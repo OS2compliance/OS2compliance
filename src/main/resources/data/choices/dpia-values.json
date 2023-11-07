@@ -1,0 +1,18 @@
+[
+  {
+    "identifier": "dpia-yes",
+    "caption": "Ja"
+  },{
+    "identifier": "dpia-no",
+    "caption": "Nej"
+  },{
+    "identifier": "dpia-partially",
+    "caption": "Delvis"
+  },{
+    "identifier": "dpia-not-relevant",
+    "caption": "Ikke relevant"
+  }, {
+    "identifier": "dpia-dont-know",
+    "caption": "Ved ikke"
+  }
+]

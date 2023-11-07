@@ -1,0 +1,248 @@
+[
+  {
+    "identifier": "dp-access-who-empl",
+    "caption": "Medarbejdere"
+  },{
+    "identifier": "dp-access-who-leaders",
+    "caption": "Ledere"
+  },{
+    "identifier": "dp-access-who-ext",
+    "caption": "Eksterne konsulenter/leverandører"
+  },{
+    "identifier": "dp-access-self-owned",
+    "caption": "Selvejende institutioner"
+  },{
+    "identifier": "dp-access-municipal-collective",
+    "caption": "Kommunale fællesskaber"
+  },{
+    "identifier": "dp-access-who-citizens",
+    "caption": "Borgere"
+  },{
+    "identifier": "dp-access-who-students",
+    "caption": "Skoleelever"
+  },{
+    "identifier": "dp-access-others",
+    "caption": "Andre"
+  },
+
+  {
+    "identifier": "dp-access-count-1-10",
+    "caption": "1-10"
+  }, {
+    "identifier": "dp-access-count-10-100",
+    "caption": "10-100"
+  }, {
+    "identifier": "dp-access-count-100-1000",
+    "caption": "100-1000"
+  }, {
+    "identifier": "dp-access-count-above",
+    "caption": "Over 1.000"
+  }, {
+    "identifier": "dp-access-count-clarification",
+    "caption": "Under afklaring"
+  },
+
+  {
+    "identifier": "dp-person-cnt-1-10",
+    "caption": "1-10"
+  }, {
+    "identifier": "dp-person-cnt-10-100",
+    "caption": "10-100"
+  }, {
+    "identifier": "dp-person-cnt-100-1000",
+    "caption": "100-1.000"
+  }, {
+    "identifier": "dp-person-cnt-1000-10000",
+    "caption": "1.000-10.000"
+  }, {
+    "identifier": "dp-person-cnt-above",
+    "caption": "Over 10.000"
+  }, {
+    "identifier": "dp-person-cnt-all",
+    "caption": "Alle kommunens borgere"
+  }, {
+    "identifier": "dp-person-cnt-clarification",
+    "caption": "Under afklaring"
+  },
+
+  {
+    "identifier": "dp-person-categories-regular",
+    "caption": "Almindelige personoplysninger",
+    "description": "Almindelige personoplysninger kan fx være identifikationsoplysninger som fx navn og adresse, kundeforhold, økonomi, skat, gæld, sygedage, tjenstlige forhold, familieforhold, bolig, bil, eksamen, ansøgning, CV, ansættelsesdato, stilling, arbejdsområde, arbejdstelefon, stamoplysninger: navn, adresse, fødselsdato, IP-adresse, matrikelnr. og andre lignende ikke-følsomme oplysninger"
+  }, {
+    "identifier": "dp-person-categories-sensitive",
+    "caption": "Følsomme personoplysninger",
+    "childListIdentifier": "dp-person-categories-sensitive-list"
+  }, {
+    "identifier": "dp-person-categories-sensitive-etnicity",
+    "caption": "Etnisk oprindelse"
+  }, {
+    "identifier": "dp-person-categories-sensitive-political",
+    "caption": "Politisk overbevisning"
+  }, {
+    "identifier": "dp-person-categories-sensitive-religion",
+    "caption": "Religiøs eller filosofisk overbevisning"
+  }, {
+    "identifier": "dp-person-categories-sensitive-union",
+    "caption": "Fagforeningsmæssige tilhørsforhold"
+  }, {
+    "identifier": "dp-person-categories-sensitive-genetics",
+    "caption": "Genetiske data"
+  }, {
+    "identifier": "dp-person-categories-sensitive-biometrics",
+    "caption": "Biometriske data med henblik på entydig identifikation"
+  }, {
+    "identifier": "dp-person-categories-sensitive-health",
+    "caption": "Helbredsoplysninger"
+  }, {
+    "identifier": "dp-person-categories-sensitive-sexual",
+    "caption": "Seksuelle forhold eller seksuel orientering"
+  }, {
+    "identifier": "dp-person-categories-classified",
+    "caption": "Fortrolige personoplysninger (CPR nr.)"
+  }, {
+    "identifier": "dp-person-categories-offences",
+    "caption": "Oplysninger om Straffedomme eller lovovertrædelser"
+  },
+
+  {
+    "identifier": "dp-categories-registered-adult",
+    "caption": "Borgere over 18 år"
+  }, {
+    "identifier": "dp-categories-registered-vuln-adult",
+    "caption": "Sårbare over 18 år"
+  }, {
+    "identifier": "dp-categories-registered-children",
+    "caption": "Børn (under 18 år)"
+  }, {
+    "identifier": "dp-categories-registered-vuln-children",
+    "caption": "Sårbare børn (under 18 år)"
+  }, {
+    "identifier": "dp-categories-registered-employees",
+    "caption": "Ansatte"
+  }, {
+    "identifier": "dp-categories-registered-applicants",
+    "caption": "Jobansøgere"
+  }, {
+    "identifier": "dp-categories-registered-customers",
+    "caption": "Kunder og forbrugere"
+  }, {
+    "identifier": "dp-categories-registered-suppliers",
+    "caption": "Virksomheder, Leverandører og frivillige foreninger"
+  }, {
+    "identifier": "dp-categories-registered-partners",
+    "caption": "Samarbejdspartnere, eksterne konsulenter og rådgivere"
+  }, {
+    "identifier": "dp-categories-registered-board-pol",
+    "caption": "Bestyrelsesmedlemmer og politikere"
+  }, {
+    "identifier": "dp-categories-registered-board",
+    "caption": "Bestyrelsesmedlemmer"
+  }, {
+    "identifier": "dp-categories-registered-volunteers",
+    "caption": "Frivillige"
+  }, {
+    "identifier": "dp-categories-registered-municipal-board",
+    "caption": "Medlemmer af kommunalbestyrelsen/byrådet"
+  }, {
+    "identifier": "dp-categories-registered-web-visitors",
+    "caption": "Besøgende på hjemmeside"
+  }, {
+    "identifier": "dp-categories-registered-interns",
+    "caption": "Praktikanter"
+  }, {
+    "identifier": "dp-categories-registered-voters",
+    "caption": "Stemmeberettigede vælgere"
+  }, {
+    "identifier": "dp-categories-registered-listed",
+    "caption": "Stillere"
+  }, {
+    "identifier": "dp-categories-registered-elec-off",
+    "caption": "Tilforordnede vælgere"
+  },
+
+  {
+    "identifier": "dp-storage-duration-kle",
+    "caption": "Følger KLE-anbefalingen til slettefrister"
+  }, {
+    "identifier": "dp-storage-duration-1mth",
+    "caption": "1 måned efter modtagelse"
+  }, {
+    "identifier": "dp-storage-duration-6mth",
+    "caption": "6 måneder efter modtagelse"
+  }, {
+    "identifier": "dp-storage-duration-12mth",
+    "caption": "12 måneder efter modtagelse"
+  }, {
+    "identifier": "dp-storage-duration-13mth",
+    "caption": "13 måneder plus løbende måned"
+  }, {
+    "identifier": "dp-storage-duration-2y",
+    "caption": "2 år efter modtagelse"
+  }, {
+    "identifier": "dp-storage-duration-3y",
+    "caption": "3 år efter modtagelse"
+  }, {
+    "identifier": "dp-storage-duration-5y",
+    "caption": "5 år efter sagsafslutning, eleven er afgangsført/udmeldt og den ansattes fratrædelse"
+  }, {
+    "identifier": "dp-storage-duration-10y",
+    "caption": "10 år efter sagsafslutning"
+  }, {
+    "identifier": "dp-storage-duration-request",
+    "caption": "Indtil anmodning om sletning"
+  }, {
+    "identifier": "dp-storage-duration-undecided",
+    "caption": "Det er der ikke taget stilling til"
+  },
+
+  {
+    "identifier": "dp-supplier-accept-basis-eu",
+    "caption": "EU-land"
+  }, {
+    "identifier": "dp-supplier-accept-basis-eos",
+    "caption": "EØS-land"
+  }, {
+    "identifier": "dp-supplier-accept-basis-suf",
+    "caption": "Tilstrækkelighedsvurdering (Andorra, Argentina, Færøerne, Guernsey, Isle of Man, Israel, Jersey, New Zealand, Schweiz, Storbritannien, Uruguay og Japan)"
+  }, {
+    "identifier": "dp-supplier-accept-basis-usa",
+    "caption": "Tilstrækkelighedsvurdering USA, certificeret under EU-U.S DPF hos det amerikanske handelsministerium"
+  }, {
+    "identifier": "dp-supplier-accept-none",
+    "caption": "Ingen"
+  }, {
+    "identifier": "dp-supplier-accept-clarification",
+    "caption": "Skal afklares"
+  },
+
+  {
+    "identifier": "dp-receiver-lawyers",
+    "caption": "Advokater"
+  }, {
+    "identifier": "dp-receiver-banks",
+    "caption": "Banker"
+  }, {
+    "identifier": "dp-receiver-citizens",
+    "caption": "Borger"
+  }, {
+    "identifier": "dp-receiver-associations",
+    "caption": "Foreninger"
+  }, {
+    "identifier": "dp-receiver-insurance",
+    "caption": "Forsikringsselskaber"
+  }, {
+    "identifier": "dp-receiver-public-aut",
+    "caption": "Offentlige myndigheder"
+  }, {
+    "identifier": "dp-receiver-public",
+    "caption": "Offentligheden"
+  }, {
+    "identifier": "dp-receiver-consult",
+    "caption": "Rådgiver/konsulenter"
+  }, {
+    "identifier": "dp-receiver-companies",
+    "caption": "Virksomheder"
+  }
+
+]

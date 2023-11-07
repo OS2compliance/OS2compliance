@@ -1,0 +1,6 @@
+{
+  "identifier": "register-gdpr-p6",
+  "name": "Behandling af personoplysninger efter Artikel 6 stk. 1",
+  "multiSelect": true,
+  "valueIdentifiers": ["register-gdpr-p6-a", "register-gdpr-p6-b", "register-gdpr-p6-c", "register-gdpr-p6-d", "register-gdpr-p6-e", "register-gdpr-p6-f"]
+}

@@ -1,0 +1,9 @@
+{
+  "identifier": "dp-person-categories-sensitive-list",
+  "name": "Følsomme personoplysninger",
+  "multiSelect": true,
+  "valueIdentifiers": ["dp-person-categories-sensitive-etnicity", "dp-person-categories-sensitive-political",
+    "dp-person-categories-sensitive-religion", "dp-person-categories-sensitive-union", "dp-person-categories-sensitive-genetics",
+    "dp-person-categories-sensitive-biometrics", "dp-person-categories-sensitive-health", "dp-person-categories-sensitive-sexual"
+  ]
+}

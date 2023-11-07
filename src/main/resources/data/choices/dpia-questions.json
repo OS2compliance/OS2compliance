@@ -1,0 +1,119 @@
+[
+    {
+      "identifier": "dpia-1",
+      "category": "Personoplysninger",
+      "subCategory": "Følsomme",
+      "name": "Behandles der følsomme oplysninger",
+      "authorization": "GDPR Artikel 5, 6 og 9, stk. 2",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-2",
+      "category": "Personoplysninger",
+      "subCategory": "Straffeoplysninger",
+      "name": "Behandles der oplysninger om straffedomme eller lovovertrædelser",
+      "authorization": "GDPR Artikel 35, stk. 3, litra b\nGDPR Artikel 5, 6 og 10, \nDatabeskyttelsesloven §8",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-3",
+      "category": "Personoplysninger",
+      "subCategory": "Sårbare registrerede",
+      "name": "Behandles der  oplysninger om sårbare registrerede",
+      "authorization": "GDPR præambelbetragtning 75",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-4",
+      "category": "Behandling",
+      "subCategory": "Systematisk overvågning",
+      "name": "Foretages der systematisk overvågning? (f.eks. Kameraovervågning eller overvågning af medarbejderes internetforbrug)",
+      "authorization": "GDPR Artikel 35, stk. 3, litra c",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-5",
+      "category": "Behandling",
+      "subCategory": "Evaluering eller analyse, herunder profilering",
+      "name": "Benyttes personoplysninger til profilering? (indsamlede oplysninger bruges til at lave profil der f.eks. forudser fremtidige behov eller evaluerer personlige forhold)",
+      "authorization": "GDPR Artikel 35, stk. 3, litra a\nGDPR præambelbetragtning 71 og 91\nGDPR Artikel 4, stk. 4",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-6",
+      "category": "Behandling",
+      "subCategory": "Automatiseret beslutningstagning",
+      "name": "Vil der blive foretaget automatiseret beslutningstagning eller automatiseret afgørelse med juridisk eller tilsvarende betydelig virkning?",
+      "authorization": "GDPR Artikel 22 og 35, stk. 3",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-7",
+      "category": "Behandling",
+      "subCategory": "Sikkerhed og helbred for de registrerede",
+      "name": "Vil et brud på persondatasikkerheden have direkte konsekvenser for en persons fysiske helbred eller på sikkerheden for en fysisk person",
+      "authorization": "GDPR Artikel 35, stk. 1",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-8",
+      "category": "Behandling",
+      "subCategory": "Omfattende behandling",
+      "name": "Behandles oplysninger der gøres til genstand for omfattende behandling (behandling i stort omfang)?",
+      "authorization": "GDPR præambelbetragtning 91\nGDPR Artikel 35, stk. 3, litra b",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-9",
+      "category": "Behandling",
+      "subCategory": "Match eller kombination af datasæt (Samkøring)",
+      "name": "Foretages der samkøring af data (matching eller kombination af datasæt fra to eller flere behandlinger af oplysninger med forskellige formål og/eller foretaget af forskellige dataansvarlige på en måde, som ville overstige den registreredes rimelige forventninger).",
+      "authorization": "",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-10",
+      "category": "Nye teknologier",
+      "subCategory": "Biometri",
+      "name": "Benyttes biometri til at identificere personer? (f.eks. Fingeraftrykslæser eller ansigtsgenkendelse)",
+      "authorization": "Artikel 9, stk. 1",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-11",
+      "category": "Nye teknologier",
+      "subCategory": "Lokationsdata",
+      "name": "Behandles lokationsdata?",
+      "authorization": "",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-12",
+      "category": "Nye teknologier",
+      "subCategory": "Genetiske data",
+      "name": "Behandles genetiske data?",
+      "authorization": "Artikel 9, stk. 1",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    },
+    {
+      "identifier": "dpia-13",
+      "category": "Nye teknologier",
+      "subCategory": "Nye teknologier eller innovativ brug",
+      "name": "Indsamles eller behandles persondata ved brug af nye teknologier eller innovativ brug af teknologier? (f.eks. Kunstig intelligens, maskinlæring, Internet of Things, app på mobil enhed eller screening på sociale medier)",
+      "authorization": "GDPR Artikel 35, stk. 1",
+      "multiSelect": false,
+      "valueIdentifiers": [ "dpia-yes", "dpia-no", "dpia-partially", "dpia-not-relevant", "dpia-dont-know" ]
+    }
+  ]

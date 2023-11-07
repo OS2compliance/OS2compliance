@@ -1,0 +1,177 @@
+[
+  {
+    "standardIdentifier": "iso27001",
+    "identifier": "iso27001_4",
+    "section": "4",
+    "description": "Organisationens kontekst",
+    "sortKey": 0
+  }, {
+    "identifier": "iso27001_4.1",
+    "section": "4.1",
+    "parentIdentifier": "iso27001_4",
+    "description": "Forståelse af organisationen og dens kontekst",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_4.2",
+    "section": "4.2",
+    "parentIdentifier": "iso27001_4",
+    "description": "Forståelse af interessenters behov og forventninger",
+    "sortKey": 2
+  }, {
+    "identifier": "iso27001_4.3",
+    "section": "4.3",
+    "parentIdentifier": "iso27001_4",
+    "description": "Bestemmelse af omfanget af ledelsessystemet for informationssikkerhed",
+    "sortKey": 3
+  }, {
+    "identifier": "iso27001_4.4",
+    "section": "4.4",
+    "parentIdentifier": "iso27001_4",
+    "description": "Ledelsessystem for informationssikkerhed",
+    "sortKey": 4
+  }, {
+    "standardIdentifier": "iso27001",
+    "identifier": "iso27001_5",
+    "section": "5",
+    "description": "Lederskab",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_5.1",
+    "section": "5.1",
+    "parentIdentifier": "iso27001_5",
+    "description": "Lederskab og engagement",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_5.2",
+    "section": "5.2",
+    "parentIdentifier": "iso27001_5",
+    "description": "Politik",
+    "sortKey": 2
+  }, {
+    "identifier": "iso27001_5.3",
+    "section": "5.3",
+    "parentIdentifier": "iso27001_5",
+    "description": "Roller, ansvar og beføjelser i organisationen",
+    "sortKey": 3
+  }, {
+    "standardIdentifier": "iso27001",
+    "identifier": "iso27001_6",
+    "section": "6",
+    "description": "Planlægning",
+    "sortKey": 2
+  }, {
+    "identifier": "iso27001_6.1",
+    "section": "6.1",
+    "parentIdentifier": "iso27001_6",
+    "description": "Handlinger til håndtering af risici og muligheder",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_6.2",
+    "section": "6.2",
+    "parentIdentifier": "iso27001_6",
+    "description": "Målsætning for informationssikkerhed og planlægning for opfyldelse heraf",
+    "sortKey": 2
+  }, {
+    "standardIdentifier": "iso27001",
+    "identifier": "iso27001_7",
+    "section": "7",
+    "description": "Support",
+    "sortKey": 3
+  }, {
+    "identifier": "iso27001_7.1",
+    "section": "7.1",
+    "parentIdentifier": "iso27001_7",
+    "description": "Ressourcer",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_7.2",
+    "section": "7.2",
+    "parentIdentifier": "iso27001_7",
+    "description": "Kompetencer",
+    "sortKey": 2
+  }, {
+    "identifier": "iso27001_7.3",
+    "section": "7.3",
+    "parentIdentifier": "iso27001_7",
+    "description": "Bevidsthed",
+    "sortKey": 3
+  }, {
+    "identifier": "iso27001_7.4",
+    "section": "7.4",
+    "parentIdentifier": "iso27001_7",
+    "description": "Kommunikation",
+    "sortKey": 4
+  }, {
+    "identifier": "iso27001_7.5",
+    "section": "7.5",
+    "parentIdentifier": "iso27001_7",
+    "description": "Dokumenteret information",
+    "sortKey": 5
+  }, {
+    "standardIdentifier": "iso27001",
+    "identifier": "iso27001_8",
+    "section": "8",
+    "description": "Drift",
+    "sortKey": 4
+  }, {
+    "identifier": "iso27001_8.1",
+    "section": "8.1",
+    "parentIdentifier": "iso27001_8",
+    "description": "Driftplanlægning og –styring",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_8.2",
+    "section": "8.2",
+    "parentIdentifier": "iso27001_8",
+    "description": "Vurdering af informationssikkerhedsrisici",
+    "sortKey": 2
+  }, {
+    "identifier": "iso27001_8.3",
+    "section": "8.3",
+    "parentIdentifier": "iso27001_8",
+    "description": "Håndtering af informationssikkerhedsrisici",
+    "sortKey": 3
+  }, {
+    "standardIdentifier": "iso27001",
+    "identifier": "iso27001_9",
+    "section": "9",
+    "description": "Evaluering",
+    "sortKey": 5
+  }, {
+    "identifier": "iso27001_9.1",
+    "section": "9.1",
+    "parentIdentifier": "iso27001_9",
+    "description": "Overvågning, måling, analyse og evaluering",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_9.2",
+    "section": "9.2",
+    "parentIdentifier": "iso27001_9",
+    "description": "Intern audit",
+    "sortKey": 2
+  }, {
+    "identifier": "iso27001_9.3",
+    "section": "9.3",
+    "parentIdentifier": "iso27001_9",
+    "description": "Ledelsens gennemgang",
+    "sortKey": 3
+  }, {
+    "standardIdentifier": "iso27001",
+    "identifier": "iso27001_10",
+    "section": "10",
+    "description": "Forbedring",
+    "sortKey": 6
+  }, {
+    "identifier": "iso27001_10.1",
+    "section": "10.1",
+    "parentIdentifier": "iso27001_10",
+    "description": "Afvigelser og korrigerende handlinger",
+    "sortKey": 1
+  }, {
+    "identifier": "iso27001_10.2",
+    "section": "10.2",
+    "parentIdentifier": "iso27001_10",
+    "description": "Løbende forbedringer",
+    "sortKey": 2
+  }
+]

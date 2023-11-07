@@ -1,0 +1,60 @@
+<th:block th:fragment="riskProfileTablesFragment">
+    <!--NOTE: if you use this fragment remember to use the javascript in riskProfile.js and the styling from risk_profile.css. On page load call profilePageLoaded();-->
+    <div class="col-sm-12 row">
+        <div class="col-sm-6">
+            <h5 style="padding-left: 20px;">Risikoprofil før risikohåndtering</h5>
+            <div class="col-sm-12">
+                <div class="vertical-axis-label">Konsekvens</div>
+                <div class="table-container-profile">
+                    <table class="table-bordered table-profile" id="riskProfileBefore" style="max-width: 700px; max-height: 700px;">
+                        <tr th:each="consequence : ${reversedScale}" class="tr-profile">
+                            <td th:text="${consequence}" class="headerStyle verticalHeader td-profile"></td>
+                            <td th:each="probability : ${#lists.sort(reversedScale)}" th:id="'before' + ${consequence} + ',' + ${probability}" class="td-profile riskScoreField" th:attr="data-consequence=${consequence}, data-probability=${probability}"></td>
+                        </tr>
+                        <tr class="tr-profile">
+                            <td class="headerStyle verticalHeader horizontalHeader td-profile"></td>
+                            <td th:each="probability : ${#lists.sort(reversedScale)}" th:text="${probability}" class="headerStyle horizontalHeader td-profile"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-sm-6">
+            <h5 style="padding-left: 20px;">Risikoprofil efter risikohåndtering</h5>
+            <div class="col-sm-12">
+                <div class="vertical-axis-label">Konsekvens</div>
+                <div class="table-container-profile">
+                    <table class="table-bordered table-profile" id="riskProfileAfter" style="max-width: 700px; max-height: 700px;">
+                        <tr th:each="consequence : ${reversedScale}" class="tr-profile">
+                            <td th:text="${consequence}" class="headerStyle verticalHeader td-profile"></td>
+                            <td th:each="probability : ${#lists.sort(reversedScale)}" th:id="'after' + ${consequence} + ',' + ${probability}" class="td-profile riskScoreField" th:attr="data-consequence=${consequence}, data-probability=${probability}"></td>
+                        </tr>
+                        <tr class="tr-profile">
+                            <td class="headerStyle verticalHeader horizontalHeader td-profile"></td>
+                            <td th:each="probability : ${#lists.sort(reversedScale)}" th:text="${probability}" class="headerStyle horizontalHeader td-profile"></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12 row">
+        <div class="col-sm-6"  style="font-weight: bold; padding-left: 28px;">
+            <div class="center" style="width: 100%; max-width: 700px;">
+                <span>Sandsynlighed</span>
+            </div>
+        </div>
+        <div class="col-sm-6 center"  style="font-weight: bold; padding-left: 28px;">
+            <div class="center" style="width: 100%; max-width: 700px;">
+                <span>Sandsynlighed</span>
+            </div>
+        </div>
+    </div><div class="col-sm-12 row mt-2">
+        <div class="col-sm-6">
+        </div>
+        <div class="col-sm-6" style="padding-left: 28px;">
+            *angiver at risikoscore for denne trussel er revurderet efter risikohåndtering
+        </div>
+    </div>
+</th:block>

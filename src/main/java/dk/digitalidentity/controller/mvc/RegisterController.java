@@ -1,0 +1,301 @@
+package dk.digitalidentity.controller.mvc;
+
+import dk.digitalidentity.dao.ConsequenceAssessmentDao;
+import dk.digitalidentity.dao.OrganisationUnitDao;
+import dk.digitalidentity.dao.UserDao;
+import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.AssetSupplierMapping;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.ConsequenceAssessment;
+import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.RegisterStatus;
+import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.DataProcessingService;
+import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.ScaleService;
+import jakarta.validation.Valid;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.hibernate.validator.constraints.UUID;
+import org.jetbrains.annotations.NotNull;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.Comparator;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
+
+import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
+
+@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
+@Slf4j
+@Controller
+@RequireUser
+@RequestMapping("registers")
+public class RegisterController {
+    @Autowired
+    private RegisterService registerService;
+    @Autowired
+    private AssetService assetService;
+    @Autowired
+    private RelationService relationService;
+    @Autowired
+    private ChoiceService choiceService;
+    @Autowired
+    private OrganisationUnitDao organisationUnitDao;
+    @Autowired
+    private UserDao userDao;
+    @Autowired
+    private ConsequenceAssessmentDao consequenceAssessmentDao;
+    @Autowired
+    private ScaleService scaleService;
+    @Autowired
+    private DataProcessingService dataProcessingService;
+
+    @GetMapping
+    public String registerList() {
+        return "registers/index";
+    }
+
+
+    @GetMapping("form")
+    public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
+        if (id == null) {
+            model.addAttribute("register", new Register());
+            model.addAttribute("formId", "createForm");
+            model.addAttribute("formTitle", "Ny behandlingsaktivitet");
+        } else {
+            final Register register = registerService.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            model.addAttribute("register", register);
+            model.addAttribute("formId", "editForm");
+            model.addAttribute("formTitle", "Rediger behandlingsaktivitet");
+        }
+        return "registers/form";
+    }
+
+    @Transactional
+    @PostMapping("create")
+    public String create(@ModelAttribute @Valid final Register register) {
+        final Register saved = registerService.save(register);
+        return "redirect:/registers/" + register.getId();
+    }
+
+    @Transactional
+    @PostMapping("{id}/assessment")
+    public String updateAssessment(@PathVariable final Long id,
+                                   @ModelAttribute @Valid final ConsequenceAssessment assessment,
+                                   @RequestParam(required = false) final String section) {
+        final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
+        if (existingOptional.isPresent()) {
+            final ConsequenceAssessment existing = existingOptional.get();
+            existing.setAssessment(assessment.getAssessment());
+            existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
+            existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
+            existing.setConfidentialityOrganisationRep(assessment.getConfidentialityOrganisationRep());
+            existing.setConfidentialityOrganisationEco(assessment.getConfidentialityOrganisationEco());
+            existing.setConfidentialityReason(assessment.getConfidentialityReason());
+
+            existing.setIntegrityRegistered(assessment.getIntegrityRegistered());
+            existing.setIntegrityOrganisation(assessment.getIntegrityOrganisation());
+            existing.setIntegrityOrganisationRep(assessment.getIntegrityOrganisationRep());
+            existing.setIntegrityOrganisationEco(assessment.getIntegrityOrganisationEco());
+            existing.setIntegrityReason(assessment.getIntegrityReason());
+
+            existing.setAvailabilityRegistered(assessment.getAvailabilityRegistered());
+            existing.setAvailabilityOrganisation(assessment.getAvailabilityOrganisation());
+            existing.setAvailabilityOrganisationRep(assessment.getAvailabilityOrganisationRep());
+            existing.setAvailabilityOrganisationEco(assessment.getAvailabilityOrganisationEco());
+            existing.setAvailabilityReason(assessment.getAvailabilityReason());
+        } else {
+            assessment.setId(null);
+            final Register register = registerService.findById(id)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            assessment.setRegister(register);
+            register.setConsequenceAssessment(assessment);
+            consequenceAssessmentDao.save(assessment);
+        }
+
+        return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+    }
+
+    @Transactional
+    @PostMapping("{id}/update")
+    public String update(@PathVariable final Long id,
+                         @RequestParam(value = "description", required = false) @Valid final String description,
+                         @RequestParam(value = "responsibleOu", required = false) @Valid @UUID final String responsibleOuUuid,
+                         @RequestParam(value = "department", required = false) @Valid @UUID final String departmentUuid,
+                         @RequestParam(value = "responsibleUser", required = false) @Valid @UUID final String responsibleUserUuid,
+                         @RequestParam(value = "criticality", required = false) final Criticality criticality,
+                         @RequestParam(value = "purpose", required = false) final String purpose,
+                         @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
+                         @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
+                         @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
+                         @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
+                         @RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
+                         @RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
+                         @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
+                         @RequestParam(required = false) final String section,
+                         @RequestParam(value = "consent", required = false) final String consent,
+                         @RequestParam(value = "status", required = false) final RegisterStatus status) {
+        final Register register = registerService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (description != null) {
+            register.setDescription(description);
+        }
+        if (StringUtils.isNotEmpty(responsibleOuUuid)) {
+            final OrganisationUnit responsibleOu = organisationUnitDao.findById(responsibleOuUuid)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            register.setResponsibleOu(responsibleOu);
+        }
+        if (StringUtils.isNotEmpty(departmentUuid)) {
+            final OrganisationUnit departmentOu = organisationUnitDao.findById(departmentUuid)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            register.setDepartment(departmentOu);
+        }
+        if (StringUtils.isNotEmpty(responsibleUserUuid)) {
+            final User responsibleUser = Optional.of(responsibleUserUuid).map(r -> userDao.findById(r).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
+                    .orElse(null);
+            register.setResponsibleUser(responsibleUser);
+        }
+        if (criticality != null) {
+            register.setCriticality(criticality);
+        }
+        if (purpose != null) {
+            register.setPurpose(purpose);
+        }
+        if (emergencyPlanLink != null) {
+            register.setEmergencyPlanLink(emergencyPlanLink);
+        }
+        if (gdprChoices != null) {
+            register.setGdprChoices(gdprChoices);
+        }
+        if (informationObligationStatus != null) {
+            register.setInformationObligation(informationObligationStatus);
+        }
+        if (informationObligationDesc != null) {
+            register.setInformationObligationDesc(informationObligationDesc);
+        }
+        if (informationResponsible != null) {
+            register.setInformationResponsible(informationResponsible);
+        }
+        if (registerRegarding != null) {
+            register.setRegisterRegarding(registerRegarding);
+        }
+        if (purposeNotes != null) {
+            register.setPurposeNotes(purposeNotes);
+        }
+        if (consent != null) {
+            register.setConsent(consent);
+        }
+        if (status != null) {
+            register.setStatus(status);
+        }
+        registerService.save(register);
+        return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+    }
+
+    @Transactional
+    @PostMapping("{id}/dataprocessing")
+    public String dataProcessing(@PathVariable final Long id, @Valid @ModelAttribute final DataProcessingDTO body) {
+        final Register register = registerService.findById(body.getId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        dataProcessingService.update(register.getDataProcessing(), body);
+        return "redirect:/registers/" + id + "?section=dataprocessing";
+    }
+
+    @GetMapping("{id}")
+    public String view(final Model model, @PathVariable final Long id,
+                       @RequestParam(required = false) final String section) {
+        final Register register = registerService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final ConsequenceAssessment assessment = consequenceAssessmentDao.findById(id)
+                .orElse(new ConsequenceAssessment());
+        final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(register);
+        final ChoiceList gdprP6ChoiceList = choiceService.findChoiceList("register-gdpr-p6")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
+        final List<ChoiceValue> gdprP6Choices = sortChoicesAlpha(gdprP6ChoiceList);
+        final ChoiceList gdprP7ChoiceList = choiceService.findChoiceList("register-gdpr-p7")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
+        final List<ChoiceValue> gdprP7Choices = sortChoicesAlpha(gdprP7ChoiceList);
+        final ChoiceList gdprChoiceList = choiceService.findChoiceList("register-gdpr")
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
+        final List<ChoiceValue> gdprChoices = sortChoicesNumeric(gdprChoiceList);
+        final List<Relatable> relatedAssets = relationService.findAllRelatedTo(register).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
+        final List<AssetSupplierMapping> assetSupplierMappingList = relatedAssets.stream().map(Asset.class::cast).map(r -> assetService.findMainSupplier(r)).collect(Collectors.toList());
+
+        model.addAttribute("section", section);
+        model.addAttribute("dpChoices", dataProcessingService.getChoices());
+        model.addAttribute("dataProcessing", register.getDataProcessing());
+        model.addAttribute("register", register);
+        model.addAttribute("assessment", assessment);
+        model.addAttribute("gdprChoices", gdprChoices);
+        model.addAttribute("gdprP6Choices", gdprP6Choices);
+        model.addAttribute("gdprP7Choices", gdprP7Choices);
+        model.addAttribute("relatedDocuments", allRelatedTo.stream()
+                .filter(r -> r.getRelationType() == RelationType.DOCUMENT)
+                .collect(Collectors.toList()));
+        model.addAttribute("relatedTasks", allRelatedTo.stream()
+                .filter(r -> r.getRelationType() == RelationType.TASK)
+                .collect(Collectors.toList()));
+        model.addAttribute("threatAssessments", allRelatedTo.stream()
+            .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+            .collect(Collectors.toList()));
+        model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
+        model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
+
+        return "registers/view";
+    }
+
+    @DeleteMapping("{id}")
+    @ResponseStatus(value = HttpStatus.OK)
+    @Transactional
+    public void registerDelete(@PathVariable final String id) {
+        final Long lid = Long.valueOf(id);
+        final Register register = registerService.findById(lid)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        relationService.deleteRelatedTo(lid);
+        registerService.delete(register);
+    }
+
+    @NotNull
+    private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
+        return gdprChoiceList.getValues().stream()
+                .sorted(Comparator.comparingInt(a -> asNumber(a.getCaption())))
+                .collect(Collectors.toList());
+    }
+
+    @NotNull
+    private static List<ChoiceValue> sortChoicesAlpha(final ChoiceList gdprChoiceList) {
+        return gdprChoiceList.getValues().stream()
+                .sorted((a, b) -> a.getCaption().compareToIgnoreCase(b.getCaption()))
+                .collect(Collectors.toList());
+    }
+
+}

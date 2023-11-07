@@ -1,0 +1,9 @@
+{
+  "identifier": "dp-person-storage-duration-list",
+  "name": "Hvor længe opbevares personoplysningerne",
+  "multiSelect": false,
+  "valueIdentifiers": ["dp-storage-duration-kle", "dp-storage-duration-1mth", "dp-storage-duration-6mth",
+    "dp-storage-duration-12mth", "dp-storage-duration-13mth", "dp-storage-duration-2y", "dp-storage-duration-3y",
+    "dp-storage-duration-5y", "dp-storage-duration-10y", "dp-storage-duration-request", "dp-storage-duration-undecided"
+  ]
+}

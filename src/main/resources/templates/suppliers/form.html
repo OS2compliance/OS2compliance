@@ -1,0 +1,72 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="supplierLabel" th:text="${formTitle}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/suppliers/form}" th:object="${supplier}" method="post">
+                <input id="id" th:field="*{id}" type="hidden">
+                <div class="row mt-3">
+                    <label for="cvr" class="col-sm-4 col-form-label">CVR</label>
+                    <div class="col-sm-8">
+                        <input id="cvr" th:field="*{cvr}" oninput="checkCvr(this)" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <label for="navn" class="col-sm-4 col-form-label">Navn</label>
+                    <div class="col-sm-8">
+                        <input id="navn" th:field="*{name}" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="adresse" class="col-sm-4 col-form-label">Addresse</label>
+                    <div class="col-sm-8">
+                        <input id="adresse" th:field="*{address}" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="postnr" class="col-sm-4 col-form-label">Postnummer</label>
+                    <div class="col-sm-8">
+                        <input id="postnr" th:field="*{zip}" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="by" class="col-sm-4 col-form-label">By</label>
+                    <div class="col-sm-8">
+                        <input id="by" th:field="*{city}" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="land" class="col-sm-4 col-form-label">Land</label>
+                    <div class="col-sm-8">
+                        <input id="land" th:field="*{country}" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="kontakt" class="col-sm-4 col-form-label">Kontaktperson</label>
+                    <div class="col-sm-8">
+                        <input id="kontakt" th:field="*{contact}" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="telefon" class="col-sm-4 col-form-label">Telefon</label>
+                    <div class="col-sm-8">
+                        <input id="telefon" th:field="*{phone}" type="text" class="form-control">
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="mail" class="col-sm-4 col-form-label">Mail</label>
+                    <div class="col-sm-8">
+                        <input id="mail" th:field="*{email}" type="email" class="form-control">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+        </div>
+    </div>
+</div>

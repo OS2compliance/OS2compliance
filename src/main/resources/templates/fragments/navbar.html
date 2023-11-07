@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html>
+<body>
+	<nav th:fragment="main" id="mainnav-container" class="mainnav">
+		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner">
+			<div class="mainnav__top-content scrollable-content pb-2">
+				<div class="mainnav__categoriy py-3">
+					<ul class="mainnav__menu nav flex-column">
+						<li class="nav-item">
+							<a href="/" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'hjem' ? 'active' : ''">
+								<i class="pli-home fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Dashboard</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/standards}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'standarder' ? 'active' : ''">
+								<i class="pli-globe fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Standarder</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/registers}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'fortegnelse' ? 'active' : ''">
+								<i class="pli-address-book-2 fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Fortegnelse</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/assets}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'aktiver' ? 'active' : ''">
+								<i class="pli-crane fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Aktiver</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/suppliers}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'leverandører' ? 'active' : ''">
+								<i class="pli-office fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Leverandører</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/risks}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'risikostyring' ? 'active' : ''">
+								<i class="pli-flashlight fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Risikostyring</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/documents}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'dokumenter' ? 'active' : ''">
+								<i class="pli-files fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Dokumenter</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/tasks}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'opgavecenter' ? 'active' : ''">
+								<i class="pli-check fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Opgavecenter</span>
+							</a>
+						</li>
+						<li class="nav-item">
+							<a th:href="@{/reports}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'rapporter' ? 'active' : ''">
+								<i class="pli-newspaper fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
+							</a>
+						</li>
+						<!--
+						<li class="nav-item">
+							<a th:href="@{/ui/events}" class="nav-link mininav-toggle collapsed">
+								<i class="pli-bulleted-list fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">LogEvents</span>
+							</a>
+						</li>
+						-->
+					</ul>
+				</div>
+
+				<div class="mainnav__bottom-content border-top">
+					<ul id="mainnav" class="mainnav__menu nav flex-column">
+						<li class="nav-item has-sub"><a href="/saml/logout" class="nav-link"
+							aria-expanded="false"> <i class="pli-unlock fs-5 me-2"></i> <span
+								class="nav-label ms-1">Log ud</span>
+						</a></li>
+					</ul>
+				</div>
+
+			</div>
+		</div>
+	</nav>
+</body>
+</html>

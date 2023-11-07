@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<body>
+
+<div th:fragment="taskDialog">
+	<div class="modal fade" id="taskFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
+	<script th:inline="javascript">
+		document.addEventListener("DOMContentLoaded", function(event) {
+			loadSharedElements();
+		});
+	</script>
+
+</div>
+
+<div th:fragment="scripts">
+
+	<script th:src="@{/js/common.js}" defer></script>
+	<script th:src="@{/js/form-validation.js}" defer></script>
+	<script th:src="@{/js/shared-elements.js}" defer></script>
+
+	<script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}" defer></script>
+	<script th:src="@{/webjars/nifty/3.0.1/vendors/bootstrap/bootstrap.min.js}" defer></script>
+	<script th:src="@{/webjars/nifty/3.0.1/js/nifty.js}" defer></script>
+    <script th:src="@{/webjars/nifty/3.0.1/vendors/gridjs/gridjs.umd.min.js}" defer></script>
+    <script nomodule th:src="@{/webjars/nifty/3.0.1/vendors/ionicons/ionicons.js}"></script>
+	<script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}"></script>
+	<script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
+	<script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
+	<script th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
+
+</div>
+</body>

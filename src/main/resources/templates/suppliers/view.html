@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<body class="jumping">
+<script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
+<script type="text/javascript" th:src="@{/js/supplier/formReset.js}"></script>
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/suppliers}">Leverandører</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${supplier.name}"></li>
+                            </ol>
+                        </nav>
+                    </div>
+                </div>
+                <div class="row mt-4 mb-2">
+                        <h1 class="page-title mb-0" th:text="${supplier.name}"></h1>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed rounded-0">
+            <div class="content__wrap">
+
+                <div class="tab-base">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsGenerelt" type="button" role="tab" aria-controls="generelt" aria-selected="true">Generelt</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsTilsyn" type="button" role="tab" aria-controls="tilsyn" aria-selected="false">Tilsyn</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div id="_dm-tabsGenerelt" class="tab-pane fade active show" role="tabpanel" aria-labelledby="generelt-tab">
+                            <div th:replace="~{suppliers/generelt :: generelt(${supplier})}" />
+                            <div class="card shadow-none">
+                                <div class="card-header toolbar">
+                                    <h5 class="toolbar-start m-0">Kontakter</h5>
+                                    <div class="toolbar-end">
+                                        <button type="button" class="btn btn-secondary btn-xs" data-bs-toggle="modal" data-bs-target="#formDialog">Tilføj</button>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    <table class="table table-striped">
+                                        <tbody>
+                                        <tr th:each="contact: ${contacts}">
+                                            <td th:text="${contact.role}" />
+                                            <td th:text="${contact.name}" />
+                                            <td th:text="${contact.phone}" />
+                                            <td th:text="${contact.mail}" />
+                                            <td title="Fjern relation" style="text-align: right;">
+                                                <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${contact.id}, data-relationtype=${contact.relationType}"></i>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="card shadow-none col-md-4 col-sm-12">
+                                    <div class="card-header toolbar">
+                                        <h5 class="toolbar-start m-0">Aktiver</h5>
+                                        <div class="toolbar-end">
+                                            <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="col-lg-12">
+                                            <tbody>
+                                            <tr th:each="asset : ${assets}">
+                                                <td class="col-lg-10">
+                                                    <a th:text="${asset.name}" th:href="@{ '/assets/' + ${asset.id}}"></a>
+                                                </td>
+                                                <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
+                                                    <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${asset.id}, data-relationtype=${asset.relationType}"></i>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="card shadow-none col-md-4 col-sm-12">
+                                    <div class="card-header toolbar">
+                                        <h5 class="toolbar-start m-0">Dokumenter</h5>
+                                        <div class="toolbar-end">
+                                            <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="col-lg-12">
+                                            <tbody>
+                                            <tr th:each="document : ${documents}">
+                                                <td class="col-lg-10">
+                                                    <a th:text="${document.name} + ' - ' + ${document.nextRevision}" th:href="@{documents/{id}(id=${document.id})}"></a>
+                                                </td>
+                                                <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
+                                                    <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="card shadow-none col-md-4 col-sm-12">
+                                    <div class="card-header toolbar">
+                                        <h5 class="toolbar-start m-0">Opgaver</h5>
+                                        <div class="toolbar-end">
+                                            <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                                        </div>
+                                    </div>
+                                    <div class="card-body">
+                                        <table class="col-lg-12">
+                                            <tbody>
+                                            <tr th:each="task : ${tasks}">
+                                                <td class="col-lg-10">
+                                                    <a th:text="${task.name}" th:href="@{ '/tasks/' + ${task.id}}"></a>
+                                                </td>
+                                                <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
+                                                    <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                        <div id="_dm-tabsTilsyn" class="tab-pane fade" role="tabpanel" aria-labelledby="tilsyn-tab">
+                            <div th:replace="~{assets/fragments/oversightTable :: oversightTable(${oversights})}"></div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}" />
+    <nav th:replace="~{fragments/navbar :: main (page='leverandører')}" />
+</div>
+
+
+<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true"></div>
+<div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal)}" />
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal)}" />
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal)}" />
+<div th:replace="~{fragments/footer :: scripts}" />
+
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var oversightUrl = [[@{/assets/oversight}]];
+        var formUrl = [[@{/contacts/form(sourceRelationId=${supplier.id}, sourceRelationType=SUPPLIER)}]];
+        var supplierId = [[${supplier.id}]]
+    +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        fetch(formUrl)
+            .then(response => response.text()
+                .then(data => document.getElementById('formDialog').innerHTML = data))
+            .catch(error => console.log(error));
+
+            addRelationFormLoaded();
+    });
+
+    function showOversightModal() {
+            initOversightModal().then(() => oversightDialog.show());
+        }
+
+        function initOversightModal() {
+            return fetch(oversightUrl + "/" + supplierId + "/supplier")
+            .then(response => response.text()
+                .then(data => {
+                    document.getElementById('oversightDialog').innerHTML = data;
+
+                    //Init modal
+                    oversightDialog = new bootstrap.Modal(document.getElementById('oversightDialog'), {
+                      keyboard: false
+                    });
+
+                    //Init date pickers
+                    const datepickerOversight = MCDatepicker.create({
+                        el: '#oversightDateId',
+                        bodyType: 'inline',
+                        autoClose: true,
+                        dateFormat: 'dd/mm-yyyy',
+                        selectedDate: new Date(),
+                        closeOnBlur: true,
+                        firstWeekday: 1,
+                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                        customClearBTN: "Ryd",
+                        customCancelBTN: "Annuller"
+                        });
+                    document.querySelector("#oversightDateBtn").addEventListener("click", () => {
+                    datepickerOversight.open();
+                    });
+
+                    const inspectionDateOversightModal = MCDatepicker.create({
+                        el: '#oversightInspectionDateInput',
+                        bodyType: 'inline',
+                        autoClose: true,
+                        dateFormat: 'dd/mm-yyyy',
+                        selectedDate: new Date(),
+                        closeOnBlur: true,
+                        firstWeekday: 1,
+                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                        customClearBTN: "Ryd",
+                        customCancelBTN: "Annuller"
+                        });
+                    document.querySelector("#oversightInspectionDateBtn").addEventListener("click", () => {
+                        inspectionDateOversightModal.open();
+                    });
+
+                    //choices.js
+                    const oversightSelect = document.getElementById('oversightUserSelect');
+                    oversightResponsibleUserChoices = initSelect(oversightSelect);
+                    updateUsers(oversightResponsibleUserChoices, "");
+                    oversightSelect.addEventListener("search",
+                    function(event) {
+                        updateUsers(oversightResponsibleUserChoices, event.detail.value);
+                    },
+                    false,
+                    );
+                    oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
+                        checkInputField(oversightResponsibleUserChoices);
+                    });
+
+
+                }))
+            .catch(error => console.log(error))
+        }
+
+    function addRelationFormLoaded() {
+            initAssetRelationSelectPrivate();
+            initDocumentRelationSelectPrivate();
+            initTaskRelationSelectPrivate();
+    }
+
+    function initAssetRelationSelectPrivate() {
+            const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
+            let relationsChoice = initSelect(relationsSelect);
+            updateRelationsAssetsOnly(relationsChoice, "");
+            relationsSelect.addEventListener("search",
+                function(event) {
+                    updateRelationsAssetsOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+        relationsSelect.addEventListener("change",
+            function(event) {
+                updateRelationsAssetsOnly(relationsChoice, "");
+            },
+            false,
+        );
+    }
+
+    function initDocumentRelationSelectPrivate() {
+            const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
+            let relationsChoice = initSelect(relationsSelect);
+            updateRelationsDocumentsOnly(relationsChoice, "");
+            relationsSelect.addEventListener("search",
+                function(event) {
+                    updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+        relationsSelect.addEventListener("change",
+            function(event) {
+                updateRelationsDocumentsOnly(relationsChoice, "");
+            },
+            false,
+        );
+    }
+
+    function initTaskRelationSelectPrivate() {
+            const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
+            let relationsChoice = initSelect(relationsSelect);
+            updateRelationsTasksOnly(relationsChoice, "");
+            relationsSelect.addEventListener("search",
+                function(event) {
+                    updateRelationsTasksOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+        relationsSelect.addEventListener("change",
+            function(event) {
+                updateRelationsTasksOnly(relationsChoice, "");
+            },
+            false,
+            );
+        }
+
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

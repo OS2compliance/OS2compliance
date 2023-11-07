@@ -1,0 +1,7 @@
+{
+  "identifier": "dp-person-categories-list",
+  "name": "Kategorier af personoplysninger",
+  "multiSelect": true,
+  "valueIdentifiers": ["dp-person-categories-regular", "dp-person-categories-sensitive",
+    "dp-person-categories-classified", "dp-person-categories-offences"]
+}

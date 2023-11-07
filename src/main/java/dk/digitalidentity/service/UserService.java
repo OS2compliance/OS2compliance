@@ -1,0 +1,46 @@
+package dk.digitalidentity.service;
+
+import dk.digitalidentity.dao.UserDao;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.SecurityUtil;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Service;
+
+import java.util.Optional;
+
+@Service
+public class UserService {
+    private final UserDao userDao;
+
+    public UserService(final UserDao userDao) {
+        this.userDao = userDao;
+    }
+
+    public User currentUser() {
+        final String loggedInUserUuid = SecurityUtil.getLoggedInUserUuid();
+        if (loggedInUserUuid != null) {
+            return userDao.findById(loggedInUserUuid).orElse(null);
+        }
+        return null;
+    }
+
+    public Optional<User> get(final String uuid) {
+        if (uuid == null) {
+            return Optional.empty();
+        }
+        return userDao.findById(uuid);
+    }
+
+    public Optional<User> findByUserId(final String userId) {
+        if (StringUtils.isEmpty(userId)) {
+            return Optional.empty();
+        }
+        return userDao.findByUserIdAndActiveIsTrue(userId);
+    }
+
+    public Page<User> getPaged(final int pageSize, final int page) {
+        return userDao.findAll(Pageable.ofSize(pageSize).withPage(page));
+    }
+}

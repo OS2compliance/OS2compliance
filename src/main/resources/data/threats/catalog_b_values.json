@@ -1,0 +1,269 @@
+[
+  {
+    "identifier": "b02",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Manglende sletning af persondata som følge af utilstrækkelige sletteprocedurer eller utilstrækkelig automatisering – brud på princippet om opbevaringsbegrænsning",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b03",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Persondata behandles i strid med principperne om lovlighed, rimelighed og gennemsigtighed – utilstrækkelige procedurer eller manglende awareness",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b04",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Forkerte eller unøjagtige persondata som følge af utilstrækkelige procedurer for validering og fravær af løbende opdatering – brud på princippet om rigtighed",
+    "confidentiality": false,
+    "integrity": true,
+    "availability": false,
+    "rights": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b05",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Den registrerede oplyses ikke om behandling af persondata ved første indsamling eller ved genbrug/viderebehandling - brud på efterlevelse af oplysningspligt",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b06",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Brud på fortrolighed ved overførsel af personoplysninger pga. utilstrækkelig procedure for eller manglende opmærksomhed på sikker overførsel",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b07",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Der registreres unødvendige personoplysninger - Manglende overholdelse af princippet om dataminimering af persondata",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b08",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Usikker opbevaring af data, fx på delte drev uden adgangsbegrænsning eller PC skrivebord pga. mangelfuld oprydningsprocedure og awareness",
+    "confidentiality": true,
+    "integrity": true,
+    "availability": true,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b10",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Brug af fysiske dokumenter begrænser tilgængelighed af data, pga manglende tekniske foranstaltninger",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b11",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Data opbevares på ukrypterede lagringsenheder fx harddiske og USB-sticks",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b12",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Fratrådte medarbejderes adgang fjernes ikke, og vil derved kunne bruges til at kompromittere aktivet/systemet",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": false,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "b14",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Videregivelse af fortrolige eller følsomme personoplysninger til forkert modtager - Brud på fortrolighed",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b15",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Utilsigtet sletning af personoplysninger af uautoriseret eller ondsindet medarbejder pga. manglende kontrol (indhentelse af straffeattest, kontroller mv.)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b16",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Fejlhåndtering af persondata fx pga. mangelfulde procedurer eller awareness",
+    "confidentiality": false,
+    "integrity": true,
+    "availability": false,
+    "rights": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b17",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Ansatte misbruger legitime adgange til at udføre uautoriserede handlinger, fx manglende kontrol med betroede medarbejdere",
+    "confidentiality": false,
+    "integrity": true,
+    "availability": true,
+    "rights": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b18",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Nuværende eller tidligere medarbejder videregiver eller udnytter fortrolige eller følsomme data – brud på tavshedspligt",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b19",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere anvender private tjenester (privat mail, Dropbox, etc.) til at opbevare og arbejde med data og kompromitterer dermed sikkerheden",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b20",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere bryder fortroligheden (videregive oplysninger, manglende cleandesk, ikke låst skærm ved fravær, gemmer fortrolige informationer på fil-drev, hvor sikkerhedsniveauet er lavere end i selve systemet/applikationen, hvorved informationerne bliver kompromitteret)",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b21",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere deler fortrolige eller følsomme data via usikre kanaler med andre medarbejdere eller eksterne (mail sendes til forkerte modtagere, ikke-sikker mail uden brug af passende kryptering eller mails placeres i fællespostkasser)",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b22",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere flytter fortrolige data via USB-sticks, hvorved data kompromitteres, f.eks. Ved genbrug af USB-nøgler eller ved tab af disse",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b23",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere foranlediges til at udlevere fortrolige oplysninger (afpresning, hævn, overfald, bestikkelse, for økonomisk vindings skyld, etc)",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b24",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere foretager tyveri af data / software / hardware",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b25",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere afslører fortrolige oplysninger under arbejde i det offentlige rum (fx ved at arbejde på en måde, så andre kan kigge over skulderen, eller tale højt, så andre kan høre med).",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "b27",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Cybertrusler",
+    "description": "Der opnås adgang til en brugers login-information (brugernavn og password), fx ved læk af passwords til kolleger, videregivelse, usikker opbevaring af passwords.",
+    "confidentiality": true,
+    "integrity": true,
+    "availability": true,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b28",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Cybertrusler",
+    "description": "Nedbrud som følge af malware eller andre cybertrusler, f.eks. Pga. manglende awareness på fishing og smishing (SMS-fishing)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "rights": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "b29",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Cybertrusler",
+    "description": "Angreb ved brug af social engeneering (medarbejder udlererer information under en samtale)",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "b31",
+    "threatCatalogIdentifier": "b",
+    "threatType": "Fysiske trusler",
+    "description": "Indbrud/tyveri - Fremmede bryder fysisk ind i lokalet hvor systemet anvendes med henblik på tyveri",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "rights": true,
+    "consequenceMunicipal": true
+  }
+]

@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<body class="jumping">
+<script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
+<script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
+<script th:src="@{/js/risk/riskProfile.js}" defer></script>
+<script th:src="@{/js/form-validation.js}" defer></script>
+
+<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
+<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.css}" />
+<link rel="stylesheet" th:href="@{/css/risks/risks.css}" />
+<link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
+
+<link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
+<script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto" style="width: 500px;">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/risks}">Risikostyring</a></li>
+                                <li class="breadcrumb-item"><a th:href="'/risks/' + ${risk.id}" th:text="${risk.name}"></a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Risikoprofil</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2" th:text="${risk.name}"></h1>
+                        <div class="col-lg-12 row">
+                            <div class="col-lg-6">
+                                <p th:text="'Type: ' + ${risk.threatAssessmentType.getMessage()}" style="margin-bottom: 0px;"></p>
+                                <p th:unless="${risk.threatAssessmentType == T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).SCENARIO}" th:text="'Element: ' + ${elementName}" style="margin-bottom: 0px;"></p>
+                                <p th:text="'Trusselskatalog: ' + ${risk.threatCatalog.name}" style="margin-bottom: 0px;"></p>
+                            </div>
+                            <div class="col-lg-6">
+                                <p th:text="'Vurdering for den registrerede: ' + (${risk.registered} ? 'ja' : 'nej')" style="margin-bottom: 0px;"></p>
+                                <p th:text="'Vurdering for organisationen: ' + (${risk.organisation} ? 'ja' : 'nej')" style="margin-bottom: 0px;"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <div class="card mb-3">
+                    <div class="card-body" >
+                        <div th:replace="~{risks/riskProfileTablesFragment :: riskProfileTablesFragment}"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}" />
+    <nav th:replace="~{fragments/navbar :: main (page='risikostyring')}" />
+</div>
+
+<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/footer :: taskDialog}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    /*[+
+        var riskId = [[${risk.id}]];
+        var taskFormUrl = [[@{/tasks/form}]]
+        var scaleMap = [[${scale}]];
+        var scaleColorMap = [[${riskScoreColorMap}]];
+        var riskProfiles = [[${riskProfiles}]];
+    +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        profilePageLoaded();
+    });
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>
