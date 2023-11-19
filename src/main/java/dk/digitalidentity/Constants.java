@@ -16,7 +16,7 @@ public interface Constants {
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";
-    String SEED_VERSION_SETTING = "seed_version";
+    String DATA_MIGRATION_VERSION_SETTING = "seed_version";
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendValue(DAY_OF_MONTH, 2)

@@ -29,6 +29,7 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.IT_CONTRACT_OF
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_OFFSET_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM_OFFSET;
 
 @Slf4j
 @Service
@@ -76,10 +77,10 @@ public class KitosClientService {
     /**
      * Synchronize all it-contract in use by the current municipal
      */
-    public List<ItContractResponseDTO> fetchChangedItContracts(final UUID municipalUuid) {
+    public List<ItContractResponseDTO> fetchChangedItContracts(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_CONTRACT_OFFSET_SETTING_KEY,
             pageAndOffset -> contractApi.getManyItContractV2GetItContracts(municipalUuid, null, null, null, null,
-                null, null, pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+                null, null, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItContractResponseDTO::getLastModified
         );
     }
@@ -87,10 +88,10 @@ public class KitosClientService {
     /**
      * Synchronize all it-systems in use by the current municipal
      */
-    public List<ItSystemResponseDTO> fetchChangedItSystems(final UUID municipalUuid) {
+    public List<ItSystemResponseDTO> fetchChangedItSystems(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_SYSTEM_OFFSET_SETTING_KEY,
             pageAndOffset -> itSystemApi.getManyItSystemV2GetItSystems(null, null, null, null, null,
-                false, pageAndOffset.getValue().plusNanos(1000L), municipalUuid, null, null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+                false, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), municipalUuid, null, null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItSystemResponseDTO::getLastModified
             );
     }
@@ -106,7 +107,8 @@ public class KitosClientService {
         );
     }
 
-    public <T> List<T> deltaFetch(final String settingsKey, final Function<Pair<Integer, OffsetDateTime>, List<T>> getter,
+    public <T> List<T> deltaFetch(final String settingsKey,
+                                  final Function<Pair<Integer, OffsetDateTime>, List<T>> getter,
                                   final Function<T, OffsetDateTime> getLastModified) {
         final ZonedDateTime syncFrom = settingsService.getZonedDateTime(settingsKey, KITOS_DELTA_START_FROM);
         final OffsetDateTime offsetDateTime = syncFrom.toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);

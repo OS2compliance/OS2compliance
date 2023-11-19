@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.model.entity.enums.DocumentType.PROCEDURE;
@@ -53,7 +54,7 @@ public class ISO27002Replacer implements PlaceHolderReplacer {
 
     @Override
     @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
         final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
             replaceParagraph(paragraph, placeHolder.getPlaceHolder());

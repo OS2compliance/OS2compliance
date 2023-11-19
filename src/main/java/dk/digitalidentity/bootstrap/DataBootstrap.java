@@ -1,13 +1,17 @@
 package dk.digitalidentity.bootstrap;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.service.ChoiceListImporter;
+import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -22,31 +26,25 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
-import static dk.digitalidentity.Constants.SEED_VERSION_SETTING;
+import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
 @Order(100)
 @Component
+@RequiredArgsConstructor
 public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent> {
-    final ChoiceListImporter choiceImporter;
-    final ThreatCatalogImporter threatCatalogImporter;
-    final StandardTemplateImporter templateImporter;
-    final TagDao tagDao;
-    final RegisterImporter registerImporter;
-    final OS2complianceConfiguration config;
-    final SettingsService settingsService;
+    private final ChoiceListImporter choiceImporter;
+    private final ThreatCatalogImporter threatCatalogImporter;
+    private final StandardTemplateImporter templateImporter;
+    private final TagDao tagDao;
+    private final RegisterImporter registerImporter;
+    private final OS2complianceConfiguration config;
+    private final SettingsService settingsService;
+    private final StandardTemplateSectionDao standardTemplateSectionDao;
+    private final RiskService riskService;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
 
-    public DataBootstrap(final ChoiceListImporter choiceImporter, final ThreatCatalogImporter threatCatalogImporter, final StandardTemplateImporter templateImporter, final TagDao tagDao, final RegisterImporter registerImporter, final OS2complianceConfiguration config, final SettingsService settingsService) {
-        this.choiceImporter = choiceImporter;
-        this.threatCatalogImporter = threatCatalogImporter;
-        this.templateImporter = templateImporter;
-        this.tagDao = tagDao;
-        this.registerImporter = registerImporter;
-        this.config = config;
-        this.settingsService = settingsService;
-    }
 
     @Override
     @Transactional
@@ -55,14 +53,73 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return;
         }
         try {
-            final int currentVersion = settingsService.getInt(SEED_VERSION_SETTING, 0);
+            final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
             if (currentVersion == 0) {
                 seedV0();
-                settingsService.setInt(SEED_VERSION_SETTING, 1);
+                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, 1);
+            }
+            if (currentVersion == 1) {
+                seedV1();
+                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, 2);
+            }
+            if (currentVersion == 2) {
+                seedV2();
+                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, 3);
+            }
+            if (currentVersion == 3) {
+                seedV3();
+                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, 4);
             }
         } catch (final IOException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    private void seedV3() {
+        // Threat assessment status field, needs update (again)
+        riskService.findAll().forEach(riskService::setThreatAssessmentColor);
+    }
+
+    private void seedV2() {
+        // Threat assessment status field, we need to update them all
+        riskService.findAll().forEach(riskService::setThreatAssessmentColor);
+    }
+
+    private void seedV1() throws IOException {
+        // NSIS 4.1.4 was missing in the initial release
+        templateImporter.importStandardSections("./data/standards/nsis2_missing_section.json");
+        // And 5+ from 4.1.3 should actually have been in 4.1.4
+        final StandardTemplateSection newParent = standardTemplateSectionDao.findById("nsis_2_0_2a_414").orElseThrow();
+        standardTemplateSectionDao.findById("nsis_2_0_2a_413_5").ifPresent(s -> {
+            s.setSection("1");
+            s.setSortKey(1);
+            s.setParent(newParent);
+            newParent.getChildren().add(s);
+        });
+        standardTemplateSectionDao.findById("nsis_2_0_2a_413_6").ifPresent(s -> {
+            s.setSection("2");
+            s.setSortKey(2);
+            s.setParent(newParent);
+            newParent.getChildren().add(s);
+        });
+        standardTemplateSectionDao.findById("nsis_2_0_2a_413_7").ifPresent(s -> {
+            s.setSection("3");
+            s.setSortKey(3);
+            s.setParent(newParent);
+            newParent.getChildren().add(s);
+        });
+        standardTemplateSectionDao.findById("nsis_2_0_2a_413_Q").ifPresent(s -> {
+            s.setSection("4");
+            s.setSortKey(4);
+            s.setParent(newParent);
+            newParent.getChildren().add(s);
+        });
+        standardTemplateSectionDao.findById("nsis_2_0_2a_413_QQ").ifPresent(s -> {
+            s.setSection("5");
+            s.setSortKey(5);
+            s.setParent(newParent);
+            newParent.getChildren().add(s);
+        });
     }
 
     private void seedV0() throws IOException {

@@ -250,21 +250,21 @@
                                 <a type="button" class="btn btn-success btn-xs w-25 mb-1" th:href="'/risks/' + ${risk.id} + '/profile'">
                                     Se risikoprofil
                                 </a>
-                                <button type="button" class="btn btn-success btn-xs w-25">
+                                <a type="button" class="btn btn-success btn-xs w-25" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">
                                     Generer rapport
-                                </button>
+                                </a>
                             </div>
                         </div>
                         <div class="row">
-                            <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${tasks}, relatableId=${risk.id})}" />
+                            <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${tasks}, relatableId=${risk.id})}"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <header th:replace="~{fragments/header :: header}" />
-    <nav th:replace="~{fragments/navbar :: main (page='risikostyring')}" />
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='risikostyring')}"></nav>
 </div>
 
 <div class="modal fade" id="customThreatFormDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">

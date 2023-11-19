@@ -45,6 +45,7 @@ public interface DocumentMapper {
             @Mapping(target = "active", ignore = true),
             @Mapping(target = "positions", ignore = true),
             @Mapping(target = "properties", ignore = true),
+            @Mapping(target = "roles", ignore = true),
     })
     User fromEO(UserWriteEO userWriteEO);
 

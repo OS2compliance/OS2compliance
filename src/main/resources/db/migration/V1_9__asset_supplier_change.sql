@@ -1,0 +1,1 @@
+ALTER TABLE task_logs MODIFY current_description TEXT;

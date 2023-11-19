@@ -206,7 +206,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				Supplier supplier3 = new Supplier();
 				supplier3.setName("456 IT");
 				supplier3.setVersion(1);
-				supplier3.setCreatedBy("");// TODO
+				supplier3.setCreatedBy("");
 				supplier3.setStatus(SupplierStatus.IN_PROGRESS);
 				supplier3 = supplierDao.save(supplier3);
 

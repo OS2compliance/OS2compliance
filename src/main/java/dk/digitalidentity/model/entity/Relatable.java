@@ -37,6 +37,7 @@ import java.util.Set;
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
 @EntityListeners(AuditingEntityListener.class)
 abstract public class Relatable {
+
 	@Id
 	@GeneratedValue(strategy = GenerationType.TABLE)
 	private Long id;

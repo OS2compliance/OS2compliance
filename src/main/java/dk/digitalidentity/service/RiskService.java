@@ -25,7 +25,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.stream.Collectors;
+import java.util.Optional;
 
 @Service
 public class RiskService {
@@ -39,12 +39,20 @@ public class RiskService {
     @Autowired
     private ThreatAssessmentDao threatAssessmentDao;
 
+    public Optional<ThreatAssessment> findById(final Long assessmentId) {
+        return threatAssessmentDao.findById(assessmentId);
+    }
+
+    public List<ThreatAssessment> findAll() {
+        return threatAssessmentDao.findAll();
+    }
+
 	public RiskDTO calculateRiskFromRegisters(final Asset asset) {
 		final List<Register> registers = relationDao.findRelatedToWithType(asset.getId(), RelationType.REGISTER).stream()
 				.map(r -> r.getRelationAType() == RelationType.REGISTER ? r.getRelationAId() : r.getRelationBId())
 				.map(rid -> registerDao.findById(rid).orElse(null))
 				.filter(Objects::nonNull)
-				.collect(Collectors.toList());
+				.toList();
 
 		int highestRF = 0;
 		int highestOF = 0;
@@ -153,21 +161,12 @@ public class RiskService {
         int globalHighestprobability = -1;
         int globalHighestConsequence = -1;
         for (final ThreatAssessmentResponse threatAssessmentResponse : savedThreatAssessment.getThreatAssessmentResponses()) {
-            if (threatAssessmentResponse.getMethod().equals(ThreatMethod.ACCEPT)) {
-                continue;
-            }
-
-            boolean useResidual = false;
-            if (threatAssessmentResponse.getResidualRiskConsequence() != null && threatAssessmentResponse.getResidualRiskProbability() != null) {
-                useResidual = true;
-            }
-            final int highestConsequence = useResidual ? threatAssessmentResponse.getResidualRiskConsequence() : findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation());
-            final int probability = useResidual ? threatAssessmentResponse.getResidualRiskProbability() : threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
+            final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation());
+            final int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
 
             if (probability < 1 || highestConsequence < 1) {
                 continue;
             }
-
             final int riskScore = probability * highestConsequence;
             if (riskScore > highestRiskNotAcceptedRiskScore) {
                 highestRiskNotAcceptedRiskScore = riskScore;

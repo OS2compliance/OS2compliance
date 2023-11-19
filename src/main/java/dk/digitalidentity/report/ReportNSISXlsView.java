@@ -68,7 +68,8 @@ public class ReportNSISXlsView extends AbstractXlsView {
         doc.outputSettings(outputSettings);
         doc.select("br").before("\\n");
         doc.select("p").before("\\n");
-        final String str = doc.html().replaceAll("\\\\n", "\n");
+        doc.select("li").before("\\n");
+        final String str = doc.html().replaceAll("\\\\n", "\n").replaceAll("&nbsp;", " ");
         return Jsoup.clean(str, "", Whitelist.none(), outputSettings);
     }
 

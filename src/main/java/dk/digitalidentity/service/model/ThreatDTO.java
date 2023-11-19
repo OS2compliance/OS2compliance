@@ -17,12 +17,23 @@ public class ThreatDTO {
     private final String threat;
     private final boolean notRelevant;
     private final int probability;
+
+    // Consequence of registered
+    // Fortrolighed
     private final int rf;
+    // Integritet
     private final int ri;
+    // Tilgængelighed
     private final int rt;
+
+    // Consequence of organization
+    // Fortrolighed
     private final int of;
+    // Integritet
     private final int oi;
+    // Tilgængelighed
     private final int ot;
+
     private final String problem;
     private final String existingMeasures;
     private final ThreatMethod method;

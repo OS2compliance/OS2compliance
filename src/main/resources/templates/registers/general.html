@@ -106,7 +106,7 @@
                                     </td>
                                     <td th:text="${relatedAsset.asset.supplier?.name}"></td>
                                     <td th:text="${relatedAsset.asset.DataProcessingAgreementStatus.message}"></td>
-                                    <td th:text="${relatedAsset.asset.supplier.country}"></td>
+                                    <td th:text="${relatedAsset.asset.supplier?.country}"></td>
                                     <td th:text="${relatedAsset.thirdCountryTransfer?.message}"></td>
                                     <td th:text="${@choiceService.getCaption(relatedAsset.acceptanceBasis, '')}"></td>
                                     <td title="Fjern relation">

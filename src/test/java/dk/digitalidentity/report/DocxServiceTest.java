@@ -1,7 +1,10 @@
 package dk.digitalidentity.report;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.dao.RegisterDao;
+import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
+import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -14,19 +17,34 @@ import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.InformationPassedOn;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.report.replacers.Article30Replacer;
 import dk.digitalidentity.report.replacers.CommonPropertiesReplacer;
 import dk.digitalidentity.report.replacers.ISO27001Replacer;
 import dk.digitalidentity.report.replacers.ISO27002Replacer;
+import dk.digitalidentity.report.replacers.ThreatAssessmentReplacer;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.RiskService;
+import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.TaskService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -37,6 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
@@ -46,21 +65,30 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
 
+/**
+ * Unit test for {@link DocxService}
+ * And replacers...
+ */
 @SpringBootTest
 @ContextConfiguration(classes = {DocxService.class, DocsReportGeneratorComponent.class,
-    CommonPropertiesReplacer.class, Article30Replacer.class, ISO27001Replacer.class, ISO27002Replacer.class, DocsReportGeneratorComponent.class})
+    CommonPropertiesReplacer.class, Article30Replacer.class, ISO27001Replacer.class, ISO27002Replacer.class, DocsReportGeneratorComponent.class,
+    ThreatAssessmentReplacer.class, ScaleService.class, RiskService.class})
 @EnableConfigurationProperties(value = OS2complianceConfiguration.class)
 @TestPropertySource("/application-test.properties")
 @ActiveProfiles("test")
@@ -74,15 +102,40 @@ public class DocxServiceTest {
     @MockBean
     private StandardTemplateDao standardTemplateDaoMock;
     @MockBean
-    private AssetService assetService;
+    private AssetService assetServiceMock;
     @MockBean
     private RelationService relationServiceMock;
+    @MockBean
+    private RelationDao relationDaoMock;
+    @MockBean
+    private RegisterDao registerDaoMock;
+    @MockBean
+    private ThreatAssessmentDao threatAssessmentDaoMock;
+    @MockBean
+    private TaskService taskServiceMock;
+    @SpyBean
+    private RiskService riskServiceMock;
+    @MockBean
+    private SettingsService settingsServiceMock;
 
     @BeforeEach
     public void setup() {
+        mockStandards();
+        mockThreatAssessment();
+    }
+
+    private void mockThreatAssessment() {
+        doReturn(Optional.of(createDummyThreatAssessment())).when(riskServiceMock).findById(any());
+        doReturn(Optional.of(createDummyAssets().get(0))).when(assetServiceMock).get(any());
+        doReturn("scale-1-4").when(settingsServiceMock).getString(eq("scale"), any());
+        doReturn(List.of(createDummyTask(), createAsset(0))).when(relationServiceMock).findAllRelatedTo(any());
+        doReturn(false).when(taskServiceMock).isTaskDone(any());
+    }
+
+    private void mockStandards() {
         // This giant wall of mock, makes sure all choices, assets and registers needed for generating a report is present
         // when the service needs them.
-        doReturn(createDummyAssets()).when(assetService).findRelatedTo(any());
+        doReturn(createDummyAssets()).when(assetServiceMock).findRelatedTo(any());
         doReturn(Arrays.asList(createDummyRegister(1), createDummyRegister(2)))
             .when(registerServiceMock).findAll();
         doReturn(Optional.of(ChoiceValue.builder().caption("10-100").build())).when(choiceServiceMock).getValue("dp-access-count-10-100");
@@ -127,7 +180,7 @@ public class DocxServiceTest {
     @Test
     public void canReplaceISO27001() throws IOException {
         try (final XWPFDocument doc = documentService.readDocument("reports/ISO27001/ISO27001.docx")) {
-            documentService.replacePlaceHolders(doc);
+            documentService.replacePlaceHolders(doc, Collections.emptyMap());
             final FileOutputStream out = new FileOutputStream("test-result-iso27001.docx");
             doc.write(out);
             out.close();
@@ -142,7 +195,7 @@ public class DocxServiceTest {
     @Test
     public void canReplaceISO27002() throws IOException {
         try (final XWPFDocument doc = documentService.readDocument("reports/ISO27002/ISO27002.docx")) {
-            documentService.replacePlaceHolders(doc);
+            documentService.replacePlaceHolders(doc, Collections.emptyMap());
             final FileOutputStream out = new FileOutputStream("test-result-iso27002.docx");
             doc.write(out);
             out.close();
@@ -157,8 +210,18 @@ public class DocxServiceTest {
     @Test
     public void canReplaceArticle30() throws IOException {
         try (final XWPFDocument doc = documentService.readDocument("reports/article30/main.docx")) {
-            documentService.replacePlaceHolders(doc);
+            documentService.replacePlaceHolders(doc, Collections.emptyMap());
             final FileOutputStream out = new FileOutputStream("test-result-article30.docx");
+            doc.write(out);
+            out.close();
+        }
+    }
+
+    @Test
+    public void canReplaceThreatAssessment() throws IOException {
+        try (final XWPFDocument doc = documentService.readDocument("reports/risk/main.docx")) {
+            documentService.replacePlaceHolders(doc, Map.of(PARAM_RISK_ASSESSMENT_ID, "1"));
+            final FileOutputStream out = new FileOutputStream("test-result-threat-assessment.docx");
             doc.write(out);
             out.close();
         }
@@ -298,12 +361,70 @@ public class DocxServiceTest {
         return IntStream.range(1, 4).mapToObj(this::createAsset).collect(Collectors.toList());
     }
 
+    private Task createDummyTask() {
+        final Task t = new Task();
+        t.setTaskType(TaskType.TASK);
+        t.setNextDeadline(LocalDate.now());
+        t.setDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris convallis augue non lectus eleifend, eget sagittis nisl iaculis. Nam in mi at eros maximus mattis. Donec tempus congue diam eu pellentesque.");
+        t.setName("Et opgave navn");
+        t.setResponsibleUser(User.builder().name("En Bruger").build());
+        t.setResponsibleOu(OrganisationUnit.builder().name("En afdeling").build());
+        return t;
+    }
+
+    private static ThreatAssessment createDummyThreatAssessment() {
+        final ThreatCatalogThreat tct1 = new ThreatCatalogThreat();
+        final ThreatCatalogThreat tct2 = new ThreatCatalogThreat();
+        final ThreatCatalog catalog = new ThreatCatalog();
+        final ThreatAssessment assessment = new ThreatAssessment();
+        assessment.setName("IT-system dummy");
+        assessment.setAssessment(RiskAssessment.RED);
+        assessment.setThreatAssessmentType(ThreatAssessmentType.ASSET);
+        tct1.setThreatCatalog(catalog);
+        tct1.setIdentifier("t1");
+        tct1.setThreatType("En type");
+        tct1.setDescription("Neque porro quisquam est qui dolorem ipsum quia dolor sit amet, consectetur, adipisci velit..");
+        tct2.setThreatType("En anden type");
+        tct2.setThreatCatalog(catalog);
+        tct2.setIdentifier("t2");
+        tct2.setDescription("There is no one who loves pain itself, who seeks after it and wants to have it, simply because it is pain..");
+        catalog.setIdentifier("test");
+        catalog.setThreats(Arrays.asList(tct1, tct2));
+        assessment.setThreatCatalog(catalog);
+        assessment.setThreatAssessmentResponses(
+            List.of(createResponseWithResidual(tct1), createResponse(tct2))
+        );
+        assessment.setCustomThreats(Collections.emptyList());
+        return assessment;
+    }
+
+    private static ThreatAssessmentResponse createResponseWithResidual(final ThreatCatalogThreat tct) {
+        final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setMethod(ThreatMethod.MITIGER);
+        response.setProbability(3);
+        response.setResidualRiskProbability(2);
+        response.setIntegrityOrganisation(3);
+        response.setResidualRiskConsequence(1);
+        response.setThreatCatalogThreat(tct);
+        return response;
+    }
+    private static ThreatAssessmentResponse createResponse(final ThreatCatalogThreat tct) {
+        final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setMethod(ThreatMethod.ACCEPT);
+        response.setProbability(4);
+        response.setIntegrityOrganisation(3);
+        response.setThreatCatalogThreat(tct);
+        return response;
+    }
+
     private Asset createAsset(final int idx) {
         final Asset asset = new Asset();
         asset.setName("Asset name " + idx);
         asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.YES);
         final DataProcessing dataProcessing = new DataProcessing();
         asset.setDataProcessing(dataProcessing);
+        asset.setCriticality(Criticality.CRITICAL);
+        asset.setEmergencyPlanLink("https://aarhusbryghus.dk/");
 
         final Supplier supplier = new Supplier();
         supplier.setName("Supplier " + idx);

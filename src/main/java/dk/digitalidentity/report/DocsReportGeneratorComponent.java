@@ -4,6 +4,7 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.util.Map;
 
 @Component
 public class DocsReportGeneratorComponent {
@@ -13,9 +14,9 @@ public class DocsReportGeneratorComponent {
         this.docxService = docxService;
     }
 
-    public XWPFDocument generateDocument(final String inputFileName) throws IOException {
+    public XWPFDocument generateDocument(final String inputFileName, final Map<String, String> parameters) throws IOException {
         final XWPFDocument document = docxService.readDocument(inputFileName);
-        docxService.replacePlaceHolders(document);
+        docxService.replacePlaceHolders(document, parameters);
         document.enforceUpdateFields();
         return document;
     }

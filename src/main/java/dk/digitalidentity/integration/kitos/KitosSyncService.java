@@ -204,6 +204,11 @@ public class KitosSyncService {
     }
 
     private void createAsset(final ItSystemResponseDTO responseDTO) {
+        final Supplier supplier = findOrCreateSupplier(responseDTO);
+        if (supplier == null) {
+            log.warn("Supplier for " + responseDTO.getName() + " not found skipping record");
+            return;
+        }
         final Asset asset = new Asset();
         asset.getProperties().add(
             Property.builder()
@@ -217,7 +222,7 @@ public class KitosSyncService {
         asset.setDescription(responseDTO.getDescription());
         asset.setAssetType(AssetType.IT_SYSTEM);
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
-        asset.setSupplier(findOrCreateSupplier(responseDTO));
+        asset.setSupplier(supplier);
         asset.setCriticality(Criticality.NON_CRITICAL);
         asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
         assetService.create(asset);

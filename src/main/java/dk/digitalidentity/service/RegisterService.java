@@ -1,6 +1,7 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
+import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
@@ -17,10 +18,12 @@ public class RegisterService {
 
     private final RegisterDao registerDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
+    private final DataProcessingDao dataProcessingDao;
 
-    public RegisterService(final RegisterDao registerDao, final ConsequenceAssessmentDao consequenceAssessmentDao) {
+    public RegisterService(final RegisterDao registerDao, final ConsequenceAssessmentDao consequenceAssessmentDao, final DataProcessingDao dataProcessingDao) {
         this.registerDao = registerDao;
         this.consequenceAssessmentDao = consequenceAssessmentDao;
+        this.dataProcessingDao = dataProcessingDao;
     }
 
     public Optional<Register> findById(final Long id) {
@@ -59,6 +62,8 @@ public class RegisterService {
 
     @Transactional
     public void delete(final Register register) {
+        dataProcessingDao.delete(register.getDataProcessing());
+        consequenceAssessmentDao.delete(register.getConsequenceAssessment());
         registerDao.delete(register);
     }
 }

@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessment;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import org.springframework.data.domain.Page;
@@ -77,6 +78,10 @@ public class AssetService {
             .collect(Collectors.toList());
     }
 
+    public List<Asset> findBySupplier(final Supplier supplier) {
+        return assetDao.findBySupplier(supplier);
+    }
+
     /**
      * Will find the main supplier {@link AssetSupplierMapping} if none is found a default placeholder will be returned
      */
@@ -113,7 +118,7 @@ public class AssetService {
 
 
     private static void addDefaultSubSupplier(final Asset saved) {
-        if (saved.getSupplier() != null && saved.getSuppliers() == null || saved.getSuppliers().isEmpty()) {
+        if (saved.getSupplier() != null && saved.getSuppliers().isEmpty()) {
             saved.getSuppliers().add(AssetSupplierMapping.builder()
                 .asset(saved)
                 .supplier(saved.getSupplier())

@@ -9,6 +9,8 @@ import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFNumbering;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
+import org.apache.poi.xwpf.usermodel.XWPFTableCell;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
 import org.apache.xmlbeans.XmlException;
 import org.apache.xmlbeans.XmlObject;
@@ -21,6 +23,7 @@ import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTNumbering;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class DocxUtil {
     public static String cTAbstractNumBulletXML =
@@ -47,15 +50,21 @@ public class DocxUtil {
                     if (part.getElementType() != BodyElementType.CONTENTCONTROL && part.getPartType() != BodyType.CONTENTCONTROL && part.getBody() != null) {
                         final List<XWPFParagraph> paragraphs = part.getBody().getParagraphs();
                         for (final XWPFParagraph paragraph : paragraphs) {
-                            paragraph.getRuns().stream()
-                                .filter(r -> placeHolder.equalsIgnoreCase(r.getText(0)))
-                                .findFirst().ifPresent(p -> result.set(paragraph));
+                            final String text = getParagraphText(paragraph);
+                            if (placeHolder.equalsIgnoreCase(text)) {
+                                result.set(paragraph);
+                                break;
+                            }
                         }
                     }
                 }
             }
         );
         return result.get();
+    }
+
+    public static String getParagraphText(final XWPFParagraph paragraph) {
+        return paragraph.getRuns().stream().map(r -> r.getText(0)).collect(Collectors.joining());
     }
 
     public static XWPFRun addTextRun(final String text, final XWPFParagraph paragraph) {
@@ -124,6 +133,20 @@ public class DocxUtil {
         return StringUtils.replaceOnce(cTAbstractNumBulletXML, "#REPLACE_NUM_ID#", "" + findNextAvailNumber(document));
     }
 
+    /**
+     * Get or create a new cell in the given row
+     */
+    public static XWPFTableCell getCell(final XWPFTableRow row, final int cellIdx) {
+        final XWPFTableCell cell = row.getCell(cellIdx);
+        if (cell == null) {
+            return row.addNewTableCell();
+        }
+        return cell;
+    }
+
+    /**
+     * Generate a new numbering element in the document, and return the created number index
+     */
     public static BigInteger generateNumbering(final XWPFDocument document, final String abstractNumXml) throws XmlException {
         final CTNumbering cTNumbering = CTNumbering.Factory.parse(abstractNumXml);
         final CTAbstractNum cTAbstractNum = cTNumbering.getAbstractNumArray(0);
@@ -135,6 +158,9 @@ public class DocxUtil {
         return numbering.addNum(abstractNumID);
     }
 
+    /**
+     * Looks through all numberings in the document and returns the next available numbering index
+     */
     public static BigInteger findNextAvailNumber(final XWPFDocument document) {
         XWPFNumbering numbering = document.getNumbering();
         if (numbering == null) {

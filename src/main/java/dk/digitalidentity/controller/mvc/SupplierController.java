@@ -4,14 +4,16 @@ import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.SupplierDao;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
-import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.RelationService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -43,14 +45,16 @@ public class SupplierController {
     private final AssetOversightDao assetOversightDao;
 
     private final RelationService relationService;
+    private final AssetService assetService;
 
-	public SupplierController(final SupplierDao supplierDao, final RelationDao relationDao, final ContactDao contactDao, final AssetOversightDao assetOversightDao, final RelationService relationService) {
+	public SupplierController(final SupplierDao supplierDao, final RelationDao relationDao, final ContactDao contactDao, final AssetOversightDao assetOversightDao, final RelationService relationService, final AssetService assetService) {
 		this.supplierDao = supplierDao;
 		this.relationDao = relationDao;
 		this.contactDao = contactDao;
 		this.assetOversightDao = assetOversightDao;
 		this.relationService = relationService;
-	}
+        this.assetService = assetService;
+    }
 
 	@GetMapping
 	public String suppliersList() {
@@ -67,7 +71,8 @@ public class SupplierController {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 
-        final List<Relatable> assets = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
+        final List<Asset> assetsDirect = assetService.findBySupplier(supplier);
+        final List<Relatable> assetRelated = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
         final List<Relatable> documents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
         final List<Relatable> tasks = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
 
@@ -77,7 +82,8 @@ public class SupplierController {
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);
-        model.addAttribute("assets", assets);
+        model.addAttribute("assetsDirect", assetsDirect);
+        model.addAttribute("assetsRelated", assetRelated);
 		model.addAttribute("contacts", contacts);
 		return "suppliers/view";
 	}

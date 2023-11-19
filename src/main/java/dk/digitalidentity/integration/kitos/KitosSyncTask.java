@@ -39,10 +39,13 @@ public class KitosSyncTask {
         }
         log.info("Starting Kitos synchronisation");
         final UUID municipalUuid = kitosClientService.lookupMunicipalUuid(configuration.getMunicipal().getCvr());
-
-        final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid);
         final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
-        final List<ItContractResponseDTO> itContracts = kitosClientService.fetchChangedItContracts(municipalUuid);
+
+        // We only fetch it-systems that the municipal is using, so when the usages have changed, it can mean that
+        // the usage points to an it-system we haven't fetched because they weren't using it earlier... so reimport for now
+        final boolean reimport = !changedItSystemUsages.isEmpty();
+        final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
+        final List<ItContractResponseDTO> itContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
         if (!changedItSystems.isEmpty() || !changedItSystemUsages.isEmpty() || !itContracts.isEmpty()) {
             final List<RoleOptionResponseDTO> roles = kitosClientService.listRoles(municipalUuid);
             final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);

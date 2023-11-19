@@ -1,12 +1,3 @@
-function setTableHeights() {
-    var tables = document.querySelectorAll('.table-profile');
-    var tableContainers = document.querySelectorAll('.table-container-profile');
-    tableContainers.forEach(function(container, index) {
-        var width = container.offsetWidth;
-        tables[index].style.height = width + 'px';
-    });
-}
-
 function setColors() {
     var fields = document.querySelectorAll('.riskScoreField');
     fields.forEach(function(field, index) {
@@ -39,9 +30,9 @@ function setBeforeNumbers() {
     riskProfiles.forEach(function(riskProfile, index) {
         var matchingField = document.getElementById('before' + riskProfile.consequence + ',' + riskProfile.probability);
         if (matchingField.textContent.trim() === "") {
-            matchingField.textContent = riskProfile.index;
+            matchingField.textContent = (riskProfile.index + 1);
         } else {
-            matchingField.textContent = matchingField.textContent + ', ' + riskProfile.index;
+            matchingField.textContent = matchingField.textContent + ', ' + (riskProfile.index+1);
         }
     });
 }
@@ -51,7 +42,7 @@ function setAfterNumbers() {
         var residualValues = false;
         var consequence = riskProfile.consequence;
         var probability = riskProfile.probability;
-        if (riskProfile.residualConsequence != -1 && riskProfile.residualProbability != -1) {
+        if (riskProfile.residualConsequence !== -1 && riskProfile.residualProbability !== -1) {
             consequence = riskProfile.residualConsequence;
             probability = riskProfile.residualProbability;
             residualValues = true;
@@ -59,15 +50,14 @@ function setAfterNumbers() {
 
         var matchingField = document.getElementById('after' + consequence + ',' + probability);
         if (matchingField.textContent.trim() === "") {
-            matchingField.textContent = riskProfile.index + (residualValues ? '*' : '');
+            matchingField.textContent = (riskProfile.index+1) + (residualValues ? '*' : '');
         } else {
-            matchingField.textContent = matchingField.textContent + ', ' + riskProfile.index + (residualValues ? '*' : '');
+            matchingField.textContent = matchingField.textContent + ', ' + (riskProfile.index+1) + (residualValues ? '*' : '');
         }
     });
 }
 
 function profilePageLoaded() {
-    setTableHeights();
     setColors();
     setBeforeNumbers();
     setAfterNumbers();

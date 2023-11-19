@@ -48,8 +48,9 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
             authorities.add(new SamlGrantedAuthority(a.getAuthority()));
         }
         authorities.add(new SamlGrantedAuthority(Roles.AUTHENTICATED));
+        // Add roles coming directly from the database.
+        user.getRoles().forEach(r -> authorities.add(new SamlGrantedAuthority(r)));
         tokenUser.setAuthorities(authorities);
-
     }
 
     private User extractUser(final String principal) {

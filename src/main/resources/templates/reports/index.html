@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 <script th:src="@{/js/register/form.js}" defer></script>
 
 <body class="jumping">
@@ -65,13 +65,18 @@
                         </div>
                         <p class="mb-1">Fortegnelse over behandlingsaktiviteter</p>
                     </a>
-                    <a href="#" class="list-group-item list-group-item-action">
+                    <button href="#" class="list-group-item list-group-item-action" data-bs-toggle="dropdown" aria-expanded="false">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">Tag-rapport</h5>
                             <i class="pli-download-2 fs-3 text-info"></i>
+
                         </div>
-                        <p class="mb-1"></p>
-                    </a>
+
+                        <p class="mb-1">Kontrol liste</p>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end">
+                        <li th:each="tag : ${tags}"><a class="dropdown-item" th:text="${tag.value}" onclick="printTagReport(this)" th:data-tagid="${tag.id}"></a></li>
+                    </ul>
                 </div>
               </div>
             </div>
@@ -80,23 +85,30 @@
       </div>
     </div>
   </section>
-  <header th:replace="~{fragments/header :: header}" />
-  <nav th:replace="~{fragments/navbar :: main (page='Rapport')}" />
+  <header th:replace="~{fragments/header :: header}"></header>
+  <nav th:replace="~{fragments/navbar :: main (page='Rapport')}"></nav>
 </div>
 
 
 
-<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/footer :: scripts}"></div>
 
 
 
 <script th:inline="javascript">
 		/*<![CDATA[*/
+        function printTagReport(item) {
+            const tagId = item.dataset.tagid;
+            fetch(`/reports/tags?tag=${tagId}`)
+                .then(response => response.text()
+                    .then(data => {
+                        var win = window.open("", "Print Rapport", "height=600,width=800");
+                        win.document.write(data);
+                        win.print();
+                    }))
+                .catch(error => console.log(error));
 
-		/*[+
-
-		+]*/
-
+        }
 
 		/*]]>*/
 	</script>

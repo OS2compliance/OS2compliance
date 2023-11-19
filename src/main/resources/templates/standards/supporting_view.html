@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
 <link rel="stylesheet" th:href="@{/css/standard/supporting_view.css}" />
 
@@ -62,7 +62,7 @@
                                                     <td th:if="${isNSIS}" th:text="${section.securityLevel}" style="font-weight: bold;"></td>
                                                     <td th:id="'reasonTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.reason}" style="font-weight: bold;"></td>
                                                     <td th:id="'dateTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${#temporals.format(section.standardSection.updatedAt, 'dd-MM-yyyy')}" style="font-weight: bold;"></td>
-                                                    <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.userId}" style="font-weight: bold;"></td>
+                                                    <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.name}" style="font-weight: bold;"></td>
                                                     <td th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}">
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED == section.standardSection.status} " class="d-block badge bg-yellow-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS == section.standardSection.status} " class="d-block badge bg-blue-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
@@ -131,17 +131,17 @@
 
                                                       <div class="row mt-3">
                                                             <th:block th:each="mapEntry : ${relationMap}" th:if="${mapEntry.key} == ${section.standardSection.id}">
-                                                                <div th:replace="~{fragments/relations :: relationsfragment (statIndex=${stat.index} + '.' + ${statSection.index}, relations=${mapEntry.value}, completed=false, relatableId=${section.standardSection.id}, customDelete=true)}" />
+                                                                <div th:replace="~{fragments/relations :: relationsfragment (statIndex=${stat.index} + '.' + ${statSection.index}, relations=${mapEntry.value}, completed=false, relatableId=${section.standardSection.id}, customDelete=true)}"></div>
                                                             </th:block>
                                                       </div>
                                                     </td>
                                                 </tr>
                                                 <tr>
-                                                    <td style="padding: 0 px; border-right: 1px solid black;">
-                                                        <hr style="margin: 0px;"/>
+                                                    <td style="padding: 0; border-right: 1px solid black;">
+                                                        <hr style="margin: 0;"/>
                                                     </td>
-                                                    <td style="padding: 0 px;" colspan="5">
-                                                        <hr style="margin: 0px;"/>
+                                                    <td style="padding: 0;" colspan="5">
+                                                        <hr style="margin: 0;"/>
                                                     </td>
                                                 </tr>
                                             </th:block>
@@ -155,15 +155,15 @@
             </div>
         </div>
     </section>
-    <header th:replace="~{fragments/header :: header}" />
-    <nav th:replace="~{fragments/navbar :: main (page='standarder')}" />
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
 </div>
 
-<div th:replace="~{fragments/addRelation :: addRelation(customAddRelationBtn = true)}" />
+<div th:replace="~{fragments/addRelation :: addRelation(customAddRelationBtn = true)}"></div>
 
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
 <script type="text/javascript" th:src="@{/js/ckeditor/ckeditor.js}" defer></script>
-<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/footer :: scripts}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

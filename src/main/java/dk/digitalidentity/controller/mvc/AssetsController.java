@@ -143,7 +143,10 @@ public class AssetsController {
         final List<Relatable> relatedAssets = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
 		final List<Relatable> registers = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.REGISTER).toList();
 		final List<Relatable> documents = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
-		final List<Relatable> threatAssessments = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT).collect(Collectors.toList());
+		final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
+            .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+            .map(ThreatAssessment.class::cast)
+            .collect(Collectors.toList());
 		final List<Relatable> tasks = relationService.findAllRelatedTo(asset).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
 
 		final ChoiceList acceptListIdentifiers = choiceService.findChoiceList("dp-supplier-accept-list")
@@ -227,13 +230,13 @@ public class AssetsController {
         final boolean threatExists = !threatAssessments.isEmpty();
         model.addAttribute("threatExists", threatExists);
         if (threatExists) {
-            final ThreatAssessment newestThreatAssessment = (ThreatAssessment) threatAssessments.get(0);
+            final ThreatAssessment newestThreatAssessment = threatAssessments.get(0);
             model.addAttribute("risk", newestThreatAssessment);
             model.addAttribute("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("riskProfiles", riskService.buildRiskProfileDTOs(newestThreatAssessment));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
-            model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(newestThreatAssessment, true));
+            model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, true));
         }
 
 		return "assets/view";

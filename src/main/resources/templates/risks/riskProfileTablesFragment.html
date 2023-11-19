@@ -6,7 +6,7 @@
             <div class="col-sm-12">
                 <div class="vertical-axis-label">Konsekvens</div>
                 <div class="table-container-profile">
-                    <table class="table-bordered table-profile" id="riskProfileBefore" style="max-width: 700px; max-height: 700px;">
+                    <table class="table-bordered table-profile" id="riskProfileBefore" style="max-width: 700px; height: 350px;">
                         <tr th:each="consequence : ${reversedScale}" class="tr-profile">
                             <td th:text="${consequence}" class="headerStyle verticalHeader td-profile"></td>
                             <td th:each="probability : ${#lists.sort(reversedScale)}" th:id="'before' + ${consequence} + ',' + ${probability}" class="td-profile riskScoreField" th:attr="data-consequence=${consequence}, data-probability=${probability}"></td>
@@ -25,7 +25,7 @@
             <div class="col-sm-12">
                 <div class="vertical-axis-label">Konsekvens</div>
                 <div class="table-container-profile">
-                    <table class="table-bordered table-profile" id="riskProfileAfter" style="max-width: 700px; max-height: 700px;">
+                    <table class="table-bordered table-profile" id="riskProfileAfter" style="max-width: 700px; height: 350px;">
                         <tr th:each="consequence : ${reversedScale}" class="tr-profile">
                             <td th:text="${consequence}" class="headerStyle verticalHeader td-profile"></td>
                             <td th:each="probability : ${#lists.sort(reversedScale)}" th:id="'after' + ${consequence} + ',' + ${probability}" class="td-profile riskScoreField" th:attr="data-consequence=${consequence}, data-probability=${probability}"></td>

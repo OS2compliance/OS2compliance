@@ -239,7 +239,7 @@
 					<layout>ZIP</layout>
 					<addResources>true</addResources>
 					<directories>
-						<directory>${basedir}/config</directory>
+						<directory>${basedir}/security</directory>
 					</directories>
 					<image>
 						<env>

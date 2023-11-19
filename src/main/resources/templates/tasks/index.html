@@ -212,7 +212,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(task =>
-                    [ task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition === null ? task.taskRepetition : "", task.taskResult, task.completed ]
+                    [ task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed ]
                 ),
                 total: data => data.totalCount
             },

@@ -1,7 +1,9 @@
 package dk.digitalidentity.model.entity;
 
+import dk.digitalidentity.config.StringListNullSafeConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Index;
@@ -43,6 +45,10 @@ public class User {
 
     @Column
     private Boolean active;
+
+    @Column
+    @Convert(converter = StringListNullSafeConverter.class)
+    private Set<String> roles;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

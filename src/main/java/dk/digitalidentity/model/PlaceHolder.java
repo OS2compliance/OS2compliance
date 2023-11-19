@@ -8,7 +8,8 @@ public enum PlaceHolder {
     DATE("{dato}"),
     ACTIVITIES("{behandlingsaktiviteter}"),
     STANDARDS("{standards}"),
-    ISO27002("{iso27002}");
+    ISO27002("{iso27002}"),
+    RISK_ASSESSMENT("{risk_assessment}");
 
     private final String placeHolder;
 

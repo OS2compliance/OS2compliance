@@ -3,14 +3,13 @@ package dk.digitalidentity.report.replacers;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.PlaceHolder;
 import org.apache.commons.lang3.ObjectUtils;
-import org.apache.poi.xwpf.usermodel.BodyElementType;
-import org.apache.poi.xwpf.usermodel.BodyType;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.util.Map;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.model.PlaceHolder.DATE;
@@ -30,7 +29,7 @@ public class CommonPropertiesReplacer implements PlaceHolderReplacer {
     }
 
     @Override
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
         document.getBodyElementsIterator().forEachRemaining(
                 part -> {
                     if (part.getBody() != null) {

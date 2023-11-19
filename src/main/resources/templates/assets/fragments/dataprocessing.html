@@ -34,7 +34,7 @@
                         </thead>
                         <tbody>
                             <tr th:each="sub : ${asset.suppliers}" class="align-middle">
-                                <td>
+                                <td title="Hovedleverandør"><span th:if="${sub.supplier?.id == asset.supplier?.id}" class="pli-home me-1"></span>
                                     <span th:text="${sub.supplier.name}"></span>
                                 </td>
                                 <td th:text="${sub.service}"></td>

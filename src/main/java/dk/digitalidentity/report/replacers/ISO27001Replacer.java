@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 import static dk.digitalidentity.report.DocxUtil.addHtmlRun;
 import static dk.digitalidentity.report.DocxUtil.addTextRun;
@@ -42,7 +43,7 @@ public class ISO27001Replacer implements PlaceHolderReplacer {
 
     @Override
     @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
         final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
             replaceParagraph(paragraph, placeHolder.getPlaceHolder());

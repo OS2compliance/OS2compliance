@@ -17,6 +17,7 @@ public interface KitosConstants {
     String KITOS_RESPONSIBLE_ROLE_SETTING_KEY = "kitos_responsible_role_uuid";
 
     ZonedDateTime KITOS_DELTA_START_FROM = OffsetDateTime.of(1970, 1, 1, 0, 0, 0 ,0, ZoneOffset.UTC).toZonedDateTime();
+    OffsetDateTime KITOS_DELTA_START_FROM_OFFSET = OffsetDateTime.of(1970, 1, 1, 0, 0, 0 ,0, ZoneOffset.UTC).toZonedDateTime().toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
 
     Integer PAGE_SIZE = 100;
 

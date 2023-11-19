@@ -236,7 +236,6 @@ public class TasksController {
         if (StringUtils.isEmpty(dto.comment().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal angives en kommentar ved udførsel.");
         }
-
         final TaskLog taskLog = new TaskLog();
         taskLog.setName(task.getName());
         taskLog.setCompleted(LocalDate.now());
@@ -245,6 +244,7 @@ public class TasksController {
         taskLog.setCurrentDescription(task.getDescription());
         taskLog.setComment(dto.comment());
         taskLog.setResponsibleOUName(nullSafe(() -> task.getResponsibleOu().getName()));
+        taskLog.setResponsibleUserName(user.getName());
         taskLog.setResponsibleUserUserId(user.getUserId());
         taskLog.setTaskResult(dto.taskResult());
 

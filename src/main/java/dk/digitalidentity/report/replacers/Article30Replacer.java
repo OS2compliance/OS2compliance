@@ -30,6 +30,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -40,6 +41,7 @@ import static dk.digitalidentity.report.DocxUtil.addBoldTextRun;
 import static dk.digitalidentity.report.DocxUtil.addBulletList;
 import static dk.digitalidentity.report.DocxUtil.addTextRun;
 import static dk.digitalidentity.report.DocxUtil.advanceCursor;
+import static dk.digitalidentity.report.DocxUtil.getCell;
 import static dk.digitalidentity.report.DocxUtil.setCursorToNextStartToken;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
@@ -64,12 +66,10 @@ public class Article30Replacer implements PlaceHolderReplacer {
 
     @Override
     @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
         final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
             replaceParagraph(paragraph, placeHolder.getPlaceHolder());
-        } else {
-            log.warn("No paragraph found for " + placeHolder.getPlaceHolder());
         }
     }
 
@@ -292,14 +292,6 @@ public class Article30Replacer implements PlaceHolderReplacer {
                 .map(e -> nullSafe(() -> e.getAcceptanceBasis(), "")).orElse(""));
         }
 
-    }
-
-    private static XWPFTableCell getCell(final XWPFTableRow row, final int cellIdx) {
-        final XWPFTableCell cell = row.getCell(cellIdx);
-        if (cell == null) {
-            return row.addNewTableCell();
-        }
-        return cell;
     }
 
     private static XWPFParagraph insertNormalParagraph(final XWPFDocument document, final XmlCursor cursor) {

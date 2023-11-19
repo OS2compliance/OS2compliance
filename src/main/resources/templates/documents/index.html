@@ -167,7 +167,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(document =>
-                    [ document.id, document.name, document.documentType, document.responsibleUserId, document.nextRevision, document.status ]
+                    [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status ]
                 ),
                 total: data => data.totalCount
             },

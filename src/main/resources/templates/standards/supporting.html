@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
 
 <div id="root" class="root mn--max hd--expanded">
@@ -41,12 +41,12 @@
             </div>
         </div>
     </section>
-    <header th:replace="~{fragments/header :: header}" />
-    <nav th:replace="~{fragments/navbar :: main (page='standarder')}" />
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
 </div>
 
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
-<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/footer :: scripts}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

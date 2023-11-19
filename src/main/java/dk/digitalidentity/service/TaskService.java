@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
@@ -25,7 +26,7 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 @Slf4j
 public class TaskService {
  	@Autowired
-	TaskDao taskDao;
+	private TaskDao taskDao;
 	@Autowired
 	private SettingsService settingsService;
     @Autowired
@@ -45,6 +46,12 @@ public class TaskService {
     public List<Task> findTasksNearingDeadlines(final boolean shouldNotify){
         return findTasksNearingDeadlines(shouldNotify, null);
     }
+
+    @Transactional
+    public List<Task> allTasksWithTag(final Long tagId) {
+        return taskDao.findByTag(tagId);
+    }
+
     @Transactional
     public List<Task> findTasksNearingDeadlines(Boolean shouldNotify, @Nullable final User user){
         try{
@@ -66,6 +73,19 @@ public class TaskService {
     @Transactional
     public Task createTask(final Task task) {
         return taskDao.save(task);
+    }
+
+    public boolean isTaskDone(final Task task) {
+        if (task.getLogs().isEmpty()) {
+            return false;
+        }
+        return task.getTaskType() == TaskType.TASK;
+    }
+
+    public List<TaskDTO> buildRelatedTasks(final List<ThreatAssessment> threatAssessments, final boolean onlyNotCompleted) {
+        return threatAssessments.stream()
+            .flatMap(a -> buildRelatedTasks(a, onlyNotCompleted).stream())
+            .collect(Collectors.toList());
     }
 
     public List<TaskDTO> buildRelatedTasks(final ThreatAssessment threatAssessment, final boolean onlyNotCompleted) {

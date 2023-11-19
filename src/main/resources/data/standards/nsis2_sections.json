@@ -622,45 +622,53 @@
     "description": "Ledelsessystemet for ID-tjenesten skal være certificeret efter [ISO 27001] standarden eller det skal på tilsvarende måde kunne dokumenteres efterlevelsen af krav til informationssikkerhedsledelse.",
     "sortKey": 4
   },
+
   {
-    "section": "5",
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_413",
+    "section": "4.1.4",
+    "description": "Dokumentation og registerføring",
+    "sortKey": 414
+  },
+  {
+    "section": "1",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_5",
     "securityLevel": "Lav",
     "description": "Relevant information skal arkiveres og beskyttes i henhold til gældende lov samt god praksis inden for databeskyttelse og forvaltning.",
-    "sortKey": 5
+    "sortKey": 1
   },
   {
-    "section": "6",
+    "section": "2",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_6",
     "securityLevel": "Lav",
     "description": "Relevante oplysninger registreres og ajourføres ved hjælp af et effektivt registreringssystem, der tager hensyn til gældende lovgivning og god praksis inden for beskyttelse og opbevaring af data.",
-    "sortKey": 6
+    "sortKey": 2
   },
   {
-    "section": "7",
+    "section": "3",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_7",
     "securityLevel": "Lav",
     "description": "Informationer (herunder logs) skal opbevares og beskyttes, så længe de er nødvendige af hensyn til revision eller efterforskning af sikkerhedshændelser, under hensyntagen til lovgivningens begrænsninger, hvorefter de skal slettes sikkert.",
-    "sortKey": 7
+    "sortKey": 3
   },
   {
-    "section": "8",
+    "section": "4",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_Q",
     "securityLevel": "Betydelig",
     "description": "Som Lav.",
-    "sortKey": 8
+    "sortKey": 4
   },
   {
-    "section": "9",
+    "section": "5",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_QQ",
     "securityLevel": "Høj",
     "description": "Som Lav.",
-    "sortKey": 9
+    "sortKey": 4
   },
 
   {

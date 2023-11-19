@@ -9,6 +9,7 @@
     table-layout: fixed;
     width: 100%;
     height: 100%;
+    font-size: medium;
 }
 
 .td-profile, .tr-profile {
@@ -19,14 +20,15 @@
     background-color: darkgrey;
     color: white;
     text-align: center;
+    font-weight: bold;
 }
 
 .horizontalHeader {
-    height: 20px;
+    height: 28px;
 }
 
 .verticalHeader {
-    width: 20px;
+    width: 28px;
 }
 
 .center {

@@ -74,7 +74,12 @@
                                     <div class="card-body">
                                         <table class="col-lg-12">
                                             <tbody>
-                                            <tr th:each="asset : ${assets}">
+                                            <tr th:each="asset : ${assetsDirect}">
+                                                <td class="col-lg-12">
+                                                    <a th:text="${asset.name}" th:href="@{ '/assets/' + ${asset.id}}"></a>
+                                                </td>
+                                            </tr>
+                                            <tr th:each="asset : ${assetsRelated}">
                                                 <td class="col-lg-10">
                                                     <a th:text="${asset.name}" th:href="@{ '/assets/' + ${asset.id}}"></a>
                                                 </td>

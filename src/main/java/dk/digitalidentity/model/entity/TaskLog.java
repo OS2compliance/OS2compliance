@@ -28,6 +28,9 @@ public class TaskLog extends Relatable {
     @Column
     private String responsibleUserUserId;
 
+    @Column
+    private String responsibleUserName;
+
     @Column(name = "responsible_o_u_name")
     private String responsibleOUName;
 

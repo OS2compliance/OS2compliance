@@ -62,7 +62,7 @@
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dpiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span id="dpiaBadge" class="badge">&nbsp</span>&nbspDPIA</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${asset.tia?.assessment != null}" id="tiaBadge" class="badge"th:classappend="${asset.tia?.assessment?.name() == 'RED'} ? 'bg-red' : (${asset.tia?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspTIA</button>
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${asset.tia?.assessment != null}" id="tiaBadge" class="badge" th:classappend="${asset.tia?.assessment?.name() == 'RED'} ? 'bg-red' : (${asset.tia?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspTIA</button>
                             </li>
                         </ul>
 
