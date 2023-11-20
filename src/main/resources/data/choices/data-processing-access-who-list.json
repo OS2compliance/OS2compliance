@@ -1,0 +1,6 @@
+{
+  "identifier": "dp-access-who-list",
+  "name": "Hvem har adgang til personoplysningerne",
+  "multiSelect": true,
+  "valueIdentifiers": ["dp-access-who-empl", "dp-access-who-leaders", "dp-access-who-ext", "dp-access-self-owned", "dp-access-municipal-collective", "dp-access-who-citizens", "dp-access-who-students", "dp-access-others"]
+}

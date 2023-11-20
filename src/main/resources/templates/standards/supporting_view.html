@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}"></head>
+<body class="jumping">
+<link rel="stylesheet" th:href="@{/css/standard/supporting_view.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/standards}">Standarder</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/standards/supporting}">Understøttende standarder</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${template.name}"></li>
+                            </ol>
+                        </nav>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <table class="col-lg-12 table">
+                                    <thead>
+                                    <tr class="bg-light">
+                                        <th class="col-lg-3" style="border-right: 1px solid black;">Foranstaltning</th>
+                                        <th th:unless="${isNSIS}" class="col-lg-1">Tilvalgt /fravalgt</th>
+                                        <th th:if="${isNSIS}" class="col-lg-2">Sikkerhedsniveau</th>
+                                        <th th:class="${isNSIS} ? 'col-lg-4' : 'col-lg-5'">Note</th>
+                                        <th class="col-lg-1">Senest redigeret</th>
+                                        <th class="col-lg-1">Ansvarlig</th>
+                                        <th class="col-lg-1">Status</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                        <th:block th:each="sectionParent, stat : ${template.standardTemplateSections}">
+                                            <tr class="bg-light">
+                                                <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${sectionParent.section} + ' ' + ${sectionParent.description}"></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                                <td></td>
+                                            </tr>
+                                            <th:block th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
+                                                <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
+                                                    <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${section.section} + ' ' + ${section.description}"></td>
+                                                    <td th:unless="${isNSIS}" th:id="'selectedTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.selected} ? 'Tilvalgt' : 'Fravalgt'" style="font-weight: bold;"></td>
+                                                    <td th:if="${isNSIS}" th:text="${section.securityLevel}" style="font-weight: bold;"></td>
+                                                    <td th:id="'reasonTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.reason}" style="font-weight: bold;"></td>
+                                                    <td th:id="'dateTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${#temporals.format(section.standardSection.updatedAt, 'dd-MM-yyyy')}" style="font-weight: bold;"></td>
+                                                    <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.name}" style="font-weight: bold;"></td>
+                                                    <td th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}">
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED == section.standardSection.status} " class="d-block badge bg-yellow-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS == section.standardSection.status} " class="d-block badge bg-blue-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                    </td>
+                                                </tr>
+                                                <tr class="hidden">
+                                                    <td style="border-right: 1px solid black;"></td>
+                                                    <td colspan="5">
+                                                        <div class="row mt-3">
+                                                            <label class="col-sm-2 col-form-label">Note</label>
+                                                            <div class="col-sm-10">
+                                                                <input class="form-control reasons" th:id="'reason' + ${stat.index} + '.' + ${statSection.index}" th:value="${section.standardSection.reason}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3" th:unless="${isNSIS}">
+                                                            <div class="col-sm-2 col-form-label">Tilvalgt</div>
+                                                            <div class="col-sm-10" style="padding: 8px;">
+                                                                <input class="form-check-input selectedCheckbox" type="checkbox" th:checked="${section.standardSection.selected}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3">
+                                                            <label class="col-sm-2 col-form-label">Ansvarlig</label>
+                                                            <div class="col-sm-4">
+                                                                <select class="form-control form-select choices__input responsibleUserSelect" data-trigger="" th:id="'userSelect' + ${stat.index} + '.' + ${statSection.index}" tabindex="-1" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+                                                                    <option th:if="${section.standardSection.responsibleUser} != null" th:value="${section.standardSection.responsibleUser.uuid}" th:text="'(' + ${section.standardSection.responsibleUser.userId} + ') ' + ${section.standardSection.responsibleUser.name}"></option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3">
+                                                            <label class="col-sm-2 col-form-label">Status</label>
+                                                            <div class="col-sm-4">
+                                                                <select class="form-control statusSelect" data-trigger="" th:id="'statusSelect' + ${stat.index} + '.' + ${statSection.index}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+                                                                    <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${section.standardSection.status == status}"></option>
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3" th:unless="${isNSIS}">
+                                                            <label class="col-sm-2 col-form-label">Efterlevelse af kravet</label>
+                                                            <div class="col-sm-10" onclick="editField(this)" data-type="DESCRIPTION" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+                                                                <div class="editor-container" th:id="'editorDescriptionContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                                                                    <textarea th:id="'description' + ${stat.index} + '.' + ${statSection.index}" data-type="DESCRIPTION" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.description}"></textarea>
+                                                                </div>
+                                                                <div class="editDescription" th:id="'descriptionRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.description}"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3" th:if="${isNSIS}">
+                                                            <label class="col-sm-2 col-form-label">Anmelders beskrivelse af opfyldelse (Praksis)</label>
+                                                            <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_PRACTICE" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+                                                                <div class="editor-container" th:id="'editorPracticeContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                                                                    <textarea th:id="'practice' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_PRACTICE" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisPractice}"></textarea>
+                                                                </div>
+                                                                <div class="editDescription" th:id="'practiceRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisPractice}"></div>
+                                                            </div>
+                                                        </div>
+                                                        <div class="row mt-3" th:if="${isNSIS}">
+                                                            <label class="col-sm-2 col-form-label">Anmelders beskrivelse af kontrolmål (SMART)</label>
+                                                            <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_SMART" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+                                                                <div class="editor-container" th:id="'editorSmartContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                                                                    <textarea th:id="'smart' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_SMART" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisSmart}"></textarea>
+                                                                </div>
+                                                                <div class="editDescription" th:id="'smartRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisSmart}"></div>
+                                                            </div>
+                                                        </div>
+
+
+                                                      <div class="row mt-3">
+                                                            <th:block th:each="mapEntry : ${relationMap}" th:if="${mapEntry.key} == ${section.standardSection.id}">
+                                                                <div th:replace="~{fragments/relations :: relationsfragment (statIndex=${stat.index} + '.' + ${statSection.index}, relations=${mapEntry.value}, completed=false, relatableId=${section.standardSection.id}, customDelete=true)}"></div>
+                                                            </th:block>
+                                                      </div>
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td style="padding: 0; border-right: 1px solid black;">
+                                                        <hr style="margin: 0;"/>
+                                                    </td>
+                                                    <td style="padding: 0;" colspan="5">
+                                                        <hr style="margin: 0;"/>
+                                                    </td>
+                                                </tr>
+                                            </th:block>
+                                        </th:block>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
+</div>
+
+<div th:replace="~{fragments/addRelation :: addRelation(customAddRelationBtn = true)}"></div>
+
+<script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
+<script type="text/javascript" th:src="@{/js/ckeditor/ckeditor.js}" defer></script>
+<div th:replace="~{fragments/footer :: scripts}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var viewUrl = [[@{/standards/supporting/}]];
+        var today = [[${today}]];
+        var templateIdentifier = [[${template.identifier}]];
+        var testMap = [[${relationMap}]]
+    +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        supportingStandartsViewLoaded();
+        addRelationFormLoaded();
+    });
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

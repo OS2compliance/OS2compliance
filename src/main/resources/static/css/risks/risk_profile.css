@@ -1,0 +1,51 @@
+.table-container-profile {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    padding-left: 20px;
+}
+
+.table-profile {
+    table-layout: fixed;
+    width: 100%;
+    height: 100%;
+    font-size: medium;
+}
+
+.td-profile, .tr-profile {
+    border: 1px solid black;
+}
+
+.headerStyle {
+    background-color: darkgrey;
+    color: white;
+    text-align: center;
+    font-weight: bold;
+}
+
+.horizontalHeader {
+    height: 28px;
+}
+
+.verticalHeader {
+    width: 28px;
+}
+
+.center {
+    text-align: center;
+}
+
+.riskScoreField {
+    text-align: center;
+}
+
+.vertical-axis-label {
+    writing-mode: vertical-rl;
+    white-space: nowrap;
+    text-orientation: mixed;
+    position: absolute;
+    text-align: center;
+    font-weight: bold;
+    top: 50%;
+    transform: translateY(-50%);
+}

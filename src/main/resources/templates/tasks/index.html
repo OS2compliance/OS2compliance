@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<body class="jumping">
+<script th:src="@{/js/task/form.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/task/tasks.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Opgavecenter</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Opgavecenter</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#taskFormDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="tasksDatatable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}" />
+    <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}" />
+</div>
+
+<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true"></div>
+<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/footer :: taskDialog}" />
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var gridTasksUrl = [[@{/rest/tasks/list}]];
+        var viewUrl = [[@{/tasks/}]];
+        var deleteUrl = [[@{/tasks/}]];
+    +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    const defaultClassName = {
+        table: 'table table-striped',
+        search: "form-control",
+        header: "d-flex justify-content-end"
+    };
+
+    const updateUrl = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+
+        const today = new Date();
+        const grid = new gridjs.Grid({
+            className: defaultClassName,
+            search: {
+                server: {
+                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
+                },
+                debounceTimeout: 1000
+            },
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'nextDeadline', 'taskRepetition', 'taskResult' ,'completed'];
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
+                    }
+                }
+            },
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
+                },
+                {
+                    name: "Opgavenavn",
+                    formatter: (cell, row) => {
+                        const url = viewUrl + row.cells[0]['data'];
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    }
+                },
+                {
+                    name: "Opgave type"
+                },
+                {
+                    name: "Ansvarlig"
+                },
+                {
+                    name: "Afdeling"
+                },
+                {
+                    name: "Deadline",
+                    formatter: (cell, row) => {
+                        var completed = row.cells[7]['data'];
+                        var type = row.cells[2]['data'];
+                        if (completed && type == "Opgave") {
+                            return gridjs.html(`<span>${cell}</span>`);
+                        }
+
+                        var dateString = cell.replace(" ", "/");
+                        var dateSplit = dateString.split("/");
+                        var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                        if (cellDate < today) {
+                            return gridjs.html(`<span style="color: red;">${cell}</span>`);
+                        } else {
+                            return gridjs.html(`<span>${cell}</span>`);
+                        }
+                    }
+                },
+                {
+                    name: "Gentages"
+                },
+                {
+                    name: "Resultat",
+                    formatter: (cell, row) => {
+                        if(row.cells[7]['data'] === null)
+                        {
+                            return "";
+                        } else {
+                            if(row.cells[7]['data'] == 'NO_ERROR') {
+                                return gridjs.html('<div class="d-block badge bg-success">Ingen fejl</div>', 'div');
+                            }
+                            else if (row.cells[7]['data'] == 'NO_CRITICAL_ERROR') {
+                                return gridjs.html('<div class="d-block badge bg-warning">Ingen kritiske fejl</div>', 'div');
+                            } else {
+                                return  gridjs.html('<div class="d-block badge bg-danger">Kritiske fejl</div>', 'div');
+                            }
+                        }
+                    }
+                },
+                {
+                    name: "Status",
+                    formatter: (cell, row) => {
+                        var status = "";
+                        var type = row.cells[2]['data'];
+
+                        // if completed and task type opgave
+                        if (cell && type == "Opgave") {
+                            status = [
+                                '<div class="d-block badge bg-success">Udført</div>'
+                            ]
+                        } else {
+                            var deadline = row.cells[5]['data'];
+                            var dateString = deadline.replace(" ", "/");
+                            var dateSplit = dateString.split("/");
+                            var deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+
+                            if (deadlineAsDate < today) {
+                                status = [
+                                    '<div class="d-block badge bg-danger">Overskredet</div>'
+                                ]
+                            } else {
+                                status = [
+                                    '<div class="d-block badge bg-warning">Ikke udført</div>'
+                                ]
+                            }
+                        }
+
+                        return gridjs.html(''.concat(...status), 'div')
+                    },
+                },
+                {
+                    id: 'handlinger',
+                    name: 'Handlinger',
+                    sort: 0,
+                    width: '10%',
+                    formatter: (cell, row) => {
+                        const taskId = row.cells[0]['data'];
+                        const name = row.cells[1]['data'];
+                        return gridjs.html(
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                    }
+                }
+            ],
+            server:{
+                url: gridTasksUrl,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(task =>
+                    [ task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed ]
+                ),
+                total: data => data.totalCount
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Opgaver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        }).render( document.getElementById( "tasksDatatable" ));
+    });
+
+    function deleteClicked(taskId, name) {
+        Swal.fire({
+          text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra TASK slettes også.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#03a9f4',
+          cancelButtonColor: '#df5645',
+          confirmButtonText: 'Ja',
+          cancelButtonText: 'Nej'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`${deleteUrl}${taskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                    .then(() => {
+                        window.location.reload();
+                    });
+          }
+        })
+    }
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

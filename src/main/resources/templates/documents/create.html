@@ -1,0 +1,111 @@
+<th:block th:fragment="createDocumentFragment">
+  <div class="modal fade" id="createDocumentDialog" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Opret dokument</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+          <form id="createDocumentModal" class="row g-3 needs-validation" action="#" th:action="@{/documents/create}" th:object="${document}" method="post" novalidate>
+            <div class="row mt-3">
+              <label for="name" class="col-lg-4 col-form-label">Titel</label>
+              <div class="col-lg-8">
+                <input id="name" th:field="*{name}" type="text" class="form-control" required>
+                <div class="invalid-feedback">Der skal angives en titel</div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="description" class="col-lg-4 col-form-label">Beskrivelse</label>
+              <div class="col-lg-8">
+                <div class="input-group">
+                  <textarea id="description" class="form-control" placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="documentType" class="col-lg-4 col-form-label">Dokumenttype</label>
+              <div class="col-lg-8">
+                <select class="form-control form-select" th:field="*{documentType}" id="documentType" required>
+                  <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
+                          th:value="${type}" th:text="${type.message}"></option>
+                </select>
+                <div class="invalid-feedback">Der skal vælges en type</div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="version" class="col-lg-4 col-form-label">Version</label>
+              <div class="col-lg-8">
+                <input id="version" th:field="*{documentVersion}" type="text" class="form-control">
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="status" class="col-lg-4 col-form-label">Status</label>
+              <div class="col-lg-8">
+                <select class="form-control form-select" th:field="*{status}" id="status" required>
+                  <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DocumentStatus).values()}"
+                          th:value="${status}" th:text="${status.message}"></option>
+                </select>
+                <div class="invalid-feedback">Der skal vælges en status</div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="link" class="col-lg-4 col-form-label">Link</label>
+              <div class="col-lg-8">
+                <input id="link" th:field="*{link}" type="text" class="form-control">
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="revisionInterval" class="col-lg-4 col-form-label">Revideringsfrekvens</label>
+              <div class="col-lg-8">
+                <select class="form-control form-select" th:field="*{revisionInterval}" id="revisionInterval" required>
+                  <option th:each="revisionInterval : ${T(dk.digitalidentity.model.entity.enums.DocumentRevisionInterval).values()}"
+                          th:value="${revisionInterval}" th:text="${revisionInterval.message}"></option>
+                </select>
+                <div class="invalid-feedback">Der skal vælges en revideringsfrekvens</div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="nextRevision" class="col-lg-4 col-form-label">Revideringsdato</label>
+              <div class="col-lg-8">
+                <div class="input-group">
+                  <input id="nextRevision" type="text" class="form-control" th:field="*{nextRevision}">
+                  <button id="nextRevisionBtn" class="btn btn-primary" type="button" >
+                    <i class="pli-calendar-4 fs-5"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="userSelect" class="col-lg-4 col-form-label">Ansvarlig</label>
+              <div class="col-lg-8">
+                <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" id="userSelect" hidden="" tabindex="-1" required></select>
+                <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="relationsSelect" class="col-lg-4 col-form-label">Relationer</label>
+              <div class="col-lg-8">
+                <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="relations" id="relationsSelect" hidden="" tabindex="-1" multiple></select>
+              </div>
+            </div>
+            <div class="row mt-3">
+              <label for="createDocumentTagsSelect" class="col-sm-4 col-form-label">Tags</label>
+              <div class="col-sm-8">
+                  <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="tags" id="createDocumentTagsSelect" hidden="" tabindex="-1" multiple></select>
+              </div>
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+          <button type="submit" form="createDocumentModal" class="btn btn-primary">Gem</button>
+        </div>
+      </div>
+    </div>
+    <div class="mc-calendar">
+
+    </div>
+  </div>
+</th:block>

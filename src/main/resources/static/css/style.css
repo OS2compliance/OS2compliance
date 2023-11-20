@@ -1,0 +1,95 @@
+.mc-calendar {
+    z-index: 1060 !important;
+}
+
+.text-no-transform {
+    text-transform: none !important;
+}
+
+.btn-yellow {
+    color:#000;
+    background-color: #FFDE07FF;
+    border-color:#FFDE07FF
+}
+
+/*Validation*/
+.input-group .form-control.is-valid, .input-group .form-select.is-valid, .was-validated .input-group .form-control:valid, .was-validated .input-group .form-select:valid {
+    z-index: 0;
+}
+
+.form-control.is-valid, .was-validated .form-control:valid, .form-control.is-valid:focus, .was-validated .form-control:valid:focus {
+    border-color: #edf1f6;
+    background-image: none;
+}
+
+.form-select.is-valid:not([multiple]):not([size]), .form-select.is-valid:not([multiple])[size="1"], .was-validated .form-select:valid:not([multiple]):not([size]), .was-validated .form-select:valid:not([multiple])[size="1"] {
+    border-color: #edf1f6;
+    background-image: none;
+}
+
+.form-control.is-valid:focus, .was-validated .form-control:valid:focus {
+    box-shadow: 0 0 0.5rem 0.15rem #e1e7f087;
+}
+
+.input-group .form-control.is-invalid, .input-group .form-select.is-invalid, .was-validated .input-group .form-control:invalid, .was-validated .input-group .form-select:invalid {
+    z-index: 0;
+}
+
+.form-check-input.is-valid~.form-check-label, .was-validated .form-check-input:valid~.form-check-label {
+    color: var(--bs-body-color);
+}
+
+.form-check-input.is-valid, .was-validated .form-check-input:valid {
+    border-color: rgba(0,0,0,.2095);
+}
+
+.form-check-input.is-valid:checked, .was-validated .form-check-input:valid:checked {
+    background-color: #25476a;
+    border-color: #25476a;
+}
+
+.invalid-feedback.show {
+    display: block !important;
+}
+
+.invalid-feedback.hide {
+    display: none !important;
+}
+
+.choices {
+	margin-bottom: 0px !important;
+}
+
+/* Remove arrows on number input*/
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type=number]{
+    -moz-appearance: textfield;
+}
+
+.choices__list--dropdown, .choices__list[aria-expanded] {
+    z-index: 2 !important;
+}
+
+/* Remove gray background from choices.js search input */
+.choices:not(.is-disabled) > div > input[name="search_terms"] {
+    background-color: white !important;
+}
+/* Remove gray background from choices.js search input */
+.choices.is-disabled .choices__input {
+    background-color: #f3f5f9 !important;
+}
+
+select[aria-readonly="true"] {
+    pointer-events: none;
+}
+
+/* change this if you want the appearance bigger or smaller - now its at 100% zoom */
+html {
+    zoom: 1.0;
+}

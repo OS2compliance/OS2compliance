@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<div th:fragment="oversight(asset, oversights)" id="oversightTab" class="tab-pane fade" role="tabpanel" aria-labelledby="oversight-tab">
+    <form id="dataprocessingAgreementForm" action="#" th:action="@{/assets/oversight}" method="post" class="needs-validation" novalidate>
+        <div class="row">
+            <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
+                <button id="editDataAgreementBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataAgreementEditState(true)">Rediger</button>
+                <button id="cancelDataAgreementBtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataAgreementEditState(false)" hidden>Annuller</button>
+                <button id="saveDataAgreementBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                <div class="row mb-3" th:object="${asset}">
+                    <input th:field="${asset.id}" hidden>
+                    <!--- Table 1 Data process agreement-->
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="col-lg-2">Er der indgået en databehandleraftale</th>
+                                <th class="col-lg-2">Dato</th>
+                                <th class="col-lg-2">Link</th>
+                                <th class="col-lg-2">Valg af tilsynsmodel</th>
+                                <th class="col-lg-2">Hyppighed</th>
+                                <th class="col-lg-2">Næste tilsyn</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="align-middle">
+                                <td>
+                                    <select class="form-control form-select editField" th:field="*{dataProcessingAgreementStatus}" tabindex="-1" disabled>
+                                        <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}" th:value="${status.name}" th:text="${status.message}"></option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div class="input-group" th:hidden="*{dataProcessingAgreementDate == null}">
+                                        <input id="dataProcessingAgreementDateInput" type="text" class="form-control editField datepicker" th:field="*{dataProcessingAgreementDate}" disabled>
+                                        <button id="dataProcessingAgreementDateBtn" class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;" disabled>
+                                            <i class="pli-calendar-4 fs-5"></i>
+                                        </button>
+                                    </div>
+                                    <div class="form-control-static" th:hidden="*{dataProcessingAgreementDate != null}">Ingen</div>
+                                </td>
+                                <td>
+                                    <a class="form-control-static editField" th:href="*{dataProcessingAgreementLink}" th:text="*{dataProcessingAgreementLink}" target="_blank" rel="noopener" ></a>
+                                    <input class="form-control" th:field="*{dataProcessingAgreementLink}" hidden>
+                                </td>
+                                <td>
+                                    <select class="form-control form-select editField" th:field="*{supervisoryModel}" tabindex="-1" disabled>
+                                        <option th:each="model : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}" th:value="${model.name}" th:text="${model.message}"></option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <div>
+                                        <select id="nextInspectionSelectId" class="form-control form-select editField" th:field="*{nextInspection}" tabindex="-1" disabled  onchange="nextInspectionSelect()">
+                                            <option th:each="inspection : ${T(dk.digitalidentity.model.entity.enums.NextInspection).values()}" th:value="${inspection.name}" th:text="${inspection.message}"></option>
+                                        </select>
+                                    </div>
+                                </td>
+                                <td >
+                                    <div class="input-group">
+                                        <input id="nextInspectionDateInput" type="text" class="form-control editField datepicker" th:field="*{nextInspectionDate}" disabled>
+                                        <button id="nextInspectionDateBtn" class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;" disabled hidden>
+                                            <i class="pli-calendar-4 fs-5"></i>
+                                        </button>
+                                    </div>
+                                    <div class="ms-2" th:hidden="*{nextInspection != T(dk.digitalidentity.model.entity.enums.NextInspection).DATE} or *{nextInspectionDate != null}">Ingen</div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <!--- Table 2 Oversights-->
+    <div th:replace="~{assets/fragments/oversightTable :: oversightTable(${oversights})}"></div>
+
+
+
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        /*[+
+            var _oversight_asset_id = [[${asset.id}]]
+            var oversightUrl = [[@{/assets/oversight}]];
+        +]*/
+        var oversightDialog;
+        var oversightResponsibleUserChoices;
+
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+                       //Initialize datepickers
+            const dataProcessingAgreementDatePicker = MCDatepicker.create({
+                el: '#dataProcessingAgreementDateInput',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                //minDate: new Date(),
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#dataProcessingAgreementDateBtn" ).addEventListener( "click", () => {
+                dataProcessingAgreementDatePicker.open();
+            });
+
+            const nextInspectionDatePicker = MCDatepicker.create({
+                el: '#nextInspectionDateInput',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                //minDate: new Date(),
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#nextInspectionDateBtn" ).addEventListener( "click", () => {
+                nextInspectionDatePicker.open();
+            });
+
+        });
+
+        function setDataAgreementEditState(enabled) {
+            const rootElement = document.getElementById('oversightTab');
+            if (enabled) {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = false;
+                  if (elem.tagName == "A") {
+                      elem.hidden = true;
+                      if (elem.nextElementSibling) {
+                         elem.nextElementSibling.hidden = false;
+                      }
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    elem.parentElement.hidden = false; // show the datepicker
+                    if (elem.parentElement.nextElementSibling) {
+                        elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
+                    }
+                  }
+                });
+
+                document.getElementById('saveDataAgreementBtn').hidden = false;
+                document.getElementById('editDataAgreementBtn').hidden = true;
+                document.getElementById('cancelDataAgreementBtn').hidden = false;
+            } else {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = true;
+                  if (elem.tagName == "A") {
+                      elem.hidden = false;
+                      elem.nextElementSibling.hidden = true;
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    if (elem.value == null || elem.value == "") {
+                      elem.parentElement.hidden = true; // hide the datepicker
+                      elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
+                    }
+                  }
+                });
+
+                document.getElementById('saveDataAgreementBtn').hidden = true;
+                document.getElementById('editDataAgreementBtn').hidden = false;
+                document.getElementById('cancelDataAgreementBtn').hidden = true;
+            }
+
+        }
+
+        function showOversightModal() {
+            initOversightModal().then(() => oversightDialog.show());
+        }
+
+        function initOversightModal() {
+            return fetch(oversightUrl + "/" + _oversight_asset_id + "/asset")
+            .then(response => response.text()
+                .then(data => {
+                    document.getElementById('oversightDialog').innerHTML = data;
+
+                    //Init modal
+                    oversightDialog = new bootstrap.Modal(document.getElementById('oversightDialog'), {
+                      keyboard: false
+                    });
+
+                    //Init date pickers
+                    const datepickerOversight = MCDatepicker.create({
+                        el: '#oversightDateId',
+                        autoClose: true,
+                        dateFormat: 'dd/mm-yyyy',
+                        selectedDate: new Date(),
+                        closeOnBlur: true,
+                        firstWeekday: 1,
+                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                        customClearBTN: "Ryd",
+                        customCancelBTN: "Annuller"
+                        });
+                    document.querySelector("#oversightDateBtn").addEventListener("click", () => {
+                    datepickerOversight.open();
+                    });
+
+                    const inspectionDateOversightModal = MCDatepicker.create({
+                        el: '#oversightInspectionDateInput',
+                        autoClose: true,
+                        dateFormat: 'dd/mm-yyyy',
+                        selectedDate: new Date(),
+                        closeOnBlur: true,
+                        firstWeekday: 1,
+                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                        customClearBTN: "Ryd",
+                        customCancelBTN: "Annuller"
+                        });
+                    document.querySelector("#oversightInspectionDateBtn").addEventListener("click", () => {
+                        inspectionDateOversightModal.open();
+                    });
+
+                    //choices.js
+                    const oversightSelect = document.getElementById('oversightUserSelect');
+                    oversightResponsibleUserChoices = initSelect(oversightSelect);
+                    updateUsers(oversightResponsibleUserChoices, "");
+                    oversightSelect.addEventListener("search",
+                    function(event) {
+                        updateUsers(oversightResponsibleUserChoices, event.detail.value);
+                    },
+                    false,
+                    );
+                    oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
+                        checkInputField(oversightResponsibleUserChoices);
+                    });
+
+
+                }))
+            .catch(error => console.log(error))
+        }
+
+
+
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

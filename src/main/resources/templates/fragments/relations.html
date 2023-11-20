@@ -1,0 +1,58 @@
+<th:block th:fragment="relationsfragment">
+    <div class="card shadow-none col-md-12">
+        <div class="card-header toolbar">
+            <h5 class="toolbar-start m-0">Tilknytninger</h5>
+            <div class="toolbar-end">
+                <button th:unless="${completed}" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${relatableId}, data-index=${statIndex}" data-bs-toggle="modal" data-bs-target="#addRelationModal">Tilføj</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped" th:id="${statIndex} == null ? '' : 'relationTable' + ${statIndex}">
+                <thead>
+                <tr>
+                    <th class="col-lg-9">Navn</th>
+                    <th class="col-lg-2">Type</th>
+                    <th class="col-lg-1">Fjern</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="relation : ${relations}">
+                    <td class="col-lg-9">
+                        <div th:switch="${relation.relationType}">
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).SUPPLIER}" th:href="'/suppliers/' + ${relation.id}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).CONTACT}" th:href="'/contacts/' + ${relation.id}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).TASK}" th:href="'/tasks/' + ${relation.id}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).DOCUMENT}" th:href="'/documents/' + ${relation.id}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).REGISTER}" th:href="'/registers/' + ${relation.id}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).ASSET}" th:href="'/assets/' + ${relation.id}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).THREAT_ASSESSMENT}" th:href="'/risks/' + ${relation.id}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).STANDARD_SECTION}" th:href="'/standards/supporting/' + ${relation.standardIdentifier}">
+                                <span th:text="${relation.name}"></span>
+                            </a>
+                        </div>
+                    </td>
+                    <td th:text="${relation.relationType.getMessage()}" class="col-lg-2" />
+                    <td class="col-lg-1">
+                        <i th:if="${!customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
+                        <i th:if="${customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>

@@ -1,0 +1,8 @@
+{
+  "identifier": "register-gdpr-p7",
+  "name": "Behandling af personoplysninger efter Artikel 9 stk. 2 (særlige kategorier af personoplysninger)",
+  "multiSelect": true,
+  "valueIdentifiers": ["register-gdpr-p7-a", "register-gdpr-p7-b", "register-gdpr-p7-c", "register-gdpr-p7-d",
+    "register-gdpr-p7-e", "register-gdpr-p7-f", "register-gdpr-p7-g", "register-gdpr-p7-h", "register-gdpr-p7-i",
+    "register-gdpr-p7-j"]
+}

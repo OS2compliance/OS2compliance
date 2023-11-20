@@ -1,0 +1,440 @@
+[
+  {
+    "identifier": "a02",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Cybertrusler",
+    "description": "Hackerangreb af typen RansomWare - hvor data låses/krypteres og der kræves løsepenge",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a03",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Cybertrusler",
+    "description": "Avanceret hackerangreb med henblik på cyberspionage fra fremmede stater",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a04",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Cybertrusler",
+    "description": "Hackerangreb, (Man-in-the-middle angreb) - hvor hacker indsætter sig mellem to enheder og udgiver sig for at være en enhed der er tillid til",
+    "confidentiality": true,
+    "integrity": true,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a05",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Cybertrusler",
+    "description": "Hackerangreb, af typen brute-force hvor hackeren systematisk vha. software med stort antal logon-forsøg forsøger at gætte en brugers password",
+    "confidentiality": true,
+    "integrity": true,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a06",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Cybertrusler",
+    "description": "Overbelastningsangreb, der gør systemet utilgængeligt (DDoS)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "a08",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Uklarhed omkring roller og ansvar medfører at organisatoriske sikringsforanstaltninger omkring systemet mangler eller er utilstrækkelige, f.eks. manglende kontrol med rettigheder",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a09",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Medarbejdere har for mange rettigheder til systemet, f.eks. pga. manglende kontrol eller manglende opdatering af rettigheder",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a10",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "For mange medarbejdere har superbruger- eller administratorrettigheder til systemet, f.eks. pga. utilstrækkelig rettighedsopsætning",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a11",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Logning er ikke sat korrekt op, hvorfor brud på fortrolighed ikke opdages og ikke kan dokumenteres",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a12",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Backup er fejlbehæftet og system eller data kan ikke genskabes",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a13",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Utilstrækkelige sikkerhedsforanstaltninger til håndtering af bruger autentifikation (godkendelse)",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a14",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fejlede sikkerhedsforanstaltninger",
+    "description": "Uanonymiserede kopier af data anvendes i test eller uddannelsesmiljøer, hvorved fortrolige data utilsigtet bliver kompromitteret",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "a16",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere får adgang til informationer, som de ikke har et arbejdsbetinget behov for at få adgang til.",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a17",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere glemmer at journalisere.",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a18",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere kompromitterer uforsætligt sikkerheden, f.eks. ved forkert systembrug, uopmærksomhed eller forkert håndtering/klassificering af data",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a19",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Medarbejdertrusler",
+    "description": "Medarbejdere tiltvinger sig uretmæssig adgang til systemer, f.eks. ved gæt af kodeord",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a20",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Medarbejdertrusler",
+    "description": "Systemadministrator kompromitterer sikkerheden bevidst eller uforsætligt.",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "a22",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Leverandørtrusler",
+    "description": "Manglende sikkerhedsmæssig stillingtagen i kontrakter, kompromitterer sikkerheden på systemet. F.eks. Manglende Service-Level-Agreement (SLA) eller manglende rapportering på performance.",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a23",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Leverandørtrusler",
+    "description": "Leverandøren evner ikke at at opretholde aftalte serviceniveau (SLA)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a24",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Leverandørtrusler",
+    "description": "Leverandøren har ikke tilstrækkelige sikkerhedsprocedurer, -foranstaltninger og –kontroller, hvilket kompromitterer sikkerheden på systemet",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a25",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Leverandørtrusler",
+    "description": "Der forekommer et nedbrud (op til en halv arbejdsdag) hos leverandøren, der påvirker tilgængeligheden til løsningen",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a26",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Leverandørtrusler",
+    "description": "Leverandøren har utilstrækkelige nødplaner eller forsømmer test af nødplan",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a27",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Leverandørtrusler",
+    "description": "Leverandørens medarbejdere bryder bevidst sikkerheden.",
+    "confidentiality": true,
+    "integrity": true,
+    "availability": false,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "a29",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemfejl og fejlkonfigurationer",
+    "description": "Fejl ved brevfletning medfører forkert modtager af oplysninger",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a30",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemfejl og fejlkonfigurationer",
+    "description": "Oplysninger i systemet er ikke pålidelige, f.eks. pga. manglende opdatering eller manglende kontrol af data under indtastning",
+    "confidentiality": false,
+    "integrity": true,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a31",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemfejl og fejlkonfigurationer",
+    "description": "Fejl i systemet medfører fejl eller forsømmelser i sagsbehandlingen",
+    "confidentiality": true,
+    "integrity": true,
+    "availability": true,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "a33",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fysiske trusler",
+    "description": "Brand (kontorlokaler, naboejendom, serverrum)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a34",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fysiske trusler",
+    "description": "Forsyningssvigt (el, vand, strøm, internet, køl, telekommunikation, etc.)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a35",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fysiske trusler",
+    "description": "Fysisk skade på udstyr som følge af støv, korrosion (rust, ætsning) eller frost, køle eller skader som følge af overophedning",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a36",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fysiske trusler",
+    "description": "Hærværk på udstyr eller medier ( ødelæggelse )",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a37",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fysiske trusler",
+    "description": "Krig eller terror rammer udstyr eller medarbejdere",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a38",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fysiske trusler",
+    "description": "Miljøskader i kontorlokaler eller naboområde (fx giftudslip eller radioaktivt udslip, herunder elektromagnetisk udstråling, elektromagnetisk implus, termisk udstråling)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a39",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Fysiske trusler",
+    "description": "Skader som følge af naturkatastrofer - oversvømmelse, storm, jordskælv, etc. herunder vandskader i kontorlokaler/serverrum/kælder/arkiver",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "a41",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Klient- og netværkstrusler",
+    "description": "Manglende antivirus eller opdatering af antivirus på klienter, mobile enheder og servere",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a42",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Klient- og netværkstrusler",
+    "description": "Network traffic hijack - angreb der ændrer datatrafikken i netværket",
+    "confidentiality": false,
+    "integrity": true,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a43",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Klient- og netværkstrusler",
+    "description": "Manglende sikkerhedsopdatering af enheden fx PC, Ipad eller Mobiltelefon",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": false
+  }, {
+    "identifier": "a44",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Klient- og netværkstrusler",
+    "description": "Manglende sikkerhedspatches for Adobe Reader, Microsoft Office, .NET og/eller Microsoft Edge (etc.)",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": false
+  }, {
+    "identifier": "a45",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Klient- og netværkstrusler",
+    "description": "Manglende sikkerhedspatches for operativsystemet eller underliggende systemer.",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a46",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Klient- og netværkstrusler",
+    "description": "Manglende krypterinng af enheder (PC/Mobiltelefon/iPad) kan kompromittere sikkerheden hvis enheden mistes.",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a47",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Klient- og netværkstrusler",
+    "description": "Data genskabes på udstyr, der genbruges i anden sammenhæng (fx ved udfasning eller overdragelse af mobilt udstyr eller PC)",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  },
+
+  {
+    "identifier": "a49",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemdrift",
+    "description": "Opdatering af systemet ødelægger funktionalitet på server eller klient",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a50",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemdrift",
+    "description": "Systemet er svært at drifte og udvikle pga. mangelfuld ansvarsfordeling, dokumentation, driftsprocedure, eller lign.",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a51",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemdrift",
+    "description": "Systemet er svært at drifte pga. utilstrækkeligt personnel eller manglende nøgleperson til at løse driftsopgaven",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a52",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemdrift",
+    "description": "Systemet er teknisk underdimensioneret, hvilket viser sig ved at systemet periodisk er langsomt eller utilgængeligt",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a53",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemdrift",
+    "description": "Systemet fejler som følge af mangelfuld udskiftning af udstyr ( Servere, diske, etc)",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a54",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemdrift",
+    "description": "Systemet fungerer fejlbehæftet pga. manglende overvågning",
+    "confidentiality": false,
+    "integrity": false,
+    "availability": true,
+    "consequenceMunicipal": true
+  }, {
+    "identifier": "a54",
+    "threatCatalogIdentifier": "a",
+    "threatType": "Systemdrift",
+    "description": "Co-location leaks, dvs. systemet deler infrastruktur, servere eller cloud sammen med andre kunder og fejlkonfigurationer forekommer, der medfører læk.",
+    "confidentiality": true,
+    "integrity": false,
+    "availability": false,
+    "consequenceMunicipal": true
+  }
+]

@@ -1,0 +1,21 @@
+#risksDatatable td[data-column-id="suppressions"] ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#risksDatatable td[data-column-id="suppressions"] ul > li {
+    display: table-row;
+}
+
+#risksDatatable td[data-column-id="suppressions"] ul > li > span {
+    display: table-cell;
+    min-width: 1rem;
+}
+
+#risksDatatable td[data-column-id="handlinger"] {
+    text-align: center;
+}
+
+#risksDatatable td[data-column-id="status"] {
+    vertical-align: middle;
+}

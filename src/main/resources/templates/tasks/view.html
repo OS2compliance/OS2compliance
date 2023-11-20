@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<body class="jumping">
+
+<script th:src="@{/js/task/form.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/task/tasks.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/tasks}">Opgavecenter</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${task.name}"></li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>
+                        <p class="lead"></p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <div class="tab-base">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsOpgave" type="button" role="tab" aria-controls="opgave" aria-selected="true" th:text="${task.taskType.getMessage()}"></button>
+                        </li>
+                        <li class="nav-item" role="presentation" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsHistorik" type="button" role="tab" aria-controls="historik" aria-selected="false">Historik</button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content">
+                        <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
+                            <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
+                                <div class="row mb-3">
+                                    <button th:unless="${completed}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                                    <button th:unless="${completed}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                    <button th:unless="${completed}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
+                                </div>
+                                <input th:field="*{id}" hidden>
+                                <div class="row mb-3">
+                                    <label for="taskType" class="col-sm-2 col-form-label">Opgavetype</label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control " id="taskType" th:value="*{taskType.getMessage()}" readonly>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="userSelect" class="col-sm-2 col-form-label">Ansvarlig</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" tabindex="-1" required hidden >
+                                            <option th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}" selected></option>
+                                        </select>
+                                        <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="ouSelect" class="col-sm-2 col-form-label">Ansvarlig afdeling</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="ouSelect" tabindex="-1" hidden>
+                                            <option th:if="${task.responsibleOu} != null" th:value="*{responsibleOu.uuid}" th:text="*{responsibleOu.name}" selected></option>
+                                        </select>
+                                        <div class="invalid-feedback">Der skal vælges en ansvarlig afdeling</div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+
+                                    <label for="deadline" class="col-sm-2 col-form-label">Deadline</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <input id="deadline" type="text" class="form-control editField" th:field="*{nextDeadline}" required>
+                                            <button id="deadlineBtn" class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;" disabled>
+                                                <i class="pli-calendar-4 fs-5"></i>
+                                            </button>
+                                            <div class="invalid-feedback">Der skal vælges en deadline</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div th:if="${task.taskType.name() == 'CHECK'}" class="row mb-3" >
+                                    <label for="repetition" class="col-sm-2 col-form-label">Gentagelse</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select editField" th:field="*{repetition}" id="repetition" name="gentagelse" tabindex="-1" required>
+                                            <option th:each="repetition : ${T(dk.digitalidentity.model.entity.enums.TaskRepetition).values()}"
+                                                    th:value="${repetition.name}" th:text="${repetition.message}" th:selected="${repetition.name} == ${task.repetition?.name()}"></option>
+                                        </select>
+                                        <div class="invalid-feedback">Der skal vælges et interval for gentagelse</div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="description" class="col-sm-2 col-form-label">Beskrivelse</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <textarea id="description" class="form-control editField" placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+                                            <div class="invalid-feedback">Der skal indtastes en beskrivelse</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <th:block th:if="${completed}">
+                                    <div class="row mb-3">
+                                        <label for="completedDate" class="col-sm-2 col-form-label">Udført</label>
+                                        <div class="col-sm-10">
+                                            <input th:unless="${taskLog.daysAfterDeadline} == 0" class="form-control" id="completedDate" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLog.daysAfterDeadline} + ')'" style="color: red;" disabled readonly>
+                                            <input th:if="${taskLog.daysAfterDeadline} == 0" class="form-control" id="completedDate" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')}" disabled readonly>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label for="performedBy" class="col-sm-2 col-form-label">Udført af</label>
+                                        <div class="col-sm-10">
+                                            <input class="form-control" id="performedBy" th:value="${taskLog.performedBy}" disabled readonly>
+                                        </div>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <label for="completedComment" class="col-sm-2 col-form-label">Kommentar til udførsel</label>
+                                        <div class="col-sm-10">
+                                            <div class="input-group">
+                                                <textarea class="form-control" id="completedComment" th:text="${taskLog.comment}" rows="3" disabled readonly></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div th:unless="${taskLog.documentationLink} == null" class="row mb-3">
+                                        <label for="completedDocumentationLink" class="col-sm-2 col-form-label">Link til dokumentation</label>
+                                        <div class="col-sm-10" style="padding-top: 10px;">
+                                            <a id="completedDocumentationLink" th:text="${taskLog.documentationLink}" th:href="${taskLog.documentationLink}"></a>
+                                        </div>
+                                    </div>
+                                    <div th:unless="${taskLog.documentName} == null" class="row mb-3">
+                                        <label for="documentRelationLink" class="col-sm-2 col-form-label">Relation ved dokument</label>
+                                        <div class="col-sm-10" style="padding-top: 10px;">
+                                            <a id="documentRelationLink" th:text="${taskLog.documentName}" th:href="'/documents/' + ${taskLog.documentId}"></a>
+                                        </div>
+                                    </div>
+                                </th:block>
+                            </form>
+
+                            <div class="row">
+                                <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
+                            </div>
+                            <div class="row">
+                                <div th:replace="~{fragments/tags :: tagsfragment (tags=${task.tags}, completed=${completed}, relatableId=${task.id})}"></div>
+                            </div>
+                        </div>
+                        <div id="_dm-tabsHistorik" class="tab-pane fade" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
+                            <div class="timeline" style="padding-bottom: 30px;">
+                                <div class="tl-entry" th:each="taskLog : ${taskLogs}">
+                                    <div class="tl-time">
+                                        <div th:unless="${taskLog.daysAfterDeadline} == 0" class="tl-time" th:text="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLog.daysAfterDeadline} + ')'" style="color: red;"></div>
+                                        <div th:if="${taskLog.daysAfterDeadline} == 0" class="tl-time" th:text="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')}"></div>
+                                    </div>
+                                    <div class="tl-point"></div>
+                                    <div class="tl-content card" style="width: 100%;">
+                                        <div class="card-body">
+                                            <div class="col-lg-12 row">
+                                                <div class="col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="checkCompletedDescription" class="col-lg-12 col-form-label">Daværende beskrivelse</label>
+                                                        <textarea class="form-control col-lg-12" id="checkCompletedDescription" th:text="${taskLog.description}" rows="3" disabled readonly></textarea>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <label for="checkCompletedDeadline" class="col-sm-3 col-form-label">Deadline</label>
+                                                        <div class="col-sm-9">
+                                                            <input class="form-control" id="checkCompletedDeadline" th:value="${#temporals.format(taskLog.deadline, 'dd/MM-yyyy')}" disabled readonly>
+                                                        </div>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <label for="checkCompletedPerformedBy" class="col-sm-3 col-form-label">Udført af</label>
+                                                        <div class="col-sm-9">
+                                                            <input class="form-control" id="checkCompletedPerformedBy" th:value="${taskLog.performedBy}" disabled readonly>
+                                                        </div>
+                                                    </div>
+                                                    <div th:unless="${taskLog.taskResult} == null" class="row mb-3">
+                                                        <label for="checkCompletedtaskResult" class="col-sm-3 col-form-label">Resultat</label>
+                                                        <div class="col-sm-9" style="padding-top: 10px;">
+                                                            <input class="form-control" id="checkCompletedtaskResult" th:value="${taskLog.taskResult.getValue()}" disabled readonly>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="col-lg-6">
+                                                    <div class="mb-3">
+                                                        <label for="checkCompletedComment" class="col-lg-12 col-form-label">Kommentar til udførsel</label>
+                                                        <textarea class="form-control col-lg-12" id="checkCompletedComment" th:text="${taskLog.comment}" rows="3" disabled readonly></textarea>
+                                                    </div>
+                                                    <div class="row mb-3">
+                                                        <label for="checkCompleted" class="col-sm-3 col-form-label">Udført</label>
+                                                        <div class="col-sm-9">
+                                                            <input th:unless="${taskLog.daysAfterDeadline} == 0" class="form-control" id="checkCompleted" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLog.daysAfterDeadline} + ')'" style="color: red;" disabled readonly>
+                                                            <input th:if="${taskLog.daysAfterDeadline} == 0" class="form-control" id="checkCompleted" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')}" disabled readonly>
+                                                        </div>
+                                                    </div>
+                                                    <div th:unless="${taskLog.documentationLink} == null" class="row mb-3">
+                                                        <label for="checkCompletedDocumentationLink" class="col-sm-3 col-form-label">Link til dokumentation</label>
+                                                        <div class="col-sm-9" style="padding-top: 10px;">
+                                                            <a id="checkCompletedDocumentationLink" th:text="${taskLog.documentationLink}" th:href="${taskLog.documentationLink}"></a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}" />
+    <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}" />
+</div>
+
+<div th:replace="~{tasks/completeTask :: completeTask}" />
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${task.id})}" />
+<div th:replace="~{fragments/addTags :: addTags(relatableId=${task.id})}" />
+
+<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/footer :: taskDialog}" />
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    /*[+
+        var taskId = [[${task.id}]];
+    +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        loadViewAndEditForm();
+        addRelationFormLoaded();
+        addTagsFormLoaded();
+        completeTaskFormLoaded();
+
+        initFormValidationForForm('editForm');
+        initFormValidationForForm('completeTaskForm');
+        initDatepicker("#deadlineBtn", "#deadline");
+    });
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

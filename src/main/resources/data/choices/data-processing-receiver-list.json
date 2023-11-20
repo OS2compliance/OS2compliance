@@ -1,0 +1,8 @@
+{
+  "identifier": "dp-receiver-list",
+  "name": "Modtager",
+  "multiSelect": false,
+  "valueIdentifiers": ["dp-receiver-lawyers", "dp-receiver-banks", "dp-receiver-citizens",
+    "dp-receiver-associations", "dp-receiver-insurance", "dp-receiver-public-aut",
+    "dp-receiver-public", "dp-receiver-consult", "dp-receiver-companies"]
+}

@@ -1,0 +1,37 @@
+<div th:fragment="oversightTable(oversights)" id="oversightTable" aria-labelledby="oversight-table">
+<div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
+    <button type="button" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="showOversightModal()">
+        <i class="ti-plus fs-4"></i>
+        <span class="vr"></span>
+        Nyt tilsyn
+    </button>
+    <table class="table table-striped">
+        <thead>
+            <th>Dato</th>
+            <th>Ansvarlig</th>
+            <th>Tilsynsform</th>
+            <th>Konklusion</th>
+            <th>Resultat</th>
+        </thead>
+        <tbody>
+            <tr th:each="oversight : ${oversights}">
+                <td th:text="${oversight.creationDate}"></td>
+                <td th:text="${oversight.responsibleUser.userId}"></td>
+                <td th:text="${oversight.supervisionModel.getMessage()}"></td>
+                <td th:text="${oversight.conclusion}"></td>
+                <td>
+                    <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).RED == oversight.status}" class="d-block badge bg-danger" style="width: 60px">Rød</div>
+                    <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).GREEN == oversight.status}" class="d-block badge bg-success" style="width: 60px">Grøn</div>
+                    <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).YELLOW == oversight.status}" class="d-block badge bg-warning" style="width: 60px">Gul</div>
+                </td>
+            </tr>
+        </tbody>
+
+    </table>
+</div>
+</div>
+
+<script th:inline="javascript">
+
+</script>
+</div>

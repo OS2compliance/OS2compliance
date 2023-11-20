@@ -1,0 +1,1 @@
+ALTER TABLE standard_sections MODIFY reason TEXT;
