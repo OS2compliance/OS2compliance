@@ -51,10 +51,10 @@
                                     <table class="table table-striped">
                                         <tbody>
                                         <tr th:each="contact: ${contacts}">
-                                            <td th:text="${contact.role}" />
-                                            <td th:text="${contact.name}" />
-                                            <td th:text="${contact.phone}" />
-                                            <td th:text="${contact.mail}" />
+                                            <td th:text="${contact.role}"></td>
+                                            <td th:text="${contact.name}"></td>
+                                            <td th:text="${contact.phone}"></td>
+                                            <td th:text="${contact.mail}"></td>
                                             <td title="Fjern relation" style="text-align: right;">
                                                 <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${contact.id}, data-relationtype=${contact.relationType}"></i>
                                             </td>
@@ -154,10 +154,10 @@
 
 <div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true"></div>
 <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal)}" />
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal)}" />
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal)}" />
-<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal)}"></div>
+<div th:replace="~{fragments/footer :: scripts}"></div>
 
 
 <script th:inline="javascript">
