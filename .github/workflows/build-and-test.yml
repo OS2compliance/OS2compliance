@@ -30,4 +30,4 @@ jobs:
           restore-keys: ubuntu-latest-m2
 
       - name: Build and Test
-        run: ./mvn -B package --file pom.xml
+        run: ./mvnw -B clean test package --file pom.xml
