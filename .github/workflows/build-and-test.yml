@@ -1,0 +1,33 @@
+name: Build
+
+on:
+  push:
+    branches: ['*']
+    paths-ignore:
+      - '**.md'
+  pull_request:
+    paths-ignore:
+      - '**.md'
+
+jobs:
+  build:
+    runs-on: 'ubuntu-latest'
+    steps:
+      - name: 'Check out repository'
+        uses: actions/checkout@v3
+
+      - name: 'Set up Java'
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: 'corretto'
+
+      - name: 'Cache Maven packages'
+        uses: actions/cache@v3
+        with:
+          path: ~/.m2
+          key: ubuntu-latest-m2-${{ hashFiles('**/pom.xml', '**/*.target') }}
+          restore-keys: ubuntu-latest-m2
+
+      - name: Build and Test
+        run: ./mvn -B package --file pom.xml
