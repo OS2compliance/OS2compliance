@@ -119,7 +119,6 @@ public class SupplierController {
 		if (supplier.getId() != null) {
 			final Supplier existingSupplier = supplierDao.findById(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-//			existingSupplier.setResponsibleUuid(supplier.getResponsibleUuid());
 			existingSupplier.setStatus(supplier.getStatus());
 			existingSupplier.setCvr(supplier.getCvr());
 			existingSupplier.setZip(supplier.getZip());
