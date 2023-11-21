@@ -62,7 +62,4 @@ function profilePageLoaded() {
     setBeforeNumbers();
     setAfterNumbers();
 
-    window.addEventListener('load', setTableHeights);
-    window.addEventListener('resize', setTableHeights);
-
 }

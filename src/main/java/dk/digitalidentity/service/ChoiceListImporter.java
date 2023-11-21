@@ -24,6 +24,7 @@ import org.springframework.stereotype.Service;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Set;
@@ -89,6 +90,17 @@ public class ChoiceListImporter {
                         .collect(Collectors.toList());
                 entity.setValues(values);
                 choiceMeasuresDao.save(entity);
+            } else {
+                final ChoiceMeasure measure = choiceMeasuresDao.findByIdentifier(choice.getIdentifier()).orElseThrow();
+                final List<String> identifiersToRemove = measure.getValues().stream().map(ChoiceValue::getIdentifier).collect(Collectors.toCollection(ArrayList::new));
+                final List<String> wantedIdentifiers = choice.getValueIdentifiers();
+                wantedIdentifiers.forEach(vid -> {
+                        if (!identifiersToRemove.contains(vid)) {
+                            measure.getValues().add(valueDao.findByIdentifier(vid).orElseThrow(() -> new RuntimeException("Value not found " + vid)));
+                        }
+                        identifiersToRemove.remove(vid);
+                    });
+                measure.getValues().removeIf(v -> identifiersToRemove.contains(v.getIdentifier()));
             }
         }
     }

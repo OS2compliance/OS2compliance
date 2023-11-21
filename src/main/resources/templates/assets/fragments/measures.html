@@ -13,7 +13,7 @@
                 <input name="assetId" th:value="${asset.id}" hidden>
 
                 <div class="row mb-3">
-                    <table class="table table-striped">
+                    <table class="table table-striped" style="border-collapse: collapse;">
                         <thead>
                             <tr>
                                 <th class="col-lg-1">Kategori</th>
@@ -23,14 +23,15 @@
                             </tr>
                         </thead>
                         <tbody>
-                            <tr th:each="measure, itemStat : *{measures}">
+                            <tr class="collapse show" aria-expanded="true"  th:each="measure, itemStat : *{measures}"  th:id="|measureRow_${measure.identifier}|">
                                 <td th:text="${measure.choice.category}"></td>
                                 <td>
                                     <span th:text="${measure.choice.name}"></span>
                                     <input th:name="|measures[${itemStat.index}].identifier|" th:value="${measure.identifier}" hidden>
                                 </td>
                                 <td>
-                                    <select class="form-control form-select editField" th:name="|measures[${itemStat.index}].answer|" tabindex="-1" disabled>
+                                    <select class="form-control form-select editField" th:name="|measures[${itemStat.index}].answer|" onchange="measureStateChanged()"
+                                            th:id="|measureSelect${measure.identifier}|" tabindex="-1" disabled>
                                         <option th:each="choice: ${measure.choice.values}" th:value="${choice.identifier}"
                                             th:selected="${measure.answer == choice.identifier}"
                                             th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
@@ -51,21 +52,60 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
 
-        /*[+
-
-        +]*/
-
+        const measures = /*[[${measuresForm.measures}]]*/ [];
         document.addEventListener("DOMContentLoaded", function(event) {
-
+            const collapseElementList = [].slice.call(document.querySelectorAll('.collapse'));
+            collapseElementList.map(function (collapseEl) {
+                return new bootstrap.Collapse(collapseEl, {
+                    toggle: false
+                });
+            });
+            measureStateChanged();
         });
 
+        function measureStateChanged() {
+            // Update visuals when choices have changed
+            measures.forEach(m => {
+                const questionIdentifier = m.choice.identifier;
+                const select = document.getElementById('measureSelect' + questionIdentifier);
+                const selectedValue = select.value;
+                // "measure-7" => "Foretages backup af data i systemet?"
+                if (questionIdentifier === "measure-7") {
+                    const enable = selectedValue === "relevance-yes";
+                    // "measure-8" => "Hvis ja, Hvor ofte foretages backup?"
+                    // "measure-9" => "Hvis ja, hvor længe gemmes backup?"
+                    // "measure-10" => "Hvis ja, er der defineret retningslinjer for Recovery Time Objective (RTO), Recovery Point Objective (RPO) og test heraf?"
+                    const backupHowOften = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-8');
+                    const backupHowLong = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-9');
+                    const backupGuidelines = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-10');
+                    if (enable) {
+                        backupHowOften.show();
+                        backupHowLong.show();
+                        backupGuidelines.show();
+                    } else {
+                        backupHowOften.hide();
+                        backupHowLong.hide();
+                        backupGuidelines.hide();
+                    }
+                }
+                if (questionIdentifier === "measure-20") {
+                    const enable = selectedValue === "operation-3";
+                    const whichCloud = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-21');
+                    if (enable) {
+                        whichCloud.show();
+                    } else {
+                        whichCloud.hide();
+                    }
+                }
+            });
+        }
 
         function setMeasureEditState(enabled) {
             const rootElement = document.getElementById('measuresTab');
             if (enabled) {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                   elem.disabled = false;
-                  if (elem.tagName == "A") {
+                  if (elem.tagName === "A") {
                       elem.hidden = true;
                       if (elem.nextElementSibling) {
                          elem.nextElementSibling.hidden = false;
@@ -86,13 +126,13 @@
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                   elem.disabled = true;
-                  if (elem.tagName == "A") {
+                  if (elem.tagName === "A") {
                       elem.hidden = false;
                       elem.nextElementSibling.hidden = true;
                   }
 
                   if (elem.classList.contains("datepicker")) {
-                    if (elem.value == null || elem.value == "") {
+                    if (elem.value == null || elem.value === "") {
                       elem.parentElement.hidden = true; // hide the datepicker
                       elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
                     }
