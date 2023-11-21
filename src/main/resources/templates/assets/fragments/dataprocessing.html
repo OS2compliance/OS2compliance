@@ -158,12 +158,6 @@
             .catch(error => console.log(error))
         }
 
-        function nextInspectionSelect() {
-            const nextInspectionSelect = document.getElementById('nextInspection');
-            const nextInspectionDatePicker = document.getElementById('nextInspectionDate');
-            nextInspectionDatePicker.parentElement.hidden = nextInspectionSelect.value != 'DATE';
-        }
-
         function setDataprocessingEditState(enabled) {
             editModeCategoryInformationEditable(enabled);
             const rootElement = document.getElementById('dataProcessingTab');
@@ -208,7 +202,6 @@
                 document.getElementById('editDataProcessingBtn').hidden = false;
                 document.getElementById('cancelDataProcessingBtn').hidden = true;
             }
-            nextInspectionSelect();
         }
 
         function updateSuppliers(choices, search) {

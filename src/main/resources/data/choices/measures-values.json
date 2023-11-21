@@ -32,6 +32,10 @@
     "caption" : "Hybrid"
   },
   {
+    "identifier" : "operation-5",
+    "caption" : "Skal afklares"
+  },
+  {
     "identifier" : "cloud-1",
     "caption": "AWS"
   },
@@ -82,5 +86,5 @@
     "identifier" : "duration-4",
     "caption" : "Mere end 12 måneder"
   }
-  
+
 ]

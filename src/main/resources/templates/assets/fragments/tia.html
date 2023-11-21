@@ -209,7 +209,6 @@
         });
 
         function initRegisteredCategoriesChoices(values) {
-            console.log(values);
             let registeredCategoriesSelect = document.getElementById('tia.registeredCategories');
             let registeredCategoriesChoice = initSelect(registeredCategoriesSelect);
             registeredCategoriesChoice.setChoices(values, 'identifier', 'caption', true);
