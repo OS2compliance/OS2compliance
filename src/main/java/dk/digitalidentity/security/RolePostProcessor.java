@@ -7,13 +7,10 @@ import dk.digitalidentity.samlmodule.model.SamlLoginPostProcessor;
 import dk.digitalidentity.samlmodule.model.TokenUser;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
@@ -54,18 +51,8 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
     }
 
     private User extractUser(final String principal) {
-        final String[] parts = StringUtils.split(principal, ",");
-        if (parts.length == 1) {
-            return Optional.of(userDao.findByUuidAndActiveIsTrue(parts[0]))
-                .orElseThrow(() -> new UsernameNotFoundException("Brugeren for principal " + principal + " blev ikke fundet"));
-        } else {
-            return Arrays.stream(parts)
-                .filter(p -> p.contains("Serial="))
-                .map(p -> StringUtils.substringAfter(p, "="))
-                .map(userDao::findByUuidAndActiveIsTrue)
-                .filter(Objects::nonNull)
-                .findFirst()
-                .orElseThrow(() -> new UsernameNotFoundException("Brugeren for principal " + principal + " blev ikke fundet"));
-        }
+        final Optional<String> uuidOptional = NameIdParser.parseNameId(principal);
+        return uuidOptional.map(userDao::findByUuidAndActiveIsTrue)
+            .orElseThrow(() -> new UsernameNotFoundException("Brugeren for principal " + principal + " blev ikke fundet"));
     }
 }

@@ -1,7 +1,6 @@
 package dk.digitalidentity.security;
 
 public interface Roles {
-    // TODO More Roles
     String AUTHENTICATED = "AUTHENTICATED";
     String API_ACCESS = "API_ACCESS";
 
