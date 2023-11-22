@@ -27,6 +27,7 @@ public class UserRestControllerTest extends BaseIntegrationTest {
     private UserDao userDao;
     @Autowired
     private MockMvc mockMvc;
+
     @BeforeEach
     public void setup() {
         createUser("ff6fc101-aeb2-486e-8d39-5d8e718abdec", "kbp", "Kaspar Bach Pedersen");
