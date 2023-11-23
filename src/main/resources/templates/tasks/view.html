@@ -108,6 +108,15 @@
                                     </div>
                                 </div>
 
+                                <div class="row mb-3">
+                                    <label for="notifyResponsible" class="col-sm-2 col-form-label">Send som mail til ansvarlig</label>
+                                    <div class="col-sm-10">
+                                        <div class="input-group">
+                                            <input id="notifyResponsible" class="form-check-input editField" type="checkbox" th:value="${task.notifyResponsible}" th:field="*{notifyResponsible}">
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <th:block th:if="${completed}">
                                     <div class="row mb-3">
                                         <label for="completedDate" class="col-sm-2 col-form-label">Udført</label>
@@ -119,7 +128,7 @@
                                     <div class="row mb-3">
                                         <label for="performedBy" class="col-sm-2 col-form-label">Udført af</label>
                                         <div class="col-sm-10">
-                                            <input class="form-control" id="performedBy" th:value="${taskLog.performedBy}" disabled readonly>
+                                            <input class="form-check-input" id="performedBy" th:value="${taskLog.performedBy}" disabled readonly>
                                         </div>
                                     </div>
                                     <div class="row mb-3">
