@@ -47,7 +47,12 @@ public class NameIdParser {
 
     private static String decodeBase64BinaryUUID(final String principal) {
         final byte[] decoded = Base64.getDecoder().decode(principal);
-        final ByteBuffer buffer = ByteBuffer.wrap(decoded);
+        final int[] theByteOrder = {3,2,1,0,5,4,7,6,8,9,10,11,12,13,14,15};
+        final ByteBuffer buffer = ByteBuffer.allocate(decoded.length);
+        for (final int offset : theByteOrder) {
+            buffer.put(decoded[offset]);
+        }
+        buffer.rewind();
         final long high = buffer.getLong();
         final long low = buffer.getLong();
         final UUID uuid = new UUID(high, low);
