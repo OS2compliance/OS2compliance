@@ -15,7 +15,7 @@
               <div class="card card-body">
                 <div th:each="setting, itemStat :  *{settingsList}">
                   <div th:if="${setting.association} == 'risk'" class="row mt-3">
-                    <label for="riskScaleSelect" class="col-sm-4 col-form-label" th:text="Skala"></label>
+                    <label for="riskScaleSelect" class="col-sm-4 col-form-label" th:text="Skala" style="color: black;"></label>
                     <div th:if="${setting.settingKey} == 'scale'">
                       <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}" />
                       <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}" />
@@ -48,14 +48,14 @@
                   <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}" />
                   <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_KEY}">
                     <div class="row mt-3">
-                      <label for="ownerSelect" class="col-sm-4 col-form-label">UUID for ejerrollen i kitos</label>
+                      <label for="ownerSelect" class="col-sm-4 col-form-label" style="color: black;">UUID for ejerrollen i kitos</label>
                       <select class="form-control form-select choices__input col-sm-8" id="ownerSelect"
                         th:field="*{settingsList[__${itemStat.index}__].settingValue}"></select>
                     </div>
                   </div>
                   <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_KEY}">
                     <div class="row mt-3">
-                      <label for="responsibleSelect" class="col-sm-4 col-form-label">UUID for ansvarsrollen i kitos</label>
+                      <label for="responsibleSelect" class="col-sm-4 col-form-label" style="color: black;">UUID for ansvarsrollen i kitos</label>
                       <select class="form-control form-select choices__input" id="responsibleSelect"
                         th:field="*{settingsList[__${itemStat.index}__].settingValue}"></select>
                     </div>
