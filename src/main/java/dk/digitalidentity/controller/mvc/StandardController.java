@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -147,14 +148,15 @@ public class StandardController {
     public String supportingPage(final Model model) {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
         for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(s -> s.isSupporting()).collect(Collectors.toList())) {
-            AtomicLong countTotal = new AtomicLong();
-            AtomicLong countDone = new AtomicLong();
-            standardTemplate.getStandardTemplateSections().stream().forEach( sts -> countTotal.addAndGet(sts.getStandardSection().getTemplateSection().getChildren().stream().filter(child -> child.getStandardSection().isSelected()).collect(Collectors.toList()).size()));
-            standardTemplate.getStandardTemplateSections().stream().forEach( sts -> countDone.getAndAdd(sts.getStandardSection().getTemplateSection().getChildren().stream().filter(child -> child.getStandardSection().isSelected() && Objects.equals(child.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size()));
-            //final long countTotal = standardTemplate.getStandardTemplateSections().stream().filter(s -> s.getStandardSection().isSelected()).collect(Collectors.toList()).size();
-            //final long countDone = standardTemplate.getStandardTemplateSections().stream().filter(s -> s.getStandardSection().isSelected() && Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).count();
-            final long compliance = countTotal.get() == 0 ? 0 : 100 * (countDone.get() / countTotal.get());
-            templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), compliance + "%"));
+
+            List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
+                .flatMap(s -> s.getChildren().stream())
+                .filter(s -> s.getStandardSection().isSelected()).collect(Collectors.toList());
+            double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size();
+
+            final double compliance = collect.size() == 0 ? 0 : 100 * (readyCounter / collect.size());
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
         }
         model.addAttribute("templates", templates);
         return "standards/supporting";
