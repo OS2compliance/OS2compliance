@@ -90,6 +90,16 @@
                                             </div>
 
                                             <div class="row mb-3">
+                                                <label for="systemType"
+                                                    class="col-sm-3 col-form-label">Systemtype</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control editField" id="systemType" th:field="*{assetType}" disabled>
+                                                        <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.AssetType).values()}" th:value="${type}" th:text="${type.getMessage()}" th:selected="${type} == *{assetType}"></option>
+                                                    </select >
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
                                                 <label for="supplier"
                                                     class="col-sm-3 col-form-label">Leverandør</label>
                                                 <div class="col-sm-9">
