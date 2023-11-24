@@ -108,6 +108,15 @@
                                     </div>
                                 </div>
 
+                                <div class="row mb-3">
+                                    <label for="notifyResponsible" class="col-sm-2 col-form-label">Send mail til ansvarlig</label>
+                                    <div class="col-sm-10" style="display:flex; align-items: center">
+                                        <div class="input-group">
+                                            <input id="notifyResponsible" class="form-check-input editField" type="checkbox" th:value="${task.notifyResponsible}" th:field="*{notifyResponsible}">
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <th:block th:if="${completed}">
                                     <div class="row mb-3">
                                         <label for="completedDate" class="col-sm-2 col-form-label">Udført</label>

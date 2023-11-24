@@ -330,7 +330,7 @@ public class AssetsController {
         if(!Objects.isNull(asset.getSupplier())) {
             existingAsset.setSupplier(asset.getSupplier());
         }
-
+        existingAsset.setAssetType(asset.getAssetType());
         existingAsset.setProductLink(asset.getProductLink());
         existingAsset.setCriticality(asset.getCriticality());
 
