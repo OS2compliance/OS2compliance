@@ -81,6 +81,7 @@ public class DocumentsController {
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {
 //            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en gyldig revideringsdato");
 //        }
+        excistingDocument.setName(document.getName());
         excistingDocument.setDescription(document.getDescription());
         excistingDocument.setStatus(document.getStatus());
         excistingDocument.setLink(document.getLink());
