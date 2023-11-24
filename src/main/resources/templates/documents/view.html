@@ -49,6 +49,12 @@
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">
+                                    <label for="documentName" class="col-sm-2 col-form-label">Titel</label>
+                                    <div class="col-sm-10">
+                                        <input class="form-control editField" id="documentName" th:value="*{name}" th:field="*{name}" required>
+                                    </div>
+                                </div>
+                                <div class="row mb-3">
                                     <label for="documentType" class="col-sm-2 col-form-label">Dokumenttype</label>
                                     <div class="col-sm-10">
                                         <input class="form-control" id="documentType" th:value="*{documentType.getMessage()}" readonly>
