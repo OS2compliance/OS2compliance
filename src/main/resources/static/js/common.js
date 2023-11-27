@@ -7,7 +7,7 @@ function truncateString(str, num) {
 }
 
 const initSelect = (element) => {
-    return new Choices(element, {
+    let choices = new Choices(element, {
         searchChoices: false,
         removeItemButton: true,
         allowHTML: true,
@@ -20,6 +20,13 @@ const initSelect = (element) => {
         },
         duplicateItemsAllowed: false,
     });
+    element.addEventListener("change",
+        function(event) {
+            choices.hideDropdown();
+        },
+        false,
+    );
+    return choices;
 }
 
 function initDatepicker(elementQuerySelector, inputField) {
