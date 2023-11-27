@@ -11,7 +11,7 @@ import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
-import org.jsoup.safety.Whitelist;
+import org.jsoup.safety.Safelist;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
 import java.util.Comparator;
@@ -70,7 +70,7 @@ public class ReportNSISXlsView extends AbstractXlsView {
         doc.select("p").before("\\n");
         doc.select("li").before("\\n");
         final String str = doc.html().replaceAll("\\\\n", "\n").replaceAll("&nbsp;", " ");
-        return Jsoup.clean(str, "", Whitelist.none(), outputSettings);
+        return Jsoup.clean(str, "",  Safelist.none(), outputSettings);
     }
 
     private void createMainHeader(final Workbook workbook, final Sheet sheet) {

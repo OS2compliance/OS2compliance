@@ -27,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -146,10 +148,15 @@ public class StandardController {
     public String supportingPage(final Model model) {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
         for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(s -> s.isSupporting()).collect(Collectors.toList())) {
-            final long countTotal = standardTemplate.getStandardTemplateSections().stream().filter(s -> s.getStandardSection().isSelected()).count();
-            final long countDone = standardTemplate.getStandardTemplateSections().stream().filter(s -> s.getStandardSection().isSelected() && Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).count();
-            final long compliance = countTotal == 0 ? 100 : 100 * (countDone / countTotal);
-            templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), compliance + "%"));
+
+            List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
+                .flatMap(s -> s.getChildren().stream())
+                .filter(s -> s.getStandardSection().isSelected()).collect(Collectors.toList());
+            double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size();
+
+            final double compliance = collect.size() == 0 ? 0 : 100 * (readyCounter / collect.size());
+            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
         }
         model.addAttribute("templates", templates);
         return "standards/supporting";

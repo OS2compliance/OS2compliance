@@ -93,6 +93,16 @@
                                             </div>
 
                                             <div class="row mb-3">
+                                                <label for="systemType"
+                                                    class="col-sm-3 col-form-label">Systemtype</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control editField" id="systemType" th:field="*{assetType}" disabled>
+                                                        <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.AssetType).values()}" th:value="${type}" th:text="${type.getMessage()}" th:selected="${type} == *{assetType}"></option>
+                                                    </select >
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
                                                 <label for="supplier"
                                                     class="col-sm-3 col-form-label">Leverandør</label>
                                                 <div class="col-sm-9">
@@ -279,8 +289,7 @@
                                             </div>
 
                                             <div class="row mb-3">
-                                                <label for="archive" class="col-sm-3 col-form-label">Skal systemet
-                                                    arkiveres</label>
+                                                <label for="archive" class="col-sm-3 col-form-label">Systemet skal arkiveres</label>
                                                 <div class="col-sm-9 my-auto">
                                                     <input id="archive" th:field="*{archive}" th:checked="*{archive}"
                                                         class="form-check-input editField" type="checkbox" disabled>
@@ -457,16 +466,18 @@
 
         let managersChoicesEditSelect = null;
         let suppliersChoicesEditSelect = null;
+        let responsibleChoicesEditSelect = null;
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
         document.addEventListener("DOMContentLoaded", function (event) {
             initDatePickers();
             managersChoicesEditSelect = initManagersSelect();
             suppliersChoicesEditSelect = initSuppliersSelect();
-            editMode(false);
             suppliersChoicesEditSelect.disable();
             managersChoicesEditSelect.disable();
-            initUserSelect("responsibleUser");
+            responsibleChoicesEditSelect = initUserSelect("responsibleUser");
+            responsibleChoicesEditSelect.disable();
+            editMode(false);
 
             addRelationFormLoaded();
             initTabs();
@@ -749,6 +760,7 @@
                     managersChoicesEditSelect.enable();
                 }
                 suppliersChoicesEditSelect.enable();
+                responsibleChoicesEditSelect.enable();
                 document.getElementById('saveEditAssetBtn').hidden = false;
                 document.getElementById('editAssetBtn').hidden = true;
                 document.getElementById('cancelBtn').hidden = false;
@@ -769,6 +781,7 @@
                 });
                 suppliersChoicesEditSelect.disable();
                 managersChoicesEditSelect.disable();
+                responsibleChoicesEditSelect.disable();
                 document.getElementById('saveEditAssetBtn').hidden = true;
                 document.getElementById('editAssetBtn').hidden = false;
                 document.getElementById('cancelBtn').hidden = true;
