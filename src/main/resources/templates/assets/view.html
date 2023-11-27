@@ -8,9 +8,7 @@
 
 <body class="jumping">
     <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
-    <script th:src="@{/js/asset/view.js}" defer></script>
     <script th:src="@{/js/tabs.js}" defer></script>
-
 
     <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.css}" />
     <link rel="stylesheet" th:href="@{/css/asset/asset.css}" />
@@ -84,8 +82,13 @@
                                                 <label for="responsibleUser"
                                                     class="col-sm-3 col-form-label">Systemejer</label>
                                                 <div class="col-sm-9">
-                                                    <input class="form-control" id="responsibleUser"
-                                                        th:value="*{responsibleUser?.name}" readonly>
+                                                    <select class="form-control form-select choices__input"
+                                                            data-trigger="" id="responsibleUser" th:field="*{responsibleUser}" hidden=""
+                                                            tabindex="-1">
+                                                        <option th:value="${asset.responsibleUser?.uuid}"
+                                                                th:text="${asset.responsibleUser?.name}"
+                                                                th:if="${asset.responsibleUser != null}"></option>
+                                                    </select>
                                                 </div>
                                             </div>
 
@@ -292,7 +295,6 @@
                                                         class="form-check-input editField" type="checkbox" disabled>
                                                 </div>
                                             </div>
-
                                         </div>
                                     </div>
                                 </form>
@@ -436,18 +438,18 @@
                 </div>
             </div>
         </section>
-        <header th:replace="~{fragments/header :: header}" />
-        <nav th:replace="~{fragments/navbar :: main (page='aktiver')}" />
+        <header th:replace="~{fragments/header :: header}"></header>
+        <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
     </div>
 
     <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
     <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
 
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}" />
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}" />
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}" />
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}" />
-    <div th:replace="~{fragments/footer :: scripts}" />
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
+    <div th:replace="~{fragments/footer :: scripts}"></div>
     <div th:replace="~{fragments/footer :: taskDialog}"></div>
 
     <script th:inline="javascript">
@@ -462,10 +464,21 @@
             var supplierId = [[${asset.supplier?.id}]];
         +]*/
 
+        let managersChoicesEditSelect = null;
+        let suppliersChoicesEditSelect = null;
+        let responsibleChoicesEditSelect = null;
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
         document.addEventListener("DOMContentLoaded", function (event) {
-            loadViewAndEditForm();
+            initDatePickers();
+            managersChoicesEditSelect = initManagersSelect();
+            suppliersChoicesEditSelect = initSuppliersSelect();
+            suppliersChoicesEditSelect.disable();
+            managersChoicesEditSelect.disable();
+            responsibleChoicesEditSelect = initUserSelect("responsibleUser");
+            responsibleChoicesEditSelect.disable();
+            editMode(false);
+
             addRelationFormLoaded();
             initTabs();
             rememberSelectedTab();
@@ -560,7 +573,6 @@
             );
         }
 
-
         function initTaskRelationSelectPrivate() {
             const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
             let relationsChoice = initSelect(relationsSelect);
@@ -584,7 +596,7 @@
             //var hash = window.location.hash;
             var hash = window.localStorage.getItem('activeTab');
 
-            if (hash != null && hash != "") {
+            if (hash != null && hash !== "") {
                 //Inactivate all tabs
                 const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
                 makeInactive(myTabs);
@@ -602,6 +614,180 @@
             }
 
         }
+
+        function initDatePickers() {
+            const contractDatePicker = MCDatepicker.create({
+                el: '#contractDate',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#contractDateBtn" ).addEventListener( "click", () => {
+                contractDatePicker.open();
+            });
+
+
+            const contractTerminationPicker = MCDatepicker.create({
+                el: '#contractTermination',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#contractTerminationBtn" ).addEventListener( "click", () => {
+                contractTerminationPicker.open();
+            });
+        }
+
+        function removeChoiceByUserUuid(arr, uuid) {
+            const objWithIdIndex = arr.findIndex((obj) => obj.uuid === uuid);
+
+            if (objWithIdIndex > -1) {
+                arr.splice(objWithIdIndex, 1);
+            }
+
+            return arr;
+        }
+
+        function removeChoiceByRegisterId(arr, id) {
+            const objWithIdIndex = arr.findIndex((obj) => obj.id === id);
+            if (objWithIdIndex > -1) {
+                arr.splice(objWithIdIndex, 1);
+            }
+
+            return arr;
+        }
+
+        function updateUsers(choices, search) {
+            fetch( `/rest/users/autocomplete?search=${search}`)
+                .then(response => response.json()
+                    .then(data => {
+                        // Remove already selected users from result
+                        alreadySelected = []
+                        let sel = choices.passedElement.element;
+                        for (let i=0, n=sel.options.length;i<n;i++) {
+                            if (sel.options[i].value) alreadySelected.push(sel.options[i].value);
+                        }
+
+                        alreadySelected.forEach((uuid) => removeChoiceByUserUuid(data.content, uuid));
+
+                        choices.setChoices(data.content.map(e => {
+                            return {
+                                value: e.uuid,
+                                label: `(${e.userId}) ${e.name}`}
+                        }), 'value', 'label', false); //false to not override already selected choices
+                    }))
+                .catch(error => console.log(error));
+        }
+
+        function updateSuppliers(choices, search) {
+            fetch( `/rest/suppliers/autocomplete?search=${search}`)
+                .then(response => response.json()
+                    .then(data => {
+                        alreadySelected = []
+                        var sel = choices.passedElement.element;
+                        for (var i=0, n=sel.options.length;i<n;i++) {
+                            if (sel.options[i].value) alreadySelected.push(sel.options[i].value);
+                        }
+                        alreadySelected.forEach((id) => removeChoiceByRegisterId(data.content, id));
+
+                        choices.setChoices(data.content.map(e => {
+                            return {
+                                value: e.id,
+                                label: `${e.name}`}
+                        }), 'value', 'label', true); //false to not override already selected choices
+                    }))
+                .catch(error => console.log(error));
+        }
+
+        function initManagersSelect() {
+            const userSelect = document.getElementById('managers');
+            const userChoices = initSelect(userSelect);
+            updateUsers(userChoices, "");
+            userSelect.addEventListener("search",
+                function(event) {
+                    updateUsers(userChoices, event.detail.value);
+                },
+                false,
+            );
+            return userChoices;
+        }
+
+        function initSuppliersSelect() {
+            let supplierSelect = document.getElementById('supplier');
+            const supplierChoices = initSelect(supplierSelect);
+            updateSuppliers(supplierChoices, "");
+            supplierSelect.addEventListener("search",
+                function(event) {
+                    updateSuppliers(supplierChoices, event.detail.value);
+                },
+                false,
+            );
+            supplierChoices.setChoiceByValue(supplierId)
+            return supplierChoices;
+        }
+
+        function editMode(enabled) {
+            const rootElement = document.getElementById('editForm');
+            if (enabled) {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                    elem.disabled = false;
+                    if (elem.tagName === "A") {
+                        elem.hidden = true;
+                        if (elem.nextElementSibling) {
+                            elem.nextElementSibling.hidden = false;
+                        }
+                    }
+
+                    if (elem.classList.contains("datepicker")) {
+                        elem.parentElement.hidden = false; // show the datepicker
+                        if (elem.parentElement.nextElementSibling) {
+                            elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
+                        }
+                    }
+                });
+
+                if (!isKitos) {
+                    managersChoicesEditSelect.enable();
+                }
+                suppliersChoicesEditSelect.enable();
+                responsibleChoicesEditSelect.enable();
+                document.getElementById('saveEditAssetBtn').hidden = false;
+                document.getElementById('editAssetBtn').hidden = true;
+                document.getElementById('cancelBtn').hidden = false;
+            } else {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                    elem.disabled = true;
+                    if (elem.tagName === "A") {
+                        elem.hidden = false;
+                        elem.nextElementSibling.hidden = true;
+                    }
+
+                    if (elem.classList.contains("datepicker")) {
+                        if (elem.value == null || elem.value === "") {
+                            elem.parentElement.hidden = true; // hide the datepicker
+                            elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
+                        }
+                    }
+                });
+                suppliersChoicesEditSelect.disable();
+                managersChoicesEditSelect.disable();
+                responsibleChoicesEditSelect.disable();
+                document.getElementById('saveEditAssetBtn').hidden = true;
+                document.getElementById('editAssetBtn').hidden = false;
+                document.getElementById('cancelBtn').hidden = true;
+            }
+        }
+
 
         /*]]>*/
     </script>
