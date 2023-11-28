@@ -154,7 +154,7 @@
                     width: '10%',
                     formatter: (cell, row) => {
                         const documentId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'];
+                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${documentId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
@@ -191,7 +191,7 @@
 
     function deleteClicked(documentId, name) {
         Swal.fire({
-          text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra DOCUMENT slettes også.`,
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra DOCUMENT slettes også.`,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#03a9f4',
