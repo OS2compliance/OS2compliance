@@ -1,7 +1,6 @@
 package dk.digitalidentity.dao.grid;
 
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -141,12 +140,7 @@ public class SearchRepositoryImpl implements SearchRepository {
             }
         }
         final Predicate or = cb.or(predicates.toArray(new Predicate[predicates.size()]));
-        if(entityClass.equals(DocumentGrid.class)) {
-            cq.select(root).where(cb.equal(root.get("responsibleUserId"), user.getUserId()), or);
-        }
-        else {
-            cq.select(root).where(cb.equal(root.get("responsibleUser"), user), or);
-        }
+        cq.select(root).where(cb.equal(root.get("responsibleUser"), user), or);
 
 
         // Order By
