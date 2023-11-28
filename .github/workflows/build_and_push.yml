@@ -1,0 +1,75 @@
+# Runs on all pushes to main and uses ${{secrets.GITHUB_TOKEN}} for auth.
+# Pushes to ghcr.io
+
+name: Build and push
+
+# Controls when the workflow will run
+on:
+  push:
+    branches: [ main ]
+    tags:
+      - 'v*.*.*'
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  build:
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+# Set docker image names.
+      - name: Setup env variables
+        run: |
+          echo "DOCKER_SERVICE=ghcr.io/$(echo ${{ github.repository }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+
+# Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+
+# Login against a Docker registry except on PR
+# https://github.com/docker/login-action
+      - name: Log into registry ghcr.io
+        uses: docker/login-action@28218f9b04b4f3f62068d7b6ce6ca5b26e35336c
+        with:
+          registry: ghcr.io/${{ github.repository_owner }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+# if below step is skipped this build is a tag build. Can be used for skipping other steps.
+      - name: Is Tag Build
+        id: tag
+        if:  ${{ startsWith(github.ref, 'refs/tags/v') }}
+        run: echo ::set-output name=VERSION::${GITHUB_REF/refs\/tags\/v/}        
+
+# Build
+      - name: Build
+        run: ./build/build.sh ${{ env.DOCKER_SERVICE }} ${{ github.event.repository.url }}
+
+# Push to Github
+      - name: Tag service git id docker image
+        run: ./build/docker-tag.sh ${{ env.DOCKER_SERVICE }}:latest ${{ env.DOCKER_SERVICE }}:${{ github.sha }}
+
+      - name: Tag service dev docker image
+        run: ./build/docker-tag.sh ${{ env.DOCKER_SERVICE }}:latest ${{ env.DOCKER_SERVICE }}:dev
+
+      - name: Push dev docker image.
+        run: ./build/docker-push.sh ${{ env.DOCKER_SERVICE }}:dev
+
+      - name: Push service git id docker image.
+        run: ./build/docker-push.sh ${{ env.DOCKER_SERVICE }}:${{ github.sha }}
+
+      - name: Push latest service docker image
+        if: ${{ steps.tag.conclusion != 'skipped' }}
+        run: ./build/docker-push.sh ${{ env.DOCKER_SERVICE }}:latest
+
+      - name: Tag version service docker image
+        if: ${{ steps.tag.conclusion != 'skipped' }}
+        run: ./build/docker-tag.sh ${{ env.DOCKER_SERVICE }}:latest ${{ env.DOCKER_SERVICE }}:${{ steps.tag.outputs.VERSION }}
+
+      - name: Push version service docker image.
+        if: ${{ steps.tag.conclusion != 'skipped' }}
+        run: ./build/docker-push.sh ${{ env.DOCKER_SERVICE }}:${{ steps.tag.outputs.VERSION }}
