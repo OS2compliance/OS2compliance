@@ -8,6 +8,9 @@ on:
     branches: [ "main", "develop" ]
     tags:
       - 'v*.*.*'
+  # TMP for testing
+  pull_request:
+    branches: [ "develop" ]
 
 env:
   REGISTRY: ghcr.io
