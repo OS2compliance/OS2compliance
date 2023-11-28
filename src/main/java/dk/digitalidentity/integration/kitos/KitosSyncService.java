@@ -23,6 +23,7 @@ import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -200,7 +201,13 @@ public class KitosSyncService {
     private void updateAsset(final Asset asset, final ItSystemResponseDTO responseDTO) {
         asset.setName(responseDTO.getName());
         asset.setDescription(responseDTO.getDescription());
-        asset.setSupplier(findOrCreateSupplier(responseDTO));
+        if (!supplierOverriden(asset)) {
+            asset.setSupplier(findOrCreateSupplier(responseDTO));
+        }
+    }
+
+    private boolean supplierOverriden(final Asset asset) {
+        return nullSafe(() -> asset.getSupplier().getProperties().stream().anyMatch(p -> KITOS_UUID_PROPERTY_KEY.equals(p.getKey())), true);
     }
 
     private void createAsset(final ItSystemResponseDTO responseDTO) {
@@ -229,11 +236,16 @@ public class KitosSyncService {
     }
 
     private Supplier findOrCreateSupplier(final ItSystemResponseDTO responseDTO) {
-        if (responseDTO.getRightsHolder() == null || responseDTO.getRightsHolder().getCvr() == null) {
+        if (responseDTO.getRightsHolder() == null) {
             return null;
         }
-        return supplierService.findByCvr(responseDTO.getRightsHolder().getCvr())
-            .orElseGet(() -> createSupplier(responseDTO));
+        if (validCvr(responseDTO.getRightsHolder().getCvr())) {
+            return supplierService.findByCvr(responseDTO.getRightsHolder().getCvr())
+                .orElseGet(() -> createSupplier(responseDTO));
+        } else {
+            return supplierService.findByName(responseDTO.getRightsHolder().getName())
+                .orElseGet(() -> createSupplier(responseDTO));
+        }
     }
 
     private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
@@ -241,23 +253,42 @@ public class KitosSyncService {
         final Supplier supplier = new Supplier();
         supplier.setCreatedBy(responseDTO.getCreatedBy().getName());
         supplier.setName(responseDTO.getRightsHolder().getName());
-        supplier.setCvr(responseDTO.getRightsHolder().getCvr());
-        supplier.getProperties().add(Property.builder()
-            .key(KITOS_UUID_PROPERTY_KEY)
-            .value(responseDTO.getRightsHolder().getUuid().toString())
-            .entity(supplier)
-            .build());
+        final String cvr = responseDTO.getRightsHolder().getCvr();
+        supplier.setCvr(cvr);
+        addKitosUuid(supplier, responseDTO.getRightsHolder().getUuid().toString());
+        if (validCvr(cvr)) {
+            setNeedsCvrUpdate(supplier);
+        }
+        supplierService.create(supplier);
+        return supplier;
+    }
+
+    private static void setNeedsCvrUpdate(final Supplier supplier) {
         supplier.getProperties().add(Property.builder()
             .key(NEEDS_CVR_UPDATE_PROPERTY)
             .value("1")
             .entity(supplier)
             .build());
-        supplierService.create(supplier);
-        return supplier;
+    }
+
+    private static void addKitosUuid(final Supplier supplier, final String kitosUuid) {
+        supplier.getProperties().add(Property.builder()
+            .key(KITOS_UUID_PROPERTY_KEY)
+            .value(kitosUuid)
+            .entity(supplier)
+            .build());
     }
 
     private Optional<Asset> findItSystem(final String kitosUuid) {
         return assetService.findByKitosUuid(kitosUuid);
+    }
+
+    private boolean validCvr(final String cvr) {
+        if (StringUtils.isEmpty(cvr)) {
+            return false;
+        }
+        final String digits = StringUtils.getDigits(cvr);
+        return digits.length() == 8;
     }
 
 }

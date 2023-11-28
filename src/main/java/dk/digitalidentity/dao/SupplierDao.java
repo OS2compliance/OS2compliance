@@ -17,6 +17,8 @@ public interface SupplierDao extends JpaRepository<Supplier, Long> {
 
     Optional<Supplier> findByCvr(final String cvr);
 
+    Optional<Supplier> findByNameIgnoreCase(final String name);
+
     @Query("select s from Supplier s inner join Property p on p.entity=s where p.key=:key and p.value=:value")
     List<Supplier> findByPropertyKeyValue(@Param("key") final String propertyKey, @Param("value") final String propertyValue);
 
