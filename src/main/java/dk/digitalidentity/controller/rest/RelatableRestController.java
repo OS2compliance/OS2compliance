@@ -109,13 +109,17 @@ public class RelatableRestController {
                 .build())
             .forEach(relation -> relationDao.save(relation));
 
-        Set<Long> addedIds = new HashSet<>();
-        List<AddedRelationDTO> relationsToReturn = new ArrayList<>();
-        for (Relatable relatable : relationService.findAllRelatedTo(relateTo)) {
+        final Set<Long> addedIds = new HashSet<>();
+        final List<AddedRelationDTO> relationsToReturn = new ArrayList<>();
+        for (final Relatable relatable : relationService.findAllRelatedTo(relateTo)) {
             if (dto.relations.contains(relatable.getId()) && !addedIds.contains(relatable.getId())) {
                 if (relatable.getRelationType().equals(RelationType.STANDARD_SECTION)) {
-                    StandardSection asStandardSection = (StandardSection) relatable;
-                    relationsToReturn.add(new AddedRelationDTO(relatable.getId(), relatable.getName(), relatable.getRelationType(), findTypeForUrl(relatable.getRelationType()), relatable.getRelationType().getMessage(), asStandardSection.getTemplateSection().getStandardTemplate().getIdentifier()));
+                    final StandardSection asStandardSection = (StandardSection) relatable;
+                    relationsToReturn.add(new AddedRelationDTO(relatable.getId(), relatable.getName(), relatable.getRelationType(),
+                        findTypeForUrl(relatable.getRelationType()),
+                        relatable.getRelationType().getMessage(),
+                        RelationService.extractStandardIdentifier(asStandardSection)
+                    ));
                 } else {
                     relationsToReturn.add(new AddedRelationDTO(relatable.getId(), relatable.getName(), relatable.getRelationType(), findTypeForUrl(relatable.getRelationType()), relatable.getRelationType().getMessage(), null));
                 }
@@ -126,7 +130,7 @@ public class RelatableRestController {
         return new ResponseEntity<>(relationsToReturn, HttpStatus.OK);
     }
 
-    private String findTypeForUrl(RelationType relationType) {
+    private String findTypeForUrl(final RelationType relationType) {
         switch (relationType) {
             case SUPPLIER: return "suppliers";
             case CONTACT: return "contacts";
