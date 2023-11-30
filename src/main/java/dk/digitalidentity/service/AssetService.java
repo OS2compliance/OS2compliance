@@ -78,6 +78,10 @@ public class AssetService {
             .collect(Collectors.toList());
     }
 
+    public List<Asset> findWithPropertyKey(final String propertyKey) {
+        return assetDao.findWithPropertyKey(propertyKey);
+    }
+
     public List<Asset> findBySupplier(final Supplier supplier) {
         return assetDao.findBySupplier(supplier);
     }

@@ -47,6 +47,10 @@ public class SupplierService {
         supplierDao.delete(supplier);
     }
 
+    public Optional<Supplier> findByName(final String name) {
+        return supplierDao.findByNameIgnoreCase(name);
+    }
+
     public Optional<Supplier> findByCvr(final String cvr) {
         return supplierDao.findByCvr(cvr);
     }

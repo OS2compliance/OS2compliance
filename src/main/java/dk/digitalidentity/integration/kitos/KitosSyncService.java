@@ -1,7 +1,6 @@
 package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.dao.KitosRolesDao;
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.KitosRole;
 import dk.digitalidentity.model.entity.Property;
@@ -15,6 +14,7 @@ import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
+import dk.digitalidentity.service.UserService;
 import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -23,6 +23,7 @@ import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -40,14 +41,14 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public class KitosSyncService {
     private final AssetService assetService;
     private final SupplierService supplierService;
-    private final UserDao userDao;
+    private final UserService userService;
     private final SettingsService settingsService;
     private final KitosRolesDao rolesDao;
 
-    public KitosSyncService(final AssetService assetService, final SupplierService supplierService, final UserDao userDao, final SettingsService settingsService, final KitosRolesDao rolesDao) {
+    public KitosSyncService(final AssetService assetService, final SupplierService supplierService, final UserService userService, final SettingsService settingsService, final KitosRolesDao rolesDao) {
         this.assetService = assetService;
         this.supplierService = supplierService;
-        this.userDao = userDao;
+        this.userService = userService;
         this.settingsService = settingsService;
         this.rolesDao = rolesDao;
     }
@@ -69,8 +70,8 @@ public class KitosSyncService {
     }
 
     @Transactional
-    public void syncItSystemUsages(final List<ItSystemUsageResponseDTO> changedItSystemUsages, final List<OrganizationUserResponseDTO> users) {
-        changedItSystemUsages.forEach(itSystem -> syncSingleItSystemUsage(itSystem, users));
+    public void syncItSystemUsages(final List<ItSystemUsageResponseDTO> changedItSystemUsages) {
+        changedItSystemUsages.forEach(this::syncSingleItSystemUsage);
     }
 
     @Transactional
@@ -88,24 +89,24 @@ public class KitosSyncService {
 
     private void syncSingleUser(final OrganizationUserResponseDTO userResponseDTO) {
         final String kitosUuid = userResponseDTO.getUuid().toString();
-        userDao.findFirstByEmailEqualsIgnoreCaseAndActiveIsTrue(userResponseDTO.getEmail())
+        // Try to look up the user by e-mail if that fails try by name.
+        userService.findByEmail(userResponseDTO.getEmail())
             .ifPresentOrElse(
-                user -> {
-                    final UserProperty userProperty = user.getProperties().stream()
-                        .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY))
-                        .findFirst().orElseGet(() -> {
-                            final UserProperty newProperty = UserProperty.builder()
-                                .key(KITOS_UUID_PROPERTY_KEY)
-                                .build();
-                            newProperty.setUser(user);
-                            user.getProperties().add(newProperty);
-                            return newProperty;
-                        });
-                    userProperty.setValue(kitosUuid);
-                },
-                () -> log.warn("User with email: {} not found", userResponseDTO.getEmail()));
+                user -> setKitosUuid(user, kitosUuid),
+                () -> syncSingleUserByName(userResponseDTO));
     }
 
+    private void syncSingleUserByName(final OrganizationUserResponseDTO userResponseDTO) {
+        final String kitosUuid = userResponseDTO.getUuid().toString();
+        final List<User> users = userService.findByName(userResponseDTO.getName());
+        if (users.size() == 1) {
+            setKitosUuid(users.get(0), kitosUuid);
+        } else if (users.isEmpty()) {
+            log.info("User with email: {} and name {} not found", userResponseDTO.getEmail(), userResponseDTO.getName());
+        } else {
+            log.info("Multiple users with name {} found, set correct email in Kitos to look up the user", userResponseDTO.getName());
+        }
+    }
 
     private void syncSingleItContract(final ItContractResponseDTO contractResponseDTO) {
         contractResponseDTO.getSystemUsages().stream()
@@ -116,15 +117,13 @@ public class KitosSyncService {
             });
     }
 
-
-    private void syncSingleItSystemUsage(final ItSystemUsageResponseDTO itSystemUsageResponseDTO,
-                                         final List<OrganizationUserResponseDTO> users) {
+    private void syncSingleItSystemUsage(final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
         final String itSystemUuid = nullSafe(() -> itSystemUsageResponseDTO.getSystemContext().getUuid().toString());
         if (itSystemUuid == null) {
             return;
         }
         final Optional<Asset> itSystem = findItSystem(itSystemUuid);
-        itSystem.ifPresent(asset -> updateAssetWith(asset, itSystemUsageResponseDTO, users));
+        itSystem.ifPresent(asset -> updateAssetWith(asset, itSystemUsageResponseDTO));
     }
 
     private void syncSingleItSystem(final ItSystemResponseDTO responseDTO) {
@@ -138,6 +137,7 @@ public class KitosSyncService {
 
     private void updateAssetWith(final Asset asset, final ItContractResponseDTO itContractResponseDTO) {
         if (!itContractResponseDTO.getGeneral().getValidity().getValid()) {
+            removeKitosUuid(asset);
             return;
         }
         asset.setContractDate(
@@ -148,19 +148,18 @@ public class KitosSyncService {
         );
     }
 
-    private void updateAssetWith(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO,
-                                 final List<OrganizationUserResponseDTO> users) {
-        setAssetOwner(asset, itSystemUsageResponseDTO, users);
-        setAssetManagers(asset, itSystemUsageResponseDTO, users);
+    private void updateAssetWith(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
+        setAssetOwner(asset, itSystemUsageResponseDTO);
+        setAssetManagers(asset, itSystemUsageResponseDTO);
     }
 
-    private void setAssetManagers(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO, final List<OrganizationUserResponseDTO> users) {
+    private void setAssetManagers(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
         final String responsibleRoleUuid = settingsService.getString(KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "");
         itSystemUsageResponseDTO.getRoles().stream()
             .filter(r -> responsibleRoleUuid.equalsIgnoreCase(r.getRole().getUuid().toString()))
             .map(r -> r.getUser().getUuid())
             .forEach(r -> {
-                final Optional<User> user = findUser(r.toString(), users);
+                final Optional<User> user = findUser(r.toString());
                 user.ifPresent(value -> {
                     // Make sure to only add managers once
                     if (asset.getManagers().stream().noneMatch(u -> value.getUuid().equals(u.getUuid()))) {
@@ -170,8 +169,8 @@ public class KitosSyncService {
             });
     }
 
-    private Optional<User> findUser(final String uuid, final List<OrganizationUserResponseDTO> users) {
-        final List<User> userEntities = userDao.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, uuid);
+    private Optional<User> findUser(final String uuid) {
+        final List<User> userEntities = userService.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, uuid);
         if (userEntities.size() == 1) {
             return Optional.of(userEntities.get(0));
         }
@@ -179,14 +178,14 @@ public class KitosSyncService {
         return Optional.empty();
     }
 
-    private void setAssetOwner(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO, final List<OrganizationUserResponseDTO> users) {
+    private void setAssetOwner(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
         final String ownerRoleUuid = settingsService.getString(KITOS_OWNER_ROLE_SETTING_KEY, "");
         final UUID ownerUuid = itSystemUsageResponseDTO.getRoles().stream()
             .filter(r -> ownerRoleUuid.equalsIgnoreCase(r.getRole().getUuid().toString()))
             .map(r -> r.getUser().getUuid())
             .findFirst().orElse(null);
         if (ownerUuid != null) {
-            final List<User> userEntities = userDao.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, ownerUuid.toString());
+            final List<User> userEntities = userService.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, ownerUuid.toString());
             if (userEntities.size() == 1) {
                 asset.setResponsibleUser(userEntities.get(0));
             } else if (userEntities.isEmpty()) {
@@ -200,7 +199,14 @@ public class KitosSyncService {
     private void updateAsset(final Asset asset, final ItSystemResponseDTO responseDTO) {
         asset.setName(responseDTO.getName());
         asset.setDescription(responseDTO.getDescription());
-        asset.setSupplier(findOrCreateSupplier(responseDTO));
+        if (!supplierOverriden(asset)) {
+            asset.setSupplier(findOrCreateSupplier(responseDTO));
+        }
+    }
+
+    private boolean supplierOverriden(final Asset asset) {
+        //noinspection DataFlowIssue
+        return nullSafe(() -> asset.getSupplier().getProperties().stream().anyMatch(p -> KITOS_UUID_PROPERTY_KEY.equals(p.getKey())), true);
     }
 
     private void createAsset(final ItSystemResponseDTO responseDTO) {
@@ -229,11 +235,16 @@ public class KitosSyncService {
     }
 
     private Supplier findOrCreateSupplier(final ItSystemResponseDTO responseDTO) {
-        if (responseDTO.getRightsHolder() == null || responseDTO.getRightsHolder().getCvr() == null) {
+        if (responseDTO.getRightsHolder() == null) {
             return null;
         }
-        return supplierService.findByCvr(responseDTO.getRightsHolder().getCvr())
-            .orElseGet(() -> createSupplier(responseDTO));
+        if (validCvr(responseDTO.getRightsHolder().getCvr())) {
+            return supplierService.findByCvr(responseDTO.getRightsHolder().getCvr())
+                .orElseGet(() -> createSupplier(responseDTO));
+        } else {
+            return supplierService.findByName(responseDTO.getRightsHolder().getName())
+                .orElseGet(() -> createSupplier(responseDTO));
+        }
     }
 
     private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
@@ -241,23 +252,63 @@ public class KitosSyncService {
         final Supplier supplier = new Supplier();
         supplier.setCreatedBy(responseDTO.getCreatedBy().getName());
         supplier.setName(responseDTO.getRightsHolder().getName());
-        supplier.setCvr(responseDTO.getRightsHolder().getCvr());
-        supplier.getProperties().add(Property.builder()
-            .key(KITOS_UUID_PROPERTY_KEY)
-            .value(responseDTO.getRightsHolder().getUuid().toString())
-            .entity(supplier)
-            .build());
+        final String cvr = responseDTO.getRightsHolder().getCvr();
+        supplier.setCvr(cvr);
+        addKitosUuid(supplier, responseDTO.getRightsHolder().getUuid().toString());
+        if (validCvr(cvr)) {
+            setNeedsCvrUpdate(supplier);
+        }
+        supplierService.create(supplier);
+        return supplier;
+    }
+
+    private void setKitosUuid(final User user, final String kitosUuid) {
+        final UserProperty userProperty = user.getProperties().stream()
+            .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY))
+            .findFirst().orElseGet(() -> {
+                final UserProperty newProperty = UserProperty.builder()
+                    .key(KITOS_UUID_PROPERTY_KEY)
+                    .build();
+                newProperty.setUser(user);
+                user.getProperties().add(newProperty);
+                return newProperty;
+            });
+        userProperty.setValue(kitosUuid);
+    }
+
+    private void removeKitosUuid(final Asset asset) {
+        asset.getProperties().stream()
+            .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY))
+            .findFirst()
+            .ifPresent(property -> asset.getProperties().remove(property));
+    }
+
+    private Optional<Asset> findItSystem(final String kitosUuid) {
+        return assetService.findByKitosUuid(kitosUuid);
+    }
+
+    private boolean validCvr(final String cvr) {
+        if (StringUtils.isEmpty(cvr)) {
+            return false;
+        }
+        final String digits = StringUtils.getDigits(cvr);
+        return digits.length() == 8;
+    }
+
+    private static void setNeedsCvrUpdate(final Supplier supplier) {
         supplier.getProperties().add(Property.builder()
             .key(NEEDS_CVR_UPDATE_PROPERTY)
             .value("1")
             .entity(supplier)
             .build());
-        supplierService.create(supplier);
-        return supplier;
     }
 
-    private Optional<Asset> findItSystem(final String kitosUuid) {
-        return assetService.findByKitosUuid(kitosUuid);
+    private static void addKitosUuid(final Supplier supplier, final String kitosUuid) {
+        supplier.getProperties().add(Property.builder()
+            .key(KITOS_UUID_PROPERTY_KEY)
+            .value(kitosUuid)
+            .entity(supplier)
+            .build());
     }
 
 }
