@@ -29,6 +29,8 @@ public interface UserDao extends JpaRepository<User, String>  {
 
     Optional<User> findFirstByEmailEqualsIgnoreCaseAndActiveIsTrue(final String email);
 
+    List<User> findByNameEqualsIgnoreCaseAndActiveIsTrue(final String name);
+
     @Query("select u from User u inner join UserProperty up on up.user=u where up.key=:key and up.value=:value")
     List<User> findByPropertyKeyValue(@Param("key") final String propertyKey, @Param("value") final String propertyValue);
 
