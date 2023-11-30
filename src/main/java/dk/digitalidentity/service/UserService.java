@@ -8,6 +8,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -38,6 +39,18 @@ public class UserService {
             return Optional.empty();
         }
         return userDao.findByUserIdAndActiveIsTrue(userId);
+    }
+
+    public List<User> findByName(final String name) {
+        return userDao.findByNameEqualsIgnoreCaseAndActiveIsTrue(name);
+    }
+
+    public List<User> findByPropertyKeyValue(final String propertyKey, final String propertyValue) {
+        return userDao.findByPropertyKeyValue(propertyKey, propertyValue);
+    }
+
+    public Optional<User> findByEmail(final String email) {
+        return userDao.findFirstByEmailEqualsIgnoreCaseAndActiveIsTrue(email);
     }
 
     public Page<User> getPaged(final int pageSize, final int page) {

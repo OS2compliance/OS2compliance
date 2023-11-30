@@ -52,7 +52,7 @@ public class KitosSyncTask {
             kitosService.syncRoles(roles);
             kitosService.syncUsers(users);
             kitosService.syncItSystems(changedItSystems);
-            kitosService.syncItSystemUsages(changedItSystemUsages, users);
+            kitosService.syncItSystemUsages(changedItSystemUsages);
             kitosService.syncItContracts(itContracts);
         }
 
