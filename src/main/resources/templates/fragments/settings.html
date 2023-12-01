@@ -1,5 +1,15 @@
 <div th:if="${T(dk.digitalidentity.security.SecurityUtil).administrator}" class="modal fade" id="settingsDialog" tabindex="-1" aria-labelledby="settings" aria-hidden="true">
-  <div class="modal-dialog">
+    <link rel="stylesheet" th:href="@{/css/setting/style.css}" />
+    <style>
+    .choices__list--dropdown {
+    color: black;
+    }
+    .choices__list[aria-expanded] {
+    color:black;
+    }
+
+    </style>
+    <div class="modal-dialog">
     <div class="modal-content">
       <div class="modal-header">
         <h5 class="modal-title">Rediger indstillinger</h5>
@@ -22,9 +32,9 @@
                       <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}" />
                       <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}" />
                       <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}" />
-                      <select class="form-control form-select" data-trigger="" name="riskScale" id="riskScaleSelect"
+                      <select style="color:black;" class="form-control form-select" data-trigger="" name="riskScale" id="riskScaleSelect"
                         tabindex="-1" th:field="*{settingsList[__${itemStat.index}__].settingValue}">
-                        <option th:each="scale : ${T(dk.digitalidentity.model.entity.enums.RiskScaleType).values()}"
+                        <option style="color: black;" th:each="scale : ${T(dk.digitalidentity.model.entity.enums.RiskScaleType).values()}"
                           th:value="${scale.getValue()}" th:text="${scale}"
                           th:selected="${scale.name() == @scaleService.switchScale(setting.settingValue).name()}"></option>
                       </select>
