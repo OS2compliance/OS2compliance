@@ -2,6 +2,7 @@ package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.kitos.auth.AuthTokenService;
+import dk.kitos.api.ApiV2DeltaFeedApi;
 import dk.kitos.api.ApiV2ItContractApi;
 import dk.kitos.api.ApiV2ItSystemApi;
 import dk.kitos.api.ApiV2ItSystemUsageApi;
@@ -34,6 +35,11 @@ public class KitosIntegrationConfig {
             apiClient.setBasePath(configuration.getIntegrations().getKitos().getBasePath());
         }
         return apiClient;
+    }
+
+    @Bean
+    public ApiV2DeltaFeedApi deltaFeedApi(final ApiClient apiClient) {
+        return new ApiV2DeltaFeedApi(apiClient);
     }
 
     @Bean
