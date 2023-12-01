@@ -43,22 +43,22 @@ public class DefaultController implements ErrorController {
     }
 
     @Transactional
-    @GetMapping("/")
+    @GetMapping("/dashboard")
 	public String index(final Model model) {
-        if (!SecurityUtil.isLoggedIn()) {
-            return "landingPage";
-        }
-        final var userUuid = SecurityUtil.getLoggedInUserUuid();
-        if(userUuid != null) {
-            final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
-            final List<Task> taskList = taskService.findTasksNearingDeadlines(user).stream().sorted((o1, o2) -> o1.getNextDeadline().compareTo(o2.getNextDeadline())).collect(Collectors.toList());
-            model.addAttribute("tasks", taskList);
-            final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
-            model.addAttribute("documents", documentList);
-            model.addAttribute("user", user);
-        }
+        if (SecurityUtil.isLoggedIn()) {
+            final var userUuid = SecurityUtil.getLoggedInUserUuid();
+            if(userUuid != null) {
+                final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
+                final List<Task> taskList = taskService.findTasksNearingDeadlines(user).stream().sorted((o1, o2) -> o1.getNextDeadline().compareTo(o2.getNextDeadline())).collect(Collectors.toList());
+                model.addAttribute("tasks", taskList);
+                final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
+                model.addAttribute("documents", documentList);
+                model.addAttribute("user", user);
+            }
 
-		return "index";
+            return "dashboard";
+        }
+        return "index";
     }
 
 	@RequestMapping(value = "/error", produces = "text/html")
