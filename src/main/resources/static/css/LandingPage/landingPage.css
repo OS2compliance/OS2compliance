@@ -1,0 +1,45 @@
+
+    body {
+      font-family: 'Arial', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(to right, #015080, #0276aa, #03538f);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      animation: gradientAnimation 10s infinite alternate;
+    }
+
+    @keyframes gradientAnimation {
+      0% {
+        background-position: 0% 50%;
+      }
+      100% {
+        background-position: 100% 50%;
+      }
+    }
+
+    .container {
+      text-align: center;
+      color: #fff;
+    }
+
+    .logo {
+      width: auto;
+      height: 15vh; /* Make logo fill 15% of the screen */
+      margin-bottom: 40px;
+    }
+
+    a {
+      background-color: #014c7a;
+      color: white;
+      padding: 16px 32px;
+      font-size: 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      display: inline-block;
+      position: center;
+      width: 35%;
+    }

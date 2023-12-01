@@ -3,56 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-    body {
-      font-family: 'Arial', sans-serif;
-      margin: 0;
-      padding: 0;
-      background: linear-gradient(to right, #015080, #0276aa, #03538f);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      animation: gradientAnimation 10s infinite alternate;
-    }
-
-    @keyframes gradientAnimation {
-      0% {
-        background-position: 0% 50%;
-      }
-      100% {
-        background-position: 100% 50%;
-      }
-    }
-
-    .container {
-      text-align: center;
-      color: #fff;
-    }
-
-    .logo {
-      width: auto;
-      height: 25vh; /* Make logo fill 25% of the screen */
-      margin-bottom: 40px;
-    }
-
-    .login-button {
-      background-color: #014c7a;
-      color: white;
-      padding: 16px 32px;
-      font-size: 20px;
-      border: none;
-      cursor: pointer;
-      border-radius: 5px;
-      width: 40%;
-    }
-  </style>
 </head>
 <body>
+<link rel="stylesheet" th:href="@{/css/landingPage/landingPage.css}" />
 <div class="container">
     <img class="logo" src="/img/OS2compliance_logo.svg" alt="Your Logo">
     <br><br>
-    <button class="login-button" onclick="redirectToLoginPage()">Login</button>
+    <a th:href="@{/saml/login}" class="login-button" type="submit">Log in</a>
 </div>
 
 <script>

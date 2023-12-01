@@ -44,11 +44,10 @@ public class DefaultController implements ErrorController {
 
     @Transactional
     @GetMapping("/")
-	public String defaultPage(final Model model) {
-        return "landingPage";
-		/*if (!SecurityUtil.isLoggedIn()) {
-			return "redirect:/saml/login";
-		}
+	public String index(final Model model) {
+        if (!SecurityUtil.isLoggedIn()) {
+            return "landingPage";
+        }
         final var userUuid = SecurityUtil.getLoggedInUserUuid();
         if(userUuid != null) {
             final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
@@ -59,8 +58,8 @@ public class DefaultController implements ErrorController {
             model.addAttribute("user", user);
         }
 
-		return "index";*/
-	}
+		return "index";
+    }
 
 	@RequestMapping(value = "/error", produces = "text/html")
 	public String errorPage(final Model model, final HttpServletRequest request) {
