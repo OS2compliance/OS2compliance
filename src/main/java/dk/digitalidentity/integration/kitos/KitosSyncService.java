@@ -21,6 +21,7 @@ import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
+import dk.kitos.api.model.TrackingEventResponseDTO;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -33,6 +34,7 @@ import java.util.UUID;
 import static dk.digitalidentity.Constants.NEEDS_CVR_UPDATE_PROPERTY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
@@ -51,6 +53,16 @@ public class KitosSyncService {
         this.userService = userService;
         this.settingsService = settingsService;
         this.rolesDao = rolesDao;
+    }
+
+    @Transactional
+    public void syncDeletedItSystems(final List<TrackingEventResponseDTO> deletionEvents) {
+        deletionEvents.stream().map(TrackingEventResponseDTO::getEntityUuid).forEach(this::syncItSystemDeletion);
+    }
+
+    @Transactional
+    public void syncDeletedItSystemUsages(final List<TrackingEventResponseDTO> deletedUsages) {
+        deletedUsages.stream().map(TrackingEventResponseDTO::getEntityUuid).forEach(this::syncItSystemUsageDeletion);
     }
 
     @Transactional
@@ -77,6 +89,16 @@ public class KitosSyncService {
     @Transactional
     public void syncItSystems(final List<ItSystemResponseDTO> changedItSystems) {
         changedItSystems.forEach(this::syncSingleItSystem);
+    }
+
+    private void syncItSystemDeletion(final UUID itSystemUuid) {
+        assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, itSystemUuid.toString())
+            .ifPresent(this::removeKitosUuid);
+    }
+
+    private void syncItSystemUsageDeletion(final UUID usageUuid) {
+        assetService.findByProperty(KITOS_USAGE_UUID_PROPERTY_KEY, usageUuid.toString())
+            .ifPresent(this::removeKitosUuid);
     }
 
     private void syncSingleRole(final RoleOptionResponseDTO roleOptionResponseDTO) {
@@ -137,7 +159,6 @@ public class KitosSyncService {
 
     private void updateAssetWith(final Asset asset, final ItContractResponseDTO itContractResponseDTO) {
         if (!itContractResponseDTO.getGeneral().getValidity().getValid()) {
-            removeKitosUuid(asset);
             return;
         }
         asset.setContractDate(
@@ -149,9 +170,15 @@ public class KitosSyncService {
     }
 
     private void updateAssetWith(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
+        final boolean valid = nullSafe(() -> itSystemUsageResponseDTO.getGeneral().getValidity().getValid(), true);
+        if (!valid) {
+            return;
+        }
+        addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
         setAssetOwner(asset, itSystemUsageResponseDTO);
         setAssetManagers(asset, itSystemUsageResponseDTO);
     }
+
 
     private void setAssetManagers(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
         final String responsibleRoleUuid = settingsService.getString(KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "");
@@ -254,7 +281,7 @@ public class KitosSyncService {
         supplier.setName(responseDTO.getRightsHolder().getName());
         final String cvr = responseDTO.getRightsHolder().getCvr();
         supplier.setCvr(cvr);
-        addKitosUuid(supplier, responseDTO.getRightsHolder().getUuid().toString());
+        setKitosUuid(supplier, responseDTO.getRightsHolder().getUuid().toString());
         if (validCvr(cvr)) {
             setNeedsCvrUpdate(supplier);
         }
@@ -278,13 +305,12 @@ public class KitosSyncService {
 
     private void removeKitosUuid(final Asset asset) {
         asset.getProperties().stream()
-            .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY))
-            .findFirst()
-            .ifPresent(property -> asset.getProperties().remove(property));
+            .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY) ||p.getKey().equals(KITOS_USAGE_UUID_PROPERTY_KEY))
+            .forEach(property -> asset.getProperties().remove(property));
     }
 
     private Optional<Asset> findItSystem(final String kitosUuid) {
-        return assetService.findByKitosUuid(kitosUuid);
+        return assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, kitosUuid);
     }
 
     private boolean validCvr(final String cvr) {
@@ -303,12 +329,33 @@ public class KitosSyncService {
             .build());
     }
 
-    private static void addKitosUuid(final Supplier supplier, final String kitosUuid) {
-        supplier.getProperties().add(Property.builder()
-            .key(KITOS_UUID_PROPERTY_KEY)
-            .value(kitosUuid)
-            .entity(supplier)
-            .build());
+
+    private static void addKitosUsageUuid(final Asset asset, final String usageUuid) {
+        asset.getProperties().stream()
+            .filter(p -> p.getKey().equals(KITOS_USAGE_UUID_PROPERTY_KEY))
+            .findFirst()
+            .ifPresentOrElse(
+                p -> p.setValue(usageUuid),
+                () -> asset.getProperties().add(Property.builder()
+                    .key(KITOS_USAGE_UUID_PROPERTY_KEY)
+                    .value(usageUuid)
+                    .entity(asset)
+                    .build())
+            );
+    }
+
+    private static void setKitosUuid(final Supplier supplier, final String kitosUuid) {
+        supplier.getProperties().stream()
+            .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY))
+            .findFirst()
+            .ifPresentOrElse(
+                p -> p.setValue(kitosUuid),
+                () -> supplier.getProperties().add(Property.builder()
+                    .key(KITOS_UUID_PROPERTY_KEY)
+                    .value(kitosUuid)
+                    .entity(supplier)
+                    .build())
+            );
     }
 
 }
