@@ -30,8 +30,7 @@ public class KitosSyncTask {
 
     @Scheduled(cron = "${os2compliance.integrations.kitos.cron}")
     public void sync() {
-        if (!configuration.isSchedulingEnabled()) {
-            log.info("Scheduling disabled, not doing sync");
+        if (taskDisabled()) {
             return;
         }
         if (!configuration.getIntegrations().getKitos().isEnabled()) {
@@ -65,6 +64,9 @@ public class KitosSyncTask {
 
     @Scheduled(cron = "${os2compliance.integrations.kitos.deletion.cron}")
     public void syncDeletions() {
+        if (taskDisabled()) {
+            return;
+        }
         log.info("Starting Kitos deletion synchronisation");
         final List<TrackingEventResponseDTO> deletedSystemUsageTracking = kitosClientService.fetchDeletedSystemUsages(true);
         final List<TrackingEventResponseDTO> deletedItSystems = kitosClientService.fetchDeletedItSystems(true);
@@ -72,5 +74,18 @@ public class KitosSyncTask {
         kitosService.syncDeletedItSystemUsages(deletedSystemUsageTracking);
         log.info("Finished Kitos deletion synchronisation");
     }
+
+    private boolean taskDisabled() {
+        if (!configuration.isSchedulingEnabled()) {
+            log.info("Scheduling disabled, not doing sync");
+            return true;
+        }
+        if (!configuration.getIntegrations().getKitos().isEnabled()) {
+            log.info("Kitos sync not enabled, not doing sync");
+            return true;
+        }
+        return false;
+    }
+
 
 }
