@@ -27,6 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -304,7 +305,8 @@ public class KitosSyncService {
     }
 
     private void removeKitosUuid(final Asset asset) {
-        asset.getProperties().stream()
+        final List<Property> listCopy = new ArrayList<>(asset.getProperties());
+        listCopy.stream()
             .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY) ||p.getKey().equals(KITOS_USAGE_UUID_PROPERTY_KEY))
             .forEach(property -> asset.getProperties().remove(property));
     }
