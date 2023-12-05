@@ -6,6 +6,7 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.service.ChoiceListImporter;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.RegisterImporter;
@@ -42,6 +43,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final ThreatCatalogImporter threatCatalogImporter;
     private final StandardTemplateImporter templateImporter;
     private final TagDao tagDao;
+    private final RegisterService registerService;
     private final RegisterImporter registerImporter;
     private final OS2complianceConfiguration config;
     private final SettingsService settingsService;
@@ -62,6 +64,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(2, this::seedV2);
         incrementAndPerformIfVersion(3, this::seedV3);
         incrementAndPerformIfVersion(4, this::seedV4);
+        incrementAndPerformIfVersion(5, this::seedV5);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -72,8 +75,18 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         }
     }
 
+    private void seedV5() {
+        // Article 30 registers had mistakenly been marked with $10 they should have had $8
+        registerService.findAllArticle30().stream()
+            .filter(r -> r.getGdprChoices().contains("register-gdpr-valp10"))
+            .forEach(r -> {
+                r.getGdprChoices().remove("register-gdpr-valp10");
+                r.getGdprChoices().add("register-gdpr-valp8");
+            });
+    }
+
     private void seedV4() {
-        // Reimport meassures as new options was added.
+        // Reimport measures as new options was added.
         try {
             choiceImporter.importValues("./data/choices/measures-values.json");
             // Delete and reimport the measure choices
