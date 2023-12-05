@@ -19,7 +19,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#taskFormDialog">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -45,8 +45,10 @@
     <nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
 </div>
 
+<div th:replace="~{fragments/footer :: taskDialog}"></div>
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
 <div th:replace="~{fragments/footer :: scripts}"></div>
+
 
 <script th:inline="javascript">
     /*<![CDATA[*/
