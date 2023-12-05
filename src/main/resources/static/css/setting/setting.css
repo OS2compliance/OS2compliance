@@ -1,0 +1,6 @@
+.choices__list--dropdown {
+    color: black;
+}
+.choices__list[aria-expanded] {
+    color:black;
+}
