@@ -186,7 +186,7 @@
                                                     <div class="row mb-3">
                                                         <label for="checkCompletedPerformedBy" class="col-sm-3 col-form-label">Udført af</label>
                                                         <div class="col-sm-9">
-                                                            <input class="form-control" id="checkCompletedPerformedBy" th:value="${taskLog.performedBy()}" disabled readonly>
+                                                            <input class="form-control" id="checkCompletedPerformedBy" th:value="${taskLog.performedBy}" disabled readonly>
                                                         </div>
                                                     </div>
                                                     <div th:unless="${taskLog.taskResult} == null" class="row mb-3">
