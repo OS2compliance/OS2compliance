@@ -45,8 +45,8 @@
 				</div>
 			</div>
 		</section>
-		<header th:replace="~{fragments/header :: header}" />
-		<nav th:replace="~{fragments/navbar :: main (page='fortegnelse')}" />
+		<header th:replace="~{fragments/header :: header}"></header>
+		<nav th:replace="~{fragments/navbar :: main (page='fortegnelse')}"></nav>
 	</div>
 
 	<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="registerLabel" aria-hidden="true"></div>
@@ -231,7 +231,7 @@
 						width: '10%',
 						formatter: (cell, row) => {
 							const registerId = row.cells[0]['data'];
-							const name = row.cells[1]['data'];
+                            const name = row.cells[1]['data'].replaceAll("'", "\\'");
 							return gridjs.html(
 									`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
 						}
@@ -268,7 +268,7 @@
 
 		function deleteClicked(registerId, name) {
 			Swal.fire({
-			  text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra REGISTER slettes også.`,
+			  text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra REGISTER slettes også.`,
 			  icon: 'warning',
 			  showCancelButton: true,
 			  confirmButtonColor: '#03a9f4',

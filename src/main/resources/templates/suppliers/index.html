@@ -107,7 +107,7 @@
 
 		function deleteClicked(supplierId, name) {
             Swal.fire({
-              text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra leverandøren slettes også.`,
+              text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra leverandøren slettes også.`,
               icon: 'warning',
               showCancelButton: true,
               confirmButtonColor: '#03a9f4',
@@ -215,7 +215,7 @@
 						width: '10%',
 						formatter: (cell, row) => {
 							const supplierId = row.cells[0]['data'];
-							const name = row.cells[1]['data'];
+                            const name = row.cells[1]['data'].replaceAll("'", "\\'");
 							return gridjs.html(
 									`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editClicked('${supplierId}')"><i class="pli-pen-5 fs-5"></i></button>` +
 									`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${supplierId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
