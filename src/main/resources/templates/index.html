@@ -149,6 +149,7 @@
 			var documentsViewUrl = [[@{/documents/}]];
 		+]*/
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+		let today = new Date();
 
 		const defaultClassName = {
 			table: 'table table-striped',
@@ -161,7 +162,6 @@
 		};
 
 		document.addEventListener("DOMContentLoaded", function (event) {
-			const today = new Date();
 			const gridTasks = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
@@ -221,8 +221,8 @@
 							}
 
 							var dateString = cell.replace(" ", "/");
-							var dateSplit = dateString.split("/");
-							var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+							var cellDate = Date.parse(dateString);
+							
 							if (cellDate < today) {
 								return gridjs.html(`<span style="color: red;">${cell}</span>`);
 							} else {
