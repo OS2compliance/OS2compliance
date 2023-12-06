@@ -182,7 +182,6 @@ public class StandardController {
 
     private Map<Long, List<RelationDTO>> buildRelationsMap(final StandardTemplate template) {
         final Map<Long, List<RelationDTO>> result = new HashMap<>();
-        var testData = template.getStandardTemplateSections();
 
         for (final StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
             for(final StandardTemplateSection child : standardTemplateSection.getChildren())

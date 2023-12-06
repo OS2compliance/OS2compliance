@@ -65,6 +65,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(3, this::seedV3);
         incrementAndPerformIfVersion(4, this::seedV4);
         incrementAndPerformIfVersion(5, this::seedV5);
+        incrementAndPerformIfVersion(6, this::seedV6);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -72,6 +73,16 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         if (currentVersion == version) {
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
+        }
+    }
+
+    private void seedV6() {
+        // subsections weren't displaying their association with parent. Changed format from 1 to parent.1 (ex 3.1.1 section 1 becomes 3.1.1.1)
+        try {
+
+            templateImporter.updateStandardSections("./data/standards/nsis2_sections.json");
+        } catch (IOException e){
+            throw  new RuntimeException(e);
         }
     }
 
