@@ -12,6 +12,9 @@ on:
 jobs:
   build:
     runs-on: 'ubuntu-latest'
+    # Sets permissions for the jobs according to PoLP
+    permissions:
+      contents: read
     steps:
       - name: 'Check out repository'
         uses: actions/checkout@v3
