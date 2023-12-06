@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<div th:fragment="purpose(register)">
+    <div class="card shadow-none">
+        <form id="editPurposeId" class="row" action="#" th:action="@{/registers/__${register.id}__/update(section='purpose')}" th:object="${register}" name="purpose" method="post">
+            <div class="card-header toolbar border-0 pb-0">
+                <div class="toolbar-start"></div>
+                <div class="toolbar-end">
+                    <button id="editPurposeBtn" type="button" class="btn btn-secondary btn-xs" onclick="setPurposeEditState(true)">Rediger</button>
+                    <button id="cancelPurposeBtn" type="button" onclick="setPurposeEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="savePurposeBtn" form="editPurposeId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <div class="form-group row mt-4">
+                    <div class="row">
+                        <label for="purpose" class="col-form-label col-lg-3">Beskriv formålet med behandlingsaktiviteten</label>
+                        <div class="col-lg-9">
+                            <textarea name="purpose" th:field="*{purpose}" id="purpose" class="p-2 form-control" th:text="${register.purpose}" rows="4" readonly></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label class="col-form-label col-lg-3 col-sm-12">GDPR lovhjemmel</label>
+                        <div class="col-sm-12 col-lg-9 mt-2">
+                            <div class="form-check" th:each="choice: ${gdprChoices}">
+                                <input th:id="${choice.identifier}" th:field="*{gdprChoices}" th:value="${choice.identifier}" th:checked="${#sets.contains(register.gdprChoices, choice.identifier)}" class="form-check-input" type="checkbox" autocomplete="off" disabled/>
+                                <label th:for="${choice.identifier}" th:text="${choice.caption + ' ' + choice.description}"></label>
+                                <div th:if="${choice.identifier=='register-gdpr-valp6'}" class="mb-2 mt-1">
+                                    <div class="form-check" th:each="choicep6: ${gdprP6Choices}">
+                                        <input th:id="${choicep6.identifier}" th:field="*{gdprChoices}" th:value="${choicep6.identifier}" th:checked="${#sets.contains(register.gdprChoices, choicep6.identifier)}" class="form-check-input" type="checkbox" autocomplete="off" disabled/>
+                                        <label th:title="${choicep6.description}" th:for="${choicep6.identifier}" th:text="${choicep6.caption + ' - ' + choicep6.description}"></label>
+                                    </div>
+                                </div>
+                                <div th:if="${choice.identifier=='register-gdpr-valp7'}" class="mb-2 mt-1" id="gdprP7">
+                                    <div class="form-check" th:each="choicep7: ${gdprP7Choices}">
+                                        <input th:id="${choicep7.identifier}" th:field="*{gdprChoices}" th:value="${choicep7.identifier}" th:checked="${#sets.contains(register.gdprChoices, choicep7.identifier)}" class="form-check-input" type="checkbox" autocomplete="off" disabled/>
+                                        <label th:title="${choicep7.description}" th:for="${choicep7.identifier}" th:text="${choicep7.caption + ' - ' + choicep7.description}"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="informationObligation" class="col-form-label col-lg-3 col-sm-12">Opfyldes oplysningspligten</label>
+                        <div class="col-lg-3 col-sm-6">
+                            <select class="form-control form-select" th:field="*{informationObligation}" id="informationObligation" name="informationObligation" tabindex="-1" disabled>
+                                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationObligationStatus).values()}"
+                                        th:value="${status.name}" th:text="${status.message}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="informationObligationDesc" class="col-form-label col-lg-3 col-sm-12">Beskriv hvordan oplysningspligten opfyldes</label>
+                        <div class="col-lg-9 col-sm-12">
+                            <textarea name="informationObligationDesc" th:field="*{informationObligationDesc}" id="informationObligationDesc" class="p-2 form-control" th:text="${register.informationObligationDesc}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="consent" class="col-form-label col-lg-3 col-sm-12">Beskriv hvor samtykken opbevares, hvis relevant</label>
+                        <div class="col-lg-9 col-sm-12">
+                            <textarea name="consent" th:field="*{consent}" id="consent" class="p-2 form-control" th:text="${register.consent}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="purposeNotes" class="col-form-label col-lg-3 col-sm-12">Noter</label>
+                        <div class="col-lg-9 col-sm-12">
+                            <textarea name="purposeNotes" th:field="*{purposeNotes}" id="purposeNotes" class="p-2 form-control" th:text="${register.purposeNotes}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+    <script th:inline="javascript">
+        document.addEventListener("DOMContentLoaded", function(event) {
+            purposeFormLoaded();
+        });
+    </script>
+</div>
+</body>
+</html>

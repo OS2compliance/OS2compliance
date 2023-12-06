@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="da">
+
+<head th:replace="~{fragments/header :: head}"></head>
+<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
+<script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
+<script th:src="@{/js/data-processing-component.js}" defer></script>
+
+<body class="jumping">
+    <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
+    <script th:src="@{/js/tabs.js}" defer></script>
+
+    <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.css}" />
+    <link rel="stylesheet" th:href="@{/css/asset/asset.css}" />
+    <link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
+
+    <link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
+    <script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
+    <script th:src="@{/js/risk/riskProfile.js}" defer></script>
+
+    <div id="root" class="root mn--max hd--expanded">
+        <section id="content" class="content">
+            <div class="content__header content__boxed overlapping">
+                <div class="content__wrap">
+                    <div class="d-md-flex">
+                        <div class="me-auto">
+                            <nav aria-label="breadcrumb">
+                                <ol class="breadcrumb mb-0">
+                                    <li class="breadcrumb-item"><a th:href="@{/assets}">Aktiver</a></li>
+                                    <li class="breadcrumb-item active" aria-current="page" th:text="${asset.name}"></li>
+                                </ol>
+                            </nav>
+                            <h1 class="page-title mb-0 mt-2" th:text="${asset.name}"></h1>
+                            <p class="lead"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="content__boxed">
+                <div class="content__wrap">
+                    <div class="tab-base">
+                        <ul class="nav nav-tabs" id="tabs" role="tablist">
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#assetTab" type="button" role="tab" aria-controls="asset" aria-selected="true">Generelt</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#measuresTab" type="button" role="tab" aria-controls="historik" aria-selected="false">Foranstaltninger</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataProcessingTab" type="button" role="tab" aria-controls="historik" aria-selected="false">Databehandling</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#riskAssessmentTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${threatExists}" class="badge" th:classappend="${risk?.assessment?.name() == 'RED'} ? 'bg-red' : (${risk?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspRisikovurdering</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#oversightTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${oversights.size() > 0}" class="badge" th:classappend="${oversight?.status?.name() == 'RED'} ? 'bg-red' : (${oversight?.status?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspTilsyn</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dpiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span id="dpiaBadge" class="badge">&nbsp</span>&nbspDPIA</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${asset.tia?.assessment != null}" id="tiaBadge" class="badge" th:classappend="${asset.tia?.assessment?.name() == 'RED'} ? 'bg-red' : (${asset.tia?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspTIA</button>
+                            </li>
+                        </ul>
+
+                        <div class="tab-content">
+                            <div id="assetTab" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
+                                <form id="editForm" action="#" th:action="@{/assets/edit}" th:object="${asset}" method="post" class="needs-validation was-validated">
+                                    <!-- buttons row -->
+                                    <div class="row mb-3 gap-1">
+                                        <button id="saveEditAssetBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                                        <button id="cancelBtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="editMode(false);" hidden>Annuller</button>
+                                        <button id="editAssetBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                    </div>
+                                    <div class="row mb-3">
+                                        <!-- Column 1 -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 gx-4">
+                                            <input th:field="*{id}" hidden>
+
+                                            <div class="row mb-3">
+                                                <label for="responsibleUser"
+                                                    class="col-sm-3 col-form-label">Systemejer</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select choices__input"
+                                                            data-trigger="" id="responsibleUser" th:field="*{responsibleUser}" hidden=""
+                                                            tabindex="-1">
+                                                        <option th:value="${asset.responsibleUser?.uuid}"
+                                                                th:text="${asset.responsibleUser?.name}"
+                                                                th:if="${asset.responsibleUser != null}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="systemType"
+                                                    class="col-sm-3 col-form-label">Systemtype</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control editField" id="systemType" th:field="*{assetType}" disabled>
+                                                        <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.AssetType).values()}" th:value="${type}" th:text="${type.getMessage()}" th:selected="${type} == *{assetType}"></option>
+                                                    </select >
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="supplier"
+                                                    class="col-sm-3 col-form-label">Leverandør</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select choices__input"
+                                                        data-trigger="" id="supplier" th:field="*{supplier}" hidden=""
+                                                        tabindex="-1">
+                                                        <option th:value="${asset.supplier?.id}"
+                                                            th:text="${asset.supplier?.name}"
+                                                            th:if="${asset.supplier != null}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+
+                                            <div class="row mb-3">
+                                                <label for="managers"
+                                                    class="col-sm-3 col-form-label">Systemansvarlig</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select choices__input"
+                                                        data-trigger="" id="managers" th:field="*{managers}" hidden=""
+                                                        tabindex="-1" multiple="multiple">
+                                                        <option th:unless="${isKitos}" th:each="user : *{managers}" th:value="${user.uuid}"
+                                                            th:text="'(' + ${user.userId} + ') ' + ${user.name}"
+                                                            selected></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="assetStatus"
+                                                       class="col-sm-3 col-form-label">Status</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{assetStatus}" name="assetStatus" id="assetStatus"
+                                                            tabindex="-1" disabled>
+                                                        <option
+                                                            th:each="status : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
+                                                            th:value="${status}" th:text="${status.message}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="description"
+                                                    class="col-sm-3 col-form-label">Beskrivelse</label>
+                                                <div class="col-sm-9">
+                                                    <div class="input-group">
+                                                        <textarea id="description" class="form-control editField"
+                                                            placeholder="Indtast beskrivelse" th:field="*{description}" rows="3" disabled></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <!-- Column 2 -->
+                                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 gx-4">
+                                            <div class="row mb-3">
+                                                <label for="productLink" class="col-sm-3 col-form-label">Link til
+                                                    produktside</label>
+                                                <div class="col-sm-9">
+                                                    <a class="form-control-link editField" id="productLink"
+                                                        th:href="*{productLink}" th:text="*{productLink}"></a>
+                                                    <input class="form-control" id="productLinkEdit"
+                                                        th:field="*{productLink}" hidden>
+                                                </div>
+                                            </div>
+
+                                            <hr />
+
+                                            <div class="row mb-3">
+                                                <label for="criticality"
+                                                    class="col-sm-3 col-form-label">Kritikalitet</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                        th:field="*{criticality}" name="criticality" id="criticality"
+                                                        tabindex="-1" disabled>
+                                                        <option
+                                                            th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}"
+                                                            th:value="${crit.name}" th:text="${crit.message}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="sociallyCritical"
+                                                    class="col-sm-3 col-form-label">Samfundskritisk</label>
+                                                <div class="col-sm-9 my-auto">
+                                                    <div class="form-check">
+                                                        <input id="sociallyCritical" th:field="*{sociallyCritical}"
+                                                            th:checked="*{sociallyCritical}"
+                                                            class="form-check-input editField" type="checkbox" disabled>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="emergencyPlanLink"
+                                                    class="col-sm-3 col-form-label">Nødplan</label>
+                                                <div class="col-sm-9">
+                                                    <a class="form-control-link editField" id="emergencyPlanLink"
+                                                        th:href="*{emergencyPlanLink}"
+                                                        th:text="*{emergencyPlanLink}"></a>
+                                                    <input class="form-control" id="emergencyPlanLinkEdit"
+                                                        th:field="*{emergencyPlanLink}" hidden>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="reEstablishmentPlanLink"
+                                                    class="col-sm-3 col-form-label">Reetableringsplan</label>
+                                                <div class="col-sm-9">
+                                                    <a class="form-control-link editField" id="reEstablishmentPlanLink"
+                                                        th:href="*{reEstablishmentPlanLink}"
+                                                        th:text="*{reEstablishmentPlanLink}"></a>
+                                                    <input class="form-control" id="reEstablishmentPlanLinkEdit"
+                                                        th:field="*{reEstablishmentPlanLink}" hidden>
+                                                </div>
+                                            </div>
+
+                                            <hr />
+
+                                            <div class="row mb-3">
+                                                <label for="contractLink"
+                                                    class="col-sm-3 col-form-label">Kontrakt</label>
+                                                <div class="col-sm-9">
+                                                    <a class="form-control-link editField" id="contractLink"
+                                                        th:href="*{contractLink}" th:text="*{contractLink}"></a>
+                                                    <input class="form-control" id="contractLinkEdit"
+                                                           th:field="*{contractLink}" hidden>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="contractDate"
+                                                    class="col-sm-3 col-form-label">Kontraktdato</label>
+                                                <div class="col-sm-9 my-auto">
+                                                    <div class="input-group" th:hidden="*{contractDate == null}">
+                                                        <input id="contractDate" type="text"
+                                                            class="form-control editField datepicker"
+                                                            th:field="*{contractDate}">
+                                                        <button id="contractDateBtn" class="btn btn-primary editField"
+                                                            type="button"
+                                                            style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;"
+                                                            disabled>
+                                                            <i class="pli-calendar-4 fs-5"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="form-control-static"
+                                                        th:hidden="*{contractDate != null}">Ingen</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="contractTermination"
+                                                    class="col-sm-3 col-form-label">Kontraktophør</label>
+                                                <div class="col-sm-9 my-auto">
+                                                    <div class="input-group" th:hidden="*{contractTermination == null}">
+                                                        <input id="contractTermination" type="text"
+                                                            class="form-control editField datepicker"
+                                                            th:field="*{contractTermination}">
+                                                        <button id="contractTerminationBtn"
+                                                            class="btn btn-primary editField" type="button"
+                                                            style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;"
+                                                            disabled>
+                                                            <i class="pli-calendar-4 fs-5"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="form-control-static"
+                                                        th:hidden="*{contractTermination != null}">Ingen</div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="terminationNotice"
+                                                    class="col-sm-3 col-form-label">Opsigelsesvarsel</label>
+                                                <div class="col-sm-9">
+                                                    <!--                                                 When that field will be an enum -->
+                                                    <!--                                                 <select class="form-control form-select" th:field="*{criticality}" name="criticality" id="criticality" tabindex="-1" disabled> -->
+                                                    <!--                                                     <option th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}" -->
+                                                    <!--                                                             th:value="${crit.name}" th:text="${crit.message}"></option> -->
+                                                    <!--                                                 </select> -->
+                                                    <input class="form-control editField" id="terminationNotice"
+                                                        th:value="*{terminationNotice}" disabled>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="archive" class="col-sm-3 col-form-label">Systemet skal arkiveres</label>
+                                                <div class="col-sm-9 my-auto">
+                                                    <input id="archive" th:field="*{archive}" th:checked="*{archive}"
+                                                        class="form-check-input editField" type="checkbox" disabled>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </form>
+                                <div class="row mb-3">
+
+                                    <div class="col-12">
+                                        <div class="card shadow-none h-100 border-2">
+                                            <div class="card-header toolbar">
+                                                <h5 class="toolbar-start m-0">Behandlingsaktivitet</h5>
+                                                <div class="toolbar-end">
+                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                            data-bs-toggle="modal" data-bs-target="#RegisterRelationModal">Tilføj</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="col-lg-12">
+                                                    <tbody>
+                                                    <tr th:each="register : ${registers}">
+                                                        <td class="col-lg-10">
+                                                            <a th:text="${register.name}" th:href="@{/registers/{id}(id=${register.id})}"></a>
+                                                        </td>
+                                                        <td class="col-lg-2" title="Fjern Behandlingsaktivitet" style="text-align: right;">
+                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${register.id}, data-relationtype=${register.relationType}"></i>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="card shadow-none h-100 border-2">
+                                            <div class="card-header toolbar">
+                                                <h5 class="toolbar-start m-0">Relaterede aktiver</h5>
+                                                <div class="toolbar-end">
+                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                            data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="col-lg-12">
+                                                    <tbody>
+                                                    <tr th:each="currentAsset : ${relatedAssets}">
+                                                        <td class="col-lg-10">
+                                                            <a th:text="${currentAsset.name}" th:href="@{/assets/{id}(id=${currentAsset.id})}"></a>
+                                                        </td>
+                                                        <td class="col-lg-2" title="Fjern relateret aktivitet" style="text-align: right;">
+                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${currentAsset.id}, data-relationtype=${currentAsset.relationType}"></i>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="card shadow-none h-100 border-2">
+                                            <div class="card-header toolbar">
+                                                <h5 class="toolbar-start m-0">Dokumenter</h5>
+                                                <div class="toolbar-end">
+                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="col-lg-12">
+                                                    <tbody>
+                                                    <tr th:each="document : ${documents}">
+                                                        <td class="col-lg-10">
+                                                            <a th:text="${document.name}" th:href="@{/documents/{id}(id=${document.id})}"></a>
+                                                        </td>
+                                                        <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
+                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                         </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="card shadow-none h-100 border-2">
+                                            <div class="card-header toolbar">
+                                                <h5 class="toolbar-start m-0">Opgaver</h5>
+                                                <div class="toolbar-end">
+                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="col-lg-12">
+                                                    <tbody>
+                                                    <tr th:each="task : ${tasks}">
+                                                        <td class="col-lg-10">
+                                                            <a th:text="${task.name}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
+                                                        </td>
+                                                        <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
+                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div> <!-- Assets tab end -->
+                            <div id="measuresTab" class="tab-pane fade" role="tabpanel" aria-labelledby="measures-tab" th:replace="~{assets/fragments/measures :: measures(${asset}, ${measures})}">
+                            </div><!-- Measures tab end -->
+                            <div id="dataProcessingTab" class="tab-pane fade" role="tabpanel" aria-labelledby="data-processing-tab" th:replace="~{assets/fragments/dataprocessing :: dataprocessing(${asset}, ${dataProcessing})}">
+                            </div>
+                            <div id="riskAssessmentTab" class="tab-pane fade" role="tabpanel" aria-labelledby="risk-assesssment-tab">
+                                <th:block th:if="${threatExists}">
+                                    <div class="mb-3 col-lg-12" style="position: relative;">
+                                        <div th:replace="~{risks/riskProfileTablesFragment :: riskProfileTablesFragment}"></div>
+                                    </div>
+                                    <div class="mb-3 col-lg-12">
+                                        <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${unfinishedTasks}, relatableId=${risk.id}, hideRemove=true, customTitle='Udestående opgaver')}" />
+                                    </div>
+                                    <div th:replace="~{fragments/risks :: risksfragment(threatAssessments=${threatAssessments})}" />
+                                </th:block>
+                                <th:block th:unless="${threatExists}">
+                                    Ingen tilknyttede risikovurderinger
+                                </th:block>
+                            </div><!-- Risk Assessment tab end -->
+                            <div id="oversightTab" class="tab-pane fade" role="tabpanel" aria-labelledby="oversight-tab" th:replace="~{assets/fragments/oversight :: oversight(${asset}, ${oversights})}">
+                                Oversight
+                            </div><!-- Oversight tab end -->
+                            <div id="dpiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="dpia-tab" th:replace="~{assets/fragments/dpia :: dpia(${asset})}">
+                                Data Protection Impact Assessment
+                            </div><!--  Data Protection Impact Assessment tab end -->
+                            <div id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab" th:replace="~{assets/fragments/tia :: tia(${asset}, ${dpChoices})}">
+                                Transfer impact assessment
+                            </div><!--  Transfer impact assessment tab end -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <header th:replace="~{fragments/header :: header}"></header>
+        <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
+    </div>
+
+    <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
+    <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
+
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
+    <div th:replace="~{fragments/footer :: scripts}"></div>
+    <div th:replace="~{fragments/footer :: taskDialog}"></div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        /*[+
+            var isKitos = [[${isKitos}]];
+            var scaleMap = [[${scale}]];
+            var scaleColorMap = [[${riskScoreColorMap}]];
+            var riskProfiles = [[${riskProfiles}]];
+            var threatExists = [[${threatExists}]];
+            var supplierId = [[${asset.supplier?.id}]];
+        +]*/
+
+        let managersChoicesEditSelect = null;
+        let suppliersChoicesEditSelect = null;
+        let responsibleChoicesEditSelect = null;
+        let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+            initDatePickers();
+            managersChoicesEditSelect = initManagersSelect();
+            suppliersChoicesEditSelect = initSuppliersSelect();
+            suppliersChoicesEditSelect.disable();
+            managersChoicesEditSelect.disable();
+            responsibleChoicesEditSelect = initUserSelect("responsibleUser");
+            responsibleChoicesEditSelect.disable();
+            editMode(false);
+
+            addRelationFormLoaded();
+            initTabs();
+            rememberSelectedTab();
+
+            if (threatExists) {
+                profilePageLoaded();
+            }
+        });
+
+
+        function initTabs() {
+            const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
+            const panes = document.querySelectorAll(".tab-pane");
+            const tabAction = Object.keys(myTabs).map((tab) => {
+                myTabs[tab].addEventListener("click", (e) => {
+
+                    makeInactive(myTabs);
+                    activateTab(e);
+                    makeInactive(panes);
+                    activateTabContent(e);
+
+                    //save selected tab
+                    //window.location.hash = myTabs[tab].getAttribute('data-bs-target').substr(1);
+                    window.localStorage.setItem('activeTab', '#' + myTabs[tab].getAttribute('data-bs-target').substr(1));
+//                     console.log("Setting Tab: " + myTabs[tab].getAttribute('data-bs-target').substr(1));
+//                     console.log("window.location.hash: " + window.location.hash);
+
+                    e.preventDefault();
+                });
+            });
+
+        }
+
+        function initAssetRelationSelect() {
+            const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
+            let relationsChoice = initSelect(relationsSelect);
+            updateRelationsAssetsOnly(relationsChoice, "");
+            relationsSelect.addEventListener("search",
+                function(event) {
+                    updateRelationsAssetsOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+        relationsSelect.addEventListener("change",
+            function(event) {
+                updateRelationsAssetsOnly(relationsChoice, "");
+            },
+            false,
+            );
+        }
+
+        function addRelationFormLoaded() {
+            initAssetRelationSelect();
+            initDocumentRelationSelectPrivate();
+            initTaskRelationSelectPrivate();
+            initRegisterRelationSelectPrivate();
+        }
+
+        function initRegisterRelationSelectPrivate() {
+            const relationsSelect = document.getElementById('RegisterRelationModalrelationsSelect')
+            let relationsChoice = initSelect(relationsSelect);
+            updateRelationsRegistersOnly(relationsChoice, "");
+            relationsSelect.addEventListener("search",
+                function(event) {
+                    updateRelationsRegistersOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+            relationsSelect.addEventListener("change",
+                function(event) {
+                    updateRelationsRegistersOnly(relationsChoice, "");
+                },
+                false,
+            );
+        }
+
+        function initDocumentRelationSelectPrivate() {
+            const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
+            let relationsChoice = initSelect(relationsSelect);
+            updateRelationsDocumentsOnly(relationsChoice, "");
+            relationsSelect.addEventListener("search",
+                function(event) {
+                    updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+            relationsSelect.addEventListener("change",
+                function(event) {
+                    updateRelationsDocumentsOnly(relationsChoice, "");
+                },
+                false,
+            );
+        }
+
+        function initTaskRelationSelectPrivate() {
+            const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
+            let relationsChoice = initSelect(relationsSelect);
+            updateRelationsTasksOnly(relationsChoice, "");
+            relationsSelect.addEventListener("search",
+                function(event) {
+                    updateRelationsTasksOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+            relationsSelect.addEventListener("change",
+            function(event) {
+                updateRelationsTasksOnly(relationsChoice, "");
+            },
+            false,
+            );
+        }
+
+        function rememberSelectedTab() {
+            // on load of the page: switch to the currently selected tab
+            //var hash = window.location.hash;
+            var hash = window.localStorage.getItem('activeTab');
+
+            if (hash != null && hash !== "") {
+                //Inactivate all tabs
+                const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
+                makeInactive(myTabs);
+
+                //Hide all contentTabs
+                const panes = document.querySelectorAll(".tab-pane");
+                makeInactive(panes);
+
+                const activeTab = document.querySelector('button[data-bs-target="' + hash + '"]');
+                activeTab.classList.add("active");
+
+                const activePane = document.querySelector(hash);
+                activePane.classList.add("active");
+                activePane.classList.add("show");
+            }
+
+        }
+
+        function initDatePickers() {
+            const contractDatePicker = MCDatepicker.create({
+                el: '#contractDate',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#contractDateBtn" ).addEventListener( "click", () => {
+                contractDatePicker.open();
+            });
+
+
+            const contractTerminationPicker = MCDatepicker.create({
+                el: '#contractTermination',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#contractTerminationBtn" ).addEventListener( "click", () => {
+                contractTerminationPicker.open();
+            });
+        }
+
+        function removeChoiceByUserUuid(arr, uuid) {
+            const objWithIdIndex = arr.findIndex((obj) => obj.uuid === uuid);
+
+            if (objWithIdIndex > -1) {
+                arr.splice(objWithIdIndex, 1);
+            }
+
+            return arr;
+        }
+
+        function removeChoiceByRegisterId(arr, id) {
+            const objWithIdIndex = arr.findIndex((obj) => obj.id === id);
+            if (objWithIdIndex > -1) {
+                arr.splice(objWithIdIndex, 1);
+            }
+
+            return arr;
+        }
+
+        function updateUsers(choices, search) {
+            fetch( `/rest/users/autocomplete?search=${search}`)
+                .then(response => response.json()
+                    .then(data => {
+                        // Remove already selected users from result
+                        alreadySelected = []
+                        let sel = choices.passedElement.element;
+                        for (let i=0, n=sel.options.length;i<n;i++) {
+                            if (sel.options[i].value) alreadySelected.push(sel.options[i].value);
+                        }
+
+                        alreadySelected.forEach((uuid) => removeChoiceByUserUuid(data.content, uuid));
+
+                        choices.setChoices(data.content.map(e => {
+                            return {
+                                value: e.uuid,
+                                label: `(${e.userId}) ${e.name}`}
+                        }), 'value', 'label', false); //false to not override already selected choices
+                    }))
+                .catch(error => console.log(error));
+        }
+
+        function updateSuppliers(choices, search) {
+            fetch( `/rest/suppliers/autocomplete?search=${search}`)
+                .then(response => response.json()
+                    .then(data => {
+                        alreadySelected = []
+                        var sel = choices.passedElement.element;
+                        for (var i=0, n=sel.options.length;i<n;i++) {
+                            if (sel.options[i].value) alreadySelected.push(sel.options[i].value);
+                        }
+                        alreadySelected.forEach((id) => removeChoiceByRegisterId(data.content, id));
+
+                        choices.setChoices(data.content.map(e => {
+                            return {
+                                value: e.id,
+                                label: `${e.name}`}
+                        }), 'value', 'label', true); //false to not override already selected choices
+                    }))
+                .catch(error => console.log(error));
+        }
+
+        function initManagersSelect() {
+            const userSelect = document.getElementById('managers');
+            const userChoices = initSelect(userSelect);
+            updateUsers(userChoices, "");
+            userSelect.addEventListener("search",
+                function(event) {
+                    updateUsers(userChoices, event.detail.value);
+                },
+                false,
+            );
+            return userChoices;
+        }
+
+        function initSuppliersSelect() {
+            let supplierSelect = document.getElementById('supplier');
+            const supplierChoices = initSelect(supplierSelect);
+            updateSuppliers(supplierChoices, "");
+            supplierSelect.addEventListener("search",
+                function(event) {
+                    updateSuppliers(supplierChoices, event.detail.value);
+                },
+                false,
+            );
+            supplierChoices.setChoiceByValue(supplierId)
+            return supplierChoices;
+        }
+
+        function editMode(enabled) {
+            const rootElement = document.getElementById('editForm');
+            if (enabled) {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                    elem.disabled = false;
+                    if (elem.tagName === "A") {
+                        elem.hidden = true;
+                        if (elem.nextElementSibling) {
+                            elem.nextElementSibling.hidden = false;
+                        }
+                    }
+
+                    if (elem.classList.contains("datepicker")) {
+                        elem.parentElement.hidden = false; // show the datepicker
+                        if (elem.parentElement.nextElementSibling) {
+                            elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
+                        }
+                    }
+                });
+
+                if (!isKitos) {
+                    managersChoicesEditSelect.enable();
+                }
+                suppliersChoicesEditSelect.enable();
+                responsibleChoicesEditSelect.enable();
+                document.getElementById('saveEditAssetBtn').hidden = false;
+                document.getElementById('editAssetBtn').hidden = true;
+                document.getElementById('cancelBtn').hidden = false;
+            } else {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                    elem.disabled = true;
+                    if (elem.tagName === "A") {
+                        elem.hidden = false;
+                        elem.nextElementSibling.hidden = true;
+                    }
+
+                    if (elem.classList.contains("datepicker")) {
+                        if (elem.value == null || elem.value === "") {
+                            elem.parentElement.hidden = true; // hide the datepicker
+                            elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
+                        }
+                    }
+                });
+                suppliersChoicesEditSelect.disable();
+                managersChoicesEditSelect.disable();
+                responsibleChoicesEditSelect.disable();
+                document.getElementById('saveEditAssetBtn').hidden = true;
+                document.getElementById('editAssetBtn').hidden = false;
+                document.getElementById('cancelBtn').hidden = true;
+            }
+        }
+
+
+        /*]]>*/
+    </script>
+
+</body>
+
+</html>

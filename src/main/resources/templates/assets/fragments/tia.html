@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<div th:fragment="tia(asset, dbChoices)" id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab">
+    <form id="tiaForm" action="#" th:action="@{/assets/tia}" th:object="${asset}" method="post" class="needs-validation" novalidate>
+        <div class="row">
+            <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
+                <div class="row mb-3 gap-1">
+                    <button id="editTIABtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setTIAEditState(true)">Rediger TIA</button>
+                    <button id="cancelTIABtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setTIAEditState(false)" hidden>Annuller</button>
+                    <button id="saveTIABtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right"  hidden>Gem</button>
+                </div>
+                <input th:field="${asset.id}" hidden>
+
+                <div class="row mb-3">
+                    <!-- Table1-->
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="col-lg-4">Beskrivelse af overførslen</th>
+                                <th class="col-lg-6">Svar</th>
+                                <th class="col-lg-2">Valg</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Modtager af data (Dataimportør)</td>
+                                <td>
+                                    <ul>
+                                        <li th:each="supplier : ${asset.suppliers.?[thirdCountryTransfer == T(dk.digitalidentity.model.entity.enums.ThirdCountryTransfer).YES]}" th:text="${supplier.supplier.name} + ' ' + (${supplier.supplier.country} ? '(' + ${supplier.supplier.country} + ')' : '')"></li>
+                                    </ul>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Hvilke behandlinger foretages med hvilket formål?</td>
+                                <td>
+                                    <dl>
+                                        <th:block th:each="register : ${registers}">
+                                        <dt th:text="${register.name}"></dt>
+                                        <dd th:text="${register.purpose}"></dd>
+                                        </th:block>
+                                    </dl>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Hvilke typer af personlysninger overføres til tredjelandet?</td>
+                                <td>
+                                    <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" th:field="*{tia.informationTypes}" hidden="" tabindex="-1" multiple>
+                                        <option th:each="choice : ${dbChoices.personCategoriesInformationIdentifiers1.values}"
+                                                th:value="${choice.identifier}" th:text="${choice.caption}"></option>
+                                        <option th:each="choice : ${dbChoices.personCategoriesInformationIdentifiers2.values}"
+                                                th:value="${choice.identifier}" th:text="${choice.caption}"></option>
+                                    </select>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Hvilke kategorier af registrerede overføres til tredjelandet?</td>
+                                <td>
+                                    <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" th:field="*{tia.registeredCategories}" hidden="" tabindex="-1" multiple>
+                                        <option th:each="choice : ${dbChoices.personCategoriesRegisteredIdentifiers.values}"
+                                                th:value="${choice.identifier}" th:text="${choice.caption}"></option>
+                                    </select>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Sendes oplysningerne sendes videre til andre leverandører?</td>
+                                <td>
+                                    <select class="form-control form-select editField" onchange="handleSendDataToOtherSuppliers()" th:field="*{tia.forwardInformationToOtherSuppliers}" tabindex="-1" disabled>
+                                         <option th:each="fitos : ${T(dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers).values()}"
+                                                 th:value="${fitos.name}" th:text="${fitos.message}"></option>
+                                    </select>
+                                </td>
+                                <td></td>
+                            </tr>
+                            <tr id="details" class="collapse" th:classappend="*{tia.forwardInformationToOtherSuppliers == T(dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers).YES} ? 'show' : ''">
+                                <td></td>
+                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.forwardInformationToOtherSuppliersDetail}"></textarea></td>
+                                <td></td>
+                            </tr>
+                         </tbody>
+                         <thead>
+                            <tr>
+                                <th colspan="3">Grundlæggende parametre for overførsel</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Hvor længe påregnes overførelsen at finde sted?</td>
+                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.expectedTransferDuration}"></textarea></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>I hvilke tilfælde sker overførsel af data?</td>
+                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.transferCaseDescription}"></textarea></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Hvilken adgang gives til data</td>
+                                <td>
+                                    <select class="form-control form-select editField" th:field="*{tia.accessType}" tabindex="-1" disabled>
+                                         <option th:each="fitos : ${T(dk.digitalidentity.model.entity.enums.AccessType).values()}"
+                                                 th:value="${fitos.name}" th:text="${fitos.message}"></option>
+                                    </select>
+                                </td>
+                                <td></td>
+                            </tr>
+                         </tbody>
+                         <thead>
+                            <tr>
+                                <th colspan="3">Implementerede sikkerhedsforanstaltninger</th>
+                            </tr>
+                        </thead>
+                        <tbody id="measures">
+                            <tr>
+                                <td>Tekniske sikkerhedsforanstaltninger</td>
+                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.technicalSecurityMeasures}"></textarea></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Organisatoriske sikkerhedsforanstaltninger</td>
+                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.organizationalSecurityMeasures}"></textarea></td>
+                                <td></td>
+                            </tr>
+                            <tr>
+                                <td>Kontraktuelle sikkerhedsforanstaltninger</td>
+                                <td><textarea rows="8" class="form-control editField" th:field="*{tia.contractualSecurityMeasures}"></textarea></td>
+                                <td></td>
+                            </tr>
+                         </tbody>
+                         <thead>
+                            <tr>
+                                <th colspan="3">Modtagerlands lovgivning</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Acceptgrundlag</td>
+                                <td>
+                                    <dl>
+                                        <th:block th:each="supplier : ${asset.suppliers}">
+                                            <dt  th:text="${supplier.supplier.name}"></dt>
+                                            <dd style="text-indent: 20px;" th:each="choice: ${acceptanceBasisChoices.values}" th:if="${supplier.acceptanceBasis == choice.identifier}" th:text="${'- ' + choice.caption}"></dd>
+                                        </th:block>
+                                    </dl>
+                                </td>
+                                <td></td>
+                            </tr>
+                         </tbody>
+                         <thead>
+                            <tr>
+                                <th colspan="2">Konklusion</th>
+                                <th>Vurdering</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="2">
+                                    <textarea rows="8" class="form-control editField" th:field="*{tia.conclusion}"></textarea>
+                                </td>
+                                <td class="text-center">
+                                    <div class="btn-group" role="group" aria-label="Vurdering">
+                                      <input type="radio" class="btn-check editField" name="btnradio" id="btnRed" value="RED" th:field="*{tia.assessment}" autocomplete="off" required >
+                                      <label class="btn btn-outline-danger" for="btnRed">Rød</label>
+                                      <input type="radio" class="btn-check editField" name="btnradio" id="btnYellow" value="YELLOW" th:field="*{tia.assessment}" autocomplete="off" required >
+                                      <label class="btn btn-outline-warning" for="btnYellow">Gul</label>
+                                      <input type="radio" class="btn-check editField" name="btnradio" id="btnGreen" value="GREEN" th:field="*{tia.assessment}" autocomplete="off" required >
+                                      <label class="btn btn-outline-success" for="btnGreen">Grøn</label>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        /*[+
+        +]*/
+        let bsCollapse;
+        let tiaChoiceElements =[];
+
+        const registeredCategories = /*[[${dbChoices.personCategoriesRegisteredIdentifiers.values}]]*/ [];
+        const informationChoices1 = /*[[${dbChoices.personCategoriesInformationIdentifiers1.values}]]*/ [];
+        const informationChoices2 = /*[[${dbChoices.personCategoriesInformationIdentifiers2.values}]]*/ [];
+        const chosenCategories = /*[[${asset.tia.registeredCategories}]]*/ [];
+        const chosenInformationTypes = /*[[${asset.tia.informationTypes}]]*/ [];
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+            //init collapse
+            bsCollapse = new bootstrap.Collapse(document.getElementById('details'), { toggle: false });
+
+
+            handleSendDataToOtherSuppliers();
+
+            //Init choices.js
+            // must be before setEditState
+            initRegisteredCategoriesChoices(registeredCategories);
+            initInformationTypeChoices(informationChoices1.concat(informationChoices2));
+
+            setTIAEditState(false);
+        });
+
+        function initRegisteredCategoriesChoices(values) {
+            let registeredCategoriesSelect = document.getElementById('tia.registeredCategories');
+            let registeredCategoriesChoice = initSelect(registeredCategoriesSelect);
+            registeredCategoriesChoice.setChoices(values, 'identifier', 'caption', true);
+            for (const option of document.querySelectorAll('#tia\\.registeredCategories option')) {
+                if (chosenCategories.includes(option.value)) {
+                    option.setAttribute('selected', 'selected');
+                }
+            }
+            tiaChoiceElements.push(registeredCategoriesChoice);
+        }
+
+        function initInformationTypeChoices(values) {
+            const informationTypeSelect = document.getElementById('tia.informationTypes');
+            let informationTypeChoice = initSelect(informationTypeSelect);
+            informationTypeChoice.setChoices(values, 'identifier', 'caption', true);
+            for (const option of document.querySelectorAll('#tia\\.informationTypes option')) {
+                if (chosenInformationTypes.includes(option.value)) {
+                    option.setAttribute('selected', 'selected');
+                }
+            }
+            tiaChoiceElements.push(informationTypeChoice);
+        }
+
+        function setTIAEditState(enabled) {
+            const rootElement = document.getElementById('tiaTab');
+            if (enabled) {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = false;
+                  if (elem.tagName === "A") {
+                      elem.hidden = true;
+                      if (elem.nextElementSibling) {
+                         elem.nextElementSibling.hidden = false;
+                      }
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    elem.parentElement.hidden = false; // show the datepicker
+                    if (elem.parentElement.nextElementSibling) {
+                        elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
+                    }
+                  }
+                });
+
+                tiaChoiceElements.forEach((e) => e.enable());
+
+                document.getElementById('saveTIABtn').hidden = false;
+                document.getElementById('editTIABtn').hidden = true;
+                document.getElementById('cancelTIABtn').hidden = false;
+            } else {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = true;
+                  if (elem.tagName === "A") {
+                      elem.hidden = false;
+                      elem.nextElementSibling.hidden = true;
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    if (elem.value == null || elem.value === "") {
+                      elem.parentElement.hidden = true; // hide the datepicker
+                      elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
+                    }
+                  }
+                });
+
+                tiaChoiceElements.forEach((e) => e.disable());
+
+                document.getElementById('saveTIABtn').hidden = true;
+                document.getElementById('editTIABtn').hidden = false;
+                document.getElementById('cancelTIABtn').hidden = true;
+
+                const form = document.getElementById("tiaForm");
+                form.reset();
+            }
+        }
+
+        function handleSendDataToOtherSuppliers() {
+            const element = document.getElementById('tia.forwardInformationToOtherSuppliers');
+            if (element.value === "YES") {
+                bsCollapse.show();
+            } else {
+                bsCollapse.hide();
+            }
+        }
+
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

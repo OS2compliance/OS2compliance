@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<script th:src="@{/js/register/form.js}" defer></script>
+
+<body class="jumping">
+	<div id="root" class="root mn--max hd--expanded">
+		<section id="content" class="content">
+			<div class="content__header content__boxed overlapping">
+				<div class="content__wrap">
+					<div class="d-md-flex">
+						<div class="me-auto">
+							<nav aria-label="breadcrumb">
+								<ol class="breadcrumb mb-0">
+									<li class="breadcrumb-item"><a th:href="@{/}">Hjem</a></li>
+									<li class="breadcrumb-item active" aria-current="page">Fortegnelse</li>
+								</ol>
+							</nav>
+							<h1 class="page-title mb-0 mt-2">Fortegnelse</h1>
+							<p class="lead"></p>
+						</div>
+						<div class="align-self-center d-inline-flex">
+							<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny behandlingsaktivitet
+							</button>
+							<button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#taskFormDialog">
+								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+							</button>
+						</div>
+					</div>
+				</div>
+			</div>
+
+			<div class="content__boxed">
+				<div class="content__wrap">
+					<article class="d-md-flex gap-4">
+						<div class="flex-fill">
+							<div class="card mb-3">
+								<div class="card-body">
+									<div id="registersDatatable"></div>
+								</div>
+							</div>
+						</div>
+					</article>
+				</div>
+			</div>
+		</section>
+		<header th:replace="~{fragments/header :: header}" />
+		<nav th:replace="~{fragments/navbar :: main (page='fortegnelse')}" />
+	</div>
+
+	<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="registerLabel" aria-hidden="true"></div>
+
+	<div th:replace="~{fragments/footer :: scripts}" />
+	<div th:replace="~{fragments/footer :: taskDialog}" />
+
+	<style>
+
+	#registersDatatable td[data-column-id="suppressions"] ul {
+		list-style-type: none;
+		padding: 0;
+	}
+
+	#registersDatatable td[data-column-id="suppressions"] ul > li {
+		display: table-row;
+	}
+
+	#registersDatatable td[data-column-id="suppressions"] ul > li > span {
+		display: table-cell;
+		min-width: 1rem;
+	}
+	#registersDatatable td[data-column-id="status"] {
+		vertical-align: middle;
+	}
+	#registersDatatable td[data-column-id="konsekvensVurdering"] {
+		vertical-align: middle;
+	}
+	#registersDatatable td[data-column-id="risikoVurdering"] {
+		vertical-align: middle;
+	}
+
+	</style>
+
+	<script th:inline="javascript">
+		/*<![CDATA[*/
+
+		/*[+
+			var gridRegistersUrl = [[@{/rest/registers/list}]];
+			var viewUrl = [[@{/registers/}]];
+			var formUrl = [[@{/registers/form}]];
+			var restUrl = [[@{/rest/registers}]];
+			var deleteUrl = [[@{/registers/}]];
+		+]*/
+		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+		const defaultClassName = {
+			table: 'table table-striped',
+			search: "form-control",
+			header: "d-flex justify-content-end"
+		};
+
+		const updateUrl = (prev, query) => {
+			return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+		};
+
+		document.addEventListener("DOMContentLoaded", function(event) {
+			fetch(formUrl)
+				.then(response => response.text()
+						.then(data => {
+							document.getElementById('formDialog').innerHTML = data;
+							formLoaded(true);
+						}))
+				.catch(error => console.log(error));
+
+			const grid = new gridjs.Grid({
+				className: defaultClassName,
+				 search: {
+					server: {
+						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
+					},
+                     debounceTimeout: 1000
+				},
+				pagination: {
+					limit: 50,
+					server: {
+						url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+					}
+				},
+				sort: {
+					enabled: true,
+					multiColumn: false,
+					server: {
+						url: (prev, columns) => {
+							if (!columns.length) return prev;
+							const columnIds = ['name', 'responsibleUser', 'responsibleOU', 'updatedAt', 'consequence', 'risk', 'status'];
+							const col = columns[0]; // multiColumn false
+							const order = columnIds[col.index];
+							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
+						}
+					}
+				},
+				columns: [
+					{
+						name: "id",
+						hidden: true
+					},
+					{
+						name: "Titel",
+						formatter: (cell, row) => {
+							const url = viewUrl + row.cells[0]['data'];
+							return gridjs.html(`<a href="${url}">${cell}</a>`);
+						},
+						width: '40%'
+					},
+					{
+						name: "Ansvarlig afdeling",
+					},
+					{
+						name: "Kontakt person",
+					},
+					{
+						name: "Senest redigeret",
+					},
+					{
+						name: "Konsekvens vurdering",
+						width: "100px",
+						formatter: (cell, row) => {
+							var assessment = cell;
+							if (cell === "Grøn") {
+								assessment = [
+									'<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
+								]
+							} else if (cell === "Gul") {
+								assessment = [
+									'<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
+								]
+							} else if (cell === "Rød") {
+								assessment = [
+									'<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
+								]
+							}
+							return gridjs.html(''.concat(...assessment), 'div')
+						}
+					},
+					{
+						name: "Risiko vurdering",
+						width: "100px",
+						formatter: (cell, row) => {
+							var assessment = [];
+							if (cell === "Grøn") {
+								assessment = [
+									'<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
+								]
+							} else if (cell === "Gul") {
+								assessment = [
+									'<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
+								]
+							} else if (cell === "Rød") {
+								assessment = [
+									'<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
+								]
+							}
+							return gridjs.html(''.concat(...assessment), 'div')
+						},
+					},
+					{
+						name: "Status",
+						width: "80px",
+						formatter: (cell, row) => {
+							var status = cell;
+							if (cell === "Klar") {
+								status = [
+									'<div class="d-block badge bg-success" style="width: 60px">' + cell + '</div>'
+								]
+							} else if (cell === "I gang") {
+								status = [
+									'<div class="d-block badge bg-info" style="width: 60px">' + cell + '</div>'
+								]
+							} else if (cell === "Ikke startet") {
+								status = [
+									'<div class="d-block badge bg-danger" style="width: 60px">' + cell + '</div>'
+								]
+							}
+							return gridjs.html(''.concat(...status), 'div')
+						},
+					},
+					{
+						id: 'handlinger',
+						name: 'Handlinger',
+						sort: 0,
+						width: '10%',
+						formatter: (cell, row) => {
+							const registerId = row.cells[0]['data'];
+							const name = row.cells[1]['data'];
+							return gridjs.html(
+									`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+						}
+					}
+				],
+				server:{
+					url: gridRegistersUrl,
+					method: 'POST',
+					headers: {
+						'X-CSRF-TOKEN': token
+					},
+					then: data => data.content.map(register =>
+						[ register.id, register.name, register.responsibleOU, register.responsibleUser, register.updatedAt, register.consequence, register.risk, register.status ]
+					),
+					total: data => data.totalCount
+				},
+				language: {
+					'search': {
+					  'placeholder': 'Søg'
+					},
+					'pagination': {
+					  'previous': 'Forrige',
+					  'next': 'Næste',
+					  'showing': 'Viser',
+					  'results': 'Fortegnelser',
+					  'of': 'af',
+					  'to': 'til',
+					  'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                      'page': (page) => `Side ${page}`
+					}
+			  	}
+			}).render( document.getElementById( "registersDatatable" ));
+		});
+
+		function deleteClicked(registerId, name) {
+			Swal.fire({
+			  text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra REGISTER slettes også.`,
+			  icon: 'warning',
+			  showCancelButton: true,
+			  confirmButtonColor: '#03a9f4',
+			  cancelButtonColor: '#df5645',
+			  confirmButtonText: 'Ja',
+			  cancelButtonText: 'Nej'
+			}).then((result) => {
+			  if (result.isConfirmed) {
+				fetch(`${deleteUrl}${registerId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+						.then(() => {
+							window.location.reload();
+						});
+			  }
+			})
+		}
+
+		/*]]>*/
+	</script>
+
+</body>
+
+</html>

@@ -1,0 +1,12 @@
+{
+  "identifier": "dp-categories-list",
+  "name": "Kategorier af registrerede",
+  "multiSelect": true,
+  "valueIdentifiers": ["dp-categories-registered-adult", "dp-categories-registered-vuln-adult", "dp-categories-registered-children",
+    "dp-categories-registered-vuln-children", "dp-categories-registered-employees", "dp-categories-registered-applicants",
+    "dp-categories-registered-customers", "dp-categories-registered-suppliers", "dp-categories-registered-partners",
+    "dp-categories-registered-board", "dp-categories-registered-board-pol", "dp-categories-registered-volunteers",
+    "dp-categories-registered-municipal-board", "dp-categories-registered-web-visitors", "dp-categories-registered-interns",
+    "dp-categories-registered-voters", "dp-categories-registered-listed", "dp-categories-registered-elec-off"
+  ]
+}

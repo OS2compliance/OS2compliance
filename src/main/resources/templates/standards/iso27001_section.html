@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html>
+<body>
+<div th:fragment="iso27001_section (standardTemplateSectionDto)" class="section">
+    <form th:each="standardSectionDto : ${standardTemplateSectionDto.standardSectionDTOs}" th:action="@{/standards/save}"
+          method="post" th:id="${'sectionForm' + standardSectionDto.standardSection.id}">
+        <input type="hidden" name="id" th:value="${standardSectionDto.standardSection.id}">
+    </form>
+    <table class="table table-striped" style="min-width: 900px; overflow: visible">
+        <thead>
+        <tr>
+            <th style="width: 280px" th:text="${standardTemplateSectionDto.standardTemplateSection.section + ' ' + standardTemplateSectionDto.standardTemplateSection.description}"></th>
+            <th>Beskrivelse</th>
+            <th>Relation</th>
+            <th>Dokumenter</th>
+            <th style="width: 148px">Status</th>
+            <th style="width: 130px"></th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="standardSectionDto, iterStat : ${standardTemplateSectionDto.standardSectionDTOs}" th:with="section=${standardSectionDto.standardSection}">
+            <td th:text="${section.templateSection.section + ' ' + section.templateSection.description}"></td>
+            <td>
+                <div class="editor-container" th:id="${'editorContainer' + section.id}" style="display: none">
+                    <textarea th:form="${'sectionForm' + section.id}" name="description" class="p-2" th:text="${section.description}"></textarea>
+                </div>
+                <div th:id="${'descriptionRead' + section.id}" style="display: block" th:utext="${section.description}"></div>
+            </td>
+            <td>
+                <div th:id="${'relationsShow' + section.id}">
+                    <div th:each="sec : ${standardSectionDto.relatedSections}">
+                        <a th:href="@{/standards/section/__${sec.id}__}" th:text="${sec.name}"></a>
+                    </div>
+                </div>
+                <div style="display: none" th:id="${'relationsEdit' + section.id}">
+                    <select th:form="${'sectionForm' + section.id}" class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="relations" th:id="${'relationsEdit' + section.id}" tabindex="-1" multiple>
+                        <option th:each="rel : ${standardSectionDto.relatedSections}"  th:value="${rel.id}" th:text="${rel.name}" selected>
+                        </option>
+                    </select>
+                </div>
+            </td>
+            <td>
+                <div th:id="${'documentsShow' + section.id}">
+                    <div th:each="doc : ${standardSectionDto.relatedDocuments}">
+                        <a th:href="@{/documents/__${doc.id}__}" th:text="${doc.name}"></a>
+                    </div>
+                </div>
+                <div th:id="${'documentsEdit' + section.id}" style="display: none">
+                    <select th:form="${'sectionForm' + section.id}" class="form-control form-select choices__input" fo data-type="select-multiple" data-trigger="" name="documents" tabindex="-1" multiple>
+                        <option th:each="doc : ${standardSectionDto.relatedDocuments}"  th:value="${doc.id}" th:text="${doc.name}" selected>
+                        </option>
+                    </select>
+                </div>
+            </td>
+            <td>
+                <select class="form-control form-select" th:form="${'sectionForm' + section.id}" th:id="${'statusSelect' + section.id}" name="status" tabindex="-1" disabled>
+                    <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}"
+                            th:value="${status.name}" th:text="${status.message}" th:selected="${standardSectionDto.standardSection.status.name() == status.name()}"></option>
+                </select>
+            </td>
+            <td style="text-align: right">
+                <div class="ms-2 toolbar-end">
+                    <button th:id="${'editSectionBtn' + section.id}" type="button" class="btn btn-secondary btn-xs" th:data-id="${section.id}" onclick="setEditState(this, true)">Rediger</button>
+                    <button th:id="${'cancelSectionBtn' + section.id}" type="button" class="btn btn-light btn-xs" th:data-id="${section.id}" onclick="setEditState(this, false)" style="display: none">Anuller</button>
+                    <button th:id="${'saveSectionBtn' + section.id}" type="submit" th:form="${'sectionForm' + section.id}" class="btn btn-secondary btn-xs" th:data-id="${section.id}" style="display: none">Gem</button>
+                </div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

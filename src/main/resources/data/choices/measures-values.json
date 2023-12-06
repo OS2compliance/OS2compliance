@@ -1,0 +1,90 @@
+[
+  {
+    "identifier" : "relevance-yes",
+    "caption" : "Ja"
+  },
+  {
+    "identifier" : "relevance-no",
+    "caption" : "Nej"
+  },
+  {
+    "identifier" : "relevance-needs-clarification",
+    "caption" : "Skal afklares"
+  },
+  {
+    "identifier" : "relevance-not-relevant",
+    "caption" : "Ikke relevant"
+  },
+  {
+    "identifier" : "operation-1",
+    "caption": "On-premise"
+  },
+  {
+    "identifier" : "operation-2",
+    "caption": "Privat Cloud"
+  },
+  {
+    "identifier" : "operation-3",
+    "caption": "Public Cloud"
+  },
+  {
+    "identifier" : "operation-4",
+    "caption" : "Hybrid"
+  },
+  {
+    "identifier" : "operation-5",
+    "caption" : "Skal afklares"
+  },
+  {
+    "identifier" : "cloud-1",
+    "caption": "AWS"
+  },
+  {
+    "identifier" : "cloud-2",
+    "caption": "Microsoft Azure"
+  },
+  {
+    "identifier" : "cloud-3",
+    "caption": "Google Cloud"
+  },
+  {
+    "identifier" : "cloud-4",
+    "caption" : "Oracle Cloud"
+  },
+  {
+    "identifier" : "cloud-5",
+    "caption" : "Andre"
+  },{
+    "identifier" : "frequency-1",
+    "caption": "Flere gange dagligt"
+  },
+  {
+    "identifier" : "frequency-2",
+    "caption": "Dagligt"
+  },
+  {
+    "identifier" : "frequency-3",
+    "caption": "Ugentligt"
+  },
+  {
+    "identifier" : "frequency-4",
+    "caption" : "Sjældnere"
+  },
+  {
+    "identifier" : "duration-1",
+    "caption" : "Mindre end 1 måned"
+  },
+  {
+    "identifier" : "duration-2",
+    "caption" : "1 måned"
+  },
+  {
+    "identifier" : "duration-3",
+    "caption" : "1-12 måneder"
+  },
+  {
+    "identifier" : "duration-4",
+    "caption" : "Mere end 12 måneder"
+  }
+
+]

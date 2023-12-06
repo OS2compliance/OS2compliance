@@ -1,0 +1,1045 @@
+[
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_051",
+    "section": "5.1",
+    "description": "Informationssikkerhedspolitikker - Retningslinjer",
+    "sortKey": 51
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_061",
+    "section": "6.1",
+    "description": "Organisering - Roller",
+    "sortKey": 61
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_062",
+    "section": "6.2",
+    "description": "Organisering - Mobilt",
+    "sortKey": 62
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_071",
+    "section": "7.1",
+    "description": "Personalesikkerhed - Før",
+    "sortKey": 71
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_072",
+    "section": "7.2",
+    "description": "Personalesikkerhed - Under",
+    "sortKey": 72
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_073",
+    "section": "7.3",
+    "description": "Personalesikkerhed - Ansættelsesforholdets",
+    "sortKey": 73
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_081",
+    "section": "8.1",
+    "description": "Styring - Ansvar",
+    "sortKey": 81
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_082",
+    "section": "8.2",
+    "description": "Styring - Klassifikation",
+    "sortKey": 82
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_083",
+    "section": "8.3",
+    "description": "Styring - Mediehåndtering",
+    "sortKey": 83
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_091",
+    "section": "9.1",
+    "description": "Adgangsstyring - Forretningsmæssige",
+    "sortKey": 91
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_092",
+    "section": "9.2",
+    "description": "Adgangsstyring - Administration",
+    "sortKey": 92
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_093",
+    "section": "9.3",
+    "description": "Adgangsstyring - Brugernes",
+    "sortKey": 93
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_094",
+    "section": "9.4",
+    "description": "Adgangsstyring - Styring",
+    "sortKey": 94
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_101",
+    "section": "10.1",
+    "description": "Kryptografi - Kryptografiske",
+    "sortKey": 101
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_111",
+    "section": "11.1",
+    "description": "Fysisk - Sikre",
+    "sortKey": 111
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_112",
+    "section": "11.2",
+    "description": "Fysisk - Udstyr",
+    "sortKey": 112
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_121",
+    "section": "12.1",
+    "description": "Driftssikkerhed - Driftsprocedurer",
+    "sortKey": 121
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_122",
+    "section": "12.2",
+    "description": "Driftssikkerhed - Beskyttelse",
+    "sortKey": 122
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_123",
+    "section": "12.3",
+    "description": "Driftssikkerhed - Backup",
+    "sortKey": 123
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_124",
+    "section": "12.4",
+    "description": "Driftssikkerhed - Logning",
+    "sortKey": 124
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_125",
+    "section": "12.5",
+    "description": "Driftssikkerhed - Styring",
+    "sortKey": 125
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_126",
+    "section": "12.6",
+    "description": "Driftssikkerhed - Sårbarhedsstyring",
+    "sortKey": 126
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_127",
+    "section": "12.7",
+    "description": "Driftssikkerhed - Overvejelser",
+    "sortKey": 127
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_131",
+    "section": "13.1",
+    "description": "Kommunikationssikkerhed - Styring",
+    "sortKey": 131
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_132",
+    "section": "13.2",
+    "description": "Kommunikationssikkerhed - Informationsoverførsel",
+    "sortKey": 132
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_141",
+    "section": "14.1",
+    "description": "Anskaffelse, - Sikkerhedskrav",
+    "sortKey": 141
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_142",
+    "section": "A.14.2",
+    "description": "Anskaffelse, - Sikkerhed",
+    "sortKey": 142
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_143",
+    "section": "14.3",
+    "description": "Anskaffelse, - Testdata",
+    "sortKey": 143
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_151",
+    "section": "15.1",
+    "description": "Leverandørforhold - Informationssikkerhed",
+    "sortKey": 151
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_152",
+    "section": "15.2",
+    "description": "Leverandørforhold - Styring",
+    "sortKey": 152
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_161",
+    "section": "16.1",
+    "description": "Styring - Styring",
+    "sortKey": 161
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_171",
+    "section": "17.1",
+    "description": "Informationssikkerhedsaspekter - Informationssikkerhedskontinuitet",
+    "sortKey": 171
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_172",
+    "section": "17.2",
+    "description": "Informationssikkerhedsaspekter - Redundans",
+    "sortKey": 172
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_181",
+    "section": "18.1",
+    "description": "Overensstemmelse - Overensstemmelse",
+    "sortKey": 181
+  },
+  {
+    "standardIdentifier": "iso27002_2017",
+    "identifier": "iso_27002_2017_182",
+    "section": "18.2",
+    "description": "Overensstemmelse - Gennemgang",
+    "sortKey": 182
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_051",
+    "identifier": "iso27002_2017_511",
+    "section": "5.1.1",
+    "description": "Politikker for informationssikkerhed",
+    "sortKey": 0
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_051",
+    "identifier": "iso27002_2017_512",
+    "section": "5.1.2",
+    "description": "Gennemgang af politikker for informationssikkerhed",
+    "sortKey": 1
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_061",
+    "identifier": "iso27002_2017_611",
+    "section": "6.1.1",
+    "description": "Roller og ansvarsområder for informationssikkerhed",
+    "sortKey": 2
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_061",
+    "identifier": "iso27002_2017_612",
+    "section": "6.1.2",
+    "description": "Funktionsadskillelse",
+    "sortKey": 3
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_061",
+    "identifier": "iso27002_2017_613",
+    "section": "6.1.3",
+    "description": "Kontakt med myndigheder",
+    "sortKey": 4
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_061",
+    "identifier": "iso27002_2017_614",
+    "section": "6.1.4",
+    "description": "Kontakt med særlige interessegrupper",
+    "sortKey": 5
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_061",
+    "identifier": "iso27002_2017_615",
+    "section": "6.1.5",
+    "description": "Informationssikkerhed ved projektstyring",
+    "sortKey": 6
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_062",
+    "identifier": "iso27002_2017_621",
+    "section": "6.2.1",
+    "description": "Politik for mobilt udstyr",
+    "sortKey": 7
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_062",
+    "identifier": "iso27002_2017_622",
+    "section": "6.2.2",
+    "description": "Fjernarbejdspladser",
+    "sortKey": 8
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_071",
+    "identifier": "iso27002_2017_711",
+    "section": "7.1.1",
+    "description": "Screening",
+    "sortKey": 9
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_071",
+    "identifier": "iso27002_2017_712",
+    "section": "7.1.2",
+    "description": "Ansættelsesvilkår og -betingelser",
+    "sortKey": 10
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_072",
+    "identifier": "iso27002_2017_721",
+    "section": "7.2.1",
+    "description": "Ledelsesansvar",
+    "sortKey": 11
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_072",
+    "identifier": "iso27002_2017_722",
+    "section": "7.2.2",
+    "description": "Bevidsthed om, uddannelse og træning i informationssikkerhed",
+    "sortKey": 12
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_072",
+    "identifier": "iso27002_2017_723",
+    "section": "7.2.3",
+    "description": "Sanktioner",
+    "sortKey": 13
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_073",
+    "identifier": "iso27002_2017_731",
+    "section": "7.3.1",
+    "description": "Ansættelsesforholdets ophør eller ændring",
+    "sortKey": 14
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_081",
+    "identifier": "iso27002_2017_811",
+    "section": "8.1.1",
+    "description": "Fortegnelse over aktiver",
+    "sortKey": 15
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_081",
+    "identifier": "iso27002_2017_812",
+    "section": "8.1.2",
+    "description": "Ejerskab af aktiver",
+    "sortKey": 16
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_081",
+    "identifier": "iso27002_2017_813",
+    "section": "8.1.3",
+    "description": "Accepteret brug af aktiver",
+    "sortKey": 17
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_081",
+    "identifier": "iso27002_2017_814",
+    "section": "8.1.4",
+    "description": "Tilbagelevering af aktiver",
+    "sortKey": 18
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_082",
+    "identifier": "iso27002_2017_821",
+    "section": "8.2.1",
+    "description": "Klassifikation af information",
+    "sortKey": 19
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_082",
+    "identifier": "iso27002_2017_822",
+    "section": "8.2.2",
+    "description": "Mærkning af information",
+    "sortKey": 20
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_082",
+    "identifier": "iso27002_2017_823",
+    "section": "8.2.3",
+    "description": "Håndtering af aktiver",
+    "sortKey": 21
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_083",
+    "identifier": "iso27002_2017_831",
+    "section": "8.3.1",
+    "description": "Styring af bærbare medier",
+    "sortKey": 22
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_083",
+    "identifier": "iso27002_2017_832",
+    "section": "8.3.2",
+    "description": "Bortskaffelse af medier",
+    "sortKey": 23
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_083",
+    "identifier": "iso27002_2017_833",
+    "section": "8.3.3",
+    "description": "Fysiske medier under transport",
+    "sortKey": 24
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_091",
+    "identifier": "iso27002_2017_911",
+    "section": "9.1.1",
+    "description": "Politik for adgangsstyring",
+    "sortKey": 25
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_091",
+    "identifier": "iso27002_2017_912",
+    "section": "9.1.2",
+    "description": "Adgang til netværk og netværkstjenester",
+    "sortKey": 26
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_092",
+    "identifier": "iso27002_2017_921",
+    "section": "9.2.1",
+    "description": "Brugerregistrering og -afmelding",
+    "sortKey": 27
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_092",
+    "identifier": "iso27002_2017_922",
+    "section": "9.2.2",
+    "description": "Tildeling af brugeradgang",
+    "sortKey": 28
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_092",
+    "identifier": "iso27002_2017_923",
+    "section": "9.2.3",
+    "description": "Styring af privilegerede adgangsrettigheder",
+    "sortKey": 29
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_092",
+    "identifier": "iso27002_2017_924",
+    "section": "9.2.4",
+    "description": "Styring af hemmelig autentifikations-information om brugere",
+    "sortKey": 30
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_092",
+    "identifier": "iso27002_2017_925",
+    "section": "9.2.5",
+    "description": "Gennemgang af brugeradgangs-rettigheder",
+    "sortKey": 31
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_092",
+    "identifier": "iso27002_2017_926",
+    "section": "9.2.6",
+    "description": "Inddragelse eller justering af adgangsrettigheder",
+    "sortKey": 32
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_093",
+    "identifier": "iso27002_2017_931",
+    "section": "9.3.1",
+    "description": "Brug af hemmelig autentifikations-information",
+    "sortKey": 33
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_094",
+    "identifier": "iso27002_2017_941",
+    "section": "9.4.1",
+    "description": "Begrænset adgang til informationer",
+    "sortKey": 34
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_094",
+    "identifier": "iso27002_2017_942",
+    "section": "9.4.2",
+    "description": "Procedurer for sikker log-on",
+    "sortKey": 35
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_094",
+    "identifier": "iso27002_2017_943",
+    "section": "9.4.3",
+    "description": "System for administration af adgangskoder",
+    "sortKey": 36
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_094",
+    "identifier": "iso27002_2017_944",
+    "section": "9.4.4",
+    "description": "Brug af privilegerede systemprogrammer",
+    "sortKey": 37
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_094",
+    "identifier": "iso27002_2017_945",
+    "section": "9.4.5",
+    "description": "Styring af adgang til kildekoder til programmer",
+    "sortKey": 38
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_101",
+    "identifier": "iso27002_2017_1011",
+    "section": "10.1.1",
+    "description": "Politik for anvendelse af kryptografi",
+    "sortKey": 39
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_101",
+    "identifier": "iso27002_2017_1012",
+    "section": "10.1.2",
+    "description": "Administration af nøgler",
+    "sortKey": 40
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_111",
+    "identifier": "iso27002_2017_1111",
+    "section": "11.1.1",
+    "description": "Fysisk perimetersikring",
+    "sortKey": 41
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_111",
+    "identifier": "iso27002_2017_1112",
+    "section": "11.1.2",
+    "description": "Fysisk adgangskontrol",
+    "sortKey": 42
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_111",
+    "identifier": "iso27002_2017_1113",
+    "section": "11.1.3",
+    "description": "Sikring af kontorer, lokaler og faciliteter",
+    "sortKey": 43
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_111",
+    "identifier": "iso27002_2017_1114",
+    "section": "11.1.4",
+    "description": "Beskyttelse mod eksterne og miljømæssige trusler",
+    "sortKey": 44
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_111",
+    "identifier": "iso27002_2017_1115",
+    "section": "11.1.5",
+    "description": "Arbejde i sikre områder",
+    "sortKey": 45
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_111",
+    "identifier": "iso27002_2017_1116",
+    "section": "11.1.6",
+    "description": "Områder til af- og pålæsning",
+    "sortKey": 46
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1121",
+    "section": "11.2.1",
+    "description": "Placering og beskyttelse af udstyr",
+    "sortKey": 47
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1122",
+    "section": "11.2.2",
+    "description": "Understøttende forsyninger (forsyningssikkerhed)",
+    "sortKey": 48
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1123",
+    "section": "11.2.3",
+    "description": "Sikring af kabler",
+    "sortKey": 49
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1124",
+    "section": "11.2.4",
+    "description": "Vedligeholdelse af udstyr",
+    "sortKey": 50
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1125",
+    "section": "11.2.5",
+    "description": "Fjernelse af aktiver",
+    "sortKey": 51
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1126",
+    "section": "11.2.6",
+    "description": "Sikring af udstyr og aktiver uden for organisationen",
+    "sortKey": 52
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1127",
+    "section": "11.2.7",
+    "description": "Sikker bortskaffelse eller genbrug af udstyr",
+    "sortKey": 53
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1128",
+    "section": "11.2.8",
+    "description": "Brugerudstyr uden opsyn",
+    "sortKey": 54
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_112",
+    "identifier": "iso27002_2017_1129",
+    "section": "11.2.9",
+    "description": "Politik for ryddeligt skrivebord og blank skærm",
+    "sortKey": 55
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_121",
+    "identifier": "iso27002_2017_1211",
+    "section": "12.1.1",
+    "description": "Dokumenterede driftsprocedurer",
+    "sortKey": 56
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_121",
+    "identifier": "iso27002_2017_1212",
+    "section": "12.1.2",
+    "description": "Ændringsstyring",
+    "sortKey": 57
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_121",
+    "identifier": "iso27002_2017_1213",
+    "section": "12.1.3",
+    "description": "Kapacitetsstyring",
+    "sortKey": 58
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_121",
+    "identifier": "iso27002_2017_1214",
+    "section": "12.1.4",
+    "description": "Adskillelse af udviklings-, test- og driftsmiljøer",
+    "sortKey": 59
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_122",
+    "identifier": "iso27002_2017_1221",
+    "section": "12.2.1",
+    "description": "Kontroller mod malware",
+    "sortKey": 60
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_123",
+    "identifier": "iso27002_2017_1231",
+    "section": "12.3.1",
+    "description": "Backup af information",
+    "sortKey": 61
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_124",
+    "identifier": "iso27002_2017_1241",
+    "section": "12.4.1",
+    "description": "Hændelseslogning",
+    "sortKey": 62
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_124",
+    "identifier": "iso27002_2017_1242",
+    "section": "12.4.2",
+    "description": "Beskyttelse af log-oplysninger",
+    "sortKey": 63
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_124",
+    "identifier": "iso27002_2017_1243",
+    "section": "12.4.3",
+    "description": "Administrator- og operatørlog",
+    "sortKey": 64
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_124",
+    "identifier": "iso27002_2017_1244",
+    "section": "12.4.4",
+    "description": "Tidssynkronisering",
+    "sortKey": 65
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_125",
+    "identifier": "iso27002_2017_1251",
+    "section": "12.5.1",
+    "description": "Softwareinstallation på driftssystemer",
+    "sortKey": 66
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_126",
+    "identifier": "iso27002_2017_1261",
+    "section": "12.6.1",
+    "description": "Styring af tekniske sårbarheder",
+    "sortKey": 67
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_126",
+    "identifier": "iso27002_2017_1262",
+    "section": "12.6.2",
+    "description": "Begrænsninger på softwareinstallation",
+    "sortKey": 68
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_127",
+    "identifier": "iso27002_2017_1271",
+    "section": "12.7.1",
+    "description": "Kontroller i forbindelse med audit af informationssystemer",
+    "sortKey": 69
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_131",
+    "identifier": "iso27002_2017_1311",
+    "section": "13.1.1",
+    "description": "Netværksstyring",
+    "sortKey": 70
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_131",
+    "identifier": "iso27002_2017_1312",
+    "section": "13.1.2",
+    "description": "Sikring af netværkstjenester",
+    "sortKey": 71
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_131",
+    "identifier": "iso27002_2017_1313",
+    "section": "13.1.3",
+    "description": "Opdeling af netværk",
+    "sortKey": 72
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_132",
+    "identifier": "iso27002_2017_1321",
+    "section": "13.2.1",
+    "description": "Politikker og procedurer for informations-overførsel",
+    "sortKey": 73
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_132",
+    "identifier": "iso27002_2017_1322",
+    "section": "13.2.2",
+    "description": "Aftaler om informationsoverførsel",
+    "sortKey": 74
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_132",
+    "identifier": "iso27002_2017_1323",
+    "section": "13.2.3",
+    "description": "Elektroniske meddelelser",
+    "sortKey": 75
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_132",
+    "identifier": "iso27002_2017_1324",
+    "section": "13.2.4",
+    "description": "Fortroligheds- og hemmeligholdelses-aftaler",
+    "sortKey": 76
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_141",
+    "identifier": "iso27002_2017_1411",
+    "section": "14.1.1",
+    "description": "Analyse og specifikation af informations-sikkerhedskrav",
+    "sortKey": 77
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_141",
+    "identifier": "iso27002_2017_1412",
+    "section": "14.1.2",
+    "description": "Sikring af applikationstjenester på offentlige netværk",
+    "sortKey": 78
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_141",
+    "identifier": "iso27002_2017_1413",
+    "section": "14.1.3",
+    "description": "Beskyttelse af handelsapplikationer og -tjenester",
+    "sortKey": 79
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1421",
+    "section": "14.2.1",
+    "description": "Sikker udviklingspolitik",
+    "sortKey": 80
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1422",
+    "section": "14.2.2",
+    "description": "Procedurer for styring af systemændringer",
+    "sortKey": 81
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1423",
+    "section": "14.2.3",
+    "description": "Teknisk gennemgang af applikationer efter ændringer af driftsplatforme",
+    "sortKey": 82
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1424",
+    "section": "14.2.4",
+    "description": "Begrænsning af ændringer af softwarepakker",
+    "sortKey": 83
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1425",
+    "section": "14.2.5",
+    "description": "Principper for udvikling af sikre systemer",
+    "sortKey": 84
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1426",
+    "section": "14.2.6",
+    "description": "Sikkert udviklingsmiljø",
+    "sortKey": 85
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1427",
+    "section": "14.2.7",
+    "description": "Outsourcet udvikling",
+    "sortKey": 86
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1428",
+    "section": "14.2.8",
+    "description": "Systemsikkerhedstest",
+    "sortKey": 87
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_142",
+    "identifier": "iso27002_2017_1429",
+    "section": "14.2.9",
+    "description": "Systemgodkendelses-test",
+    "sortKey": 88
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_143",
+    "identifier": "iso27002_2017_1431",
+    "section": "14.3.1",
+    "description": "Sikring af testdata",
+    "sortKey": 89
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_151",
+    "identifier": "iso27002_2017_1511",
+    "section": "15.1.1",
+    "description": "Informationssikkerheds-politik for leverandørforhold",
+    "sortKey": 90
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_151",
+    "identifier": "iso27002_2017_1512",
+    "section": "15.1.2",
+    "description": "Håndtering af sikkerhed i leverandøraftaler",
+    "sortKey": 91
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_151",
+    "identifier": "iso27002_2017_1513",
+    "section": "15.1.3",
+    "description": "Forsyningskæde for informations- og kommunikations-teknologi (IKT)",
+    "sortKey": 92
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_152",
+    "identifier": "iso27002_2017_1521",
+    "section": "15.2.1",
+    "description": "Overvågning og gennemgang af leverandørydelser",
+    "sortKey": 93
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_152",
+    "identifier": "iso27002_2017_1522",
+    "section": "15.2.2",
+    "description": "Styring af ændringer af leverandørydelser",
+    "sortKey": 94
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_161",
+    "identifier": "iso27002_2017_1611",
+    "section": "16.1.1",
+    "description": "Ansvar og procedurer",
+    "sortKey": 95
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_161",
+    "identifier": "iso27002_2017_1612",
+    "section": "16.1.2",
+    "description": "Rapportering af informationssikkerheds-hændelser",
+    "sortKey": 96
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_161",
+    "identifier": "iso27002_2017_1613",
+    "section": "16.1.3",
+    "description": "Rapportering af informationssikkerheds-svagheder",
+    "sortKey": 97
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_161",
+    "identifier": "iso27002_2017_1614",
+    "section": "16.1.4",
+    "description": "Vurdering af og beslutning om informationssikkerheds-hændelser",
+    "sortKey": 98
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_161",
+    "identifier": "iso27002_2017_1615",
+    "section": "16.1.5",
+    "description": "Håndtering af informations-sikkerhedsbrud",
+    "sortKey": 99
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_161",
+    "identifier": "iso27002_2017_1616",
+    "section": "16.1.6",
+    "description": "Erfaring fra informationssikkerheds-brud",
+    "sortKey": 100
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_161",
+    "identifier": "iso27002_2017_1617",
+    "section": "16.1.7",
+    "description": "Indsamling af beviser",
+    "sortKey": 101
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_171",
+    "identifier": "iso27002_2017_1711",
+    "section": "17.1.1",
+    "description": "Planlægning af informationssikkerheds-kontinuitet",
+    "sortKey": 102
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_171",
+    "identifier": "iso27002_2017_1712",
+    "section": "17.1.2",
+    "description": "Implementering af informationssikkerheds-kontinuitet",
+    "sortKey": 103
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_171",
+    "identifier": "iso27002_2017_1713",
+    "section": "17.1.3",
+    "description": "Verificer, gennemgå og evaluer informationssikkerheds-kontinuiteten",
+    "sortKey": 104
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_172",
+    "identifier": "iso27002_2017_1721",
+    "section": "17.2.1",
+    "description": "Tilgængelighed af informations-behandlingsfaciliteter",
+    "sortKey": 105
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_181",
+    "identifier": "iso27002_2017_1811",
+    "section": "18.1.1",
+    "description": "Identifikation af gældende lovgivning og kontraktkrav",
+    "sortKey": 106
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_181",
+    "identifier": "iso27002_2017_1812",
+    "section": "18.1.2",
+    "description": "Immaterielle rettigheder",
+    "sortKey": 107
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_181",
+    "identifier": "iso27002_2017_1813",
+    "section": "18.1.3",
+    "description": "Beskyttelse af registreringer",
+    "sortKey": 108
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_181",
+    "identifier": "iso27002_2017_1814",
+    "section": "18.1.4",
+    "description": "Privatlivets fred og beskyttelse af personoplysninger",
+    "sortKey": 109
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_181",
+    "identifier": "iso27002_2017_1815",
+    "section": "18.1.5",
+    "description": "Regulering af kryptografi",
+    "sortKey": 110
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_182",
+    "identifier": "iso27002_2017_1821",
+    "section": "18.2.1",
+    "description": "Uafhængig gennemgang af informationssikkerhed",
+    "sortKey": 111
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_182",
+    "identifier": "iso27002_2017_1822",
+    "section": "18.2.2",
+    "description": "Overenstemmelse med sikkerhedspolitikker og sikkerhedsstandarder",
+    "sortKey": 112
+  },
+  {
+    "parentIdentifier": "iso_27002_2017_182",
+    "identifier": "iso27002_2017_1823",
+    "section": "18.2.3",
+    "description": "Undersøgelse af teknisk overensstemmelse",
+    "sortKey": 113
+  }
+]

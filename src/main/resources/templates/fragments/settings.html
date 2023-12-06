@@ -1,0 +1,90 @@
+<div th:if="${T(dk.digitalidentity.security.SecurityUtil).administrator}" class="modal fade" id="settingsDialog" tabindex="-1" aria-labelledby="settings" aria-hidden="true">
+    <link rel="stylesheet" th:href="@{/css/setting/style.css}" />
+    <style>
+    .choices__list--dropdown {
+    color: black;
+    }
+    .choices__list[aria-expanded] {
+    color:black;
+    }
+
+    </style>
+    <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Rediger indstillinger</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <form id="riskSettingsForm" class="row g-3" action="#" th:action="@{/settings/update}" style="margin-bottom: 25px;"
+          th:object="${Settings}" method="post">
+          <a class="btn btn-primary" data-bs-toggle="collapse" href="#riskPart" role="button" aria-expanded="false" aria-controls="riskPart">
+            Risiko
+          </a>
+            <div class="collapse" id="riskPart" th:classappend="${page} == 'risks' ? 'show' : ''">
+              <div class="card card-body">
+                <div th:each="setting, itemStat :  *{settingsList}">
+                  <div th:if="${setting.association} == 'risk'" class="row mt-3">
+                    <label for="riskScaleSelect" class="col-sm-4 col-form-label" th:text="Skala" style="color: black;"></label>
+                    <div th:if="${setting.settingKey} == 'scale'">
+                      <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}" />
+                      <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}" />
+                      <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}" />
+                      <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}" />
+                      <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}" />
+                      <select style="color:black;" class="form-control form-select" data-trigger="" name="riskScale" id="riskScaleSelect"
+                        tabindex="-1" th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                        <option style="color: black;" th:each="scale : ${T(dk.digitalidentity.model.entity.enums.RiskScaleType).values()}"
+                          th:value="${scale.getValue()}" th:text="${scale}"
+                          th:selected="${scale.name() == @scaleService.switchScale(setting.settingValue).name()}"></option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          <a class="btn btn-primary" data-bs-toggle="collapse" href="#kitosPart" role="button" aria-expanded="false"
+            aria-controls="kitosPart">
+            Kitos
+          </a>
+          <div class="collapse" id="kitosPart" th:classappend="${page} == 'kitos' ? 'show' : ''">
+            <div class="card card-body">
+              <div th:each="setting, itemStat :  *{settingsList}">
+                <div th:if="${setting.association} == 'kitos'" >
+                  <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}" />
+                  <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}" />
+                  <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}" />
+                  <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}" />
+                  <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}" />
+                  <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_KEY}">
+                    <div class="row mt-3">
+                      <label for="ownerSelect" class="col-sm-4 col-form-label" style="color: black;">UUID for ejerrollen i kitos</label>
+                      <select class="form-control form-select choices__input col-sm-8" id="ownerSelect"
+                        th:field="*{settingsList[__${itemStat.index}__].settingValue}"></select>
+                    </div>
+                  </div>
+                  <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_KEY}">
+                    <div class="row mt-3">
+                      <label for="responsibleSelect" class="col-sm-4 col-form-label" style="color: black;">UUID for ansvarsrollen i kitos</label>
+                      <select class="form-control form-select choices__input" id="responsibleSelect"
+                        th:field="*{settingsList[__${itemStat.index}__].settingValue}"></select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </form>
+        <form id="kitosSettingsForm" class="row g-3" action="#" th:action="@{/settings/update}" th:object="${kitosSettings}"
+          method="post">
+
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuller</button>
+        <button type="submit" form="riskSettingsForm" class="btn btn-secondary">Gem</button>
+      </div>
+    </div>
+  </div>
+</div>

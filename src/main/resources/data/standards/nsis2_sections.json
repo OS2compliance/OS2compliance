@@ -1,0 +1,1105 @@
+[
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_311",
+    "section": "3.1.1",
+    "description": "Ansøgning",
+    "sortKey": 311
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_311",
+    "identifier": "nsis_2_0_2a_311_1",
+    "securityLevel": "Lav",
+    "description": "Ansøgeren skal gøres bekendt med betingelserne for brugen af udstedte Elektroniske Identifikationsmidler.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_311",
+    "identifier": "nsis_2_0_2a_311_2",
+    "securityLevel": "Lav",
+    "description": "Ansøgeren skal gøres bekendt med de krævede sikkerhedsforanstaltninger, som har at gøre med brugen af Elektroniske Identifikationsmidler.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_311",
+    "identifier": "nsis_2_0_2a_311_3",
+    "securityLevel": "Lav",
+    "description": "De data, som er relevante for godtgørelse og kontrol af Identitet, skal indsamles.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_311",
+    "identifier": "nsis_2_0_2a_311_4",
+    "securityLevel": "Betydelig",
+    "description": "Ansøgeren skal afkræves accept af betingelser og tilkendegive at have læst dem.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_311",
+    "identifier": "nsis_2_0_2a_311_5",
+    "securityLevel": "Høj",
+    "description": "Som Betydelig.",
+    "sortKey": 5
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_312",
+    "section": "3.1.2",
+    "description": "Verifikation af Identitet (fysiske personer)",
+    "sortKey": 312
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_1",
+    "securityLevel": "Lav",
+    "description": "Der skal gennemføres en verifikation, og der skal foreligge en beskrivelse af verifikationsprocessen, herunder de forudsætninger, der lægges til grund.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_2",
+    "securityLevel": "Lav",
+    "description": "Ansøgeren (Entiteten) skal med overvejende sandsynlighed vurderes at være i besiddelse af almindeligt anerkendt dokumentation for sin Identitet. Dette kan fx være sygesikringskort, pas, kørekort, dåbsattest eller forskudsopgørelse.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_3",
+    "securityLevel": "Lav",
+    "description": "Dokumentationen kan antages at være ægte og gyldig.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_4",
+    "securityLevel": "Betydelig",
+    "description": "Det skal verificeres, at ansøgeren er i besiddelse af nationalt anerkendt foto- eller biometrisk dokumentation for sin Identitet (fx pas eller kørekort). Hvor ansøgeren ikke er besiddelse af dette, kan anvendes de samme identifikationsprocesser, som benyttes ved udstedelse af dansk pas eller kørekort.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_5",
+    "securityLevel": "Betydelig",
+    "description": "Dokumentation kontrolleres for at fastslå, at den er ægte, eller det vides i henhold til en autoritativ kilde, at dokumentationen eksisterer og er relateret til en fysisk person.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_6",
+    "securityLevel": "Betydelig",
+    "description": "Der er taget skridt til at nedbringe risikoen for, at den pågældende persons Identitet ikke er den, den påstås at være, under hensyntagen til risikoen for at den fremlagte dokumentation kan være blevet tabt, stjålet, suspenderet, tilbagekaldt eller være udløbet. Ansøgerens identitet valideres i henhold til en autoritativ kilde, og i det omfang det er muligt, tages der skridt til at sikre, at ansøgeren ikke er markeret som død eller forsvundet.",
+    "sortKey": 6
+  },
+  {
+    "section": "7",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_7",
+    "securityLevel": "Betydelig",
+    "description": "Hvis der gennemføres manuelle kontroller, må disse kun udføres af specielt uddannet personale, der har modtaget relevant instruktion i at verificere ægthed af dokumenation og detektere svindel.",
+    "sortKey": 7
+  },
+  {
+    "section": "8",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_8",
+    "securityLevel": "Betydelig",
+    "description": "Hvis registreringen gennemføres af en anden person end ansøgeren, skal denne være autentificeret på Sikringsniveau Betydelig eller Høj.",
+    "sortKey": 8
+  },
+  {
+    "section": "9",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_9",
+    "securityLevel": "Høj",
+    "description": "Ansøgeren kan identificeres som havende den påståede Identitet ved sammenligning af et eller flere af personens fysiske kendetegn med en Autoritativ kilde. Sammenligningen skal udføres enten via personligt fremmøde eller en anden mekanisme, der giver en ækvivalent sikkerhed.",
+    "sortKey": 9
+  },
+  {
+    "section": "10",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_10",
+    "securityLevel": "Høj",
+    "description": "Der er med meget høj sandsynlighed et fysisk match mellem ansøgeren og den præsenterede dokumentation (fx match af billede og underskrift).",
+    "sortKey": 10
+  },
+  {
+    "section": "11",
+    "parentIdentifier": "nsis_2_0_2a_312",
+    "identifier": "nsis_2_0_2a_312_11",
+    "securityLevel": "Høj",
+    "description": "Hvis registreringen gennemføres af en anden person end ansøgeren, skal denne være autentificeret på Sikringsniveau Høj.",
+    "sortKey": 11
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_313",
+    "section": "3.1.3",
+    "description": "Verifikation af Identitet (juridiske enheder)",
+    "sortKey": 313
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_1",
+    "securityLevel": "Lav",
+    "description": "Den juridiske enheds eksistens er dokumenteret med et anerkendt\nbevis (fx registreringsbevis eller tilsvarende) eller ved opslag i CVR-registret.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_2",
+    "securityLevel": "Lav",
+    "description": "Den juridiske enheds navn, retlige form og entydige\nregistreringsnummer (CVR-nummer) er fastlagt entydigt.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_3",
+    "securityLevel": "Lav",
+    "description": "Den juridiske enhed er ikke registreret med en status, der afholder\nden juridiske person fra at agere som sådan (herunder konkurs etc.).",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_4",
+    "securityLevel": "Lav",
+    "description": "Det kan antages, at registreringen gennemføres af en person, der er\nautoriseret til dette af den juridiske enhed.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_5",
+    "securityLevel": "Lav",
+    "description": "Personen, der gennemfører registreringen, er autentificeret på Sikringsniveau\nLav eller højere.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_6",
+    "securityLevel": "Betydelig",
+    "description": "Der er taget rimelige skridt til at sikre, at registreringen gennemføres\naf en person, der er autoriseret til dette af den juridiske enhed.\nÆgtheden af autorisationen skal verificeres.",
+    "sortKey": 6
+  },
+  {
+    "section": "7",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_7",
+    "securityLevel": "Betydelig",
+    "description": "Personen, der gennemfører registreringen, er autentificeret på\nSikringsniveau Betydelig eller Høj.",
+    "sortKey": 7
+  },
+  {
+    "section": "8",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_8",
+    "securityLevel": "Høj",
+    "description": "Der er gennemført en stærk validering af, at registreringen\ngennemføres af en person, der er autoriseret til dette af den\njuridiske enhed.",
+    "sortKey": 8
+  },
+  {
+    "section": "9",
+    "parentIdentifier": "nsis_2_0_2a_313",
+    "identifier": "nsis_2_0_2a_313_9",
+    "securityLevel": "Høj",
+    "description": "Personen, der gennemfører registreringen, er autentificeret på\nSikringsniveau Høj.",
+    "sortKey": 9
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_321",
+    "section": "3.2.1",
+    "description": "Styrke af Elektronisk Identifikationsmiddel",
+    "sortKey": 321
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_321",
+    "identifier": "nsis_2_0_2a_321_1",
+    "securityLevel": "Lav",
+    "description": "Det Elektroniske Identifikationsmiddel skal gøre brug af mindst en Autentifikationsfaktor.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_321",
+    "identifier": "nsis_2_0_2a_321_2",
+    "securityLevel": "Lav",
+    "description": "Det Elektroniske Identifikationsmiddel er udformet således, at udstederen tager rimelige skridt til at kontrollere, at det kun er den Person, som det tilhører, der har kontrol over og er i besiddelse af det.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_321",
+    "identifier": "nsis_2_0_2a_321_3",
+    "securityLevel": "Betydelig",
+    "description": "Det Elektroniske Identifikationsmiddel skal gøre brug af mindst to Autentifikationsfaktorer fra forskellige kategorier.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_321",
+    "identifier": "nsis_2_0_2a_321_4",
+    "securityLevel": "Betydelig",
+    "description": "Det Elektroniske Identifikationsmiddel er udformet således, at det kan antages, at det kun kan bruges, når det er den person, som det tilhører, der har kontrol over og er i besiddelse af det.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_321",
+    "identifier": "nsis_2_0_2a_321_5",
+    "securityLevel": "Høj",
+    "description": "Det Elektroniske Identifikationsmiddel skal være beskyttet mod kopiering og manipulering af angribere med stor Angrebskapacitet.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_321",
+    "identifier": "nsis_2_0_2a_321_6",
+    "securityLevel": "Høj",
+    "description": "Det Elektroniske Identifikationsmiddel er udformet således, at den person, som det tilhører, kan beskytte det sikkert mod, at andre bruger det.",
+    "sortKey": 6
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_322",
+    "section": "3.2.2",
+    "description": "Levering og aktivering",
+    "sortKey": 322
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_322",
+    "identifier": "nsis_2_0_2a_322_1",
+    "securityLevel": "Lav",
+    "description": "Det Elektroniske Identifikationsmiddel leveres efter udstedelse via en mekanisme, som gør det muligt at antage, at det kun leveres til den tilsigtede Person.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_322",
+    "identifier": "nsis_2_0_2a_322_2",
+    "securityLevel": "Betydelig",
+    "description": "Det Elektroniske Identifikationsmiddel leveres efter udstedelse via en mekanisme, som gør det muligt at antage, at det kun udleveres til den Person, som det tilhører.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_322",
+    "identifier": "nsis_2_0_2a_322_3",
+    "securityLevel": "Høj",
+    "description": "Aktiveringsprocessen kontrollerer, at det Elektroniske Identifikationsmiddel kun blev udleveret til den Person, som det tilhører.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_322",
+    "identifier": "nsis_2_0_2a_322_4",
+    "securityLevel": "Høj",
+    "description": "Udleveringen skal beskyttes mod angreb, hvor det Elektroniske Identifikationsmiddel stjæles under transport samt insider-angreb i udleveringsfunktionen hos udstederen ved fx at benytte to uafhængige forsendelseskanaler eller funktionsadskillelse.",
+    "sortKey": 4
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_323",
+    "section": "3.2.3",
+    "description": "Suspendering, spærring og genaktivering",
+    "sortKey": 323
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_1",
+    "securityLevel": "Lav",
+    "description": "Det skal være muligt for ejeren af et Elektronisk Identifikationsmiddel at suspendere (midlertidigt forhindre anvendelse) og/eller spærre (permanent forhindre anvendelse) hurtigt og effektivt.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_2",
+    "securityLevel": "Lav",
+    "description": "Der skal etableres foranstaltninger, som sikrer mod, at Elektroniske Identifikationsmidler spærres eller suspenderes uretmæssigt i et forsøg på at lukke en legitim Persons adgang.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_3",
+    "securityLevel": "Lav",
+    "description": "Reaktivering skal kun finde sted, hvis de samme sikringskrav som forud for udstedelsen fortsat er opfyldt.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_4",
+    "securityLevel": "Lav",
+    "description": "Udstederen af et Elektronisk Identifikationsmiddel, skal på eget initiativ spærre dette:\n- hvis der er mistanke om kompromittering eller tab af kontrol over dette,\n- hvis der konstateres fejl i det Elektroniske Identifikationsmiddel (fx forkerte data),\n- hvis der ikke længere foreligger en gyldig aftale mellem udsteder og ansøger",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_5",
+    "securityLevel": "Lav",
+    "description": "Der gives en kvittering for spærring til ejeren af det Elektroniske Identifikationsmiddel, hvis det er muligt.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_6",
+    "securityLevel": "Betydelig",
+    "description": "Suspenderings- og spærrefunktion skal være til rådighed døgnet rundt og have en høj grad af tilgængelighed.",
+    "sortKey": 6
+  },
+  {
+    "section": "7",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_7",
+    "securityLevel": "Betydelig",
+    "description": "Udstederen skal spærre Elektroniske Identifikationsmidler, hvis det konstateres, at ejeren af det Elektroniske Identifikationsmiddel er ophørt med at eksistere (fx dødsfald for fysisk person eller konkurs for juridisk enhed).",
+    "sortKey": 7
+  },
+  {
+    "section": "8",
+    "parentIdentifier": "nsis_2_0_2a_323",
+    "identifier": "nsis_2_0_2a_323_Q",
+    "securityLevel": "Høj",
+    "description": "Som Betydelig.",
+    "sortKey": 8
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_324",
+    "section": "3.2.4",
+    "description": "Fornyelse og erstatning",
+    "sortKey": 324
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_324",
+    "identifier": "nsis_2_0_2a_324_1",
+    "securityLevel": "Lav",
+    "description": "Processer til fornyelse og udskiftning skal enten honorere de samme krav som den initiale Identitetssikring (og indregne risikoen for ændrede identifikationsdata) eller baseres på en gyldig elektronisk identifikation på samme eller højere Sikringsniveau.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_324",
+    "identifier": "nsis_2_0_2a_324_Q",
+    "securityLevel": "Betydelig",
+    "description": "Som Lav.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_324",
+    "identifier": "nsis_2_0_2a_324_2",
+    "securityLevel": "Høj",
+    "description": "Hvor fornyelsen baseres på en gyldig elektronisk identifikation, skal personidentifikationsdata og eksistens af Entiteten verificeres på ny mod en Autoritativ kilde.",
+    "sortKey": 3
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_331",
+    "section": "3.3.1",
+    "description": "Autentifikationsmekanismer",
+    "sortKey": 331
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_331",
+    "identifier": "nsis_2_0_2a_331_1",
+    "securityLevel": "Lav",
+    "description": "Frigivelsen af personidentifikationsdata finder sted efter en pålidelig kontrol af det anvendte Elektroniske Identifikationsmiddel og dets gyldighed og på en måde, hvor fortrolighed og integritet af afgivne data sikres.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_331",
+    "identifier": "nsis_2_0_2a_331_2",
+    "securityLevel": "Lav",
+    "description": "Hvis personidentifikationsdata er lagret som en del af autentifikationsmekanismen, er disse oplysninger sikret på en måde, der beskytter dem mod at gå tabt eller blive kompromitteret, herunder ved offline analyse.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_331",
+    "identifier": "nsis_2_0_2a_331_3",
+    "securityLevel": "Lav",
+    "description": "Autentifikationsmekanismen implementerer sikkerhedskontroller til at efterprøve Elektroniske Identifikationsmidler, således at det er højst usandsynligt, at det er muligt for en angriber med en øget basal Angrebskapacitet at gætte, lytte sig til, gengive eller manipulere kommunikationen og på den måde omgå autentifikationsmekanismen.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_331",
+    "identifier": "nsis_2_0_2a_331_4",
+    "securityLevel": "Betydelig",
+    "description": "Frigivelsen af personidentifikationsdata finder sted efter en pålidelig kontrol af Elektroniske Identifikationsmidler og deres gyldighed via en Dynamisk Autentifikationsmekanisme.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_331",
+    "identifier": "nsis_2_0_2a_331_5",
+    "securityLevel": "Betydelig",
+    "description": "Autentifikationsmekanismen implementerer sikkerhedskontroller til at efterprøve Elektroniske Identifikationsmidler, således at det er højst usandsynligt, at det er muligt for en angriber med en moderat Angrebskapacitet at gætte, lytte sig til, gengive eller manipulere kommunikationen og på den måde omgå autentifikationsmekanismen.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_331",
+    "identifier": "nsis_2_0_2a_331_6",
+    "securityLevel": "Høj",
+    "description": "Autentifikationsmekanismen implementerer sikkerhedskontroller til at efterprøve Elektroniske Identifikationsmidler, således at det er højst usandsynligt, at det er muligt for en angriber med en høj Angrebskapacitet at gætte, lytte sig til, gengive eller manipulere kommunikationen og på den måde omgå autentifikationsmekanismen.",
+    "sortKey": 6
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_411",
+    "section": "4.1.1",
+    "description": "Generelle krav",
+    "sortKey": 411
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_411",
+    "identifier": "nsis_2_0_2a_411_1",
+    "securityLevel": "Lav",
+    "description": "Organisationer, som leverer ID-tjenester beskrevet i dette dokument, skal være en registreret juridisk enhed i EU med en etableret organisation. Organisationen skal leve op til alle krav for de tilbudte tjenester, svarende til de beskrevne processer i Elektroniske Identifikationsmidlers livscyklus (registrering, udstedelse, anvendelse, broker etc.).",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_411",
+    "identifier": "nsis_2_0_2a_411_2",
+    "securityLevel": "Lav",
+    "description": "Organisationer, som leverer ID-tjenester, skal til enhver tid overholde gældende lov herunder den gældende regulering af databeskyttelse, forvaltningsloven (hvis offentlig myndighed), [eIDAS] forordningen samt anden relevant lovgivning.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_411",
+    "identifier": "nsis_2_0_2a_411_3",
+    "securityLevel": "Lav",
+    "description": "Organisationer, som leverer ID-tjenester, er ansvarlige for opfyldelse af forpligtelser, som er overdraget til tredjepart.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_411",
+    "identifier": "nsis_2_0_2a_411_4",
+    "securityLevel": "Betydelig",
+    "description": "Organisationer som leverer ID-tjenester skal være i stand til at dokumentere deres evne til at påtage sig risikoen for at bære erstatningsansvar, og at de har tilstrækkelige finansielle ressourcer til at fortsætte driften og levere tjenester.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_411",
+    "identifier": "nsis_2_0_2a_411_5",
+    "securityLevel": "Betydelig",
+    "description": "Private organisationer, som leverer ID-tjenester, skal have en beskrevet termineringsplan, som sikrer en hensigtsmæssig nedlukning eller overtagelse af tredjepart, samt underretning af myndigheder og brugere. Planen skal indeholde detaljer om, hvordan data opbevares, beskyttes og destrueres.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_411",
+    "identifier": "nsis_2_0_2a_411_Q",
+    "securityLevel": "Høj",
+    "description": "Som Betydelig",
+    "sortKey": 6
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_412",
+    "section": "4.1.2",
+    "description": "Oplysningspligt",
+    "sortKey": 412
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_412",
+    "identifier": "nsis_2_0_2a_412_1",
+    "securityLevel": "Lav",
+    "description": "Der skal offentliggøres en servicebeskrivelse, som beskriver alle relevante betingelser, betalinger for og begrænsninger i brugen af servicen. Servicebeskrivelsen skal indeholde en privatlivspolitik, som opfylder kravene i [GDPR].",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_412",
+    "identifier": "nsis_2_0_2a_412_2",
+    "securityLevel": "Lav",
+    "description": "Der skal oplyses om ansvar og forudsætninger for brugere samt ’relying parties’, der forlader sig på et Elektronisk Identifikationsmiddel, i forhold til at opnå et givet Sikringsniveau. Dette omfatter fx sikkerhedsvejledning til brugere.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_412",
+    "identifier": "nsis_2_0_2a_412_3",
+    "securityLevel": "Lav",
+    "description": "Det skal eksplicit kræves i betingelserne, at ejeren:\n- alene anvender det Elektroniske Identifikationsmiddel i overensstemmelse med udstederens politikker (herunder politikker for brug og evt. længde af kodeord) samt\n- ikke overdrager sine Elektroniske Identifikationsmidler til andre samt\n- giver fyldestgørende og korrekte svar på alle anmodninger om information i ansøgningsprocessen samt\n- tager rimelige forholdsregler for at beskytte sine Elektroniske Identifikationsmidler (herunder ved evt. sikkerhedskopiering) samt\n- omgående anmoder om spærring af sine Elektroniske Identifikationsmidler i tilfælde af kompromittering eller mistanke om kompromittering af disse, samt\n- omgående anmoder om fornyelse af sine Elektroniske Identifikationsmidler, hvis indholdet af disse ikke længere er i overensstemmelse med de faktiske forhold (herunder oplysninger afgivet under registreringsprocessen, som indgår i Elektroniske Identifikationsmidler).",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_412",
+    "identifier": "nsis_2_0_2a_412_Q",
+    "securityLevel": "Betydelig",
+    "description": "Som Lav.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_412",
+    "identifier": "nsis_2_0_2a_412_QQ",
+    "securityLevel": "Høj",
+    "description": "Som Lav.",
+    "sortKey": 5
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_413",
+    "section": "4.1.3",
+    "description": "Informationssikkerhedsledelse",
+    "sortKey": 413
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_1",
+    "securityLevel": "Lav",
+    "description": "Organisationer, som leverer ID-tjenester, skal etablere et effektivt ledelsessystem for informationssikkerhed (ISMS) som dækker ID-tjenesten med henblik på at håndtere risici knyttet til informationssikkerhed.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_2",
+    "securityLevel": "Betydelig",
+    "description": "Ledelsessystemet for ID-tjenesten skal være i overensstemmelse med principperne i [ISO 27001] standarden.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_3",
+    "securityLevel": "Betydelig",
+    "description": "Der skal foreligge en beredskabsplan, som dækker alle væsentlige områder.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_4",
+    "securityLevel": "Høj",
+    "description": "Ledelsessystemet for ID-tjenesten skal være certificeret efter [ISO 27001] standarden eller det skal på tilsvarende måde kunne dokumenteres efterlevelsen af krav til informationssikkerhedsledelse.",
+    "sortKey": 4
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_413",
+    "section": "4.1.4",
+    "description": "Dokumentation og registerføring",
+    "sortKey": 414
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_5",
+    "securityLevel": "Lav",
+    "description": "Relevant information skal arkiveres og beskyttes i henhold til gældende lov samt god praksis inden for databeskyttelse og forvaltning.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_6",
+    "securityLevel": "Lav",
+    "description": "Relevante oplysninger registreres og ajourføres ved hjælp af et effektivt registreringssystem, der tager hensyn til gældende lovgivning og god praksis inden for beskyttelse og opbevaring af data.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_7",
+    "securityLevel": "Lav",
+    "description": "Informationer (herunder logs) skal opbevares og beskyttes, så længe de er nødvendige af hensyn til revision eller efterforskning af sikkerhedshændelser, under hensyntagen til lovgivningens begrænsninger, hvorefter de skal slettes sikkert.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_Q",
+    "securityLevel": "Betydelig",
+    "description": "Som Lav.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_413",
+    "identifier": "nsis_2_0_2a_413_QQ",
+    "securityLevel": "Høj",
+    "description": "Som Lav.",
+    "sortKey": 4
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_415",
+    "section": "4.1.5",
+    "description": "Faciliteter og personale",
+    "sortKey": 415
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_1",
+    "securityLevel": "Lav",
+    "description": "Der skal findes procedurer, som sikrer, at personale og underleverandører er tilstrækkeligt uddannede, kvalificerede, erfarne og har de færdigheder, der er behov for, når de skal udfylde deres roller.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_2",
+    "securityLevel": "Lav",
+    "description": "Der skal være tilstrækkeligt med personale (evt. via underleverandører) til at drive og vedligeholde tjenesten i henhold til de relevante politikker og procedurer.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_3",
+    "securityLevel": "Lav",
+    "description": "Driftsfaciliteter skal løbende overvåges for og beskyttes imod skade forvoldt ved miljøkatastrofer, uautoriseret adgang eller andre faktorer, som kan påvirke tjenestens sikkerhed.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_4",
+    "securityLevel": "Lav",
+    "description": "Områder i driftsfaciliteter indeholdende personlige, kryptografiske eller andre fortrolige oplysninger skal begrænses til autoriseret personale.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_5",
+    "securityLevel": "Betydelig",
+    "description": "Det skal kontrolleres, at ledere og medarbejdere, der udfører betroede opgaver, ikke er straffet for en forbrydelse, der gør dem uegnede til at bestride deres hverv, samt at medarbejdere og ledere har tilstrækkelig uddannelse og erfaring. Det samme gælder leverandører og underleverandører.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_6",
+    "securityLevel": "Betydelig",
+    "description": "Det skal kunne dokumenteres, hvem der har haft adgang til centrale driftslokaler.",
+    "sortKey": 6
+  },
+  {
+    "section": "7",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_7",
+    "securityLevel": "Betydelig",
+    "description": "Betroede adgange (herunder administratoradgange) i produktionssystemer skal sikres og overvåges.",
+    "sortKey": 7
+  },
+  {
+    "section": "8",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_8",
+    "securityLevel": "Høj",
+    "description": "Det skal sikres, at adgang til og ophold i de centrale driftslokaler videoovervåges.",
+    "sortKey": 8
+  },
+  {
+    "section": "9",
+    "parentIdentifier": "nsis_2_0_2a_415",
+    "identifier": "nsis_2_0_2a_415_9",
+    "securityLevel": "Høj",
+    "description": "Driftsfaciliteter skal have en perimeterbeskyttelse svarende til [DS 471] eller tilsvarende.",
+    "sortKey": 9
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_416",
+    "section": "4.1.6",
+    "description": "Tekniske kontroller",
+    "sortKey": 416
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_1",
+    "securityLevel": "Lav",
+    "description": "Der findes rimelige tekniske kontroller, som gør det muligt at afværge trusler mod tjenesternes sikkerhed og sikre de behandlede oplysningers fortrolighed, integritet og tilgængelighed.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_2",
+    "securityLevel": "Lav",
+    "description": "Elektroniske kommunikationskanaler, som benyttes til udveksling af persondata, skal beskyttes mod aflytning, manipulation og genspilning (replay).",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_3",
+    "securityLevel": "Lav",
+    "description": "Adgang til kryptografisk materiale brugt til udstedelse af et Elektronisk Identifikationsmiddel eller Autentifikation skal være begrænset til de roller og applikationer, der har et strengt nødvendigt behov for adgang, og kryptografisk materiale må aldrig gemmes i klar tekst i vedvarende lagringsmedier.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_4",
+    "securityLevel": "Lav",
+    "description": "Der er indført procedurer, som garanterer, at sikkerheden bevares over tid, og at der er mulighed for at reagere på ændringer i risikoniveau, sikkerhedshændelser og brud på sikkerheden.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_5",
+    "securityLevel": "Lav",
+    "description": "Alle medier, som indeholder personlige, kryptografiske eller andre fortrolige eller følsomme oplysninger, lagres, transporteres og bortskaffes på en sikker måde.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_6",
+    "securityLevel": "Betydelig",
+    "description": "Følsomt kryptografisk materiale anvendt til udstedelse af et Elektronisk Identifikationsmiddel og Autentifikation, som lagres vedvarende, skal beskyttes mod manipulation.",
+    "sortKey": 6
+  },
+  {
+    "section": "7",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_7",
+    "securityLevel": "Betydelig",
+    "description": "Der må ikke benyttes kryptografiske algoritmer eller protokoller med kendte sårbarheder eller med utilstrækkelige nøglelængder.",
+    "sortKey": 7
+  },
+  {
+    "section": "8",
+    "parentIdentifier": "nsis_2_0_2a_416",
+    "identifier": "nsis_2_0_2a_416_Q",
+    "securityLevel": "Høj",
+    "description": "Som Betydelig.",
+    "sortKey": 8
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_417",
+    "section": "4.1.7",
+    "description": "Anmeldelse og revision",
+    "sortKey": 417
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_417",
+    "identifier": "nsis_2_0_2a_417_1",
+    "securityLevel": "Lav",
+    "description": "Ved anmeldelse af en Elektronisk Identifikationsordning og/eller Identitetsbroker til Digitaliseringsstyrelsen skal der redegøres for den tekniske og sikkerhedsmæssige udformning samt Sikringsniveau og navn.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_417",
+    "identifier": "nsis_2_0_2a_417_2",
+    "securityLevel": "Lav",
+    "description": "Ved anmeldelse af en Elektronisk Identifikationsordning og/eller Identitetsbroker til Digitaliseringsstyrelsen skal der anvendes selv-deklarering. Anmelderen indestår herved selv for, at kravene til det angivne Sikringsniveau (Lav) er opfyldt.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_417",
+    "identifier": "nsis_2_0_2a_417_3",
+    "securityLevel": "Lav",
+    "description": "Ved anmeldelse på niveau Lav skal der udføres intern revision, som omfatter alle nødvendige områder af de tilbudte tjenester med henblik på at sikre overholdelse af relevante krav og politikker. Anmelderen skal på sikringsniveau Lav endvidere årligt indsende en ledelseserklæring som bekræfter, at den oprindelige anmeldelse fortsat er retvisende og løsningen er aktiv – eller alternativt opdatere sin anmeldelse eller bede om afnotering fra listen over anmeldte løsninger. Såfremt der gennemføres ekstern revision ift. sikringsniveau Betydelig eller Høj, bortfalder kravet til intern revision.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_417",
+    "identifier": "nsis_2_0_2a_417_4",
+    "securityLevel": "Betydelig",
+    "description": "Ved anmeldelse på niveau Betydelig anvendes selvdeklarering suppleret med en revisionserklæring fra en uafhængig statsautoriseret revisor eller et overensstemmelsesvurderingsorgan (jf. eIDAS artikel 3, stk. 1, nr. 18). Denne skal bekræfte, at løsningens tekniske og sikkerhedsmæssige udformning er gennemgået, at kravene i denne standard er overholdt af løsningen på det angivne Sikringsniveau, og at der er implementeret processer for løbende at sikre, at det angivne Sikringsniveau opretholdes. Anmeldelsen suppleres med en ledelseserklæring underskrevet af en tegningsberettiget, hvoraf det fremgår, at alle relevante krav er opfyldt og fornødne processer for opretholdelse er implementeret. Der skal årligt indsendes en ny revisionserklæring, som bekræfter, at kravene til stadighed opfyldes.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_417",
+    "identifier": "nsis_2_0_2a_417_5",
+    "securityLevel": "Betydelig",
+    "description": "Revisionserklæringen skal udarbejdes i henhold til seneste revisionsvejledning for NSIS 2.0 [REV]. \nAnmelder og revisor udfylder det tilhørende kontrolskema (eller tilsvarende ) for niveau Betydelig.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_417",
+    "identifier": "nsis_2_0_2a_417_6",
+    "securityLevel": "Høj",
+    "description": "Revisionserklæringen skal udarbejdes i henhold til seneste revisionsvejledning for NSIS 2.0 [REV].  \nAnmelder og revisor udfylder det tilhørende kontrolskema (eller tilsvarende) for niveau Høj.",
+    "sortKey": 6
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_52",
+    "section": "5.2",
+    "description": "Binding (associering) mellem Elektroniske Identifikationsmidler for fysiske personer og juridiske enheder",
+    "sortKey": 520
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_1",
+    "securityLevel": "Lav",
+    "description": "Det skal være muligt at suspendere og/eller ophæve en forbindelse for begge parter.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_2",
+    "securityLevel": "Lav",
+    "description": "Den juridiske enhed har (via en administrator) ret til at udføre suspendering eller ophævning, hvilket evt. kan indbefatte suspendering / spærring af et tilhørende Elektroniske Identifikationsmiddel, hvis forbindelsen er etableret herigennem.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_3",
+    "securityLevel": "Lav",
+    "description": "Det skal sikres, at forbindelsen fjernes, når associationen mellem den juridiske enhed og fysiske person ophører. Et eksempel kan være, at medarbejdere ikke længere er ansat eller ikke længere har et arbejdsbetinget behov for at være associeret, eller i tilfælde af den juridiske enheds konkurs eller likvidering.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_4",
+    "securityLevel": "Lav",
+    "description": "Godtgørelse af Identiteten af den fysiske person, der handler på vegne af den juridiske enhed, kontrolleres på Sikringsniveau »lav« eller derover.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_5",
+    "securityLevel": "Lav",
+    "description": "Forbindelsen kan oprettes på grundlag af opslag i CVR-registret\neller anden Autoritativ Kilde, herunder den juridiske person selv.",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_6",
+    "securityLevel": "Lav",
+    "description": "Den fysiske person er ikke registreret af en Autoritativ Kilde med en status, der afholder den fysiske person fra at handle på vegne af den juridiske enhed.",
+    "sortKey": 6
+  },
+  {
+    "section": "7",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_7",
+    "securityLevel": "Betydelig",
+    "description": "Sikringen af Identiteten af den fysiske person, der handler på vegne af den juridiske enhed, foretages på Sikringsniveau »Betydelig« eller »Høj«.",
+    "sortKey": 7
+  },
+  {
+    "section": "8",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_8",
+    "securityLevel": "Betydelig",
+    "description": "Forbindelsen er etableret under kontrol af den juridiske enhed fx via en udpeget administrator eller via oplysninger fra en Autoritativ kilde.",
+    "sortKey": 8
+  },
+  {
+    "section": "9",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_9",
+    "securityLevel": "Betydelig",
+    "description": "Procedurer til grund for etableringen af forbindelsen er underlagt revision.",
+    "sortKey": 9
+  },
+  {
+    "section": "10",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_10",
+    "securityLevel": "Betydelig",
+    "description": "Forbindelsen er blevet kontrolleret på grundlag af et entydigt identifikationsnummer (fx CVR-nummer), der repræsenterer den juridiske enhed, og som bruges i dansk virksomhedsregistrering, og på grundlag af oplysninger, der entydigt repræsenterer den fysiske person, fra en Autoritativ kilde.",
+    "sortKey": 10
+  },
+  {
+    "section": "11",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_11",
+    "securityLevel": "Betydelig",
+    "description": "Den fysiske person og juridiske enhed notificeres om etablering af forbindelsen.",
+    "sortKey": 11
+  },
+  {
+    "section": "12",
+    "parentIdentifier": "nsis_2_0_2a_52",
+    "identifier": "nsis_2_0_2a_52_12",
+    "securityLevel": "Høj",
+    "description": "Sikringen af Identiteten af den fysiske person, der er knyttet til en juridisk enhed, kontrolleres på Sikringsniveau »Høj«.",
+    "sortKey": 12
+  },
+
+  {
+    "standardIdentifier": "nsis_2_0_2a",
+    "identifier": "nsis_2_0_2a_6",
+    "section": "6",
+    "description": "Krav til Identitetsbrokere",
+    "sortKey": 600
+  },
+  {
+    "section": "1",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_1",
+    "securityLevel": "Lav",
+    "description": "Security tokens må kun udstedes umiddelbart efter a) forudgående, succesfuld Autentifikation, b) på baggrund af en gyldig, autentificeret session (Single Sign-On), eller c) ved omveksling af et gyldigt security token fra en anden Identitetsbroker, der er etableret et tillidsforhold til.",
+    "sortKey": 1
+  },
+  {
+    "section": "2",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_2",
+    "securityLevel": "Lav",
+    "description": "Det aktuelle Sikringsniveau skal angives som en oplysning i det udstedte token (LoA), således at modtageren af tokens direkte kan aflæse dette. Sikringsniveauet i et token opgøres som mindsteværdien af Sikringsniveauet for Autentifikationen (jf. afsnit 2-5), brokerens eget Sikringsniveau (FAL) jf. afsnit 4 og 6, samt Sikringsniveauerne for evt. Identitetsbrokere, der er benyttet som underleverandører i den konkrete Autentifikation. Det er dermed det laveste Sikringsniveau i autentifikationskæden, som bliver det resulterende Sikringsniveau.",
+    "sortKey": 2
+  },
+  {
+    "section": "3",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_3",
+    "securityLevel": "Lav",
+    "description": "Tokens skal signeres med brokerens private nøgle og må kun udveksles over krypterede kanaler.",
+    "sortKey": 3
+  },
+  {
+    "section": "4",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_4",
+    "securityLevel": "Lav",
+    "description": "Brokerens private nøgle, der underskriver security tokens, skal beskyttes mod uautoriseret adgang.",
+    "sortKey": 4
+  },
+  {
+    "section": "5",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_5",
+    "securityLevel": "Lav",
+    "description": "Sessioner med Identitetsbrokere skal have en begrænset levetid (automatisk udløb), og det skal være muligt for brugeren at logge ud af alle sessioner på én gang (single logout).",
+    "sortKey": 5
+  },
+  {
+    "section": "6",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_6",
+    "securityLevel": "Lav",
+    "description": "Sessioner med Identitetsbrokere skal beskyttes mod overtagelse.",
+    "sortKey": 6
+  },
+  {
+    "section": "7",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_7",
+    "securityLevel": "Lav",
+    "description": "Alle forespørgsler til Identitetsbrokeren og alle svar på disse skal skrives til en integritetsbeskyttet log.",
+    "sortKey": 7
+  },
+  {
+    "section": "8",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_8",
+    "securityLevel": "Betydelig",
+    "description": "Anvendere af Identitetsbrokere, der aftager Autentifikation, skal i deres forespørgsel kunne fravælge Single Sign-On, hvis der fra tjenestens side er ønske om at gennemtvinge en Autentifikation med aktiv brugerinvolvering (dvs. fravælge SSO).",
+    "sortKey": 8
+  },
+  {
+    "section": "9",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_9",
+    "securityLevel": "Betydelig",
+    "description": "Tokenet skal være begrænset til en eller flere specifikke tjenester, og disse skal fremgå eksplicit i tokenet (fx som Audience Restriction).",
+    "sortKey": 9
+  },
+  {
+    "section": "10",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_10",
+    "securityLevel": "Betydelig",
+    "description": "Tokens, som indeholder fortrolige eller følsomme personoplysninger, og transporteres via brugerens browser, skal end-to-end krypteres eller krypteres på attributniveau, således at indholdet kun er læsbart for modtageren.",
+    "sortKey": 10
+  },
+  {
+    "section": "11",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_11",
+    "securityLevel": "Betydelig",
+    "description": "Brokerens private nøgle, der underskriver security tokens, skal beskyttes mod uautoriseret adgang både fra interne og eksterne, og der skal etableres eksplicitte procedurer for nøglehåndtering, som dækker den fulde livscyklus.",
+    "sortKey": 11
+  },
+  {
+    "section": "12",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_12",
+    "securityLevel": "Betydelig",
+    "description": "For nationale tjenester skal brokerens private nøgle, der underskriver security tokens, placeres i 'tamper-resistent' kryptografisk hardware der opfylder kravene til [FIPS 140-2] level 3 eller tilsvarende.",
+    "sortKey": 12
+  },
+  {
+    "section": "13",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_13",
+    "securityLevel": "Høj",
+    "description": "Brokerens private nøgle, der underskriver security tokens, placeres i 'tamper-resistent' kryptografisk hardware, der opfylder kravene til [FIPS 140-2] level 3 eller tilsvarende.",
+    "sortKey": 13
+  },
+  {
+    "section": "14",
+    "parentIdentifier": "nsis_2_0_2a_6",
+    "identifier": "nsis_2_0_2a_6_14",
+    "securityLevel": "Høj",
+    "description": "Den private nøgle skal genereres i hardware og må ikke kunne eksporteres i klar tekst.",
+    "sortKey": 14
+  }
+]

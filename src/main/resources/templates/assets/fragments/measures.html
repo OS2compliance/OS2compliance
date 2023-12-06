@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<div th:fragment="measures(asset, measures)" id="measuresTab" class="tab-pane fade" role="tabpanel" aria-labelledby="measures-tab">
+    <form id="measuresForm" action="#" th:action="@{/assets/measures}" th:object="${measuresForm}" method="post" class="needs-validation" novalidate>
+        <div class="row">
+            <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
+                <div class="row mb-3 gap-1">
+                    <button id="editMeasureBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setMeasureEditState(true)">Rediger foranstaltninger</button>
+                    <button id="cancelMeasureBtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setMeasureEditState(false)" hidden>Annuller</button>
+                    <button id="saveMeasureBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                </div>
+                <input name="assetId" th:value="${asset.id}" hidden>
+
+                <div class="row mb-3">
+                    <table class="table table-striped" style="border-collapse: collapse;">
+                        <thead>
+                            <tr>
+                                <th class="col-lg-1">Kategori</th>
+                                <th class="col-lg-4">Foranstaltninger</th>
+                                <th class="col-lg-2">Svar</th>
+                                <th class="col-lg-3">Noter</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="collapse show" aria-expanded="true"  th:each="measure, itemStat : *{measures}"  th:id="|measureRow_${measure.identifier}|">
+                                <td th:text="${measure.choice.category}"></td>
+                                <td>
+                                    <span th:text="${measure.choice.name}"></span>
+                                    <input th:name="|measures[${itemStat.index}].identifier|" th:value="${measure.identifier}" hidden>
+                                </td>
+                                <td>
+                                    <select class="form-control form-select editField" th:name="|measures[${itemStat.index}].answer|" onchange="measureStateChanged()"
+                                            th:id="|measureSelect${measure.identifier}|" tabindex="-1" disabled>
+                                        <option th:each="choice: ${measure.choice.values}" th:value="${choice.identifier}"
+                                            th:selected="${measure.answer == choice.identifier}"
+                                            th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
+                                    </select>
+                                </td>
+                                <td>
+                                    <textarea class="form-control editField" rows="5" th:field="*{measures[__${itemStat.index}__].note}" disabled></textarea>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </form>
+
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        const measures = /*[[${measuresForm.measures}]]*/ [];
+        document.addEventListener("DOMContentLoaded", function(event) {
+            const collapseElementList = [].slice.call(document.querySelectorAll('.collapse'));
+            collapseElementList.map(function (collapseEl) {
+                return new bootstrap.Collapse(collapseEl, {
+                    toggle: false
+                });
+            });
+            measureStateChanged();
+        });
+
+        function measureStateChanged() {
+            // Update visuals when choices have changed
+            measures.forEach(m => {
+                const questionIdentifier = m.choice.identifier;
+                const select = document.getElementById('measureSelect' + questionIdentifier);
+                const selectedValue = select.value;
+                // "measure-7" => "Foretages backup af data i systemet?"
+                if (questionIdentifier === "measure-7") {
+                    const enable = selectedValue === "relevance-yes";
+                    // "measure-8" => "Hvis ja, Hvor ofte foretages backup?"
+                    // "measure-9" => "Hvis ja, hvor længe gemmes backup?"
+                    // "measure-10" => "Hvis ja, er der defineret retningslinjer for Recovery Time Objective (RTO), Recovery Point Objective (RPO) og test heraf?"
+                    const backupHowOften = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-8');
+                    const backupHowLong = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-9');
+                    const backupGuidelines = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-10');
+                    if (enable) {
+                        backupHowOften.show();
+                        backupHowLong.show();
+                        backupGuidelines.show();
+                    } else {
+                        backupHowOften.hide();
+                        backupHowLong.hide();
+                        backupGuidelines.hide();
+                    }
+                }
+                if (questionIdentifier === "measure-20") {
+                    const enable = selectedValue === "operation-3";
+                    const whichCloud = bootstrap.Collapse.getOrCreateInstance('#measureRow_measure-21');
+                    if (enable) {
+                        whichCloud.show();
+                    } else {
+                        whichCloud.hide();
+                    }
+                }
+            });
+        }
+
+        function setMeasureEditState(enabled) {
+            const rootElement = document.getElementById('measuresTab');
+            if (enabled) {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = false;
+                  if (elem.tagName === "A") {
+                      elem.hidden = true;
+                      if (elem.nextElementSibling) {
+                         elem.nextElementSibling.hidden = false;
+                      }
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    elem.parentElement.hidden = false; // show the datepicker
+                    if (elem.parentElement.nextElementSibling) {
+                        elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
+                    }
+                  }
+                });
+
+                document.getElementById('saveMeasureBtn').hidden = false;
+                document.getElementById('editMeasureBtn').hidden = true;
+                document.getElementById('cancelMeasureBtn').hidden = false;
+            } else {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = true;
+                  if (elem.tagName === "A") {
+                      elem.hidden = false;
+                      elem.nextElementSibling.hidden = true;
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    if (elem.value == null || elem.value === "") {
+                      elem.parentElement.hidden = true; // hide the datepicker
+                      elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
+                    }
+                  }
+                });
+
+                document.getElementById('saveMeasureBtn').hidden = true;
+                document.getElementById('editMeasureBtn').hidden = false;
+                document.getElementById('cancelMeasureBtn').hidden = true;
+            }
+        }
+
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

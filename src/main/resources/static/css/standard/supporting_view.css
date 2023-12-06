@@ -1,0 +1,21 @@
+.hidden {
+    display: none;
+}
+
+table {
+    width: 100%;
+}
+
+tr, td {
+    border: none;
+}
+
+.foldable {
+    cursor: pointer;
+}
+
+.editDescription {
+    cursor: text;
+}
+
+

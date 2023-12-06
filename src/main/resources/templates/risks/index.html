@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<body class="jumping">
+<script th:src="@{/js/risk/risk.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/risks/risks.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Risikostyring</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Risikostyring</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny risikovurdering
+                        </button>
+                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#taskFormDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="risksDatatable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}" />
+    <nav th:replace="~{fragments/navbar :: main (page='risikostyring')}" />
+</div>
+
+<div class="modal fade" id="createModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Opret risikovurdering</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createRiskModal" class="row g-3 needs-validation" action="#" th:action="@{/risks/create}" th:object="${risk}" method="post" novalidate>
+                    <input id="sendEmail" name="sendEmail" value="false" hidden>
+                    <div class="row mt-3">
+                        <label for="threatAssessmentType" class="col-sm-4 col-form-label">Type</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="threatAssessmentType" required>
+                                <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
+                                        th:value="${type}" th:text="${type.message}"></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges en type</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="name" class="col-sm-4 col-form-label">Titel</label>
+                        <div class="col-sm-8">
+                            <input id="name" th:field="*{name}" type="text" class="form-control" required>
+                            <div class="invalid-feedback">Der skal angives en titel</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="registerSelectRow">
+                        <label for="registerSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1"></select>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="assetSelectRow">
+                        <label for="assetSelect" class="col-sm-4 col-form-label">Aktiv</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedAsset" data-trigger="" id="assetSelect" hidden="" tabindex="-1"></select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="threatCatalog" class="col-sm-4 col-form-label">Trusselskatalog</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select" th:field="*{threatCatalog}" id="threatCatalog" required>
+                                <option th:each="catalog : ${threatCatalogs}"
+                                        th:value="${catalog.identifier}" th:text="${catalog.name}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="registered"  th:field="*{registered}" class="form-check-input" type="checkbox">
+                            <label for="registered" class="form-check-label">Vurdering for den registrerede</label>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="organisation" th:field="*{organisation}" class="form-check-input" type="checkbox">
+                            <label for="organisation" class="form-check-label">Vurdering for organisationen</label>
+                            <div class="invalid-feedback" id="checkboxError">Der skal vælges minimum en af de to vurderinger</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="inheritRow">
+                        <div class="col-sm-4 col-form-label">
+                            <p>Højeste konsekvens fra koblede behandlingsaktiviteter:</p>
+                            <table>
+                                <tr>
+                                    <th></th>
+                                    <th style="font-weight: normal;">Registreret</th>
+                                    <th style="font-weight: normal;">Organisationen</th>
+                                </tr>
+                                <tr>
+                                    <td>Fortrolighed</td>
+                                    <td style="text-align: center;" id="RF">1</td>
+                                    <td style="text-align: center;" id="OF">2</td>
+                                </tr>
+                                <tr>
+                                    <td>Integritet</td>
+                                    <td style="text-align: center;" id="RI">3</td>
+                                    <td style="text-align: center;" id="OI">3</td>
+                                </tr>
+                                <tr>
+                                    <td>Tilgængelighed</td>
+                                    <td style="text-align: center;" id="RT">4</td>
+                                    <td style="text-align: center;" id="OT">3</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-sm-8">
+                            <div style="margin-top: 10px;">
+                                <input id="inherit" th:field="*{inherit}" class="form-check-input" type="checkbox" checked="">
+                                <label for="inherit" class="form-check-label">Skal konsekvensen arves fra behandlingsaktivitet?</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="ouSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="ouSelect" hidden="" tabindex="-1" required></select>
+                            <div class="invalid-feedback">Der skal vælges et fagområde</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="userSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" hidden="" tabindex="-1" required></select>
+                            <div class="invalid-feedback">Der skal vælges en risikoejer</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="sendEmailcheckbox" class="form-check-input" type="checkbox">
+                            <label for="sendEmailcheckbox" class="form-check-label">Send som opgave til risikoejer</label>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="submit" form="createRiskModal" class="btn btn-primary">Gem</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: scripts}"></div>
+<div th:replace="~{fragments/footer :: taskDialog}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var taskFormUrl = [[@{/tasks/form}]]
+        var gridRisksUrl = [[@{/rest/risks/list}]];
+        var viewUrl = [[@{/risks/}]];
+        var deleteUrl = [[@{/risks/}]];
+    +]*/
+
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    const defaultClassName = {
+        table: 'table table-striped',
+        search: "form-control",
+        header: "d-flex justify-content-end"
+    };
+
+    const updateUrl = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+
+        createFormLoaded();
+
+        const grid = new gridjs.Grid({
+            className: defaultClassName,
+            search: {
+                server: {
+                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
+                },
+                debounceTimeout: 1000
+            },
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = ['id', 'name', 'type', 'ou', 'user', 'tasks', 'date', 'assessment'];
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
+                    }
+                }
+            },
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
+                },
+                {
+                    name: "Risikovurdering",
+                    formatter: (cell, row) => {
+                        const url = viewUrl + row.cells[0]['data'];
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    }
+                },
+                {
+                    name: "Type",
+                    width: '10%'
+                },
+                {
+                    name: "Fagområde",
+                    width: '15%'
+                },
+                {
+                    name: "Risikoejer",
+                    width: '15%'
+                },
+                {
+                    name: "Opgaver",
+                    width: '10%'
+                },
+                {
+                    name: "Dato",
+                    width: '10%'
+                },
+                {
+                    name: "Risikovurdering",
+                    width: '10%',
+                    formatter: (cell, row) => {
+                        var status = cell;
+                        if (cell === "Grøn") {
+                            status = [
+                                '<div class="d-block badge bg-green">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Gul") {
+                            status = [
+                                '<div class="d-block badge bg-yellow">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Rød") {
+                            status = [
+                                '<div class="d-block badge bg-danger">' + cell + '</div>'
+                            ]
+                        } else if (cell === "NONE") {
+                            return "";
+                        }
+                        return gridjs.html(''.concat(...status), 'div')
+                    },
+                },
+                {
+                    id: 'handlinger',
+                    name: 'Handlinger',
+                    sort: 0,
+                    width: '10%',
+                    formatter: (cell, row) => {
+                        const riskId = row.cells[0]['data'];
+                        const name = row.cells[1]['data'];
+                        return gridjs.html(
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                    }
+                }
+            ],
+            server:{
+                url: gridRisksUrl,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(risk =>
+                    [ risk.id, risk.name, risk.type, risk.ou, risk.user, risk.tasks, risk.date, risk.assessment]
+                ),
+                total: data => data.totalCount
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Opgaver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        }).render( document.getElementById( "risksDatatable" ));
+    });
+
+    function deleteClicked(riskId, name) {
+        Swal.fire({
+          text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra RISK slettes også.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#03a9f4',
+          cancelButtonColor: '#df5645',
+          confirmButtonText: 'Ja',
+          cancelButtonText: 'Nej'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`${deleteUrl}${riskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                    .then(() => {
+                        window.location.reload();
+                    });
+          }
+        })
+    }
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

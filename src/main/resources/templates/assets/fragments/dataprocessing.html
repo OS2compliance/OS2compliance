@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<div th:fragment="dataprocessing(asset, dataProcessing)" id="dataProcessingTab" class="tab-pane fade" role="tabpanel" aria-labelledby="data-processing-tab">
+    <form id="dataprocessingForm" action="#" th:action="@{/assets/dataprocessing}" method="post" class="needs-validation" novalidate>
+        <div class="row">
+            <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
+
+                <div class="row mb-3" th:object="${asset}"><!--TABLE 1 -->
+                    <input th:field="${asset.id}" hidden>
+                    <input th:field="*{dataProcessingAgreementStatus}" hidden>
+                    <input th:field="*{dataProcessingAgreementDate}" hidden>
+                    <input th:Field="*{dataProcessingAgreementLink}"hidden>
+                    <input th:field="*{supervisoryModel}" hidden>
+                    <input th:field="*{nextInspectionDate}" hidden>
+                </div>
+
+                <div class="row mb-3"><!--TABLE 2 -->
+                    <div class="col-sm-2">
+                        <button type="button" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="newSubsupplier()">
+                            <i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj leverandør
+                        </button>
+                    </div>
+                    <table class="table table-striped">
+                        <thead>
+                            <tr>
+                                <th class="col-lg-3">Leverandørliste</th>
+                                <th class="col-lg-2">Ydelse</th>
+                                <th class="col-lg-2">Land</th>
+                                <th class="col-lg-2">Tredjelandsoverførsel</th>
+                                <th class="col-lg-3">Acceptgrundlag</th>
+                                <th class="col-lg-1">Options</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr th:each="sub : ${asset.suppliers}" class="align-middle">
+                                <td title="Hovedleverandør"><span th:if="${sub.supplier?.id == asset.supplier?.id}" class="pli-home me-1"></span>
+                                    <span th:text="${sub.supplier.name}"></span>
+                                </td>
+                                <td th:text="${sub.service}"></td>
+                                <td th:text="${sub.supplier.country}"></td>
+                                <td th:text="${sub.thirdCountryTransfer?.message}"></td>
+                                <td>
+                                    <div th:each="choice: ${acceptanceBasisChoices.values}"
+                                        th:if="${sub.acceptanceBasis == choice.identifier}"
+                                        th:text="${choice.caption + ' ' + (choice.description ?: '')}"></div>
+                                </td>
+                                <td>
+                                    <button onclick="editSubsupplier(this)" th:attr="data-subsupplierid=${sub.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit subsupplier">
+                                        <i class="pli-pen-4 fs-6"></i>
+                                    </button>
+                                    <button onclick="deleteSubsupplier(this)" th:attr="data-subsupplierid=${sub.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete subsupplier">
+                                        <i class="pli-trash fs-6"></i>
+                                    </button>
+                                </td>
+                            </tr>
+
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="row mb-3 gap-1">
+                    <button id="editDataProcessingBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataprocessingEditState(true)">Rediger databehandlingsindstillinger</button>
+                    <button id="cancelDataProcessingBtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
+                    <button id="saveDataProcessingBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                </div>
+
+
+                <input th:field="${asset.id}" type="hidden">
+                <div th:replace="~{fragments/dataprocessing :: dataProcessing(${dpChoices}, ${asset.dataProcessing}, 'true')}"></div>
+
+            </div>
+        </div>
+    </form>
+
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        /*[+
+            var subsupplierUrl = [[@{/assets/subsupplier}]];
+        +]*/
+        var subsupplierDialog;
+        var supplierChoices;
+        var dpChoiceElements =[];
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+            // Initialize Subsupplier modal
+            initSubsupplierModal();
+
+            //Initialize datepickers
+            const dataProcessingAgreementDatePicker = MCDatepicker.create({
+                el: '#dataProcessingAgreementDate',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                //minDate: new Date(),
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#dataProcessingAgreementDateBtn" ).addEventListener( "click", () => {
+                dataProcessingAgreementDatePicker.open();
+            });
+
+            const nextInspectionDatePicker = MCDatepicker.create({
+                el: '#nextInspectionDate',
+                autoClose: true,
+                dateFormat: 'dd/mm-yyyy',
+                //minDate: new Date(),
+                closeOnBlur: true,
+                firstWeekday: 1,
+                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                customClearBTN: "Ryd",
+                customCancelBTN: "Annuller"
+            });
+            document.querySelector( "#nextInspectionDateBtn" ).addEventListener( "click", () => {
+                nextInspectionDatePicker.open();
+            });
+
+        });
+
+        function initSubsupplierModal(id) {
+            let params = new URLSearchParams({asset: [[${asset.id}]]});
+
+            if (id) {
+                params.append('id', id);
+            }
+
+            return fetch(subsupplierUrl + '?' + params.toString())
+            .then(response => response.text()
+                .then(data => {
+                    document.getElementById('subsupplierDialog').innerHTML = data;
+
+                    //Init modal
+                    subsupplierDialog = new bootstrap.Modal(document.getElementById('subsupplierDialog'), {
+                      keyboard: false
+                    });
+
+                    //Init choices.js
+                    const supplierSelect = document.getElementById('supplierSelect');
+                    supplierChoices = initSelect(supplierSelect);
+                    updateSuppliers(supplierChoices, "");
+                    supplierSelect.addEventListener("search",
+                        function(event) {
+                            updateSuppliers(supplierChoices, event.detail.value);
+                        },
+                        false,
+                    );
+                    supplierChoices.passedElement.element.addEventListener('change', function() {
+                        checkInputField(supplierChoices);
+                    });
+                    dpChoiceElements.push(supplierChoices);
+                }))
+            .catch(error => console.log(error))
+        }
+
+        function setDataprocessingEditState(enabled) {
+            editModeCategoryInformationEditable(enabled);
+            const rootElement = document.getElementById('dataProcessingTab');
+            if (enabled) {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = false;
+                  if (elem.tagName == "A") {
+                      elem.hidden = true;
+                      if (elem.nextElementSibling) {
+                         elem.nextElementSibling.hidden = false;
+                      }
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    elem.parentElement.hidden = false; // show the datepicker
+                    if (elem.parentElement.nextElementSibling) {
+                        elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
+                    }
+                  }
+                });
+
+                document.getElementById('saveDataProcessingBtn').hidden = false;
+                document.getElementById('editDataProcessingBtn').hidden = true;
+                document.getElementById('cancelDataProcessingBtn').hidden = false;
+            } else {
+                rootElement.querySelectorAll('.editField').forEach(elem => {
+                  elem.disabled = true;
+                  if (elem.tagName == "A") {
+                      elem.hidden = false;
+                      elem.nextElementSibling.hidden = true;
+                  }
+
+                  if (elem.classList.contains("datepicker")) {
+                    if (elem.value == null || elem.value == "") {
+                      elem.parentElement.hidden = true; // hide the datepicker
+                      elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
+                    }
+                  }
+                });
+
+                document.getElementById('saveDataProcessingBtn').hidden = true;
+                document.getElementById('editDataProcessingBtn').hidden = false;
+                document.getElementById('cancelDataProcessingBtn').hidden = true;
+            }
+        }
+
+        function updateSuppliers(choices, search) {
+            fetch( `/rest/suppliers/autocomplete?search=${search}`)
+                .then(response => response.json()
+                    .then(data => {
+                        choices.setChoices(data.content.map(e => {
+                            return {
+                                value: e.id,
+                                label: `${e.name}`}
+                        }), 'value', 'label', true);
+                    }))
+                .catch(error => console.log(error));
+        }
+
+        function newSubsupplier() {
+            initSubsupplierModal().then(() => subsupplierDialog.show());
+        }
+
+        function editSubsupplier(elem) {
+            const subsupplierId = elem.dataset.subsupplierid;
+            initSubsupplierModal(subsupplierId).then(() => subsupplierDialog.show());
+        }
+
+        function deleteSubsupplier(elem) {
+        	const subsupplierId = elem.dataset.subsupplierid;
+        	fetch(subsupplierUrl+ '?' + new URLSearchParams({asset: [[${asset.id}]], id: subsupplierId}), { method: 'DELETE', headers: {
+        		   'X-CSRF-TOKEN': token,
+            }, })
+        	.then((res) => {
+        		   window.location.reload();
+        	});
+        }
+
+        /*]]>*/
+    </script>
+</div>
+</body>
+</html>

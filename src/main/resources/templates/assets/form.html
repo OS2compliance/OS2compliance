@@ -1,0 +1,59 @@
+<div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title" id="assetLabel" th:text="${formTitle}"></h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+
+      <form th:id="${formId}" class="row g-3 needs-validation" action="#" th:action="@{/assets/form}" th:object="${asset}" method="post" novalidate>
+        <input id="id" th:field="*{id}" type="hidden">
+        <div class="row mt-3">
+          <label for="navn" class="col-sm-4 col-form-label">Navn</label>
+          <div class="col-sm-8">
+            <input id="navn" th:field="*{name}" type="text" class="form-control" required>
+            <div class="invalid-feedback">Name is required</div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="supplierSelect" class="col-sm-4 col-form-label">Leverandør</label>
+          <div class="col-sm-8">
+            <select class="form-control form-select choices__input was-validated" th:field="*{supplier}" data-trigger="" id="supplierSelect" hidden="" tabindex="-1" required></select>
+            <div class="invalid-feedback">Supplier is required</div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="type" class="col-sm-4 col-form-label">Type</label>
+          <div class="col-sm-8">
+            <div id="assetType" class="btn-group" role="group" aria-label="Asset type valg">
+              <input type="radio" class="btn-check" name="btnradio" id="btnItSystem" value="IT_SYSTEM" autocomplete="off" th:field="*{assetType}" required>
+              <label class="btn btn-outline-primary" for="btnItSystem">IT-system</label>
+              <input type="radio" class="btn-check" name="btnradio" id="btnModule" value="MODULE" autocomplete="off" th:field="*{assetType}" required>
+              <label class="btn btn-outline-primary" for="btnModule">Modul</label>
+              <input type="radio" class="btn-check" name="btnradio" id="btnServer" value="SERVER" autocomplete="off" th:field="*{assetType}" required>
+              <label class="btn btn-outline-primary" for="btnServer">Server</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="userSelect" class="col-sm-4 col-form-label">Systemejer</label>
+          <div class="col-sm-8">
+            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" id="userSelect" hidden="" required></select>
+            <div class="invalid-feedback">User is required</div>
+          </div>
+        </div>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+      <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+    </div>
+  </div>
+</div>
+<div class="mc-calendar">
+
+</div>

@@ -1,0 +1,112 @@
+<div class="modal-dialog">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h5 class="modal-title" id="taskLabel" th:text="${formTitle}"></h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+    </div>
+    <div class="modal-body">
+
+      <form th:id="${formId}" class="row g-3 needs-validation" action="#" th:action="@{/tasks/create}" th:object="${task}" method="post" novalidate>
+        <input id="id" th:field="*{id}" type="hidden">
+        <input id="taskRiskId" name="taskRiskId" type="hidden">
+        <div class="row mt-3">
+          <label for="navn" class="col-sm-4 col-form-label">Opgave navn</label>
+          <div class="col-sm-8">
+            <input id="navn" th:field="*{name}" type="text" class="form-control" required>
+            <div class="invalid-feedback">Der skal angives et navn</div>
+          </div>
+        </div>
+        <div class="row mt-3">
+          <label for="type" class="col-sm-4 col-form-label">Opgave type</label>
+          <div class="col-sm-8">
+            <div id="type" class="btn-group" role="group" aria-label="Opgave type valg">
+              <input type="radio" class="btn-check" name="btnradio" id="btntask" value="TASK" onclick="selectCreateTaskOption('TASK')" autocomplete="off" th:field="*{taskType}">
+              <label class="btn btn-outline-primary" for="btntask">Opgave</label>
+              <input type="radio" class="btn-check" name="btnradio" id="btncheck" value="CHECK" onclick="selectCreateTaskOption('CHECK')" autocomplete="off" th:field="*{taskType}">
+              <label class="btn btn-outline-primary" for="btncheck">Kontrol</label>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="taskDeadline" class="col-sm-4 col-form-label">Deadline</label>
+          <div class="col-sm-8">
+            <div class="input-group">
+              <input id="taskDeadline" type="text" class="form-control" th:field="*{nextDeadline}" required>
+              <button id="taskDeadlineBtn" class="btn btn-primary" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;">
+                <i class="pli-calendar-4 fs-5"></i>
+              </button>
+              <div class="invalid-feedback">Der skal vælges en deadline</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="taskUserSelect" class="col-sm-4 col-form-label">Ansvarlig</label>
+          <div class="col-sm-8">
+            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="taskUserSelect" hidden="" tabindex="-1" required></select>
+            <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="taskOuSelect" class="col-sm-4 col-form-label">Afdeling</label>
+          <div class="col-sm-8">
+            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="taskOuSelect" hidden="" tabindex="-1"></select>
+            <div class="invalid-feedback">Der skal vælges en ansvarlig afdeling</div>
+          </div>
+        </div>
+
+        <div class="row mt-3" id="repetitionSection">
+          <label for="repetition" class="col-sm-4 col-form-label">Gentagelse</label>
+          <div class="col-sm-8">
+            <select class="form-control form-select" th:field="*{repetition}" id="repetition" name="gentagelse" tabindex="-1">
+              <option th:each="repetition : ${T(dk.digitalidentity.model.entity.enums.TaskRepetition).values()}"
+                      th:value="${repetition.name}" th:text="${repetition.message}"></option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="createTaskRelationsSelect" class="col-sm-4 col-form-label">Relationer</label>
+          <div class="col-sm-8">
+              <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="relations" id="createTaskRelationsSelect" hidden="" tabindex="-1" multiple></select>
+              <span id="threatAssessmentExplainer" style="display: none;">Opgaven vil automatisk blive knyttet til denne risikovurdering og dens relationer</span>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="createTaskTagsSelect" class="col-sm-4 col-form-label">Tags</label>
+          <div class="col-sm-8">
+              <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="tags" id="createTaskTagsSelect" hidden="" tabindex="-1" multiple></select>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <label for="description" class="col-sm-4 col-form-label">Beskrivelse</label>
+          <div class="col-sm-8">
+            <div class="input-group">
+              <textarea id="description" class="form-control" placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+            </div>
+          </div>
+        </div>
+
+        <div class="row mt-3">
+          <div class="col-sm-4 col-form-label"></div>
+          <div class="col-sm-8">
+            <input id="sendMail" th:field="*{notifyResponsible}" class="form-check-input" type="checkbox" checked="">
+            <label for="sendMail" class="form-check-label">Send som mail til ansvarlig</label>
+          </div>
+        </div>
+
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button type="button" onclick="taskFormReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+      <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+    </div>
+  </div>
+</div>
+<div class="mc-calendar">
+
+</div>

@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}"></head>
+<body class="jumping">
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/standards}">Standarder</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Understøttende standarder</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Understøttende standarder</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="tablePlaceholder"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
+</div>
+
+<script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
+<div th:replace="~{fragments/footer :: scripts}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var data = [[${templates}]];
+        var viewUrl = [[@{/standards/supporting/}]];
+    +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        const defaultClassName = {
+            table: 'table table-striped',
+            search: "form-control",
+            header: "d-flex justify-content-end"
+        };
+
+        new gridjs.Grid({
+          className: defaultClassName,
+            sort: {
+                enabled: true,
+                multiColumn: false
+            },
+            columns: [
+                {
+                    id: "identifier",
+                    name: "identifier",
+                    hidden: true
+                },
+                {
+                    id: "name",
+                    name: "Standard",
+                    formatter: (cell, row) => {
+                        const url = viewUrl + row.cells[0]['data'];
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    }
+                },
+                {
+                    id: "compliance",
+                    name: "Efterlevelse"
+                }
+            ],
+            data: data,
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Opgaver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        }).render(document.getElementById("tablePlaceholder"));
+    });
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

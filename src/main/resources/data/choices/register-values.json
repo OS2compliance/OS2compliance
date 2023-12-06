@@ -1,0 +1,116 @@
+[
+  {
+    "identifier": "register-gdpr-valp6",
+    "caption": "§6",
+    "description": "Behandling af personoplysninger efter Artikel 6 stk. 1",
+    "childListIdentifier": "register-gdpr-p6"
+  }, {
+    "identifier": "register-gdpr-valp7",
+    "caption": "§7",
+    "description": "Behandling af personoplysninger efter Artikel 9 stk. 2 (særlige kategorier af personoplysninger)",
+    "childListIdentifier": "register-gdpr-p7"
+  }, {
+    "identifier": "register-gdpr-valp8",
+    "caption": "§8",
+    "description": "Nødvendig behandling af strafbare forhold"
+  }, {
+    "identifier": "register-gdpr-valp9",
+    "caption": "§9",
+    "description": "Retsinformationssystemer af væsentlige samfundsmæssig betydning"
+  }, {
+    "identifier": "register-gdpr-valp10",
+    "caption": "§10",
+    "description": "Statistiske eller videnskabelige undersøgelser af væsentlig samfundsmæssig betydning"
+  }, {
+    "identifier": "register-gdpr-valp11",
+    "caption": "§11",
+    "description": "Myndigheders behandling af personnummer"
+  }, {
+    "identifier": "register-gdpr-valp12",
+    "caption": "§12",
+    "description": "Behandling af personoplysninger i forbindelse med ansættelsesforhold"
+  }, {
+    "identifier": "register-gdpr-valp13",
+    "caption": "§13",
+    "description": "Markedsføring"
+  }, {
+    "identifier": "register-gdpr-valp14",
+    "caption": "§14",
+    "description": "Behandling i.h.t arkivlovgivningen"
+  },
+  {
+  "identifier": "register-gdpr-p6-a",
+  "caption": "a",
+  "description": "Den registrerede har givet samtykke til behandling af sine personoplysninger til et eller flere specifikke formål."
+},{
+  "identifier": "register-gdpr-p6-b",
+  "caption": "b",
+  "description": "Behandling er nødvendig af hensyn til opfyldelse af en kontrakt, som den registrerede er part i, eller af hensyn til gennemførelse af foranstaltninger, der træffes på den registreredes anmodning forud for indgåelse af en kontrakt."
+},{
+  "identifier": "register-gdpr-p6-c",
+  "caption": "c",
+  "description": "Behandling er nødvendig for at overholde en retlig forpligtelse, som påhviler den dataansvarlige."
+},{
+  "identifier": "register-gdpr-p6-d",
+  "caption": "d",
+  "description": "Behandling er nødvendig for at beskytte den registreredes eller en anden fysisk persons vitale interesser."
+},{
+  "identifier": "register-gdpr-p6-e",
+  "caption": "e",
+  "description": "Behandling er nødvendig af hensyn til udførelse af en opgave i samfundets interesse eller som henhører under offentlig myndighedsudøvelse, som den dataansvarlige har fået pålagt."
+},{
+  "identifier": "register-gdpr-p6-f",
+  "caption": "f",
+  "description": "Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. Første afsnit, litra f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver."
+},
+{
+  "identifier": "register-gdpr-p7-a",
+  "caption": "a",
+  "description": "Den registrerede har givet udtrykkeligt samtykke til behandlingen"
+},
+{
+  "identifier": "register-gdpr-p7-b",
+  "caption": "b",
+  "description": "Behandlingen er nødvendig af hensyn til en kontrakt med den registrerede"
+},
+{
+  "identifier": "register-gdpr-p7-c",
+  "caption": "c",
+  "description": "Behandlingen er nødvendig af hensyn til en retlig forpligtelse"
+},
+{
+  "identifier": "register-gdpr-p7-d",
+  "caption": "d",
+  "description": "Behandlingen er nødvendig af hensyn til den registrerede eller en anden fysisk  persons vitale interesser"
+},
+{
+  "identifier": "register-gdpr-p7-e",
+  "caption": "e",
+  "description": "Behandling vedrører personoplysninger, som tydeligvis er offentliggjort af den registrerede"
+},
+{
+  "identifier": "register-gdpr-p7-f",
+  "caption": "f",
+  "description": "Behandling er nødvendig af hensyn til en opgave i samfundets interesse eller offentlig myndighedsudøvelse"
+},
+{
+  "identifier": "register-gdpr-p7-g",
+  "caption": "g",
+  "description": "Behandlingen er nødvendig af hensyn til en legitim interesse, som ikke overgås af den registreredes interesser eller rettigheder"
+},
+{
+  "identifier": "register-gdpr-p7-h",
+  "caption": "h",
+  "description": "Behandling er nødvendig med henblik på behandling eller forvaltning af social og sundhedsomsorg i henhold til lov"
+},
+{
+  "identifier": "register-gdpr-p7-i",
+  "caption": "i",
+  "description": "Behandling er nødvendig af hensyn til samfundsinteresser på folkesundhedsområdet"
+},
+{
+  "identifier": "register-gdpr-p7-j",
+  "caption": "j",
+  "description": "Behandling er nødvendig til arkivformål i samfundets interesse, til videnskabelige eller historiske forskningsformål eller til statistiske formål i overensstemmelse med artikel 89, stk. 1"
+}
+]

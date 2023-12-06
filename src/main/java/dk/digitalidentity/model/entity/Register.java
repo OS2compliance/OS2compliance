@@ -1,0 +1,113 @@
+package dk.digitalidentity.model.entity;
+
+import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.RegisterStatus;
+import dk.digitalidentity.model.entity.enums.RelationType;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.PrimaryKeyJoinColumn;
+import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
+
+import java.util.HashSet;
+import java.util.Set;
+
+import static dk.digitalidentity.util.NullSafe.nullSafe;
+
+@Entity
+@Table(name = "registers")
+@Getter
+@Setter
+@SQLDelete(sql = "UPDATE registers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
+@Where(clause = "deleted=false")
+public class Register extends Relatable {
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsible_uuid")
+    private User responsibleUser;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "responsible_ou_uuid")
+    private OrganisationUnit responsibleOu;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department")
+    private OrganisationUnit department;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private Criticality criticality;
+
+    // Name of a prebundled pack eg. kl-article-30
+    @Column
+    private String packageName;
+
+    @Column
+    private String description;
+
+    @Column
+    private String registerRegarding;
+
+    @Column
+    private String informationResponsible;
+
+    @Column
+    private String purpose;
+
+    @Column
+    private String purposeNotes;
+
+    @Column
+    private String emergencyPlanLink;
+
+    @Column
+    private String informationObligationDesc;
+
+    @Column
+    private String consent;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private InformationObligationStatus informationObligation;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private RegisterStatus status;
+
+    @Column
+    @Convert(converter = StringListNullSafeConverter.class)
+    private Set<String> gdprChoices = new HashSet<>();
+
+    @OneToOne(mappedBy = "register")
+    @PrimaryKeyJoinColumn
+    private ConsequenceAssessment consequenceAssessment;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
+    @JoinColumn(name = "data_processing_id", referencedColumnName = "id")
+    private DataProcessing dataProcessing;
+
+    @Override
+    public RelationType getRelationType() {
+        return RelationType.REGISTER;
+    }
+
+    @Override
+    public String getLocalizedEnumValues() {
+        return (status != null ? status.getMessage() : "") +
+                (consequenceAssessment != null ? nullSafe(() -> consequenceAssessment.getAssessment().getMessage(), "") : "");
+    }
+}

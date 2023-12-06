@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="DA">
+<body>
+<div th:fragment="generelt(supplier)">
+    <div class="card shadow-none">
+        <div class="card-header toolbar">
+            <h5 class="toolbar-start m-0">Stamdata</h5>
+            <div class="toolbar-end">
+                <button id="editDescBtn" type="button" class="btn btn-secondary btn-xs" onclick="setEditState(true)">Rediger</button>
+                <button id="cancelBtn" type="button" onclick="setEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                <button id="saveBtn" form="editDataForm" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+            </div>
+        </div>
+        <div class="card-body">
+            <link th:href="@{/css/supplier/generelt.css}" rel="stylesheet">
+            <form id="editDataForm" class="row" action="#" th:action="@{/suppliers/edit(id=${supplier.id})}" name="generelt" method="post">
+                <div class="row mb-3">
+                    <label for="status"
+                           class="col-sm-3 col-form-label">Status</label>
+                    <div class="col-sm-9">
+                        <select class="form-control form-select" th:field="${supplier.status}" name="status" id="status" disabled>
+                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.SupplierStatus).values()}" th:value="${status}" th:text="${status.message}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="cvr"
+                           class="col-sm-3 col-form-label">CVR</label>
+                    <div class="col-sm-9">
+                        <input class="form-control edit-input" th:field="${supplier.cvr}" name="cvr" id="cvr" readonly>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="address"
+                           class="col-sm-3 col-form-label">Adresse</label>
+                    <div class="col-sm-9">
+                        <input class="form-control edit-input" th:field="${supplier.address}" name="address" id="address" readonly>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="cvr"
+                           class="col-sm-3 col-form-label">Postnummer</label>
+                    <div class="col-sm-9">
+                        <input class="form-control edit-input" th:field="${supplier.zip}" name="zip" id="zip" readonly>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="city"
+                           class="col-sm-3 col-form-label">By</label>
+                    <div class="col-sm-9">
+                        <input class="form-control edit-input" th:field="${supplier.city}" name="city" id="city" readonly>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="country"
+                           class="col-sm-3 col-form-label">Land</label>
+                    <div class="col-sm-9">
+                        <input class="form-control edit-input" th:field="${supplier.country}" name="country" id="country" readonly>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="country"
+                           class="col-sm-3 col-form-label">Kontakt</label>
+                    <div class="col-sm-9">
+                        <input class="form-control edit-input" th:field="${supplier.contact}" name="contact" id="contact" readonly>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <label for="description"
+                           class="col-sm-3 col-form-label">Beskrivelse</label>
+                    <div class="col-sm-9" id="description">
+                        <div id="editDescId" class="editor-container d-flex flex-column" style="display: none !important">
+                            <textarea name="description" id="description-editor" class="p-2" th:text="${supplier.description}"></textarea>
+                        </div>
+                        <div id="readDescId" style="display: block" th:utext="${supplier.description}"></div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    <script type="text/javascript" th:src="@{/js/ckeditor/ckeditor.js}"></script>
+    <script type="text/javascript" th:src="@{/js/supplier/genereltEditor.js}"></script>
+</div>
+</body>
+</html>

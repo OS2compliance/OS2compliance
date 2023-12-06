@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<body class="jumping">
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/}">Hjem</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/standards}">Standarder</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${#strings.capitalize(sectionName)}"></li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2" th:text="${#strings.capitalize(sectionName)}"></h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-success btn-lg hstack gap-2" data-bs-toggle="modal" data-bs-target="#taskFormDialog"
+                                style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body" id="here">
+                                <div th:each="standardTemplateSectionDto : ${sections}" th:insert="~{standards/iso27001_section :: iso27001_section (standardTemplateSectionDto=${standardTemplateSectionDto})  }"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
+</div>
+
+<script type="text/javascript" th:src="@{/js/standards/iso27001.js}" defer></script>
+<script type="text/javascript" th:src="@{/js/ckeditor/ckeditor.js}" defer></script>
+<div th:replace="~{fragments/footer :: scripts}"></div>
+<div th:replace="~{fragments/footer :: taskDialog}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    document.addEventListener("DOMContentLoaded", function(event) {
+        standardsFormLoaded();
+    });
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

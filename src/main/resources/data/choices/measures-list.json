@@ -1,0 +1,426 @@
+[
+  {
+    "identifier" : "measure-1",
+    "category": "Adgang",
+    "name": "Styres brugeradgange ved hjælp af en identitets- og adgangstyringsløsning, fx Azure AD?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-2",
+    "category": "Adgang",
+    "name": "Benyttes multi faktor autentificering ved adgang til systemet fra mobilt udstyr udenfor eget netværk?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-3",
+    "category": "Adgang",
+    "name": "Er der etableret retningslinjer for styring og overvågning af brugeradgange?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-4",
+    "category": "Adgang",
+    "name": "Hvis ja, er der implementeret regelmæssig kontrol af brugere og rettigheder?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-5",
+    "category": "Adgang",
+    "name": "Er roller dokumenteret, så rolletildeling og kontrol kan udføres?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-6",
+    "category": "Adgang",
+    "name": "Er der via roller etableret funktionsadskillelse så risiko for misbrug reduceres?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-7",
+    "category": "Backup",
+    "name": "Foretages backup af data i systemet?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-8",
+    "category": "Backup",
+    "name": "Hvis ja, Hvor ofte foretages backup?",
+    "multiSelect": false,
+    "valueIdentifiers": ["frequency-1", "frequency-2", "frequency-3", "frequency-4"]
+  },
+  {
+    "identifier" : "measure-9",
+    "category": "Backup",
+    "name": "Hvis ja, hvor længe gemmes backup?",
+    "multiSelect": false,
+    "valueIdentifiers": ["duration-1", "duration-2", "duration-3", "duration-4"]
+  },
+  {
+    "identifier" : "measure-10",
+    "category": "Backup",
+    "name": "Hvis ja, er der defineret retningslinjer for Recovery Time Objective (RTO), Recovery Point Objective (RPO) og test heraf?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-11",
+    "category": "Business continuity",
+    "name": "Er der aftalt procedurer for håndtering, registrering og rapportering af sikkerhedshændelser hos leverandøren?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-12",
+    "category": "Business continuity",
+    "name": "Er der udarbejdet en it-beredskabsplan (katastrofeplan) for systemet, der bl.a. beskriver nøddrift, eskalering, retablering og genoptagelse af normal drift i tilfælde af større nedbrud?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-13",
+    "category": "Business continuity",
+    "name": "Bliver beredskabsplaner regelmæssigt testet?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-14",
+    "category": "Datatilgængelighed",
+    "name": "Kan der udtrækkes data til indsigtsret?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-15",
+    "category": "Datatilgængelighed",
+    "name": "Har kommunen direkte adgang til alle data i løsningen, evt. med administratoradgang?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-16",
+    "category": "Dokumentation",
+    "name": "Opdateres systemdokumentation, driftsdokumentation og evt. driftsinstrukser ved alle større ændringer i systemet?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-17",
+    "category": "Dokumentation",
+    "name": "Er der en opdateret arkitekturtegning for systemet, som viser de involverede system- og servicekomponenter, deres indbyrdes kommunikation med angivelse af netværkszone, protokol, portnumre, trafikinitieringsretning og snitflader?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-18",
+    "category": "Dokumentation",
+    "name": "Kan leverandøren dokumentere deres sikkerhed gennem eksempelvis ISO27001 certificering, ISAE3000, ISAE3402 eller lignende?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-19",
+    "category": "Drift",
+    "name": "Er der indgået en Service Level Agreement (SLA) indeholdendende oppetid, planlagt nedetid, sikkerhed, svartider, responsetider ved incidents, alarmering?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-20",
+    "category": "Drift",
+    "name": "Hvor driftes systemet",
+    "multiSelect": false,
+    "valueIdentifiers": ["operation-1", "operation-2", "operation-3", "operation-4", "operation-5"]
+  },
+  {
+    "identifier" : "measure-21",
+    "category": "Drift",
+    "name": "Hvis Public Cloud, hvilken anvendes",
+    "multiSelect": false,
+    "valueIdentifiers": ["cloud-1", "cloud-2", "cloud-3", "cloud-4", "cloud-5"]
+  },
+  {
+    "identifier" : "measure-22",
+    "category": "Drift",
+    "name": "Foretages løbende og automatiseret sikkerhedsopdatering af software (patch)?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-23",
+    "category": "Drift",
+    "name": "Bliver virtualiseringslag, OS, middleware (java VM, .net), applikationsservere (SQL, tomcat) og software på servere løbende opdateret, så kendte sårbarheder bliver elimineret?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-24",
+    "category": "Drift",
+    "name": "Beskyttes internt vendte komponenter og database via fx firewall og VLAN?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-25",
+    "category": "Fysisk sikkerhed",
+    "name": "Er den fysiske sikkerhed hos driftleverandøren tilfredsstillende (serverrum og lignende områder med forretningskritisk udstyr og/eller større mængder data)?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-26",
+    "category": "Kryptering",
+    "name": "Anvender løsningen minimum kryptering TLS 1.2 ved transport?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-27",
+    "category": "Kryptering",
+    "name": "Anvendes passende kryptering under transmission over åbne net (internet/email)?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-28",
+    "category": "Kryptering",
+    "name": "Krypteres data på mobile enhed i henhold til dataklassifikation?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-29",
+    "category": "Logning",
+    "name": "Logger systemet brugernes handlinger (handlingssporbarhed)?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-30",
+    "category": "Logning",
+    "name": "Logges det, hvis bruger tilgår personoplysninger?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-31",
+    "category": "Logning",
+    "name": "Logger systemet fejl?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-32",
+    "category": "Logning",
+    "name": "Gemmes loggen i et læsbart format? (eller skal der bruges bestemte programmer til at fortolke loggen)",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-33",
+    "category": "Logning",
+    "name": "Er det kun Kommunens og Leverandørens betroede medarbejdere der har adgang til brugerloggen?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-34",
+    "category": "Logning",
+    "name": "Er der planlagt hvordan logs slettes, når opbevaring ikke længere er nødvendig?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-35",
+    "category": "Logning",
+    "name": "Kan loggens indhold anvendes til revision og efterforskning af sikkerhedshændelser?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-36",
+    "category": "Logning",
+    "name": "Er løbende logopfølgning af en betroet medarbejder påkrævet?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  },
+  {
+    "identifier" : "measure-37",
+    "category": "Test",
+    "name": "Hvor det accepteres at personoplysninger benyttes i testmiljøer, benyttes da de samme sikkerhedstiltag i testmiljøer som i produktionsmiljøer?",
+    "multiSelect": false,
+    "valueIdentifiers": [
+      "relevance-yes",
+      "relevance-no",
+      "relevance-needs-clarification",
+      "relevance-not-relevant"
+    ]
+  }
+]

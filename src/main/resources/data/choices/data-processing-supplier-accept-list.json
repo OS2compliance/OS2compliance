@@ -1,0 +1,7 @@
+{
+  "identifier": "dp-supplier-accept-list",
+  "name": "Acceptgrundlag",
+  "multiSelect": false,
+  "valueIdentifiers": ["dp-supplier-accept-basis-eu", "dp-supplier-accept-basis-eos",
+    "dp-supplier-accept-basis-suf", "dp-supplier-accept-basis-usa", "dp-supplier-accept-none", "dp-supplier-accept-clarification"]
+}

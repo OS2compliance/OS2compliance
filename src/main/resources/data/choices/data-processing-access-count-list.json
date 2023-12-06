@@ -1,0 +1,10 @@
+{
+  "identifier": "dp-access-count-list",
+  "name": "Hvor mange har adgang til personoplysningerne",
+  "multiSelect": false,
+  "valueIdentifiers": ["dp-access-count-1-10",
+    "dp-access-count-10-100",
+    "dp-access-count-100-1000",
+    "dp-access-count-above",
+    "dp-access-count-clarification"]
+}

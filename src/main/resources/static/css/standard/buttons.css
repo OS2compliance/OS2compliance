@@ -1,0 +1,159 @@
+
+.link.active {
+    cursor: pointer;
+    text-decoration: underline;
+}
+
+@media (max-width: 991.98px) {
+    #center {
+        pointer-events: none;
+        position: absolute;
+        left: calc(50%);
+        top: 28em;
+        transform: translate(-50%, -50%);
+    }
+}
+@media (max-width: 575.98px) {
+    #center {
+        pointer-events: none;
+        position: absolute;
+        left: calc(50%);
+        top: 33em;
+        transform: translate(-50%, -50%);
+    }
+}
+@media (min-width: 992px) {
+    #center {
+        pointer-events: none;
+        position: absolute;
+        left: calc(110px + 50%);
+        top: 28em;
+        transform: translate(-50%, -50%);
+    }
+}
+
+.middle {
+    transform: translate(0%, 0%);
+    position: static;
+}
+
+.circle {
+    top: 130px;
+    position: relative;
+    border: 1px solid black;
+    padding: 0;
+    pointer-events: auto;
+    margin: 1em auto;
+    width: 20em;
+    height: 20em;
+    border-radius: 50%;
+    list-style: none;
+    overflow: hidden;
+}
+
+.circle-li {
+    overflow: hidden;
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 50%;
+    transform-origin: 0% 100%;
+}
+
+a.circle-li.active > .text1 {
+    text-decoration: underline;
+}
+
+.circle-li:first-child {
+    background: linear-gradient(110.1deg, rgb(34, 126, 34) 2.9%, rgb(168, 251, 60) 90.3%);
+    -webkit-transform: rotate(0deg);
+    -ms-transform: rotate(0deg);
+    transform: rotate(0deg);
+}
+
+.circle-li:nth-child(2) {
+    background: linear-gradient(109.6deg, rgb(255, 219, 47) 11.2%, rgb(244, 253, 0) 100.2%);
+    -webkit-transform: rotate(90deg);
+    -ms-transform: rotate(90deg);
+    transform: rotate(90deg);
+}
+
+.circle-li:nth-child(3) {
+    background: radial-gradient(circle at 10% 20%, rgb(255, 131, 61) 0%, rgb(231, 140, 4) 90%);
+    -webkit-transform: rotate(180deg);
+    -ms-transform: rotate(180deg);
+    transform: rotate(180deg);
+}
+
+.circle-li:nth-child(4) {
+    background: linear-gradient(98.3deg, rgb(160, 94, 94) 10.6%, rgb(255, 0, 0) 97.7%);
+    -webkit-transform: rotate(270deg);
+    -ms-transform: rotate(270deg);
+    transform: rotate(270deg);
+}
+
+.middle-text {
+    font-size: 1.5em;
+    font-weight: bold;
+    color: whitesmoke;
+    text-shadow: -0.01em -0.01em 0.01em #000;
+    animation: rise 2s ease-in-out 0.5s forwards;
+}
+
+.text {
+    color: black;
+    text-decoration: none;
+    font-size: 1.2em;
+    font-weight: bold;
+    position: absolute;
+    left: -100%;
+    width: 200%;
+    height: 200%;
+    text-align: center;
+    -webkit-transform: rotate(45deg);
+    -ms-transform: rotate(90deg);
+    padding-top: 0px;
+}
+
+.text1 {
+    top: 6%;
+    right: 70%;
+    left: -100%;
+}
+
+
+.left-item {
+    float: left;
+}
+
+.right-item {
+    float: right;
+}
+
+.middle-item {
+    margin-left: auto;
+    margin-right: auto;
+}
+
+button.center:hover {
+    background: linear-gradient(112.1deg, rgb(8, 26, 89) 11.4%, rgb(75, 92, 148) 70.2%);
+    text-decoration: underline;
+}
+.center {
+    text-decoration: none;
+    height: 80%;
+    width: 80%;
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    background: linear-gradient(112.1deg, rgb(32, 38, 57) 11.4%, rgb(63, 76, 119) 70.2%);
+    border-radius: 50%;
+    text-align: center;
+    overflow: hidden;
+}
+
+.center-text {
+    padding-top: 20em;
+    overflow: visible;
+}
