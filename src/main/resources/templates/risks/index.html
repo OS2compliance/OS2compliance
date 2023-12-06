@@ -295,7 +295,7 @@
                     width: '10%',
                     formatter: (cell, row) => {
                         const riskId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'];
+                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
@@ -332,7 +332,7 @@
 
     function deleteClicked(riskId, name) {
         Swal.fire({
-          text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra RISK slettes også.`,
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra risikovurderingen slettes også.`,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#03a9f4',
