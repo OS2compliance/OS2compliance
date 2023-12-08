@@ -165,39 +165,42 @@ public class Article30Replacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         insertAssetTable(table, assetService.findRelatedTo(register));
 
-        insertBoldParagraph(document, cursor, "Hvem har adgang til personoplysningerne:");
-        insertAccessWhoList(document, cursor, register);
+        if (register.getDataProcessing() != null) {
 
-        insertBoldParagraph(document, cursor, "Hvor mange har adgang til personoplysningerne:");
-        final String accessCountValue = getChoiceCaption(register.getDataProcessing().getAccessCountIdentifier());
-        paragraph = insertNormalParagraph(document, cursor);
-        addTextRun(accessCountValue, paragraph);
+            insertBoldParagraph(document, cursor, "Hvem har adgang til personoplysningerne:");
+            insertAccessWhoList(document, cursor, register);
 
-        insertBoldParagraph(document, cursor, "Hvor mange behandles der personoplysninger om:");
-        final String personCountCaption = getChoiceCaption(register.getDataProcessing().getPersonCountIdentifier());
-        paragraph = insertNormalParagraph(document, cursor);
-        addTextRun(personCountCaption, paragraph);
+            insertBoldParagraph(document, cursor, "Hvor mange har adgang til personoplysningerne:");
+            final String accessCountValue = getChoiceCaption(register.getDataProcessing().getAccessCountIdentifier());
+            paragraph = insertNormalParagraph(document, cursor);
+            addTextRun(accessCountValue, paragraph);
 
-        table = paragraph.getBody().insertNewTbl(cursor);
-        advanceCursor(cursor);
-        insertInformationCategoriesTable(table, register.getDataProcessing());
+            insertBoldParagraph(document, cursor, "Hvor mange behandles der personoplysninger om:");
+            final String personCountCaption = getChoiceCaption(register.getDataProcessing().getPersonCountIdentifier());
+            paragraph = insertNormalParagraph(document, cursor);
+            addTextRun(personCountCaption, paragraph);
 
-        paragraph = insertBoldParagraph(document, cursor, "Hvor længe opbevares personoplysningerne: ");
-        final String storageTimeCaption = getChoiceCaption(register.getDataProcessing().getStorageTimeIdentifier());
-        addTextRun(storageTimeCaption, paragraph);
-        if (register.getDataProcessing().getElaboration() != null) {
-            addBoldTextRun(register.getDataProcessing().getElaboration() + ": ", paragraph);
-            addTextRun(register.getDataProcessing().getElaboration(), paragraph);
+            table = paragraph.getBody().insertNewTbl(cursor);
+            advanceCursor(cursor);
+            insertInformationCategoriesTable(table, register.getDataProcessing());
+
+            paragraph = insertBoldParagraph(document, cursor, "Hvor længe opbevares personoplysningerne: ");
+            final String storageTimeCaption = getChoiceCaption(register.getDataProcessing().getStorageTimeIdentifier());
+            addTextRun(storageTimeCaption, paragraph);
+            if (register.getDataProcessing().getElaboration() != null) {
+                addBoldTextRun(register.getDataProcessing().getElaboration() + ": ", paragraph);
+                addTextRun(register.getDataProcessing().getElaboration(), paragraph);
+            }
+
+            insertStandard(document, cursor,
+                "Er der udarbejdet sletteprocedure: ",
+                nullSafe(() -> register.getDataProcessing().getDeletionProcedure().getMessage(), "")
+            );
+            insertStandard(document, cursor,
+                "Link til sletteprocedure: ",
+                nullSafe(() -> register.getDataProcessing().getDeletionProcedureLink(), "")
+            );
         }
-
-        insertStandard(document, cursor,
-            "Er der udarbejdet sletteprocedure: ",
-            nullSafe(() -> register.getDataProcessing().getDeletionProcedure().getMessage(), "")
-            );
-        insertStandard(document, cursor,
-            "Link til sletteprocedure: ",
-            nullSafe(() -> register.getDataProcessing().getDeletionProcedureLink(), "")
-            );
     }
 
     private String getChoiceCaption(final String valueIdentifier) {

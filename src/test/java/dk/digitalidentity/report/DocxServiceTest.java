@@ -136,7 +136,9 @@ public class DocxServiceTest {
         // This giant wall of mock, makes sure all choices, assets and registers needed for generating a report is present
         // when the service needs them.
         doReturn(createDummyAssets()).when(assetServiceMock).findRelatedTo(any());
-        doReturn(Arrays.asList(createDummyRegister(1), createDummyRegister(2)))
+        final Register dummyRegister = createDummyRegister(2);
+        dummyRegister.setDataProcessing(null);
+        doReturn(Arrays.asList(createDummyRegister(1), dummyRegister, createDummyRegister(3)))
             .when(registerServiceMock).findAll();
         doReturn(Optional.of(ChoiceValue.builder().caption("10-100").build())).when(choiceServiceMock).getValue("dp-access-count-10-100");
         doReturn(Optional.of(ChoiceValue.builder().caption("100-1.000").build())).when(choiceServiceMock).getValue("dp-person-cnt-100-1000");
