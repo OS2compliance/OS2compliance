@@ -101,7 +101,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
     }
 
     private void insertArticle30(final XWPFParagraph p, final XWPFRun placeHolderRun) {
-        final List<Register> allArticle30 = registerService.findAll();
+        final List<Register> allArticle30 = registerService.findAllOrdered();
         placeHolderRun.setText("", 0);
         try (final XmlCursor cursor = setCursorToNextStartToken(p.getCTP())) {
             boolean initial = true;

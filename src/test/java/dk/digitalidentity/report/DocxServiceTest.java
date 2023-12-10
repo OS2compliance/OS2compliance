@@ -139,7 +139,7 @@ public class DocxServiceTest {
         final Register dummyRegister = createDummyRegister(2);
         dummyRegister.setDataProcessing(null);
         doReturn(Arrays.asList(createDummyRegister(1), dummyRegister, createDummyRegister(3)))
-            .when(registerServiceMock).findAll();
+            .when(registerServiceMock).findAllOrdered();
         doReturn(Optional.of(ChoiceValue.builder().caption("10-100").build())).when(choiceServiceMock).getValue("dp-access-count-10-100");
         doReturn(Optional.of(ChoiceValue.builder().caption("100-1.000").build())).when(choiceServiceMock).getValue("dp-person-cnt-100-1000");
         doReturn(Optional.of(ChoiceValue.builder().caption("12 måneder efter modtagelse").build())).when(choiceServiceMock).getValue("dp-storage-duration-12mth");
