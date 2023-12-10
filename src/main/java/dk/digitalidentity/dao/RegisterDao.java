@@ -9,6 +9,8 @@ public interface RegisterDao extends JpaRepository<Register, Long> {
 
     List<Register> findByPackageName(final String packageName);
 
+    List<Register> findByDeletedFalse();
+
     boolean existsByName(final String name);
 
 }
