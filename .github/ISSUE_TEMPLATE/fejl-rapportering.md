@@ -1,6 +1,6 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: Fejl rapportering
+about: Hjælp os med at forbedre produktet
 title: Fejlrapport titel
 labels: bug
 assignees: kbp-di
