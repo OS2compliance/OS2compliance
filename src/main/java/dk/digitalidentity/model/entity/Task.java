@@ -58,7 +58,7 @@ public class Task extends Relatable {
     private String description;
 
     @Column
-    private Boolean notifyResponsible;
+    private Boolean notifyResponsible = true;
 
     @Column(name = "responsible_notified")
     private Boolean hasNotifiedResponsible;
