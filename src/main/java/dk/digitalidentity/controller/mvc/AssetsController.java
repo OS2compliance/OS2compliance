@@ -417,7 +417,7 @@ public class AssetsController {
 		final AssetSupplierMapping subsupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), id)).findAny()
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		asset.getSuppliers().remove(subsupplier);
-		return "redirect:/assets/" + asset.getId();
+		return "/assets/" + asset.getId();
 	}
 
 
