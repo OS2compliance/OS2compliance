@@ -82,6 +82,15 @@ public class StandardTemplateImporter {
         }
     }
 
+    public void updateStandardSections(final String filename) throws IOException {
+        final StandardTemplateSectionDTO[] sections = objectMapper.readValue(new ClassPathResource(filename).getInputStream(), StandardTemplateSectionDTO[].class);
+        Arrays.stream(sections).forEach( newSection -> {
+         StandardTemplateSection oldSection = standardTemplateSectionDao.findById(newSection.getIdentifier()).orElseThrow();
+         oldSection.setSection(newSection.getSection());
+         standardTemplateSectionDao.save(oldSection);
+        } );
+    }
+
     private static String calculateName(final StandardTemplateSection templateSectionEntity) {
         final String fullDesc = templateSectionEntity.getSection() + " " + templateSectionEntity.getDescription();
         return StringUtils.truncate(fullDesc, 150);

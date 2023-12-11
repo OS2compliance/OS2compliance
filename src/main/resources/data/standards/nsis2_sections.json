@@ -7,7 +7,7 @@
     "sortKey": 311
   },
   {
-    "section": "1",
+    "section": "3.1.1.1",
     "parentIdentifier": "nsis_2_0_2a_311",
     "identifier": "nsis_2_0_2a_311_1",
     "securityLevel": "Lav",
@@ -15,7 +15,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.1.1.2",
     "parentIdentifier": "nsis_2_0_2a_311",
     "identifier": "nsis_2_0_2a_311_2",
     "securityLevel": "Lav",
@@ -23,7 +23,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.1.1.3",
     "parentIdentifier": "nsis_2_0_2a_311",
     "identifier": "nsis_2_0_2a_311_3",
     "securityLevel": "Lav",
@@ -31,7 +31,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "3.1.1.4",
     "parentIdentifier": "nsis_2_0_2a_311",
     "identifier": "nsis_2_0_2a_311_4",
     "securityLevel": "Betydelig",
@@ -39,7 +39,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "3.1.1.5",
     "parentIdentifier": "nsis_2_0_2a_311",
     "identifier": "nsis_2_0_2a_311_5",
     "securityLevel": "Høj",
@@ -55,7 +55,7 @@
     "sortKey": 312
   },
   {
-    "section": "1",
+    "section": "3.1.2.1",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_1",
     "securityLevel": "Lav",
@@ -63,7 +63,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.1.2.2",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_2",
     "securityLevel": "Lav",
@@ -71,7 +71,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.1.2.3",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_3",
     "securityLevel": "Lav",
@@ -79,7 +79,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "3.1.2.4",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_4",
     "securityLevel": "Betydelig",
@@ -87,7 +87,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "3.1.2.5",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_5",
     "securityLevel": "Betydelig",
@@ -95,7 +95,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "3.1.2.6",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_6",
     "securityLevel": "Betydelig",
@@ -103,7 +103,7 @@
     "sortKey": 6
   },
   {
-    "section": "7",
+    "section": "3.1.2.7",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_7",
     "securityLevel": "Betydelig",
@@ -111,7 +111,7 @@
     "sortKey": 7
   },
   {
-    "section": "8",
+    "section": "3.1.2.8",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_8",
     "securityLevel": "Betydelig",
@@ -119,7 +119,7 @@
     "sortKey": 8
   },
   {
-    "section": "9",
+    "section": "3.1.2.9",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_9",
     "securityLevel": "Høj",
@@ -127,7 +127,7 @@
     "sortKey": 9
   },
   {
-    "section": "10",
+    "section": "3.1.2.10",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_10",
     "securityLevel": "Høj",
@@ -135,7 +135,7 @@
     "sortKey": 10
   },
   {
-    "section": "11",
+    "section": "3.1.2.11",
     "parentIdentifier": "nsis_2_0_2a_312",
     "identifier": "nsis_2_0_2a_312_11",
     "securityLevel": "Høj",
@@ -151,7 +151,7 @@
     "sortKey": 313
   },
   {
-    "section": "1",
+    "section": "3.1.3.1",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_1",
     "securityLevel": "Lav",
@@ -159,7 +159,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.1.3.2",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_2",
     "securityLevel": "Lav",
@@ -167,7 +167,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.1.3.3",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_3",
     "securityLevel": "Lav",
@@ -175,7 +175,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "3.1.3.4",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_4",
     "securityLevel": "Lav",
@@ -183,7 +183,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "3.1.3.5",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_5",
     "securityLevel": "Lav",
@@ -191,7 +191,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "3.1.3.6",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_6",
     "securityLevel": "Betydelig",
@@ -199,7 +199,7 @@
     "sortKey": 6
   },
   {
-    "section": "7",
+    "section": "3.1.3.7",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_7",
     "securityLevel": "Betydelig",
@@ -207,7 +207,7 @@
     "sortKey": 7
   },
   {
-    "section": "8",
+    "section": "3.1.3.8",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_8",
     "securityLevel": "Høj",
@@ -215,7 +215,7 @@
     "sortKey": 8
   },
   {
-    "section": "9",
+    "section": "3.1.3.9",
     "parentIdentifier": "nsis_2_0_2a_313",
     "identifier": "nsis_2_0_2a_313_9",
     "securityLevel": "Høj",
@@ -231,7 +231,7 @@
     "sortKey": 321
   },
   {
-    "section": "1",
+    "section": "3.2.1.1",
     "parentIdentifier": "nsis_2_0_2a_321",
     "identifier": "nsis_2_0_2a_321_1",
     "securityLevel": "Lav",
@@ -239,7 +239,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.2.1.2",
     "parentIdentifier": "nsis_2_0_2a_321",
     "identifier": "nsis_2_0_2a_321_2",
     "securityLevel": "Lav",
@@ -247,7 +247,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.2.1.3",
     "parentIdentifier": "nsis_2_0_2a_321",
     "identifier": "nsis_2_0_2a_321_3",
     "securityLevel": "Betydelig",
@@ -255,7 +255,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "3.2.1.4",
     "parentIdentifier": "nsis_2_0_2a_321",
     "identifier": "nsis_2_0_2a_321_4",
     "securityLevel": "Betydelig",
@@ -263,7 +263,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "3.2.1.5",
     "parentIdentifier": "nsis_2_0_2a_321",
     "identifier": "nsis_2_0_2a_321_5",
     "securityLevel": "Høj",
@@ -271,7 +271,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "3.2.1.6",
     "parentIdentifier": "nsis_2_0_2a_321",
     "identifier": "nsis_2_0_2a_321_6",
     "securityLevel": "Høj",
@@ -287,7 +287,7 @@
     "sortKey": 322
   },
   {
-    "section": "1",
+    "section": "3.2.2.1",
     "parentIdentifier": "nsis_2_0_2a_322",
     "identifier": "nsis_2_0_2a_322_1",
     "securityLevel": "Lav",
@@ -295,7 +295,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.2.2.2",
     "parentIdentifier": "nsis_2_0_2a_322",
     "identifier": "nsis_2_0_2a_322_2",
     "securityLevel": "Betydelig",
@@ -303,7 +303,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.2.2.3",
     "parentIdentifier": "nsis_2_0_2a_322",
     "identifier": "nsis_2_0_2a_322_3",
     "securityLevel": "Høj",
@@ -311,7 +311,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "3.2.2.4",
     "parentIdentifier": "nsis_2_0_2a_322",
     "identifier": "nsis_2_0_2a_322_4",
     "securityLevel": "Høj",
@@ -327,7 +327,7 @@
     "sortKey": 323
   },
   {
-    "section": "1",
+    "section": "3.2.3.1",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_1",
     "securityLevel": "Lav",
@@ -335,7 +335,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.2.3.2",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_2",
     "securityLevel": "Lav",
@@ -343,7 +343,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.2.3.3",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_3",
     "securityLevel": "Lav",
@@ -351,7 +351,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "3.2.3.4",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_4",
     "securityLevel": "Lav",
@@ -359,7 +359,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "3.2.3.5",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_5",
     "securityLevel": "Lav",
@@ -367,7 +367,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "3.2.3.6",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_6",
     "securityLevel": "Betydelig",
@@ -375,7 +375,7 @@
     "sortKey": 6
   },
   {
-    "section": "7",
+    "section": "3.2.3.7",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_7",
     "securityLevel": "Betydelig",
@@ -383,7 +383,7 @@
     "sortKey": 7
   },
   {
-    "section": "8",
+    "section": "3.2.3.8",
     "parentIdentifier": "nsis_2_0_2a_323",
     "identifier": "nsis_2_0_2a_323_Q",
     "securityLevel": "Høj",
@@ -399,7 +399,7 @@
     "sortKey": 324
   },
   {
-    "section": "1",
+    "section": "3.2.4.1",
     "parentIdentifier": "nsis_2_0_2a_324",
     "identifier": "nsis_2_0_2a_324_1",
     "securityLevel": "Lav",
@@ -407,7 +407,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.2.4.2",
     "parentIdentifier": "nsis_2_0_2a_324",
     "identifier": "nsis_2_0_2a_324_Q",
     "securityLevel": "Betydelig",
@@ -415,7 +415,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.2.4.3",
     "parentIdentifier": "nsis_2_0_2a_324",
     "identifier": "nsis_2_0_2a_324_2",
     "securityLevel": "Høj",
@@ -431,7 +431,7 @@
     "sortKey": 331
   },
   {
-    "section": "1",
+    "section": "3.3.1.1",
     "parentIdentifier": "nsis_2_0_2a_331",
     "identifier": "nsis_2_0_2a_331_1",
     "securityLevel": "Lav",
@@ -439,7 +439,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "3.3.1.2",
     "parentIdentifier": "nsis_2_0_2a_331",
     "identifier": "nsis_2_0_2a_331_2",
     "securityLevel": "Lav",
@@ -447,7 +447,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "3.3.1.3",
     "parentIdentifier": "nsis_2_0_2a_331",
     "identifier": "nsis_2_0_2a_331_3",
     "securityLevel": "Lav",
@@ -455,7 +455,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "3.3.1.4",
     "parentIdentifier": "nsis_2_0_2a_331",
     "identifier": "nsis_2_0_2a_331_4",
     "securityLevel": "Betydelig",
@@ -463,7 +463,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "3.3.1.5",
     "parentIdentifier": "nsis_2_0_2a_331",
     "identifier": "nsis_2_0_2a_331_5",
     "securityLevel": "Betydelig",
@@ -471,7 +471,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "3.3.1.6",
     "parentIdentifier": "nsis_2_0_2a_331",
     "identifier": "nsis_2_0_2a_331_6",
     "securityLevel": "Høj",
@@ -487,7 +487,7 @@
     "sortKey": 411
   },
   {
-    "section": "1",
+    "section": "4.1.1.1",
     "parentIdentifier": "nsis_2_0_2a_411",
     "identifier": "nsis_2_0_2a_411_1",
     "securityLevel": "Lav",
@@ -495,7 +495,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "4.1.1.2",
     "parentIdentifier": "nsis_2_0_2a_411",
     "identifier": "nsis_2_0_2a_411_2",
     "securityLevel": "Lav",
@@ -503,7 +503,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "4.1.1.3",
     "parentIdentifier": "nsis_2_0_2a_411",
     "identifier": "nsis_2_0_2a_411_3",
     "securityLevel": "Lav",
@@ -511,7 +511,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "4.1.1.4",
     "parentIdentifier": "nsis_2_0_2a_411",
     "identifier": "nsis_2_0_2a_411_4",
     "securityLevel": "Betydelig",
@@ -519,7 +519,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "4.1.1.5",
     "parentIdentifier": "nsis_2_0_2a_411",
     "identifier": "nsis_2_0_2a_411_5",
     "securityLevel": "Betydelig",
@@ -527,7 +527,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "4.1.1.6",
     "parentIdentifier": "nsis_2_0_2a_411",
     "identifier": "nsis_2_0_2a_411_Q",
     "securityLevel": "Høj",
@@ -543,7 +543,7 @@
     "sortKey": 412
   },
   {
-    "section": "1",
+    "section": "4.1.2.1",
     "parentIdentifier": "nsis_2_0_2a_412",
     "identifier": "nsis_2_0_2a_412_1",
     "securityLevel": "Lav",
@@ -551,7 +551,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "4.1.2.2",
     "parentIdentifier": "nsis_2_0_2a_412",
     "identifier": "nsis_2_0_2a_412_2",
     "securityLevel": "Lav",
@@ -559,7 +559,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "4.1.2.3",
     "parentIdentifier": "nsis_2_0_2a_412",
     "identifier": "nsis_2_0_2a_412_3",
     "securityLevel": "Lav",
@@ -567,7 +567,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "4.1.2.4",
     "parentIdentifier": "nsis_2_0_2a_412",
     "identifier": "nsis_2_0_2a_412_Q",
     "securityLevel": "Betydelig",
@@ -575,7 +575,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "4.1.2.5",
     "parentIdentifier": "nsis_2_0_2a_412",
     "identifier": "nsis_2_0_2a_412_QQ",
     "securityLevel": "Høj",
@@ -591,7 +591,7 @@
     "sortKey": 413
   },
   {
-    "section": "1",
+    "section": "4.1.3.1",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_1",
     "securityLevel": "Lav",
@@ -599,7 +599,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "4.1.3.2",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_2",
     "securityLevel": "Betydelig",
@@ -607,7 +607,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "4.1.3.3",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_3",
     "securityLevel": "Betydelig",
@@ -615,7 +615,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "4.1.3.4",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_4",
     "securityLevel": "Høj",
@@ -631,7 +631,7 @@
     "sortKey": 414
   },
   {
-    "section": "1",
+    "section": "4.1.4.1",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_5",
     "securityLevel": "Lav",
@@ -639,7 +639,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "4.1.4.2",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_6",
     "securityLevel": "Lav",
@@ -647,7 +647,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "4.1.4.3",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_7",
     "securityLevel": "Lav",
@@ -655,7 +655,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "4.1.4.4",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_Q",
     "securityLevel": "Betydelig",
@@ -663,7 +663,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "4.1.4.5",
     "parentIdentifier": "nsis_2_0_2a_413",
     "identifier": "nsis_2_0_2a_413_QQ",
     "securityLevel": "Høj",
@@ -679,7 +679,7 @@
     "sortKey": 415
   },
   {
-    "section": "1",
+    "section": "4.1.5.1",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_1",
     "securityLevel": "Lav",
@@ -687,7 +687,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "4.1.5.2",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_2",
     "securityLevel": "Lav",
@@ -695,7 +695,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "4.1.5.3",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_3",
     "securityLevel": "Lav",
@@ -703,7 +703,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "4.1.5.4",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_4",
     "securityLevel": "Lav",
@@ -711,7 +711,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "4.1.5.5",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_5",
     "securityLevel": "Betydelig",
@@ -719,7 +719,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "4.1.5.6",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_6",
     "securityLevel": "Betydelig",
@@ -727,7 +727,7 @@
     "sortKey": 6
   },
   {
-    "section": "7",
+    "section": "4.1.5.7",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_7",
     "securityLevel": "Betydelig",
@@ -735,7 +735,7 @@
     "sortKey": 7
   },
   {
-    "section": "8",
+    "section": "4.1.5.8",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_8",
     "securityLevel": "Høj",
@@ -743,7 +743,7 @@
     "sortKey": 8
   },
   {
-    "section": "9",
+    "section": "4.1.5.9",
     "parentIdentifier": "nsis_2_0_2a_415",
     "identifier": "nsis_2_0_2a_415_9",
     "securityLevel": "Høj",
@@ -759,7 +759,7 @@
     "sortKey": 416
   },
   {
-    "section": "1",
+    "section": "4.1.6.1",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_1",
     "securityLevel": "Lav",
@@ -767,7 +767,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "4.1.6.2",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_2",
     "securityLevel": "Lav",
@@ -775,7 +775,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "4.1.6.3",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_3",
     "securityLevel": "Lav",
@@ -783,7 +783,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "4.1.6.4",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_4",
     "securityLevel": "Lav",
@@ -791,7 +791,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "4.1.6.5",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_5",
     "securityLevel": "Lav",
@@ -799,7 +799,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "4.1.6.6",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_6",
     "securityLevel": "Betydelig",
@@ -807,7 +807,7 @@
     "sortKey": 6
   },
   {
-    "section": "7",
+    "section": "4.1.6.7",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_7",
     "securityLevel": "Betydelig",
@@ -815,7 +815,7 @@
     "sortKey": 7
   },
   {
-    "section": "8",
+    "section": "4.1.6.8",
     "parentIdentifier": "nsis_2_0_2a_416",
     "identifier": "nsis_2_0_2a_416_Q",
     "securityLevel": "Høj",
@@ -831,7 +831,7 @@
     "sortKey": 417
   },
   {
-    "section": "1",
+    "section": "4.1.7.1",
     "parentIdentifier": "nsis_2_0_2a_417",
     "identifier": "nsis_2_0_2a_417_1",
     "securityLevel": "Lav",
@@ -839,7 +839,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "4.1.7.2",
     "parentIdentifier": "nsis_2_0_2a_417",
     "identifier": "nsis_2_0_2a_417_2",
     "securityLevel": "Lav",
@@ -847,7 +847,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "4.1.7.3",
     "parentIdentifier": "nsis_2_0_2a_417",
     "identifier": "nsis_2_0_2a_417_3",
     "securityLevel": "Lav",
@@ -855,7 +855,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "4.1.7.4",
     "parentIdentifier": "nsis_2_0_2a_417",
     "identifier": "nsis_2_0_2a_417_4",
     "securityLevel": "Betydelig",
@@ -863,7 +863,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "4.1.7.5",
     "parentIdentifier": "nsis_2_0_2a_417",
     "identifier": "nsis_2_0_2a_417_5",
     "securityLevel": "Betydelig",
@@ -871,7 +871,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "4.1.7.6",
     "parentIdentifier": "nsis_2_0_2a_417",
     "identifier": "nsis_2_0_2a_417_6",
     "securityLevel": "Høj",
@@ -887,7 +887,7 @@
     "sortKey": 520
   },
   {
-    "section": "1",
+    "section": "5.2.1",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_1",
     "securityLevel": "Lav",
@@ -895,7 +895,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "5.2.2",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_2",
     "securityLevel": "Lav",
@@ -903,7 +903,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "5.2.3",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_3",
     "securityLevel": "Lav",
@@ -911,7 +911,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "5.2.4",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_4",
     "securityLevel": "Lav",
@@ -919,7 +919,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "5.2.5",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_5",
     "securityLevel": "Lav",
@@ -927,7 +927,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "5.2.6",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_6",
     "securityLevel": "Lav",
@@ -935,7 +935,7 @@
     "sortKey": 6
   },
   {
-    "section": "7",
+    "section": "5.2.7",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_7",
     "securityLevel": "Betydelig",
@@ -943,7 +943,7 @@
     "sortKey": 7
   },
   {
-    "section": "8",
+    "section": "5.2.8",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_8",
     "securityLevel": "Betydelig",
@@ -951,7 +951,7 @@
     "sortKey": 8
   },
   {
-    "section": "9",
+    "section": "5.2.9",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_9",
     "securityLevel": "Betydelig",
@@ -959,7 +959,7 @@
     "sortKey": 9
   },
   {
-    "section": "10",
+    "section": "5.2.10",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_10",
     "securityLevel": "Betydelig",
@@ -967,7 +967,7 @@
     "sortKey": 10
   },
   {
-    "section": "11",
+    "section": "5.2.11",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_11",
     "securityLevel": "Betydelig",
@@ -975,7 +975,7 @@
     "sortKey": 11
   },
   {
-    "section": "12",
+    "section": "5.2.12",
     "parentIdentifier": "nsis_2_0_2a_52",
     "identifier": "nsis_2_0_2a_52_12",
     "securityLevel": "Høj",
@@ -991,7 +991,7 @@
     "sortKey": 600
   },
   {
-    "section": "1",
+    "section": "6.1",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_1",
     "securityLevel": "Lav",
@@ -999,7 +999,7 @@
     "sortKey": 1
   },
   {
-    "section": "2",
+    "section": "6.2",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_2",
     "securityLevel": "Lav",
@@ -1007,7 +1007,7 @@
     "sortKey": 2
   },
   {
-    "section": "3",
+    "section": "6.3",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_3",
     "securityLevel": "Lav",
@@ -1015,7 +1015,7 @@
     "sortKey": 3
   },
   {
-    "section": "4",
+    "section": "6.4",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_4",
     "securityLevel": "Lav",
@@ -1023,7 +1023,7 @@
     "sortKey": 4
   },
   {
-    "section": "5",
+    "section": "6.5",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_5",
     "securityLevel": "Lav",
@@ -1031,7 +1031,7 @@
     "sortKey": 5
   },
   {
-    "section": "6",
+    "section": "6.6",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_6",
     "securityLevel": "Lav",
@@ -1039,7 +1039,7 @@
     "sortKey": 6
   },
   {
-    "section": "7",
+    "section": "6.7",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_7",
     "securityLevel": "Lav",
@@ -1047,7 +1047,7 @@
     "sortKey": 7
   },
   {
-    "section": "8",
+    "section": "6.8",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_8",
     "securityLevel": "Betydelig",
@@ -1055,7 +1055,7 @@
     "sortKey": 8
   },
   {
-    "section": "9",
+    "section": "6.9",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_9",
     "securityLevel": "Betydelig",
@@ -1063,7 +1063,7 @@
     "sortKey": 9
   },
   {
-    "section": "10",
+    "section": "6.10",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_10",
     "securityLevel": "Betydelig",
@@ -1071,7 +1071,7 @@
     "sortKey": 10
   },
   {
-    "section": "11",
+    "section": "6.11",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_11",
     "securityLevel": "Betydelig",
@@ -1079,7 +1079,7 @@
     "sortKey": 11
   },
   {
-    "section": "12",
+    "section": "6.12",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_12",
     "securityLevel": "Betydelig",
@@ -1087,7 +1087,7 @@
     "sortKey": 12
   },
   {
-    "section": "13",
+    "section": "6.13",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_13",
     "securityLevel": "Høj",
@@ -1095,7 +1095,7 @@
     "sortKey": 13
   },
   {
-    "section": "14",
+    "section": "6.14",
     "parentIdentifier": "nsis_2_0_2a_6",
     "identifier": "nsis_2_0_2a_6_14",
     "securityLevel": "Høj",
