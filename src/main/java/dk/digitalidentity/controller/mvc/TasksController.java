@@ -159,7 +159,6 @@ public class TasksController {
         if (task.getResponsibleUser() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en ansvarlig bruger");
         }
-
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());

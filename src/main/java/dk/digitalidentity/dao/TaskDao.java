@@ -8,12 +8,11 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.Optional;
 
 public interface TaskDao extends JpaRepository<Task, Long> {
-	Optional<List<Task>> findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(LocalDate date);
-    Optional<List<Task>> findByResponsibleUserAndNextDeadlineBefore(User user, LocalDate date);
-    Optional<List<Task>> findByNextDeadlineBefore(LocalDate date);
+	List<Task> findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(LocalDate date);
+    List<Task> findByResponsibleUserAndNextDeadlineBefore(User user, LocalDate date);
+    List<Task> findByNextDeadlineBefore(LocalDate date);
 
     @Query("select t from Task t join t.tags tags where tags.id=:tagId")
     List<Task> findByTag(@Param("tagId") final Long tagId);

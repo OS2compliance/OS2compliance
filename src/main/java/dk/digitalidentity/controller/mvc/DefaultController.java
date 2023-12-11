@@ -51,7 +51,7 @@ public class DefaultController implements ErrorController {
         final var userUuid = SecurityUtil.getLoggedInUserUuid();
         if(userUuid != null) {
             final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
-            final List<Task> taskList = taskService.findTasksNearingDeadlines(user).stream().sorted((o1, o2) -> o1.getNextDeadline().compareTo(o2.getNextDeadline())).collect(Collectors.toList());
+            final List<Task> taskList = taskService.findTasksNearingDeadlineForUser(user).stream().sorted((o1, o2) -> o1.getNextDeadline().compareTo(o2.getNextDeadline())).collect(Collectors.toList());
             model.addAttribute("tasks", taskList);
             final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
             model.addAttribute("documents", documentList);
@@ -66,7 +66,7 @@ public class DefaultController implements ErrorController {
 		final Map<String, Object> body = getErrorAttributes(new ServletWebRequest(request));
         try {
             model.addAllAttributes(body);
-            Object status = body.get("status");
+            final Object status = body.get("status");
             if(status != null && request.getSession() != null) {
                 switch ((Integer) status) {
                     //change to landing page when created
@@ -78,7 +78,7 @@ public class DefaultController implements ErrorController {
                 }
             }
 
-        } catch (Exception e) {
+        } catch (final Exception e) {
             //do nothing as we will just return whitepage error if it fails
         }
 
