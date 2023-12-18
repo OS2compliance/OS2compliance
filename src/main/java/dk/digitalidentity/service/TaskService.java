@@ -16,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -29,6 +30,10 @@ public class TaskService {
 	private SettingsService settingsService;
     @Autowired
     private RelationService relationService;
+
+    public Optional<Task> findById(final Long id) {
+        return taskDao.findById(id);
+    }
 
     @Transactional
     public List<Task> findTasksNearingDeadlineForUser(final User user) {

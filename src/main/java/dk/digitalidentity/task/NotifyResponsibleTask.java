@@ -21,6 +21,6 @@ public class NotifyResponsibleTask {
 	@Scheduled(cron = "${os2compliance.mail.cron}")
 	public void notifyResponsibleUsersAboutDeadline() {
 		taskService.findTasksThatNeedsNotification()
-            .forEach(notifyService::notifyTask);
+            .forEach(taskId -> notifyService.notifyTask(taskId.getId()));
 	}
 }
