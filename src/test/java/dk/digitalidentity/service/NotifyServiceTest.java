@@ -13,10 +13,13 @@ import org.springframework.test.context.ContextConfiguration;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 
@@ -32,14 +35,17 @@ public class NotifyServiceTest {
     private NotifyService notifyService;
     @MockBean
     private MailService mailService;
+    @MockBean
+    private TaskService taskService;
 
     @Test
     public void canSendNotification() {
         // Given
         final Task dummyTask = createDummyTask();
+        doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
 
         // When
-        notifyService.notifyTask(dummyTask);
+        notifyService.notifyTask(dummyTask.getId());
 
         // Then
         verify(mailService, times(1)).sendMessage(eq(dummyTask.getResponsibleUser().getEmail()),
@@ -51,10 +57,11 @@ public class NotifyServiceTest {
     public void willNotSendNotificationMultipleTimes() {
         // Given
         final Task dummyTask = createDummyTask();
+        doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
 
         // When
         IntStream.of(10).forEach(i -> {
-            notifyService.notifyTask(dummyTask);
+            notifyService.notifyTask(dummyTask.getId());
         });
 
         // Then

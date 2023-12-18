@@ -14,14 +14,18 @@ import java.time.temporal.ChronoUnit;
 public class NotifyService {
     private final DISAML_Configuration diSamlConfiguration;
     private final MailService mailService;
+    private final TaskService taskService;
 
-    public NotifyService(final DISAML_Configuration diSamlConfiguration, final MailService mailService) {
+    public NotifyService(final DISAML_Configuration diSamlConfiguration, final MailService mailService, final TaskService taskService) {
         this.diSamlConfiguration = diSamlConfiguration;
         this.mailService = mailService;
+        this.taskService = taskService;
     }
 
     @Transactional
-    public void notifyTask(final Task task) {
+    public void notifyTask(final Long taskId) {
+        final Task task = taskService.findById(taskId)
+            .orElseThrow(() -> new IllegalArgumentException("Task with id: " + taskId + " not found"));
         if (task.getHasNotifiedResponsible() != null && task.getHasNotifiedResponsible()) {
             log.warn("Task '" + task.getName() + "' already notified");
             return;
