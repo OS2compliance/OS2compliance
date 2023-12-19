@@ -22,10 +22,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = RuntimeException.class)
     public ModelAndView defaultErrorHandler(final HttpServletRequest request, final Exception e) throws Exception {
-        // If the exception is annotated with @ResponseStatus rethrow it and let
-        // the framework handle it - like the OrderNotFoundException example
-        // at the start of this post.
-        // AnnotationUtils is a Spring Framework utility class.
+        // If the exception is annotated with @ResponseStatus rethrow it and let the framework handle it
         if (AnnotationUtils.findAnnotation (e.getClass(), ResponseStatus.class) != null) {
             throw e;
         }
