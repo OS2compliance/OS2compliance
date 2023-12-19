@@ -30,7 +30,7 @@ public class MvcSecurityTest {
 
     @Test
     public void failsWhenUnauthenticated() throws Exception {
-        assertUrlProtected("/");
+        assertUrlProtected("/dashboard");
         assertUrlProtected("/assets");
         assertUrlProtected("/contacts");
         assertUrlProtected("/documents");
