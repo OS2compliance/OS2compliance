@@ -57,7 +57,11 @@
                                 <div class="row mb-3">
                                     <label for="documentType" class="col-sm-2 col-form-label">Dokumenttype</label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="documentType" th:value="*{documentType.getMessage()}" readonly>
+                                        <select class="form-control form-select editField" th:field="*{documentType}" id="documentType" required disabled>
+                                            <option th:each="docType : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
+                                                    th:value="${docType}" th:text="${docType.message}"></option>
+                                        </select>
+                                        <div class="invalid-feedback">Der skal vælges en dokument type</div>
                                     </div>
                                 </div>
                                 <div class="row mb-3">

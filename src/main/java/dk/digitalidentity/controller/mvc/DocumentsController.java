@@ -82,6 +82,7 @@ public class DocumentsController {
 //            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en gyldig revideringsdato");
 //        }
         excistingDocument.setName(document.getName());
+        excistingDocument.setDocumentType(document.getDocumentType());
         excistingDocument.setDescription(document.getDescription());
         excistingDocument.setStatus(document.getStatus());
         excistingDocument.setLink(document.getLink());
