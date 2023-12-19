@@ -65,24 +65,7 @@ public class DefaultController implements ErrorController {
 	@RequestMapping(value = "/error", produces = "text/html")
 	public String errorPage(final Model model, final HttpServletRequest request) {
 		final Map<String, Object> body = getErrorAttributes(new ServletWebRequest(request));
-        try {
-            model.addAllAttributes(body);
-            final Object status = body.get("status");
-            if(status != null && request.getSession() != null) {
-                switch ((Integer) status) {
-                    //change to landing page when created
-                    case 401: return "redirect:/saml/login";
-                    //Only related to settings for now.
-                    case 403: return "errors/missingClaims";
-                    case 500: return "errors/technicalError";
-                    default: return "error";
-                }
-            }
-
-        } catch (final Exception e) {
-            //do nothing as we will just return whitepage error if it fails
-        }
-
+        model.addAllAttributes(body);
 		return "error";
 	}
 
