@@ -24,6 +24,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -43,23 +44,23 @@ public class DefaultController implements ErrorController {
     }
 
     @Transactional
-    @GetMapping("/")
-	public String defaultPage(final Model model) {
-		if (!SecurityUtil.isLoggedIn()) {
-			return "redirect:/saml/login";
-		}
-        final var userUuid = SecurityUtil.getLoggedInUserUuid();
-        if(userUuid != null) {
-            final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
-            final List<Task> taskList = taskService.findTasksNearingDeadlineForUser(user).stream().sorted((o1, o2) -> o1.getNextDeadline().compareTo(o2.getNextDeadline())).collect(Collectors.toList());
-            model.addAttribute("tasks", taskList);
-            final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
-            model.addAttribute("documents", documentList);
-            model.addAttribute("user", user);
-        }
+    @GetMapping("/dashboard")
+	public String index(final Model model) {
+        if (SecurityUtil.isLoggedIn()) {
+            final var userUuid = SecurityUtil.getLoggedInUserUuid();
+            if(userUuid != null) {
+                final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
+                final List<Task> taskList = taskService.findTasksNearingDeadlineForUser(user).stream().sorted(Comparator.comparing(Task::getNextDeadline)).collect(Collectors.toList());
+                model.addAttribute("tasks", taskList);
+                final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
+                model.addAttribute("documents", documentList);
+                model.addAttribute("user", user);
+            }
 
-		return "index";
-	}
+            return "dashboard";
+        }
+        return "index";
+    }
 
 	@RequestMapping(value = "/error", produces = "text/html")
 	public String errorPage(final Model model, final HttpServletRequest request) {
