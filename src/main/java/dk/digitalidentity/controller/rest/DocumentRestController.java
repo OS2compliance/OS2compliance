@@ -92,7 +92,7 @@ public class DocumentRestController {
     }
 
     private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("documentType") || fieldName.equals("responsibleUserId")
+        return fieldName.equals("name") || fieldName.equals("documentType") || fieldName.equals("responsibleUser")
                 || fieldName.equals("nextRevision") || fieldName.equals("status");
     }
 }

@@ -57,7 +57,11 @@
                                 <div class="row mb-3">
                                     <label for="documentType" class="col-sm-2 col-form-label">Dokumenttype</label>
                                     <div class="col-sm-10">
-                                        <input class="form-control" id="documentType" th:value="*{documentType.getMessage()}" readonly>
+                                        <select class="form-control form-select editField" th:field="*{documentType}" id="documentType" required disabled>
+                                            <option th:each="docType : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
+                                                    th:value="${docType}" th:text="${docType.message}"></option>
+                                        </select>
+                                        <div class="invalid-feedback">Der skal vælges en dokument type</div>
                                     </div>
                                 </div>
                                 <div class="row mb-3">
@@ -115,7 +119,8 @@
                                     <label for="userSelect" class="col-sm-2 col-form-label">Ansvarlig</label>
                                     <div class="col-sm-10">
                                         <select class="form-control form-select choices__input editField" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" tabindex="-1" required hidden >
-                                            <option th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}" selected></option>
+                                            <option th:if="*{responsibleUser != null}" th:value="*{responsibleUser?.uuid}"
+                                                    th:text="'(' + *{responsibleUser?.userId} + ') ' + *{responsibleUser?.name}" selected></option>
                                         </select>
                                         <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
                                     </div>
@@ -123,11 +128,11 @@
                             </form>
 
                             <div class="row">
-                                <div th:replace="~{fragments/relations :: relationsfragment(relations=${relations}, completed=false, relatableId=${document.id}, customDelete=false)}" />
+                                <div th:replace="~{fragments/relations :: relationsfragment(relations=${relations}, completed=false, relatableId=${document.id}, customDelete=false)}"></div>
                             </div>
 
                             <div class="row">
-                                <div th:replace="~{fragments/tags :: tagsfragment(tags=${document.tags}, completed=false, relatableId=${document.id})}" />
+                                <div th:replace="~{fragments/tags :: tagsfragment(tags=${document.tags}, completed=false, relatableId=${document.id})}"></div>
                             </div>
                         </div>
                     </div>

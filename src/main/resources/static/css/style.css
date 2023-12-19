@@ -93,3 +93,7 @@ select[aria-readonly="true"] {
 html {
     zoom: 1.0;
 }
+
+.scrollable-content::-webkit-scrollbar, body::-webkit-scrollbar, html::-webkit-scrollbar {
+    width: 1rem;
+}

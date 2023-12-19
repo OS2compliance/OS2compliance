@@ -59,6 +59,7 @@
         var deleteUrl = [[@{/tasks/}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    let today = new Date();
 
     const defaultClassName = {
         table: 'table table-striped',
@@ -72,7 +73,6 @@
 
     document.addEventListener("DOMContentLoaded", function(event) {
 
-        const today = new Date();
         const grid = new gridjs.Grid({
             className: defaultClassName,
             search: {
@@ -130,9 +130,8 @@
                             return gridjs.html(`<span>${cell}</span>`);
                         }
 
-                        var dateString = cell.replace(" ", "/");
-                        var dateSplit = dateString.split("/");
-                        var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                            var dateString = cell.replace(" ", "/");
+							var cellDate = Date.parse(dateString);
                         if (cellDate < today) {
                             return gridjs.html(`<span style="color: red;">${cell}</span>`);
                         } else {
@@ -199,7 +198,7 @@
                     width: '10%',
                     formatter: (cell, row) => {
                         const taskId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'];
+                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
@@ -236,7 +235,7 @@
 
     function deleteClicked(taskId, name) {
         Swal.fire({
-          text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra TASK slettes også.`,
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra TASK slettes også.`,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#03a9f4',

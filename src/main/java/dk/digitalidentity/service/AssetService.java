@@ -20,8 +20,6 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
-
 @Service
 public class AssetService {
     private final AssetDao assetDao;
@@ -66,8 +64,8 @@ public class AssetService {
         assetDao.delete(asset);
     }
 
-    public Optional<Asset> findByKitosUuid(final String kitosUuid) {
-        return assetDao.findByPropertyValue(KITOS_UUID_PROPERTY_KEY, kitosUuid);
+    public Optional<Asset> findByProperty(final String key, final String value) {
+        return assetDao.findByPropertyValue(key, value);
     }
 
     public List<Asset> findRelatedTo(final Register register) {

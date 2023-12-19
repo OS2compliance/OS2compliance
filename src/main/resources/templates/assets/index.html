@@ -167,7 +167,6 @@
                                 '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
                             ]
                         }
-                        console.log(assessment);
                         return gridjs.html(''.concat(...assessment), 'div')
                     },
                 },
@@ -198,7 +197,7 @@
                     width: '10%',
                     formatter: (cell, row) => {
                         const assetId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'];
+                        const name = row.cells[2]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
@@ -236,7 +235,7 @@
 
     function deleteClicked(assetId, name) {
         Swal.fire({
-          text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra ASSET slettes også.`,
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#03a9f4',

@@ -159,7 +159,6 @@ public class TasksController {
         if (task.getResponsibleUser() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en ansvarlig bruger");
         }
-
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
@@ -202,7 +201,10 @@ public class TasksController {
             final List<LogDTO> taskLogs = new ArrayList<>();
             for (final TaskLog taskLog : task.getLogs()) {
                 final long daysAfterDeadline = calculateDaysAfterDeadline(taskLog.getDeadline(), taskLog.getCompleted());
-                taskLogs.add(new LogDTO(taskLog.getComment(), taskLog.getCurrentDescription(), taskLog.getDocumentationLink(), taskLog.getDocument() == null ? null : taskLog.getDocument().getName(), taskLog.getDocument() == null ? null : taskLog.getDocument().getId(), taskLog.getResponsibleUserUserId() + ", " + taskLog.getResponsibleOUName(), taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
+                taskLogs.add(new LogDTO(taskLog.getComment(), taskLog.getCurrentDescription(), taskLog.getDocumentationLink(),
+                    taskLog.getDocument() == null ? null : taskLog.getDocument().getName(),
+                    taskLog.getDocument() == null ? null : taskLog.getDocument().getId(),
+                    taskLog.getResponsibleUserName() + ", " + taskLog.getResponsibleOUName(), taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
             }
 
             taskLogs.sort(Comparator.comparing(LogDTO :: completedDate).reversed());

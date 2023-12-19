@@ -408,7 +408,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
             final XWPFTableRow row = rows.get(rowIndex);
             final XWPFTableCell cell = row.getCell(probability);
             if (StringUtils.length(cell.getText()) > 0) {
-                setCellTextSmall(row, probability, cell.getText() + ", " + (riskProfileDTO.getIndex()+1) + postFix).setBold(true);
+                setCellTextSmall(row, probability, ", " + (riskProfileDTO.getIndex()+1) + postFix).setBold(true);
             } else {
                 setCellTextSmall(row, probability, (riskProfileDTO.getIndex()+1) + postFix).setBold(true);
             }

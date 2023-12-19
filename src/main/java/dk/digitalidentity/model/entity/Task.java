@@ -58,7 +58,7 @@ public class Task extends Relatable {
     private String description;
 
     @Column
-    private Boolean notifyResponsible;
+    private Boolean notifyResponsible = true;
 
     @Column(name = "responsible_notified")
     private Boolean hasNotifiedResponsible;
@@ -66,7 +66,7 @@ public class Task extends Relatable {
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskLog> logs  = new HashSet<>();
 
-    @ManyToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "relatable_tags", joinColumns = { @JoinColumn(name = "relatable_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
     private List<Tag> tags = new ArrayList<>();
 

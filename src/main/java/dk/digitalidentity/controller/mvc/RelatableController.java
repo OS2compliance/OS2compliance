@@ -137,7 +137,7 @@ public class RelatableController {
             task.getTags().remove(tagToDelete);
             taskDao.save(task);
         }
-        return getReturnPath(id, relatedTo);
+        return "redirect:/";
     }
 
     @NotNull private String getReturnPath(final long id, final Relatable relatable) {

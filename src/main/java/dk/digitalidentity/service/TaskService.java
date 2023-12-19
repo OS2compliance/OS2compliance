@@ -13,11 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Nullable;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NoSuchElementException;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -32,19 +31,13 @@ public class TaskService {
     @Autowired
     private RelationService relationService;
 
-	@Transactional
-	public List<Task> findTasksNearingDeadlines(){
-		return findTasksNearingDeadlines(false, null);
-	}
-
-    @Transactional
-    public List<Task> findTasksNearingDeadlines(final User user){
-        return findTasksNearingDeadlines(false, user);
+    public Optional<Task> findById(final Long id) {
+        return taskDao.findById(id);
     }
 
     @Transactional
-    public List<Task> findTasksNearingDeadlines(final boolean shouldNotify){
-        return findTasksNearingDeadlines(shouldNotify, null);
+    public List<Task> findTasksNearingDeadlineForUser(final User user) {
+        return taskDao.findByResponsibleUserAndNextDeadlineBefore(user, closeToDeadline());
     }
 
     @Transactional
@@ -53,21 +46,9 @@ public class TaskService {
     }
 
     @Transactional
-    public List<Task> findTasksNearingDeadlines(Boolean shouldNotify, @Nullable final User user){
-        try{
-            final LocalDate date = LocalDate.now().plusDays(settingsService.getInt("notify.days",10));
-            if(shouldNotify = false){
-                return taskDao.findByNextDeadlineBefore(date).get();
-            } else if(user != null) {
-                return taskDao.findByResponsibleUserAndNextDeadlineBefore(user, date).get();
-            } else {
-                return taskDao.findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(date).get();
-            }
-
-        }
-        catch (final NoSuchElementException e) {
-            return List.of();
-        }
+    public List<Task> findTasksThatNeedsNotification() {
+        final LocalDate date = closeToDeadline();
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(date);
     }
 
     @Transactional
@@ -100,4 +81,9 @@ public class TaskService {
         }
         return relatedTasks;
     }
+
+    private LocalDate closeToDeadline() {
+        return LocalDate.now().plusDays(settingsService.getInt("notify.days",10));
+    }
+
 }

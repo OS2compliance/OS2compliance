@@ -264,6 +264,7 @@ public class RegisterController {
         model.addAttribute("relatedTasks", allRelatedTo.stream()
                 .filter(r -> r.getRelationType() == RelationType.TASK)
                 .collect(Collectors.toList()));
+        model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("threatAssessments", allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
             .collect(Collectors.toList()));

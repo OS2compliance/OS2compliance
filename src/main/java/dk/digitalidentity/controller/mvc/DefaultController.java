@@ -24,6 +24,7 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -49,7 +50,7 @@ public class DefaultController implements ErrorController {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();
             if(userUuid != null) {
                 final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
-                final List<Task> taskList = taskService.findTasksNearingDeadlines(user).stream().sorted((o1, o2) -> o1.getNextDeadline().compareTo(o2.getNextDeadline())).collect(Collectors.toList());
+                final List<Task> taskList = taskService.findTasksNearingDeadlineForUser(user).stream().sorted(Comparator.comparing(Task::getNextDeadline)).collect(Collectors.toList());
                 model.addAttribute("tasks", taskList);
                 final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
                 model.addAttribute("documents", documentList);
@@ -64,8 +65,23 @@ public class DefaultController implements ErrorController {
 	@RequestMapping(value = "/error", produces = "text/html")
 	public String errorPage(final Model model, final HttpServletRequest request) {
 		final Map<String, Object> body = getErrorAttributes(new ServletWebRequest(request));
+        try {
+            model.addAllAttributes(body);
+            final Object status = body.get("status");
+            if(status != null && request.getSession() != null) {
+                switch ((Integer) status) {
+                    //change to landing page when created
+                    case 401: return "redirect:/saml/login";
+                    //Only related to settings for now.
+                    case 403: return "errors/missingClaims";
+                    case 500: return "errors/technicalError";
+                    default: return "error";
+                }
+            }
 
-		model.addAllAttributes(body);
+        } catch (final Exception e) {
+            //do nothing as we will just return whitepage error if it fails
+        }
 
 		return "error";
 	}

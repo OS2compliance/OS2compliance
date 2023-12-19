@@ -6,12 +6,14 @@ import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
+import dk.kitos.api.model.TrackingEventResponseDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 @Slf4j
 @Component
@@ -27,10 +29,8 @@ public class KitosSyncTask {
     }
 
     @Scheduled(cron = "${os2compliance.integrations.kitos.cron}")
-//    @Scheduled(fixedDelay = 10000000, initialDelay = 1000)
     public void sync() {
-        if (!configuration.isSchedulingEnabled()) {
-            log.info("Scheduling disabled, not doing sync");
+        if (taskDisabled()) {
             return;
         }
         if (!configuration.getIntegrations().getKitos().isEnabled()) {
@@ -40,23 +40,52 @@ public class KitosSyncTask {
         log.info("Starting Kitos synchronisation");
         final UUID municipalUuid = kitosClientService.lookupMunicipalUuid(configuration.getMunicipal().getCvr());
         final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
-
-        // We only fetch it-systems that the municipal is using, so when the usages have changed, it can mean that
-        // the usage points to an it-system we haven't fetched because they weren't using it earlier... so reimport for now
         final boolean reimport = !changedItSystemUsages.isEmpty();
+        // We need to fetch associated entities
+        final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
+            .map(usage -> usage.getSystemContext().getUuid())
+            .map(kitosClientService::fetchItSystem)
+            .toList();
         final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
-        final List<ItContractResponseDTO> itContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
-        if (!changedItSystems.isEmpty() || !changedItSystemUsages.isEmpty() || !itContracts.isEmpty()) {
+        final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
+
+        if (!changedItSystemUsages.isEmpty() || !changedContracts.isEmpty()) {
             final List<RoleOptionResponseDTO> roles = kitosClientService.listRoles(municipalUuid);
             final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);
             kitosService.syncRoles(roles);
             kitosService.syncUsers(users);
-            kitosService.syncItSystems(changedItSystems);
-            kitosService.syncItSystemUsages(changedItSystemUsages, users);
-            kitosService.syncItContracts(itContracts);
+            kitosService.syncItSystems(Stream.concat(assocItSystems.stream(), changedItSystems.stream()).toList());
+            kitosService.syncItSystemUsages(changedItSystemUsages);
+            kitosService.syncItContracts(changedContracts);
         }
 
         log.info("Finished Kitos synchronisation");
     }
+
+    @Scheduled(cron = "${os2compliance.integrations.kitos.deletion.cron}")
+    public void syncDeletions() {
+        if (taskDisabled()) {
+            return;
+        }
+        log.info("Starting Kitos deletion synchronisation");
+        final List<TrackingEventResponseDTO> deletedSystemUsageTracking = kitosClientService.fetchDeletedSystemUsages(true);
+        final List<TrackingEventResponseDTO> deletedItSystems = kitosClientService.fetchDeletedItSystems(true);
+        kitosService.syncDeletedItSystems(deletedItSystems);
+        kitosService.syncDeletedItSystemUsages(deletedSystemUsageTracking);
+        log.info("Finished Kitos deletion synchronisation");
+    }
+
+    private boolean taskDisabled() {
+        if (!configuration.isSchedulingEnabled()) {
+            log.info("Scheduling disabled, not doing sync");
+            return true;
+        }
+        if (!configuration.getIntegrations().getKitos().isEnabled()) {
+            log.info("Kitos sync not enabled, not doing sync");
+            return true;
+        }
+        return false;
+    }
+
 
 }
