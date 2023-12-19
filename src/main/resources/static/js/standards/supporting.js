@@ -39,7 +39,7 @@ function supportingStandartsViewLoaded() {
 
     const userSelects = document.querySelectorAll('.responsibleUserSelect');
     userSelects.forEach(select => {
-        var choiceSelect = initUserSelect(select.id);
+        var choiceSelect = initUserSelect(select.id, false);
         choiceSelect.passedElement.element.addEventListener('change', function() {
             var selectElement = choiceSelect.passedElement.element;
             var selectedIndex = selectElement.selectedIndex;
