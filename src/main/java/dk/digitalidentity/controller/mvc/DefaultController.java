@@ -72,8 +72,8 @@ public class DefaultController implements ErrorController {
                     //change to landing page when created
                     case 401: return "redirect:/saml/login";
                     //Only related to settings for now.
-                    case 403: return "/errors/missingClaims";
-                    case 500: return "/errors/technicalError";
+                    case 403: return "errors/missingClaims";
+                    case 500: return "errors/technicalError";
                     default: return "error";
                 }
             }
@@ -81,7 +81,6 @@ public class DefaultController implements ErrorController {
         } catch (final Exception e) {
             //do nothing as we will just return whitepage error if it fails
         }
-
 
 		return "error";
 	}

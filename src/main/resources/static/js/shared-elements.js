@@ -76,10 +76,12 @@ function updateTags(choices, search) {
         .catch(error => console.log(error));
 }
 
-function initUserSelect(elementId) {
+function initUserSelect(elementId, prefetch = true) {
     const userSelect = document.getElementById(elementId);
     const userChoices = initSelect(userSelect);
-    updateUsers(userChoices, "");
+    if (prefetch) {
+        updateUsers(userChoices, "");
+    }
     userSelect.addEventListener("search",
         function(event) {
             updateUsers(userChoices, event.detail.value);
