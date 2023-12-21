@@ -131,7 +131,9 @@
                         }
 
                             var dateString = cell.replace(" ", "/");
-							var cellDate = Date.parse(dateString);
+							dateString = dateString.replace("-", "/");
+							var dateSplit = dateString.split("/");
+							var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
                         if (cellDate < today) {
                             return gridjs.html(`<span style="color: red;">${cell}</span>`);
                         } else {
@@ -174,6 +176,7 @@
                         } else {
                             var deadline = row.cells[5]['data'];
                             var dateString = deadline.replace(" ", "/");
+                            dateString = dateString.replace("-", "/");
                             var dateSplit = dateString.split("/");
                             var deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
 

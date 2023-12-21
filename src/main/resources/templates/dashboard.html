@@ -221,6 +221,7 @@
 							}
 
 							var dateString = cell.replace(" ", "/");
+							dateString = dateString.replace("-", "/");
 							var dateSplit = dateString.split("/");
 							var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
 							if (cellDate < today) {
@@ -247,6 +248,7 @@
 							} else {
 								var deadline = row.cells[5]['data'];
 								var dateString = deadline.replace(" ", "/");
+								dateString = dateString.replace("-", "/");
 								var dateSplit = dateString.split("/");
 								var deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
 
