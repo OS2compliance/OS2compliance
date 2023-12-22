@@ -20,6 +20,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Objects;
+
 @Slf4j
 @RestController
 @RequestMapping("rest/standards")
@@ -51,6 +53,10 @@ public class StandardRestController {
     }
 
     private void handleResponsibleUser(final StandardSection standardSection, final String value) {
+        if(value.equals("empty")) {
+            standardSection.setResponsibleUser(null);
+            return;
+        }
         final User user = userDao.findById(value).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
         standardSection.setResponsibleUser(user);
     }
