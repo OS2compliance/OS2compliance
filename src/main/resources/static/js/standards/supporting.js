@@ -57,7 +57,7 @@ function supportingStandartsViewLoaded() {
                 var id = select.dataset.id;
                 var index = select.dataset.index;
                 document.getElementById('responsibleTD' + index).textContent = "";
-                setField(id, "RESPONSIBLE", "empty", index);
+                setField(id, "RESPONSIBLE", "", index);
             }
         });
     });

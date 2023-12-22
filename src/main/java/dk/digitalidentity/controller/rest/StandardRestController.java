@@ -53,7 +53,7 @@ public class StandardRestController {
     }
 
     private void handleResponsibleUser(final StandardSection standardSection, final String value) {
-        if(value.equals("empty")) {
+        if(value.isEmpty()) {
             standardSection.setResponsibleUser(null);
             return;
         }
