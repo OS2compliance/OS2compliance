@@ -16,7 +16,8 @@ public enum ChoiceOfSupervisionModel {
     SUPERVISION_FORM_DECLARATION_OF_FAITH_AND_LAWS("Tilsynsskema med tro- og love erklæring"),
     SWORN_STATEMENT("Tro- og love erklæring"),
     INDEPENDENT_AUDIT("Uafhængig revisionserklæring uden typeangivelse"),
-    SOC_STATEMENT("SOC-erklæring");
+    SOC_STATEMENT("SOC-erklæring"),
+    DSD("DSD");
 
     private final String message;
 
