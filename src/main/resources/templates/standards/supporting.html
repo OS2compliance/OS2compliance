@@ -46,8 +46,7 @@
 </div>
 
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
-<div th:replace="~{fragments/footer :: scripts}"></div>
-<div th:replace="~{fragments/footer :: taskDialog}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

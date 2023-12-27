@@ -52,8 +52,7 @@
 	<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="supplierLabel" aria-hidden="true"></div>
 	<div class="modal fade" id="formEditDialog" tabindex="-1" aria-labelledby="supplierLabel" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: scripts}"></div>
-	<div th:replace="~{fragments/footer :: taskDialog}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 	<style>
 

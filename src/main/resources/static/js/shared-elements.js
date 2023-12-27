@@ -293,18 +293,6 @@ function sharedTaskFormLoaded() {
         () => validateChoices(createTaskUserChoicesEditSelect, createTaskOuChoicesEditSelect));
 }
 
-function loadSharedElements() {
-    fetch(`/tasks/form`)
-        .then(response => response.text()
-            .then(data => {
-                document.getElementById('taskFormDialog').innerHTML = data;
-                sharedTaskFormLoaded();
-                initCreateTaskRelationSelect();
-                initTagSelect('createTaskTagsSelect');
-            }))
-        .catch(error => console.log(error))
-}
-
 function loadSettingElement(pageType){
     return fetch(`/settings/form`)
     .then(response => response.text()
