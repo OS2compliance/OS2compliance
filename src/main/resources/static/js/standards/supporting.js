@@ -40,7 +40,7 @@ function supportingStandartsViewLoaded() {
     const userSelects = document.querySelectorAll('.responsibleUserSelect');
     userSelects.forEach(select => {
         var choiceSelect = initUserSelect(select.id, false);
-        choiceSelect.passedElement.element.addEventListener('change', function() {
+        choiceSelect.passedElement.element.addEventListener('addItem', function() {
             var selectElement = choiceSelect.passedElement.element;
             var selectedIndex = selectElement.selectedIndex;
             var selectedOptionText = selectElement.options[selectedIndex].text;
@@ -50,6 +50,15 @@ function supportingStandartsViewLoaded() {
 
             setField(id, "RESPONSIBLE", choiceSelect.passedElement.element.value, index)
             document.getElementById('responsibleTD' + index).textContent = username;
+        });
+
+        choiceSelect.passedElement.element.addEventListener('removeItem', function() {
+            if(!choiceSelect.getValue()) {
+                var id = select.dataset.id;
+                var index = select.dataset.index;
+                document.getElementById('responsibleTD' + index).textContent = "";
+                setField(id, "RESPONSIBLE", "", index);
+            }
         });
     });
 
