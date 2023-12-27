@@ -8,6 +8,7 @@ function CreateTaskService() {
 
     this.init = function() {
         this.load();
+        this.showWhenLoaded = false;
     }
 
     this.load = function() {
@@ -19,14 +20,23 @@ function CreateTaskService() {
                     sharedTaskFormLoaded();
                     initCreateTaskRelationSelect();
                     initTagSelect('createTaskTagsSelect');
+                    this.loading = false;
+                    if (this.showWhenLoaded) {
+                        this.showWhenLoaded = false;
+                        this.show();
+                    }
                 }))
             .catch(error => toastService.error(error))
             .finally(() => this.loading = false);
     }
 
     this.show = function () {
-        if (!this.loading) {
-
+        if (this.loading) {
+            this.showWhenLoaded = true;
+        } else {
+            const createTaskModal = new bootstrap.Modal(document.getElementById('taskFormDialog'));
+            createTaskModal.show();
         }
     }
+
 }
