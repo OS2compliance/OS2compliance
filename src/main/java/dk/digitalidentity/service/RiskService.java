@@ -127,13 +127,22 @@ public class RiskService {
             threatMap.get(threat.getThreatType()).add(dto);
         }
 
+        int index = 0;
+        for (final Map.Entry<String, List<ThreatDTO>> entry : threatMap.entrySet()) {
+            for (final ThreatDTO threatDTO : entry.getValue()) {
+                threatDTO.setIndex(index++);
+            }
+        }
+
         for (final CustomThreat threat : threatAssessment.getCustomThreats()) {
             final ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(threat.getId())).findAny().orElse(null);
             final ThreatDTO dto;
             if (response != null) {
                 dto = new ThreatDTO(threat.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getProblem(), response.getExistingMeasures(), response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
+                dto.setIndex(index++);
             } else {
                 dto = new ThreatDTO(threat.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), false, -1, -1, -1, -1, -1, -1, -1, null, null, ThreatMethod.NONE, null, -1, -1);
+                dto.setIndex(index++);
             }
 
             if (!threatMap.containsKey(threat.getThreatType())) {
@@ -142,12 +151,7 @@ public class RiskService {
             threatMap.get(threat.getThreatType()).add(dto);
         }
 
-        int index = 0;
-        for (final Map.Entry<String, List<ThreatDTO>> entry : threatMap.entrySet()) {
-            for (final ThreatDTO threatDTO : entry.getValue()) {
-                threatDTO.setIndex(index++);
-            }
-        }
+
 
         return threatMap;
     }
