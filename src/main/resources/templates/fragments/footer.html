@@ -2,17 +2,23 @@
 <html>
 <body>
 
-<div th:fragment="taskDialog">
-	<div class="modal fade" id="taskFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
-	<script th:inline="javascript">
-		document.addEventListener("DOMContentLoaded", function(event) {
-			loadSharedElements();
-		});
-	</script>
+<div th:fragment="footer">
+    <div class="toast" id="toastTemplate">
+        <div class="toast-header">
+            <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+                <rect width="100%" height="100%" fill="#007aff"></rect>
+            </svg>
+            <strong class="me-auto">Bootstrap</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060 !important;" id="toastContainer">
+    </div>
+    <script th:src="@{/js/toast-service.js}" defer></script>
 
-</div>
-
-<div th:fragment="scripts">
+    <div th:if="${taskDialog == true}" class="modal fade" id="taskFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
+    <script th:if="${taskDialog == true}" th:src="@{/js/task/create-task-service.js}" defer></script>
 
 	<script th:src="@{/js/common.js}" defer></script>
 	<script th:src="@{/js/form-validation.js}" defer></script>

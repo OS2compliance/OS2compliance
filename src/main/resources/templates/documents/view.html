@@ -146,7 +146,7 @@
 
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${document.id})}" />
 <div th:replace="~{fragments/addTags :: addTags(relatableId=${document.id})}" />
-<div th:replace="~{fragments/footer :: scripts}" />
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}" />
 
 <script th:inline="javascript">
     /*<![CDATA[*/

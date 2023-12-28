@@ -157,7 +157,7 @@
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal)}"></div>
-<div th:replace="~{fragments/footer :: scripts}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 
 <script th:inline="javascript">

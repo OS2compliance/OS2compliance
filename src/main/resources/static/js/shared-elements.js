@@ -121,26 +121,6 @@ function initOUSelect(elementId) {
     return ouChoices;
 }
 
-let createTaskRelationSelect = null;
-function initCreateTaskRelationSelect() {
-    const relationsSelect = document.getElementById('createTaskRelationsSelect');
-    const relationsChoice = initSelect(relationsSelect);
-    updateRelations(relationsChoice, "");
-    relationsSelect.addEventListener("search",
-        function(event) {
-            updateRelations(relationsChoice, event.detail.value);
-        },
-        false,
-    );
-    relationsSelect.addEventListener("change",
-        function(event) {
-            updateRelations(relationsChoice, "");
-        },
-        false,
-    );
-    createTaskRelationSelect = relationsChoice;
-}
-
 function initTagSelect(id) {
     const tagsSelect = document.getElementById(id);
     const tagsChoice = initSelect(tagsSelect);
@@ -157,7 +137,6 @@ function initTagSelect(id) {
         },
         false,
     );
-    createTaskTagSelect = tagsChoice;
 }
 
 function initDocumentRelationSelect() {
@@ -260,49 +239,6 @@ function updateRelationsForStandardSection(choices, search) {
                 }), 'id', 'name', true);
             }))
         .catch(error => console.log(error));
-}
-
-function selectCreateTaskOption(value) {
-    const form = document.querySelector('#taskCreateForm');
-    const repetitionField = form.querySelector('#repetition');
-    if (value === 'TASK') {
-        repetitionField.value = 'NONE';
-    }
-    repetitionField.disabled = value !== 'CHECK';
-}
-
-function taskFormReset() {
-    const form = document.querySelector('#taskCreateForm');
-    form.reset();
-    selectCreateTaskOption('TASK');
-}
-
-let createTaskUserChoicesEditSelect = null;
-let createTaskOuChoicesEditSelect = null;
-
-function sharedTaskFormLoaded() {
-    selectCreateTaskOption('TASK');
-
-    initDatepicker("#taskDeadlineBtn", "#taskDeadline");
-    createTaskUserChoicesEditSelect = initUserSelect('taskUserSelect');
-    createTaskOuChoicesEditSelect = initOUSelect('taskOuSelect');
-    createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
-        checkInputField(createTaskUserChoicesEditSelect);
-    });
-    initFormValidationForForm('taskCreateForm',
-        () => validateChoices(createTaskUserChoicesEditSelect, createTaskOuChoicesEditSelect));
-}
-
-function loadSharedElements() {
-    fetch(`/tasks/form`)
-        .then(response => response.text()
-            .then(data => {
-                document.getElementById('taskFormDialog').innerHTML = data;
-                sharedTaskFormLoaded();
-                initCreateTaskRelationSelect();
-                initTagSelect('createTaskTagsSelect');
-            }))
-        .catch(error => console.log(error))
 }
 
 function loadSettingElement(pageType){
