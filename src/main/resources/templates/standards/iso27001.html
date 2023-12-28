@@ -20,8 +20,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-success btn-lg hstack gap-2" data-bs-toggle="modal" data-bs-target="#taskFormDialog"
-                                style="margin-bottom: 8px; height: 45px">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -49,8 +48,7 @@
 
 <script type="text/javascript" th:src="@{/js/standards/iso27001.js}" defer></script>
 <script type="text/javascript" th:src="@{/js/ckeditor/ckeditor.js}" defer></script>
-<div th:replace="~{fragments/footer :: scripts}"></div>
-<div th:replace="~{fragments/footer :: taskDialog}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

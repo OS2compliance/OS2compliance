@@ -23,7 +23,7 @@
 							<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
 								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny leverandør
 							</button>
-							<button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#taskFormDialog">
+							<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 							</button>
 						</div>
@@ -52,8 +52,7 @@
 	<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="supplierLabel" aria-hidden="true"></div>
 	<div class="modal fade" id="formEditDialog" tabindex="-1" aria-labelledby="supplierLabel" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: scripts}"></div>
-	<div th:replace="~{fragments/footer :: taskDialog}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 	<style>
 
@@ -133,14 +132,14 @@
 								editDialog = new bootstrap.Modal(document.getElementById('formEditDialog'));
 								editDialog.show();
 							}))
-					.catch(error => console.log(error));
+					.catch(error => toastService.error(error));
 		}
 
 		document.addEventListener("DOMContentLoaded", function(event) {
 			fetch(formUrl)
 					.then(response => response.text()
 							.then(data => document.getElementById('formDialog').innerHTML = data))
-					.catch(error => console.log(error));
+					.catch(error => toastService.error(error));
 
 			const grid = new gridjs.Grid({
 				className: defaultClassName,

@@ -11,7 +11,7 @@ function updateDocumentSearch(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelSearch(choices, search) {
@@ -25,7 +25,7 @@ function updateRelSearch(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function standardsFormLoaded() {
@@ -33,7 +33,7 @@ function standardsFormLoaded() {
     for (let i=0; i<editors.length; ++i) {
         ClassicEditor.create(editors[i])
             .catch( error => {
-                console.error( error );
+                toastService.error(error);
             });
     }
     let docSelects = document.querySelectorAll(`select[name=documents]`)

@@ -40,5 +40,5 @@ function checkCvr(cvr) {
             }
         })
     )
-    .catch(reason => console.log(reason));
+    .catch(reason => toastService.error(reason));
 }

@@ -449,8 +449,7 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
-    <div th:replace="~{fragments/footer :: scripts}"></div>
-    <div th:replace="~{fragments/footer :: taskDialog}"></div>
+    <div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -686,7 +685,7 @@
                                 label: `(${e.userId}) ${e.name}`}
                         }), 'value', 'label', false); //false to not override already selected choices
                     }))
-                .catch(error => console.log(error));
+                .catch(error => toastService.error(error));
         }
 
         function updateSuppliers(choices, search) {
@@ -706,7 +705,7 @@
                                 label: `${e.name}`}
                         }), 'value', 'label', true); //false to not override already selected choices
                     }))
-                .catch(error => console.log(error));
+                .catch(error => toastService.error(error));
         }
 
         function initManagersSelect() {

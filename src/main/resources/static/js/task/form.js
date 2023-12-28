@@ -12,7 +12,7 @@ function updateRelationsForDocument(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function initTaskDocumentRelationSelect() {

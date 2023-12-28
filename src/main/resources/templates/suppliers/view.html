@@ -157,7 +157,7 @@
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal)}"></div>
-<div th:replace="~{fragments/footer :: scripts}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 
 <script th:inline="javascript">
@@ -172,7 +172,7 @@
         fetch(formUrl)
             .then(response => response.text()
                 .then(data => document.getElementById('formDialog').innerHTML = data))
-            .catch(error => console.log(error));
+            .catch(error => toastService.error(error));
 
             addRelationFormLoaded();
     });
@@ -243,7 +243,7 @@
 
 
                 }))
-            .catch(error => console.log(error))
+            .catch(error => toastService.error(error))
         }
 
     function addRelationFormLoaded() {

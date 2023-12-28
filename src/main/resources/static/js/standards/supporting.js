@@ -33,7 +33,7 @@ function supportingStandartsViewLoaded() {
                 }
             })
             .catch( error => {
-                console.error( error );
+                toastService.error(error);
             });
     }
 

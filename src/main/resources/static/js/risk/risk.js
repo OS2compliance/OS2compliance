@@ -15,7 +15,7 @@ function updateTypeSelect(choices, search, types) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function initRegisterSelect() {
@@ -89,7 +89,7 @@ function loadAssetSection() {
 
                 document.getElementById("inheritRow").style.display = '';
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function loadRegisterResponsible() {
@@ -109,7 +109,7 @@ function loadRegisterResponsible() {
                     document.getElementById('name').value = "";
                 }
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function sendEmailChanged(checked) {
