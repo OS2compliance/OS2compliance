@@ -10,7 +10,7 @@ function updateDocumentRelations(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateUsers(targetChoice, search) {
@@ -23,7 +23,7 @@ function updateUsers(targetChoice, search) {
                         label: `(${e.userId}) ${e.name}`}
                 }), 'value', 'label', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 function updateKitos(targetChoice, search) {
     fetch( `/rest/kitos/autocomplete?search=${search}`)
@@ -35,7 +35,7 @@ function updateKitos(targetChoice, search) {
                         label: `(${e.name}) ${e.uuid}`}
                 }), 'value', 'label', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 
@@ -45,7 +45,7 @@ function updateOus(targetChoice, search) {
             .then(data => {
                 targetChoice.setChoices(data.content, 'uuid', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelations(choices, search) {
@@ -59,7 +59,7 @@ function updateRelations(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateTags(choices, search) {
@@ -73,7 +73,7 @@ function updateTags(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function initUserSelect(elementId, prefetch = true) {
@@ -168,7 +168,7 @@ function updateRelationsForDocument(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsAssetsOnly(choices, search) {
@@ -182,7 +182,7 @@ function updateRelationsAssetsOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsTasksOnly(choices, search) {
@@ -196,7 +196,7 @@ function updateRelationsTasksOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsDocumentsOnly(choices, search) {
@@ -210,7 +210,7 @@ function updateRelationsDocumentsOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsRegistersOnly(choices, search) {
@@ -224,7 +224,7 @@ function updateRelationsRegistersOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsForStandardSection(choices, search) {
@@ -238,7 +238,7 @@ function updateRelationsForStandardSection(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function loadSettingElement(pageType){
@@ -247,7 +247,7 @@ function loadSettingElement(pageType){
         .then(data => {
             document.getElementById('settings').innerHTML = data;;
         }))
-    .catch(error => console.log(error));
+    .catch(error => toastService.error(error));
 }
 
 

@@ -106,7 +106,7 @@
                         win.document.write(data);
                         win.print();
                     }))
-                .catch(error => console.log(error));
+                .catch(error => toastService.error(error));
 
         }
 

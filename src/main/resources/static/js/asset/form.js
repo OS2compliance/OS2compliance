@@ -19,7 +19,7 @@ function updateSuppliers(choices, search) {
                         label: `${e.name}`}
                 }), 'value', 'label', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function formLoaded() {

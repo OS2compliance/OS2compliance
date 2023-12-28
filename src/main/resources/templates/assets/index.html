@@ -87,7 +87,7 @@
                     formLoaded();
                     //initFormValidationForForm('formDialog');
                 }))
-            .catch(error => console.log(error))
+            .catch(error => toastService.error(error))
 
         const grid = new gridjs.Grid({
             className: defaultClassName,

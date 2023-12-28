@@ -685,7 +685,7 @@
                                 label: `(${e.userId}) ${e.name}`}
                         }), 'value', 'label', false); //false to not override already selected choices
                     }))
-                .catch(error => console.log(error));
+                .catch(error => toastService.error(error));
         }
 
         function updateSuppliers(choices, search) {
@@ -705,7 +705,7 @@
                                 label: `${e.name}`}
                         }), 'value', 'label', true); //false to not override already selected choices
                     }))
-                .catch(error => console.log(error));
+                .catch(error => toastService.error(error));
         }
 
         function initManagersSelect() {

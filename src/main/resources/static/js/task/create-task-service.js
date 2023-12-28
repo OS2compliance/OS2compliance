@@ -1,13 +1,7 @@
 
 const createTaskService = new CreateTaskService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    createTaskService.init();
-});
 
 function CreateTaskService() {
-
-    this.init = function() {
-    }
 
     this.selectCreateTaskOption = function(value) {
         const form = document.querySelector('#taskCreateForm');
