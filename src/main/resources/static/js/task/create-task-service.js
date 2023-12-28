@@ -65,7 +65,6 @@ function CreateTaskService() {
             },
             false,
         );
-        this.createTaskRelationSelect = relationsChoice;
     }
 
 }
