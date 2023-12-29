@@ -108,6 +108,7 @@ public class DocumentService {
     private static void setTaskRevisionInterval(final Document document, final Task task) {
         switch(document.getRevisionInterval()) {
             case YEARLY -> task.setRepetition(TaskRepetition.YEARLY);
+            case HALF_YEARLY -> task.setRepetition(TaskRepetition.HALF_YEARLY);
             case EVERY_SECOND_YEAR -> task.setRepetition(TaskRepetition.EVERY_SECOND_YEAR);
             case EVERY_THIRD_YEAR -> task.setRepetition(TaskRepetition.EVERY_THIRD_YEAR);
             case NONE -> task.setRepetition(TaskRepetition.NONE);
