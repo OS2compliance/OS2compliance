@@ -1,31 +1,41 @@
 package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.service.SettingsService;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Stream;
 
+import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM;
+
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class KitosSyncTask {
     private final OS2complianceConfiguration configuration;
     private final KitosClientService kitosClientService;
     private final KitosSyncService kitosService;
+    private final SettingsService settingsService;
 
-    public KitosSyncTask(final OS2complianceConfiguration configuration, final KitosClientService kitosClientService, final KitosSyncService kitosService) {
-        this.configuration = configuration;
-        this.kitosClientService = kitosClientService;
-        this.kitosService = kitosService;
+    // TODO Remove this! this is temporary to circumvent kitos bug that never marks entities as updated
+    @Scheduled(cron = "${os2compliance.integrations.kitos.fullsync.cron}")
+    @Transactional
+    public void fullSync() {
+        // Just reset timestamp in settings and everything will re-sync on next delta.
+        settingsService.setZonedDateTime(IT_SYSTEM_USAGE_OFFSET_SETTING_KEY, KITOS_DELTA_START_FROM);
     }
 
     @Scheduled(cron = "${os2compliance.integrations.kitos.cron}")
