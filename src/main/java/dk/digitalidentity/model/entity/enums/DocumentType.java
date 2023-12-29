@@ -4,15 +4,16 @@ import lombok.Getter;
 
 @Getter
 public enum DocumentType {
-    PROCEDURE("Procedure"),
-    GUIDE("Vejledning"),
+    OTHER("Andet"),
     WORKFLOW("Arbejdsgang"),
-    CONTRACT("Kontrakt"),
     DATA_PROCESSING_AGREEMENT("Databehandleraftale"),
-    SUPERVISORY_REPORT("Tilsynsrapport"),
+    CONTRACT("Kontrakt"),
+    CONTROL("Kontrol"),
     MANAGEMENT_REPORT("Ledelsesrapport"),
+    PROCEDURE("Procedure"),
     RISK_ASSESSMENT_REPORT("Risikovurderingsrapport"),
-    OTHER("Andet");
+    SUPERVISORY_REPORT("Tilsynsrapport"),
+    GUIDE("Vejledning");
 
     private final String message;
 
