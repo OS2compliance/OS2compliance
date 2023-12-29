@@ -33,7 +33,7 @@ public class DocumentEO {
         SUPERVISORY_REPORT, MANAGEMENT_REPORT, RISK_ASSESSMENT_REPORT, OTHER
     }
     public enum DocumentRevisionInterval {
-        NONE, YEARLY, EVERY_SECOND_YEAR, EVERY_THIRD_YEAR
+        NONE, HALF_YEARLY, YEARLY, EVERY_SECOND_YEAR, EVERY_THIRD_YEAR
     }
 
     @NotNull
