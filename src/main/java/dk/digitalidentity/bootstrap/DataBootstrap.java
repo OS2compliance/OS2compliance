@@ -13,6 +13,7 @@ import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
@@ -68,6 +69,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(5, this::seedV5);
         incrementAndPerformIfVersion(6, this::seedV6);
         incrementAndPerformIfVersion(7, this::seedV7);
+        incrementAndPerformIfVersion(8, this::seedV8);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -76,6 +78,20 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
         }
+    }
+
+    private void seedV8() {
+        // Prefix registers with 0 if they only have one digit
+        registerService.findAllArticle30().stream()
+            .filter(r -> {
+                final String[] split = StringUtils.split(r.getName(), ".");
+                if (split.length > 1) {
+                    final String digits = StringUtils.getDigits(split[0]);
+                    return digits.length() == 1;
+                }
+                return false;
+            })
+            .forEach(r -> r.setName('0' + r.getName()));
     }
 
     private void seedV7() {
