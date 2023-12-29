@@ -12,4 +12,6 @@ public interface StandardTemplateSectionDao extends JpaRepository<StandardTempla
 
     List<StandardTemplateSection> findByStandardTemplate(final StandardTemplate standardTemplate);
 
+    List<StandardTemplateSection> findByIdentifierStartsWith(final String identifierPrefix);
+
 }

@@ -38,7 +38,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -149,13 +148,13 @@ public class StandardController {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
         for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(s -> s.isSupporting()).collect(Collectors.toList())) {
 
-            List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
+            final List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
                 .flatMap(s -> s.getChildren().stream())
                 .filter(s -> s.getStandardSection().isSelected()).collect(Collectors.toList());
-            double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size();
+            final double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size();
 
-            final double compliance = collect.size() == 0 ? 0 : 100 * (readyCounter / collect.size());
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
+            final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / collect.size());
+            final DecimalFormat decimalFormat = new DecimalFormat("0.00");
             templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
         }
         model.addAttribute("templates", templates);
