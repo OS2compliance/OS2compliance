@@ -47,7 +47,7 @@ public class StandardSection extends Relatable {
     private User responsibleUser;
 
     @Column
-    private boolean selected;
+    private boolean selected = true;
 
     @Column
     @Enumerated(EnumType.STRING)

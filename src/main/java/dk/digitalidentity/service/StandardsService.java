@@ -1,32 +1,25 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class StandardsService {
-    private final StandardSectionDao standardSectionDao;
     private final StandardTemplateDao standardTemplateDao;
     private final StandardTemplateSectionDao standardTemplateSectionDao;
-
-    public StandardsService(final StandardSectionDao standardSectionDao, final StandardTemplateDao standardTemplateDao, final StandardTemplateSectionDao standardTemplateSectionDao) {
-        this.standardSectionDao = standardSectionDao;
-        this.standardTemplateDao = standardTemplateDao;
-        this.standardTemplateSectionDao = standardTemplateSectionDao;
-    }
 
     // Get all sections that are linked to a specific iso27001 topic, eg. "4"
     public List<StandardSection> getSectionsForTopic(final String topic) {

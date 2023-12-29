@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -66,6 +67,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(4, this::seedV4);
         incrementAndPerformIfVersion(5, this::seedV5);
         incrementAndPerformIfVersion(6, this::seedV6);
+        incrementAndPerformIfVersion(7, this::seedV7);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -76,12 +78,19 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         }
     }
 
+    private void seedV7() {
+        // All non iso 27002 should be selected by default
+        standardTemplateSectionDao.findByIdentifierStartsWith("nsis").stream()
+            .map(StandardTemplateSection::getStandardSection)
+            .filter(Objects::nonNull)
+            .forEach(s -> s.setSelected(true));
+    }
+
     private void seedV6() {
         // subsections weren't displaying their association with parent. Changed format from 1 to parent.1 (ex 3.1.1 section 1 becomes 3.1.1.1)
         try {
-
             templateImporter.updateStandardSections("./data/standards/nsis2_sections.json");
-        } catch (IOException e){
+        } catch (final IOException e) {
             throw  new RuntimeException(e);
         }
     }
