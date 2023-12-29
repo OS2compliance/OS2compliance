@@ -91,8 +91,9 @@ public class AssetsRestController {
     }
 
 	private boolean containsField(final String fieldName) {
-		return fieldName.equals("name")
+		return fieldName.equals("assessment")
 				|| fieldName.equals("supplier")
+				|| fieldName.equals("risk")
 				|| fieldName.equals("assetType")
 				|| fieldName.equals("responsibleUser")
 				|| fieldName.equals("updatedAt")
