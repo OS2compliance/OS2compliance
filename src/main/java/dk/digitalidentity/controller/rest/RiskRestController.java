@@ -114,7 +114,7 @@ public class RiskRestController {
         final ResponsibleUserDTO user = !assets.isEmpty() ? getUser(assets.get(0)) : null;
         final dk.digitalidentity.service.model.RiskDTO riskDTO = riskService.calculateRiskFromRegisters(assets.stream()
             .map(Relatable::getId).collect(Collectors.toList()));
-        final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining());
+        final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), user);
     }
 

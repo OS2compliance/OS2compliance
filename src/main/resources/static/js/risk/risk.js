@@ -63,7 +63,7 @@ function typeChanged(selectedType) {
 
 function loadAssetSection() {
     const selectedAsset = document.getElementById("assetSelect").value;
-    fetch( `/rest/risks/asset?assetId=${selectedAsset}`)
+    fetch( `/rest/risks/asset?assetIds=${selectedAsset}`)
         .then(response => response.json()
             .then(data => {
                 var user = data.user;
