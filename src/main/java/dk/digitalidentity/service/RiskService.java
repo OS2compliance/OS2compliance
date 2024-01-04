@@ -3,7 +3,6 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Register;
@@ -47,8 +46,8 @@ public class RiskService {
         return threatAssessmentDao.findAll();
     }
 
-	public RiskDTO calculateRiskFromRegisters(final Asset asset) {
-		final List<Register> registers = relationDao.findRelatedToWithType(asset.getId(), RelationType.REGISTER).stream()
+	public RiskDTO calculateRiskFromRegisters(final List<Long> assetIds) {
+		final List<Register> registers = relationDao.findRelatedToWithType(assetIds, RelationType.REGISTER).stream()
 				.map(r -> r.getRelationAType() == RelationType.REGISTER ? r.getRelationAId() : r.getRelationBId())
 				.map(rid -> registerDao.findById(rid).orElse(null))
 				.filter(Objects::nonNull)

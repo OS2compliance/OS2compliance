@@ -11,6 +11,7 @@ import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
@@ -18,7 +19,6 @@ import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.RiskService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -43,6 +43,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
@@ -107,12 +109,13 @@ public class RiskRestController {
 
     record RiskUIDTO(String elementName, int rf, int of, int ri, int oi, int rt, int ot, ResponsibleUserDTO user) {}
     @GetMapping("asset")
-    public RiskUIDTO getAssetResponsibleUserAndName(@RequestParam final long assetId) {
-        final Asset asset = assetDao.findById(assetId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final ResponsibleUserDTO user = getUser(asset);
-        final dk.digitalidentity.service.model.RiskDTO riskDTO = riskService.calculateRiskFromRegisters(asset);
-        return new RiskUIDTO(asset.getName(), riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), user);
+    public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
+        final List<Asset> assets = assetDao.findAllById(assetIds);
+        final ResponsibleUserDTO user = !assets.isEmpty() ? getUser(assets.get(0)) : null;
+        final dk.digitalidentity.service.model.RiskDTO riskDTO = riskService.calculateRiskFromRegisters(assets.stream()
+            .map(Relatable::getId).collect(Collectors.toList()));
+        final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
+        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), user);
     }
 
     record SetFieldDTO(@NotNull SetFieldType setFieldType, @NotNull ThreatDatabaseType dbType, Long id, String identifier, @NotNull String value) {}

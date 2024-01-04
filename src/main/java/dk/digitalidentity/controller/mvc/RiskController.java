@@ -52,6 +52,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -97,7 +99,7 @@ public class RiskController {
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
-            @RequestParam(name = "selectedAsset", required = false) final Long selectedAsset) {
+            @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
 
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
@@ -121,10 +123,10 @@ public class RiskController {
         final ThreatAssessment savedThreatAssessment = threatAssessmentDao.save(threatAssessment);
 
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-            final Asset asset = assetDao.findById(selectedAsset).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt."));
-            createRelation(savedThreatAssessment.getId(), RelationType.ASSET, asset.getId());
+            final List<Asset> relatedAssets = assetDao.findAllById(selectedAsset);
+            relatedAssets.forEach(asset -> createRelation(savedThreatAssessment.getId(), RelationType.ASSET, asset.getId()));
             if (savedThreatAssessment.isInherit()) {
-                inheritRisk(savedThreatAssessment, asset);
+                inheritRisk(savedThreatAssessment, relatedAssets);
             }
         }
         else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
@@ -159,8 +161,7 @@ public class RiskController {
         final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("risk", threatAssessment);
         model.addAttribute("threats", riskService.buildThreatList(threatAssessment));
-        final Relatable relatable = findElement(threatAssessment);
-        model.addAttribute("elementName", relatable == null ? null : relatable.getName());
+        model.addAttribute("elementName", findElementName(threatAssessment));
         model.addAttribute("customThreat", new CustomThreat());
         model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
@@ -179,8 +180,7 @@ public class RiskController {
     public String riskProfile(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("risk", threatAssessment);
-        final Relatable relatable = findElement(threatAssessment);
-        model.addAttribute("elementName", relatable == null ? null : relatable.getName());
+        model.addAttribute("elementName", findElementName(threatAssessment));
         model.addAttribute("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
         model.addAttribute("riskProfiles", riskService.buildRiskProfileDTOs(threatAssessment));
@@ -209,8 +209,8 @@ public class RiskController {
         return "redirect:/risks/" + id;
     }
 
-    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final Asset asset) {
-        final RiskDTO riskDTO = riskService.calculateRiskFromRegisters(asset);
+    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
+        final RiskDTO riskDTO = riskService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
         savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
         savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
         savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
@@ -243,40 +243,26 @@ public class RiskController {
         relationDao.save(relation);
     }
 
-    private Relatable findElement(final ThreatAssessment threatAssessment) {
-        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
+    private String findElementName(final ThreatAssessment threatAssessment) {
+        final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();
+        if (ThreatAssessmentType.ASSET.equals(threatAssessmentType)) {
             final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET);
-            if (relations.size() != 1) {
-                log.error("None or more than one relation with type ASSET related to threatAssessment with id " + threatAssessment.getId() + ". Expected exactly one.");
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der er ingen eller mere end et Aktiv knyttet til risikovurderingen. Der skal være præcis en tilknytning.");
-            }
-
-            final Relation relation = relations.get(0);
-            long assetId = 0;
-            if (relation.getRelationAType().equals(RelationType.ASSET)) {
-                assetId = relation.getRelationAId();
-            } else if (relation.getRelationBType().equals(RelationType.ASSET)) {
-                assetId = relation.getRelationBId();
-            }
-            return assetDao.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kunne ikke finde det tilknyttede aktiv."));
-        }
-        else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
+            return relations.stream()
+                .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
+                .map(assetId -> assetDao.findById(assetId))
+                .filter(Optional::isPresent)
+                .map(a -> a.get().getName())
+                .collect(Collectors.joining(", "));
+        } else if (ThreatAssessmentType.REGISTER.equals(threatAssessmentType)) {
             final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.REGISTER);
-            if (relations.size() != 1) {
-                log.error("None or more than one relation with type REGISTER related to threatAssessment with id " + threatAssessment.getId() + ". Expected exactly one.");
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der er ingen eller mere end en behandlingsaktivitet knyttet til risikovurderingen. Der skal være præcis en tilknytning.");
-            }
-
-            final Relation relation = relations.get(0);
-            long registerId = 0;
-            if (relation.getRelationAType().equals(RelationType.REGISTER)) {
-                registerId = relation.getRelationAId();
-            } else if (relation.getRelationBType().equals(RelationType.REGISTER)) {
-                registerId = relation.getRelationBId();
-            }
-            return registerDao.findById(registerId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kunne ikke finde den tilknyttede behandlingsaktivitet."));
+            return relations.stream()
+                .map(r -> r.getRelationAType().equals(RelationType.REGISTER) ? r.getRelationAId() : r.getRelationBId())
+                .map(assetId -> registerDao.findById(assetId))
+                .filter(Optional::isPresent)
+                .map(a -> a.get().getName())
+                .collect(Collectors.joining(", "));
         } else {
-            return null;
+            return "";
         }
     }
 
