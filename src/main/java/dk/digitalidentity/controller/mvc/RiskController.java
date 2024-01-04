@@ -52,6 +52,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
@@ -97,7 +98,7 @@ public class RiskController {
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
-            @RequestParam(name = "selectedAsset", required = false) final Long selectedAsset) {
+            @RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAsset) {
 
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
@@ -121,10 +122,10 @@ public class RiskController {
         final ThreatAssessment savedThreatAssessment = threatAssessmentDao.save(threatAssessment);
 
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-            final Asset asset = assetDao.findById(selectedAsset).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt."));
-            createRelation(savedThreatAssessment.getId(), RelationType.ASSET, asset.getId());
+            final List<Asset> relatedAssets = assetDao.findAllById(selectedAsset);
+            relatedAssets.forEach(asset -> createRelation(savedThreatAssessment.getId(), RelationType.ASSET, asset.getId()));
             if (savedThreatAssessment.isInherit()) {
-                inheritRisk(savedThreatAssessment, asset);
+                inheritRisk(savedThreatAssessment, relatedAssets);
             }
         }
         else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
@@ -209,8 +210,8 @@ public class RiskController {
         return "redirect:/risks/" + id;
     }
 
-    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final Asset asset) {
-        final RiskDTO riskDTO = riskService.calculateRiskFromRegisters(asset);
+    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
+        final RiskDTO riskDTO = riskService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
         savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
         savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
         savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
