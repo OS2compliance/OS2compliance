@@ -27,7 +27,7 @@ function CreateTaskService() {
                 this.createTaskUserChoicesEditSelect, this.createTaskOuChoicesEditSelect));
     }
 
-    this.show = function() {
+    this.show = function(riskId = null) {
         this.loading = true;
         fetch(`/tasks/form`)
             .then(response => response.text()
@@ -36,7 +36,12 @@ function CreateTaskService() {
                     this.loaded();
                     this.initTaskRelationSelect();
                     initTagSelect('createTaskTagsSelect');
-                    const createTaskModal = new bootstrap.Modal(document.getElementById('taskFormDialog'));
+                    // create task modal - explainer and riskId
+                    var modal = document.querySelector('#taskFormDialog');
+                    modal.querySelector('#threatAssessmentExplainer').style.display = '';
+                    modal.querySelector('#taskRiskId').value = riskId;
+
+                    const createTaskModal = new bootstrap.Modal(modal);
                     createTaskModal.show();
                 }))
             .catch(error => toastService.error(error))

@@ -351,12 +351,5 @@ function pageLoaded() {
         methodSelects[i].addEventListener('change', methodSelectChanged, false);
     }
 
-    // create task modal - explainer and riskId
-    var modal = document.querySelector('#taskFormDialog');
-    modal.addEventListener('show.bs.modal', function() {
-        document.getElementById('threatAssessmentExplainer').style.display = '';
-        document.getElementById('taskRiskId').value = riskId;
-    });
-
     updateAverage();
 }

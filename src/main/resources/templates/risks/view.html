@@ -219,7 +219,8 @@
                                             </div>
                                         </td>
                                         <td class="riskViewTd" >
-                                            <button th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-icon btn-success rounded-circle btn-xs" data-bs-toggle="modal" data-bs-target="#taskFormDialog" title="Opgave eller kontrol">
+                                            <button th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-icon btn-success rounded-circle btn-xs"
+                                                    th:onclick="|createTaskService.show(${risk.id})|" title="Opgave eller kontrol">
                                                 <i class="pli-check icon-lg fs-5"></i>
                                             </button>
                                         </td>
