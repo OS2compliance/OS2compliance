@@ -19,6 +19,7 @@
 
     <div th:if="${taskDialog == true}" class="modal fade" id="taskFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <script th:if="${taskDialog == true}" th:src="@{/js/task/create-task-service.js}" defer></script>
+    <script th:src="@{/js/settings/settings-service.js}" defer></script>
 
 	<script th:src="@{/js/common.js}" defer></script>
 	<script th:src="@{/js/form-validation.js}" defer></script>

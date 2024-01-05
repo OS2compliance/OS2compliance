@@ -25,19 +25,6 @@ function updateUsers(targetChoice, search) {
             }))
         .catch(error => toastService.error(error));
 }
-function updateKitos(targetChoice, search) {
-    fetch( `/rest/kitos/autocomplete?search=${search}`)
-        .then(response => response.json()
-            .then(data => {
-                targetChoice.setChoices(data.content.map(e => {
-                    return {
-                        value: e.uuid,
-                        label: `(${e.name}) ${e.uuid}`}
-                }), 'value', 'label', true);
-            }))
-        .catch(error => toastService.error(error));
-}
-
 
 function updateOus(targetChoice, search) {
     fetch( `/rest/ous/autocomplete?search=${search}`)
@@ -89,23 +76,6 @@ function initUserSelect(elementId, prefetch = true) {
         false,
     );
     return userChoices;
-}
-
-function initKitosSelect(elementId) {
-    const select = document.getElementById(elementId);
-    if (select === null) {
-        return;
-    }
-    const choices = initSelect(select);
-    updateKitos(choices, "");
-    select.addEventListener("search",
-        function (event) {
-            updateKitos(choices, event.detail.value)
-        },
-        false
-    );
-    return choices;
-
 }
 
 function initOUSelect(elementId) {
@@ -240,16 +210,6 @@ function updateRelationsForStandardSection(choices, search) {
             }))
         .catch(error => toastService.error(error));
 }
-
-function loadSettingElement(pageType){
-    return fetch(`/settings/form`)
-    .then(response => response.text()
-        .then(data => {
-            document.getElementById('settings').innerHTML = data;;
-        }))
-    .catch(error => toastService.error(error));
-}
-
 
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");

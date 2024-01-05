@@ -48,8 +48,7 @@
 			<!-- Content Header - Right Side: -->
 			<div class="header__content-end">
 				<div th:if="${T(dk.digitalidentity.security.SecurityUtil).administrator}">
-					<a style="margin-bottom: 2px; margin-right: 14px; height: 45px; margin-top: 50px;" data-bs-toggle="modal"
-						data-bs-target="#settingsDialog">
+					<a style="margin-bottom: 2px; margin-right: 14px; height: 45px; margin-top: 50px;" onclick="settingsService.show()">
 						<i class="ti-settings fs-4"></i>
 					</a>
 					<div id="settings"></div>
@@ -57,24 +56,5 @@
 			</div>
 		</div>
 	</div>
-	<script th:inline="javascript">
-
-		/*<![CDATA[*/
-
-		/*[+
-		var isAdmin = [[${T(dk.digitalidentity.security.SecurityUtil).isAdministrator}]];
-		+]*/
-
-			document.addEventListener("DOMContentLoaded", function (event) {
-
-				loadSettingElement().then(x => {
-					initKitosSelect('ownerSelect');
-					initKitosSelect('responsibleSelect');
-				});
-			})
-
-
-		/*]]>*/
-	</script>
 </header>
 </html>

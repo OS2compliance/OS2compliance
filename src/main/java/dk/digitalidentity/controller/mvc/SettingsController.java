@@ -1,13 +1,14 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.KitosService;
 import dk.digitalidentity.service.SettingsService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -24,21 +25,22 @@ import java.util.Objects;
 @RequestMapping("settings")
 @RequireUser
 @RequireAdminstrator
+@RequiredArgsConstructor
 public class SettingsController {
-	@Autowired
-	private SettingsService settingsService;
-    @Autowired
-    private ScaleService scaleService;
-    @Autowired
-    private HttpServletRequest httpServletRequest;
+	private final SettingsService settingsService;
+    private final HttpServletRequest httpServletRequest;
+    private final KitosService kitosService;
+    private final OS2complianceConfiguration configuration;
 
 	@Transactional
 	@GetMapping("form")
-	public String form(final Model model){
+	public String form(final Model model) {
         final SettingsDTO settings = new SettingsDTO();
         settings.addList(settingsService.getByEditable());
 		model.addAttribute("Settings", settings);
-        model.addAttribute("page",getParentType(httpServletRequest.getHeader("Referer")));
+        model.addAttribute("page", getParentType(httpServletRequest.getHeader("Referer")));
+        model.addAttribute("kitosRoles", kitosService.kitosRoles());
+        model.addAttribute("kitosEnabled", configuration.getIntegrations().getKitos().isEnabled());
 
 		return "fragments/settings";
 	}
