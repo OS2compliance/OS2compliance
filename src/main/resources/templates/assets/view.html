@@ -124,7 +124,7 @@
                                                     <select class="form-control form-select choices__input"
                                                         data-trigger="" id="managers" th:field="*{managers}" hidden=""
                                                         tabindex="-1" multiple="multiple">
-                                                        <option th:unless="${isKitos}" th:each="user : *{managers}" th:value="${user.uuid}"
+                                                        <option th:each="user : *{managers}" th:value="${user.uuid}"
                                                             th:text="'(' + ${user.userId} + ') ' + ${user.name}"
                                                             selected></option>
                                                     </select>

@@ -43,11 +43,11 @@
                 </div>
               </div>
             </div>
-          <a class="btn btn-primary" data-bs-toggle="collapse" href="#kitosPart" role="button" aria-expanded="false"
+          <a th:if="${kitosEnabled}" class="btn btn-primary" data-bs-toggle="collapse" href="#kitosPart" role="button" aria-expanded="false"
             aria-controls="kitosPart">
             Kitos
           </a>
-          <div class="collapse" id="kitosPart" th:classappend="${page} == 'kitos' ? 'show' : ''">
+          <div th:if="${kitosEnabled}" class="collapse" id="kitosPart" th:classappend="${page} == 'kitos' ? 'show' : ''">
             <div class="card card-body">
               <div th:each="setting, itemStat :  *{settingsList}">
                 <div th:if="${setting.association} == 'kitos'" >
@@ -57,18 +57,27 @@
                   <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}" />
                   <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}" />
                   <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_KEY}">
-                    <div class="row mt-3">
-                      <label for="ownerSelect" class="col-sm-4 col-form-label" style="color: black;">UUID for ejerrollen i kitos</label>
+                    <div class="row mt-1">
+                      <label for="ownerSelect" class="col-sm-10 col-form-label" style="color: black;">Vælg systemejer rolle i Kitos</label>
                       <select class="form-control form-select choices__input col-sm-8" id="ownerSelect"
-                        th:field="*{settingsList[__${itemStat.index}__].settingValue}"></select>
+                        th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                          <option th:each="role : ${kitosRoles}"
+                                  th:value="${role.uuid}"
+                                  th:text="${role.name}"></option>
+                      </select>
                     </div>
                   </div>
                   <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_KEY}">
-                    <div class="row mt-3">
-                      <label for="responsibleSelect" class="col-sm-4 col-form-label" style="color: black;">UUID for ansvarsrollen i kitos</label>
+                    <div class="row mt-1">
+                      <label for="responsibleSelect" class="col-sm-10 col-form-label" style="color: black;">Vælg systemansvarlig rolle i Kitos</label>
                       <select class="form-control form-select choices__input" id="responsibleSelect"
-                        th:field="*{settingsList[__${itemStat.index}__].settingValue}"></select>
+                        th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                          <option th:each="role : ${kitosRoles}"
+                                  th:value="${role.uuid}"
+                                  th:text="${role.name}"></option>
+                      </select>
                     </div>
+                    <div class="text-black-50 mt-2">Bemærk, at det kan tage op til et døgn, før opdateringen af Kitos' opsætning er fuldt gennemført på alle steder.</div>
                   </div>
                 </div>
               </div>
