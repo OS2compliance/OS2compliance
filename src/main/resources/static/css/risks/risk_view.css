@@ -12,17 +12,13 @@ select, textarea {
     text-orientation: mixed;
 }
 
-.card {
-    overflow: auto;
-}
-
 .riskViewTable {
-    border-collapse: collapse;
     width: 100%;
 }
 
 .riskViewTh, .riskViewTd{
-    border: 1px solid lightgray;
+    outline: 0.5px solid #E8E8E8;
+    outline-offset: -0.5px;
     padding: 8px;
     /*text-align: center;*/
     overflow-wrap: break-word;
@@ -60,9 +56,18 @@ select::-ms-expand {
 .excel-textarea {
     width: 100%;
     height: 100%;
-    border: none;
+    outline: none;
     resize: none;
     overflow: hidden;
     padding: 0;
     margin: 0;
 }
+
+.riskViewTable thead {
+    background-color: white;
+    position: sticky;
+    position: -webkit-sticky;
+    top: 0;
+    z-index: 100;
+}
+

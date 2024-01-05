@@ -140,7 +140,7 @@
                             <tbody>
                                 <th:block th:each="type : ${threats}">
                                     <tr>
-                                        <th class="riskViewTh" th:text="${type.key} + ':'" colspan="19" style="border-left: none;border-right: none;"></th>
+                                        <th class="riskViewTh" th:text="${type.key} + ':'" colspan="19" style="outline:none;"></th>
                                     </tr>
                                     <tr th:each="row : ${type.value}" class="threatRow" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index}">
                                         <td class="riskViewTd"  th:text="${row.index} + 1"></td>
