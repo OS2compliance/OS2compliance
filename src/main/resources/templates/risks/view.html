@@ -138,11 +138,14 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <th:block th:each="type : ${threats}">
-                                    <tr>
-                                        <th class="riskViewTh" th:text="${type.key} + ':'" colspan="19" style="outline:none;"></th>
+                                <th:block th:each="type, stat : ${threats}">
+                                    <tr class="categoryTr" th:attr="data-index=${stat.index}">
+                                        <th class="riskViewTh" colspan="19">
+                                            <em class="pli-arrow-up fs-4" th:id="'categoryIcon' + ${stat.index}"></em> &nbsp;
+                                            <span th:text="${type.key} + ':'"></span>
+                                        </th>
                                     </tr>
-                                    <tr th:each="row : ${type.value}" class="threatRow" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index}">
+                                    <tr th:each="row : ${type.value}" class="threatRow" th:classappend="'categoryRow' + ${stat.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index}">
                                         <td class="riskViewTd"  th:text="${row.index} + 1"></td>
                                         <td class="riskViewTd"  th:text="${row.threat}"></td>
                                         <td class="riskViewTd" >

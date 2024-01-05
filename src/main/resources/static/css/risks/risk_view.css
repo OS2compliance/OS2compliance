@@ -71,3 +71,9 @@ select::-ms-expand {
     z-index: 100;
 }
 
+.categoryTr th {
+    outline: none;
+    cursor: pointer;
+    padding-left: 0px;
+}
+

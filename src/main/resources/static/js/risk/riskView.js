@@ -307,6 +307,28 @@ function updateColorFor(elem, color) {
     }
 }
 
+function categoryRowClicked() {
+    var rowIndex = this.dataset.index;
+    handleCategoryRow(rowIndex);
+}
+
+function handleCategoryRow(rowIndex) {
+    var icon = document.getElementById("categoryIcon" + rowIndex);
+    const belongingRows = document.querySelectorAll('.categoryRow' + rowIndex);
+    for (var i = 0; i < belongingRows.length; i++) {
+        var elem = belongingRows[i];
+        if (elem.hidden) {
+            icon.classList.add("pli-arrow-up");
+            icon.classList.remove("pli-arrow-down");
+            elem.hidden = false;
+        } else {
+            icon.classList.remove("pli-arrow-up");
+            icon.classList.add("pli-arrow-down");
+            elem.hidden = true;
+        }
+    }
+}
+
 function pageLoaded() {
     const excelTextareas = document.querySelectorAll('.excel-textarea');
     for (var i = 0; i < excelTextareas.length; i++) {
@@ -352,4 +374,17 @@ function pageLoaded() {
     }
 
     updateAverage();
+
+    // foldable categories
+    const categoryRows = document.querySelectorAll('.categoryTr');
+    for (var i = 0; i < categoryRows.length; i++) {
+        // hide all except first category
+        if (i != 0) {
+            handleCategoryRow(i);
+        }
+
+        // add listener
+        categoryRows[i].addEventListener('click', categoryRowClicked, false);
+    }
+
 }
