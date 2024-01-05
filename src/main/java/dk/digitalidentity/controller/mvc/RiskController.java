@@ -156,6 +156,13 @@ public class RiskController {
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
 
+    @GetMapping("{id}/copy")
+    public String riskCopyDialog(final Model model, @PathVariable("id") final long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("risk", threatAssessment);
+        return "risks/copyForm";
+    }
+
     @GetMapping("{id}")
     public String risk(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

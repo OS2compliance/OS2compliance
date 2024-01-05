@@ -51,14 +51,15 @@
 </div>
 
 
+<div id="copyAssessmentContainer"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        var taskFormUrl = [[@{/tasks/form}]]
         var gridRisksUrl = [[@{/rest/risks/list}]];
+        var baseUrl = [[@{/risks/}]];
         var viewUrl = [[@{/risks/}]];
         var deleteUrl = [[@{/risks/}]];
     +]*/
@@ -76,8 +77,6 @@
     };
 
     document.addEventListener("DOMContentLoaded", function(event) {
-
-        createFormLoaded();
 
         const grid = new gridjs.Grid({
             className: defaultClassName,
@@ -170,7 +169,8 @@
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyClicked('${riskId}')"><i class="pli-data-copy fs-5"></i></button>
+                                 <button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],
@@ -220,6 +220,20 @@
                     });
           }
         })
+    }
+
+    function copyClicked(riskId) {
+        let container = document.getElementById('copyAssessmentContainer');
+        fetch(`${baseUrl}${riskId}/copy`)
+            .then(response => response.text()
+                .then(data => {
+                    container.innerHTML = data;
+                    const modal = document.querySelector('#copyModal');
+                    const copyAssessmentModal = new bootstrap.Modal(modal);
+                    copyAssessmentModal.show();
+                })
+            )
+            .catch(error => toastService.error(error));
     }
     /*]]>*/
 </script>
