@@ -64,15 +64,67 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
         .catch(error => toastService.error(error));
 }
 
-let createRiskService = new CreateRiskService();
+const createRiskService = new CreateRiskService();
+const copyRiskService = new CopyRiskService();
 document.addEventListener("DOMContentLoaded", function(event) {
     createRiskService.init();
 });
+
+function CopyRiskService() {
+    this.getScopedElementById = function(id) {
+        return this.modalContainer.querySelector(`#${id}`);
+    }
+
+    this.showCopyDialog = function(threatAssessmentId) {
+        let container = document.getElementById('copyAssessmentContainer');
+        fetch(`${baseUrl}${threatAssessmentId}/copy`)
+            .then(response => response.text()
+                .then(data => {
+                    container.innerHTML = data;
+                    this.onShown();
+                })
+            )
+            .catch(error => toastService.error(error));
+    }
+
+    this.onShown = function() {
+        this.modalContainer = document.getElementById('copyModal');
+        const title = this.getScopedElementById('name');
+        title.value = '';
+        const registerSelect = this.getScopedElementById('registerSelect');
+        if (registerSelect !== null) {
+            this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        }
+        const assetSelect = this.getScopedElementById('assetSelect');
+        if (assetSelect !== null) {
+            this.assetChoicesSelect = initAssetSelect(assetSelect);
+        }
+        this.userChoicesSelect = initUserSelect("userSelect");
+        this.ouChoicesSelect = initOUSelect("ouSelect");
+        initFormValidationForForm("copyRiskModalForm",
+            () => this.validate());
+
+        this.copyAssessmentModal = new bootstrap.Modal(this.modalContainer);
+        this.copyAssessmentModal.show();
+    }
+
+    this.validate = function() {
+        let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
+        if (this.assetChoicesSelect != null) {
+            result &= checkInputField(this.assetChoicesSelect, true);
+        } else if (this.registerChoicesSelect != null) {
+            result &= validateChoices(this.registerChoicesSelect);
+        }
+        console.log("result=" + result);
+        return result;
+    }
+}
+
 function CreateRiskService() {
 
     this.init = function () {
         let self = this;
-        this.modal = document.getElementById('createModal');
+        this.modalContainer = document.getElementById('createModal');
 
         const registerSelect = this.getScopedElementById('registerSelect');
         const assetSelect = this.getScopedElementById('assetSelect');
@@ -178,7 +230,7 @@ function CreateRiskService() {
     }
 
     this.getScopedElementById = function(id) {
-        return this.modal.querySelector(`#${id}`);
+        return this.modalContainer.querySelector(`#${id}`);
     }
 
 

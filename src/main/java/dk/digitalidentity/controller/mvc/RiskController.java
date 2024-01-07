@@ -163,6 +163,17 @@ public class RiskController {
         return "risks/copyForm";
     }
 
+    @Transactional
+    @PostMapping("{id}/copy")
+    public String performCopy(@PathVariable("id") final long id,
+                              @Valid @ModelAttribute final ThreatAssessment sourceAssessment,
+                              @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
+                              @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+                              @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
+        final ThreatAssessment savedThreatAssessment = threatAssessmentDao.save(new ThreatAssessment());
+        return "redirect:/risks/" + savedThreatAssessment.getId();
+    }
+
     @GetMapping("{id}")
     public String risk(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

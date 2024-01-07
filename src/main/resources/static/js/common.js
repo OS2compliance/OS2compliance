@@ -46,9 +46,11 @@ function initDatepicker(elementQuerySelector, inputField) {
         datePicker.open();
     });
 }
-function checkInputField(my_choices) {
-    let inner_element = my_choices.containerInner.element;
-    if (my_choices.getValue(true)) {
+function checkInputField(my_choices, atleastOne = false) {
+    const inner_element = my_choices.containerInner.element;
+    const value = my_choices.getValue(true);
+    console.log("Value: " + JSON.stringify(value));
+    if (value && (!atleastOne || value.length > 0)) {
         inner_element.classList.remove('is-invalid');
         //check if there is a div right after "choices" element
         if (inner_element.parentElement.nextElementSibling) {

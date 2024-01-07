@@ -169,7 +169,7 @@
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyClicked('${riskId}')"><i class="pli-data-copy fs-5"></i></button>
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>
                                  <button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
@@ -222,19 +222,6 @@
         })
     }
 
-    function copyClicked(riskId) {
-        let container = document.getElementById('copyAssessmentContainer');
-        fetch(`${baseUrl}${riskId}/copy`)
-            .then(response => response.text()
-                .then(data => {
-                    container.innerHTML = data;
-                    const modal = document.querySelector('#copyModal');
-                    const copyAssessmentModal = new bootstrap.Modal(modal);
-                    copyAssessmentModal.show();
-                })
-            )
-            .catch(error => toastService.error(error));
-    }
     /*]]>*/
 </script>
 
