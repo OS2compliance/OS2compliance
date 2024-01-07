@@ -16,8 +16,9 @@ import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
@@ -27,16 +28,12 @@ import java.util.Objects;
 import java.util.Optional;
 
 @Service
-public class RiskService {
-
-	@Autowired
-	private RelationDao relationDao;
-	@Autowired
-	private RegisterDao registerDao;
-    @Autowired
-    private ScaleService scaleService;
-    @Autowired
-    private ThreatAssessmentDao threatAssessmentDao;
+@RequiredArgsConstructor
+public class ThreatAssessmentService {
+	private final RelationDao relationDao;
+    private final RegisterDao registerDao;
+    private final ScaleService scaleService;
+    private final ThreatAssessmentDao threatAssessmentDao;
 
     public Optional<ThreatAssessment> findById(final Long assessmentId) {
         return threatAssessmentDao.findById(assessmentId);
@@ -44,6 +41,16 @@ public class RiskService {
 
     public List<ThreatAssessment> findAll() {
         return threatAssessmentDao.findAll();
+    }
+
+    @Transactional
+    public ThreatAssessment save(final ThreatAssessment assessment) {
+        return threatAssessmentDao.save(assessment);
+    }
+
+    @Transactional
+    public void deleteById(final Long threatAssessmentId) {
+        threatAssessmentDao.deleteById(threatAssessmentId);
     }
 
 	public RiskDTO calculateRiskFromRegisters(final List<Long> assetIds) {

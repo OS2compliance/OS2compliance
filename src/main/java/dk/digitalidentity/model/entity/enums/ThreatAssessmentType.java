@@ -4,9 +4,9 @@ import lombok.Getter;
 
 @Getter
 public enum ThreatAssessmentType {
-    SCENARIO("Scenarie"),
+    ASSET("Aktiv"),
     REGISTER("Behandlingsaktivitet"),
-    ASSET("Aktiv");
+    SCENARIO("Scenarie");
     private final String message;
 
     ThreatAssessmentType(final String message) {

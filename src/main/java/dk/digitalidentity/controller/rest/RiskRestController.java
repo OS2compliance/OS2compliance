@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.RegisterDao;
-import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.mapping.RiskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
@@ -19,7 +18,7 @@ import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.service.RiskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -58,9 +57,7 @@ public class RiskRestController {
     @Autowired
     private AssetDao assetDao;
     @Autowired
-    private RiskService riskService;
-    @Autowired
-    private ThreatAssessmentDao threatAssessmentDao;
+    private ThreatAssessmentService threatAssessmentService;
 
     private final RiskGridDao riskGridDao;
     private final RiskMapper mapper;
@@ -112,7 +109,7 @@ public class RiskRestController {
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetDao.findAllById(assetIds);
         final ResponsibleUserDTO user = !assets.isEmpty() ? getUser(assets.get(0)) : null;
-        final dk.digitalidentity.service.model.RiskDTO riskDTO = riskService.calculateRiskFromRegisters(assets.stream()
+        final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream()
             .map(Relatable::getId).collect(Collectors.toList()));
         final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), user);
@@ -121,7 +118,7 @@ public class RiskRestController {
     record SetFieldDTO(@NotNull SetFieldType setFieldType, @NotNull ThreatDatabaseType dbType, Long id, String identifier, @NotNull String value) {}
     @PostMapping("{id}/threats/setfield")
     public ResponseEntity<HttpStatus> setField(@PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
-        final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
@@ -161,8 +158,8 @@ public class RiskRestController {
             case RESIDUAL_RISK_CONSEQUENCE -> response.setResidualRiskConsequence(Integer.parseInt(dto.value()));
         }
 
-        final ThreatAssessment savedThreatAssessment = threatAssessmentDao.save(threatAssessment);
-        riskService.setThreatAssessmentColor(savedThreatAssessment);
+        final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(threatAssessment);
+        threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

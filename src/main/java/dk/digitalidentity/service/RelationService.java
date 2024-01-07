@@ -33,6 +33,10 @@ public class RelationService {
         this.relatableDao = relatableDao;
     }
 
+    public List<Relation> findRelatedToWithType(final Relatable relatable, final RelationType relatedType) {
+        return relationDao.findRelatedToWithType(relatable.getId(), relatedType);
+    }
+
     public List<Relatable> findAllRelatedTo(final Relatable relatable) {
         final List<Relation> related = relationDao.findAllRelatedTo(relatable.getId());
         return related.stream()
@@ -63,14 +67,6 @@ public class RelationService {
         final String identifier = nullSafe(() -> asStandardSection.getTemplateSection().getStandardTemplate().getIdentifier());
         if (identifier != null) {
             return identifier;
-        }
-        return nullSafe(() -> asStandardSection.getTemplateSection().getParent().getStandardTemplate().getIdentifier());
-    }
-
-    private static String extractStandardName(final StandardSection asStandardSection) {
-        final String name = nullSafe(() -> asStandardSection.getTemplateSection().getStandardTemplate().getIdentifier());
-        if (name != null) {
-            return name;
         }
         return nullSafe(() -> asStandardSection.getTemplateSection().getParent().getStandardTemplate().getIdentifier());
     }
@@ -108,6 +104,17 @@ public class RelationService {
         relation.setRelationAType(a.getRelationType());
         relation.setRelationBId(b.getId());
         relation.setRelationBType(b.getRelationType());
+        return relationDao.save(relation);
+    }
+
+    @Transactional
+    public Relation addRelation(final Long relationAId, final RelationType relationAType,
+                                final Long relationBId, final RelationType relationBType) {
+        final Relation relation = new Relation();
+        relation.setRelationAId(relationAId);
+        relation.setRelationAType(relationAType);
+        relation.setRelationBId(relationBId);
+        relation.setRelationBType(relationBType);
         return relationDao.save(relation);
     }
 

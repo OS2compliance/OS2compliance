@@ -22,7 +22,9 @@
                     <div class="row mt-3" id="registerSelectRow" th:if="${risk.threatAssessmentType.name() == 'REGISTER'}">
                         <label for="registerSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1" required>
+                                <option th:each="register : ${relatedRegisters}" th:value="${register.id}" th:text="${register.name}" selected></option>
+                            </select>
                             <div class="invalid-feedback">Der skal vælges et behandlingsaktiv</div>
                         </div>
                     </div>
@@ -30,7 +32,9 @@
                         <label for="assetSelect" class="col-sm-4 col-form-label">Aktiver</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="selectedAsset" data-type="select-multiple"
-                                    data-trigger="" id="assetSelect" hidden="" tabindex="-1" multiple required></select>
+                                    data-trigger="" id="assetSelect" hidden="" tabindex="-1" multiple required>
+                                <option th:each="asset : ${relatedAssets}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
+                            </select>
                             <div class="invalid-feedback">Der skal vælges mindst et aktiv</div>
                         </div>
                     </div>
@@ -45,14 +49,18 @@
                     <div class="row mt-3">
                         <label for="ouSelect" class="col-sm-4 col-form-label">Fagområde</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="ouSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="ouSelect" hidden="" tabindex="-1" required>
+                                <option th:if="${risk.responsibleOu} != null" th:value="${risk.responsibleOu.uuid}" th:text="${risk.responsibleOu.name}"></option>
+                            </select>
                             <div class="invalid-feedback">Der skal vælges et fagområde</div>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <label for="userSelect" class="col-sm-4 col-form-label">Risikoejer</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" hidden="" tabindex="-1" required>
+                                <option th:if="${risk.responsibleUser} != null" th:value="${risk.responsibleUser.uuid}" th:text="${risk.responsibleUser.name}"></option>
+                            </select>
                             <div class="invalid-feedback">Der skal vælges en risikoejer</div>
                         </div>
                     </div>
@@ -67,7 +75,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
-                <button type="submit" form="copyRiskModalForm" class="btn btn-primary">Gem</button>
+                <button type="submit" form="copyRiskModalForm" class="btn btn-primary">Opret kopi</button>
             </div>
         </div>
     </div>

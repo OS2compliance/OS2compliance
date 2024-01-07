@@ -49,7 +49,6 @@ function initDatepicker(elementQuerySelector, inputField) {
 function checkInputField(my_choices, atleastOne = false) {
     const inner_element = my_choices.containerInner.element;
     const value = my_choices.getValue(true);
-    console.log("Value: " + JSON.stringify(value));
     if (value && (!atleastOne || value.length > 0)) {
         inner_element.classList.remove('is-invalid');
         //check if there is a div right after "choices" element

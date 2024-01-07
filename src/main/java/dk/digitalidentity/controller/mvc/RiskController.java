@@ -1,10 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.AssetDao;
-import dk.digitalidentity.dao.RegisterDao;
-import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
-import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.ThreatCatalogDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
@@ -23,16 +19,18 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.MailService;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.model.RiskDTO;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -61,31 +59,18 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("risks")
 @RequireUser
+@RequiredArgsConstructor
 public class RiskController {
-    @Autowired
-    private ThreatCatalogDao threatCatalogDao;
-    @Autowired
-    private ThreatAssessmentDao threatAssessmentDao;
-    @Autowired
-    private TaskDao taskDao;
-    @Autowired
-    private RelationDao relationDao;
-    @Autowired
-    private MailService mailService;
-    @Autowired
-    private Environment environment;
-    @Autowired
-    private AssetDao assetDao;
-    @Autowired
-    private RegisterDao registerDao;
-    @Autowired
-    private RiskService riskService;
-    @Autowired
-    private ScaleService scaleService;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private TaskService taskService;
+    private final ThreatCatalogDao threatCatalogDao;
+    private final TaskDao taskDao;
+    private final RelationService relationService;
+    private final MailService mailService;
+    private final Environment environment;
+    private final AssetService assetService;
+    private final ThreatAssessmentService threatAssessmentService;
+    private final ScaleService scaleService;
+    private final TaskService taskService;
+    private final RegisterService registerService;
 
     @GetMapping
     public String riskList(final Model model) {
@@ -120,18 +105,19 @@ public class RiskController {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
         }
 
-        final ThreatAssessment savedThreatAssessment = threatAssessmentDao.save(threatAssessment);
+        final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(threatAssessment);
 
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-            final List<Asset> relatedAssets = assetDao.findAllById(selectedAsset);
-            relatedAssets.forEach(asset -> createRelation(savedThreatAssessment.getId(), RelationType.ASSET, asset.getId()));
+            final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
+            relatedAssets.forEach(asset -> relationService.addRelation(savedThreatAssessment, asset));
             if (savedThreatAssessment.isInherit()) {
                 inheritRisk(savedThreatAssessment, relatedAssets);
             }
         }
         else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
-            final Register register = registerDao.findById(selectedRegister).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
-            createRelation(savedThreatAssessment.getId(), RelationType.REGISTER, register.getId());
+            final Register register = registerService.findById(selectedRegister).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
+            relationService.addRelation(savedThreatAssessment, register);
         }
 
         if (sendEmail && savedThreatAssessment.getResponsibleUser() != null) {
@@ -143,7 +129,7 @@ public class RiskController {
             task.setRepetition(TaskRepetition.NONE);
             task = taskDao.save(task);
 
-            createRelation(savedThreatAssessment.getId(), RelationType.TASK, task.getId());
+            relationService.addRelation(savedThreatAssessment, task);
 
             if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
                 final String message = getMessage(task);
@@ -151,15 +137,19 @@ public class RiskController {
             }
         }
 
-        riskService.setThreatAssessmentColor(savedThreatAssessment);
+        threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
 
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
 
     @GetMapping("{id}/copy")
     public String riskCopyDialog(final Model model, @PathVariable("id") final long id) {
-        final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<Relation> registerRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
+        final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
         model.addAttribute("risk", threatAssessment);
+        model.addAttribute("relatedRegisters", registerService.findAllByRelations(registerRelations));
+        model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
         return "risks/copyForm";
     }
 
@@ -170,15 +160,15 @@ public class RiskController {
                               @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
                               @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
                               @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
-        final ThreatAssessment savedThreatAssessment = threatAssessmentDao.save(new ThreatAssessment());
+        final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(new ThreatAssessment());
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
 
     @GetMapping("{id}")
     public String risk(final Model model, @PathVariable final long id) {
-        final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("risk", threatAssessment);
-        model.addAttribute("threats", riskService.buildThreatList(threatAssessment));
+        model.addAttribute("threats", threatAssessmentService.buildThreatList(threatAssessment));
         model.addAttribute("elementName", findElementName(threatAssessment));
         model.addAttribute("customThreat", new CustomThreat());
         model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
@@ -196,12 +186,12 @@ public class RiskController {
 
     @GetMapping("{id}/profile")
     public String riskProfile(final Model model, @PathVariable final long id) {
-        final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("risk", threatAssessment);
         model.addAttribute("elementName", findElementName(threatAssessment));
         model.addAttribute("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
-        model.addAttribute("riskProfiles", riskService.buildRiskProfileDTOs(threatAssessment));
+        model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(threatAssessment));
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
 
         return "risks/profile";
@@ -213,22 +203,22 @@ public class RiskController {
     public void riskDelete(@PathVariable final String id) {
         final Long lid = Long.valueOf(id);
         relationService.deleteRelatedTo(lid);
-        threatAssessmentDao.deleteById(lid);
+        threatAssessmentService.deleteById(lid);
     }
 
     @Transactional
     @PostMapping("{id}/customthreats/create")
     public String formCreateCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreat customThreat) {
-        final ThreatAssessment threatAssessment = threatAssessmentDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         customThreat.setThreatAssessment(threatAssessment);
         threatAssessment.getCustomThreats().add(customThreat);
-        threatAssessmentDao.save(threatAssessment);
+        threatAssessmentService.save(threatAssessment);
 
         return "redirect:/risks/" + id;
     }
 
     private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
-        final RiskDTO riskDTO = riskService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
+        final RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
         savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
         savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
         savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
@@ -249,33 +239,24 @@ public class RiskController {
             response.setThreatAssessment(savedThreatAssesment);
             savedThreatAssesment.getThreatAssessmentResponses().add(response);
         }
-        threatAssessmentDao.save(savedThreatAssesment);
-    }
-
-    private void createRelation(final Long threatAssesmentId, final RelationType type, final Long relationBId) {
-        final Relation relation = new Relation();
-        relation.setRelationAType(RelationType.THREAT_ASSESSMENT);
-        relation.setRelationAId(threatAssesmentId);
-        relation.setRelationBType(type);
-        relation.setRelationBId(relationBId);
-        relationDao.save(relation);
+        threatAssessmentService.save(savedThreatAssesment);
     }
 
     private String findElementName(final ThreatAssessment threatAssessment) {
         final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();
         if (ThreatAssessmentType.ASSET.equals(threatAssessmentType)) {
-            final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET);
+            final List<Relation> relations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
             return relations.stream()
                 .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                .map(assetId -> assetDao.findById(assetId))
+                .map(assetService::findById)
                 .filter(Optional::isPresent)
                 .map(a -> a.get().getName())
                 .collect(Collectors.joining(", "));
         } else if (ThreatAssessmentType.REGISTER.equals(threatAssessmentType)) {
-            final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.REGISTER);
+            final List<Relation> relations = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER);
             return relations.stream()
                 .map(r -> r.getRelationAType().equals(RelationType.REGISTER) ? r.getRelationAId() : r.getRelationBId())
-                .map(assetId -> registerDao.findById(assetId))
+                .map(registerService::findById)
                 .filter(Optional::isPresent)
                 .map(a -> a.get().getName())
                 .collect(Collectors.joining(", "));
@@ -286,11 +267,9 @@ public class RiskController {
 
     private String getMessage(final Task task) {
         final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
-        final StringBuilder stringBuilder = new StringBuilder();
-        stringBuilder.append("<p>Kære " + task.getResponsibleUser().getName() + "</p>");
-        stringBuilder.append("<p>Du er blevet tildelt opgaven med navn: \"" + task.getName());
-        stringBuilder.append("\", da du er risikoejer på en ny risikovurdering.</p>");
-        stringBuilder.append("<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>");
-        return stringBuilder.toString();
+        return "<p>Kære " + task.getResponsibleUser().getName() + "</p>" +
+                "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +
+                "\", da du er risikoejer på en ny risikovurdering.</p>" +
+                "<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>";
     }
 }

@@ -6,7 +6,9 @@ import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,6 +36,15 @@ public class RegisterService {
 
     public List<Register> findAllArticle30() {
         return registerDao.findByPackageName("kl_article30");
+    }
+
+    public List<Register> findAllByRelations(final List<Relation> relations) {
+        final List<Long> lookupIds = relations.stream()
+            .map(r -> r.getRelationAType() == RelationType.REGISTER
+                ? r.getRelationAId()
+                : r.getRelationBId())
+            .toList();
+        return registerDao.findAllById(lookupIds);
     }
 
     public List<Register> findAllOrdered() {

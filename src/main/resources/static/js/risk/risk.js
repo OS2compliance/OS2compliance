@@ -89,8 +89,6 @@ function CopyRiskService() {
 
     this.onShown = function() {
         this.modalContainer = document.getElementById('copyModal');
-        const title = this.getScopedElementById('name');
-        title.value = '';
         const registerSelect = this.getScopedElementById('registerSelect');
         if (registerSelect !== null) {
             this.registerChoicesSelect = initRegisterSelect(registerSelect);
@@ -115,7 +113,6 @@ function CopyRiskService() {
         } else if (this.registerChoicesSelect != null) {
             result &= validateChoices(this.registerChoicesSelect);
         }
-        console.log("result=" + result);
         return result;
     }
 }
@@ -194,7 +191,6 @@ function CreateRiskService() {
     }
 
     this.loadAssetSection = function () {
-        console.log("this.loadAssetSection");
         const selectedAsset = this.getScopedElementById("assetSelect").value;
         fetch( `/rest/risks/asset?assetIds=${selectedAsset}`)
             .then(response => response.json()

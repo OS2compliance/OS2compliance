@@ -9,9 +9,9 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +58,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private static final String HEADING3 = "Heading3";
     private static final String SMALL_TEXT = "Small";
 
-    private final RiskService riskService;
+    private final ThreatAssessmentService threatAssessmentService;
     private final ScaleService scaleService;
     private final RelationService relationService;
     private final TaskService taskService;
@@ -93,7 +93,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
     private ThreatContext buildThreatContext(final String assessmentId) {
         final ThreatContext context = new ThreatContext();
-        context.threatAssessment = riskService.findById(Long.valueOf(assessmentId))
+        context.threatAssessment = threatAssessmentService.findById(Long.valueOf(assessmentId))
             .orElseThrow((() -> new RuntimeException("Risk assessment not found")));
         final List<Relatable> relations = relationService.findAllRelatedTo(context.threatAssessment);
         context.riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
@@ -123,7 +123,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 .collect(Collectors.toList()));
             context.register = register.orElse(null);
         }
-        context.riskProfileDTOList = riskService.buildRiskProfileDTOs(context.threatAssessment);
+        context.riskProfileDTOList = threatAssessmentService.buildRiskProfileDTOs(context.threatAssessment);
 
         return context;
     }
@@ -198,7 +198,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
-        final Map<String, List<ThreatDTO>> threatList = riskService.buildThreatList(context.threatAssessment);
+        final Map<String, List<ThreatDTO>> threatList = threatAssessmentService.buildThreatList(context.threatAssessment);
         createTableCells(table, context.riskProfileDTOList.size() + 1, 10);
 
         final XWPFTableRow headerRow = table.getRow(0);
