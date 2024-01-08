@@ -77,3 +77,20 @@ select::-ms-expand {
     padding-left: 0px;
 }
 
+.fullWidth {
+    width: 100%
+}
+
+/*the height: 1px; on tr(threatRow) and height: inherit on td and height: 100% on select is a hack to make the selects as high as the row*/
+.threatRow {
+    height: 1px;
+}
+
+.threatRow td {
+    height: inherit;
+}
+
+.threatRow select {
+    height: 100%;
+}
+
