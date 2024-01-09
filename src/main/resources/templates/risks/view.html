@@ -242,6 +242,43 @@
                                         <td th:id="'row' + ${row.index} + 'ResidualRiskScore'" class="riskViewTd residualRiskScores" th:title="${riskScoreExplainer}"></td>
                                     </tr>
                                 </th:block>
+                                <th:block th:if="${not #lists.isEmpty(relatedRegisters)}">
+                                    <tr class="categoryTr" th:attr="data-index=${threats.size()}">
+                                        <th class="riskViewTh" colspan="19">
+                                            <em class="pli-arrow-up fs-4" th:id="'categoryIcon' + ${threats.size()}"></em> &nbsp;
+                                            <span>Relaterede behandlingsaktiviteter</span>
+                                        </th>
+                                    </tr>
+                                    <tr th:each="row : ${relatedRegisters}" th:class="'categoryRow' + ${threats.size()}">
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd">
+                                            <a th:href="'/registers/' + ${row.registerId}">
+                                                <span th:text="${row.registerName}"></span>
+                                            </a>
+                                        </td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <th:block th:if="${risk.registered}">
+                                            <td class="riskViewTd" th:text="${row.rf}"></td>
+                                            <td class="riskViewTd" th:text="${row.ri}"></td>
+                                            <td class="riskViewTd" th:text="${row.rt}"></td>
+                                        </th:block>
+                                        <th:block th:if="${risk.organisation}">
+                                            <td class="riskViewTd" th:text="${row.of}"></td>
+                                            <td class="riskViewTd" th:text="${row.oi}"></td>
+                                            <td class="riskViewTd" th:text="${row.ot}"></td>
+                                        </th:block>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                        <td class="riskViewTd"></td>
+                                    </tr>
+                                </th:block>
                             </tbody>
                         </table>
                         <div class="d-flex mb-3">
