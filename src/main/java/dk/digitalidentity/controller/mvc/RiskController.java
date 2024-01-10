@@ -14,8 +14,6 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
@@ -46,7 +44,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -89,16 +86,11 @@ public class RiskController {
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
         }
-
-        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-            if (selectedAsset == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
-            }
+        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
         }
-        else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
-            if (selectedRegister == null) {
-                throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
-            }
+        if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt.");
         }
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
@@ -108,35 +100,13 @@ public class RiskController {
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(threatAssessment);
 
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-            final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
-            relatedAssets.forEach(asset -> relationService.addRelation(savedThreatAssessment, asset));
-            if (savedThreatAssessment.isInherit()) {
-                inheritRisk(savedThreatAssessment, relatedAssets);
-            }
+            relateAssets(selectedAsset, savedThreatAssessment);
+        } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
+            relateRegister(selectedRegister, savedThreatAssessment);
         }
-        else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
-            final Register register = registerService.findById(selectedRegister).orElseThrow(
-                () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
-            relationService.addRelation(savedThreatAssessment, register);
+        if (sendEmail) {
+            createTaskAndSendMail(savedThreatAssessment);
         }
-
-        if (sendEmail && savedThreatAssessment.getResponsibleUser() != null) {
-            Task task = new Task();
-            task.setName("Udfyld risikovurdering: " + savedThreatAssessment.getName());
-            task.setTaskType(TaskType.TASK);
-            task.setResponsibleUser(savedThreatAssessment.getResponsibleUser());
-            task.setNextDeadline(LocalDate.now().plusMonths(1));
-            task.setRepetition(TaskRepetition.NONE);
-            task = taskDao.save(task);
-
-            relationService.addRelation(savedThreatAssessment, task);
-
-            if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
-                final String message = getMessage(task);
-                mailService.sendMessage(task.getResponsibleUser().getEmail(), "Påmindelse om at udfylde risikovurdering", message);
-            }
-        }
-
         threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
 
         return "redirect:/risks/" + savedThreatAssessment.getId();
@@ -155,12 +125,27 @@ public class RiskController {
 
     @Transactional
     @PostMapping("{id}/copy")
-    public String performCopy(@PathVariable("id") final long id,
-                              @Valid @ModelAttribute final ThreatAssessment sourceAssessment,
+    public String performCopy(@PathVariable("id") final long sourceId,
+                              @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
                               @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
                               @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
-        final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(new ThreatAssessment());
+        if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv.");
+        }
+        if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER) && selectedRegister == null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet");
+        }
+        final ThreatAssessment savedThreatAssessment = threatAssessmentService.copy(sourceId);
+        savedThreatAssessment.setName(assessment.getName());
+        if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
+            relateAssets(selectedAsset, savedThreatAssessment);
+        } else if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
+            relateRegister(selectedRegister, savedThreatAssessment);
+        }
+        if (sendEmail) {
+            createTaskAndSendMail(savedThreatAssessment);
+        }
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
 
@@ -263,6 +248,30 @@ public class RiskController {
         } else {
             return "";
         }
+    }
+
+    private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
+        if (savedThreatAssessment.getResponsibleUser() != null) {
+            final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
+            if (task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
+                final String message = getMessage(task);
+                mailService.sendMessage(task.getResponsibleUser().getEmail(), "Påmindelse om at udfylde risikovurdering", message);
+            }
+        }
+    }
+
+    private void relateAssets(final Set<Long> selectedAsset, final ThreatAssessment savedThreatAssessment) {
+        final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
+        relatedAssets.forEach(asset -> relationService.addRelation(savedThreatAssessment, asset));
+        if (savedThreatAssessment.isInherit()) {
+            inheritRisk(savedThreatAssessment, relatedAssets);
+        }
+    }
+
+    private void relateRegister(final Long selectedRegister, final ThreatAssessment savedThreatAssessment) {
+        final Register register = registerService.findById(selectedRegister).orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
+        relationService.addRelation(savedThreatAssessment, register);
     }
 
     private String getMessage(final Task task) {

@@ -9,7 +9,8 @@
             </div>
             <div class="modal-body">
                 <form id="copyRiskModalForm" class="row g-3 needs-validation" action="#" th:action="@{/risks/__${risk.id}__/copy}" th:object="${risk}" method="post" novalidate>
-                    <input id="sendEmail" name="sendEmail" value="false" hidden>
+                    <input th:field="*{threatAssessmentType}" type="hidden">
+                    <input id="sendEmail" name="sendEmail" value="false" type="hidden">
                     <div class="row mt-3">
                         <label for="threatAssessmentType" class="col-sm-4 col-form-label">Type</label>
                         <div class="col-sm-8">
