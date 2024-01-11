@@ -3,8 +3,11 @@ package dk.digitalidentity.bootstrap;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RiskService;
@@ -51,6 +54,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final SettingsService settingsService;
     private final StandardTemplateSectionDao standardTemplateSectionDao;
     private final RiskService riskService;
+    private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -70,6 +74,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(6, this::seedV6);
         incrementAndPerformIfVersion(7, this::seedV7);
         incrementAndPerformIfVersion(8, this::seedV8);
+        incrementAndPerformIfVersion(9, this::seedV9);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -78,6 +83,18 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
         }
+    }
+
+    private void seedV9() {
+        List<ThreatAssessmentResponse> responses = threatAssessmentResponseDao.findAll();
+        for (ThreatAssessmentResponse response : responses) {
+            if (response.getCustomThreat() != null) {
+                response.setName(response.getCustomThreat().getDescription());
+            } else if (response.getThreatCatalogThreat() != null) {
+                response.setName(response.getThreatCatalogThreat().getDescription());
+            }
+        }
+        threatAssessmentResponseDao.saveAll(responses);
     }
 
     private void seedV8() {

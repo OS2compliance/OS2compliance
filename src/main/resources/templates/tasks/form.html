@@ -9,6 +9,8 @@
       <form th:id="${formId}" class="row g-3 needs-validation" action="#" th:action="@{/tasks/create}" th:object="${task}" method="post" novalidate>
         <input id="id" th:field="*{id}" type="hidden">
         <input id="taskRiskId" name="taskRiskId" type="hidden">
+        <input id="riskCustomId" name="riskCustomId" type="hidden">
+        <input id="riskCatalogIdentifier" name="riskCatalogIdentifier" type="hidden">
         <div class="row mt-3">
           <label for="navn" class="col-sm-4 col-form-label">Opgave navn</label>
           <div class="col-sm-8">
@@ -71,7 +73,7 @@
           <label for="createTaskRelationsSelect" class="col-sm-4 col-form-label">Relationer</label>
           <div class="col-sm-8">
               <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger="" name="relations" id="createTaskRelationsSelect" hidden="" tabindex="-1" multiple></select>
-              <span id="threatAssessmentExplainer" style="display: none;">Opgaven vil automatisk blive knyttet til denne risikovurdering og dens relationer</span>
+              <span id="threatAssessmentExplainer" style="display: none;">Opgaven vil automatisk blive knyttet til det valgte punkt i risikovurderingen samt risikovurderingen og dens relationer</span>
           </div>
         </div>
 

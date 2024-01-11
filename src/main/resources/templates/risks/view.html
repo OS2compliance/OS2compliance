@@ -145,102 +145,133 @@
                                             <span th:text="${type.key} + ':'"></span>
                                         </th>
                                     </tr>
-                                    <tr th:each="row : ${type.value}" class="threatRow" th:classappend="'categoryRow' + ${stat.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index}">
-                                        <td class="riskViewTd"  th:text="${row.index} + 1"></td>
-                                        <td class="riskViewTd"  th:text="${row.threat}"></td>
-                                        <td style="height: inherit" class="riskViewTd" >
-                                            <select style="height: 100%" class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
-                                                <option value="false" th:selected="${row.notRelevant} == false"></option>
-                                                <option value="true" th:selected="${row.notRelevant} == true">Ikke relevant</option>
-                                            </select>
-                                        </td>
-                                        <td style="height: inherit" class="riskViewTd" >
-                                            <select style="height: 100%" class="riskNumber rowNumbers probabilitySelect setField probabilities" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="PROBABILITY" th:value="${row.probability}" th:title="${probabilityExplainer}">
-                                                <option value="-1" th:selected="${row.probability} == -1"></option>
-                                                <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.probability == entry.key}"></option>
-                                            </select>
-                                        </td>
-                                       <th:block th:if="${risk.registered}">
+                                    <th:block th:each="row : ${type.value}">
+                                        <tr class="threatRow" th:classappend="'categoryRow' + ${stat.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index}">
+                                            <td class="riskViewTd"  th:text="${row.index} + 1"></td>
+                                            <td class="riskViewTd"  th:text="${row.threat}"></td>
+                                            <td style="height: inherit" class="riskViewTd" >
+                                                <select style="height: 100%" class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
+                                                    <option value="false" th:selected="${row.notRelevant} == false"></option>
+                                                    <option value="true" th:selected="${row.notRelevant} == true">Ikke relevant</option>
+                                                </select>
+                                            </td>
+                                            <td style="height: inherit" class="riskViewTd" >
+                                                <select style="height: 100%" class="riskNumber rowNumbers probabilitySelect setField probabilities" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="PROBABILITY" th:value="${row.probability}" th:title="${probabilityExplainer}">
+                                                    <option value="-1" th:selected="${row.probability} == -1"></option>
+                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.probability == entry.key}"></option>
+                                                </select>
+                                            </td>
+                                            <th:block th:if="${risk.registered}">
+                                                <td class="riskViewTd" >
+                                                    <select style="height: 100%" class="fullWidth riskNumber rowNumbers setField rfs" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RF" th:value="${row.rf}" th:title="${consequenceExplainer}">
+                                                        <option value="-1" th:selected="${row.rf} == -1"></option>
+                                                        <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.rf == entry.key}"></option>
+                                                    </select>
+                                                </td>
+                                                <td class="riskViewTd" >
+                                                    <select style="height: 100%" class="fullWidth riskNumber rowNumbers setField ris" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RI" th:value="${row.ri}" th:title="${consequenceExplainer}">
+                                                        <option value="-1" th:selected="${row.ri} == -1"></option>
+                                                        <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.ri == entry.key}"></option>
+                                                    </select>
+                                                </td>
+                                                <td class="riskViewTd" >
+                                                    <select class="fullWidth riskNumber rowNumbers setField rts" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RT" th:value="${row.rt}" th:title="${consequenceExplainer}">
+                                                        <option value="-1" th:selected="${row.rt} == -1"></option>
+                                                        <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.rt == entry.key}"></option>
+                                                    </select>
+                                                </td>
+                                            </th:block>
+                                            <th:block th:if="${risk.organisation}">
+                                                <td class="riskViewTd" >
+                                                    <select class="fullWidth riskNumber rowNumbers setField ofs" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="OF" th:value="${row.of}" th:title="${consequenceExplainer}">
+                                                        <option value="-1" th:selected="${row.of} == -1"></option>
+                                                        <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.of == entry.key}"></option>
+                                                    </select>
+                                                </td>
+                                                <td class="riskViewTd" >
+                                                    <select class="fullWidth riskNumber rowNumbers setField ois" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="OI" th:value="${row.oi}" th:title="${consequenceExplainer}">
+                                                        <option value="-1" th:selected="${row.oi} == -1"></option>
+                                                        <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.oi == entry.key}"></option>
+                                                    </select>
+                                                </td>
+                                                <td class="riskViewTd" >
+                                                    <select class="fullWidth riskNumber rowNumbers setField ots" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="OT" th:value="${row.ot}" th:title="${consequenceExplainer}">
+                                                        <option value="-1" th:selected="${row.ot} == -1"></option>
+                                                        <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.ot == entry.key}"></option>
+                                                    </select>
+                                                </td>
+                                            </th:block>
+                                            <td th:id="'row' + ${row.index} + 'RiskScore'" class="riskViewTd setField riskScores" th:title="${riskScoreExplainer}"></td>
                                             <td class="riskViewTd" >
-                                                <select style="height: 100%" class="fullWidth riskNumber rowNumbers setField rfs" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RF" th:value="${row.rf}" th:title="${consequenceExplainer}">
-                                                    <option value="-1" th:selected="${row.rf} == -1"></option>
-                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.rf == entry.key}"></option>
+                                                <div class="excel-textarea-container">
+                                                    <textarea th:text="${row.problem}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="PROBLEM"></textarea>
+                                                </div>
+                                            </td>
+                                            <td class="riskViewTd" >
+                                                <div class="excel-textarea-container">
+                                                    <textarea th:text="${row.existingMeasures}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="EXISTING_MEASURES"></textarea>
+                                                </div>
+                                            </td>
+                                            <td class="riskViewTd" >
+                                                <select style="cursor: pointer;" class="fullWidth setField methodSelect" th:value="${row.method}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="METHOD">
+                                                    <option th:each="method : ${T(dk.digitalidentity.model.entity.enums.ThreatMethod).values()}" th:value="${method}" th:text="${method.message}" th:selected="${row.method == method}"></option>
                                                 </select>
                                             </td>
                                             <td class="riskViewTd" >
-                                                <select style="height: 100%" class="fullWidth riskNumber rowNumbers setField ris" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RI" th:value="${row.ri}" th:title="${consequenceExplainer}">
-                                                    <option value="-1" th:selected="${row.ri} == -1"></option>
-                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.ri == entry.key}"></option>
+                                                <div class="excel-textarea-container">
+                                                    <textarea th:text="${row.elaboration}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="ELABORATION"></textarea>
+                                                </div>
+                                            </td>
+                                            <td class="riskViewTd" >
+                                                <button th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-icon btn-success rounded-circle btn-xs"
+                                                        th:onclick="|createTaskService.show(this)|" title="Opgave eller kontrol"
+                                                        th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
+                                                    <i class="pli-check icon-lg fs-5"></i>
+                                                </button>
+                                            </td>
+                                            <td class="riskViewTd" >
+                                                <select th:id="'residualRiskProbabilityBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_PROBABILITY" th:value="${row.residualRiskProbability}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
+                                                    <option value="-1" th:selected="${row.residualRiskProbability} == -1"></option>
+                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskProbability == entry.key}"></option>
                                                 </select>
                                             </td>
                                             <td class="riskViewTd" >
-                                                <select class="fullWidth riskNumber rowNumbers setField rts" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RT" th:value="${row.rt}" th:title="${consequenceExplainer}">
-                                                    <option value="-1" th:selected="${row.rt} == -1"></option>
-                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.rt == entry.key}"></option>
+                                                <select th:id="'residualRiskConsequenceBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_CONSEQUENCE" th:value="${row.residualRiskConsequence}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
+                                                    <option value="-1" th:selected="${row.residualRiskConsequence} == -1"></option>
+                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskConsequence == entry.key}"></option>
                                                 </select>
                                             </td>
-                                       </th:block>
-                                       <th:block th:if="${risk.organisation}">
-                                            <td class="riskViewTd" >
-                                                <select class="fullWidth riskNumber rowNumbers setField ofs" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="OF" th:value="${row.of}" th:title="${consequenceExplainer}">
-                                                    <option value="-1" th:selected="${row.of} == -1"></option>
-                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.of == entry.key}"></option>
-                                                </select>
+                                            <td th:id="'row' + ${row.index} + 'ResidualRiskScore'" class="riskViewTd residualRiskScores" th:title="${riskScoreExplainer}"></td>
+                                        </tr>
+                                        <tr th:if="${not #lists.isEmpty(row.tasks)}" class="relatedTasksRow" th:classappend="'relatedTasksRow' + ${stat.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index}">
+                                            <td th:text="${row.index} + 1" style="padding: 8px; font-size: 10px; text-align: center;"></td>
+                                            <td colspan="18" style="padding: 8px;">
+                                                <span style="margin: 15 px;">Relaterede opgaver:</span>
+                                                <table class="taskTable table">
+                                                    <thead>
+                                                        <tr>
+                                                            <th class="col-lg-8">Navn</th>
+                                                            <th class="col-lg-3">Type</th>
+                                                            <th class="col-lg-1">Fjern tilknytning</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr th:each="taskRow : ${row.tasks}">
+                                                            <td class="col-lg-8">
+                                                                <a th:href="'/tasks/' + ${taskRow.id}">
+                                                                    <span th:text="${taskRow.name}"></span>
+                                                                </a>
+                                                            </td>
+                                                            <td th:text="${taskRow.taskType.getMessage()}" class="col-lg-3"></td>
+                                                            <td class="col-lg-1" style="text-align: center;">
+                                                                <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${row.responseId}, data-relationid=${taskRow.id}" data-relationtype="TASK"></i>
+                                                            </td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
                                             </td>
-                                            <td class="riskViewTd" >
-                                                <select class="fullWidth riskNumber rowNumbers setField ois" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="OI" th:value="${row.oi}" th:title="${consequenceExplainer}">
-                                                    <option value="-1" th:selected="${row.oi} == -1"></option>
-                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.oi == entry.key}"></option>
-                                                </select>
-                                            </td>
-                                            <td class="riskViewTd" >
-                                                <select class="fullWidth riskNumber rowNumbers setField ots" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="OT" th:value="${row.ot}" th:title="${consequenceExplainer}">
-                                                    <option value="-1" th:selected="${row.ot} == -1"></option>
-                                                    <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.ot == entry.key}"></option>
-                                                </select>
-                                            </td>
-                                        </th:block>
-                                        <td th:id="'row' + ${row.index} + 'RiskScore'" class="riskViewTd setField riskScores" th:title="${riskScoreExplainer}"></td>
-                                        <td class="riskViewTd" >
-                                            <div class="excel-textarea-container">
-                                                <textarea th:text="${row.problem}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="PROBLEM"></textarea>
-                                            </div>
-                                        </td>
-                                        <td class="riskViewTd" >
-                                            <div class="excel-textarea-container">
-                                                <textarea th:text="${row.existingMeasures}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="EXISTING_MEASURES"></textarea>
-                                            </div>
-                                        </td>
-                                        <td class="riskViewTd" >
-                                            <select style="cursor: pointer;" class="fullWidth setField methodSelect" th:value="${row.method}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="METHOD">
-                                                <option th:each="method : ${T(dk.digitalidentity.model.entity.enums.ThreatMethod).values()}" th:value="${method}" th:text="${method.message}" th:selected="${row.method == method}"></option>
-                                            </select>
-                                        </td>
-                                        <td class="riskViewTd" >
-                                            <div class="excel-textarea-container">
-                                                <textarea th:text="${row.elaboration}" class="setField excel-textarea" rows="1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="ELABORATION"></textarea>
-                                            </div>
-                                        </td>
-                                        <td class="riskViewTd" >
-                                            <button th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-icon btn-success rounded-circle btn-xs"
-                                                    th:onclick="|createTaskService.show(${risk.id})|" title="Opgave eller kontrol">
-                                                <i class="pli-check icon-lg fs-5"></i>
-                                            </button>
-                                        </td>
-                                        <td class="riskViewTd" >
-                                            <select th:id="'residualRiskProbabilityBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_PROBABILITY" th:value="${row.residualRiskProbability}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
-                                                <option value="-1" th:selected="${row.residualRiskProbability} == -1"></option>
-                                                <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskProbability == entry.key}"></option>
-                                            </select>
-                                        </td>
-                                        <td class="riskViewTd" >
-                                            <select th:id="'residualRiskConsequenceBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_CONSEQUENCE" th:value="${row.residualRiskConsequence}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
-                                                <option value="-1" th:selected="${row.residualRiskConsequence} == -1"></option>
-                                                <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskConsequence == entry.key}"></option>
-                                            </select>
-                                        </td>
-                                        <td th:id="'row' + ${row.index} + 'ResidualRiskScore'" class="riskViewTd residualRiskScores" th:title="${riskScoreExplainer}"></td>
-                                    </tr>
+                                        </tr>
+                                    </th:block>
                                 </th:block>
                                 <th:block th:if="${not #lists.isEmpty(relatedRegisters)}">
                                     <tr class="categoryTr" th:attr="data-index=${threats.size()}">

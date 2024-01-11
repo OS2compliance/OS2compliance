@@ -251,6 +251,7 @@ public class RiskController {
 
         for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
             final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+            response.setName(threat.getDescription());
             response.setConfidentialityRegistered(riskDTO.getRf());
             response.setIntegrityRegistered(riskDTO.getRi());
             response.setAvailabilityRegistered(riskDTO.getRt());

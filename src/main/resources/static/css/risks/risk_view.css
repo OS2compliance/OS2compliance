@@ -63,7 +63,7 @@ select::-ms-expand {
     margin: 0;
 }
 
-.riskViewTable thead {
+.riskViewTable > thead {
     background-color: white;
     position: sticky;
     position: -webkit-sticky;
@@ -81,6 +81,11 @@ select::-ms-expand {
     width: 100%
 }
 
+.relatedTasksRow > td {
+    outline: 0.5px solid #E8E8E8;
+    outline-offset: -0.5px;
+}
+
 /*the height: 1px; on tr(threatRow) and height: inherit on td and height: 100% on select is a hack to make the selects as high as the row*/
 .threatRow {
     height: 1px;
@@ -92,5 +97,12 @@ select::-ms-expand {
 
 .threatRow select {
     height: 100%;
+}
+
+/* taskTable */
+.taskTable {
+    font-size: 10px;
+    margin: 15px;
+    width: 98%;
 }
 

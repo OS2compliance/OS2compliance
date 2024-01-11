@@ -1,14 +1,12 @@
 package dk.digitalidentity.model.entity;
 
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -19,10 +17,12 @@ import lombok.Setter;
 @Table(name = "threat_assessment_responses")
 @Getter
 @Setter
-public class ThreatAssessmentResponse {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+public class ThreatAssessmentResponse extends Relatable {
+
+    // meget vigtig TODO v1_10__ migration skal ændres. Der skal tilføjes en ny id kollonne så det generes rigtigt i forhold til relatable. Og den gamle skal omdøbes eller fjernes - der er ingen relationer til det gamle id
+//    @Id
+//    @GeneratedValue(strategy = GenerationType.TABLE)
+//    private Long id;
 
     @Column
     private boolean notRelevant;
@@ -78,4 +78,12 @@ public class ThreatAssessmentResponse {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "custom_threat_id")
     private CustomThreat customThreat;
+
+    @Override public RelationType getRelationType() {
+        return RelationType.THREAT_ASSESSMENT_RESPONSE;
+    }
+
+    @Override public String getLocalizedEnumValues() {
+        return (method != null ? method.getMessage() : "");
+    }
 }

@@ -313,18 +313,38 @@ function categoryRowClicked() {
 }
 
 function handleCategoryRow(rowIndex) {
+    // hide and show belonging rows
+    var show = false;
     var icon = document.getElementById("categoryIcon" + rowIndex);
     const belongingRows = document.querySelectorAll('.categoryRow' + rowIndex);
     for (var i = 0; i < belongingRows.length; i++) {
         var elem = belongingRows[i];
         if (elem.hidden) {
-            icon.classList.add("pli-arrow-up");
-            icon.classList.remove("pli-arrow-down");
+            if (i == 0) {
+                show = true;
+            }
             elem.hidden = false;
         } else {
-            icon.classList.remove("pli-arrow-up");
-            icon.classList.add("pli-arrow-down");
             elem.hidden = true;
+        }
+    }
+
+    if (show) {
+        icon.classList.add("pli-arrow-up");
+        icon.classList.remove("pli-arrow-down");
+    } else {
+        icon.classList.remove("pli-arrow-up");
+        icon.classList.add("pli-arrow-down");
+    }
+
+    const relatedTasksRowsToShow = document.querySelectorAll('.relatedTasksRow' + rowIndex);
+    if (show) {
+        for (var i = 0; i < relatedTasksRowsToShow.length; i++) {
+            relatedTasksRowsToShow[i].hidden = false;
+        }
+    } else {
+        for (var i = 0; i < relatedTasksRowsToShow.length; i++) {
+            relatedTasksRowsToShow[i].hidden = true;
         }
     }
 }

@@ -132,13 +132,13 @@ public class RiskRestController {
             final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(dto.identifier())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier())).findAny().orElse(null);
             if (response == null) {
-                response = createResponse(threatAssessment, threat, null);
+                response = riskService.createResponse(threatAssessment, threat, null);
             }
         } else if (dto.dbType().equals(ThreatDatabaseType.CUSTOM)) {
             final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(dto.id())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId() == threat.getId()).findAny().orElse(null);
             if (response == null) {
-                response = createResponse(threatAssessment, null, threat);
+                response = riskService.createResponse(threatAssessment, null, threat);
             }
         } else {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
@@ -179,16 +179,6 @@ public class RiskRestController {
             response.setIntegrityOrganisation(null);
             response.setAvailabilityOrganisation(null);
         }
-    }
-
-    private ThreatAssessmentResponse createResponse(final ThreatAssessment threatAssessment, final ThreatCatalogThreat threatCatalogThreat, final CustomThreat customThreat) {
-        final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
-        response.setMethod(ThreatMethod.NONE);
-        response.setThreatAssessment(threatAssessment);
-        response.setCustomThreat(customThreat);
-        response.setThreatCatalogThreat(threatCatalogThreat);
-        threatAssessment.getThreatAssessmentResponses().add(response);
-        return response;
     }
 
     private ResponsibleUserDTO getUser(final Asset asset) {
