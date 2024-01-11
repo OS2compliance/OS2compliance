@@ -18,10 +18,10 @@
     min-width: 1rem;
 }
 
-#tasksDatatable td[data-column-id="handlinger"] {
-    text-align: center;
+#tasksDatatable td[data-column-id="status"] {
+    vertical-align: middle;
 }
 
-#tasksDatatable td[data-column-id="status"] {
+#tasksDatatable td[data-column-id="resultat"] {
     vertical-align: middle;
 }
