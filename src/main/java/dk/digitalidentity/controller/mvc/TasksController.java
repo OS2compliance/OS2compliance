@@ -20,11 +20,10 @@ import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
-import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.RiskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -72,7 +71,7 @@ public class TasksController {
     @Autowired
     private DocumentDao documentDao;
     @Autowired
-    private RiskService riskService;
+    private ThreatAssessmentService threatAssessmentService;
 
     @GetMapping
     public String tasksList() {
@@ -141,7 +140,7 @@ public class TasksController {
 
                 // if no response, create one and add relation
                 if (response == null) {
-                    response = riskService.createResponse(threatAssessment, null, threat);
+                    response = threatAssessmentService.createResponse(threatAssessment, null, threat);
                     threatAssessmentDao.save(threatAssessment);
                 }
 
@@ -155,7 +154,7 @@ public class TasksController {
 
                 // if no response, create one and add relation
                 if (response == null) {
-                    response = riskService.createResponse(threatAssessment, threat, null);
+                    response = threatAssessmentService.createResponse(threatAssessment, threat, null);
                     threatAssessmentDao.save(threatAssessment);
                 }
 

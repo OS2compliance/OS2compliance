@@ -41,9 +41,9 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -93,7 +93,7 @@ public class AssetsController {
     @Autowired
     private ScaleService scaleService;
     @Autowired
-    private RiskService riskService;
+    private ThreatAssessmentService threatAssessmentService;
     @Autowired
     private AssetOversightService assetOversightService;
     @Autowired
@@ -234,7 +234,7 @@ public class AssetsController {
             model.addAttribute("risk", newestThreatAssessment);
             model.addAttribute("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
-            model.addAttribute("riskProfiles", riskService.buildRiskProfileDTOs(newestThreatAssessment));
+            model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(newestThreatAssessment));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, true));
         }

@@ -4,6 +4,7 @@ const toastService = new ToastService();
 function ToastService() {
 
     this.error = function(message) {
+        console.log(message);
         const container = document.getElementById('toastContainer');
         const template = document.getElementById('toastTemplate');
         const toastElem = template.cloneNode(true);

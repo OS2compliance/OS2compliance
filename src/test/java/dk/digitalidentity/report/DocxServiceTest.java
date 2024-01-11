@@ -41,10 +41,10 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -88,7 +88,7 @@ import static org.mockito.Mockito.doReturn;
 @SpringBootTest
 @ContextConfiguration(classes = {DocxService.class, DocsReportGeneratorComponent.class,
     CommonPropertiesReplacer.class, Article30Replacer.class, ISO27001Replacer.class, ISO27002Replacer.class, DocsReportGeneratorComponent.class,
-    ThreatAssessmentReplacer.class, ScaleService.class, RiskService.class})
+    ThreatAssessmentReplacer.class, ScaleService.class, ThreatAssessmentService.class})
 @EnableConfigurationProperties(value = OS2complianceConfiguration.class)
 @TestPropertySource("/application-test.properties")
 @ActiveProfiles("test")
@@ -114,7 +114,7 @@ public class DocxServiceTest {
     @MockBean
     private TaskService taskServiceMock;
     @SpyBean
-    private RiskService riskServiceMock;
+    private ThreatAssessmentService threatAssessmentServiceMock;
     @MockBean
     private SettingsService settingsServiceMock;
 
@@ -125,7 +125,7 @@ public class DocxServiceTest {
     }
 
     private void mockThreatAssessment() {
-        doReturn(Optional.of(createDummyThreatAssessment())).when(riskServiceMock).findById(any());
+        doReturn(Optional.of(createDummyThreatAssessment())).when(threatAssessmentServiceMock).findById(any());
         doReturn(Optional.of(createDummyAssets().get(0))).when(assetServiceMock).get(any());
         doReturn("scale-1-4").when(settingsServiceMock).getString(eq("scale"), any());
         doReturn(List.of(createDummyTask(), createAsset(0))).when(relationServiceMock).findAllRelatedTo(any());

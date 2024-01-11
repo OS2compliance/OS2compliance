@@ -10,8 +10,8 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.RegisterService;
-import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
@@ -53,8 +53,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final OS2complianceConfiguration config;
     private final SettingsService settingsService;
     private final StandardTemplateSectionDao standardTemplateSectionDao;
-    private final RiskService riskService;
     private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
+    private final ThreatAssessmentService threatAssessmentService;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -151,12 +151,12 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
     private void seedV3() {
         // Threat assessment status field, needs update (again)
-        riskService.findAll().forEach(riskService::setThreatAssessmentColor);
+        threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
     }
 
     private void seedV2() {
         // Threat assessment status field, we need to update them all
-        riskService.findAll().forEach(riskService::setThreatAssessmentColor);
+        threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
     }
 
     private void seedV1() {

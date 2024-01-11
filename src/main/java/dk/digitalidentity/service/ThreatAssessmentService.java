@@ -1,26 +1,28 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.RegisterDao;
-import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
+import dk.digitalidentity.model.entity.enums.TaskRepetition;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -29,22 +31,18 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Service
-public class RiskService {
-
-	@Autowired
-	private RelationDao relationDao;
-	@Autowired
-	private RegisterDao registerDao;
-    @Autowired
-    private ScaleService scaleService;
-    @Autowired
-    private ThreatAssessmentDao threatAssessmentDao;
-    @Autowired
-    private RelationService relationService;
+@RequiredArgsConstructor
+public class ThreatAssessmentService {
+	private final RelationService relationService;
+    private final RegisterDao registerDao;
+    private final ScaleService scaleService;
+    private final ThreatAssessmentDao threatAssessmentDao;
+    private final TaskService taskService;
 
     public Optional<ThreatAssessment> findById(final Long assessmentId) {
         return threatAssessmentDao.findById(assessmentId);
@@ -54,8 +52,103 @@ public class RiskService {
         return threatAssessmentDao.findAll();
     }
 
+    @Transactional
+    public ThreatAssessment save(final ThreatAssessment assessment) {
+        return threatAssessmentDao.save(assessment);
+    }
+
+    public ThreatAssessment copy(final long sourceId) {
+        final ThreatAssessment sourceAssessment = threatAssessmentDao.findById(sourceId).orElseThrow();
+        final ThreatAssessment targetAssessment = new ThreatAssessment();
+        targetAssessment.setName(sourceAssessment.getName());
+        targetAssessment.setThreatAssessmentType(sourceAssessment.getThreatAssessmentType());
+        targetAssessment.setResponsibleUser(sourceAssessment.getResponsibleUser());
+        targetAssessment.setResponsibleOu(sourceAssessment.getResponsibleOu());
+        targetAssessment.setThreatCatalog(sourceAssessment.getThreatCatalog());
+        targetAssessment.setRegistered(sourceAssessment.isRegistered());
+        targetAssessment.setOrganisation(sourceAssessment.isOrganisation());
+        targetAssessment.setInherit(sourceAssessment.isInherit());
+
+        targetAssessment.setInheritedConfidentialityRegistered(sourceAssessment.getInheritedConfidentialityRegistered());
+        targetAssessment.setInheritedConfidentialityOrganisation(sourceAssessment.getInheritedConfidentialityOrganisation());
+        targetAssessment.setInheritedIntegrityRegistered(sourceAssessment.getInheritedIntegrityRegistered());
+        targetAssessment.setInheritedIntegrityOrganisation(sourceAssessment.getInheritedIntegrityOrganisation());
+        targetAssessment.setInheritedAvailabilityRegistered(sourceAssessment.getInheritedAvailabilityRegistered());
+        targetAssessment.setInheritedAvailabilityOrganisation(sourceAssessment.getInheritedAvailabilityOrganisation());
+        targetAssessment.setAssessment(sourceAssessment.getAssessment());
+        final ThreatAssessment savedAssessment = threatAssessmentDao.save(targetAssessment);
+
+        final List<CustomThreat> customThreats = sourceAssessment.getCustomThreats().stream()
+            .map(c -> copyCustomThreat(savedAssessment, c))
+            .toList();
+        savedAssessment.setCustomThreats(customThreats);
+        final List<ThreatAssessmentResponse> responses = sourceAssessment.getThreatAssessmentResponses().stream()
+            .map(r -> copyResponse(savedAssessment, customThreats, r))
+            .collect(Collectors.toList());
+        savedAssessment.setThreatAssessmentResponses(responses);
+        return savedAssessment;
+    }
+
+    private CustomThreat copyCustomThreat(final ThreatAssessment assessment, final CustomThreat c) {
+        final CustomThreat target = new CustomThreat();
+        target.setThreatAssessment(assessment);
+        target.setThreatType(c.getThreatType());
+        target.setDescription(c.getDescription());
+        return target;
+    }
+
+    private static ThreatAssessmentResponse copyResponse(final ThreatAssessment assessment, final List<CustomThreat> customThreats,
+                                                         final ThreatAssessmentResponse sourceResponse) {
+        final ThreatAssessmentResponse t = new ThreatAssessmentResponse();
+        t.setNotRelevant(sourceResponse.isNotRelevant());
+        t.setProbability(sourceResponse.getProbability());
+        t.setConfidentialityRegistered(sourceResponse.getConfidentialityRegistered());
+        t.setConfidentialityOrganisation(sourceResponse.getConfidentialityOrganisation());
+        t.setIntegrityRegistered(sourceResponse.getIntegrityRegistered());
+        t.setIntegrityOrganisation(sourceResponse.getIntegrityOrganisation());
+        t.setAvailabilityRegistered(sourceResponse.getAvailabilityRegistered());
+        t.setAvailabilityOrganisation(sourceResponse.getAvailabilityOrganisation());
+        t.setProblem(sourceResponse.getProblem());
+        t.setExistingMeasures(sourceResponse.getExistingMeasures());
+        t.setMethod(sourceResponse.getMethod());
+        t.setElaboration(sourceResponse.getElaboration());
+        t.setResidualRiskConsequence(sourceResponse.getResidualRiskConsequence());
+        t.setResidualRiskProbability(sourceResponse.getResidualRiskProbability());
+        t.setThreatAssessment(assessment);
+        t.setThreatCatalogThreat(sourceResponse.getThreatCatalogThreat());
+        final CustomThreat sourceCustomThreat = sourceResponse.getCustomThreat();
+        if (sourceCustomThreat != null) {
+            final CustomThreat customThreat = customThreats.stream()
+                .filter(c -> StringUtils.equals(c.getThreatType(), sourceCustomThreat.getThreatType()) &&
+                    StringUtils.equals(c.getDescription(), sourceCustomThreat.getDescription()))
+                .findFirst().orElse(null);
+            t.setCustomThreat(customThreat);
+        }
+        return t;
+    }
+
+    @Transactional
+    public void deleteById(final Long threatAssessmentId) {
+        threatAssessmentDao.deleteById(threatAssessmentId);
+    }
+
+    public Task createAssociatedTask(final ThreatAssessment assessment) {
+        if (assessment.getResponsibleUser() != null) {
+            Task task = new Task();
+            task.setName("Udfyld risikovurdering: " + assessment.getName());
+            task.setTaskType(TaskType.TASK);
+            task.setResponsibleUser(assessment.getResponsibleUser());
+            task.setNextDeadline(LocalDate.now().plusMonths(1));
+            task.setRepetition(TaskRepetition.NONE);
+            task = taskService.createTask(task);
+
+            relationService.addRelation(assessment, task);
+            return task;
+        }
+        return null;
+    }
 	public RiskDTO calculateRiskFromRegisters(final List<Long> assetIds) {
-		final List<Register> registers = relationDao.findRelatedToWithType(assetIds, RelationType.REGISTER).stream()
+		final List<Register> registers = relationService.findRelatedToWithType(assetIds, RelationType.REGISTER).stream()
 				.map(r -> r.getRelationAType() == RelationType.REGISTER ? r.getRelationAId() : r.getRelationBId())
 				.map(rid -> registerDao.findById(rid).orElse(null))
 				.filter(Objects::nonNull)
