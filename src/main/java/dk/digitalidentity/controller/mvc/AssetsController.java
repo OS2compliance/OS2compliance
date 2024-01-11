@@ -246,9 +246,8 @@ public class AssetsController {
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void assetDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        relationService.deleteRelatedTo(lid);
-        assetService.deleteById(lid);
+        final Asset asset = assetService.findById(Long.valueOf(id)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        assetService.deleteById(asset);
     }
 
 	@Transactional
