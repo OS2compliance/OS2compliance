@@ -125,6 +125,7 @@ function CopyTaskService() {
 
     this.onShown = function() {
         this.modalContainer = document.getElementById('copyModal');
+        initDatepicker("#copyTaskDeadlineBtn", "#copyTaskDeadline");
 
         let responsibleSelect = this.getScopedElementById('taskCopyUserSelect');
         if(responsibleSelect !== null) {
