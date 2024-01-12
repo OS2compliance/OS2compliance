@@ -20,9 +20,9 @@
           <label for="type" class="col-sm-4 col-form-label">Opgave type</label>
           <div class="col-sm-8">
             <div id="type" class="btn-group" role="group" aria-label="Opgave type valg">
-              <input type="radio" class="btn-check" name="btnradio" id="btntask" value="TASK" onclick="selectCreateTaskOption('TASK')" autocomplete="off" th:field="*{taskType}">
+              <input type="radio" class="btn-check" name="btnradio" id="btntask" value="TASK" onclick="createTaskService.selectCreateTaskOption('TASK')" autocomplete="off" th:field="*{taskType}">
               <label class="btn btn-outline-primary" for="btntask">Opgave</label>
-              <input type="radio" class="btn-check" name="btnradio" id="btncheck" value="CHECK" onclick="selectCreateTaskOption('CHECK')" autocomplete="off" th:field="*{taskType}">
+              <input type="radio" class="btn-check" name="btnradio" id="btncheck" value="CHECK" onclick="createTaskService.selectCreateTaskOption('CHECK')" autocomplete="off" th:field="*{taskType}">
               <label class="btn btn-outline-primary" for="btncheck">Kontrol</label>
             </div>
           </div>
