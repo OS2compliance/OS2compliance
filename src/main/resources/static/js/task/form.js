@@ -102,3 +102,84 @@ function addRelationFormLoaded() {
 function completeTaskFormLoaded() {
     initTaskDocumentRelationSelect();
 }
+
+
+const copyTaskService = new CopyTaskService();
+
+function CopyTaskService() {
+    this.getScopedElementById = function(id) {
+        return this.modalContainer.querySelector(`#${id}`);
+    }
+
+    this.showCopyDialog = function(taskId) {
+        let container = document.getElementById('copyTaskContainer');
+        fetch(`${baseUrl}${taskId}/copy`)
+            .then(response => response.text()
+                .then(data => {
+                    container.innerHTML = data;
+                    this.onShown();
+                })
+            )
+            .catch(error => toastService.error(error));
+    }
+
+    this.onShown = function() {
+        this.modalContainer = document.getElementById('copyModal');
+
+        let responsibleSelect = this.getScopedElementById('taskCopyUserSelect');
+        if(responsibleSelect !== null) {
+            responsibleSelect =  initUserSelect('taskCopyUserSelect');
+        }
+
+       let taskCopyOuSelect = this.getScopedElementById('taskCopyOuSelect');
+       if(taskCopyOuSelect !== null) {
+           taskCopyOuSelect = initOUSelect('taskCopyOuSelect');
+       }
+
+       let taskCopyRelationSelect = this.getScopedElementById('copyTaskRelationsSelect');
+       if(taskCopyRelationSelect !== null) {
+           copyTaskRelationsSelect = initCopyTaskRelationSelect();
+       }
+
+       let tagCopySelect = this.getScopedElementById('copyTaskTagsSelect');
+       if(tagCopySelect !== null) {
+            copyTaskTagsSelect = initTagSelect('copyTaskTagsSelect');
+       }
+
+        initFormValidationForForm("copyTaskModalForm",
+            () => this.validate());
+
+        this.copyTaskModal = new bootstrap.Modal(this.modalContainer);
+        this.copyTaskModal.show();
+    }
+
+    this.validate = function() {
+       /* let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
+        if (this.assetChoicesSelect != null) {
+            result &= checkInputField(this.assetChoicesSelect, true);
+        } else if (this.registerChoicesSelect != null) {
+            result &= validateChoices(this.registerChoicesSelect);
+        }*/
+        return true ; //result
+    }
+
+    function initCopyTaskRelationSelect() {
+       const relationsSelect = document.getElementById('copyTaskRelationsSelect');
+       const relationsChoice = initSelect(relationsSelect);
+       updateRelations(relationsChoice, "");
+       relationsSelect.addEventListener("search",
+           function(event) {
+               updateRelations(relationsChoice, event.detail.value);
+           },
+           false,
+       );
+       relationsSelect.addEventListener("change",
+           function(event) {
+               updateRelations(relationsChoice, "");
+           },
+           false,
+       );
+   }
+
+}
+

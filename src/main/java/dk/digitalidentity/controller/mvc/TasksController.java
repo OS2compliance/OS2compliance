@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.dao.RelationDao;
+import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.Relatable;
@@ -18,11 +19,14 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.MailService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.TaskService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -39,9 +43,11 @@ import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.util.StringUtils;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -52,6 +58,8 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @RequestMapping("tasks")
 @RequireUser
 public class TasksController {
+    @Autowired
+    private TagDao tagDao;
     @Autowired
     private TaskDao taskDao;
     @Autowired
@@ -64,6 +72,13 @@ public class TasksController {
     private RelationService relationService;
     @Autowired
     private DocumentDao documentDao;
+    @Autowired
+    private TaskService taskService;
+    @Autowired
+    private MailService mailService;
+    @Autowired
+    private Environment environment;
+
 
     @GetMapping
     public String tasksList() {
@@ -269,6 +284,39 @@ public class TasksController {
         return "redirect:/tasks";
     }
 
+    @GetMapping("{id}/copy")
+    public String taskCopyDialog(final Model model, @PathVariable("id") final long id) {
+        final Task task = taskDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<Relatable> relations = relationService.findAllRelatedTo(task);
+
+        model.addAttribute("task", task);
+        model.addAttribute("relations", relations);
+        return "tasks/copyForm";
+    }
+
+    @Transactional
+    @PostMapping("{id}/copy")
+    public String performTaskCopyDialog(final Model model,
+                                        @PathVariable("id") final long id,
+                                        @Valid @ModelAttribute Task taskForm,
+                                        @RequestParam(name = "relations", required = false) final List<Long> relations
+                                        ) {
+        Task task = taskService.copyTask(taskForm);
+        setupRelations(task, relations);
+        taskDao.save(task);
+
+        if(task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
+            mailService.sendMessage(task.getResponsibleUser().getEmail(), "Du er tildelt ansvaret for en ny opgave.", newTaskEmail(task));
+        }
+        return "redirect:/tasks/" + task.getId();
+    }
+
+
+    private void setupRelations(Task task, List<Long> relations) {
+        List<Relatable> relatables = relatableDao.findAllById(relations);
+        relatables.forEach(r -> relationService.addRelation(r, task));
+
+    }
     private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
         if (repetition == null) {
             return deadline;
@@ -301,5 +349,12 @@ public class TasksController {
             days = DAYS.between(deadline, completed);
         }
         return days;
+    }
+
+    private String newTaskEmail(Task task) {
+        final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
+        return "<p>Kære " + task.getResponsibleUser().getName() + "</p>" +
+            "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +
+            "<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>";
     }
 }
