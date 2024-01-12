@@ -51,7 +51,7 @@ public class OrganisationRestController {
 
     @GetMapping("/user/{id}")
     public String getOrgUuidByUser(@PathVariable String id){
-        User user = userService.findByUserId(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Position position = user.getPositions().stream().findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         return position.getOuUuid();
     }
