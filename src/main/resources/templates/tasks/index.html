@@ -133,9 +133,16 @@
 							dateString = dateString.replace("-", "/");
 							var dateSplit = dateString.split("/");
 							var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                            var diff = DateDiff.inDays(today, cellDate);
+
+
                         if (cellDate < today) {
                             return gridjs.html(`<span style="color: red;">${cell}</span>`);
-                        } else {
+                        } 
+                        else if (diff < 31 && diff >= 0 ) {
+                            return gridjs.html(`<span style="color: orange;">${cell}</span>`)    
+                        } 
+                        else {
                             return gridjs.html(`<span>${cell}</span>`);
                         }
                     }
@@ -145,27 +152,14 @@
                 },
                 {
                     name: "Resultat",
-                    formatter: (cell, row) => {
-                        if(row.cells[7]['data'] === null)
-                        {
-                            return "";
-                        } else {
-                            if(row.cells[7]['data'] == 'NO_ERROR') {
-                                return gridjs.html('<div class="d-block badge bg-success">Ingen fejl</div>', 'div');
-                            }
-                            else if (row.cells[7]['data'] == 'NO_CRITICAL_ERROR') {
-                                return gridjs.html('<div class="d-block badge bg-warning">Ingen kritiske fejl</div>', 'div');
-                            } else {
-                                return  gridjs.html('<div class="d-block badge bg-danger">Kritiske fejl</div>', 'div');
-                            }
-                        }
-                    }
+                    hidden: true,
                 },
                 {
                     name: "Status",
                     formatter: (cell, row) => {
                         var status = "";
                         var type = row.cells[2]['data'];
+
 
                         // if completed and task type opgave
                         if (cell && type == "Opgave") {
@@ -178,14 +172,27 @@
                             dateString = dateString.replace("-", "/");
                             var dateSplit = dateString.split("/");
                             var deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                            var diff = DateDiff.inDays(today, deadlineAsDate);
 
                             if (deadlineAsDate < today) {
+                                var exceeded = '<div class="d-block badge bg-danger" style="margin-bottom: 20px;">Overskredet</div>';
+                    
+                                if(row.cells[7]['data'] == 'NO_ERROR') {
+                                    status =  [exceeded,'<div class="d-block badge bg-success">Ingen fejl</div>'];
+                                }
+                                else if (row.cells[7]['data'] == 'NO_CRITICAL_ERROR') {
+                                    status = [exceeded, '<div class="d-block badge bg-warning">Ingen kritiske fejl</div>'];
+                                }
+                                else {
+                                    status = [exceeded, '<div class="d-block badge bg-danger">Kritiske fejl</div>'];
+                                }
+                            } else if(diff < 31 && diff >= 0) {
                                 status = [
-                                    '<div class="d-block badge bg-danger">Overskredet</div>'
+                                    '<div class="d-block badge bg-warning">Ikke udført</div>'
                                 ]
                             } else {
                                 status = [
-                                    '<div class="d-block badge bg-warning">Ikke udført</div>'
+                                    '<div class="d-block badge bg-secondary">Ikke udført</div>'
                                 ]
                             }
                         }
@@ -234,6 +241,38 @@
             }
         }).render( document.getElementById( "tasksDatatable" ));
     });
+
+
+    var DateDiff = {
+ 
+ inDays: function(d1, d2) {
+     var t2 = d2.getTime();
+     var t1 = d1.getTime();
+
+     return Math.floor((t2-t1)/(24*3600*1000));
+ },
+
+ inWeeks: function(d1, d2) {
+     var t2 = d2.getTime();
+     var t1 = d1.getTime();
+
+     return parseInt((t2-t1)/(24*3600*1000*7));
+ },
+
+ inMonths: function(d1, d2) {
+     var d1Y = d1.getFullYear();
+     var d2Y = d2.getFullYear();
+     var d1M = d1.getMonth();
+     var d2M = d2.getMonth();
+
+     return (d2M+12*d2Y)-(d1M+12*d1Y);
+ },
+
+ inYears: function(d1, d2) {
+     return d2.getFullYear()-d1.getFullYear();
+ }
+}
+
 
     function deleteClicked(taskId, name) {
         Swal.fire({
