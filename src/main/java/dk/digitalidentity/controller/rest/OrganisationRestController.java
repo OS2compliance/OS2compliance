@@ -4,14 +4,13 @@ import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.mapping.OrganisationUnitMapper;
 import dk.digitalidentity.model.dto.OrganisationUnitDTO;
 import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Position;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -27,17 +26,11 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("rest/ous")
 @RequireUser
+@RequiredArgsConstructor
 public class OrganisationRestController {
     private final OrganisationUnitDao organisationUnitDao;
     private final OrganisationUnitMapper mapper;
-    @Autowired
-    private UserService userService;
-
-    public OrganisationRestController(final OrganisationUnitDao organisationUnitDao, final OrganisationUnitMapper mapper) {
-        this.organisationUnitDao = organisationUnitDao;
-        this.mapper = mapper;
-    }
-
+    private final UserService userService;
 
     @GetMapping("autocomplete")
     public PageDTO<OrganisationUnitDTO> autocomplete(@RequestParam("search") final String search) {
@@ -50,9 +43,9 @@ public class OrganisationRestController {
     }
 
     @GetMapping("/user/{id}")
-    public String getOrgUuidByUser(@PathVariable String id){
-        User user = userService.findByUserId(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Position position = user.getPositions().stream().findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public String getOrgUuidByUser(@PathVariable final String id){
+        final User user = userService.findByUserId(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Position position = user.getPositions().stream().findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         return position.getOuUuid();
     }
 }

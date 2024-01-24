@@ -53,8 +53,8 @@ public class TaskService {
         return taskDao.findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(date);
     }
 
-    public Task copyTask(Task oldTask) {
-        Task task = new Task();
+    public Task copyTask(final Task oldTask) {
+        final Task task = new Task();
         task.setName(oldTask.getName());
         task.setTaskType(oldTask.getTaskType());
         task.setNextDeadline(oldTask.getNextDeadline());
@@ -65,7 +65,6 @@ public class TaskService {
         task.setDescription(oldTask.getDescription());
         task.setCreatedAt(LocalDateTime.now());
         task.setCreatedBy(SecurityUtil.getLoggedInUserUuid());
-
 
         return taskDao.save(task);
     }
