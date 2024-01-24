@@ -36,7 +36,7 @@ public class GlobalExceptionHandler {
     public ModelAndView accessDeniedErrorHandler(final HttpServletRequest request, final Exception e) throws Exception {
         return errorView(request, "errors/missingClaims");
     }
-    
+
     private ModelAndView errorView(final HttpServletRequest request, final String viewName) {
         // Otherwise setup and send the user to a default error-view.
         final Map<String, Object> body = getErrorAttributes(new ServletWebRequest(request));

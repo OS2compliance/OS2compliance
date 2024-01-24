@@ -175,9 +175,9 @@ public class RiskController {
         return "risks/view";
     }
 
-    record RelatedRegisterDTO(long registerId, String registerName, int rf, int ri, int rt, int of, int oi, int ot) {}
-    private List<RelatedRegisterDTO> findRelatedRegisters(ThreatAssessment threatAssessment) {
-        List<RelatedRegisterDTO> result = new ArrayList<>();
+    record RelatedRegisterDTO(long registerId, String registerName, Integer rf, Integer ri, Integer rt, Integer of, Integer oi, Integer ot) {}
+    private List<RelatedRegisterDTO> findRelatedRegisters(final ThreatAssessment threatAssessment) {
+        final List<RelatedRegisterDTO> result = new ArrayList<>();
         if (threatAssessment.isInherit() && ThreatAssessmentType.ASSET.equals(threatAssessment.getThreatAssessmentType())) {
             final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET);
             final List<Asset> assets = relations.stream()
@@ -187,11 +187,11 @@ public class RiskController {
                 .map(a -> a.get())
                 .collect(Collectors.toList());
 
-            List<Long> addedIds = new ArrayList<>();
-            for (Asset asset : assets) {
+            final List<Long> addedIds = new ArrayList<>();
+            for (final Asset asset : assets) {
                 final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
                 final List<Register> registers = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.REGISTER).map(r -> (Register) r).toList();
-                for (Register register : registers) {
+                for (final Register register : registers) {
                     if (!addedIds.contains(register.getId())) {
                         final ConsequenceAssessment consequenceAssessment = register.getConsequenceAssessment();
                         result.add(new RelatedRegisterDTO(register.getId(), register.getName(), consequenceAssessment.getConfidentialityRegistered(), consequenceAssessment.getIntegrityRegistered(), consequenceAssessment.getAvailabilityRegistered(), consequenceAssessment.getConfidentialityOrganisation(), consequenceAssessment.getIntegrityOrganisation(), consequenceAssessment.getAvailabilityOrganisation()));

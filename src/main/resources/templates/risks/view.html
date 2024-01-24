@@ -87,16 +87,16 @@
                                 </tr>
                                 <tr style="height: 20px;" th:if="${risk.inherit}">
                                     <th class="riskViewTh" colspan="1"></th>
+                                    <th class="riskViewTh"></th>
+                                    <th class="riskViewTh"></th>
                                     <th class="riskViewTh">Arvet konsekvens fra behandlingsaktivitet</th>
                                     <th class="riskViewTh"></th>
-                                    <th class="riskViewTh"></th>
-                                    <th class="riskViewTh"></th>
-                                    <th class="riskViewTh" th:text="${risk.inheritedConfidentialityRegistered == 0 ? '' : risk.inheritedConfidentialityRegistered}"></th>
-                                    <th class="riskViewTh" th:text="${risk.inheritedIntegrityRegistered == 0 ? '' : risk.inheritedIntegrityRegistered}"></th>
-                                    <th class="riskViewTh" th:text="${risk.inheritedAvailabilityRegistered == 0 ? '' : risk.inheritedAvailabilityRegistered}"></th>
-                                    <th class="riskViewTh" th:text="${risk.inheritedConfidentialityOrganisation == 0 ? '' : risk.inheritedConfidentialityOrganisation}"></th>
-                                    <th class="riskViewTh" th:text="${risk.inheritedIntegrityOrganisation == 0 ? '' : risk.inheritedIntegrityOrganisation}"></th>
-                                    <th class="riskViewTh" th:text="${risk.inheritedAvailabilityOrganisation == 0 ? '' : risk.inheritedAvailabilityOrganisation}"></th>
+                                    <th class="riskViewTh text-center" th:text="${risk.inheritedConfidentialityRegistered == 0 ? '' : risk.inheritedConfidentialityRegistered}"></th>
+                                    <th class="riskViewTh text-center" th:text="${risk.inheritedIntegrityRegistered == 0 ? '' : risk.inheritedIntegrityRegistered}"></th>
+                                    <th class="riskViewTh text-center" th:text="${risk.inheritedAvailabilityRegistered == 0 ? '' : risk.inheritedAvailabilityRegistered}"></th>
+                                    <th class="riskViewTh text-center" th:text="${risk.inheritedConfidentialityOrganisation == 0 ? '' : risk.inheritedConfidentialityOrganisation}"></th>
+                                    <th class="riskViewTh text-center" th:text="${risk.inheritedIntegrityOrganisation == 0 ? '' : risk.inheritedIntegrityOrganisation}"></th>
+                                    <th class="riskViewTh text-center" th:text="${risk.inheritedAvailabilityOrganisation == 0 ? '' : risk.inheritedAvailabilityOrganisation}"></th>
                                     <th class="riskViewTh"></th>
                                     <th class="riskViewTh"></th>
                                     <th class="riskViewTh"></th>
@@ -108,7 +108,7 @@
                                    <th class="riskViewTh" style="width: 45px"></th>
                                    <th class="riskViewTh"></th>
                                    <th class="riskViewTh" style="width: 90px"></th>
-                                   <th class="riskViewTh" style="width: 200px">Gennemsnit af alle trusler</th>
+                                   <th class="riskViewTh" style="width: 255px">Gennemsnit af alle trusler</th>
                                    <th class="riskViewTh text-center" id="averageProbability" style="width: 50px"></th>
                                    <th:block th:if="${risk.registered}">
                                        <th class="riskViewTh text-center"  id="averageRF" style="width: 50px"></th>
