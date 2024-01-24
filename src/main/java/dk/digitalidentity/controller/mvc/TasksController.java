@@ -22,12 +22,15 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.MailService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,6 +75,13 @@ public class TasksController {
     private DocumentDao documentDao;
     @Autowired
     private ThreatAssessmentService threatAssessmentService;
+    @Autowired
+    private TaskService taskService;
+    @Autowired
+    private MailService mailService;
+    @Autowired
+    private Environment environment;
+
 
     @GetMapping
     public String tasksList() {
@@ -120,7 +130,7 @@ public class TasksController {
             final Relatable relatable = relatableDao.findById(riskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret risikovurdering ikke fundet"));
 
-            ThreatAssessment threatAssessment = (ThreatAssessment) relatable;
+            final ThreatAssessment threatAssessment = (ThreatAssessment) relatable;
             if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
                 final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
                     .filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
@@ -306,6 +316,39 @@ public class TasksController {
         return "redirect:/tasks";
     }
 
+    @GetMapping("{id}/copy")
+    public String taskCopyDialog(final Model model, @PathVariable("id") final long id) {
+        final Task task = taskDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<Relatable> relations = relationService.findAllRelatedTo(task);
+
+        model.addAttribute("task", task);
+        model.addAttribute("relations", relations);
+        return "tasks/copyForm";
+    }
+
+    @Transactional
+    @PostMapping("{id}/copy")
+    public String performTaskCopyDialog(final Model model,
+                                        @PathVariable("id") final long id,
+                                        @Valid @ModelAttribute final Task taskForm,
+                                        @RequestParam(name = "relations", required = false) final List<Long> relations
+                                        ) {
+        final Task task = taskService.copyTask(taskForm);
+        setupRelations(task, relations);
+        taskDao.save(task);
+
+        if(task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
+            mailService.sendMessage(task.getResponsibleUser().getEmail(), "Du er tildelt ansvaret for en ny opgave.", newTaskEmail(task));
+        }
+        return "redirect:/tasks/" + task.getId();
+    }
+
+
+    private void setupRelations(final Task task, final List<Long> relations) {
+        final List<Relatable> relatables = relatableDao.findAllById(relations);
+        relatables.forEach(r -> relationService.addRelation(r, task));
+
+    }
     private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
         if (repetition == null) {
             return deadline;
@@ -338,5 +381,12 @@ public class TasksController {
             days = DAYS.between(deadline, completed);
         }
         return days;
+    }
+
+    private String newTaskEmail(final Task task) {
+        final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
+        return "<p>Kære " + task.getResponsibleUser().getName() + "</p>" +
+            "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +
+            "<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>";
     }
 }
