@@ -4,12 +4,16 @@ import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
+import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.UserDao;
+import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -19,6 +23,7 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -52,6 +57,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @RequestMapping("tasks")
 @RequireUser
 public class TasksController {
+    @Autowired private ThreatAssessmentDao threatAssessmentDao;
     @Autowired
     private TaskDao taskDao;
     @Autowired
@@ -64,6 +70,8 @@ public class TasksController {
     private RelationService relationService;
     @Autowired
     private DocumentDao documentDao;
+    @Autowired
+    private ThreatAssessmentService threatAssessmentService;
 
     @GetMapping
     public String tasksList() {
@@ -91,7 +99,9 @@ public class TasksController {
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
                            @RequestParam(name = "relations", required = false) final List<Long> relations,
-                           @RequestParam(name = "taskRiskId", required = false) final Long riskId) {
+                           @RequestParam(name = "taskRiskId", required = false) final Long riskId,
+                           @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
+                           @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
         final Task savedTask = taskDao.save(task);
         if (relations != null) {
             relations.stream()
@@ -110,7 +120,7 @@ public class TasksController {
             final Relatable relatable = relatableDao.findById(riskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret risikovurdering ikke fundet"));
 
-            final ThreatAssessment threatAssessment = (ThreatAssessment) relatable;
+            ThreatAssessment threatAssessment = (ThreatAssessment) relatable;
             if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
                 final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
                     .filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
@@ -122,28 +132,55 @@ public class TasksController {
                 addRelations(savedTask, relatedRegisters);
             }
 
-            final Relation relation = Relation.builder()
-                .relationAId(savedTask.getId())
-                .relationAType(savedTask.getRelationType())
-                .relationBId(relatable.getId())
-                .relationBType(relatable.getRelationType())
-                .build();
-            relationDao.save(relation);
+            if (riskCustomId != 0) {
+                final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(riskCustomId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+                    .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(riskCustomId))
+                    .findAny().orElse(null);
+
+                // if no response, create one and add relation
+                if (response == null) {
+                    response = threatAssessmentService.createResponse(threatAssessment, null, threat);
+                    threatAssessmentDao.save(threatAssessment);
+                }
+
+                addRelation(savedTask, response);
+
+            } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
+                final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(riskCatalogIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+                    .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
+                    .findAny().orElse(null);
+
+                // if no response, create one and add relation
+                if (response == null) {
+                    response = threatAssessmentService.createResponse(threatAssessment, threat, null);
+                    threatAssessmentDao.save(threatAssessment);
+                }
+
+                addRelation(savedTask, response);
+            }
+
+            addRelation(savedTask, relatable);
             return "redirect:/risks/" + riskId;
         }
 
         return "redirect:/tasks/"+savedTask.getId();
     }
 
+    private void addRelation(final Task savedTask, final Relatable relatable) {
+        final Relation relation = Relation.builder()
+            .relationAId(savedTask.getId())
+            .relationAType(savedTask.getRelationType())
+            .relationBId(relatable.getId())
+            .relationBType(relatable.getRelationType())
+            .build();
+        relationDao.save(relation);
+    }
+
     private void addRelations(final Task savedTask, final List<Relatable> relatables) {
         for (final Relatable relatable : relatables) {
-            final Relation relation = Relation.builder()
-                .relationAId(savedTask.getId())
-                .relationAType(savedTask.getRelationType())
-                .relationBId(relatable.getId())
-                .relationBType(relatable.getRelationType())
-                .build();
-            relationDao.save(relation);
+            addRelation(savedTask, relatable);
         }
     }
 

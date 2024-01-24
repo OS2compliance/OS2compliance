@@ -27,7 +27,7 @@ function CreateTaskService() {
                 this.createTaskUserChoicesEditSelect, this.createTaskOuChoicesEditSelect));
     }
 
-    this.show = function(riskId = null) {
+    this.show = function(elem = null) {
         this.loading = true;
         fetch(`/tasks/form`)
             .then(response => response.text()
@@ -38,8 +38,22 @@ function CreateTaskService() {
                     initTagSelect('createTaskTagsSelect');
                     // create task modal - explainer and riskId
                     var modal = document.querySelector('#taskFormDialog');
-                    modal.querySelector('#threatAssessmentExplainer').style.display = '';
-                    modal.querySelector('#taskRiskId').value = riskId;
+
+                    // if elem != null it means that the method is called from the risk view page
+                    if (elem != null) {
+                        var riskId = elem.dataset.riskid;
+                        var customId = elem.dataset.customid;
+                        var catalogIdentifier = elem.dataset.catalogidentifier;
+                        modal.querySelector('#threatAssessmentExplainer').style.display = '';
+                        modal.querySelector('#taskRiskId').value = riskId;
+                        modal.querySelector('#riskCustomId').value = customId;
+                        modal.querySelector('#riskCatalogIdentifier').value = catalogIdentifier;
+                    } else {
+                        modal.querySelector('#threatAssessmentExplainer').style.display = 'none';
+                        modal.querySelector('#taskRiskId').value = null;
+                        modal.querySelector('#riskCustomId').value = null;
+                        modal.querySelector('#riskCatalogIdentifier').value = null;
+                    }
 
                     const createTaskModal = new bootstrap.Modal(modal);
                     createTaskModal.show();

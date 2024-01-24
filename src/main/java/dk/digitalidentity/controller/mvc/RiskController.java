@@ -1,8 +1,11 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.dao.AssetDao;
+import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.ThreatCatalogDao;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Register;
@@ -68,6 +71,8 @@ public class RiskController {
     private final ScaleService scaleService;
     private final TaskService taskService;
     private final RegisterService registerService;
+    private final RelationDao relationDao;
+    private final AssetDao assetDao;
 
     @GetMapping
     public String riskList(final Model model) {
@@ -162,11 +167,41 @@ public class RiskController {
         model.addAttribute("consequenceExplainer", scaleService.getScaleConsequenceNumberExplainer());
         model.addAttribute("riskScoreExplainer", scaleService.getScaleRiskScoreExplainer());
         model.addAttribute("tasks", taskService.buildRelatedTasks(threatAssessment, false));
+        model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
 
         final Document document = new Document();
         document.setDocumentType(DocumentType.PROCEDURE);
         model.addAttribute("document", document);
         return "risks/view";
+    }
+
+    record RelatedRegisterDTO(long registerId, String registerName, int rf, int ri, int rt, int of, int oi, int ot) {}
+    private List<RelatedRegisterDTO> findRelatedRegisters(ThreatAssessment threatAssessment) {
+        List<RelatedRegisterDTO> result = new ArrayList<>();
+        if (threatAssessment.isInherit() && ThreatAssessmentType.ASSET.equals(threatAssessment.getThreatAssessmentType())) {
+            final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET);
+            final List<Asset> assets = relations.stream()
+                .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
+                .map(assetId -> assetDao.findById(assetId))
+                .filter(Optional::isPresent)
+                .map(a -> a.get())
+                .collect(Collectors.toList());
+
+            List<Long> addedIds = new ArrayList<>();
+            for (Asset asset : assets) {
+                final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
+                final List<Register> registers = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.REGISTER).map(r -> (Register) r).toList();
+                for (Register register : registers) {
+                    if (!addedIds.contains(register.getId())) {
+                        final ConsequenceAssessment consequenceAssessment = register.getConsequenceAssessment();
+                        result.add(new RelatedRegisterDTO(register.getId(), register.getName(), consequenceAssessment.getConfidentialityRegistered(), consequenceAssessment.getIntegrityRegistered(), consequenceAssessment.getAvailabilityRegistered(), consequenceAssessment.getConfidentialityOrganisation(), consequenceAssessment.getIntegrityOrganisation(), consequenceAssessment.getAvailabilityOrganisation()));
+                        addedIds.add(register.getId());
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
     @GetMapping("{id}/profile")
@@ -213,6 +248,7 @@ public class RiskController {
 
         for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
             final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+            response.setName(threat.getDescription());
             response.setConfidentialityRegistered(riskDTO.getRf());
             response.setIntegrityRegistered(riskDTO.getRi());
             response.setAvailabilityRegistered(riskDTO.getRt());
