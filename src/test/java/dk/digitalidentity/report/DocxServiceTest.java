@@ -402,6 +402,7 @@ public class DocxServiceTest {
 
     private static ThreatAssessmentResponse createResponseWithResidual(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.MITIGER);
         response.setProbability(3);
         response.setResidualRiskProbability(2);
@@ -412,6 +413,7 @@ public class DocxServiceTest {
     }
     private static ThreatAssessmentResponse createResponse(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.ACCEPT);
         response.setProbability(4);
         response.setIntegrityOrganisation(3);

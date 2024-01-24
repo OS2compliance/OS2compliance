@@ -47,6 +47,7 @@ public class StandardSection extends Relatable {
     private User responsibleUser;
 
     @Column
+    @Builder.Default
     private boolean selected = true;
 
     @Column

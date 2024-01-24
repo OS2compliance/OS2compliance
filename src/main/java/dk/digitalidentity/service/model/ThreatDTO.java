@@ -6,11 +6,14 @@ import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
 
+import java.util.List;
+
 @Getter
 @Setter
 @RequiredArgsConstructor
 public class ThreatDTO {
     private final long id;
+    private final long responseId;
     private final String identifier;
     private final ThreatDatabaseType dataType;
     private final String type;
@@ -41,4 +44,5 @@ public class ThreatDTO {
     private final int residualRiskConsequence;
     private final int residualRiskProbability;
     private int index;
+    private List<TaskDTO> tasks;
 }

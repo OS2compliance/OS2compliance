@@ -3,14 +3,17 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.dao.RelationDao;
-import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.dao.TaskDao;
+import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.UserDao;
+import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -22,6 +25,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.MailService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
@@ -43,11 +47,9 @@ import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.util.StringUtils;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -58,8 +60,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @RequestMapping("tasks")
 @RequireUser
 public class TasksController {
-    @Autowired
-    private TagDao tagDao;
+    @Autowired private ThreatAssessmentDao threatAssessmentDao;
     @Autowired
     private TaskDao taskDao;
     @Autowired
@@ -72,6 +73,8 @@ public class TasksController {
     private RelationService relationService;
     @Autowired
     private DocumentDao documentDao;
+    @Autowired
+    private ThreatAssessmentService threatAssessmentService;
     @Autowired
     private TaskService taskService;
     @Autowired
@@ -106,7 +109,9 @@ public class TasksController {
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
                            @RequestParam(name = "relations", required = false) final List<Long> relations,
-                           @RequestParam(name = "taskRiskId", required = false) final Long riskId) {
+                           @RequestParam(name = "taskRiskId", required = false) final Long riskId,
+                           @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
+                           @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
         final Task savedTask = taskDao.save(task);
         if (relations != null) {
             relations.stream()
@@ -137,28 +142,55 @@ public class TasksController {
                 addRelations(savedTask, relatedRegisters);
             }
 
-            final Relation relation = Relation.builder()
-                .relationAId(savedTask.getId())
-                .relationAType(savedTask.getRelationType())
-                .relationBId(relatable.getId())
-                .relationBType(relatable.getRelationType())
-                .build();
-            relationDao.save(relation);
+            if (riskCustomId != 0) {
+                final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(riskCustomId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+                    .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(riskCustomId))
+                    .findAny().orElse(null);
+
+                // if no response, create one and add relation
+                if (response == null) {
+                    response = threatAssessmentService.createResponse(threatAssessment, null, threat);
+                    threatAssessmentDao.save(threatAssessment);
+                }
+
+                addRelation(savedTask, response);
+
+            } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
+                final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(riskCatalogIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+                    .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
+                    .findAny().orElse(null);
+
+                // if no response, create one and add relation
+                if (response == null) {
+                    response = threatAssessmentService.createResponse(threatAssessment, threat, null);
+                    threatAssessmentDao.save(threatAssessment);
+                }
+
+                addRelation(savedTask, response);
+            }
+
+            addRelation(savedTask, relatable);
             return "redirect:/risks/" + riskId;
         }
 
         return "redirect:/tasks/"+savedTask.getId();
     }
 
+    private void addRelation(final Task savedTask, final Relatable relatable) {
+        final Relation relation = Relation.builder()
+            .relationAId(savedTask.getId())
+            .relationAType(savedTask.getRelationType())
+            .relationBId(relatable.getId())
+            .relationBType(relatable.getRelationType())
+            .build();
+        relationDao.save(relation);
+    }
+
     private void addRelations(final Task savedTask, final List<Relatable> relatables) {
         for (final Relatable relatable : relatables) {
-            final Relation relation = Relation.builder()
-                .relationAId(savedTask.getId())
-                .relationAType(savedTask.getRelationType())
-                .relationBId(relatable.getId())
-                .relationBType(relatable.getRelationType())
-                .build();
-            relationDao.save(relation);
+            addRelation(savedTask, relatable);
         }
     }
 
@@ -298,10 +330,10 @@ public class TasksController {
     @PostMapping("{id}/copy")
     public String performTaskCopyDialog(final Model model,
                                         @PathVariable("id") final long id,
-                                        @Valid @ModelAttribute Task taskForm,
+                                        @Valid @ModelAttribute final Task taskForm,
                                         @RequestParam(name = "relations", required = false) final List<Long> relations
                                         ) {
-        Task task = taskService.copyTask(taskForm);
+        final Task task = taskService.copyTask(taskForm);
         setupRelations(task, relations);
         taskDao.save(task);
 
@@ -312,8 +344,8 @@ public class TasksController {
     }
 
 
-    private void setupRelations(Task task, List<Long> relations) {
-        List<Relatable> relatables = relatableDao.findAllById(relations);
+    private void setupRelations(final Task task, final List<Long> relations) {
+        final List<Relatable> relatables = relatableDao.findAllById(relations);
         relatables.forEach(r -> relationService.addRelation(r, task));
 
     }
@@ -351,7 +383,7 @@ public class TasksController {
         return days;
     }
 
-    private String newTaskEmail(Task task) {
+    private String newTaskEmail(final Task task) {
         final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
         return "<p>Kære " + task.getResponsibleUser().getName() + "</p>" +
             "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +

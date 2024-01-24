@@ -20,11 +20,16 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${#strings.abbreviate(register.name, 25)}"></li>
                             </ol>
                         </nav>
+                        <div class="row mt-4 mb-3">
+                            <div class="col-12">
+                                <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${register.name}"></h1>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="row mt-4 mb-3">
-                    <div class="col-12">
-                        <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${register.name}"></h1>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
                     </div>
                 </div>
             </div>
