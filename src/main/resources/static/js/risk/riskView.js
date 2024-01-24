@@ -1,30 +1,29 @@
+
+
 function notRelevantSelectChanged() {
-    var selected = this.value;
-    var rowId = this.dataset.rowid;
-    var row = document.getElementById('row' + rowId);
-    setStyleNotRelevant(selected, rowId, row);
+    const selected = this.value;
+    const rowId = this.dataset.rowid;
+    setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
     updateAverage();
 }
 
 function notRelevantSelectInit(elem) {
-    var selected = elem.value;
-    var rowId = elem.dataset.rowid;
-    var row = document.getElementById('row' + rowId);
-    setStyleNotRelevant(selected, rowId, row);
+    const selected = elem.value;
+    const rowId = elem.dataset.rowid;
+    setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
 }
 
-function setStyleNotRelevant(selected, rowId, row) {
-    var selectAndTextareaElements = [];
-    findSelectAndTextareaElements(row, selectAndTextareaElements);
-
+function setStyleNotRelevant(selected, rowId, rowClassName) {
+    const selectAndTextareaElements = findSelectAndTextareaElements(rowClassName);
+    let rows = document.querySelectorAll('.rowId' + rowId);
     // if not relevant
-    if (selected == 'true') {
-        row.style.backgroundColor = "whitesmoke";
+    if (selected === 'true') {
+        rows.forEach(r => r.style.backgroundColor = "whitesmoke");
         disableOrEnableFields(selectAndTextareaElements, true)
 
         // reset numbers
         var selectElements = [];
-        findNumberSelects(row, selectElements);
+        rows.forEach(r => findNumberSelects(r, selectElements));
         for (var i = 0; i < selectElements.length; i++) {
                 var elem = selectElements[i];
                 elem.value = -1;
@@ -33,7 +32,7 @@ function setStyleNotRelevant(selected, rowId, row) {
         rowRiskScore.textContent = "";
         updateColorFor(rowRiskScore, "INGEN")
     } else {
-        row.style.backgroundColor = "white";
+        rows.forEach(r => r.style.backgroundColor = "transparent");
         disableOrEnableFields(selectAndTextareaElements, false)
     }
 }
@@ -43,25 +42,22 @@ function disableOrEnableFields(selectAndTextareaElements, disable) {
         if (!element.classList.contains("notRelevantSelect")) {
             element.disabled = disable;
         }
-
         if (disable) {
             element.style.backgroundColor = "whitesmoke";
         } else {
-            element.style.backgroundColor = "white";
+            element.style.backgroundColor = "transparent";
         }
     });
 }
 
-function findSelectAndTextareaElements(element, selectAndTextareaElements) {
-    for (var i = 0; i < element.children.length; i++) {
-        var child = element.children[i];
-
-        if (child.tagName === "SELECT" || child.tagName === "TEXTAREA") {
-            selectAndTextareaElements.push(child);
-        }
-
-        findSelectAndTextareaElements(child, selectAndTextareaElements);
-    }
+function findSelectAndTextareaElements(categoryClassName) {
+    const elements = document.querySelectorAll('.' + categoryClassName);
+    let resultElements = [];
+    elements.forEach(e => {
+        e.querySelectorAll('select, textarea')
+            .forEach(s => resultElements.push(s));
+    });
+    return resultElements;
 }
 
 function numberSelectChanged() {
@@ -397,13 +393,8 @@ function pageLoaded() {
 
     // foldable categories
     const categoryRows = document.querySelectorAll('.categoryTr');
-    for (var i = 0; i < categoryRows.length; i++) {
-        // hide all except first category
-        if (i != 0) {
-            handleCategoryRow(i);
-        }
-
-        // add listener
+    for (let i = 0; i < categoryRows.length; i++) {
+        handleCategoryRow(i);
         categoryRows[i].addEventListener('click', categoryRowClicked, false);
     }
 

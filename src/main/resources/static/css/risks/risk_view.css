@@ -15,14 +15,26 @@ select, textarea {
 .riskViewTable {
     width: 100%;
 }
+.riskViewRowShadow {
+    box-shadow: 0 6px 4px -4px #E8E8E8;
+}
+.riskViewCategory {
+    background-color: #f9fafc;
+    border: 0.5px solid #E8E8E8;
+}
+.riskViewCategory:hover {
+    background-color: #26a69a;
+    border: 0.5px solid #E8E8E8;
+    color: whitesmoke;
+}
 
-.riskViewTh, .riskViewTd{
-    outline: 0.5px solid #E8E8E8;
-    outline-offset: -0.5px;
+.riskViewResidual {
+}
+.riskViewTh, .riskViewTd {
+    border: 0.5px solid #E8E8E8;
     padding: 8px;
-    /*text-align: center;*/
     overflow-wrap: break-word;
-    font-size: 10px;
+    font-size: 11px;
 }
 
 .riskNumber {
@@ -36,11 +48,18 @@ textarea {
 
 select {
   color: #75868f;
+  background-color: transparent;
   cursor: pointer;
   /* for Firefox */
   -moz-appearance: none;
   /* for Chrome */
   -webkit-appearance: none;
+  text-align: center;
+}
+
+.editCell:hover {
+    /*background-color: #f9fafc;*/
+    box-shadow: inset 0 0 4px #7586AF;
 }
 
 /* For IE10 */
@@ -72,9 +91,8 @@ select::-ms-expand {
 }
 
 .categoryTr th {
-    outline: none;
     cursor: pointer;
-    padding-left: 0px;
+    padding-left: 6px;
 }
 
 .fullWidth {
@@ -101,7 +119,7 @@ select::-ms-expand {
 
 /* taskTable */
 .taskTable {
-    font-size: 10px;
+    font-size: 11px;
     margin: 15px;
     width: 98%;
 }
