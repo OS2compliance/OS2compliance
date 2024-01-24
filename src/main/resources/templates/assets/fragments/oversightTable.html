@@ -8,6 +8,7 @@
     <table class="table table-striped">
         <thead>
             <th>Dato</th>
+            <th>Aktiv</th>
             <th>Ansvarlig</th>
             <th>Tilsynsform</th>
             <th>Konklusion</th>
@@ -16,6 +17,7 @@
         <tbody>
             <tr th:each="oversight : ${oversights}">
                 <td th:text="${oversight.creationDate}"></td>
+                <td th:text="${oversight.asset.name}"></td>
                 <td th:text="${oversight.responsibleUser.userId}"></td>
                 <td th:text="${oversight.supervisionModel.getMessage()}"></td>
                 <td th:text="${oversight.conclusion}"></td>
