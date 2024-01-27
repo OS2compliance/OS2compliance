@@ -21,11 +21,13 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
-import jakarta.validation.constraints.Null;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -37,6 +39,8 @@ import java.util.List;
 @Getter
 @Setter
 @ToString
+@SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
+@Where(clause = "deleted=false")
 public class Asset extends Relatable {
 
     @ManyToOne(fetch = FetchType.LAZY)
