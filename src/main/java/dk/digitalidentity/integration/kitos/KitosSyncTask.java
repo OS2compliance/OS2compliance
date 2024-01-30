@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.stream.Stream;
 
@@ -62,6 +63,7 @@ public class KitosSyncTask {
         final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
             .map(usage -> usage.getSystemContext().getUuid())
             .map(kitosClientService::fetchItSystem)
+            .filter(Objects::nonNull)
             .toList();
         final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
         final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
