@@ -24,6 +24,9 @@
                         <label class="col-form-label col-lg-3 col-sm-12">GDPR lovhjemmel</label>
                         <div class="col-sm-12 col-lg-9 mt-2">
                             <div class="form-check" th:each="choice: ${gdprChoices}">
+                                <p th:if="${choice.identifier=='register-gdpr-valp8'}" class="mb-1 mt-2" style="position:relative; left: -22px; font-weight: bold">
+                                    Databeskyttelsesloven
+                                </p>
                                 <input th:id="${choice.identifier}" th:field="*{gdprChoices}" th:value="${choice.identifier}" th:checked="${#sets.contains(register.gdprChoices, choice.identifier)}" class="form-check-input" type="checkbox" autocomplete="off" disabled/>
                                 <label th:for="${choice.identifier}" th:text="${choice.caption + ' ' + choice.description}"></label>
                                 <div th:if="${choice.identifier=='register-gdpr-valp6'}" class="mb-2 mt-1">
