@@ -15,6 +15,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.util.List;
 
@@ -22,6 +25,8 @@ import java.util.List;
 @Table(name = "threat_assessments")
 @Getter
 @Setter
+@SQLDelete(sql = "UPDATE threat_assessments SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
+@Where(clause = "deleted=false")
 public class ThreatAssessment extends Relatable {
     @Column
     @Enumerated(EnumType.STRING)

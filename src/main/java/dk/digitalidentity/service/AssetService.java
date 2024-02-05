@@ -1,7 +1,7 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.AssetDao;
-import dk.digitalidentity.dao.RelationDao;
+import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.DataProcessing;
@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -25,8 +26,8 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class AssetService {
     private final AssetDao assetDao;
-    private final RelationDao relationDao;
-
+    private final RelationService relationService;
+    private final DataProcessingDao dataProcessingDao;
 
     public Optional<Asset> get(final Long id) {
         return assetDao.findById(id);
@@ -84,7 +85,7 @@ public class AssetService {
     }
 
     public List<Asset> findRelatedTo(final Register register) {
-        final List<Relation> relations = relationDao.findRelatedToWithType(register.getId(), RelationType.ASSET);
+        final List<Relation> relations = relationService.findRelatedToWithType(register, RelationType.ASSET);
         return findAllByRelations(relations);
     }
 
@@ -122,8 +123,11 @@ public class AssetService {
         };
     }
 
-    public void deleteById(final Long id) {
-        assetDao.deleteById(id);
+    @Transactional
+    public void deleteById(final Asset asset) {
+        relationService.deleteRelatedTo(asset.getId());
+        dataProcessingDao.delete(asset.getDataProcessing());
+        assetDao.delete(asset);
     }
 
 
