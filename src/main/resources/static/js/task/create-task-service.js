@@ -16,9 +16,17 @@ function CreateTaskService() {
         let self = this;
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskDeadlineBtn", "#taskDeadline");
+         this.createTaskOuChoicesEditSelect = initOUSelect('taskOuSelect');
 
         this.createTaskUserChoicesEditSelect = initUserSelect('taskUserSelect');
-        this.createTaskOuChoicesEditSelect = initOUSelect('taskOuSelect');
+        this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
+             var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
+             fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
+                self.createTaskOuChoicesEditSelect.setChoiceByValue(data);
+             })).catch(error => toastService.error(error));
+        })
+
+
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
         });
