@@ -1,4 +1,4 @@
-ALTER TABLE threat_assessment_responses ADD COLUMN created_at DATETIME(6) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+ALTER TABLE threat_assessment_responses ADD COLUMN created_at DATETIME(6) NOT NULL;
 ALTER TABLE threat_assessment_responses ADD COLUMN created_by VARCHAR(255) NOT NULL DEFAULT 'ukendt';
 ALTER TABLE threat_assessment_responses ADD COLUMN updated_at DATETIME(6) NULL;
 ALTER TABLE threat_assessment_responses ADD COLUMN updated_by VARCHAR(255) NULL;
