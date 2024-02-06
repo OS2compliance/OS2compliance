@@ -16,9 +16,17 @@ function CreateTaskService() {
         let self = this;
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskDeadlineBtn", "#taskDeadline");
+         this.createTaskOuChoicesEditSelect = initOUSelect('taskOuSelect');
 
         this.createTaskUserChoicesEditSelect = initUserSelect('taskUserSelect');
-        this.createTaskOuChoicesEditSelect = initOUSelect('taskOuSelect');
+        this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
+             var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
+             fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
+                self.createTaskOuChoicesEditSelect.setChoiceByValue(data);
+             })).catch(error => toastService.error(error));
+        })
+
+
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
         });
@@ -27,7 +35,7 @@ function CreateTaskService() {
                 this.createTaskUserChoicesEditSelect, this.createTaskOuChoicesEditSelect));
     }
 
-    this.show = function(riskId = null) {
+    this.show = function(elem = null) {
         this.loading = true;
         fetch(`/tasks/form`)
             .then(response => response.text()
@@ -38,8 +46,22 @@ function CreateTaskService() {
                     initTagSelect('createTaskTagsSelect');
                     // create task modal - explainer and riskId
                     var modal = document.querySelector('#taskFormDialog');
-                    modal.querySelector('#threatAssessmentExplainer').style.display = '';
-                    modal.querySelector('#taskRiskId').value = riskId;
+
+                    // if elem != null it means that the method is called from the risk view page
+                    if (elem != null) {
+                        var riskId = elem.dataset.riskid;
+                        var customId = elem.dataset.customid;
+                        var catalogIdentifier = elem.dataset.catalogidentifier;
+                        modal.querySelector('#threatAssessmentExplainer').style.display = '';
+                        modal.querySelector('#taskRiskId').value = riskId;
+                        modal.querySelector('#riskCustomId').value = customId;
+                        modal.querySelector('#riskCatalogIdentifier').value = catalogIdentifier;
+                    } else {
+                        modal.querySelector('#threatAssessmentExplainer').style.display = 'none';
+                        modal.querySelector('#taskRiskId').value = null;
+                        modal.querySelector('#riskCustomId').value = null;
+                        modal.querySelector('#riskCatalogIdentifier').value = null;
+                    }
 
                     const createTaskModal = new bootstrap.Modal(modal);
                     createTaskModal.show();

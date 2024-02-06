@@ -47,6 +47,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}" />
 </div>
 
+<div id="copyTaskContainer"></div>
 <div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true)}" />
 
@@ -56,6 +57,7 @@
         var gridTasksUrl = [[@{/rest/tasks/list}]];
         var viewUrl = [[@{/tasks/}]];
         var deleteUrl = [[@{/tasks/}]];
+        var baseUrl = [[@{/tasks/}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     let today = new Date();
@@ -209,7 +211,8 @@
                         const taskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyTaskService.showCopyDialog('${taskId}')"><i class="pli-data-copy fs-5"></i></button>
+                                 <button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],

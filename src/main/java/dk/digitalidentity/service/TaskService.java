@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.TaskDTO;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +51,22 @@ public class TaskService {
     public List<Task> findTasksThatNeedsNotification() {
         final LocalDate date = closeToDeadline();
         return taskDao.findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(date);
+    }
+
+    public Task copyTask(final Task oldTask) {
+        final Task task = new Task();
+        task.setName(oldTask.getName());
+        task.setTaskType(oldTask.getTaskType());
+        task.setNextDeadline(oldTask.getNextDeadline());
+        task.setResponsibleUser(oldTask.getResponsibleUser());
+        task.setResponsibleOu(oldTask.getResponsibleOu());
+        task.setRepetition(oldTask.getRepetition());
+        task.setTags(oldTask.getTags());
+        task.setDescription(oldTask.getDescription());
+        task.setCreatedAt(LocalDateTime.now());
+        task.setCreatedBy(SecurityUtil.getLoggedInUserUuid());
+
+        return taskDao.save(task);
     }
 
     @Transactional

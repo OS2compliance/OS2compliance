@@ -15,6 +15,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +26,8 @@ import java.util.List;
 @Table(name = "suppliers")
 @Getter
 @Setter
+@SQLDelete(sql = "UPDATE suppliers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
+@Where(clause = "deleted=false")
 public class Supplier extends Relatable {
 
 	@ManyToOne(fetch = FetchType.LAZY)

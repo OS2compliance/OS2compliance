@@ -1,6 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
@@ -16,6 +17,7 @@ import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Map;
 
+@Slf4j
 @ControllerAdvice
 public class GlobalExceptionHandler {
     private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
@@ -26,6 +28,7 @@ public class GlobalExceptionHandler {
         if (AnnotationUtils.findAnnotation (e.getClass(), ResponseStatus.class) != null) {
             throw e;
         }
+        log.error("Unhandled error", e);
         return errorView(request, "errors/technicalError");
     }
 

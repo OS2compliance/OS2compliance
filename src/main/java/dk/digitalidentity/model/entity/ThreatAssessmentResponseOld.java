@@ -1,12 +1,14 @@
 package dk.digitalidentity.model.entity;
 
-import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
@@ -14,10 +16,13 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "threat_assessment_responses")
+@Table(name = "threat_assessment_responses_old")
 @Getter
 @Setter
-public class ThreatAssessmentResponse extends Relatable {
+public class ThreatAssessmentResponseOld {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
 
     @Column
     private boolean notRelevant;
@@ -73,12 +78,4 @@ public class ThreatAssessmentResponse extends Relatable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "custom_threat_id")
     private CustomThreat customThreat;
-
-    @Override public RelationType getRelationType() {
-        return RelationType.THREAT_ASSESSMENT_RESPONSE;
-    }
-
-    @Override public String getLocalizedEnumValues() {
-        return (method != null ? method.getMessage() : "");
-    }
 }

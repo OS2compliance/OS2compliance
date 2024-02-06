@@ -34,6 +34,13 @@ public class UserService {
         return userDao.findById(uuid);
     }
 
+    public Optional<User> findByUuid(final String uuid) {
+        if(StringUtils.isEmpty(uuid)) {
+            return Optional.empty();
+        }
+        return userDao.findById(uuid);
+    }
+
     public Optional<User> findByUserId(final String userId) {
         if (StringUtils.isEmpty(userId)) {
             return Optional.empty();
