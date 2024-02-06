@@ -9,5 +9,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface TaskGridDao extends JpaRepository<TaskGrid, Long>, SearchRepository  {
     Page<TaskGrid> findAll(final Pageable pageable);
-    Page<TaskGrid> findAllByResponsibleUser(final User user, final Pageable pageable);
+    Page<TaskGrid> findAllByResponsibleUserAndCompletedFalse(final User user, final Pageable pageable);
 }
