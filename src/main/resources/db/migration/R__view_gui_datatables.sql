@@ -22,12 +22,16 @@ SELECT
     t.next_deadline,
     t.repetition,
     (ts.id IS NOT NULL) as completed, ts.task_result AS result,
-    concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums
+    concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
+    GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value ASC SEPARATOR ',') as tags
 FROM tasks t
     LEFT JOIN task_logs ts on ts.task_id = t.id
+    LEFT JOIN relatable_tags rt on rt.relatable_id = t.id
+    LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE
     t.deleted = false AND
-    (ts.id IS NULL OR ts.id = (SELECT MAX(id) FROM task_logs WHERE task_id = t.id));
+    (ts.id IS NULL OR ts.id = (SELECT MAX(id) FROM task_logs WHERE task_id = t.id))
+GROUP BY t.id;
 
 CREATE OR REPLACE
 VIEW view_gridjs_registers AS
