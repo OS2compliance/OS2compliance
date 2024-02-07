@@ -161,7 +161,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				ishoj = organisationUnitDao.save(ishoj);
 
 				User user1 = new User();
-				user1.setUuid("71bada4e-8532-4d1d-b74c-6817fd6a5a79");
+				user1.setUuid(UUID.randomUUID().toString());
 				user1.setActive(true);
 				user1.setUserId("user1");
 				user1.setName("Test User 1");
