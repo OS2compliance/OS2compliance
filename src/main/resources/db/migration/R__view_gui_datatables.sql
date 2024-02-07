@@ -102,7 +102,10 @@ SELECT
     d.responsible_uuid,
     d.next_revision,
     d.status,
-    d.localized_enums
-FROM
-    documents d
-WHERE d.deleted=false;
+    d.localized_enums,
+    GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value ASC SEPARATOR ',') as tags
+FROM documents d
+    LEFT JOIN relatable_tags rt on rt.relatable_id = d.id
+    LEFT JOIN tags tg on rt.tag_id = tg.id
+WHERE d.deleted=false
+GROUP BY d.id;

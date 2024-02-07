@@ -16,4 +16,5 @@ public class DocumentDTO {
     private String responsibleUser;
     private String nextRevision;
     private String status;
+    private String tags;
 }

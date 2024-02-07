@@ -57,7 +57,7 @@ public class TaskRestController {
         Page<TaskGrid> tasks = null;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "taskType", "responsibleUser.name" , "responsibleOU.name", "nextDeadline", "localizedEnums", "tags");
+            final List<String> searchableProperties = Arrays.asList("name", "taskType", "responsibleUser.name" , "responsibleOU.name", "nextDeadline", "localizedEnums");
             tasks = taskGridDao.findAllCustom(searchableProperties, search, sortAndPage, TaskGrid.class);
         } else {
             // Fetch paged and sorted
