@@ -31,6 +31,7 @@ public interface DocumentMapper {
                 .responsibleUser(nullSafe(() -> documentGrid.getResponsibleUser().getName(), ""))
                 .nextRevision(nullSafe(() -> documentGrid.getNextRevision().format(DK_DATE_FORMATTER)))
                 .status(nullSafe(() -> documentGrid.getStatus().getMessage()))
+                .tags(nullSafe(() -> documentGrid.getTags()))
                 .build();
     }
 
