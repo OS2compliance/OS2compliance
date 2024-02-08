@@ -104,4 +104,8 @@ public class TaskService {
         return LocalDate.now().plusDays(settingsService.getInt("notify.days",10));
     }
 
+    public void deleteAll(List<Task> tasks) {
+        taskDao.deleteAll(tasks);
+    }
+
 }

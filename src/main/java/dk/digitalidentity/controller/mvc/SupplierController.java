@@ -4,17 +4,23 @@ import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.SupplierDao;
+import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
 import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.data.repository.CrudRepository;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -30,8 +36,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -46,14 +54,16 @@ public class SupplierController {
 
     private final RelationService relationService;
     private final AssetService assetService;
+    private final TaskDao taskDao;
 
-	public SupplierController(final SupplierDao supplierDao, final RelationDao relationDao, final ContactDao contactDao, final AssetOversightDao assetOversightDao, final RelationService relationService, final AssetService assetService) {
+	public SupplierController(final SupplierDao supplierDao, final RelationDao relationDao, final ContactDao contactDao, final AssetOversightDao assetOversightDao, final RelationService relationService, final AssetService assetService, TaskDao taskDao) {
 		this.supplierDao = supplierDao;
 		this.relationDao = relationDao;
 		this.contactDao = contactDao;
 		this.assetOversightDao = assetOversightDao;
 		this.relationService = relationService;
         this.assetService = assetService;
+        this.taskDao = taskDao;
     }
 
 	@GetMapping
@@ -93,6 +103,16 @@ public class SupplierController {
 	@Transactional
 	public void supplierDelete(@PathVariable final String id) {
 		final Long lid = Long.valueOf(id);
+		
+        // Find all tasks(type: CHECK) related to this Supplier
+        final List<Relation> relations = relationService.findRelatedToWithType(Arrays.asList(lid), RelationType.TASK);
+        List<Task> tasks = relations.stream()
+            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
+            .map(taskDao::findById)
+            .filter(Optional::isPresent).filter(t -> t.get().getTaskType() == TaskType.CHECK).map(t -> t.get()).collect(Collectors.toList());
+        // Delete those tasks
+        taskDao.deleteAll(tasks);
+		
 		relationDao.deleteRelatedTo(lid);
 		supplierDao.deleteById(lid);
 	}

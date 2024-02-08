@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.dao.OrganisationUnitDao;
+import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.entity.Asset;
@@ -12,11 +13,14 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -44,6 +48,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -77,6 +82,8 @@ public class RegisterController {
     private ScaleService scaleService;
     @Autowired
     private DataProcessingService dataProcessingService;
+    @Autowired
+    private TaskDao taskDao;
 
     @GetMapping
     public String registerList() {
@@ -281,6 +288,16 @@ public class RegisterController {
         final Long lid = Long.valueOf(id);
         final Register register = registerService.findById(lid)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        
+        // Find all tasks(type: CHECK) related to this Register
+        final List<Relation> relations = relationService.findRelatedToWithType(register, RelationType.TASK);
+        List<Task> tasks = relations.stream()
+            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
+            .map(taskDao::findById)
+            .filter(Optional::isPresent).filter(t -> t.get().getTaskType() == TaskType.CHECK).map(t -> t.get()).collect(Collectors.toList());
+        // Delete those tasks
+        taskDao.deleteAll(tasks);
+        
         relationService.deleteRelatedTo(lid);
         registerService.delete(register);
     }

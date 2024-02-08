@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
@@ -48,6 +49,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -222,6 +224,16 @@ public class RiskController {
     @Transactional
     public void riskDelete(@PathVariable final String id) {
         final Long lid = Long.valueOf(id);
+        
+        // Find all tasks(type: CHECK) related to this Risk
+        final List<Relation> relations = relationService.findRelatedToWithType(Arrays.asList(lid), RelationType.TASK);
+        List<Task> tasks = relations.stream()
+            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
+            .map(taskDao::findById)
+            .filter(Optional::isPresent).filter(t -> t.get().getTaskType() == TaskType.CHECK).map(t -> t.get()).collect(Collectors.toList());
+        // Delete those tasks
+        taskDao.deleteAll(tasks);
+        
         relationService.deleteRelatedTo(lid);
         threatAssessmentService.deleteById(lid);
     }
