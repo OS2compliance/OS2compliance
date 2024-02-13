@@ -1,3 +1,5 @@
+test-result-*.docx
+
 .DS_Store
 
 .classpath

@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.RequireUser;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -68,27 +69,27 @@ public class TaskRestController {
 
     @PostMapping("list/{id}")
     public PageDTO<TaskDTO> list(
-        @PathVariable(name = "id", required = true) final String uuid,
+        @PathVariable(name = "id") final String userUuid,
         @RequestParam(name = "search", required = false) final String search,
         @RequestParam(name = "page", required = false) final Integer page,
         @RequestParam(name = "size", required = false) final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
-        final User user = userDao.findByUuidAndActiveIsTrue(uuid);
+        final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
         }
         final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
-        Page<TaskGrid> tasks = null;
+        final Page<TaskGrid> tasks;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "responsibleOU.name", "nextDeadline", "localizedEnums", "completed");
-            tasks = taskGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, TaskGrid.class, user);
+            final List<String> searchableProperties = Arrays.asList("name", "responsibleOU.name", "nextDeadline", "localizedEnums", "completed", "tags");
+            tasks = taskGridDao.findAllCustomExtra(searchableProperties, search, List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
         } else {
             // Fetch paged and sorted
-            tasks = taskGridDao.findAllByResponsibleUser(user, sortAndPage);
+            tasks = taskGridDao.findAllByResponsibleUserAndCompletedFalse(user, sortAndPage);
         }
         assert tasks != null;
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));

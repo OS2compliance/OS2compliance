@@ -25,6 +25,7 @@ import dk.digitalidentity.model.entity.DataProtectionImpactAssessment;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
@@ -34,6 +35,7 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetOversightService;
@@ -245,8 +247,13 @@ public class AssetsController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void assetDelete(@PathVariable final String id) {
-        final Asset asset = assetService.findById(Long.valueOf(id)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public void assetDelete(@PathVariable final Long id) {
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // All related checks should be deleted along with the asset
+        final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
+        relationService.deleteRelatedTo(id);
+        taskService.deleteAll(tasks);
         assetService.deleteById(asset);
     }
 

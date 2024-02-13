@@ -130,6 +130,13 @@ function CreateRiskService() {
         this.userChoicesSelect = initUserSelect("userSelect");
         this.ouChoicesSelect = initOUSelect("ouSelect");
 
+        this.userChoicesSelect.passedElement.element.addEventListener('addItem', function() {
+                     var userUuid = self.userChoicesSelect.passedElement.element.value;
+                     fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
+                        self.ouChoicesSelect.setChoiceByValue(data);
+                     })).catch(error => toastService.error(error));
+                })
+
         this.typeChanged(this.getScopedElementById("threatAssessmentType").value);
         this.getScopedElementById('threatAssessmentType').addEventListener('change', function() {
             self.typeChanged(this.value);

@@ -182,7 +182,7 @@
 					server: {
 						url: (prev, columns) => {
 							if (!columns.length) return prev;
-							const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'nextDeadline', 'taskRepetition', 'completed'];
+							const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'nextDeadline', 'taskRepetition', 'completed', 'tags'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
@@ -265,6 +265,21 @@
 
 							return gridjs.html(''.concat(...status), 'div')
 						},
+					},
+					{
+						name: "Tags",
+						formatter: (cell, row) => {
+							var result = '<ul>';
+							if (cell != null && cell.trim() !== '') {
+								var tags = cell.split(',');
+								for (var i =0; i< tags.length; i++) {
+									result += '<li>'+tags[i]+'</li>';
+								}
+							}
+
+							result += '</ul>';
+							return gridjs.html(''.concat(...result), 'div')
+						},
 					}
 				],
 				server: {
@@ -274,7 +289,7 @@
 						'X-CSRF-TOKEN': token
 					},
 					then: data => data.content.map(task =>
-						[task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed]
+						[task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
 					),
 					total: data => data.totalCount
 				},
@@ -540,7 +555,7 @@
 					server: {
 						url: (prev, columns) => {
 							if (!columns.length) return prev;
-							const columnIds = ['id', 'name', 'documentType', 'responsibleUserId', 'responsibleOU', 'nextRevision', 'status'];
+							const columnIds = ['id', 'name', 'documentType', 'responsibleUserId', 'responsibleOU', 'nextRevision', 'status', 'tags'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
@@ -589,6 +604,21 @@
 
 							return gridjs.html(''.concat(...status), 'div')
 						},
+					},
+					{
+						name: "Tags",
+						formatter: (cell, row) => {
+							var result = '<ul>';
+							if (cell != null && cell.trim() !== '') {
+								var tags = cell.split(',');
+								for (var i =0; i< tags.length; i++) {
+									result += '<li>'+tags[i]+'</li>';
+								}
+							}
+
+							result += '</ul>';
+							return gridjs.html(''.concat(...result), 'div')
+						},
 					}
 				],
 				server: {
@@ -598,7 +628,7 @@
 						'X-CSRF-TOKEN': token
 					},
 					then: data => data.content.map(document =>
-						[document.id, document.name, document.documentType, document.responsibleUserId, document.nextRevision, document.status]
+						[document.id, document.name, document.documentType, document.responsibleUserId, document.nextRevision, document.status, document.tags]
 					),
 					total: data => data.totalCount
 				},

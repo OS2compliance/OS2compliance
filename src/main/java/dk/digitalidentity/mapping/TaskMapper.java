@@ -25,6 +25,7 @@ public interface TaskMapper {
                 .taskType(nullSafe(() -> taskGrid.getTaskType().getMessage()))
                 .taskResult(nullSafe(() -> taskGrid.getTaskResult()))
                 .completed(nullSafe(taskGrid::isCompleted))
+                .tags(nullSafe(() -> taskGrid.getTags()))
                 .build();
     }
 

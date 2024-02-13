@@ -365,6 +365,7 @@ public class DocxServiceTest {
 
     private Task createDummyTask() {
         final Task t = new Task();
+        t.setId(3L);
         t.setTaskType(TaskType.TASK);
         t.setNextDeadline(LocalDate.now());
         t.setDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris convallis augue non lectus eleifend, eget sagittis nisl iaculis. Nam in mi at eros maximus mattis. Donec tempus congue diam eu pellentesque.");
@@ -402,6 +403,8 @@ public class DocxServiceTest {
 
     private static ThreatAssessmentResponse createResponseWithResidual(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setId(1L);
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.MITIGER);
         response.setProbability(3);
         response.setResidualRiskProbability(2);
@@ -412,6 +415,8 @@ public class DocxServiceTest {
     }
     private static ThreatAssessmentResponse createResponse(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setId(2L);
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.ACCEPT);
         response.setProbability(4);
         response.setIntegrityOrganisation(3);

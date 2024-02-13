@@ -160,7 +160,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
     private void addTasksTable(final XWPFDocument document, final XmlCursor cursor,
                                final List<Task> tasks, final String heading) {
-        if (tasks.isEmpty()) {
+        if (tasks == null || tasks.isEmpty()) {
             return;
         }
         createHeading3(document, cursor, heading);
