@@ -1,13 +1,15 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.TaskService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
 import java.util.Set;
 
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
@@ -29,13 +32,11 @@ import java.util.Set;
 @Controller
 @RequireUser
 @RequestMapping("documents")
+@RequiredArgsConstructor
 public class DocumentsController {
-    @Autowired
-    private DocumentService documentService;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private TaskDao taskDao;
+    private final DocumentService documentService;
+    private final RelationService relationService;
+    private final TaskService taskService;
 
     @GetMapping
     public String documentsList(final Model model) {
@@ -67,10 +68,15 @@ public class DocumentsController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void documentDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        relationService.deleteRelatedTo(lid);
-        documentService.deleteById(lid);
+    public void documentDelete(@PathVariable final Long id) {
+        final Document document = documentService.get(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // All related checks should be deleted along with the document
+        final List<Task> tasks = taskService.findRelatedTasks(document, t -> t.getTaskType() == TaskType.CHECK);
+        taskService.deleteAll(tasks);
+        relationService.deleteRelatedTo(id);
+        documentService.deleteById(id);
     }
 
     @Transactional

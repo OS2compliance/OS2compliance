@@ -8,7 +8,7 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.service.model.RelationDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,15 +23,10 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Component
+@RequiredArgsConstructor
 public class RelationService {
     private final RelationDao relationDao;
     private final RelatableDao relatableDao;
-
-    @Autowired
-    public RelationService(final RelationDao relationDao, final RelatableDao relatableDao) {
-        this.relationDao = relationDao;
-        this.relatableDao = relatableDao;
-    }
 
     public List<Relation> findRelatedToWithType(final Relatable relatable, final RelationType relatedType) {
         return relationDao.findRelatedToWithType(relatable.getId(), relatedType);

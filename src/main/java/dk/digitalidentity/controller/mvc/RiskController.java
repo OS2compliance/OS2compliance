@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
@@ -182,10 +183,10 @@ public class RiskController {
             final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET);
             final List<Asset> assets = relations.stream()
                 .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                .map(assetId -> assetDao.findById(assetId))
+                .map(assetDao::findById)
                 .filter(Optional::isPresent)
-                .map(a -> a.get())
-                .collect(Collectors.toList());
+                .map(Optional::get)
+                .toList();
 
             final List<Long> addedIds = new ArrayList<>();
             for (final Asset asset : assets) {
@@ -220,10 +221,14 @@ public class RiskController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void riskDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        relationService.deleteRelatedTo(lid);
-        threatAssessmentService.deleteById(lid);
+    public void riskDelete(@PathVariable final Long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // All related checks should be deleted along with the threatAssessment
+        final List<Task> tasks = taskService.findRelatedTasks(threatAssessment, t -> t.getTaskType() == TaskType.CHECK);
+        taskDao.deleteAll(tasks);
+
+        relationService.deleteRelatedTo(id);
+        threatAssessmentService.deleteById(id);
     }
 
     @Transactional
