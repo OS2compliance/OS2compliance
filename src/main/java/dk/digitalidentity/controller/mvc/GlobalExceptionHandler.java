@@ -18,7 +18,7 @@ import org.springframework.web.servlet.ModelAndView;
 import java.util.Map;
 
 @Slf4j
-@ControllerAdvice
+@ControllerAdvice(basePackages = "package dk.digitalidentity.controller.mvc")
 public class GlobalExceptionHandler {
     private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
