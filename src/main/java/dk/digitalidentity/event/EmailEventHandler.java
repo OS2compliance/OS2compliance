@@ -3,6 +3,7 @@ package dk.digitalidentity.event;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.service.TransportErrorHandler;
 import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
 import jakarta.mail.Multipart;
 import jakarta.mail.Session;
 import jakarta.mail.Transport;
@@ -17,6 +18,9 @@ import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.IOException;
+import java.util.List;
 import java.util.Properties;
 
 @Slf4j
@@ -61,7 +65,7 @@ public class EmailEventHandler {
 
                 final Multipart multipart = new MimeMultipart();
                 multipart.addBodyPart(messageBodyPart);
-
+                addAttachments(multipart, event.getAttachments());
                 msg.setContent(multipart);
 
                 transport = session.getTransport();
@@ -78,6 +82,22 @@ public class EmailEventHandler {
                 } catch (final Exception ex) {
                     log.warn("Error occured while trying to terminate connection", ex);
                 }
+            }
+        }
+    }
+
+    private void addAttachments(final Multipart multipart, final List<String> attachments) {
+        if (attachments == null || attachments.isEmpty()) {
+            return;
+        }
+        for (final String attachmentFilename : attachments) {
+            try {
+                final File f = new File(attachmentFilename);
+                final MimeBodyPart attachmentPart = new MimeBodyPart();
+                attachmentPart.attachFile(f);
+                multipart.addBodyPart(attachmentPart);
+            } catch (final IOException | MessagingException e) {
+                log.error("Failed to attach file", e);
             }
         }
     }

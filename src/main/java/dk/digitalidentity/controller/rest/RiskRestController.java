@@ -17,13 +17,14 @@ import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
+import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -51,21 +52,15 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 @RestController
 @RequestMapping("rest/risks")
 @RequireUser
+@RequiredArgsConstructor
 public class RiskRestController {
-    @Autowired
-    private RegisterDao registerDao;
-    @Autowired
-    private AssetDao assetDao;
-    @Autowired
-    private ThreatAssessmentService threatAssessmentService;
-
+    private final RegisterDao registerDao;
+    private final AssetDao assetDao;
+    private final ThreatAssessmentService threatAssessmentService;
+    private final DocsReportGeneratorComponent docsReportGeneratorComponent;
     private final RiskGridDao riskGridDao;
     private final RiskMapper mapper;
 
-    public RiskRestController(final RiskGridDao riskGridDao, final RiskMapper mapper) {
-        this.riskGridDao = riskGridDao;
-        this.mapper = mapper;
-    }
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -81,7 +76,7 @@ public class RiskRestController {
             sort = Sort.by(direction, order);
         }
         final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
-        Page<RiskGrid> risks = null;
+        final Page<RiskGrid> risks;
         if (StringUtils.isNotEmpty(search)) {
             final List<String> searchableProperties = Arrays.asList("name", "responsibleUser.name", "responsibleOU.name", "date", "localizedEnums");
             risks = riskGridDao.findAllCustom(searchableProperties, search, sortAndPage, RiskGrid.class);
@@ -113,6 +108,13 @@ public class RiskRestController {
             .map(Relatable::getId).collect(Collectors.toList()));
         final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), user);
+    }
+
+    @PostMapping("{id}/mailReport")
+    public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id) {
+        // TODO GEnerate report, save to temp/ and attached to email to system owner
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
     record SetFieldDTO(@NotNull SetFieldType setFieldType, @NotNull ThreatDatabaseType dbType, Long id, String identifier, @NotNull String value) {}
