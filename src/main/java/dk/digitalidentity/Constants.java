@@ -13,6 +13,7 @@ public interface Constants {
     String NEEDS_CVR_UPDATE_PROPERTY = "cvr_update";
     String CVR_UPDATED_PROPERTY = "cvr_updated_at";
     String ASSOCIATED_DOCUMENT_PROPERTY = "linked_doc";
+    String ASSOCIATED_THREAT_ASSESSMENT_PROPERTY = "linked_threat";
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";

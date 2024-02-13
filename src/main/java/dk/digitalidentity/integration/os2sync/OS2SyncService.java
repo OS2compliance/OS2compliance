@@ -2,13 +2,13 @@ package dk.digitalidentity.integration.os2sync;
 
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.dao.UserDao;
-import dk.digitalidentity.model.entity.OrganisationUnit;
-import dk.digitalidentity.model.entity.Position;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.integration.os2sync.api.HierarchyOU;
 import dk.digitalidentity.integration.os2sync.api.HierarchyPosition;
 import dk.digitalidentity.integration.os2sync.api.HierarchyResult;
 import dk.digitalidentity.integration.os2sync.api.HierarchyUser;
+import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Position;
+import dk.digitalidentity.model.entity.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -42,7 +42,7 @@ public class OS2SyncService {
                 .map(User::getUuid)
                 .collect(Collectors.toSet());
         existingUuids.removeAll(newUuids);
-        int deactivatedOUs = userDao.deactivateUsers(existingUuids);
+        final int deactivatedOUs = userDao.deactivateUsers(existingUuids);
         log.info("Deactivated {} users", deactivatedOUs);
     }
 
@@ -54,7 +54,7 @@ public class OS2SyncService {
                 .map(OrganisationUnit::getUuid)
                 .collect(Collectors.toSet());
         existingUuids.removeAll(newUuids);
-        int deactivatedOUs = organisationUnitDao.deactivateOUs(existingUuids);
+        final int deactivatedOUs = organisationUnitDao.deactivateOUs(existingUuids);
         log.info("Deactivated {} ous", deactivatedOUs);
     }
 
@@ -69,6 +69,9 @@ public class OS2SyncService {
         user.setUuid(hierarchyUser.getUuid());
         user.setName(hierarchyUser.getName());
         user.setEmail(hierarchyUser.getEmail());
+        user.setPositions(hierarchyUser.getPositions().stream()
+            .map(p -> toPosition(user, p))
+            .collect(Collectors.toSet()));
         user.setActive(true);
 
         return userDao.save(user);
@@ -94,7 +97,7 @@ public class OS2SyncService {
         user.setName(hierarchyUser.getName());
         user.setActive(true);
         user.setPositions(hierarchyUser.getPositions().stream()
-                .map(OS2SyncService::toPosition)
+                .map(p -> toPosition(user, p))
                 .collect(Collectors.toSet()));
         return userDao.save(user);
     }
@@ -108,10 +111,11 @@ public class OS2SyncService {
         return organisationUnitDao.save(ou);
     }
 
-    private static Position toPosition(final HierarchyPosition hierarchyPosition) {
+    private static Position toPosition(final User user, final HierarchyPosition hierarchyPosition) {
         final Position p = new Position();
         p.setName(hierarchyPosition.getName());
         p.setOuUuid(p.getOuUuid());
+        p.setUser(user);
         return p;
     }
 

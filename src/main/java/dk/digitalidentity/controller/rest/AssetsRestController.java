@@ -28,7 +28,6 @@ import java.util.List;
 @RequestMapping("rest/assets")
 @RequireUser
 public class AssetsRestController {
-
 	private final AssetGridDao assetGridDao;
 	private final AssetMapper mapper;
     private final UserDao userDao;

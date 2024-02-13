@@ -38,10 +38,6 @@ public class KitosSyncTask {
         if (taskDisabled()) {
             return;
         }
-        if (!configuration.getIntegrations().getKitos().isEnabled()) {
-            log.info("Kitos sync not enabled, not doing sync");
-            return;
-        }
         // Just reset timestamp in settings and everything will re-sync on next delta.
         settingsService.setZonedDateTime(IT_SYSTEM_USAGE_OFFSET_SETTING_KEY, KITOS_DELTA_START_FROM);
     }
@@ -49,10 +45,6 @@ public class KitosSyncTask {
     @Scheduled(cron = "${os2compliance.integrations.kitos.cron}")
     public void sync() {
         if (taskDisabled()) {
-            return;
-        }
-        if (!configuration.getIntegrations().getKitos().isEnabled()) {
-            log.info("Kitos sync not enabled, not doing sync");
             return;
         }
         log.info("Starting Kitos synchronisation");

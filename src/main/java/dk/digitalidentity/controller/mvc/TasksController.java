@@ -6,6 +6,7 @@ import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.UserDao;
+import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -22,7 +23,6 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.MailService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -30,6 +30,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -78,9 +79,9 @@ public class TasksController {
     @Autowired
     private TaskService taskService;
     @Autowired
-    private MailService mailService;
-    @Autowired
     private Environment environment;
+    @Autowired
+    private ApplicationEventPublisher eventPublisher;
 
 
     @GetMapping
@@ -328,17 +329,19 @@ public class TasksController {
 
     @Transactional
     @PostMapping("{id}/copy")
-    public String performTaskCopyDialog(final Model model,
-                                        @PathVariable("id") final long id,
+    public String performTaskCopyDialog(@PathVariable("id") final long id,
                                         @Valid @ModelAttribute final Task taskForm,
                                         @RequestParam(name = "relations", required = false) final List<Long> relations
                                         ) {
         final Task task = taskService.copyTask(taskForm);
         setupRelations(task, relations);
         taskDao.save(task);
-
-        if(task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
-            mailService.sendMessage(task.getResponsibleUser().getEmail(), "Du er tildelt ansvaret for en ny opgave.", newTaskEmail(task));
+        if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
+            eventPublisher.publishEvent(EmailEvent.builder()
+                    .email(task.getResponsibleUser().getEmail())
+                    .subject("Du er tildelt ansvaret for en ny opgave.")
+                    .message(newTaskEmail(task))
+                .build());
         }
         return "redirect:/tasks/" + task.getId();
     }

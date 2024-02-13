@@ -129,6 +129,7 @@ function CreateRiskService() {
         this.assetChoicesSelect = initAssetSelect(assetSelect);
         this.userChoicesSelect = initUserSelect("userSelect");
         this.ouChoicesSelect = initOUSelect("ouSelect");
+        initDatepicker("#nextRevisionBtn", "#nextRevision");
 
         this.userChoicesSelect.passedElement.element.addEventListener('addItem', function() {
                      var userUuid = self.userChoicesSelect.passedElement.element.value;
