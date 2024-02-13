@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -13,6 +14,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.service.model.RiskDTO;
@@ -25,6 +27,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -33,6 +36,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Service
@@ -43,6 +47,7 @@ public class ThreatAssessmentService {
     private final ScaleService scaleService;
     private final ThreatAssessmentDao threatAssessmentDao;
     private final TaskService taskService;
+    private final UserService userService;
 
     public Optional<ThreatAssessment> findById(final Long assessmentId) {
         return threatAssessmentDao.findById(assessmentId);
@@ -132,6 +137,36 @@ public class ThreatAssessmentService {
         threatAssessmentDao.deleteById(threatAssessmentId);
     }
 
+    @Transactional
+    public Task createAssociatedCheck(final ThreatAssessment assessment) {
+        final LocalDate deadline = assessment.getNextRevision();
+        if (deadline != null && assessment.getRevisionInterval() != null) {
+            final Task task = new Task();
+            task.setTaskType(assessment.getRevisionInterval() == ThreatAssessmentRevisionInterval.NONE
+                ? TaskType.TASK
+                : TaskType.CHECK);
+            task.setName("Revision af " + assessment.getName());
+            task.setResponsibleUser(assessment.getResponsibleUser());
+            task.setCreatedAt(LocalDateTime.now());
+            task.setNextDeadline(assessment.getNextRevision());
+            task.setNotifyResponsible(true);
+            task.setResponsibleUser(assessment.getResponsibleUser() != null ? assessment.getResponsibleUser() : userService.currentUser());
+            task.setDescription("Revider dokumentet " + assessment.getName());
+            task.getProperties().add(Property.builder()
+                .entity(task)
+                .key(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY)
+                .value("" + assessment.getId())
+                .build()
+            );
+            setTaskRevisionInterval(assessment, task);
+            final Task savedTask = taskService.createTask(task);
+            relationService.addRelation(assessment, task);
+            return savedTask;
+        }
+        return null;
+    }
+
+    @Transactional
     public Task createAssociatedTask(final ThreatAssessment assessment) {
         if (assessment.getResponsibleUser() != null) {
             Task task = new Task();
@@ -258,10 +293,10 @@ public class ThreatAssessmentService {
         return threatMap;
     }
 
-    private void addRelatedTasks(ThreatAssessmentResponse response, ThreatDTO dto) {
+    private void addRelatedTasks(final ThreatAssessmentResponse response, final ThreatDTO dto) {
         final List<Task> relatedTasks = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType() == RelationType.TASK).map(r -> (Task) r).toList();
-        List<TaskDTO> taskDTOS = new ArrayList<>();
-        for (Task relatedTask : relatedTasks) {
+        final List<TaskDTO> taskDTOS = new ArrayList<>();
+        for (final Task relatedTask : relatedTasks) {
             taskDTOS.add(new TaskDTO(relatedTask.getId(), relatedTask.getName(), relatedTask.getTaskType(), relatedTask.getResponsibleUser().getName(), relatedTask.getNextDeadline().format(DK_DATE_FORMATTER), relatedTask.getNextDeadline().isBefore(LocalDate.now())));
         }
         dto.setTasks(taskDTOS);
@@ -347,5 +382,15 @@ public class ThreatAssessmentService {
         response.setThreatCatalogThreat(threatCatalogThreat);
         threatAssessment.getThreatAssessmentResponses().add(response);
         return response;
+    }
+
+    private static void setTaskRevisionInterval(final ThreatAssessment assessment, final Task task) {
+        switch(assessment.getRevisionInterval()) {
+            case YEARLY -> task.setRepetition(TaskRepetition.YEARLY);
+            case HALF_YEARLY -> task.setRepetition(TaskRepetition.HALF_YEARLY);
+            case EVERY_SECOND_YEAR -> task.setRepetition(TaskRepetition.EVERY_SECOND_YEAR);
+            case EVERY_THIRD_YEAR -> task.setRepetition(TaskRepetition.EVERY_THIRD_YEAR);
+            case NONE -> task.setRepetition(TaskRepetition.NONE);
+        }
     }
 }

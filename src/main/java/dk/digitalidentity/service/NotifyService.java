@@ -1,8 +1,11 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -11,16 +14,11 @@ import java.time.temporal.ChronoUnit;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class NotifyService {
     private final DISAML_Configuration diSamlConfiguration;
-    private final MailService mailService;
     private final TaskService taskService;
-
-    public NotifyService(final DISAML_Configuration diSamlConfiguration, final MailService mailService, final TaskService taskService) {
-        this.diSamlConfiguration = diSamlConfiguration;
-        this.mailService = mailService;
-        this.taskService = taskService;
-    }
+    private final ApplicationEventPublisher eventPublisher;
 
     @Transactional
     public void notifyTask(final Long taskId) {
@@ -34,9 +32,11 @@ public class NotifyService {
         final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
         final String msg = "Din opgave " + task.getName() + " har deadline om " + ChronoUnit.DAYS.between(today, task.getNextDeadline()) + " dag(e).\n" +
             " Du kan finde opgaven her: " + baseUrl + "/tasks/" +  task.getId();
-        if (mailService.sendMessage(task.getResponsibleUser().getEmail(), "Deadline Notifikation", msg)) {
-            task.setHasNotifiedResponsible(true);
-        }
+        eventPublisher.publishEvent(EmailEvent.builder()
+                .email(task.getResponsibleUser().getEmail())
+                .subject("Deadline Notifikation")
+                .message(msg)
+            .build());
     }
 
 }

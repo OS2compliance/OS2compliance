@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
@@ -10,6 +11,8 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.event.ApplicationEvents;
+import org.springframework.test.context.event.RecordApplicationEvents;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -17,11 +20,9 @@ import java.util.Optional;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.doReturn;
-import static org.mockito.Mockito.times;
-import static org.mockito.Mockito.verify;
 
 /**
  * Unit tests for {@link NotifyService}
@@ -30,11 +31,12 @@ import static org.mockito.Mockito.verify;
 @ActiveProfiles("test")
 @ContextConfiguration(classes = {NotifyService.class})
 @EnableConfigurationProperties(value = DISAML_Configuration.class)
+@RecordApplicationEvents
 public class NotifyServiceTest {
     @Autowired
     private NotifyService notifyService;
-    @MockBean
-    private MailService mailService;
+    @Autowired
+    private ApplicationEvents events;
     @MockBean
     private TaskService taskService;
 
@@ -48,9 +50,12 @@ public class NotifyServiceTest {
         notifyService.notifyTask(dummyTask.getId());
 
         // Then
-        verify(mailService, times(1)).sendMessage(eq(dummyTask.getResponsibleUser().getEmail()),
-            eq("Deadline Notifikation"), eq(expectedMessage()));
         assertThat(dummyTask.getNotifyResponsible()).isTrue();
+        final EmailEvent emailEvent = events.stream(EmailEvent.class)
+            .findFirst().orElseGet(() -> fail("Event not received"));
+        assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUser().getEmail());
+        assertThat(emailEvent.getSubject()).isEqualTo("Deadline Notifikation");
+        assertThat(emailEvent.getMessage()).isEqualTo(expectedMessage());
     }
 
     @Test
@@ -65,9 +70,13 @@ public class NotifyServiceTest {
         });
 
         // Then
-        verify(mailService, times(1)).sendMessage(eq(dummyTask.getResponsibleUser().getEmail()),
-            eq("Deadline Notifikation"), eq(expectedMessage()));
         assertThat(dummyTask.getNotifyResponsible()).isTrue();
+
+        final EmailEvent emailEvent = events.stream(EmailEvent.class)
+            .findFirst().orElseGet(() -> fail("Event not received"));
+        assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUser().getEmail());
+        assertThat(emailEvent.getSubject()).isEqualTo("Deadline Notifikation");
+        assertThat(emailEvent.getMessage()).isEqualTo(expectedMessage());
     }
 
     private static String expectedMessage() {

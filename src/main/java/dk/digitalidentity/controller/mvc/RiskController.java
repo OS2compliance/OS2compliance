@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.ThreatCatalogDao;
+import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
@@ -22,7 +23,6 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
-import dk.digitalidentity.service.MailService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -33,6 +33,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -62,10 +63,10 @@ import java.util.stream.Collectors;
 @RequireUser
 @RequiredArgsConstructor
 public class RiskController {
+    private final ApplicationEventPublisher eventPublisher;
     private final ThreatCatalogDao threatCatalogDao;
     private final TaskDao taskDao;
     private final RelationService relationService;
-    private final MailService mailService;
     private final Environment environment;
     private final AssetService assetService;
     private final ThreatAssessmentService threatAssessmentService;
@@ -110,6 +111,7 @@ public class RiskController {
         } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
             relateRegister(selectedRegister, savedThreatAssessment);
         }
+        threatAssessmentService.createAssociatedCheck(savedThreatAssessment);
         if (sendEmail) {
             createTaskAndSendMail(savedThreatAssessment);
         }
@@ -296,7 +298,11 @@ public class RiskController {
             final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
             if (task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
                 final String message = getMessage(task);
-                mailService.sendMessage(task.getResponsibleUser().getEmail(), "Påmindelse om at udfylde risikovurdering", message);
+                eventPublisher.publishEvent(EmailEvent.builder()
+                        .message(message)
+                        .subject("Påmindelse om at udfylde risikovurdering")
+                        .email(task.getResponsibleUser().getEmail())
+                    .build());
             }
         }
     }
