@@ -49,7 +49,6 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -184,10 +183,10 @@ public class RiskController {
             final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET);
             final List<Asset> assets = relations.stream()
                 .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                .map(assetId -> assetDao.findById(assetId))
+                .map(assetDao::findById)
                 .filter(Optional::isPresent)
-                .map(a -> a.get())
-                .collect(Collectors.toList());
+                .map(Optional::get)
+                .toList();
 
             final List<Long> addedIds = new ArrayList<>();
             for (final Asset asset : assets) {
@@ -222,20 +221,14 @@ public class RiskController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void riskDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        
-        // Find all tasks(type: CHECK) related to this Risk
-        final List<Relation> relations = relationService.findRelatedToWithType(Arrays.asList(lid), RelationType.TASK);
-        List<Task> tasks = relations.stream()
-            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
-            .map(taskDao::findById)
-            .filter(Optional::isPresent).filter(t -> t.get().getTaskType() == TaskType.CHECK).map(t -> t.get()).collect(Collectors.toList());
-        // Delete those tasks
+    public void riskDelete(@PathVariable final Long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // All related checks should be deleted along with the threatAssessment
+        final List<Task> tasks = taskService.findRelatedTasks(threatAssessment, t -> t.getTaskType() == TaskType.CHECK);
         taskDao.deleteAll(tasks);
-        
-        relationService.deleteRelatedTo(lid);
-        threatAssessmentService.deleteById(lid);
+
+        relationService.deleteRelatedTo(id);
+        threatAssessmentService.deleteById(id);
     }
 
     @Transactional

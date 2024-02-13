@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.dao.OrganisationUnitDao;
-import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.entity.Asset;
@@ -13,7 +12,6 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -28,6 +26,7 @@ import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.TaskService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -48,7 +47,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -83,7 +81,7 @@ public class RegisterController {
     @Autowired
     private DataProcessingService dataProcessingService;
     @Autowired
-    private TaskDao taskDao;
+    private TaskService taskService;
 
     @GetMapping
     public String registerList() {
@@ -284,21 +282,15 @@ public class RegisterController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void registerDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        final Register register = registerService.findById(lid)
+    public void registerDelete(@PathVariable final Long id) {
+        final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        
-        // Find all tasks(type: CHECK) related to this Register
-        final List<Relation> relations = relationService.findRelatedToWithType(register, RelationType.TASK);
-        List<Task> tasks = relations.stream()
-            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
-            .map(taskDao::findById)
-            .filter(Optional::isPresent).filter(t -> t.get().getTaskType() == TaskType.CHECK).map(t -> t.get()).collect(Collectors.toList());
-        // Delete those tasks
-        taskDao.deleteAll(tasks);
-        
-        relationService.deleteRelatedTo(lid);
+
+        // All related checks should be deleted along with the register
+        final List<Task> tasks = taskService.findRelatedTasks(register, t -> t.getTaskType() == TaskType.CHECK);
+
+        relationService.deleteRelatedTo(id);
+        taskService.deleteAll(tasks);
         registerService.delete(register);
     }
 

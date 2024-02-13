@@ -1,17 +1,15 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.model.entity.Document;
-import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.TaskService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,25 +24,19 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Slf4j
 @Controller
 @RequireUser
 @RequestMapping("documents")
+@RequiredArgsConstructor
 public class DocumentsController {
-    @Autowired
-    private DocumentService documentService;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private TaskDao taskDao;
+    private final DocumentService documentService;
+    private final RelationService relationService;
+    private final TaskService taskService;
 
     @GetMapping
     public String documentsList(final Model model) {
@@ -76,20 +68,15 @@ public class DocumentsController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void documentDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        
-        // Find all tasks(type: CHECK) related to this Document
-        final List<Relation> relations = relationService.findRelatedToWithType( Arrays.asList(lid), RelationType.TASK);
-        List<Task> tasks = relations.stream()
-            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
-            .map(taskDao::findById)
-            .filter(Optional::isPresent).filter(t -> t.get().getTaskType() == TaskType.CHECK).map(t -> t.get()).collect(Collectors.toList());
-        // Delete those tasks
-        taskDao.deleteAll(tasks);
+    public void documentDelete(@PathVariable final Long id) {
+        final Document document = documentService.get(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        relationService.deleteRelatedTo(lid);
-        documentService.deleteById(lid);
+        // All related checks should be deleted along with the document
+        final List<Task> tasks = taskService.findRelatedTasks(document, t -> t.getTaskType() == TaskType.CHECK);
+        taskService.deleteAll(tasks);
+        relationService.deleteRelatedTo(id);
+        documentService.deleteById(id);
     }
 
     @Transactional

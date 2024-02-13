@@ -24,7 +24,6 @@ import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessment;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -248,18 +247,13 @@ public class AssetsController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void assetDelete(@PathVariable final String id) {
-        final Asset asset = assetService.findById(Long.valueOf(id)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        
-        // Find all tasks(type: CHECK) related to this Asset
-        final List<Relation> relations = relationService.findRelatedToWithType(asset, RelationType.TASK);
-        List<Task> tasks = relations.stream()
-            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
-            .map(taskService::findById)
-            .filter(Optional::isPresent).filter(t -> t.get().getTaskType() == TaskType.CHECK).map(t -> t.get()).collect(Collectors.toList());
-        // Delete those tasks
+    public void assetDelete(@PathVariable final Long id) {
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // All related checks should be deleted along with the asset
+        final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
+        relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
-        
         assetService.deleteById(asset);
     }
 

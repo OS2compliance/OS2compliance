@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
@@ -9,8 +10,8 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.TaskDTO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -19,22 +20,33 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Service
 @Slf4j
+@RequiredArgsConstructor
 public class TaskService {
- 	@Autowired
-	private TaskDao taskDao;
-	@Autowired
-	private SettingsService settingsService;
-    @Autowired
-    private RelationService relationService;
+	private final TaskDao taskDao;
+	private final SettingsService settingsService;
+    private final RelationService relationService;
 
     public Optional<Task> findById(final Long id) {
         return taskDao.findById(id);
+    }
+
+
+    public List<Task> findRelatedTasks(final Relatable relatable, final Predicate<Task> taskPredicate) {
+        final List<Relation> relations = relationService.findRelatedToWithType(relatable, RelationType.TASK);
+        return relations.stream()
+            .map(r -> r.getRelationAType().equals(RelationType.TASK) ? r.getRelationAId() : r.getRelationBId())
+            .map(taskDao::findById)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .filter(taskPredicate)
+            .toList();
     }
 
     @Transactional
@@ -104,7 +116,8 @@ public class TaskService {
         return LocalDate.now().plusDays(settingsService.getInt("notify.days",10));
     }
 
-    public void deleteAll(List<Task> tasks) {
+    @Transactional
+    public void deleteAll(final List<Task> tasks) {
         taskDao.deleteAll(tasks);
     }
 
