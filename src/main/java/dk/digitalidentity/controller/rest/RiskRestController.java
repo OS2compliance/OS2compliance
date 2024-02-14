@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
@@ -24,6 +25,7 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -80,6 +82,7 @@ public class RiskRestController {
     private final RelationService relationService;
     private final RiskGridDao riskGridDao;
     private final RiskMapper mapper;
+    private final UserService userService;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -227,9 +230,8 @@ public class RiskRestController {
      * Will create email events, where the receiver is the related asset/register's responsible user
      */
     private List<EmailEvent> buildEmailEventsToRelatedResponsible(final ThreatAssessment threatAssessment) {
-        final String responsibleUserName = threatAssessment.getResponsibleUser() != null
-            ? threatAssessment.getResponsibleUser().getName()
-            : "";
+        final User user = userService.currentUser();
+        final String responsibleUserName = user != null ? user.getName() : "";
         if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
             return relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
                 .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
