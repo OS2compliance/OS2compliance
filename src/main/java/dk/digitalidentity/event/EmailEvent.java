@@ -19,5 +19,6 @@ public class EmailEvent {
     private String email;
     private String subject;
     private String message;
+    // NOTICE: Attachments will be deleted after the event has been processed
     private List<String> attachments = new ArrayList<>();
 }

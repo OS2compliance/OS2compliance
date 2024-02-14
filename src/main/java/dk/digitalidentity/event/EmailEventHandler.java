@@ -31,6 +31,7 @@ public class EmailEventHandler {
 
     @Async
     @EventListener
+    // NOTICE: Attachments will be deleted after the event has been processed
     public void handleEmailEvent(final EmailEvent event) {
         if (configuration.getMail().isEnabled()) {
             Transport transport = null;
@@ -75,6 +76,10 @@ public class EmailEventHandler {
             } catch (final Exception ex) {
                 log.error("Failed to send email", ex);
             } finally {
+                //noinspection ResultOfMethodCallIgnored
+                event.getAttachments().stream()
+                    .map(File::new)
+                    .forEach(File::delete);
                 try {
                     if (transport != null) {
                         transport.close();

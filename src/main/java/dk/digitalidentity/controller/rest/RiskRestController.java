@@ -1,8 +1,7 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.AssetDao;
-import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.grid.RiskGridDao;
+import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.mapping.RiskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
@@ -14,23 +13,31 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -40,27 +47,39 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
+import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
+@SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @RestController
 @RequestMapping("rest/risks")
 @RequireUser
 @RequiredArgsConstructor
 public class RiskRestController {
-    private final RegisterDao registerDao;
-    private final AssetDao assetDao;
+    private final ApplicationEventPublisher eventPublisher;
+    private final RegisterService registerService;
+    private final AssetService assetService;
     private final ThreatAssessmentService threatAssessmentService;
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
+    private final RelationService relationService;
     private final RiskGridDao riskGridDao;
     private final RiskMapper mapper;
-
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -91,7 +110,7 @@ public class RiskRestController {
     record ResponsibleUserDTO(String elementName, String uuid, String name, String userId) {}
     @GetMapping("register")
     public ResponsibleUserDTO getRegisterResponsibleUserAndName(@RequestParam final long registerId) {
-        final Register register = registerDao.findById(registerId)
+        final Register register = registerService.findById(registerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (register.getResponsibleUser() == null) {
             return new ResponsibleUserDTO(register.getName(),null, null, null);
@@ -102,7 +121,7 @@ public class RiskRestController {
     record RiskUIDTO(String elementName, int rf, int of, int ri, int oi, int rt, int ot, ResponsibleUserDTO user) {}
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
-        final List<Asset> assets = assetDao.findAllById(assetIds);
+        final List<Asset> assets = assetService.findAllById(assetIds);
         final ResponsibleUserDTO user = !assets.isEmpty() ? getUser(assets.get(0)) : null;
         final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream()
             .map(Relatable::getId).collect(Collectors.toList()));
@@ -110,9 +129,21 @@ public class RiskRestController {
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), user);
     }
 
+    @Transactional
     @PostMapping("{id}/mailReport")
-    public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id) {
-        // TODO GEnerate report, save to temp/ and attached to email to system owner
+    public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id) throws IOException {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<EmailEvent> emailEvents = buildEmailEventsToRelatedResponsible(threatAssessment);
+        if (emailEvents.isEmpty()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No responsible found");
+        }
+        try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(RISK_ASSESSMENT_TEMPLATE_DOC,
+            Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
+            final File outputFile = File.createTempFile(UUID.randomUUID().toString(), "docx");
+            myDocument.write(new FileOutputStream(outputFile));
+            emailEvents.forEach(e -> e.getAttachments().add(outputFile.getAbsolutePath()));
+        }
+        emailEvents.forEach(eventPublisher::publishEvent);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -126,7 +157,7 @@ public class RiskRestController {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
         }
 
-        ThreatAssessmentResponse response = null;
+        ThreatAssessmentResponse response;
         if (dto.dbType().equals(ThreatDatabaseType.CATALOG)) {
             final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(dto.identifier())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier())).findAny().orElse(null);
@@ -135,7 +166,7 @@ public class RiskRestController {
             }
         } else if (dto.dbType().equals(ThreatDatabaseType.CUSTOM)) {
             final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(dto.id())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId() == threat.getId()).findAny().orElse(null);
+            response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getCustomThreat() != null && Objects.equals(r.getCustomThreat().getId(), threat.getId())).findAny().orElse(null);
             if (response == null) {
                 response = threatAssessmentService.createResponse(threatAssessment, null, threat);
             }
@@ -190,6 +221,43 @@ public class RiskRestController {
     private boolean containsField(final String fieldName) {
         return fieldName.equals("name") || fieldName.equals("type") || fieldName.equals("user") || fieldName.equals("ou")
                 || fieldName.equals("date") || fieldName.equals("tasks") || fieldName.equals("assessment");
+    }
+
+    /**
+     * Will create email events, where the receiver is the related asset/register's responsible user
+     */
+    private List<EmailEvent> buildEmailEventsToRelatedResponsible(final ThreatAssessment threatAssessment) {
+        final String responsibleUserName = threatAssessment.getResponsibleUser() != null
+            ? threatAssessment.getResponsibleUser().getName()
+            : "";
+        if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
+            return relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
+                .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
+                .map(assetService::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(a -> a.getResponsibleUser() != null && a.getResponsibleUser().getEmail() != null)
+                .map(a -> EmailEvent.builder()
+                    .email(a.getResponsibleUser().getEmail())
+                    .subject("Risikovurdering for " + a.getName())
+                    .message(responsibleUserName + " har sendt dig en risikovurdering for systemet " + a.getName())
+                    .build())
+                .collect(Collectors.toList());
+        } else if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
+            return relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
+                .map(a -> a.getRelationAType() == RelationType.REGISTER ? a.getRelationAId() : a.getRelationBId())
+                .map(registerService::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(a -> a.getResponsibleUser() != null && a.getResponsibleUser().getEmail() != null)
+                .map(a -> EmailEvent.builder()
+                    .email(a.getResponsibleUser().getEmail())
+                    .subject("Risikovurdering for " + a.getName())
+                    .message(responsibleUserName + " har sendt dig en risikovurdering for behandlingsaktiviteten " + a.getName())
+                    .build())
+                .collect(Collectors.toList());
+        }
+        return Collections.emptyList();
     }
 
 }

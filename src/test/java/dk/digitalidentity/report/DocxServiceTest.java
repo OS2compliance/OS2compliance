@@ -45,6 +45,7 @@ import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -117,6 +118,8 @@ public class DocxServiceTest {
     private ThreatAssessmentService threatAssessmentServiceMock;
     @MockBean
     private SettingsService settingsServiceMock;
+    @MockBean
+    private UserService userService;
 
     @BeforeEach
     public void setup() {

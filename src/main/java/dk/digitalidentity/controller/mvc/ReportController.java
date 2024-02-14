@@ -28,6 +28,10 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 
+import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 
 @Slf4j
@@ -87,13 +91,13 @@ public class ReportController {
                                                 @RequestParam(name = "riskId", required = false) final Long riskId,
                                                 final HttpServletResponse response) {
         if ("article30".equals(identifier)) {
-            generateDocument(response, "reports/article30/main.docx", "artikel30.docx", Collections.emptyMap());
+            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap());
         } else if ("iso27001".equals(identifier)) {
-            generateDocument(response, "reports/ISO27001/ISO27001.docx", "iso27001.docx", Collections.emptyMap());
+            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap());
         } else if ("iso27002_2022".equals(identifier)) {
-            generateDocument(response, "reports/ISO27002/ISO27002.docx", "iso27002.docx", Collections.emptyMap());
+            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap());
         } else if ("risk".equals(identifier)) {
-            generateDocument(response, "reports/risk/main.docx", "risikovurdering.docx",
+            generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.docx",
                 Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId));
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);

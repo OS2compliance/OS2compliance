@@ -18,6 +18,13 @@ public interface Constants {
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";
     String DATA_MIGRATION_VERSION_SETTING = "seed_version";
+
+    String RISK_ASSESSMENT_TEMPLATE_DOC = "reports/risk/main.docx";
+
+    String ISO27002_REPORT_TEMPLATE_DOC = "reports/ISO27002/ISO27002.docx";
+    String ISO27001_REPORT_TEMPLATE_DOC = "reports/ISO27001/ISO27001.docx";
+    String ARTICLE_30_REPORT_TEMPLATE_DOC = "reports/article30/main.docx";
+
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendValue(DAY_OF_MONTH, 2)
