@@ -345,6 +345,28 @@ function handleCategoryRow(rowIndex) {
     }
 }
 
+function mailReportToRelatedOwner(assessmentId) {
+    var token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    fetch( `/rest/risks/${assessmentId}/mailReport`,
+        {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token,
+            }
+        })
+        .then(response => {
+            if (response.status  > 299) {
+                response.json()
+                    .then(json => toastService.error(json.error));
+            } else {
+                toastService.info("Sendt");
+            }
+        })
+        .catch(error => {
+            toastService.error(error);
+        });
+}
+
 function pageLoaded() {
     const excelTextareas = document.querySelectorAll('.excel-textarea');
     for (var i = 0; i < excelTextareas.length; i++) {

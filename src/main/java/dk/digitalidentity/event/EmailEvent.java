@@ -20,5 +20,6 @@ public class EmailEvent {
     private String subject;
     private String message;
     // NOTICE: Attachments will be deleted after the event has been processed
+    @Builder.Default
     private List<String> attachments = new ArrayList<>();
 }

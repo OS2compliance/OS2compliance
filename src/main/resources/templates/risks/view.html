@@ -310,7 +310,8 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">Download</a></li>
-                                    <li><a class="dropdown-item">Send til system ejer</a></li>
+                                    <li th:if="${risk.threatAssessmentType.name() == 'ASSET'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til system ejer</a></li>
+                                    <li th:if="${risk.threatAssessmentType.name() == 'REGISTER'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til behandlingsaktivitets ejer</a></li>
                                 </ul>
                             </div>
                         </div>

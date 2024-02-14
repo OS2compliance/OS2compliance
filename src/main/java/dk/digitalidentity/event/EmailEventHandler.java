@@ -33,62 +33,68 @@ public class EmailEventHandler {
     @EventListener
     // NOTICE: Attachments will be deleted after the event has been processed
     public void handleEmailEvent(final EmailEvent event) {
-        if (configuration.getMail().isEnabled()) {
-            Transport transport = null;
+        if (!configuration.getMail().isEnabled()) {
+            log.info("Email disabled NOT Sending email to " + event.getEmail());
+            deleteAttachements(event);
+            return;
+        }
+        Transport transport = null;
+        log.info("Sending email: '" + event.getSubject() + "' to " + event.getEmail());
 
-            log.info("Sending email: '" + event.getSubject() + "' to " + event.getEmail());
-
-            try {
-                final Properties props = System.getProperties();
-                props.put("mail.transport.protocol", "smtps");
-                props.put("mail.smtp.port", 587);
-                props.put("mail.smtp.auth", "true");
-                props.put("mail.smtp.starttls.enable", "true");
-                props.put("mail.smtp.starttls.required", "true");
-                final Session session = Session.getDefaultInstance(props);
+        try {
+            final Properties props = System.getProperties();
+            props.put("mail.transport.protocol", "smtps");
+            props.put("mail.smtp.port", 587);
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.starttls.required", "true");
+            final Session session = Session.getDefaultInstance(props);
 
 
-                final MimeMessage msg = new MimeMessage(session);
-                msg.setFrom(new InternetAddress(configuration.getMail().getFrom(), configuration.getMail().getFromName()));
+            final MimeMessage msg = new MimeMessage(session);
+            msg.setFrom(new InternetAddress(configuration.getMail().getFrom(), configuration.getMail().getFromName()));
 
-                for (final String singleEmail : event.getEmail().split(";")) {
-                    final String trimmedEmail = singleEmail.trim();
-                    if (!StringUtils.isEmpty(trimmedEmail)) {
-                        msg.addRecipient(Message.RecipientType.TO, new InternetAddress(trimmedEmail));
-                    }
-                }
-
-                msg.setSubject(event.getSubject(), "UTF-8");
-                msg.setHeader("Content-Type", "text/html; charset=UTF-8");
-
-                final MimeBodyPart messageBodyPart = new MimeBodyPart();
-                messageBodyPart.setContent(event.getMessage(), "text/html; charset=UTF-8");
-
-                final Multipart multipart = new MimeMultipart();
-                multipart.addBodyPart(messageBodyPart);
-                addAttachments(multipart, event.getAttachments());
-                msg.setContent(multipart);
-
-                transport = session.getTransport();
-                transport.connect(configuration.getMail().getHost(), configuration.getMail().getUsername(), configuration.getMail().getPassword());
-                transport.addTransportListener(new TransportErrorHandler());
-                transport.sendMessage(msg, msg.getAllRecipients());
-            } catch (final Exception ex) {
-                log.error("Failed to send email", ex);
-            } finally {
-                //noinspection ResultOfMethodCallIgnored
-                event.getAttachments().stream()
-                    .map(File::new)
-                    .forEach(File::delete);
-                try {
-                    if (transport != null) {
-                        transport.close();
-                    }
-                } catch (final Exception ex) {
-                    log.warn("Error occured while trying to terminate connection", ex);
+            for (final String singleEmail : event.getEmail().split(";")) {
+                final String trimmedEmail = singleEmail.trim();
+                if (!StringUtils.isEmpty(trimmedEmail)) {
+                    msg.addRecipient(Message.RecipientType.TO, new InternetAddress(trimmedEmail));
                 }
             }
+
+            msg.setSubject(event.getSubject(), "UTF-8");
+            msg.setHeader("Content-Type", "text/html; charset=UTF-8");
+
+            final MimeBodyPart messageBodyPart = new MimeBodyPart();
+            messageBodyPart.setContent(event.getMessage(), "text/html; charset=UTF-8");
+
+            final Multipart multipart = new MimeMultipart();
+            multipart.addBodyPart(messageBodyPart);
+            addAttachments(multipart, event.getAttachments());
+            msg.setContent(multipart);
+
+            transport = session.getTransport();
+            transport.connect(configuration.getMail().getHost(), configuration.getMail().getUsername(), configuration.getMail().getPassword());
+            transport.addTransportListener(new TransportErrorHandler());
+            transport.sendMessage(msg, msg.getAllRecipients());
+        } catch (final Exception ex) {
+            log.error("Failed to send email", ex);
+        } finally {
+            deleteAttachements(event);
+            try {
+                if (transport != null) {
+                    transport.close();
+                }
+            } catch (final Exception ex) {
+                log.warn("Error occured while trying to terminate connection", ex);
+            }
         }
+    }
+
+    private static void deleteAttachements(final EmailEvent event) {
+        //noinspection ResultOfMethodCallIgnored
+        event.getAttachments().stream()
+            .map(File::new)
+            .forEach(File::delete);
     }
 
     private void addAttachments(final Multipart multipart, final List<String> attachments) {
