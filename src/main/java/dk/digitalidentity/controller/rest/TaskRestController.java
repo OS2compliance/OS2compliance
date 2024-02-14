@@ -8,10 +8,10 @@ import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.RequireUser;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -29,17 +29,11 @@ import java.util.List;
 @RestController
 @RequestMapping("rest/tasks")
 @RequireUser
+@RequiredArgsConstructor
 public class TaskRestController {
-    @Autowired
     private final UserDao userDao;
     private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
-
-    public TaskRestController(final UserDao userDao, final TaskGridDao taskGridDao, final TaskMapper mapper) {
-        this.userDao = userDao;
-        this.taskGridDao = taskGridDao;
-        this.mapper = mapper;
-    }
 
     @PostMapping("list")
     public PageDTO<TaskDTO> list(

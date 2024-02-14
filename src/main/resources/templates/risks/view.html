@@ -305,9 +305,14 @@
                                 <a type="button" class="btn btn-success btn-xs w-25 mb-1" th:href="'/risks/' + ${risk.id} + '/profile'">
                                     Se risikoprofil
                                 </a>
-                                <a type="button" class="btn btn-success btn-xs w-25" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">
+                                <a type="button" href="#" class="btn btn-success btn-xs w-25" data-bs-toggle="dropdown" aria-expanded="false">
                                     Generer rapport
                                 </a>
+                                <ul class="dropdown-menu dropdown-menu-end">
+                                    <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">Download</a></li>
+                                    <li th:if="${risk.threatAssessmentType.name() == 'ASSET'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til system ejer</a></li>
+                                    <li th:if="${risk.threatAssessmentType.name() == 'REGISTER'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til behandlingsaktivitets ejer</a></li>
+                                </ul>
                             </div>
                         </div>
                         <div class="row">

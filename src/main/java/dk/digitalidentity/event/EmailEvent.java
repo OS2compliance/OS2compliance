@@ -7,6 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Getter
 @Setter
 @Builder
@@ -16,4 +19,7 @@ public class EmailEvent {
     private String email;
     private String subject;
     private String message;
+    // NOTICE: Attachments will be deleted after the event has been processed
+    @Builder.Default
+    private List<String> attachments = new ArrayList<>();
 }
