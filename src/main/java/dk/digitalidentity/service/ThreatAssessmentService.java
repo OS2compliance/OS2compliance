@@ -121,6 +121,7 @@ public class ThreatAssessmentService {
         t.setResidualRiskProbability(sourceResponse.getResidualRiskProbability());
         t.setThreatAssessment(assessment);
         t.setThreatCatalogThreat(sourceResponse.getThreatCatalogThreat());
+        t.setName(sourceResponse.getName());
         final CustomThreat sourceCustomThreat = sourceResponse.getCustomThreat();
         if (sourceCustomThreat != null) {
             final CustomThreat customThreat = customThreats.stream()

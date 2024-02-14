@@ -88,8 +88,9 @@ public class RiskController {
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+            @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
             @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
-
+    // TODO presentUserUuids
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
         }
@@ -137,7 +138,9 @@ public class RiskController {
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
                               @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+                              @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
                               @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
+        // TODO presentUserUuids
         if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv.");
         }
