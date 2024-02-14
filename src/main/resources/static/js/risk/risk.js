@@ -88,6 +88,7 @@ function CopyRiskService() {
     }
 
     this.onShown = function() {
+        let self = this;
         this.modalContainer = document.getElementById('copyModal');
         const registerSelect = this.getScopedElementById('registerSelect');
         if (registerSelect !== null) {
@@ -102,8 +103,23 @@ function CopyRiskService() {
         initFormValidationForForm("copyRiskModalForm",
             () => this.validate());
 
+
+        this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
+            const userUuid = self.userChoicesSelect.passedElement.element.value;
+            self.userChanged(userUuid);
+        });
+
         this.copyAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.copyAssessmentModal.show();
+    }
+
+    this.userChanged = function (userUuid) {
+        fetch( `/rest/ous/user/` + userUuid)
+            .then(response =>  response.json()
+                .then(data => {
+                    this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
+                    this.ouChoicesSelect.setChoiceByValue(data.uuid);
+                })).catch(error => toastService.error(error));
     }
 
     this.validate = function() {
@@ -131,12 +147,10 @@ function CreateRiskService() {
         this.ouChoicesSelect = initOUSelect("ouSelect");
         initDatepicker("#nextRevisionBtn", "#nextRevision");
 
-        this.userChoicesSelect.passedElement.element.addEventListener('addItem', function() {
-                     var userUuid = self.userChoicesSelect.passedElement.element.value;
-                     fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
-                        self.ouChoicesSelect.setChoiceByValue(data);
-                     })).catch(error => toastService.error(error));
-                })
+        this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
+             const userUuid = self.userChoicesSelect.passedElement.element.value;
+             self.userChanged(userUuid);
+        });
 
         this.typeChanged(this.getScopedElementById("threatAssessmentType").value);
         this.getScopedElementById('threatAssessmentType').addEventListener('change', function() {
@@ -173,6 +187,15 @@ function CreateRiskService() {
         this.getScopedElementById("inheritRow").style.display = 'none';
         this.registerChoicesSelect.removeActiveItems();
         this.assetChoicesSelect.removeActiveItems();
+    }
+
+    this.userChanged = function (userUuid) {
+        fetch( `/rest/ous/user/` + userUuid)
+            .then(response =>  response.json()
+                .then(data => {
+                    this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
+                    this.ouChoicesSelect.setChoiceByValue(data.uuid);
+                })).catch(error => toastService.error(error));
     }
 
     this.validateChoicesAndCheckboxesRisk = function (...choiceList) {

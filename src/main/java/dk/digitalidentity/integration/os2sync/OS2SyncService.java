@@ -115,6 +115,7 @@ public class OS2SyncService {
         final Position p = new Position();
         p.setName(hierarchyPosition.getName());
         p.setOuUuid(p.getOuUuid());
+        p.setOuUuid(hierarchyPosition.getOuUuid());
         p.setUser(user);
         return p;
     }
