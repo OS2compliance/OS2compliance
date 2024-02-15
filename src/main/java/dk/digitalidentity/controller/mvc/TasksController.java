@@ -61,7 +61,8 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @RequestMapping("tasks")
 @RequireUser
 public class TasksController {
-    @Autowired private ThreatAssessmentDao threatAssessmentDao;
+    @Autowired
+    private ThreatAssessmentDao threatAssessmentDao;
     @Autowired
     private TaskDao taskDao;
     @Autowired
