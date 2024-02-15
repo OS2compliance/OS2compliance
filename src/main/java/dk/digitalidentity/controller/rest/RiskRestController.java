@@ -144,7 +144,10 @@ public class RiskRestController {
             Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
             final File outputFile = File.createTempFile(UUID.randomUUID().toString(), ".docx");
             myDocument.write(new FileOutputStream(outputFile));
-            emailEvents.forEach(e -> e.getAttachments().add(outputFile.getAbsolutePath()));
+            emailEvents.forEach(e -> e.getAttachments().add(
+                new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),
+                    "Ledelsesrapport for risikovurdering af " + threatAssessment.getName()))
+            );
         }
         emailEvents.forEach(eventPublisher::publishEvent);
 
