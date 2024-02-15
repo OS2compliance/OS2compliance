@@ -149,8 +149,8 @@ function setField() {
                };
 
     postData("/rest/risks/" + riskId + "/threats/setfield", data).then((data) => {
-      // TODO måske vis ok eller fejl notifikation som toastr.js fx via data.status
-    });
+        toastService.info()
+        }).catch(error => toastService.error(error));
 }
 
 function updateAverage() {

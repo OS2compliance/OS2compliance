@@ -152,7 +152,7 @@ public class ThreatAssessmentService {
             task.setNextDeadline(assessment.getNextRevision());
             task.setNotifyResponsible(true);
             task.setResponsibleUser(assessment.getResponsibleUser() != null ? assessment.getResponsibleUser() : userService.currentUser());
-            task.setDescription("Revider dokumentet " + assessment.getName());
+            task.setDescription("Risikovurdering af " + assessment.getName());
             task.getProperties().add(Property.builder()
                 .entity(task)
                 .key(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY)
@@ -388,7 +388,6 @@ public class ThreatAssessmentService {
     private static void setTaskRevisionInterval(final ThreatAssessment assessment, final Task task) {
         switch(assessment.getRevisionInterval()) {
             case YEARLY -> task.setRepetition(TaskRepetition.YEARLY);
-            case HALF_YEARLY -> task.setRepetition(TaskRepetition.HALF_YEARLY);
             case EVERY_SECOND_YEAR -> task.setRepetition(TaskRepetition.EVERY_SECOND_YEAR);
             case EVERY_THIRD_YEAR -> task.setRepetition(TaskRepetition.EVERY_THIRD_YEAR);
             case NONE -> task.setRepetition(TaskRepetition.NONE);

@@ -146,7 +146,7 @@ public class RiskRestController {
             myDocument.write(new FileOutputStream(outputFile));
             emailEvents.forEach(e -> e.getAttachments().add(
                 new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),
-                    "Ledelsesrapport for risikovurdering af " + threatAssessment.getName()))
+                    "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".docx"))
             );
         }
         emailEvents.forEach(eventPublisher::publishEvent);

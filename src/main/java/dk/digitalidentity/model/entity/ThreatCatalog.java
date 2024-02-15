@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -20,6 +21,7 @@ public class ThreatCatalog {
     private String identifier;
 
     @OneToMany(mappedBy = "threatCatalog")
+    @JsonIgnore
     private List<ThreatAssessment> assessments;
 
     @OneToMany(mappedBy = "threatCatalog")
