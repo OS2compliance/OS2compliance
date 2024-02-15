@@ -22,7 +22,7 @@ import java.util.Map;
 public class GlobalExceptionHandler {
     private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
 
-    @ExceptionHandler(value = RuntimeException.class)
+    @ExceptionHandler(value = Exception.class)
     public ModelAndView defaultErrorHandler(final HttpServletRequest request, final Exception e) throws Exception {
         // If the exception is annotated with @ResponseStatus rethrow it and let the framework handle it
         if (AnnotationUtils.findAnnotation (e.getClass(), ResponseStatus.class) != null) {

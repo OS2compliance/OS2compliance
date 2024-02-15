@@ -30,7 +30,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 @Controller
-@RequireUser
 public class DefaultController implements ErrorController {
 	private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
     private final UserDao userDao;
@@ -45,6 +44,7 @@ public class DefaultController implements ErrorController {
 
     @Transactional
     @GetMapping("/dashboard")
+    @RequireUser
 	public String index(final Model model) {
         if (SecurityUtil.isLoggedIn()) {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();

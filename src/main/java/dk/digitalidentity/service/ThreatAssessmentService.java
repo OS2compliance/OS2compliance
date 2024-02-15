@@ -152,7 +152,7 @@ public class ThreatAssessmentService {
             task.setNextDeadline(assessment.getNextRevision());
             task.setNotifyResponsible(true);
             task.setResponsibleUser(assessment.getResponsibleUser() != null ? assessment.getResponsibleUser() : userService.currentUser());
-            task.setDescription("Revider dokumentet " + assessment.getName());
+            task.setDescription("Risikovurdering af " + assessment.getName());
             task.getProperties().add(Property.builder()
                 .entity(task)
                 .key(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY)
