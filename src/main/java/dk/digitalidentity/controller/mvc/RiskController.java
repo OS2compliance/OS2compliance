@@ -16,6 +16,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -28,6 +29,7 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.model.RiskDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +77,7 @@ public class RiskController {
     private final RegisterService registerService;
     private final RelationDao relationDao;
     private final AssetDao assetDao;
+    private final UserService userService;
 
     @GetMapping
     public String riskList(final Model model) {
@@ -88,8 +91,8 @@ public class RiskController {
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+            @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
             @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
-
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
         }
@@ -105,7 +108,7 @@ public class RiskController {
         }
 
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(threatAssessment);
-
+        savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
             relateAssets(selectedAsset, savedThreatAssessment);
         } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
@@ -137,6 +140,7 @@ public class RiskController {
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
                               @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+                              @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
                               @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
         if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv.");
@@ -146,6 +150,7 @@ public class RiskController {
         }
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.copy(sourceId);
         savedThreatAssessment.setName(assessment.getName());
+        savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
             relateAssets(selectedAsset, savedThreatAssessment);
         } else if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
@@ -171,7 +176,7 @@ public class RiskController {
         model.addAttribute("riskScoreExplainer", scaleService.getScaleRiskScoreExplainer());
         model.addAttribute("tasks", taskService.buildRelatedTasks(threatAssessment, false));
         model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
-
+        model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         final Document document = new Document();
         document.setDocumentType(DocumentType.PROCEDURE);
         model.addAttribute("document", document);

@@ -16,10 +16,12 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EmailEvent {
+    public record EmailAttachement (String inputFilePath, String wantedFilenameInEmail) {}
+
     private String email;
     private String subject;
     private String message;
     // NOTICE: Attachments will be deleted after the event has been processed
     @Builder.Default
-    private List<String> attachments = new ArrayList<>();
+    private List<EmailAttachement> attachments = new ArrayList<>();
 }

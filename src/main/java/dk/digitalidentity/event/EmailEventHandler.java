@@ -93,19 +93,21 @@ public class EmailEventHandler {
     private static void deleteAttachements(final EmailEvent event) {
         //noinspection ResultOfMethodCallIgnored
         event.getAttachments().stream()
+            .map(EmailEvent.EmailAttachement::inputFilePath)
             .map(File::new)
             .forEach(File::delete);
     }
 
-    private void addAttachments(final Multipart multipart, final List<String> attachments) {
+    private void addAttachments(final Multipart multipart, final List<EmailEvent.EmailAttachement> attachments) {
         if (attachments == null || attachments.isEmpty()) {
             return;
         }
-        for (final String attachmentFilename : attachments) {
+        for (final EmailEvent.EmailAttachement attachement : attachments) {
             try {
-                final File f = new File(attachmentFilename);
+                final File f = new File(attachement.inputFilePath());
                 final MimeBodyPart attachmentPart = new MimeBodyPart();
                 attachmentPart.attachFile(f);
+                attachmentPart.setFileName(attachement.wantedFilenameInEmail());
                 multipart.addBodyPart(attachmentPart);
             } catch (final IOException | MessagingException e) {
                 log.error("Failed to attach file", e);

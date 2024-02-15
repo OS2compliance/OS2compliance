@@ -11,6 +11,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -85,6 +87,14 @@ public class ThreatAssessment extends Relatable {
     @Column
     @Enumerated(EnumType.STRING)
     private RiskAssessment assessment;
+
+    @ManyToMany(cascade = { CascadeType.ALL })
+    @JoinTable(
+        name = "threat_assessment_users",
+        joinColumns = { @JoinColumn(name = "threat_assessment_id") },
+        inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
+    )
+    private List<User> presentAtMeeting;
 
     @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<CustomThreat> customThreats;

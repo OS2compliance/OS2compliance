@@ -32,6 +32,8 @@ public class NotifyService {
         final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
         final String msg = "Din opgave " + task.getName() + " har deadline om " + ChronoUnit.DAYS.between(today, task.getNextDeadline()) + " dag(e).\n" +
             " Du kan finde opgaven her: " + baseUrl + "/tasks/" +  task.getId();
+        task.setHasNotifiedResponsible(true);
+
         eventPublisher.publishEvent(EmailEvent.builder()
                 .email(task.getResponsibleUser().getEmail())
                 .subject("Deadline Notifikation")

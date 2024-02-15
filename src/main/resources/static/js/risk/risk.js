@@ -43,7 +43,6 @@ function initAssetSelect(assetSelectElement) {
     return assetChoices;
 }
 
-
 function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
     let selectedRegister = selectedRegisterElement.value;
     fetch( `/rest/risks/register?registerId=${selectedRegister}`)
@@ -98,6 +97,11 @@ function CopyRiskService() {
         if (assetSelect !== null) {
             this.assetChoicesSelect = initAssetSelect(assetSelect);
         }
+        const presentSelect = this.getScopedElementById('presentAtMeetingSelect');
+        if (assetSelect !== null) {
+            this.presentSelect = initUserSelect('presentAtMeetingSelect');
+        }
+
         this.userChoicesSelect = initUserSelect("userSelect");
         this.ouChoicesSelect = initOUSelect("ouSelect");
         initFormValidationForForm("copyRiskModalForm",
@@ -169,8 +173,14 @@ function CreateRiskService() {
             self.sendEmailChanged(this.checked);
         });
 
+        const presentSelect = this.getScopedElementById('presentAtMeetingSelect');
+        if (assetSelect !== null) {
+            this.presentSelect = initUserSelect('presentAtMeetingSelect');
+        }
+
         initFormValidationForForm("createRiskModal",
             () => this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect));
+
     }
 
     this.typeChanged = function (selectedType) {
