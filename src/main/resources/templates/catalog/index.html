@@ -2,8 +2,6 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
-<script th:src="@{/js/risk/risk.js}" defer></script>
-<link rel="stylesheet" th:href="@{/css/risks/risks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -21,9 +19,9 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-<!--                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">-->
-<!--                            <i class="ti-plus"></i> <span class="vr"></span> Nyt trusselskatalog-->
-<!--                        </button>-->
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
+                            <i class="ti-plus"></i> <span class="vr"></span> Nyt trusselskatalog
+                        </button>
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
@@ -38,7 +36,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div id="cataloguesDatatable"></div>
+                                <div id="catalogsDatatable"></div>
                             </div>
                         </div>
                     </div>
@@ -47,7 +45,7 @@
         </div>
     </section>
     <header th:replace="~{fragments/header :: header}"></header>
-    <nav th:replace="~{fragments/navbar :: main (page='catalogues')}"></nav>
+    <nav th:replace="~{fragments/navbar :: main (page='catalogs')}"></nav>
 </div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
@@ -56,7 +54,7 @@
     /*<![CDATA[*/
     /*[+
         var data = [[${threatCatalogs}]];
-        var viewUrl = [[@{/catalogues/}]];
+        var viewUrl = [[@{/catalogs/}]];
     +]*/
 
     document.addEventListener("DOMContentLoaded", function(event) {
@@ -85,6 +83,30 @@
                         const url = viewUrl + row.cells[0]['data'];
                         return gridjs.html(`<a href="${url}">${cell}</a>`);
                     }
+                },
+                {
+                    id: "threats",
+                    name: "Trusler",
+                    formatter: (cell, row) => {
+                        return cell.length;
+                    }
+                },
+                {
+                    id: "hidden",
+                    name: "Synlighed",
+                    width: '90px',
+                    formatter: (cell, row) => {
+                        return cell ? "Skjult" : "Synlig";
+                    }
+                },
+                {
+                    id: "actions",
+                    name: "Handlinger",
+                    sort: 0,
+                    width: '90px',
+                    formatter: (cell, row) => {
+                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editCatalog('asdf')"><i class="pli-pencil fs-5"></i></button>`);
+                    }
                 }
             ],
             data: data,
@@ -103,7 +125,7 @@
                     'page': (page) => `Side ${page}`
                 }
             }
-        }).render(document.getElementById("cataloguesDatatable"));
+        }).render(document.getElementById("catalogsDatatable"));
     });
     /*]]>*/
 </script>

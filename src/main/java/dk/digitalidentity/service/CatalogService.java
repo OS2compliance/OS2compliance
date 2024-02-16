@@ -9,7 +9,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class CatalogueService {
+public class CatalogService {
     private final ThreatCatalogDao threatCatalogDao;
 
     public List<ThreatCatalog> findAll() {

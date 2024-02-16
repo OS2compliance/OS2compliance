@@ -32,7 +32,7 @@
 							</a>
 						</li>
 						<li class="nav-item has-sub">
-                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'risikovurderinger' || page == 'catalogues' ? 'active' : ''}">
+                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'risikovurderinger' || page == 'catalogs' ? 'active' : ''}">
                                 <i class="pli-flashlight fs-5 me-2"></i> <span class="nav-label ms-1">Risikostyring</span>
                             </a>
                             <ul class="mininav-content nav collapse">
@@ -40,7 +40,7 @@
                                     <a th:href="@{/risks}" class="nav-link" th:classappend="${page} == 'risikovurderinger' ? 'active' : ''">Risikovurderinger</a>
                                 </li>
                                 <li class="nav-item">
-                                    <a th:href="@{/catalogues}" class="nav-link" th:classappend="${page} == 'catalogues' ? 'active' : ''">Trusselskataloger</a>
+                                    <a th:href="@{/catalogs}" class="nav-link" th:classappend="${page} == 'catalogs' ? 'active' : ''">Trusselskataloger</a>
                                 </li>
                             </ul>
 						</li>
