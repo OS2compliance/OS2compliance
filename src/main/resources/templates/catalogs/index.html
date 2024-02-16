@@ -19,7 +19,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createCatalogDialog">
                             <i class="ti-plus"></i> <span class="vr"></span> Nyt trusselskatalog
                         </button>
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -44,6 +44,9 @@
             </div>
         </div>
     </section>
+
+    <div class="modal fade" tabindex="-1" id="createCatalogDialog" aria-hidden="true"></div>
+
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='catalogs')}"></nav>
 </div>
@@ -55,7 +58,15 @@
     /*[+
         var data = [[${threatCatalogs}]];
         var viewUrl = [[@{/catalogs/}]];
+        var formUrl = [[@{/catalogs/form}]];
     +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        fetch(formUrl)
+            .then(response => response.text()
+                .then(data => document.getElementById('createCatalogDialog').innerHTML = data))
+            .catch(error => toastService.error(error));
+    });
 
     document.addEventListener("DOMContentLoaded", function(event) {
         const defaultClassName = {
