@@ -8,6 +8,9 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.util.List;
 
@@ -15,6 +18,8 @@ import java.util.List;
 @Table(name = "threat_catalogs")
 @Getter
 @Setter
+@SQLDelete(sql = "UPDATE threat_catalogs SET deleted = true WHERE id=?", check = ResultCheckStyle.COUNT)
+@Where(clause = "deleted=false")
 public class ThreatCatalog {
     @Id
     @Column(nullable = false, unique = true)
@@ -29,4 +34,7 @@ public class ThreatCatalog {
 
     @Column
     private String name;
+
+    @Column
+    private boolean hidden;
 }
