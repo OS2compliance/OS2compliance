@@ -77,6 +77,11 @@
     };
 
     document.addEventListener("DOMContentLoaded", function(event) {
+        const defaultClassName = {
+            table: 'table table-striped',
+            search: "form-control",
+            header: "d-flex justify-content-end"
+        };
 
         const grid = new gridjs.Grid({
             className: defaultClassName,

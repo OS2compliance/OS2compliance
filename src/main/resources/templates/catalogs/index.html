@@ -46,6 +46,7 @@
     </section>
 
     <div class="modal fade" tabindex="-1" id="createCatalogDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editCatalogDialog" aria-hidden="true"></div>
 
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='catalogs')}"></nav>
@@ -61,14 +62,24 @@
         var formUrl = [[@{/catalogs/form}]];
     +]*/
 
+    function editCatalog(identifier) {
+        fetch(`${formUrl}?id=${identifier}`)
+            .then(response => response.text()
+                .then(data => {
+                    let dialog = document.getElementById('editCatalogDialog');
+                    dialog.innerHTML = data;
+                    editDialog = new bootstrap.Modal(document.getElementById('editCatalogDialog'));
+                    editDialog.show();
+                }))
+            .catch(error => toastService.error(error));
+    }
+
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(formUrl)
             .then(response => response.text()
                 .then(data => document.getElementById('createCatalogDialog').innerHTML = data))
             .catch(error => toastService.error(error));
-    });
 
-    document.addEventListener("DOMContentLoaded", function(event) {
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
@@ -116,7 +127,8 @@
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editCatalog('asdf')"><i class="pli-pencil fs-5"></i></button>`);
+                        const identifier = row.cells[0]['data'];
+                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editCatalog('${identifier}')"><i class="pli-pencil fs-5"></i></button>`);
                     }
                 }
             ],

@@ -21,4 +21,8 @@ public class CatalogService {
         return threatCatalogDao.findById(identifier);
     }
 
+    public ThreatCatalog save(final ThreatCatalog threatCatalog) {
+        return threatCatalogDao.save(threatCatalog);
+    }
+
 }

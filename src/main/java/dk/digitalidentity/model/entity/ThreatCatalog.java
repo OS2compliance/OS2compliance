@@ -36,5 +36,5 @@ public class ThreatCatalog {
     private String name;
 
     @Column
-    private boolean hidden;
+    private boolean hidden = true;
 }
