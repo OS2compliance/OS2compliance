@@ -21,6 +21,7 @@ public class ThreatCatalogThreatDTO {
     private String threatType;
     @NotEmpty
     private String description;
+    private Long sortKey;
 
     private Boolean confidentiality;
     private Boolean integrity;

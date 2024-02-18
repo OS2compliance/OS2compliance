@@ -1,7 +1,9 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.ThreatCatalogDao;
+import dk.digitalidentity.dao.ThreatCatalogThreatDao;
 import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -12,6 +14,7 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class CatalogService {
     private final ThreatCatalogDao threatCatalogDao;
+    private final ThreatCatalogThreatDao threatCatalogThreatDao;
 
     public List<ThreatCatalog> findAll() {
         return threatCatalogDao.findAll();
@@ -23,6 +26,14 @@ public class CatalogService {
 
     public ThreatCatalog save(final ThreatCatalog threatCatalog) {
         return threatCatalogDao.save(threatCatalog);
+    }
+
+    public ThreatCatalogThreat saveThreat(final ThreatCatalogThreat threat) {
+        return threatCatalogThreatDao.save(threat);
+    }
+
+    public Optional<ThreatCatalogThreat> getThreat(final String identifier) {
+        return threatCatalogThreatDao.findById(identifier);
     }
 
 }

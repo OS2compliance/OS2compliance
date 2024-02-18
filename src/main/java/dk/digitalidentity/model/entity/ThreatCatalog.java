@@ -5,6 +5,7 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +31,7 @@ public class ThreatCatalog {
     private List<ThreatAssessment> assessments;
 
     @OneToMany(mappedBy = "threatCatalog")
+    @OrderBy(value = "sortKey ASC")
     private List<ThreatCatalogThreat> threats;
 
     @Column

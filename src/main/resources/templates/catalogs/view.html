@@ -61,9 +61,11 @@
     /*<![CDATA[*/
     /*[+
         var catalogIdentifier = [[${catalog.identifier}]];
-        var data = [[${catalog.threats}]]
         var formUrl = [[@{/catalogs/threatForm}]];
+        var restUrl = [[@{/rest/catalogs}]];
     +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    let threatsGrid;
 
     function editThreat(identifier) {
         fetch(`${formUrl}?catalogIdentifier=${catalogIdentifier}&identifier=${identifier}`)
@@ -77,6 +79,19 @@
             .catch(error => toastService.error(error));
     }
 
+    function sortHigher(identifier) {
+        fetch(`${restUrl}/${catalogIdentifier}/${identifier}/up`,
+            {method: "POST", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+            .then(response => threatsGrid.forceRender())
+            .catch(error => toastService.error(error));
+    }
+
+    function sortLower(identifier) {
+        fetch(`${restUrl}/${catalogIdentifier}/${identifier}/down`,
+            {method: "POST", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+            .then(response => threatsGrid.forceRender())
+            .catch(error => toastService.error(error));
+    }
 
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(`${formUrl}?catalogIdentifier=${catalogIdentifier}`)
@@ -90,7 +105,35 @@
             header: "d-flex justify-content-end"
         };
 
-        new gridjs.Grid({
+        const findPreviousRow = function(threatIdentifier) {
+            let lastRow = null;
+            if (threatsGrid.data) {
+                for (let i = 0; i<threatsGrid.data.length; ++i) {
+                    const row = threatsGrid.data[i];
+                    if (row.identifier === threatIdentifier) {
+                        break;
+                    }
+                    lastRow = row;
+                }
+            }
+            return lastRow;
+        }
+
+        const findNextRow = function(threatIdentifier) {
+            let lastRow = null;
+            if (threatsGrid.data) {
+                for (let i = threatsGrid.data.length-1; i>=0; --i) {
+                    const row = threatsGrid.data[i];
+                    if (row.identifier === threatIdentifier) {
+                        break;
+                    }
+                    lastRow = row;
+                }
+            }
+            return lastRow;
+        }
+
+        threatsGrid = new gridjs.Grid({
             className: defaultClassName,
             sort: false,
             columns: [
@@ -111,15 +154,40 @@
                     id: "actions",
                     name: "Handlinger",
                     sort: 0,
-                    width: '90px',
+                    width: '110px',
                     formatter: (cell, row) => {
                         const identifier = row.cells[0]['data'];
-                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editThreat('${identifier}')"><i class="pli-pencil fs-5"></i></button>`);
+                        const threatType = row.cells[1]['data'];
+                        let lastRow = findPreviousRow(identifier);
+                        let nextRow = findNextRow(identifier);
+                        const upDisabled = (lastRow === null || lastRow.threatType !== threatType)
+                            ? 'disabled'
+                            : '';
+                        const downDisabled = (nextRow === null || nextRow.threatType !== threatType)
+                            ? 'disabled'
+                            : '';
+                        const upButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortHigher('${identifier}')" ${upDisabled}><i class="pli-triangle-arrow-up fs-5"></i></button>`;
+                        const downButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortLower('${identifier}')" ${downDisabled}><i class="pli-triangle-arrow-down fs-5"></i></button>`;
+                        return gridjs.html(upButton
+                            + downButton
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editThreat('${identifier}')"><i class="pli-pencil fs-5"></i></button>`);
                     }
                 }
             ],
-            data: data
-        }).render(document.getElementById("threatsTable"));
+            server:{
+                url: `${restUrl}/${catalogIdentifier}`,
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                then: data => {
+                    threatsGrid.data = data;
+                    return data.map(threat => [ threat.identifier, threat.threatType, threat.description ]);
+                },
+                total: data => data.totalCount
+            }
+        });
+        threatsGrid.render(document.getElementById("threatsTable"));
 
     });
     /*]]>*/
