@@ -10,6 +10,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +22,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -29,26 +33,58 @@ public class CatalogRestController {
     private final CatalogService catalogService;
     private final ThreatMapper threatMapper;
 
+    @Transactional
+    @DeleteMapping(value = "{catalogIdentifier}")
+    public ResponseEntity<?> delete(@PathVariable("catalogIdentifier") final String catalogIdentifier) {
+        final ThreatCatalog catalog = catalogService.get(catalogIdentifier)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        catalogService.delete(catalog);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Transactional
     @GetMapping(value = "{catalogIdentifier}")
     public List<ThreatCatalogThreatDTO> list(@PathVariable("catalogIdentifier") final String catalogIdentifier) {
         final ThreatCatalog catalog = catalogService.get(catalogIdentifier)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        return threatMapper.toDTO(catalog.getThreats());
+        return catalog.getThreats().stream()
+            .map(t -> {
+                final ThreatCatalogThreatDTO dto = threatMapper.toDTO(t);
+                dto.setInUse(catalogService.threatInUse(t));
+                return dto;
+            })
+            .collect(Collectors.toList());
     }
 
+    @Transactional
+    @DeleteMapping("{catalogIdentifier}/{identifier}")
+    public ResponseEntity<?> delete(@PathVariable("catalogIdentifier") final String catalogIdentifier,
+                                    @PathVariable("identifier") final String identifier) {
+        final ThreatCatalog catalog = catalogService.get(catalogIdentifier)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final ThreatCatalogThreat threat = catalogService.getThreat(identifier)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        catalogService.deleteThreat(threat);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Transactional
     @PostMapping("{catalogIdentifier}/{identifier}/up")
-    public List<ThreatCatalogThreatDTO> reorderUp(@PathVariable("catalogIdentifier") final String catalogIdentifier,
-                                                  @PathVariable("identifier") final String identifier) {
-        return reorder(catalogIdentifier, identifier, false);
+    public ResponseEntity<?> reorderUp(@PathVariable("catalogIdentifier") final String catalogIdentifier,
+                                    @PathVariable("identifier") final String identifier) {
+        reorder(catalogIdentifier, identifier, false);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @Transactional
     @PostMapping("{catalogIdentifier}/{identifier}/down")
-    public List<ThreatCatalogThreatDTO> reorderDown(@PathVariable("catalogIdentifier") final String catalogIdentifier,
+    public ResponseEntity<?> reorderDown(@PathVariable("catalogIdentifier") final String catalogIdentifier,
                                                     @PathVariable("identifier") final String identifier) {
-        return reorder(catalogIdentifier, identifier, true);
+        reorder(catalogIdentifier, identifier, true);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    private List<ThreatCatalogThreatDTO> reorder(final String catalogIdentifier, final String identifier, final boolean backwards) {
+    private void reorder(final String catalogIdentifier, final String identifier, final boolean backwards) {
         final ThreatCatalog catalog = catalogService.get(catalogIdentifier)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatCatalogThreat threat = catalogService.getThreat(identifier)
@@ -71,7 +107,6 @@ public class CatalogRestController {
                 last = currentThreat;
             }
         }
-        return threatMapper.toDTO(catalog.getThreats());
     }
 
     private static Comparator<ThreatCatalogThreat> sortCatalogThreatsComparator(final boolean backwards) {

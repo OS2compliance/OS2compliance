@@ -57,10 +57,32 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        var data = [[${threatCatalogs}]];
-        var viewUrl = [[@{/catalogs/}]];
-        var formUrl = [[@{/catalogs/form}]];
+        const inUseMap = [[${inUse}]];
+        const data = [[${threatCatalogs}]];
+        const viewUrl = [[@{/catalogs/}]];
+        const formUrl = [[@{/catalogs/form}]];
+        const restUrl = [[@{/rest/catalogs}]];
     +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    function deleteCatalog(identifier, name) {
+        Swal.fire({
+            text: `Er du sikker på du vil slette trusselskataloget '${name}'?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#03a9f4',
+            cancelButtonColor: '#df5645',
+            confirmButtonText: 'Ja',
+            cancelButtonText: 'Nej'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`${restUrl}/${identifier}`,
+                    {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                    .then(response => location.reload())
+                    .catch(error => toastService.error(error));
+            }
+        });
+    }
 
     function editCatalog(identifier) {
         fetch(`${formUrl}?id=${identifier}`)
@@ -128,7 +150,12 @@
                     width: '90px',
                     formatter: (cell, row) => {
                         const identifier = row.cells[0]['data'];
-                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editCatalog('${identifier}')"><i class="pli-pencil fs-5"></i></button>`);
+                        const catalog = row.cells[1]['data'];
+                        const inUse = inUseMap[identifier];
+                        const deleteStyle = inUse ? 'visibility: hidden' : '';
+                        const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editCatalog('${identifier}')"><i class="pli-pencil fs-5"></i></button>`;
+                        const deleteButton = `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="deleteCatalog('${identifier}', '${catalog}')"><i class="pli-trash fs-5"></i></button>`;
+                        return gridjs.html(editButton + deleteButton);
                     }
                 }
             ],

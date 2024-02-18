@@ -23,6 +23,7 @@ public interface ThreatMapper {
     @Mapping(target = "integrity", ignore = true)
     @Mapping(target = "availability", ignore = true)
     @Mapping(target = "consequenceMunicipal", ignore = true)
+    @Mapping(target = "inUse", ignore = true)
     ThreatCatalogThreatDTO toDTO(final ThreatCatalogThreat threat);
 
     List<ThreatCatalogThreatDTO> toDTO(final List<ThreatCatalogThreat> threat);

@@ -22,7 +22,7 @@ public class ThreatCatalogThreatDTO {
     @NotEmpty
     private String description;
     private Long sortKey;
-
+    private Boolean inUse;
     private Boolean confidentiality;
     private Boolean integrity;
     private Boolean availability;

@@ -1,5 +1,7 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.dao.ThreatAssessmentDao;
+import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.dao.ThreatCatalogDao;
 import dk.digitalidentity.dao.ThreatCatalogThreatDao;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -15,9 +17,15 @@ import java.util.Optional;
 public class CatalogService {
     private final ThreatCatalogDao threatCatalogDao;
     private final ThreatCatalogThreatDao threatCatalogThreatDao;
+    private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
+    private final ThreatAssessmentDao threatAssessmentDao;
 
     public List<ThreatCatalog> findAll() {
         return threatCatalogDao.findAll();
+    }
+
+    public List<ThreatCatalog> findAllVisible() {
+        return threatCatalogDao.findAllByHiddenFalse();
     }
 
     public Optional<ThreatCatalog> get(final String identifier) {
@@ -28,6 +36,10 @@ public class CatalogService {
         return threatCatalogDao.save(threatCatalog);
     }
 
+    public void delete(final ThreatCatalog threatCatalog) {
+        threatCatalogDao.delete(threatCatalog);
+    }
+
     public ThreatCatalogThreat saveThreat(final ThreatCatalogThreat threat) {
         return threatCatalogThreatDao.save(threat);
     }
@@ -36,4 +48,15 @@ public class CatalogService {
         return threatCatalogThreatDao.findById(identifier);
     }
 
+    public boolean threatInUse(final ThreatCatalogThreat threat) {
+        return threatAssessmentResponseDao.countByThreatCatalogThreat(threat) > 0;
+    }
+
+    public boolean inUse(final ThreatCatalog threatCatalog) {
+        return threatAssessmentDao.countByThreatCatalog(threatCatalog) > 0;
+    }
+
+    public void deleteThreat(final ThreatCatalogThreat threat) {
+        threatCatalogThreatDao.delete(threat);
+    }
 }

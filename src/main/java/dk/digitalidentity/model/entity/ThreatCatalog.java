@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -19,7 +20,7 @@ import java.util.List;
 @Table(name = "threat_catalogs")
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE threat_catalogs SET deleted = true WHERE id=?", check = ResultCheckStyle.COUNT)
+@SQLDelete(sql = "UPDATE threat_catalogs SET deleted = true WHERE identifier=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
 public class ThreatCatalog {
     @Id
@@ -30,8 +31,8 @@ public class ThreatCatalog {
     @JsonIgnore
     private List<ThreatAssessment> assessments;
 
-    @OneToMany(mappedBy = "threatCatalog")
-    @OrderBy(value = "sortKey ASC")
+    @OneToMany(mappedBy = "threatCatalog", cascade = CascadeType.ALL)
+    @OrderBy(value = "threatType ASC, sortKey ASC")
     private List<ThreatCatalogThreat> threats;
 
     @Column

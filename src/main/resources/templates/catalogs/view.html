@@ -93,6 +93,25 @@
             .catch(error => toastService.error(error));
     }
 
+    function deleteThreat(identifier) {
+        Swal.fire({
+            text: `Er du sikker på du vil slette truslen`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#03a9f4',
+            cancelButtonColor: '#df5645',
+            confirmButtonText: 'Ja',
+            cancelButtonText: 'Nej'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`${restUrl}/${catalogIdentifier}/${identifier}`,
+                    {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                    .then(response => threatsGrid.forceRender())
+                    .catch(error => toastService.error(error));
+            }
+        });
+    }
+
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(`${formUrl}?catalogIdentifier=${catalogIdentifier}`)
             .then(response => response.text()
@@ -151,26 +170,35 @@
                     name: "Beskrivelse"
                 },
                 {
+                    id: "inUse",
+                    name: "inUse",
+                    hidden: true
+                },
+                {
                     id: "actions",
                     name: "Handlinger",
                     sort: 0,
-                    width: '110px',
+                    width: '130px',
                     formatter: (cell, row) => {
                         const identifier = row.cells[0]['data'];
                         const threatType = row.cells[1]['data'];
+                        const inUse = row.cells[3]['data'];
                         let lastRow = findPreviousRow(identifier);
                         let nextRow = findNextRow(identifier);
-                        const upDisabled = (lastRow === null || lastRow.threatType !== threatType)
-                            ? 'disabled'
+                        const upStyle = (lastRow === null || lastRow.threatType !== threatType)
+                            ? 'visibility: hidden'
                             : '';
-                        const downDisabled = (nextRow === null || nextRow.threatType !== threatType)
-                            ? 'disabled'
+                        const downStyle = (nextRow === null || nextRow.threatType !== threatType)
+                            ? 'visibility: hidden'
                             : '';
-                        const upButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortHigher('${identifier}')" ${upDisabled}><i class="pli-triangle-arrow-up fs-5"></i></button>`;
-                        const downButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortLower('${identifier}')" ${downDisabled}><i class="pli-triangle-arrow-down fs-5"></i></button>`;
+                        const deleteStyle = inUse ? 'visibility: hidden' : '';
+                        const upButton = `<button style="${upStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortHigher('${identifier}')"><i class="pli-up fs-5"></i></button>`;
+                        const downButton = `<button style="${downStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortLower('${identifier}')"><i class="pli-down fs-5"></i></button>`;
+
                         return gridjs.html(upButton
                             + downButton
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editThreat('${identifier}')"><i class="pli-pencil fs-5"></i></button>`);
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editThreat('${identifier}')"><i class="pli-pencil fs-5"></i></button>`
+                            + `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="deleteThreat('${identifier}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],
@@ -182,7 +210,7 @@
                 },
                 then: data => {
                     threatsGrid.data = data;
-                    return data.map(threat => [ threat.identifier, threat.threatType, threat.description ]);
+                    return data.map(threat => [ threat.identifier, threat.threatType, threat.description, threat.inUse ]);
                 },
                 total: data => data.totalCount
             }

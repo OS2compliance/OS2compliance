@@ -6,6 +6,7 @@ import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+import java.util.Objects;
+import java.util.UUID;
+import java.util.stream.Collectors;
+
 @Slf4j
 @Controller
 @RequestMapping("catalogs")
@@ -28,7 +34,10 @@ public class CatalogController {
 
     @GetMapping
     public String riskList(final Model model) {
-        model.addAttribute("threatCatalogs", threatCatalogService.findAll());
+        final List<ThreatCatalog> catalogList = threatCatalogService.findAll();
+        model.addAttribute("threatCatalogs", catalogList);
+        model.addAttribute("inUse", catalogList.stream()
+            .collect(Collectors.toMap(ThreatCatalog::getIdentifier, threatCatalogService::inUse)));
         return "catalogs/index";
     }
 
@@ -69,7 +78,18 @@ public class CatalogController {
         final ThreatCatalogThreat existingThreat = catalog.getThreats().stream()
             .filter(t -> threat.getIdentifier().equals(t.getIdentifier()))
             .findFirst()
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            .orElseGet(() -> {
+                // New threat, make sure to set the sort key to max
+                final long currentMax = catalog.getThreats().stream()
+                    .filter(t -> StringUtils.equalsIgnoreCase(t.getThreatType(), threat.getThreatType()))
+                    .mapToLong(ThreatCatalogThreat::getSortKey)
+                    .filter(Objects::nonNull)
+                    .max().orElse(0L);
+                threat.setIdentifier(UUID.randomUUID().toString());
+                threat.setThreatCatalog(catalog);
+                threat.setSortKey(currentMax+1);
+                return threatCatalogService.saveThreat(threat);
+            });
         existingThreat.setThreatType(threat.getThreatType());
         existingThreat.setDescription(threat.getDescription());
         return "redirect:/catalogs/" + catalogIdentifier;
@@ -94,12 +114,13 @@ public class CatalogController {
     @Transactional
     @PostMapping("form")
     public String formPost(@ModelAttribute final ThreatCatalog catalog) {
-        if (catalog.getIdentifier() != null) {
+        if (StringUtils.isNotEmpty(catalog.getIdentifier())) {
             final ThreatCatalog existingCatalog = threatCatalogService.get(catalog.getIdentifier())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             existingCatalog.setName(catalog.getName());
             existingCatalog.setHidden(catalog.isHidden());
         } else {
+            catalog.setIdentifier(UUID.randomUUID().toString());
             threatCatalogService.save(catalog);
         }
         return "redirect:/catalogs";
