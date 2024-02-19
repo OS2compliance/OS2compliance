@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("catalogs")
-@RequireUser
+@RequireAdminstrator
 @RequiredArgsConstructor
 public class CatalogController {
     private final CatalogService threatCatalogService;
@@ -97,6 +97,7 @@ public class CatalogController {
 
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final String id) {
+        model.addAttribute("action", "catalogs/form");
         if (id == null) {
             model.addAttribute("catalog", new ThreatCatalog());
             model.addAttribute("formId", "createForm");
@@ -108,6 +109,17 @@ public class CatalogController {
             model.addAttribute("formId", "editForm");
             model.addAttribute("formTitle", "Rediger trusselskatalog");
         }
+        return "catalogs/form";
+    }
+
+    @GetMapping("copy")
+    public String copyForm(final Model model, @RequestParam(name = "id") final String id) {
+        final ThreatCatalog catalog = threatCatalogService.get(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("action", "catalogs/copy");
+        model.addAttribute("catalog", catalog);
+        model.addAttribute("formId", "copyForm");
+        model.addAttribute("formTitle", "Kopier trusselskatalog");
         return "catalogs/form";
     }
 
@@ -123,6 +135,13 @@ public class CatalogController {
             catalog.setIdentifier(UUID.randomUUID().toString());
             threatCatalogService.save(catalog);
         }
+        return "redirect:/catalogs";
+    }
+
+    @Transactional
+    @PostMapping("copy")
+    public String copyPost(@ModelAttribute final ThreatCatalog catalog) {
+        threatCatalogService.copyToNew(catalog);
         return "redirect:/catalogs";
     }
 

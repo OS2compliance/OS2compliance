@@ -8,9 +8,12 @@ import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -56,7 +59,32 @@ public class CatalogService {
         return threatAssessmentDao.countByThreatCatalog(threatCatalog) > 0;
     }
 
+    @Transactional
     public void deleteThreat(final ThreatCatalogThreat threat) {
         threatCatalogThreatDao.delete(threat);
+    }
+
+    @Transactional
+    public void copyToNew(final ThreatCatalog source) {
+        final ThreatCatalog catalog = new ThreatCatalog();
+        catalog.setIdentifier(UUID.randomUUID().toString());
+        catalog.setName(source.getName());
+        catalog.setHidden(source.isHidden());
+        final ThreatCatalog savedCatalog = threatCatalogDao.save(catalog);
+        final List<ThreatCatalogThreat> copiedThreats = threatCatalogThreatDao.findByThreatCatalog(source).stream()
+            .map(t -> copyThreatTo(t, savedCatalog))
+            .collect(Collectors.toList());
+        savedCatalog.setThreats(copiedThreats);
+    }
+
+    private ThreatCatalogThreat copyThreatTo(final ThreatCatalogThreat source, final ThreatCatalog destination) {
+        final ThreatCatalogThreat threat = new ThreatCatalogThreat();
+        threat.setIdentifier(UUID.randomUUID().toString());
+        threat.setThreatCatalog(destination);
+        threat.setSortKey(source.getSortKey());
+        threat.setDescription(source.getDescription());
+        threat.setRights(source.isRights());
+        threat.setThreatType(source.getThreatType());
+        return threatCatalogThreatDao.save(threat);
     }
 }

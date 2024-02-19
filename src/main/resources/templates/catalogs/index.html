@@ -2,6 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
+<script th:src="@{/js/catalogs/catalog.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -47,6 +48,7 @@
 
     <div class="modal fade" tabindex="-1" id="createCatalogDialog" aria-hidden="true"></div>
     <div class="modal fade" tabindex="-1" id="editCatalogDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="copyCatalogDialog" aria-hidden="true"></div>
 
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='catalogs')}"></nav>
@@ -61,40 +63,10 @@
         const data = [[${threatCatalogs}]];
         const viewUrl = [[@{/catalogs/}]];
         const formUrl = [[@{/catalogs/form}]];
+        const copyFormUrl = [[@{/catalogs/copy}]];
         const restUrl = [[@{/rest/catalogs}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
-    function deleteCatalog(identifier, name) {
-        Swal.fire({
-            text: `Er du sikker på du vil slette trusselskataloget '${name}'?`,
-            icon: 'warning',
-            showCancelButton: true,
-            confirmButtonColor: '#03a9f4',
-            cancelButtonColor: '#df5645',
-            confirmButtonText: 'Ja',
-            cancelButtonText: 'Nej'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`${restUrl}/${identifier}`,
-                    {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
-                    .then(response => location.reload())
-                    .catch(error => toastService.error(error));
-            }
-        });
-    }
-
-    function editCatalog(identifier) {
-        fetch(`${formUrl}?id=${identifier}`)
-            .then(response => response.text()
-                .then(data => {
-                    let dialog = document.getElementById('editCatalogDialog');
-                    dialog.innerHTML = data;
-                    editDialog = new bootstrap.Modal(document.getElementById('editCatalogDialog'));
-                    editDialog.show();
-                }))
-            .catch(error => toastService.error(error));
-    }
 
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(formUrl)
@@ -153,9 +125,10 @@
                         const catalog = row.cells[1]['data'];
                         const inUse = inUseMap[identifier];
                         const deleteStyle = inUse ? 'visibility: hidden' : '';
-                        const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editCatalog('${identifier}')"><i class="pli-pencil fs-5"></i></button>`;
-                        const deleteButton = `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="deleteCatalog('${identifier}', '${catalog}')"><i class="pli-trash fs-5"></i></button>`;
-                        return gridjs.html(editButton + deleteButton);
+                        const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="catalog.editCatalog('${identifier}')"><i class="pli-pencil fs-5"></i></button>`;
+                        const deleteButton = `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="catalog.deleteCatalog('${identifier}', '${catalog}')"><i class="pli-trash fs-5"></i></button>`;
+                        const copyButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="catalog.copyCatalog('${identifier}')"><i class="pli-data-copy fs-5"></i></button>`;
+                        return gridjs.html(editButton + copyButton + deleteButton);
                     }
                 }
             ],

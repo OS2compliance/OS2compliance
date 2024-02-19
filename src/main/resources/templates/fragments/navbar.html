@@ -39,7 +39,7 @@
                                 <li class="nav-item">
                                     <a th:href="@{/risks}" class="nav-link" th:classappend="${page} == 'risikovurderinger' ? 'active' : ''">Risikovurderinger</a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
                                     <a th:href="@{/catalogs}" class="nav-link" th:classappend="${page} == 'catalogs' ? 'active' : ''">Trusselskataloger</a>
                                 </li>
                             </ul>
@@ -59,13 +59,6 @@
 								<i class="pli-newspaper fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
 							</a>
 						</li>
-						<!--
-						<li class="nav-item">
-							<a th:href="@{/ui/events}" class="nav-link mininav-toggle collapsed">
-								<i class="pli-bulleted-list fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">LogEvents</span>
-							</a>
-						</li>
-						-->
 					</ul>
 				</div>
 

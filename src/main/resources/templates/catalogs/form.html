@@ -6,7 +6,7 @@
         </div>
         <div class="modal-body">
 
-            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/catalogs/form}" th:object="${catalog}" method="post">
+            <form th:id="${formId}" class="row g-3" action="#" th:action="${action}" th:object="${catalog}" method="post">
                 <input id="identifier" th:field="*{identifier}" type="hidden">
                 <div class="row mt-4">
                     <label for="navn" class="col-sm-4 col-form-label">Navn</label>
