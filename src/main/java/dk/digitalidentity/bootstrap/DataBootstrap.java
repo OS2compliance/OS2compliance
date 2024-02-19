@@ -8,6 +8,8 @@ import dk.digitalidentity.dao.ThreatAssessmentResponseOldDao;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
@@ -56,6 +58,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
     private final ThreatAssessmentResponseOldDao threatAssessmentResponseOldDao;
     private final ThreatAssessmentService threatAssessmentService;
+    private final CatalogService catalogService;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -76,6 +79,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(7, this::seedV7);
         incrementAndPerformIfVersion(8, this::seedV8);
         incrementAndPerformIfVersion(9, this::seedV9);
+        incrementAndPerformIfVersion(10, this::seedV10);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -83,6 +87,22 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         if (currentVersion == version) {
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
+        }
+    }
+
+    /*
+    * Add sort key by extracting digits from the threats identifier.
+    */
+    private void seedV10() {
+        final List<ThreatCatalog> catalogList = catalogService.findAll();
+        for (final ThreatCatalog catalog : catalogList) {
+            catalog.getThreats()
+                .forEach(threat -> {
+                    final String identifierDigits = StringUtils.getDigits(threat.getIdentifier());
+                    if (identifierDigits != null && !identifierDigits.isEmpty()) {
+                        threat.setSortKey(Long.parseLong(identifierDigits));
+                    }
+                });
         }
     }
 

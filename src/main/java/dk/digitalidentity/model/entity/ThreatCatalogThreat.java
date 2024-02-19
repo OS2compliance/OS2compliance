@@ -32,6 +32,9 @@ public class ThreatCatalogThreat {
     private String description;
 
     @Column
+    private Long sortKey;
+
+    @Column
     private boolean rights;
 
 }

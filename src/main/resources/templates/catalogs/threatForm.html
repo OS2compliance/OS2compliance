@@ -1,0 +1,30 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="supplierLabel" th:text="${formTitle}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/catalogs/threatForm(catalogIdentifier=${catalog.identifier})}" th:object="${threat}" method="post">
+                <input id="identifier" th:field="*{identifier}" type="hidden">
+                <div class="row mt-4">
+                    <label for="navn" class="col-sm-4 col-form-label">Type</label>
+                    <div class="col-sm-8">
+                        <input id="navn" th:field="*{threatType}" type="text" class="form-control" required>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-sm-4 col-form-label"><label for="description">Beskrivelse</label></div>
+                    <div class="col-sm-8">
+                        <textarea id="description" th:field="*{description}" rows="5" type="text" class="form-control" required></textarea>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+        </div>
+    </div>
+</div>

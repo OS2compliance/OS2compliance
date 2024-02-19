@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.security.RequireUser;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,17 +30,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequireUser
+@RequiredArgsConstructor
 @RequestMapping(value = "rest/choice-lists", consumes = "application/json", produces = "application/json")
 public class ChoiceListRestController {
     private final ChoiceListMapper mapper;
     private final ChoiceListDao choiceListDao;
     private final ChoiceValueDao choiceValueDao;
-
-    public ChoiceListRestController(final ChoiceListMapper mapper, final ChoiceListDao choiceListDao, final ChoiceValueDao choiceValueDao) {
-        this.mapper = mapper;
-        this.choiceListDao = choiceListDao;
-        this.choiceValueDao = choiceValueDao;
-    }
 
     @PostMapping("values")
     @Transactional

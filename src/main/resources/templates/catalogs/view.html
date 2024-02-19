@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}"></head>
+<body class="jumping">
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/catalogs}">Trusselskataloger</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${catalog.name}"></li>
+                            </ol>
+                        </nav>
+                        <div class="row mt-4 mb-2">
+                            <h1 class="page-title mb-0" th:text="${catalog.name}"></h1>
+                        </div>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createThreatDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny Trussel
+                        </button>
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed rounded-0">
+            <div class="content__wrap">
+
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="threatsTable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" tabindex="-1" id="createThreatDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editThreatDialog" aria-hidden="true"></div>
+
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='catalogs')}"></nav>
+</div>
+
+
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var catalogIdentifier = [[${catalog.identifier}]];
+        var formUrl = [[@{/catalogs/threatForm}]];
+        var restUrl = [[@{/rest/catalogs}]];
+    +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    let threatsGrid;
+
+    function editThreat(identifier) {
+        fetch(`${formUrl}?catalogIdentifier=${catalogIdentifier}&identifier=${identifier}`)
+            .then(response => response.text()
+                .then(data => {
+                    let dialog = document.getElementById('editThreatDialog');
+                    dialog.innerHTML = data;
+                    editDialog = new bootstrap.Modal(document.getElementById('editThreatDialog'));
+                    editDialog.show();
+                }))
+            .catch(error => toastService.error(error));
+    }
+
+    function sortHigher(identifier) {
+        fetch(`${restUrl}/${catalogIdentifier}/${identifier}/up`,
+            {method: "POST", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+            .then(response => threatsGrid.forceRender())
+            .catch(error => toastService.error(error));
+    }
+
+    function sortLower(identifier) {
+        fetch(`${restUrl}/${catalogIdentifier}/${identifier}/down`,
+            {method: "POST", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+            .then(response => threatsGrid.forceRender())
+            .catch(error => toastService.error(error));
+    }
+
+    function deleteThreat(identifier) {
+        Swal.fire({
+            text: `Er du sikker på du vil slette truslen`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#03a9f4',
+            cancelButtonColor: '#df5645',
+            confirmButtonText: 'Ja',
+            cancelButtonText: 'Nej'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`${restUrl}/${catalogIdentifier}/${identifier}`,
+                    {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                    .then(response => threatsGrid.forceRender())
+                    .catch(error => toastService.error(error));
+            }
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        fetch(`${formUrl}?catalogIdentifier=${catalogIdentifier}`)
+            .then(response => response.text()
+                .then(data => document.getElementById('createThreatDialog').innerHTML = data))
+            .catch(error => toastService.error(error));
+
+        const defaultClassName = {
+            table: 'table table-striped',
+            search: "form-control",
+            header: "d-flex justify-content-end"
+        };
+
+        const findPreviousRow = function(threatIdentifier) {
+            let lastRow = null;
+            if (threatsGrid.data) {
+                for (let i = 0; i<threatsGrid.data.length; ++i) {
+                    const row = threatsGrid.data[i];
+                    if (row.identifier === threatIdentifier) {
+                        break;
+                    }
+                    lastRow = row;
+                }
+            }
+            return lastRow;
+        }
+
+        const findNextRow = function(threatIdentifier) {
+            let lastRow = null;
+            if (threatsGrid.data) {
+                for (let i = threatsGrid.data.length-1; i>=0; --i) {
+                    const row = threatsGrid.data[i];
+                    if (row.identifier === threatIdentifier) {
+                        break;
+                    }
+                    lastRow = row;
+                }
+            }
+            return lastRow;
+        }
+
+        threatsGrid = new gridjs.Grid({
+            className: defaultClassName,
+            sort: false,
+            columns: [
+                {
+                    id: "identifier",
+                    name: "identifier",
+                    hidden: true
+                },
+                {
+                    id: "threatType",
+                    name: "Type"
+                },
+                {
+                    id: "description",
+                    name: "Beskrivelse"
+                },
+                {
+                    id: "inUse",
+                    name: "inUse",
+                    hidden: true
+                },
+                {
+                    id: "actions",
+                    name: "Handlinger",
+                    sort: 0,
+                    width: '130px',
+                    formatter: (cell, row) => {
+                        const identifier = row.cells[0]['data'];
+                        const threatType = row.cells[1]['data'];
+                        const inUse = row.cells[3]['data'];
+                        let lastRow = findPreviousRow(identifier);
+                        let nextRow = findNextRow(identifier);
+                        const upStyle = (lastRow === null || lastRow.threatType !== threatType)
+                            ? 'visibility: hidden'
+                            : '';
+                        const downStyle = (nextRow === null || nextRow.threatType !== threatType)
+                            ? 'visibility: hidden'
+                            : '';
+                        const deleteStyle = inUse ? 'visibility: hidden' : '';
+                        const upButton = `<button style="${upStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortHigher('${identifier}')"><i class="pli-up fs-5"></i></button>`;
+                        const downButton = `<button style="${downStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="sortLower('${identifier}')"><i class="pli-down fs-5"></i></button>`;
+
+                        return gridjs.html(upButton
+                            + downButton
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editThreat('${identifier}')"><i class="pli-pencil fs-5"></i></button>`
+                            + `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="deleteThreat('${identifier}')"><i class="pli-trash fs-5"></i></button>`);
+                    }
+                }
+            ],
+            server:{
+                url: `${restUrl}/${catalogIdentifier}`,
+                method: 'GET',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                then: data => {
+                    threatsGrid.data = data;
+                    return data.map(threat => [ threat.identifier, threat.threatType, threat.description, threat.inUse ]);
+                },
+                total: data => data.totalCount
+            }
+        });
+        threatsGrid.render(document.getElementById("threatsTable"));
+
+    });
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

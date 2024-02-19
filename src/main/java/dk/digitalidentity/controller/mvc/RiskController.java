@@ -3,7 +3,6 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
-import dk.digitalidentity.dao.ThreatCatalogDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
@@ -24,6 +23,7 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -66,7 +66,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class RiskController {
     private final ApplicationEventPublisher eventPublisher;
-    private final ThreatCatalogDao threatCatalogDao;
+    private final CatalogService catalogService;
     private final TaskDao taskDao;
     private final RelationService relationService;
     private final Environment environment;
@@ -82,7 +82,7 @@ public class RiskController {
     @GetMapping
     public String riskList(final Model model) {
         model.addAttribute("risk", new ThreatAssessment());
-        model.addAttribute("threatCatalogs", threatCatalogDao.findAll());
+        model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         return "risks/index";
     }
 

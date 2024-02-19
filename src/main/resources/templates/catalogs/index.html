@@ -2,6 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
+<script th:src="@{/js/catalogs/catalog.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -19,7 +20,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createCatalogDialog">
                             <i class="ti-plus"></i> <span class="vr"></span> Nyt trusselskatalog
                         </button>
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -44,6 +45,11 @@
             </div>
         </div>
     </section>
+
+    <div class="modal fade" tabindex="-1" id="createCatalogDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editCatalogDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="copyCatalogDialog" aria-hidden="true"></div>
+
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='catalogs')}"></nav>
 </div>
@@ -53,11 +59,21 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        var data = [[${threatCatalogs}]];
-        var viewUrl = [[@{/catalogs/}]];
+        const inUseMap = [[${inUse}]];
+        const data = [[${threatCatalogs}]];
+        const viewUrl = [[@{/catalogs/}]];
+        const formUrl = [[@{/catalogs/form}]];
+        const copyFormUrl = [[@{/catalogs/copy}]];
+        const restUrl = [[@{/rest/catalogs}]];
     +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
     document.addEventListener("DOMContentLoaded", function(event) {
+        fetch(formUrl)
+            .then(response => response.text()
+                .then(data => document.getElementById('createCatalogDialog').innerHTML = data))
+            .catch(error => toastService.error(error));
+
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
@@ -105,7 +121,14 @@
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editCatalog('asdf')"><i class="pli-pencil fs-5"></i></button>`);
+                        const identifier = row.cells[0]['data'];
+                        const catalog = row.cells[1]['data'];
+                        const inUse = inUseMap[identifier];
+                        const deleteStyle = inUse ? 'visibility: hidden' : '';
+                        const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="catalog.editCatalog('${identifier}')"><i class="pli-pencil fs-5"></i></button>`;
+                        const deleteButton = `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="catalog.deleteCatalog('${identifier}', '${catalog}')"><i class="pli-trash fs-5"></i></button>`;
+                        const copyButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="catalog.copyCatalog('${identifier}')"><i class="pli-data-copy fs-5"></i></button>`;
+                        return gridjs.html(editButton + copyButton + deleteButton);
                     }
                 }
             ],
