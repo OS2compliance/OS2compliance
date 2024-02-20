@@ -29,6 +29,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,10 +140,16 @@ public class ThreatAssessmentService {
     }
 
     @Transactional
-    public Task createAssociatedCheck(final ThreatAssessment assessment) {
+    public Task createOrUpdateAssociatedCheck(final ThreatAssessment assessment) {
         final LocalDate deadline = assessment.getNextRevision();
         if (deadline != null && assessment.getRevisionInterval() != null) {
-            final Task task = new Task();
+            final Task task = relationService.findRelatedToWithType(Collections.singletonList(assessment.getId()), RelationType.TASK)
+                .stream().map(r -> r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId())
+                .map(taskService::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .findFirst().orElse(new Task());
+            // TODO Start her i morgen.
             task.setTaskType(assessment.getRevisionInterval() == ThreatAssessmentRevisionInterval.NONE
                 ? TaskType.TASK
                 : TaskType.CHECK);

@@ -119,27 +119,6 @@
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="nextRevision" class="col-lg-4 col-form-label">Revideringsdato (opretter en opgave)</label>
-                        <div class="col-lg-8">
-                            <div class="input-group">
-                                <input id="nextRevision" type="text" class="form-control" th:field="*{nextRevision}">
-                                <button id="nextRevisionBtn" class="btn btn-primary" type="button" >
-                                    <i class="pli-calendar-4 fs-5"></i>
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
-                        <label for="revisionInterval" class="col-lg-4 col-form-label">Revideringsfrekvens</label>
-                        <div class="col-lg-8">
-                            <select class="form-control form-select" th:field="*{revisionInterval}" id="revisionInterval" required>
-                                <option th:each="revisionInterval : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentRevisionInterval).values()}"
-                                        th:value="${revisionInterval}" th:text="${revisionInterval.message}"></option>
-                            </select>
-                            <div class="invalid-feedback">Der skal vælges en revideringsfrekvens</div>
-                        </div>
-                    </div>
-                    <div class="row mt-3">
                         <div class="col-sm-4 col-form-label"></div>
                         <div class="col-sm-8">
                             <input id="sendEmailcheckbox" class="form-check-input" type="checkbox">

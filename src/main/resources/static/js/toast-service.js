@@ -7,6 +7,7 @@ function ToastService() {
         const container = document.getElementById('toastContainer');
         const template = document.getElementById('toastTemplate');
         const toastElem = template.cloneNode(true);
+        toastElem.dataset.bsDelay = "5000";
         toastElem.querySelector("rect").setAttribute("fill", "#df5645");
         toastElem.querySelector("strong").innerHTML = "Fejl";
         toastElem.querySelector(".toast-body").innerHTML = message;
@@ -22,6 +23,7 @@ function ToastService() {
         const container = document.getElementById('toastContainer');
         const template = document.getElementById('toastTemplate');
         const toastElem = template.cloneNode(true);
+        toastElem.dataset.bsDelay = "1000";
         toastElem.querySelector("rect").setAttribute("fill", "#9FCC2E");
         toastElem.querySelector("strong").innerHTML = header;
         if (message) {

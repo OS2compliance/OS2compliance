@@ -149,7 +149,7 @@ function setField() {
                };
 
     postData("/rest/risks/" + riskId + "/threats/setfield", data).then((data) => {
-        toastService.info()
+        toastService.info("Info", "Dine ændringer er blevet gemt")
         }).catch(error => toastService.error(error));
 }
 
@@ -367,7 +367,22 @@ function mailReportToRelatedOwner(assessmentId) {
         });
 }
 
+let revisionDialog;
+function setRevisionInterval(assessmentId) {
+    fetch( `/risks/${assessmentId}/revision`)
+        .then(response => response.text()
+            .then(data => {
+                let dialog = document.getElementById('revisionIntervalDialog');
+                dialog.innerHTML = data;
+                revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
+                revisionDialog.show();
+                initDatepicker("#nextRevisionBtn", "#nextRevision");
+            }))
+        .catch(error => toastService.error(error));
+}
+
 function pageLoaded() {
+
     const excelTextareas = document.querySelectorAll('.excel-textarea');
     for (var i = 0; i < excelTextareas.length; i++) {
         excelTextareas[i].addEventListener('input', autoAdjustTextareaHeight, false);

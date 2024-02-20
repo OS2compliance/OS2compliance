@@ -302,18 +302,21 @@
                                 </th:block>
                             </tbody>
                         </table>
-                        <div class="d-flex mb-3">
-                            <div class="d-flex flex-fill align-items-start flex-column mb-3 p-1">
-                                <button type="button" class="btn btn-success btn-sm" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
+                        <div class="d-flex mb-2">
+                            <div class="d-flex flex-fill align-items-start mb-3 p-1">
+                                <button type="button" class="btn btn-success mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
                                     <i class="ti-plus"></i> <span class="vr"></span> Tilføj ny trussel
                                 </button>
+                                <button type="button" class="btn btn-success" th:onclick="|setRevisionInterval(${risk.id})|">
+                                    <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
+                                </button>
                             </div>
-                            <div class="d-flex flex-fill align-items-end flex-column mb-3 p-1">
-                                <a type="button" class="btn btn-success btn-xs w-25 mb-1" th:href="'/risks/' + ${risk.id} + '/profile'">
-                                    Se risikoprofil
+                            <div class="d-flex align-items-end flex-row mb-3 p-1">
+                                <a type="button" class="btn btn-success me-1 mb-1" th:href="'/risks/' + ${risk.id} + '/profile'">
+                                    <i class="pli-magnifi-glass"></i> <span class="vr"></span> Se risikoprofil
                                 </a>
-                                <a type="button" href="#" class="btn btn-success btn-xs w-25" data-bs-toggle="dropdown" aria-expanded="false">
-                                    Generer rapport
+                                <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">Download</a></li>
@@ -333,6 +336,8 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='risikovurderinger')}"></nav>
 </div>
+
+<div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true"></div>
 
 <div class="modal fade" id="customThreatFormDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
     <div class="modal-dialog">
