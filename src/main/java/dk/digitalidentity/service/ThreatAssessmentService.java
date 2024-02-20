@@ -137,12 +137,25 @@ public class ThreatAssessmentService {
         threatAssessmentDao.deleteById(threatAssessmentId);
     }
 
+    public Optional<Task> findAssociatedCheck(final ThreatAssessment assessment) {
+        final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY, "" + assessment.getId());
+        if (tasks == null || tasks.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(tasks.get(0));
+    }
+
+    @Transactional
+    public void updateNextRevisionAssociatedTask(final ThreatAssessment assessment) {
+        findAssociatedCheck(assessment)
+            .ifPresent(t -> assessment.setNextRevision(t.getNextDeadline()));
+    }
+
     @Transactional
     public Task createOrUpdateAssociatedCheck(final ThreatAssessment assessment) {
         final LocalDate deadline = assessment.getNextRevision();
         if (deadline != null && assessment.getRevisionInterval() != null) {
-            final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY, "" + assessment.getId());
-            final Task task = (tasks == null || tasks.isEmpty()) ? createAssociatedCheck(assessment) : tasks.get(0);
+            final Task task = findAssociatedCheck(assessment).orElseGet(() -> createAssociatedCheck(assessment));
             task.setName("Revision af " + assessment.getName());
             task.setResponsibleUser(assessment.getResponsibleUser());
             task.setNextDeadline(assessment.getNextRevision());

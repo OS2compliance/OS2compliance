@@ -227,6 +227,7 @@ public class RiskController {
     @GetMapping("{id}/revision")
     public String revisionForm(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        threatAssessmentService.updateNextRevisionAssociatedTask(threatAssessment);
         model.addAttribute("risk", threatAssessment);
         return "risks/revisionIntervalForm";
     }
