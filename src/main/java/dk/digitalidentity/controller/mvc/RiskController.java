@@ -232,6 +232,7 @@ public class RiskController {
     }
 
     @PostMapping("{id}/revision")
+    @Transactional
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         threatAssessment.setRevisionInterval(assessment.getRevisionInterval());

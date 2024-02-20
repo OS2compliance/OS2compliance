@@ -49,6 +49,10 @@ public class TaskService {
             .toList();
     }
 
+    public List<Task> findTaskWithProperty(final String propertyName, final String propertyValue) {
+        return taskDao.findByProperty(propertyName, propertyValue);
+    }
+
     @Transactional
     public List<Task> findTasksNearingDeadlineForUser(final User user) {
         return taskDao.findByResponsibleUserAndNextDeadlineBefore(user, closeToDeadline());
@@ -82,7 +86,7 @@ public class TaskService {
     }
 
     @Transactional
-    public Task createTask(final Task task) {
+    public Task saveTask(final Task task) {
         return taskDao.save(task);
     }
 
