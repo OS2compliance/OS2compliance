@@ -40,6 +40,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -201,6 +202,25 @@ public class RiskRestController {
         threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Transactional
+    @DeleteMapping("{id}/threats/{threatId}")
+    public ResponseEntity<HttpStatus> deleteCustomThread(@PathVariable final long id, @PathVariable final long threatId) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final CustomThreat customThreat = threatAssessment.getCustomThreats().stream()
+            .filter(c -> c.getId() == threatId)
+            .findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        threatAssessment.getThreatAssessmentResponses().stream()
+            .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId() == threatId)
+            .findFirst().ifPresent(r -> {
+                relationService.deleteRelatedTo(r.getId());
+                threatAssessment.getThreatAssessmentResponses().remove(r);
+            });
+        threatAssessment.getCustomThreats().remove(customThreat);
+        threatAssessmentService.save(threatAssessment);
+
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     private void handleNotRelevant(final boolean notRelevant, final ThreatAssessmentResponse response) {

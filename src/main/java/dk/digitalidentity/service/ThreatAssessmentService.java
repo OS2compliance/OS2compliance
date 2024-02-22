@@ -14,7 +14,6 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.model.entity.enums.ThreatAssessmentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.service.model.RiskDTO;
@@ -138,33 +137,53 @@ public class ThreatAssessmentService {
         threatAssessmentDao.deleteById(threatAssessmentId);
     }
 
+    public Optional<Task> findAssociatedCheck(final ThreatAssessment assessment) {
+        final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY, "" + assessment.getId());
+        if (tasks == null || tasks.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(tasks.get(0));
+    }
+
     @Transactional
-    public Task createAssociatedCheck(final ThreatAssessment assessment) {
+    public void updateNextRevisionAssociatedTask(final ThreatAssessment assessment) {
+        findAssociatedCheck(assessment)
+            .ifPresent(t -> assessment.setNextRevision(t.getNextDeadline()));
+    }
+
+    @Transactional
+    public Task createOrUpdateAssociatedCheck(final ThreatAssessment assessment) {
         final LocalDate deadline = assessment.getNextRevision();
         if (deadline != null && assessment.getRevisionInterval() != null) {
-            final Task task = new Task();
-            task.setTaskType(assessment.getRevisionInterval() == ThreatAssessmentRevisionInterval.NONE
-                ? TaskType.TASK
-                : TaskType.CHECK);
+            final Task task = findAssociatedCheck(assessment).orElseGet(() -> createAssociatedCheck(assessment));
             task.setName("Revision af " + assessment.getName());
             task.setResponsibleUser(assessment.getResponsibleUser());
-            task.setCreatedAt(LocalDateTime.now());
             task.setNextDeadline(assessment.getNextRevision());
-            task.setNotifyResponsible(true);
             task.setResponsibleUser(assessment.getResponsibleUser() != null ? assessment.getResponsibleUser() : userService.currentUser());
             task.setDescription("Risikovurdering af " + assessment.getName());
-            task.getProperties().add(Property.builder()
-                .entity(task)
-                .key(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY)
-                .value("" + assessment.getId())
-                .build()
-            );
             setTaskRevisionInterval(assessment, task);
-            final Task savedTask = taskService.createTask(task);
-            relationService.addRelation(assessment, task);
-            return savedTask;
+            return task;
         }
         return null;
+    }
+
+    private Task createAssociatedCheck(final ThreatAssessment assessment) {
+        final Task task = new Task();
+        task.setName("Revision af " + assessment.getName());
+        task.setCreatedAt(LocalDateTime.now());
+        task.getProperties().add(Property.builder()
+            .entity(task)
+            .key(ASSOCIATED_THREAT_ASSESSMENT_PROPERTY)
+            .value("" + assessment.getId())
+            .build()
+        );
+        task.setTaskType(TaskType.CHECK);
+        task.setResponsibleUser(assessment.getResponsibleUser());
+        task.setNextDeadline(assessment.getNextRevision());
+        task.setNotifyResponsible(true);
+        final Task savedTask = taskService.saveTask(task);
+        relationService.addRelation(assessment, task); // TODO Dont re-add
+        return savedTask;
     }
 
     @Transactional
@@ -176,7 +195,7 @@ public class ThreatAssessmentService {
             task.setResponsibleUser(assessment.getResponsibleUser());
             task.setNextDeadline(LocalDate.now().plusMonths(1));
             task.setRepetition(TaskRepetition.NONE);
-            task = taskService.createTask(task);
+            task = taskService.saveTask(task);
 
             relationService.addRelation(assessment, task);
             return task;
@@ -393,4 +412,5 @@ public class ThreatAssessmentService {
             case NONE -> task.setRepetition(TaskRepetition.NONE);
         }
     }
+
 }

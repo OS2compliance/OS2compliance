@@ -114,7 +114,6 @@ public class RiskController {
         } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
             relateRegister(selectedRegister, savedThreatAssessment);
         }
-        threatAssessmentService.createAssociatedCheck(savedThreatAssessment);
         if (sendEmail) {
             createTaskAndSendMail(savedThreatAssessment);
         }
@@ -223,6 +222,24 @@ public class RiskController {
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
 
         return "risks/profile";
+    }
+
+    @GetMapping("{id}/revision")
+    public String revisionForm(final Model model, @PathVariable final long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        threatAssessmentService.updateNextRevisionAssociatedTask(threatAssessment);
+        model.addAttribute("risk", threatAssessment);
+        return "risks/revisionIntervalForm";
+    }
+
+    @PostMapping("{id}/revision")
+    @Transactional
+    public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        threatAssessment.setRevisionInterval(assessment.getRevisionInterval());
+        threatAssessment.setNextRevision(assessment.getNextRevision());
+        threatAssessmentService.createOrUpdateAssociatedCheck(threatAssessment);
+        return "redirect:/risks/" + assessment.getId();
     }
 
     @DeleteMapping("{id}")

@@ -110,7 +110,7 @@ public class DataProcessingService {
             .build()
         );
         setTaskRevisionInterval(asset, task);
-        final Task savedTask = taskService.createTask(task);
+        final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, asset);
     }
 

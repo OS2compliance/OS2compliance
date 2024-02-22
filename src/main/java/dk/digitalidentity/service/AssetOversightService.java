@@ -59,7 +59,7 @@ public class AssetOversightService {
             .build()
         );
 //        setTaskRevisionInterval(document, task);
-        final Task savedTask = taskService.createTask(task);
+        final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, asset);
     }
 

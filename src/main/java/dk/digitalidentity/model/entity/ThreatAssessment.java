@@ -96,7 +96,7 @@ public class ThreatAssessment extends Relatable {
     )
     private List<User> presentAtMeeting;
 
-    @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "threatAssessment",  orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<CustomThreat> customThreats;
 
     @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
