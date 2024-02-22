@@ -1,4 +1,5 @@
 
+var token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 function notRelevantSelectChanged() {
     const selected = this.value;
@@ -305,6 +306,7 @@ function updateColorFor(elem, color) {
 
 function categoryRowClicked() {
     var rowIndex = this.dataset.index;
+    sessionStorage.setItem(`openedRowIndex${riskId}`, rowIndex);
     handleCategoryRow(rowIndex);
 }
 
@@ -365,6 +367,34 @@ function mailReportToRelatedOwner(assessmentId) {
         .catch(error => {
             toastService.error(error);
         });
+}
+
+function createTaskClicked(elem) {
+    // Find the category row
+    let row = elem.closest('.threatRow');
+    var rowIndex = row.dataset.index;
+    sessionStorage.setItem(`openedRowIndex${riskId}`, rowIndex);
+    createTaskService.show(elem);
+}
+
+function deleteThreatClicked(elem) {
+    console.log(`delete ${elem.dataset.customid} in assessment ${elem.dataset.riskid}`)
+    Swal.fire({
+        text: `Er du sikker på du vil slette denne trusslen?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#03a9f4',
+        cancelButtonColor: '#df5645',
+        confirmButtonText: 'Ja',
+        cancelButtonText: 'Nej'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/rest/risks/${elem.dataset.riskid}/threats/${elem.dataset.customid}`,
+                {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                .then(response => location.reload())
+                .catch(error => toastService.error(error));
+        }
+    });
 }
 
 let revisionDialog;
@@ -434,5 +464,8 @@ function pageLoaded() {
         handleCategoryRow(i);
         categoryRows[i].addEventListener('click', categoryRowClicked, false);
     }
-
+    const openedRow = sessionStorage.getItem(`openedRowIndex${riskId}`);
+    if (openedRow !== null && openedRow !== undefined) {
+        handleCategoryRow(openedRow);
+    }
 }

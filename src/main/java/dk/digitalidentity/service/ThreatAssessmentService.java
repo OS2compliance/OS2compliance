@@ -412,4 +412,5 @@ public class ThreatAssessmentService {
             case NONE -> task.setRepetition(TaskRepetition.NONE);
         }
     }
+
 }

@@ -144,7 +144,7 @@
                                         </th>
                                     </tr>
                                     <th:block th:each="row : ${type.value}">
-                                        <tr class="threatRow" th:classappend="'categoryRow' + ${stat.index} + ' rowId'+${row.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index}">
+                                        <tr class="threatRow" th:classappend="'categoryRow' + ${stat.index} + ' rowId'+${row.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index},data-index=${stat.index}">
                                             <td class="riskViewTd"  th:text="${row.index} + 1" rowspan="5"></td>
                                             <td class="riskViewTd"  th:text="${row.threat}" rowspan="5" style="vertical-align: top"></td>
                                             <td style="height: inherit" class="riskViewTd editCell" rowspan="5" >
@@ -208,9 +208,14 @@
                                             </td>
                                             <td class="riskViewTd text-center" >
                                                 <button th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs"
-                                                        th:onclick="|createTaskService.show(this)|" title="Opgave eller kontrol"
+                                                        th:onclick="|createTaskClicked(this)|" title="Opgave eller kontrol"
                                                         th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
                                                     Ny opgave
+                                                </button>
+                                                <button th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1"
+                                                        th:onclick="|deleteThreatClicked(this)|" title="Slet"
+                                                        th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
+                                                    Slet trussel
                                                 </button>
                                             </td>
                                             <td class="riskViewTd riskViewResidual editCell" >

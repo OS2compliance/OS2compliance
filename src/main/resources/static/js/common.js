@@ -87,4 +87,3 @@ function asIntOrDefault(value, def) {
     }
     return parsed;
 }
-
