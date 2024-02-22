@@ -7,3 +7,4 @@ ALTER TABLE assets MODIFY contract_link varchar(2048) null;
 ALTER TABLE assets MODIFY data_processing_agreement_link varchar(2048) null;
 ALTER TABLE documents MODIFY link varchar(2048) null;
 ALTER TABLE registers MODIFY emergency_plan_link varchar(2048) null;
+ALTER TABLE documents MODIFY description TEXT null;
