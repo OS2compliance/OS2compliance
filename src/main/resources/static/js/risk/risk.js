@@ -65,9 +65,57 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
 
 const createRiskService = new CreateRiskService();
 const copyRiskService = new CopyRiskService();
+const editRiskService = new EditRiskService();
 document.addEventListener("DOMContentLoaded", function(event) {
     createRiskService.init();
 });
+
+function EditRiskService() {
+    this.getScopedElementById = function(id) {
+        return this.modalContainer.querySelector(`#${id}`);
+    }
+
+    this.showEditDialog = function (threatAssessmentId) {
+        const container = document.getElementById('editAssessmentContainer');
+        fetch(`${baseUrl}${threatAssessmentId}/edit`)
+            .then(response => response.text()
+                .then(data => {
+                    container.innerHTML = data;
+                    this.onShown();
+                })
+            )
+            .catch(error => toastService.error(error));
+    }
+
+    this.onShown = function() {
+        let self = this;
+        this.modalContainer = document.getElementById('editModal');
+
+        const presentSelect = this.getScopedElementById('editPresentAtMeetingSelect');
+        if (presentSelect !== null) {
+            this.presentSelect = initUserSelect('editPresentAtMeetingSelect');
+        }
+
+        this.userChoicesSelect = initUserSelect("editUserSelect");
+        this.ouChoicesSelect = initOUSelect("editOuSelect");
+        initFormValidationForForm("editRiskModalForm",
+            () => this.validate());
+
+
+        this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
+            const userUuid = self.userChoicesSelect.passedElement.element.value;
+            self.userChanged(userUuid);
+        });
+
+
+        this.editAssessmentModal = new bootstrap.Modal(this.modalContainer);
+        this.editAssessmentModal.show();
+    }
+
+    this.validate = function() {
+        return validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
+    }
+}
 
 function CopyRiskService() {
     this.getScopedElementById = function(id) {
@@ -75,7 +123,7 @@ function CopyRiskService() {
     }
 
     this.showCopyDialog = function(threatAssessmentId) {
-        let container = document.getElementById('copyAssessmentContainer');
+        const container = document.getElementById('copyAssessmentContainer');
         fetch(`${baseUrl}${threatAssessmentId}/copy`)
             .then(response => response.text()
                 .then(data => {
@@ -89,21 +137,21 @@ function CopyRiskService() {
     this.onShown = function() {
         let self = this;
         this.modalContainer = document.getElementById('copyModal');
-        const registerSelect = this.getScopedElementById('registerSelect');
+        const registerSelect = this.getScopedElementById('copyRegisterSelect');
         if (registerSelect !== null) {
             this.registerChoicesSelect = initRegisterSelect(registerSelect);
         }
-        const assetSelect = this.getScopedElementById('assetSelect');
+        const assetSelect = this.getScopedElementById('copyAssetSelect');
         if (assetSelect !== null) {
             this.assetChoicesSelect = initAssetSelect(assetSelect);
         }
-        const presentSelect = this.getScopedElementById('presentAtMeetingSelect');
-        if (assetSelect !== null) {
-            this.presentSelect = initUserSelect('presentAtMeetingSelect');
+        const presentSelect = this.getScopedElementById('copyPresentAtMeetingSelect');
+        if (presentSelect !== null) {
+            this.presentSelect = initUserSelect('copyPresentAtMeetingSelect');
         }
 
-        this.userChoicesSelect = initUserSelect("userSelect");
-        this.ouChoicesSelect = initOUSelect("ouSelect");
+        this.userChoicesSelect = initUserSelect("copyUserSelect");
+        this.ouChoicesSelect = initOUSelect("copyOuSelect");
         initFormValidationForForm("copyRiskModalForm",
             () => this.validate());
 

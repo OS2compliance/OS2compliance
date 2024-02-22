@@ -122,6 +122,26 @@ public class RiskController {
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
 
+    @GetMapping("{id}/edit")
+    public String riskEditDialog(final Model model, @PathVariable("id") final long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("risk", threatAssessment);
+        return "risks/editForm";
+    }
+
+    @Transactional
+    @PostMapping("{id}/edit")
+    public String performEdit(@PathVariable("id") final long id,
+                              @Valid @ModelAttribute final ThreatAssessment assessment,
+                              @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids) {
+        final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        editedAssessment.setName(assessment.getName());
+        editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
+        editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
+        editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
+        return "redirect:/risks";
+    }
+
     @GetMapping("{id}/copy")
     public String riskCopyDialog(final Model model, @PathVariable("id") final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

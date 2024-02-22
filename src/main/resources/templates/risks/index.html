@@ -52,6 +52,7 @@
 
 
 <div id="copyAssessmentContainer"></div>
+<div id="editAssessmentContainer"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
@@ -174,8 +175,9 @@
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>
-                                 <button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
+                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
+                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],
