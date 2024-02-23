@@ -35,15 +35,15 @@
                 <div class="tab-base">
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsOpgave" type="button" role="tab" aria-controls="opgave" aria-selected="true" th:text="${task.taskType.getMessage()}"></button>
+                            <button class="nav-link " data-bs-toggle="tab" data-bs-target="#_dm-tabsOpgave" type="button" role="tab" aria-controls="opgave" aria-selected="false" th:text="${task.taskType.getMessage()}"></button>
                         </li>
                         <li class="nav-item" role="presentation" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsHistorik" type="button" role="tab" aria-controls="historik" aria-selected="false">Historik</button>
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsHistorik" type="button" role="tab" aria-controls="historik" aria-selected="true">Historik&nbsp<span class="badge bg-secondary" th:text="${taskLogs.size}"></span></button>
                         </li>
                     </ul>
 
                     <div class="tab-content">
-                        <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
+                        <div id="_dm-tabsOpgave" class="tab-pane fade" role="tabpanel" aria-labelledby="opgave-tab">
                             <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button th:unless="${completed}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
@@ -166,65 +166,8 @@
                                 <div th:replace="~{fragments/tags :: tagsfragment (tags=${task.tags}, completed=${completed}, relatableId=${task.id})}"></div>
                             </div>
                         </div>
-                        <div id="_dm-tabsHistorik" class="tab-pane fade" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
-                            <div class="timeline" style="padding-bottom: 30px;">
-                                <div class="tl-entry" th:each="taskLog : ${taskLogs}">
-                                    <div class="tl-time">
-                                        <div th:unless="${taskLog.daysAfterDeadline} == 0" class="tl-time" th:text="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLog.daysAfterDeadline} + ')'" style="color: red;"></div>
-                                        <div th:if="${taskLog.daysAfterDeadline} == 0" class="tl-time" th:text="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')}"></div>
-                                    </div>
-                                    <div class="tl-point"></div>
-                                    <div class="tl-content card" style="width: 100%;">
-                                        <div class="card-body">
-                                            <div class="col-lg-12 row">
-                                                <div class="col-lg-6">
-                                                    <div class="mb-3">
-                                                        <label for="checkCompletedDescription" class="col-lg-12 col-form-label">Daværende beskrivelse</label>
-                                                        <textarea class="form-control col-lg-12" id="checkCompletedDescription" th:text="${taskLog.description}" rows="3" disabled readonly></textarea>
-                                                    </div>
-                                                    <div class="row mb-3">
-                                                        <label for="checkCompletedDeadline" class="col-sm-3 col-form-label">Deadline</label>
-                                                        <div class="col-sm-9">
-                                                            <input class="form-control" id="checkCompletedDeadline" th:value="${#temporals.format(taskLog.deadline, 'dd/MM-yyyy')}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row mb-3">
-                                                        <label for="checkCompletedPerformedBy" class="col-sm-3 col-form-label">Udført af</label>
-                                                        <div class="col-sm-9">
-                                                            <input class="form-control" id="checkCompletedPerformedBy" th:value="${taskLog.performedBy}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                    <div th:unless="${taskLog.taskResult} == null" class="row mb-3">
-                                                        <label for="checkCompletedtaskResult" class="col-sm-3 col-form-label">Resultat</label>
-                                                        <div class="col-sm-9" style="padding-top: 10px;">
-                                                            <input class="form-control" id="checkCompletedtaskResult" th:value="${taskLog.taskResult.getValue()}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-6">
-                                                    <div class="mb-3">
-                                                        <label for="checkCompletedComment" class="col-lg-12 col-form-label">Kommentar til udførsel</label>
-                                                        <textarea class="form-control col-lg-12" id="checkCompletedComment" th:text="${taskLog.comment}" rows="3" disabled readonly></textarea>
-                                                    </div>
-                                                    <div class="row mb-3">
-                                                        <label for="checkCompleted" class="col-sm-3 col-form-label">Udført</label>
-                                                        <div class="col-sm-9">
-                                                            <input th:unless="${taskLog.daysAfterDeadline} == 0" class="form-control" id="checkCompleted" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLog.daysAfterDeadline} + ')'" style="color: red;" disabled readonly>
-                                                            <input th:if="${taskLog.daysAfterDeadline} == 0" class="form-control" id="checkCompleted" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                    <div th:unless="${taskLog.documentationLink} == null" class="row mb-3">
-                                                        <label for="checkCompletedDocumentationLink" class="col-sm-3 col-form-label">Link til dokumentation</label>
-                                                        <div class="col-sm-9" style="padding-top: 10px;">
-                                                            <a id="checkCompletedDocumentationLink" th:text="${taskLog.documentationLink}" th:href="${taskLog.documentationLink}"></a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                        <div id="_dm-tabsHistorik" class="tab-pane fade active show" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
+                            <div th:replace="~{tasks/fragments/viewHistory :: viewHistory}"></div>
                         </div>
                     </div>
                 </div>

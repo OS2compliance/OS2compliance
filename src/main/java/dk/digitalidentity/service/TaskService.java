@@ -1,9 +1,11 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.TaskDao;
+import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -30,13 +32,13 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 @RequiredArgsConstructor
 public class TaskService {
 	private final TaskDao taskDao;
+    private final TaskLogDao taskLogDao;
 	private final SettingsService settingsService;
     private final RelationService relationService;
 
     public Optional<Task> findById(final Long id) {
         return taskDao.findById(id);
     }
-
 
     public List<Task> findRelatedTasks(final Relatable relatable, final Predicate<Task> taskPredicate) {
         final List<Relation> relations = relationService.findRelatedToWithType(relatable, RelationType.TASK);
@@ -123,6 +125,15 @@ public class TaskService {
     @Transactional
     public void deleteAll(final List<Task> tasks) {
         taskDao.deleteAll(tasks);
+    }
+
+    @Transactional
+    public void deleteById(final Long taskId) {
+        taskDao.deleteById(taskId);
+    }
+
+    public List<TaskLog> logsBetween(final Task task, final LocalDate from, final LocalDate to) {
+        return taskLogDao.findAllByTaskFiltered(task, from, to);
     }
 
 }

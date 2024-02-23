@@ -3,6 +3,8 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.model.entity.StandardTemplate;
+import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
@@ -17,15 +19,19 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
@@ -60,6 +66,18 @@ public class ReportController {
     public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId) {
         model.addAttribute("tasks", taskService.allTasksWithTag(tagId));
         return "reports/tagReport";
+    }
+
+    @GetMapping("taskLog/{taskId}")
+    public String taskLogReport(final Model model, @PathVariable("taskId") final Long taskId,
+                                @RequestParam(value = "from", required = false) final LocalDate from,
+                                @RequestParam(value = "to", required = false) final LocalDate to) {
+        final Task task = taskService.findById(taskId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<TaskLog> taskLogs = taskService.logsBetween(task, from, to);
+        model.addAttribute("task", task);
+        model.addAttribute("taskLogs", taskLogs);
+        return "reports/taskLogReport";
     }
 
     @GetMapping("sheet")

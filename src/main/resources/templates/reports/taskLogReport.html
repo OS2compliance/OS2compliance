@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}" />
+<body class="jumping">
+<div class="card m-2">
+    <h1 class="card-header bg-light" th:text="${task.name}"></h1>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.responsibleUser?.name}"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig afdeling:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.responsibleOu?.name}"></div>
+        </div>
+        <div class="row">
+            <div class="col-lg-2 col-sm-3"><h5>Gentagelse:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.repetition?.message}"></div>
+        </div>
+        <div class="row mb-4">
+            <div class="col-lg-2 col-sm-3"><h5>Beskrivelse:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.description}"></div>
+        </div>
+
+        <div class="timeline mb-4">
+            <div th:each="log: ${taskLogs}" class="tl-entry active">
+                <div class="tl-time">
+                    <div class="tl-time" th:text="${#temporals.format(log.completed, 'd/MM-yyyy')}"></div>
+                </div>
+                <div class="tl-point"></div>
+                <div class="tl-content card shadow-none border-2 w-100">
+                    <div class="card-body">
+                        <div class="row mb-1">
+                            <div class="col-lg-3 col-sm-4"><h5>Beskrivelse:</h5></div><div class="col-lg-9 col-sm-8 fs-6" th:text="${log?.currentDescription}"></div>
+                        </div>
+                        <div class="row mb-1">
+                            <div class="col-lg-3 col-sm-4"><h5>Kommentar:</h5></div><div class="col-lg-9 col-sm-8 fs-6" th:text="${log?.comment}"></div>
+                        </div>
+                        <div class="row mb-1">
+                            <div class="col-lg-3 col-sm-4"><h5>Deadline:</h5></div><div class="col-lg-9 col-sm-8 fs-6" th:text="${#temporals.format(log.deadline, 'd/MM-yyyy')}"></div>
+                        </div>
+                        <div class="row mb-1">
+                            <div class="col-lg-3 col-sm-4"><h5>Udført af:</h5></div><div class="col-lg-9 col-sm-8 fs-6" th:text="${log.responsibleUserName + ', ' + log.responsibleOUName}"></div>
+                        </div>
+                        <div th:if="${log.taskResult} != null" class="row mb-1">
+                            <div class="col-lg-3 col-sm-4"><h5>Resultat:</h5></div>
+                            <div class="col-lg-9 col-sm-8 fs-6">
+                                <span class="badge" th:classappend="${log.taskResult?.name == 'CRITICAL_ERROR'} ? 'bg-red' : (${log.taskResult?.name == 'NO_CRITICAL_ERROR'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbsp<span th:text="${log.taskResult?.value}"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+</body>
+</html>
