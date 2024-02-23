@@ -6,6 +6,7 @@ import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -44,6 +45,7 @@ public class GlobalExceptionHandler {
         mav.addAllObjects(body);
         mav.addObject("url", request.getRequestURL());
         mav.setViewName(viewName);
+        mav.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         return mav;
     }
 

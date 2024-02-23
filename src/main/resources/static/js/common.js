@@ -45,6 +45,7 @@ function initDatepicker(elementQuerySelector, inputField) {
     document.querySelector(elementQuerySelector).addEventListener( "click", () => {
         datePicker.open();
     });
+    return datePicker;
 }
 function checkInputField(my_choices, atleastOne = false) {
     const inner_element = my_choices.containerInner.element;
@@ -87,3 +88,46 @@ function asIntOrDefault(value, def) {
     }
     return parsed;
 }
+
+// Fetches the given url and puts the resulting html and innerHtml on the element with id of targetId
+function fetchHtml(url, targetId) {
+    return fetch(url)
+        .then(response => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            response.text().then(data => {
+                document.getElementById(targetId).innerHTML = data;
+            });
+        }
+    ).catch(error => toastService.error(error));
+}
+
+function fetchWithError(url) {
+    return fetch(url)
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`);
+        }
+        response.text().then(data => {
+            document.getElementById(targetId).innerHTML = data;
+        });
+    }).catch(error => toastService.error(error));
+}
+
+function javaFormatDate(date) {
+    if (date === null || date === '') {
+        return '';
+    }
+    let dd = "" + date.getDate();
+    if (dd.length === 1) {
+        dd = "0" + dd;
+    }
+    let mm = "" + (date.getMonth()+1);
+    if (mm.length === 1) {
+        mm = "0" + mm;
+    }
+    let yyyy = date.getFullYear();
+    return `${yyyy}-${mm}-${dd}`;
+}
+

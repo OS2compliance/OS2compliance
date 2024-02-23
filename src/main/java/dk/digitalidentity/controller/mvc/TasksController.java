@@ -3,7 +3,6 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.dao.RelationDao;
-import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.event.EmailEvent;
@@ -64,8 +63,6 @@ public class TasksController {
     @Autowired
     private ThreatAssessmentDao threatAssessmentDao;
     @Autowired
-    private TaskDao taskDao;
-    @Autowired
     private RelationDao relationDao;
     @Autowired
     private RelatableDao relatableDao;
@@ -98,7 +95,7 @@ public class TasksController {
             model.addAttribute("formId", "taskCreateForm");
             model.addAttribute("formTitle", "Ny opgave");
         } else {
-            final Task task = taskDao.findById(id)
+            final Task task = taskService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             model.addAttribute("task", task);
             model.addAttribute("formId", "taskEditForm");
@@ -114,7 +111,7 @@ public class TasksController {
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
-        final Task savedTask = taskDao.save(task);
+        final Task savedTask = taskService.saveTask(task);
         if (relations != null) {
             relations.stream()
                 .map(relatedId -> relatableDao.findById(relatedId)
@@ -199,7 +196,7 @@ public class TasksController {
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Task task) {
-        final Task existingTask = taskDao.findById(task.getId())
+        final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
@@ -218,7 +215,7 @@ public class TasksController {
             existingTask.setRepetition(task.getRepetition());
         }
 
-        taskDao.save(existingTask);
+        taskService.saveTask(existingTask);
 
         return "redirect:/tasks/" + existingTask.getId();
     }
@@ -227,7 +224,7 @@ public class TasksController {
     record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
     @GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id) {
-        final Task task = taskDao.findById(id)
+        final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         model.addAttribute("task", task);
@@ -244,13 +241,21 @@ public class TasksController {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
                 }
                 final long daysAfterDeadline = calculateDaysAfterDeadline(taskLog.getDeadline(), taskLog.getCompleted());
-                model.addAttribute("taskLog", new LogDTO(taskLog.getComment(), taskLog.getCurrentDescription(), taskLog.getDocumentationLink(), taskLog.getDocument() == null ? null : taskLog.getDocument().getName(), taskLog.getDocument() == null ? null : taskLog.getDocument().getId(), taskLog.getResponsibleUserUserId() + ", " + taskLog.getResponsibleOUName(), taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
+                model.addAttribute("taskLog", new LogDTO(
+                    taskLog.getComment(),
+                    taskLog.getCurrentDescription(),
+                    taskLog.getDocumentationLink(),
+                    taskLog.getDocument() == null ? null : taskLog.getDocument().getName(), taskLog.getDocument() == null ? null : taskLog.getDocument().getId(),
+                    taskLog.getResponsibleUserUserId() + ", " + taskLog.getResponsibleOUName(),
+                    taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
             }
         } else if (task.getTaskType().equals(TaskType.CHECK)) {
             final List<LogDTO> taskLogs = new ArrayList<>();
             for (final TaskLog taskLog : task.getLogs()) {
                 final long daysAfterDeadline = calculateDaysAfterDeadline(taskLog.getDeadline(), taskLog.getCompleted());
-                taskLogs.add(new LogDTO(taskLog.getComment(), taskLog.getCurrentDescription(), taskLog.getDocumentationLink(),
+                taskLogs.add(new LogDTO(taskLog.getComment(),
+                    taskLog.getCurrentDescription(),
+                    taskLog.getDocumentationLink(),
                     taskLog.getDocument() == null ? null : taskLog.getDocument().getName(),
                     taskLog.getDocument() == null ? null : taskLog.getDocument().getId(),
                     taskLog.getResponsibleUserName() + ", " + taskLog.getResponsibleOUName(), taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
@@ -263,19 +268,30 @@ public class TasksController {
         return "tasks/view";
     }
 
+    @GetMapping("{id}/timeline")
+    public String taskTimeline(final Model model, @PathVariable final long id,
+                               @RequestParam(value = "from", required = false) final LocalDate from,
+                               @RequestParam(value = "to", required = false) final LocalDate to) {
+        final Task task = taskService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<TaskLog> taskLogs = taskService.logsBetween(task, from, to);
+        model.addAttribute("taskLogs", taskLogs);
+        return "tasks/viewTimeline";
+    }
+
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void taskDelete(@PathVariable final String id) {
         final Long lid = Long.valueOf(id);
         relationService.deleteRelatedTo(lid);
-        taskDao.deleteById(lid);
+        taskService.deleteById(lid);
     }
 
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
-        final Task task = taskDao.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
         }
@@ -313,14 +329,14 @@ public class TasksController {
         }
 
         task.getLogs().add(taskLog);
-        taskDao.save(task);
+        taskService.saveTask(task);
 
         return "redirect:/tasks";
     }
 
     @GetMapping("{id}/copy")
     public String taskCopyDialog(final Model model, @PathVariable("id") final long id) {
-        final Task task = taskDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Task task = taskService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final List<Relatable> relations = relationService.findAllRelatedTo(task);
 
         model.addAttribute("task", task);
@@ -336,7 +352,7 @@ public class TasksController {
                                         ) {
         final Task task = taskService.copyTask(taskForm);
         setupRelations(task, relations);
-        taskDao.save(task);
+        taskService.saveTask(task);
         if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
             eventPublisher.publishEvent(EmailEvent.builder()
                     .email(task.getResponsibleUser().getEmail())
