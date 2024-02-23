@@ -25,11 +25,13 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ### Added
 
+- Opgavecenter: Mulighed for at udskrive kontrol historik
+- Opgavecenter: Mulighed for at angive dato interval under historik
 - Risikovurdering: Kopier funktion til at kopiere en trusselsvurdering
 - Risikovurdering: Mulighed for at sætte "til stede på møde" (vises også i rapport)
 - Risikovurdering: Mulighed for at redigere, titel, ansvarlig, fagområde og tilstede på møde
 - Risikovurdering: Mulighed for at oprette opgaver der relaterer sig til en bestemt trussel
-- Risikovurdering: ulighed for at sende risikovurderings rapport til ansvarlig for et aktive/behandlingsaktivitet
+- Risikovurdering: Mulighed for at sende risikovurderings rapport til ansvarlig for et aktive/behandlingsaktivitet
 - Risikovurdering: Mulighed for at sætte et revisions interval der vil danne en tilhørende opgave
 
 - Trusselskataloger: Nyt modul for administratorer, giver mulighed for at administrere trusselskataloger 
