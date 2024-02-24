@@ -3,7 +3,7 @@
 <body>
 <div th:fragment="general(register, documents, assets, tasks)">
     <div class="card shadow-none">
-        <link th:href="@{/css/register/generelt.css}" rel="stylesheet">
+        <link th:href="@{/css/register.css}" rel="stylesheet">
         <form id="editDescId" class="row" action="#" th:action="@{/registers/__${register.id}__/update}" th:object="${register}" name="generelt" method="post">
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>

@@ -22,6 +22,7 @@ public interface RegisterMapper {
                 .name(registerGrid.getName())
                 .responsibleUser(nullSafe(() -> registerGrid.getResponsibleUser().getName(), ""))
                 .responsibleOU(nullSafe(() -> registerGrid.getResponsibleOU().getName(), ""))
+                .department(nullSafe(() -> registerGrid.getDepartment().getName(), ""))
                 .updatedAt(nullSafe(() -> registerGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .consequence(nullSafe(() -> registerGrid.getConsequence().getMessage(), ""))
                 .status(nullSafe(() -> registerGrid.getStatus().getMessage(), ""))

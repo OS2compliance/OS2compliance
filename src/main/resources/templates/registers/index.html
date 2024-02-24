@@ -2,8 +2,8 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head}" />
 <script th:src="@{/js/register/form.js}" defer></script>
-
 <body class="jumping">
+    <link rel="stylesheet" th:href="@{/css/register.css}" />
 	<div id="root" class="root mn--max hd--expanded">
 		<section id="content" class="content">
 			<div class="content__header content__boxed overlapping">
@@ -52,33 +52,6 @@
 	<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="registerLabel" aria-hidden="true"></div>
 
 	<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
-
-	<style>
-
-	#registersDatatable td[data-column-id="suppressions"] ul {
-		list-style-type: none;
-		padding: 0;
-	}
-
-	#registersDatatable td[data-column-id="suppressions"] ul > li {
-		display: table-row;
-	}
-
-	#registersDatatable td[data-column-id="suppressions"] ul > li > span {
-		display: table-cell;
-		min-width: 1rem;
-	}
-	#registersDatatable td[data-column-id="status"] {
-		vertical-align: middle;
-	}
-	#registersDatatable td[data-column-id="konsekvensVurdering"] {
-		vertical-align: middle;
-	}
-	#registersDatatable td[data-column-id="risikoVurdering"] {
-		vertical-align: middle;
-	}
-
-	</style>
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
@@ -148,37 +121,34 @@
 						formatter: (cell, row) => {
 							const url = viewUrl + row.cells[0]['data'];
 							return gridjs.html(`<a href="${url}">${cell}</a>`);
-						},
-						width: '40%'
+						}
 					},
 					{
-						name: "Ansvarlig afdeling",
+						name: "Afdeling",
 					},
 					{
-						name: "Kontakt person",
+						name: "Forvaltning",
 					},
 					{
-						name: "Senest redigeret",
+						name: "Kontakt",
+					},
+					{
+						name: "Opdateret",
+                        width: "100px"
 					},
 					{
 						name: "Konsekvens vurdering",
-						width: "100px",
+						width: "110px",
 						formatter: (cell, row) => {
 							var assessment = cell;
 							if (cell === "Grøn") {
-								assessment = [
-									'<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
-								]
+								assessment = '<div class="badge bg-green align-top" style="width: 60px">' + cell + '</div>';
 							} else if (cell === "Gul") {
-								assessment = [
-									'<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
-								]
+								assessment = '<div class="badge bg-yellow-500 align-top" style="width: 60px">' + cell + '</div>';
 							} else if (cell === "Rød") {
-								assessment = [
-									'<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
-								]
+								assessment = '<div class="badge bg-red align-top" style="width: 60px">' + cell + '</div>';
 							}
-							return gridjs.html(''.concat(...assessment), 'div')
+							return gridjs.html(assessment, 'div');
 						}
 					},
 					{
@@ -204,7 +174,7 @@
 					},
 					{
 						name: "Status",
-						width: "80px",
+                        width: '100px',
 						formatter: (cell, row) => {
 							var status = cell;
 							if (cell === "Klar") {
@@ -227,7 +197,7 @@
 						id: 'handlinger',
 						name: 'Handlinger',
 						sort: 0,
-						width: '10%',
+						width: '90px',
 						formatter: (cell, row) => {
 							const registerId = row.cells[0]['data'];
                             const name = row.cells[1]['data'].replaceAll("'", "\\'");
@@ -243,7 +213,7 @@
 						'X-CSRF-TOKEN': token
 					},
 					then: data => data.content.map(register =>
-						[ register.id, register.name, register.responsibleOU, register.responsibleUser, register.updatedAt, register.consequence, register.risk, register.status ]
+						[ register.id, register.name, register.responsibleOU, register.department, register.responsibleUser, register.updatedAt, register.consequence, register.risk, register.status ]
 					),
 					total: data => data.totalCount
 				},

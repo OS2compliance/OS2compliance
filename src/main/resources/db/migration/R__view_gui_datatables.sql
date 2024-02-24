@@ -40,6 +40,7 @@ SELECT
     r.name,
     r.responsible_uuid,
     r.responsible_ou_uuid,
+    r.department,
     r.updated_at,
     ca.assessment as consequence,
     ta.assessment as risk,

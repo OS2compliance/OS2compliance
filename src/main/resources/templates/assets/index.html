@@ -3,7 +3,7 @@
 <head th:replace="~{fragments/header :: head}" />
 <body class="jumping">
 <script th:src="@{/js/asset/form.js}" defer></script>
-<link rel="stylesheet" th:href="@{/css/asset/asset.css}" />
+<link rel="stylesheet" th:href="@{/css/assets.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -147,10 +147,12 @@
                     name: "Systemejer"
                 },
                 {
-                    name: "Opdateret"
+                    name: "Opdateret",
+                    width: '100px'
                 },
                 {
                     name: "Risiko vurdering",
+                    width: '100px',
                     formatter: (cell, row) => {
                         var assessment = [];
                         if (cell === "Grøn") {
@@ -171,29 +173,24 @@
                 },
                 {
                     name: "Status",
+                    width: '100px',
                     formatter: (cell, row) => {
                         var status = cell;
                         if (cell === "Ikke startet") {
-                            status = [
-                                '<div class="d-block badge bg-warning">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-warning">' + cell + '</div>'
                         } else if (cell === "I gang") {
-                            status = [
-                                '<div class="d-block badge bg-info">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-info">' + cell + '</div>'
                         } else if (cell === "Klar") {
-                            status = [
-                                '<div class="d-block badge bg-success">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-success">' + cell + '</div>'
                         }
-                        return gridjs.html(''.concat(...status), 'div')
+                        return gridjs.html(status, 'div');
                     },
                 },
                 {
                     id: 'handlinger',
                     name: 'Handlinger',
                     sort: 0,
-                    width: '10%',
+                    width: '90px',
                     formatter: (cell, row) => {
                         const assetId = row.cells[0]['data'];
                         const name = row.cells[2]['data'].replaceAll("'", "\\'");
