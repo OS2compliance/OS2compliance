@@ -3,7 +3,7 @@
 <head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
 <script th:src="@{/js/task/form.js}" defer></script>
-<link rel="stylesheet" th:href="@{/css/task/tasks.css}" />
+<link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -116,7 +116,6 @@
                 },
                 {
                     name: "Opgavenavn",
-                    width: '40%',
                     formatter: (cell, row) => {
                         const url = viewUrl + row.cells[0]['data'];
                         return gridjs.html(`<a href="${url}">${cell}</a>`);
@@ -210,7 +209,7 @@
                     id: 'handlinger',
                     name: 'Handlinger',
                     sort: 0,
-                    width: '8%',
+                    width: '90px',
                     formatter: (cell, row) => {
                         const taskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");

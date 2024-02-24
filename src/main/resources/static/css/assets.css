@@ -2,8 +2,10 @@
 #assetsDatatable td[data-column-id="status"] {
 	vertical-align: middle;
 }
-
 #assetsDatatable td[data-column-id="risikoVurdering"] {
+	vertical-align: middle;
+}
+#assetsDatatable td[data-column-id="handlinger"] {
 	vertical-align: middle;
 }
 

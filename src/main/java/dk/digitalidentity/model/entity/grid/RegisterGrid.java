@@ -39,6 +39,10 @@ public class RegisterGrid {
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOU;
 
+    @ManyToOne
+    @JoinColumn(name = "department")
+    private OrganisationUnit department;
+
     @Column
     private LocalDate updatedAt;
 

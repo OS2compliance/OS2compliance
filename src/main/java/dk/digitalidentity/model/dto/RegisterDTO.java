@@ -18,6 +18,7 @@ public class RegisterDTO {
     private String description;
     private String responsibleUser;
     private String responsibleOU;
+    private String department;
     private String updatedAt;
     private String consequence;
     private String risk;

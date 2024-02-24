@@ -1,0 +1,5 @@
+
+#documentsDatatable td[data-column-id="status"] {
+    vertical-align: middle;
+}
+

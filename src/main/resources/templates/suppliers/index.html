@@ -4,6 +4,7 @@
 <body class="jumping">
 	<script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
 	<script type="text/javascript" th:src="@{/js/supplier/formReset.js}"></script>
+    <link th:href="@{/css/suppliers.css}" rel="stylesheet">
 	<div id="root" class="root mn--max hd--expanded">
 		<section id="content" class="content">
 			<div class="content__header content__boxed overlapping">
@@ -54,27 +55,6 @@
 
 	<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
-	<style>
-
-	#suppliersDatatable td[data-column-id="suppressions"] ul {
-		list-style-type: none;
-		padding: 0;
-	}
-
-	#suppliersDatatable td[data-column-id="suppressions"] ul > li {
-		display: table-row;
-	}
-
-	#suppliersDatatable td[data-column-id="suppressions"] ul > li > span {
-		display: table-cell;
-		min-width: 1rem;
-	}
-
-	#suppliersDatatable td[data-column-id="status"] {
-		vertical-align: middle;
-	}
-
-	</style>
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
@@ -184,11 +164,11 @@
 					},
 					{
 						name: "Opdateret",
-						width: '20%'
+						width: '100px'
 					},
 					{
 						name: "Status",
-						width: '10%',
+						width: '100px',
 						formatter: (cell, row) => {
 							var status = cell;
 							if (cell === "Klar") {
@@ -207,7 +187,7 @@
 						id: 'handlinger',
 						name: 'Handlinger',
 						sort: 0,
-						width: '10%',
+						width: '90px',
 						formatter: (cell, row) => {
 							const supplierId = row.cells[0]['data'];
                             const name = row.cells[1]['data'].replaceAll("'", "\\'");
