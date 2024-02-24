@@ -75,7 +75,13 @@
         document.addEventListener("DOMContentLoaded", function(event) {
             const fromPicker = initDatepicker("#reportFromDateBtn", "#reportFromDate");
             const toPicker = initDatepicker("#reportToDateBtn", "#reportToDate");
-
+            fromPicker.onSelect((date, formatedDate) => {
+                fromDate = javaFormatDate(date);
+            });
+            toPicker.onSelect((date, formatedDate) => {
+                toDate = javaFormatDate(date);
+            });
+            selectReportTag(document.getElementsByName("reportTag").item(0));
         });
 
         /*]]>*/

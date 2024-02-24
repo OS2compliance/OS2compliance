@@ -35,15 +35,15 @@
                 <div class="tab-base">
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link " data-bs-toggle="tab" data-bs-target="#_dm-tabsOpgave" type="button" role="tab" aria-controls="opgave" aria-selected="false" th:text="${task.taskType.getMessage()}"></button>
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsOpgave" type="button" role="tab" aria-controls="opgave" aria-selected="true" th:text="${task.taskType.getMessage()}"></button>
                         </li>
                         <li class="nav-item" role="presentation" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsHistorik" type="button" role="tab" aria-controls="historik" aria-selected="true">Historik&nbsp<span class="badge bg-secondary" th:text="${taskLogs.size}"></span></button>
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsHistorik" type="button" role="tab" aria-controls="historik" aria-selected="false">Historik&nbsp<span class="badge bg-secondary" th:text="${taskLogs.size}"></span></button>
                         </li>
                     </ul>
 
                     <div class="tab-content">
-                        <div id="_dm-tabsOpgave" class="tab-pane fade" role="tabpanel" aria-labelledby="opgave-tab">
+                        <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
                             <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button th:unless="${completed}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
@@ -166,7 +166,7 @@
                                 <div th:replace="~{fragments/tags :: tagsfragment (tags=${task.tags}, completed=${completed}, relatableId=${task.id})}"></div>
                             </div>
                         </div>
-                        <div id="_dm-tabsHistorik" class="tab-pane fade active show" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
+                        <div id="_dm-tabsHistorik" class="tab-pane fade" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
                             <div th:replace="~{tasks/fragments/viewHistory :: viewHistory}"></div>
                         </div>
                     </div>

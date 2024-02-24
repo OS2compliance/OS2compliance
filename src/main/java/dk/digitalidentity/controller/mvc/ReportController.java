@@ -66,8 +66,10 @@ public class ReportController {
     public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId,
                             @RequestParam(value = "from", required = false) final LocalDate from,
                             @RequestParam(value = "to", required = false) final LocalDate to) {
-        // TODO Start her
-        model.addAttribute("tasks", taskService.allTasksWithTag(tagId));
+        final List<Task> attributeValue = taskService.allTasksWithTag(tagId);
+        model.addAttribute("tasks", attributeValue);
+        model.addAttribute("from", from != null ? from : LocalDate.MIN);
+        model.addAttribute("to", to != null ? to : LocalDate.MAX);
         return "reports/tagReport";
     }
 
