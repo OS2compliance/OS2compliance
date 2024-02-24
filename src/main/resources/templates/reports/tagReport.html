@@ -19,7 +19,7 @@
         </div>
 
         <div class="timeline mb-4">
-            <div th:each="log: ${task.logs}" class="tl-entry active">
+            <div th:each="log: ${task.logs}" class="tl-entry active" th:if="${log.completed != null && !log.completed.isBefore(from) && !log.completed.isAfter(to)}">
                 <div class="tl-time">
                     <div class="tl-time" th:text="${#temporals.format(log.completed, 'd/MM-yyyy')}"></div>
                 </div>

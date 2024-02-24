@@ -63,8 +63,13 @@ public class ReportController {
 
 
     @GetMapping("tags")
-    public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId) {
-        model.addAttribute("tasks", taskService.allTasksWithTag(tagId));
+    public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId,
+                            @RequestParam(value = "from", required = false) final LocalDate from,
+                            @RequestParam(value = "to", required = false) final LocalDate to) {
+        final List<Task> attributeValue = taskService.allTasksWithTag(tagId);
+        model.addAttribute("tasks", attributeValue);
+        model.addAttribute("from", from != null ? from : LocalDate.MIN);
+        model.addAttribute("to", to != null ? to : LocalDate.MAX);
         return "reports/tagReport";
     }
 
