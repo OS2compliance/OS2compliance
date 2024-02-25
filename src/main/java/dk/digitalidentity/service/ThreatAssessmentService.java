@@ -156,7 +156,7 @@ public class ThreatAssessmentService {
         final LocalDate deadline = assessment.getNextRevision();
         if (deadline != null && assessment.getRevisionInterval() != null) {
             final Task task = findAssociatedCheck(assessment).orElseGet(() -> createAssociatedCheck(assessment));
-            task.setName("Revision af " + assessment.getName());
+            task.setName("Risikovurdering af " + assessment.getName());
             task.setResponsibleUser(assessment.getResponsibleUser());
             task.setNextDeadline(assessment.getNextRevision());
             task.setResponsibleUser(assessment.getResponsibleUser() != null ? assessment.getResponsibleUser() : userService.currentUser());
