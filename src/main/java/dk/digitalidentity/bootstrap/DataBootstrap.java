@@ -13,6 +13,7 @@ import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
@@ -33,6 +34,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -59,6 +61,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final ThreatAssessmentResponseOldDao threatAssessmentResponseOldDao;
     private final ThreatAssessmentService threatAssessmentService;
     private final CatalogService catalogService;
+    private final TaskService taskService;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -80,6 +83,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(8, this::seedV8);
         incrementAndPerformIfVersion(9, this::seedV9);
         incrementAndPerformIfVersion(10, this::seedV10);
+        incrementAndPerformIfVersion(11, this::seedV11);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -88,6 +92,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
         }
+    }
+
+    private void seedV11() {
+        // Touch all tasks to regenerate the localized enums field
+        taskService.saveAll(taskService.findAll().stream().peek(t -> t.setVersion(t.getVersion()+1)).collect(Collectors.toList()));
     }
 
     /*
