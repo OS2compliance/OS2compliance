@@ -74,7 +74,10 @@ public class RelatableController {
 		final Relatable relatedTo = relatableDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		final List<Relation> related = relationDao.findAllRelatedTo(relatedTo.getId());
-		final Relation toDelete = related.stream().filter(r -> (r.getRelationAId() == relatedId && r.getRelationAType().equals(relatedType)) || (r.getRelationBId() == relatedId && r.getRelationBType().equals(relatedType))).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet"));
+		final Relation toDelete = related.stream()
+            .filter(r -> (r.getRelationAId() == relatedId && r.getRelationAType().equals(relatedType)) || (r.getRelationBId() == relatedId && r.getRelationBType().equals(relatedType)))
+            .findAny()
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet"));
 		relationDao.delete(toDelete);
 		return getReturnPath(id, relatedTo);
 	}

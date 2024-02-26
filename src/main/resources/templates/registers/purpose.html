@@ -48,6 +48,7 @@
                         <label for="informationObligation" class="col-form-label col-lg-3 col-sm-12">Opfyldes oplysningspligten</label>
                         <div class="col-lg-3 col-sm-6">
                             <select class="form-control form-select" th:field="*{informationObligation}" id="informationObligation" name="informationObligation" tabindex="-1" disabled>
+                                <option value=""></option>
                                 <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationObligationStatus).values()}"
                                         th:value="${status.name}" th:text="${status.message}"></option>
                             </select>

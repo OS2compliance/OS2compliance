@@ -23,6 +23,7 @@
                         <div class="form-group row">
                             <label for="status" class="col-form-label">Status</label>
                             <select class="form-control form-select" th:field="*{status}" name="status" id="status" tabindex="-1" disabled>
+                                <option value=""></option>
                                 <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.RegisterStatus).values()}"
                                         th:value="${status}" th:text="${status.message}"></option>
                             </select>
@@ -30,6 +31,7 @@
                         <div class="form-group row">
                             <label for="criticality" class="col-form-label">Kritikalitet</label>
                             <select class="form-control form-select" th:field="*{criticality}" name="criticality" id="criticality" tabindex="-1" disabled>
+                                <option value=""></option>
                                 <option th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}"
                                         th:value="${crit.name}" th:text="${crit.message}"></option>
                             </select>

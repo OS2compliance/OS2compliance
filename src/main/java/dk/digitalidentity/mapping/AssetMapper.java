@@ -31,6 +31,7 @@ import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 
+@SuppressWarnings("Convert2MethodRef")
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface AssetMapper {
 
@@ -45,9 +46,9 @@ public interface AssetMapper {
         return AssetDTO.builder()
                 .id(assetGrid.getId())
                 .name(assetGrid.getName())
-                .supplier(nullSafe(() -> assetGrid.getSupplier().getName()))
+                .supplier(nullSafe(() -> assetGrid.getSupplier()))
                 .assetType(nullSafe(() -> assetGrid.getAssetType().getMessage()))
-                .responsibleUser(nullSafe(() -> assetGrid.getResponsibleUser().getName()))
+                .responsibleUser(nullSafe(() -> assetGrid.getResponsibleUserName()))
                 .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
                 .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))

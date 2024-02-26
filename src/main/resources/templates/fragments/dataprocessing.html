@@ -29,6 +29,7 @@
                     <td>Hvor mange har adgang til personoplysningerne</td>
                     <td>
                         <select class="form-control form-select editField" th:field="*{accessCountIdentifier}" tabindex="-1" disabled>
+                            <option value=""></option>
                             <option th:each="choice: ${dbChoices.accessCountIdentifier.values}" th:value="${choice.identifier}"
                                     th:selected="${dataProcessing.accessCountIdentifier == choice.identifier}"
                                     th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
@@ -40,6 +41,7 @@
                     <td>Hvor mange behandles der personoplysninger om</td>
                     <td>
                         <select class="form-control form-select editField" th:field="*{personCountIdentifier}" tabindex="-1" disabled>
+                            <option value=""></option>
                             <option th:each="choice: ${dbChoices.personCountIdentifier.values}" th:value="${choice.identifier}"
                                     th:selected="${dataProcessing.personCountIdentifier == choice.identifier}"
                                     th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
@@ -57,6 +59,7 @@
                     <td>Hvor længe opbevares personoplysningerne</td>
                     <td>
                         <select class="form-control form-select editField" th:field="*{storageTimeIdentifier}" tabindex="-1" disabled>
+                            <option value=""></option>
                             <option th:each="choice: ${dbChoices.storageTimeIdentifier.values}" th:value="${choice.identifier}"
                                     th:selected="${dataProcessing.storageTimeIdentifier == choice.identifier}"
                                     th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
@@ -74,6 +77,7 @@
                     <td>
                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-8 col-xxl-4">
                             <select class="form-control form-select editField" th:field="*{deletionProcedure}" name="deletionProcedure" tabindex="-1" disabled>
+                                <option value=""></option>
                                 <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DeletionProcedure).values()}"
                                         th:value="${status.name}" th:text="${status.message}"></option>
                             </select>

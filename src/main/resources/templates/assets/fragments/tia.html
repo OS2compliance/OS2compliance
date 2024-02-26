@@ -70,6 +70,7 @@
                                 <td>Sendes oplysningerne sendes videre til andre leverandører?</td>
                                 <td>
                                     <select class="form-control form-select editField" onchange="handleSendDataToOtherSuppliers()" th:field="*{tia.forwardInformationToOtherSuppliers}" tabindex="-1" disabled>
+                                        <option value=""></option>
                                          <option th:each="fitos : ${T(dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers).values()}"
                                                  th:value="${fitos.name}" th:text="${fitos.message}"></option>
                                     </select>
@@ -102,6 +103,7 @@
                                 <td>Hvilken adgang gives til data</td>
                                 <td>
                                     <select class="form-control form-select editField" th:field="*{tia.accessType}" tabindex="-1" disabled>
+                                        <option value=""></option>
                                          <option th:each="fitos : ${T(dk.digitalidentity.model.entity.enums.AccessType).values()}"
                                                  th:value="${fitos.name}" th:text="${fitos.message}"></option>
                                     </select>

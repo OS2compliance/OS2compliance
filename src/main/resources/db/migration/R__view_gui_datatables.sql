@@ -62,21 +62,24 @@ VIEW view_gridjs_assets AS
 SELECT
     a.id,
     a.name,
-    a.supplier_id,
+    s.name as supplier,
     a.asset_type,
     a.responsible_uuid,
+    u.name as responsible_user_name,
     a.updated_at,
     a.asset_status,
     ta.assessment,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos
 FROM assets a
-         LEFT JOIN properties ON properties.entity_id = a.id
-         LEFT JOIN threat_assessments ta ON ta.id = (
+    LEFT JOIN users u on u.uuid = a.responsible_uuid
+    LEFT JOIN suppliers s on s.id = a.supplier_id
+    LEFT JOIN properties ON properties.entity_id = a.id
+    LEFT JOIN threat_assessments ta ON ta.id = (
             SELECT MAX(tb.id) FROM threat_assessments tb
             JOIN relations r ON r.relation_a_id = a.id or r.relation_b_id = a.id
             WHERE r.relation_b_id = tb.id OR r.relation_a_id = tb.id
-        )
+    )
 WHERE a.deleted = false AND (properties.prop_key = 'kitos_uuid' OR properties.prop_key IS NULL);
 
 CREATE OR REPLACE

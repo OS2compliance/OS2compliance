@@ -38,6 +38,7 @@
                                             </td>
                                             <td>
                                                 <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="handleAnswerChange()" th:name="|questions[${itemStat.index}].answer|" tabindex="-1" disabled>
+                                                    <option value=""></option>
                                                     <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
                                                             th:selected="${dpia.answer == choice.identifier}"
                                                             th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
@@ -55,6 +56,7 @@
                                             </td>
                                             <td>
                                                 <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="handleAnswerChange()" th:name="|questions[${itemStat.index + 3}].answer|" tabindex="-1" disabled>
+                                                    <option value=""></option>
                                                     <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
                                                             th:selected="${dpia.answer == choice.identifier}"
                                                             th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
@@ -72,6 +74,7 @@
                                             </td>
                                             <td>
                                                 <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="handleAnswerChange()" th:name="|questions[${itemStat.index + 9}].answer|" tabindex="-1" disabled>
+                                                    <option value=""></option>
                                                     <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
                                                             th:selected="${dpia.answer == choice.identifier}"
                                                             th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
@@ -328,9 +331,11 @@
             tabBadge.classList.remove("bg-yellow");
             tabBadge.classList.remove("bg-green");
             tabBadge.classList.remove("bg-red");
+            tabBadge.classList.remove("bg-gray-800");
             tabBadge2.classList.remove("bg-yellow");
             tabBadge2.classList.remove("bg-green");
             tabBadge2.classList.remove("bg-red");
+            tabBadge2.classList.remove("bg-gray-800");
             if (stats.reds > 0) {
                 recommendation.textContent = "Du skal udføre konsekvensanalyse da behandlingen sandsynligvis indebærer en høj risiko for de registrerede (se røde bekymringer)";
                 recommendationCard.classList.add("border-danger");
@@ -341,11 +346,16 @@
                 recommendationCard.classList.add("border-warning");
                 tabBadge.classList.add("bg-yellow");
                 tabBadge2.classList.add("bg-yellow");
-            } else {
+            } else if (stats.blanks === 0) {
                 recommendation.textContent = "Du skal ikke udføre konsekvensanalyse da behandlingen sandsynligvis ikke indebærer risiko for de registrerede";
                 recommendationCard.classList.add("border-light");
                 tabBadge.classList.add("bg-green");
                 tabBadge2.classList.add("bg-green");
+            } else {
+                recommendation.textContent = "Du skal ikke udføre konsekvensanalyse da behandlingen sandsynligvis ikke indebærer risiko for de registrerede";
+                recommendationCard.classList.add("border-light");
+                tabBadge.classList.add("bg-gray-800");
+                tabBadge2.classList.add("bg-gray-800");
             }
 
         }
@@ -358,13 +368,13 @@
                     return false;
                 }
             } else {
-                return true;
+                return false;
             }
         }
 
         function setBadge(element, elementValue, groupSumExceeded, stats) {
             if (elementValue == false) {
-                element.parentElement.nextElementSibling.innerHTML = '<div class="d-block mx-auto badge bg-light">Blank</div>';
+                element.parentElement.nextElementSibling.innerHTML = '<div class="d-block mx-auto badge bg-gray-800">Blank</div>';
                 stats.blanks += 1;
             } else {
                 if (groupSumExceeded || element.id == "dpia-7") {
