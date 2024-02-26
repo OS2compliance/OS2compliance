@@ -143,6 +143,7 @@
                                                     <select class="form-control form-select editField"
                                                             th:field="*{assetStatus}" name="assetStatus" id="assetStatus"
                                                             tabindex="-1" disabled>
+                                                        <option value=""></option>
                                                         <option
                                                             th:each="status : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
                                                             th:value="${status}" th:text="${status.message}"></option>
@@ -183,6 +184,7 @@
                                                     <select class="form-control form-select editField"
                                                         th:field="*{criticality}" name="criticality" id="criticality"
                                                         tabindex="-1" disabled>
+                                                        <option value=""></option>
                                                         <option
                                                             th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}"
                                                             th:value="${crit.name}" th:text="${crit.message}"></option>

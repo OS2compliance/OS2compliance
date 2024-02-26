@@ -109,7 +109,7 @@ public class RegisterController {
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
         final Register saved = registerService.save(register);
-        return "redirect:/registers/" + register.getId();
+        return "redirect:/registers/" + saved.getId();
     }
 
     @Transactional
@@ -189,9 +189,6 @@ public class RegisterController {
                     .orElse(null);
             register.setResponsibleUser(responsibleUser);
         }
-        if (criticality != null) {
-            register.setCriticality(criticality);
-        }
         if (purpose != null) {
             register.setPurpose(purpose);
         }
@@ -219,9 +216,8 @@ public class RegisterController {
         if (consent != null) {
             register.setConsent(consent);
         }
-        if (status != null) {
-            register.setStatus(status);
-        }
+        register.setCriticality(criticality);
+        register.setStatus(status);
         registerService.save(register);
         return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }

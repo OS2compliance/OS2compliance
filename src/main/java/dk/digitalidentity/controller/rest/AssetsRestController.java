@@ -52,7 +52,7 @@ public class AssetsRestController {
 		final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
 		Page<AssetGrid> assets = null;
 		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name", "supplier.name", "responsibleUser.name", "updatedAt", "localizedEnums");
+			final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserName", "updatedAt", "localizedEnums");
 			// search and page
 			assets = assetGridDao.findAllCustom(searchableProperties, search, sortAndPage, AssetGrid.class);
 		} else {
@@ -78,7 +78,7 @@ public class AssetsRestController {
         final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
         Page<AssetGrid> assets = null;
         if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "supplier.name", "updatedAt", "localizedEnums");
+            final List<String> searchableProperties = Arrays.asList("name", "supplier", "updatedAt", "localizedEnums");
             // search and page
             assets = assetGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
         } else {
@@ -93,8 +93,9 @@ public class AssetsRestController {
 		return fieldName.equals("assessment")
 				|| fieldName.equals("supplier")
 				|| fieldName.equals("risk")
+				|| fieldName.equals("name")
 				|| fieldName.equals("assetType")
-				|| fieldName.equals("responsibleUser")
+				|| fieldName.equals("responsibleUserName")
 				|| fieldName.equals("updatedAt")
 				|| fieldName.equals("criticality")
 				|| fieldName.equals("assetStatus");

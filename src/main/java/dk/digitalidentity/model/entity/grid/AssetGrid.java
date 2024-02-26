@@ -1,6 +1,5 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.AssetType;
@@ -31,9 +30,8 @@ public class AssetGrid {
 	@Column
 	private String name;
 
-	@ManyToOne
-	@JoinColumn(name = "supplier_id")
-	private Supplier supplier;
+    @Column
+    private String supplier;
 
 	@Column
 	@Enumerated(EnumType.STRING)
@@ -42,6 +40,9 @@ public class AssetGrid {
 	@ManyToOne
 	@JoinColumn(name = "responsible_uuid")
 	private User responsibleUser;
+
+    @Column
+    private String responsibleUserName;
 
 	@Column
 	private LocalDate updatedAt;

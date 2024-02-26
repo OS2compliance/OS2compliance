@@ -184,7 +184,7 @@ public class AssetsController {
             final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
             defaultAnswer.setAssessment(asset.getDpia());
             defaultAnswer.setChoice(choice);
-            defaultAnswer.setAnswer("dpia-dont-know");
+            defaultAnswer.setAnswer(null);
             defaultAnswer.setId(0);
             final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpia().getDpiaScreeningAnswers().stream()
                 .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))

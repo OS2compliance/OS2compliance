@@ -8,8 +8,10 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+
 - Links felter alle steder i løsningen er lavet så de kan være 4000 tegn lange.
 - Dokumenter: Maks længde på beskrivelses felt ændret fra 255 til ~65000 tegn.
+- Aktiver: Sortering på ansvarlig, navn og leverandør fixed
 
 ### Changed
 
@@ -18,10 +20,13 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - Leverandør: Tilsyn aktiv kolonne tilføjet
 - Opgavecenter: Status og resultat er blevet slået sammen (>1 md til deadline grå / 30-0 dage til deadline gul / overskredet rød + resultatet)
 - Opgavecenter: Mulighed for at kopiere en opgave
+- Opgavecenter: Søgbar tag kolonne tilføjet
 - Risikovurdering: Ny brugerflade, nemmere at betjene
 - Risikovurdering: Overskrift følger med ned når man scroller
 - Risikovurdering: Kategorier kan folde ud/ind
 - Risikovurdering: Fagområde forudfyldes med den ansvarliges afdeling
+- Aktiver: Alle ikke angivne felter sættes default tomme
+- Fortegnelse: Alle ikke angivne felter sættes default tomme
 
 ### Added
 

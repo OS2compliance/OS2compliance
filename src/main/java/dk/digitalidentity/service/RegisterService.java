@@ -7,7 +7,6 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -83,9 +82,6 @@ public class RegisterService {
     public Register save(final Register register) {
         if (register.getDataProcessing() == null) {
             register.setDataProcessing(new DataProcessing());
-        }
-        if (register.getStatus() == null) {
-            register.setStatus(RegisterStatus.NOT_STARTED);
         }
         final Register savedRegister = registerDao.save(register);
         if (savedRegister.getConsequenceAssessment() == null) {
