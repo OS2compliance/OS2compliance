@@ -36,6 +36,15 @@ public class TaskService {
 	private final SettingsService settingsService;
     private final RelationService relationService;
 
+    public List<Task> findAll() {
+        return taskDao.findAll();
+    }
+
+
+    public void saveAll(final List<Task> all) {
+        taskDao.saveAll(all);
+    }
+
     public Optional<Task> findById(final Long id) {
         return taskDao.findById(id);
     }

@@ -102,7 +102,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'nextDeadline', 'taskRepetition', 'taskResult' ,'completed'];
+                        const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'tags', 'nextDeadline', 'taskRepetition', '', 'taskResult'];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -131,23 +131,35 @@
                     name: "Afdeling"
                 },
                 {
+                    name: "Tags",
+                    formatter: (cell, row) => {
+                        let result = '';
+                        if (cell != null && cell.trim() !== '') {
+                            let tags = cell.split(',');
+                            for (let i =0; i< tags.length; i++) {
+                                result += '<div class="d-block badge bg-info mb-1">'+tags[i]+'</div>';
+                            }
+                        }
+                        return gridjs.html(result, 'div')
+                    },
+                },
+                {
                     name: "Deadline",
                     width: '90px',
                     formatter: (cell, row) => {
-                        var completed = row.cells[7]['data'];
+                        var completed = row.cells[9]['data'];
                         var type = row.cells[2]['data'];
                         if (completed && type === "Opgave") {
                             return gridjs.html(`<span>${cell}</span>`);
                         }
 
-                            var dateString = cell.replace(" ", "/");
-							dateString = dateString.replace("-", "/");
-							var dateSplit = dateString.split("/");
-							var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
-                            var diff = DateDiff.inDays(today, cellDate);
+                        var dateString = cell.replace(" ", "/");
+                        dateString = dateString.replace("-", "/");
+                        var dateSplit = dateString.split("/");
+                        var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                        var diff = DateDiff.inDays(today, cellDate);
 
-
-                        if (cellDate < today) {
+                        if (diff < 0) {
                             return gridjs.html(`<span style="color: red;">${cell}</span>`);
                         }
                         else if (diff < 31 && diff >= 0 ) {
@@ -173,32 +185,31 @@
                         let status = "";
                         let type = row.cells[2]['data'];
 
-
                         // if completed and task type opgave
                         if (cell && type === "Opgave") {
                             status = '<div class="d-block badge bg-success">Udført</div>'
                         } else {
-                            let deadline = row.cells[5]['data'];
+                            let deadline = row.cells[6]['data'];
                             let dateString = deadline.replace(" ", "/");
                             dateString = dateString.replace("-", "/");
                             let dateSplit = dateString.split("/");
                             let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
                             let diff = DateDiff.inDays(today, deadlineAsDate);
                             let statusText = 'Ikke udført';
-                            if(row.cells[7]['data'] === 'NO_ERROR') {
+                            if(row.cells[8]['data'] === 'NO_ERROR') {
                                 statusText = 'Ingen fejl';
-                            } else if (row.cells[7]['data'] === 'NO_CRITICAL_ERROR') {
+                            } else if (row.cells[8]['data'] === 'NO_CRITICAL_ERROR') {
                                 statusText = 'Ingen kritiske fejl';
-                            } else if (row.cells[7]['data'] === 'CRITICAL_ERROR') {
+                            } else if (row.cells[8]['data'] === 'CRITICAL_ERROR') {
                                 statusText = 'Kritiske fejl';
                             }
 
-                            if (deadlineAsDate < today) {
+                            if (diff < 0) {
                                 status = `<div class="d-block badge bg-danger">${statusText}</div>`;
                             } else if (diff < 31 && diff >= 0) {
                                 status = `<div class="d-block badge bg-warning">${statusText}</div>`;
                             } else {
-                                status = `<div class="d-block badge bg-secondary">${statusText}</div>`;
+                                status = `<div class="d-block badge bg-gray-800">${statusText}</div>`;
                             }
                         }
 
@@ -227,7 +238,7 @@
                 },
                 then: data => data.content.map(task =>
                     [ task.id, task.name, task.taskType,
-                        task.responsibleUser, task.responsibleOU, task.nextDeadline,
+                        task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
                         task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed ]
                 ),
                 total: data => data.totalCount

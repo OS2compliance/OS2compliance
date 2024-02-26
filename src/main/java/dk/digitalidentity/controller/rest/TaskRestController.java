@@ -51,7 +51,7 @@ public class TaskRestController {
         Page<TaskGrid> tasks = null;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "taskType", "responsibleUser.name" , "responsibleOU.name", "nextDeadline", "localizedEnums");
+            final List<String> searchableProperties = Arrays.asList("name", "taskType", "responsibleUser.name", "responsibleOU.name", "nextDeadline", "localizedEnums", "tags");
             tasks = taskGridDao.findAllCustom(searchableProperties, search, sortAndPage, TaskGrid.class);
         } else {
             // Fetch paged and sorted
@@ -92,6 +92,6 @@ public class TaskRestController {
     private boolean containsField(final String fieldName) {
         return fieldName.equals("name") || fieldName.equals("taskType") || fieldName.equals("responsibleUser") || fieldName.equals("responsibleOU")
                 || fieldName.equals("nextDeadline") || fieldName.equals("taskRepetition")
-                || fieldName.equals("status");
+                || fieldName.equals("status") || fieldName.equals("tags");
     }
 }
