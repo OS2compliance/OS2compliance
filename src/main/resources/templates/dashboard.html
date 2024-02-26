@@ -24,59 +24,6 @@
 			</div>
 			<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="content__boxed">
 				<div class="content__wrap">
-					<div class="row row-cols-1 row-cols-md-3 g-3" >
-						<div class="col">
-							<div class="card h-100">
-								<div class="card-body">
-									<h5 class="card-title text-center">Bruger information</h5>
-									<div style="  margin: 0.5em;">
-										<div style="display: inline-block; vertical-align: top;">
-											<p th:utext="'Navn:              ' + ${user?.name}"></p>
-											<p th:utext="'Brugernavn:        ' + ${user?.userId}"></p>
-											<p th:utext="'Email:             ' + ${user?.email}"></p>
-										</div>
-										<div style="display: inline-block; margin-left: 50px;">
-											<div style="display: inline-block; vertical-align: top;">
-												<p>Rolle(r):</p>
-												<p th:each="position : ${user?.positions}" th:text="${position?.name}">
-												</p>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col">
-							<div class="card h-100">
-								<div class="card-body">
-									<h5 class="card-title text-center">Dokumenter der kræver din opmærksomhed</h5>
-									<div th:unless="${#lists.isEmpty(documents)}" th:each="document : ${documents}">
-										<a th:text="${document?.name}  + '  ' + ${document.nextRevision}"
-											th:href="@{'/documents/' + ${document.id}}"></a>
-									</div>
-									<div th:if="${#lists.isEmpty(documents)}">
-										<p>Ingen dokumenter der nærmer sig næste revision.</p>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col">
-							<div class="card h-100">
-								<div class="card-body">
-									<h5 class="card-title text-center">Opgaver der kræver din opmærksomhed</h5>
-									<div th:unless="${#lists.isEmpty(tasks)}" th:each="task : ${tasks}">
-										<a th:text="${task?.name} + ' ' + ${task.nextDeadline}"
-											th:href="@{'/tasks/' + ${task.id}}">opgavenavn</a>
-									</div>
-									<div th:if="${#lists.isEmpty(tasks)}">
-										<p>Ingen opgaver der nærmer sig deadline.</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div class="content__wrap">
 
 					<div class="tab-base">
 						<ul class="nav nav-tabs" role="tablist">

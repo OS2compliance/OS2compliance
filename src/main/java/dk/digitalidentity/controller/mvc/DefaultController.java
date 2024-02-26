@@ -2,8 +2,6 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.UserDao;
-import dk.digitalidentity.model.entity.Document;
-import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
@@ -23,11 +21,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 
-import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
 public class DefaultController implements ErrorController {
@@ -50,10 +44,6 @@ public class DefaultController implements ErrorController {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();
             if(userUuid != null) {
                 final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
-                final List<Task> taskList = taskService.findTasksNearingDeadlineForUser(user).stream().sorted(Comparator.comparing(Task::getNextDeadline)).collect(Collectors.toList());
-                model.addAttribute("tasks", taskList);
-                final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
-                model.addAttribute("documents", documentList);
                 model.addAttribute("user", user);
             }
 
