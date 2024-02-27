@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 	<script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
 	<script type="text/javascript" th:src="@{/js/supplier/formReset.js}"></script>
@@ -53,7 +53,7 @@
 	<div class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
 	<div class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 
 	<script th:inline="javascript">

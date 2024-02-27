@@ -1,7 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
-import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.entity.Asset;
@@ -23,6 +22,7 @@ import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
+import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -71,7 +71,7 @@ public class RegisterController {
     @Autowired
     private ChoiceService choiceService;
     @Autowired
-    private OrganisationUnitDao organisationUnitDao;
+    private OrganisationService organisationService;
     @Autowired
     private UserDao userDao;
     @Autowired
@@ -95,12 +95,14 @@ public class RegisterController {
             model.addAttribute("register", new Register());
             model.addAttribute("formId", "createForm");
             model.addAttribute("formTitle", "Ny behandlingsaktivitet");
+            model.addAttribute("action", "/registers/create");
         } else {
             final Register register = registerService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             model.addAttribute("register", register);
             model.addAttribute("formId", "editForm");
             model.addAttribute("formTitle", "Rediger behandlingsaktivitet");
+            model.addAttribute("action", "/registers/" + register.getId() + "/update?showIndex=true");
         }
         return "registers/form";
     }
@@ -153,6 +155,8 @@ public class RegisterController {
     @Transactional
     @PostMapping("{id}/update")
     public String update(@PathVariable final Long id,
+                         @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
+                         @RequestParam(value = "name", required = false) @Valid final String name,
                          @RequestParam(value = "description", required = false) @Valid final String description,
                          @RequestParam(value = "responsibleOu", required = false) @Valid @UUID final String responsibleOuUuid,
                          @RequestParam(value = "department", required = false) @Valid @UUID final String departmentUuid,
@@ -175,12 +179,12 @@ public class RegisterController {
             register.setDescription(description);
         }
         if (StringUtils.isNotEmpty(responsibleOuUuid)) {
-            final OrganisationUnit responsibleOu = organisationUnitDao.findById(responsibleOuUuid)
+            final OrganisationUnit responsibleOu = organisationService.get(responsibleOuUuid)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             register.setResponsibleOu(responsibleOu);
         }
         if (StringUtils.isNotEmpty(departmentUuid)) {
-            final OrganisationUnit departmentOu = organisationUnitDao.findById(departmentUuid)
+            final OrganisationUnit departmentOu = organisationService.get(departmentUuid)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             register.setDepartment(departmentOu);
         }
@@ -216,10 +220,14 @@ public class RegisterController {
         if (consent != null) {
             register.setConsent(consent);
         }
-        register.setCriticality(criticality);
-        register.setStatus(status);
+        if (criticality != null) {
+            register.setCriticality(criticality);
+        }
+        if (status != null) {
+            register.setStatus(status);
+        }
         registerService.save(register);
-        return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+        return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
     @Transactional

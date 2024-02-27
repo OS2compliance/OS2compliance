@@ -1,41 +1,55 @@
 
-function formReset() {
-    const form = document.querySelector('form');
-    form.reset();
+
+let createRegisterService = new CreateRegisterService();
+let editRegisterService = new EditRegisterService();
+document.addEventListener("DOMContentLoaded", function() {
+    createRegisterService.init();
+    editRegisterService.init();
+});
+
+function CreateRegisterService() {
+    this.init = function() {}
+
+    this.show = function() {
+        fetch(formUrl)
+            .then(response => response.text()
+                .then(data => {
+                    let dialog = document.getElementById('createRegisterDialog');
+                    dialog.innerHTML = data;
+                    this.onLoaded();
+                    const editRegisterModal = new bootstrap.Modal(dialog);
+                    editRegisterModal.show();
+                    initFormValidationForForm('createForm');
+                }))
+            .catch(error => {toastService.error(error); console.log(error)});
+    }
+
+    this.onLoaded = function() {
+        initUserSelect('createFormUserSelect', false);
+        initOUSelect('createFormOuSelect', false);
+    }
+
 }
 
-function formLoaded() {
-    const ouSelect = document.getElementById('ouSelect');
-    const ouChoices = new Choices(ouSelect, {
-        searchChoices: false,
-        allowHTML: true,
-        searchPlaceholderValue: 'Søg flere....',
-        classNames: {
-            containerInner: 'form-control'
-        }
-    });
-    ouSelect.addEventListener("search",
-        function(event) {
-            updateOus(ouChoices, event.detail.value);
-        },
-        false,
-    );
-    const userSelect = document.getElementById('userSelect');
-    const userChoices = new Choices(userSelect, {
-        searchChoices: false,
-        allowHTML: true,
-        searchPlaceholderValue: 'Søg flere....',
-        classNames: {
-            containerInner: 'form-control'
-        }
-    });
-    userSelect.addEventListener("search",
-        function(event) {
-            updateUsers(userChoices, event.detail.value);
-        },
-        false,
-    );
+function EditRegisterService() {
+    this.init = function() {}
 
-    updateOus(ouChoices, "");
-    updateUsers(userChoices, "");
+    this.show = function(registerId) {
+        fetch(`${formUrl}?id=${registerId}`)
+            .then(response => response.text()
+                .then(data => {
+                    let dialog = document.getElementById('editRegisterDialog');
+                    dialog.innerHTML = data;
+                    this.onLoaded();
+                    const createRegisterModal = new bootstrap.Modal(dialog);
+                    createRegisterModal.show();
+                    initFormValidationForForm('editForm');
+                }))
+            .catch(error => {toastService.error(error); console.log(error);});
+    }
+
+    this.onLoaded = function() {
+        initUserSelect('editFormUserSelect', false);
+        initOUSelect('editFormOuSelect', false);
+    }
 }

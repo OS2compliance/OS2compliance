@@ -78,10 +78,12 @@ function initUserSelect(elementId, prefetch = true) {
     return userChoices;
 }
 
-function initOUSelect(elementId) {
+function initOUSelect(elementId, prefetch = true) {
     const ouSelect = document.getElementById(elementId);
     const ouChoices = initSelect(ouSelect);
-    updateOus(ouChoices, "");
+    if (prefetch) {
+        updateOus(ouChoices, "");
+    }
     ouSelect.addEventListener("search",
         function(event) {
             updateOus(ouChoices, event.detail.value);
