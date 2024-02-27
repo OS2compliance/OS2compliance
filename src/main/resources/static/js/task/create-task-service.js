@@ -2,10 +2,12 @@
 const createTaskService = new CreateTaskService();
 
 function CreateTaskService() {
+    this.taskModalDialog = null;
+    this.createTaskOuChoicesEditSelect = null;
 
     this.selectCreateTaskOption = function(value) {
         const form = document.querySelector('#taskCreateForm');
-        const repetitionField = form.querySelector('#repetition');
+        const repetitionField = form.querySelector('#taskCreateFormRepetition');
         if (value === 'TASK') {
             repetitionField.value = 'NONE';
         }
@@ -15,10 +17,10 @@ function CreateTaskService() {
     this.loaded = function() {
         let self = this;
         this.selectCreateTaskOption('TASK');
-        initDatepicker("#taskDeadlineBtn", "#taskDeadline");
-         this.createTaskOuChoicesEditSelect = initOUSelect('taskOuSelect');
+        initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
+         this.createTaskOuChoicesEditSelect = initOUSelect('taskCreateFormTaskOuSelect');
 
-        this.createTaskUserChoicesEditSelect = initUserSelect('taskUserSelect');
+        this.createTaskUserChoicesEditSelect = initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
              var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
              fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
@@ -36,42 +38,39 @@ function CreateTaskService() {
     }
 
     this.show = function(elem = null) {
-        this.loading = true;
         fetch(`/tasks/form`)
             .then(response => response.text()
                 .then(data => {
-                    document.getElementById('taskFormDialog').innerHTML = data;
+                    this.taskModalDialog = document.getElementById('taskFormDialog');
+                    this.taskModalDialog.innerHTML = data;
                     this.loaded();
                     this.initTaskRelationSelect();
-                    initTagSelect('createTaskTagsSelect');
+                    initTagSelect('taskCreateFormTagsSelect');
                     // create task modal - explainer and riskId
-                    var modal = document.querySelector('#taskFormDialog');
-
                     // if elem != null it means that the method is called from the risk view page
                     if (elem != null) {
                         var riskId = elem.dataset.riskid;
                         var customId = elem.dataset.customid;
                         var catalogIdentifier = elem.dataset.catalogidentifier;
-                        modal.querySelector('#threatAssessmentExplainer').style.display = '';
-                        modal.querySelector('#taskRiskId').value = riskId;
-                        modal.querySelector('#riskCustomId').value = customId;
-                        modal.querySelector('#riskCatalogIdentifier').value = catalogIdentifier;
+                        this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = '';
+                        this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = riskId;
+                        this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = customId;
+                        this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = catalogIdentifier;
                     } else {
-                        modal.querySelector('#threatAssessmentExplainer').style.display = 'none';
-                        modal.querySelector('#taskRiskId').value = null;
-                        modal.querySelector('#riskCustomId').value = null;
-                        modal.querySelector('#riskCatalogIdentifier').value = null;
+                        this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = 'none';
+                        this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = null;
+                        this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = null;
+                        this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = null;
                     }
 
-                    const createTaskModal = new bootstrap.Modal(modal);
+                    const createTaskModal = new bootstrap.Modal(this.taskModalDialog);
                     createTaskModal.show();
                 }))
-            .catch(error => toastService.error(error))
-            .finally(() => this.loading = false);
+            .catch(error => toastService.error(error));
     }
 
     this.initTaskRelationSelect = function() {
-        const relationsSelect = document.getElementById('createTaskRelationsSelect');
+        const relationsSelect = document.getElementById('taskCreateFormRelationsSelect');
         const relationsChoice = initSelect(relationsSelect);
         updateRelations(relationsChoice, "");
         relationsSelect.addEventListener("search",

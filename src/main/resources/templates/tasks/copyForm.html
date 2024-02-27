@@ -22,12 +22,10 @@
             <label for="type" class="col-sm-4 col-form-label">Opgave type</label>
             <div class="col-sm-8">
               <div id="type" class="btn-group" role="group" aria-label="Opgave type valg">
-                <input type="radio" class="btn-check" name="btnradio" id="btntask" value="TASK"
-                  onclick="selectCreateTaskOption('TASK')" autocomplete="off" th:field="*{taskType}">
-                <label class="btn btn-outline-primary" for="btntask">Opgave</label>
-                <input type="radio" class="btn-check" name="btnradio" id="btncheck" value="CHECK"
-                  onclick="selectCreateTaskOption('CHECK')" autocomplete="off" th:field="*{taskType}">
-                <label class="btn btn-outline-primary" for="btncheck">Kontrol</label>
+                <input type="radio" class="btn-check" name="btnradio" id="copyTaskTaskBtn" value="TASK" onclick="copyTaskService.selectTaskOption('TASK')" autocomplete="off" th:field="*{taskType}">
+                <label class="btn btn-outline-primary" for="copyTaskTaskBtn">Opgave</label>
+                <input type="radio" class="btn-check" name="btnradio" id="copyTaskCheckBrn" value="CHECK" onclick="copyTaskService.selectTaskOption('CHECK')" autocomplete="off" th:field="*{taskType}">
+                <label class="btn btn-outline-primary" for="copyTaskCheckBrn">Kontrol</label>
               </div>
             </div>
           </div>
@@ -48,10 +46,10 @@
           </div>
 
           <div class="row mt-3">
-            <label for="taskCopyUserSelect" class="col-sm-4 col-form-label">Ansvarlig</label>
+            <label for="copyTaskUserSelect" class="col-sm-4 col-form-label">Ansvarlig</label>
             <div class="col-sm-8">
               <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger=""
-                name="ansvarlig" id="taskCopyUserSelect" hidden="" tabindex="-1" required>
+                name="ansvarlig" id="copyTaskUserSelect" hidden="" tabindex="-1" required>
                 <option th:if="${task.responsibleUser} != null" th:value="${task.responsibleUser.uuid}" th:text="${task.responsibleUser.name}"></option>
               </select>
               <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
@@ -59,10 +57,10 @@
           </div>
 
           <div class="row mt-3">
-            <label for="taskCopyOuSelect" class="col-sm-4 col-form-label">Afdeling</label>
+            <label for="copyTaskOuSelect" class="col-sm-4 col-form-label">Afdeling</label>
             <div class="col-sm-8">
               <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger=""
-                name="afdeling" id="taskCopyOuSelect" hidden="" tabindex="-1">
+                name="afdeling" id="copyTaskOuSelect" hidden="" tabindex="-1">
                 <option th:if="${task.responsibleOu} != null" th:value="${task.responsibleOu.uuid}" th:text="${task.responsibleOu.name}"></option>
               </select>
               <div class="invalid-feedback">Der skal vælges en ansvarlig afdeling</div>
@@ -70,9 +68,9 @@
           </div>
 
           <div class="row mt-3" id="repetitionSection">
-            <label for="repetition" class="col-sm-4 col-form-label">Gentagelse</label>
+            <label for="copyTaskRepetition" class="col-sm-4 col-form-label">Gentagelse</label>
             <div class="col-sm-8">
-              <select class="form-control form-select" th:field="*{repetition}" id="repetition" name="gentagelse"
+              <select class="form-control form-select" th:field="*{repetition}" id="copyTaskRepetition" name="gentagelse"
                 tabindex="-1">
                 <option th:each="repetition : ${T(dk.digitalidentity.model.entity.enums.TaskRepetition).values()}"
                   th:value="${repetition.name}" th:text="${repetition.message}"></option>
