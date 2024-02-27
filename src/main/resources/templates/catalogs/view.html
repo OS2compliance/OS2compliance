@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -55,7 +55,7 @@
 </div>
 
 
-<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

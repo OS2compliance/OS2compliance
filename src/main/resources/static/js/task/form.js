@@ -1,6 +1,6 @@
 
-copyTaskService = new CopyTaskService();
-editTaskService = new EditTaskService();
+let copyTaskService = new CopyTaskService();
+let editTaskService = new EditTaskService();
 
 document.addEventListener("DOMContentLoaded", function() {
     copyTaskService.init();

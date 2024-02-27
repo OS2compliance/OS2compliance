@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/asset/form.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/assets.css}" />
@@ -50,7 +50,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
 </div>
 <div class="modal fade" id="formDialog" aria-labelledby="assetLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <style>
 

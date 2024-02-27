@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/document/document.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/documents.css}" />
@@ -51,7 +51,7 @@
 </div>
 
 <div th:replace="~{documents/create :: createDocumentFragment}"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

@@ -456,7 +456,7 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
-    <div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+    <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/

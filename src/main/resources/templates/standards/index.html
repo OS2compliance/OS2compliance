@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="da">
 
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 
 <body class="jumping">
 <link rel="stylesheet" th:href="@{/css/standard/buttons.css}"/>
@@ -138,7 +138,7 @@
 	<header th:replace="~{fragments/header :: header}"></header>
 	<nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
 </div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
 	/*<![CDATA[*/
