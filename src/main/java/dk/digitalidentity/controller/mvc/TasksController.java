@@ -2,13 +2,11 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.RelatableDao;
-import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -48,8 +46,10 @@ import org.thymeleaf.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 import static java.time.temporal.ChronoUnit.DAYS;
@@ -62,8 +62,6 @@ import static java.time.temporal.ChronoUnit.DAYS;
 public class TasksController {
     @Autowired
     private ThreatAssessmentDao threatAssessmentDao;
-    @Autowired
-    private RelationDao relationDao;
     @Autowired
     private RelatableDao relatableDao;
     @Autowired
@@ -94,12 +92,17 @@ public class TasksController {
             model.addAttribute("task", new Task());
             model.addAttribute("formId", "taskCreateForm");
             model.addAttribute("formTitle", "Ny opgave");
+            model.addAttribute("action", "/tasks/create");
+            model.addAttribute("relations", Collections.emptyList());
         } else {
             final Task task = taskService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            final List<Relatable> relations = relationService.findAllRelatedTo(task);
             model.addAttribute("task", task);
             model.addAttribute("formId", "taskEditForm");
             model.addAttribute("formTitle", "Rediger opgave");
+            model.addAttribute("relations", relations);
+            model.addAttribute("action", "/tasks/edit?showIndex=true");
         }
         return "tasks/form";
     }
@@ -107,23 +110,12 @@ public class TasksController {
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
-                           @RequestParam(name = "relations", required = false) final List<Long> relations,
+                           @RequestParam(name = "relations", required = false) final Set<Long> relations,
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
         final Task savedTask = taskService.saveTask(task);
-        if (relations != null) {
-            relations.stream()
-                .map(relatedId -> relatableDao.findById(relatedId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet")))
-                .map(relatable -> Relation.builder()
-                        .relationAId(savedTask.getId())
-                        .relationAType(savedTask.getRelationType())
-                        .relationBId(relatable.getId())
-                        .relationBType(relatable.getRelationType())
-                        .build())
-                .forEach(relation -> relationDao.save(relation));
-        }
+        relationService.setRelationsAbsolute(savedTask, relations);
 
         if (riskId != null) {
             final Relatable relatable = relatableDao.findById(riskId)
@@ -153,7 +145,7 @@ public class TasksController {
                     threatAssessmentDao.save(threatAssessment);
                 }
 
-                addRelation(savedTask, response);
+                relationService.addRelation(savedTask, response);
 
             } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
                 final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(riskCatalogIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -167,35 +159,25 @@ public class TasksController {
                     threatAssessmentDao.save(threatAssessment);
                 }
 
-                addRelation(savedTask, response);
+                relationService.addRelation(savedTask, response);
             }
 
-            addRelation(savedTask, relatable);
+            relationService.addRelation(savedTask, relatable);
             return "redirect:/risks/" + riskId;
         }
 
         return "redirect:/tasks/"+savedTask.getId();
     }
 
-    private void addRelation(final Task savedTask, final Relatable relatable) {
-        final Relation relation = Relation.builder()
-            .relationAId(savedTask.getId())
-            .relationAType(savedTask.getRelationType())
-            .relationBId(relatable.getId())
-            .relationBType(relatable.getRelationType())
-            .build();
-        relationDao.save(relation);
-    }
-
     private void addRelations(final Task savedTask, final List<Relatable> relatables) {
         for (final Relatable relatable : relatables) {
-            addRelation(savedTask, relatable);
+            relationService.addRelation(savedTask, relatable);
         }
     }
 
     @Transactional
     @PostMapping("edit")
-    public String formEdit(@ModelAttribute final Task task) {
+    public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
         final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
@@ -204,6 +186,9 @@ public class TasksController {
 
         if (task.getResponsibleUser() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en ansvarlig bruger");
+        }
+        if (task.getName() != null) {
+            existingTask.setName(task.getName());
         }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
         existingTask.setDescription(task.getDescription());
@@ -217,7 +202,7 @@ public class TasksController {
 
         taskService.saveTask(existingTask);
 
-        return "redirect:/tasks/" + existingTask.getId();
+        return showIndex ? "redirect:/tasks" : "redirect:/tasks/" + existingTask.getId();
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}

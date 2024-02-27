@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
 
-<script th:src="@{/js/task/form.js}" defer></script>
+<script th:src="@{/js/task/view.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -47,7 +47,7 @@
                             <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button th:unless="${completed}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button th:unless="${completed}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                    <button th:unless="${completed}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.editMode(true);">Rediger stamdata</button>
                                     <button th:unless="${completed}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
                                 </div>
                                 <input th:field="*{id}" hidden>
@@ -190,18 +190,6 @@
     /*[+
         var taskId = [[${task.id}]];
     +]*/
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        loadViewAndEditForm();
-        addRelationFormLoaded();
-        addTagsFormLoaded();
-        completeTaskFormLoaded();
-
-        initFormValidationForForm('editForm');
-        initFormValidationForForm('completeTaskForm');
-        initDatepicker("#deadlineBtn", "#deadline");
-    });
-
     /*]]>*/
 </script>
 
