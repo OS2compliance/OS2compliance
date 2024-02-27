@@ -102,7 +102,7 @@ public class TasksController {
             model.addAttribute("formId", "taskEditForm");
             model.addAttribute("formTitle", "Rediger opgave");
             model.addAttribute("relations", relations);
-            model.addAttribute("action", "/tasks/edit");
+            model.addAttribute("action", "/tasks/edit?showIndex=true");
         }
         return "tasks/form";
     }
@@ -177,8 +177,7 @@ public class TasksController {
 
     @Transactional
     @PostMapping("edit")
-    public String formEdit(@ModelAttribute final Task task,
-                           @RequestParam(name = "relations", required = false) final Set<Long> relations) {
+    public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
         final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
@@ -203,7 +202,7 @@ public class TasksController {
 
         taskService.saveTask(existingTask);
 
-        return "redirect:/tasks/" + existingTask.getId();
+        return showIndex ? "redirect:/tasks" : "redirect:/tasks/" + existingTask.getId();
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
