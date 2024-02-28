@@ -98,3 +98,6 @@ html {
     width: 1rem;
 }
 
+.disabledBox {
+    background-color: #f3f5f9;
+}

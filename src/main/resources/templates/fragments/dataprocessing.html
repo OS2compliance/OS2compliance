@@ -138,8 +138,7 @@
             <input type="hidden" class="selectedRegisteredCategory">
         </div>
         <div class="col-sm-6 col-lg-8">
-            <div class="tagin-wrapper form-control" style="background-color: #f3f5f9">
-            </div>
+            <div class="tagin-wrapper form-control disabledBox" onclick="informationTypesClicked(this)">&nbsp</div>
         </div>
         <div class="extendedCategoryInfo row d-flex mt-2" style="display: none !important;">
             <div class="col-sm-6 col-lg-4">
@@ -179,6 +178,11 @@
         function removeCategorySelection(elem) {
             primaryCategorySelectionService.removeCategorySelection(elem);
         }
+
+        function informationTypesClicked(elem) {
+            primaryCategorySelectionService.informationTypesClicked(elem);
+        }
+
         function categorySelectionChanged(elem) {
             primaryCategorySelectionService.categorySelectionChanged(elem);
         }
@@ -186,7 +190,7 @@
             primaryCategorySelectionService.infoPassedOnSelectionChanged(elem);
         }
         function editModeCategoryInformationEditable(enabled) {
-            primaryCategorySelectionService.editModeCategoryInformationEditable(enabled);
+            primaryCategorySelectionService.setEditMode(enabled);
         }
 
         /*]]>*/

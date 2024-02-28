@@ -69,16 +69,15 @@ function checkInputField(my_choices, atleastOne = false) {
 
 async function postData(url = "", data = {}) {
     var token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    const response = await fetch(url, {
+    return await fetch(url, {
         method: "POST",
         headers: {
-           'X-CSRF-TOKEN': token,
-           "Content-Type": "application/json"
+            'X-CSRF-TOKEN': token,
+            "Content-Type": "application/json"
         },
         referrerPolicy: "no-referrer",
         body: JSON.stringify(data),
     });
-    return response;
 }
 
 function asIntOrDefault(value, def) {
@@ -100,19 +99,7 @@ function fetchHtml(url, targetId) {
                 document.getElementById(targetId).innerHTML = data;
             });
         }
-    ).catch(error => toastService.error(error));
-}
-
-function fetchWithError(url) {
-    return fetch(url)
-    .then(response => {
-        if (!response.ok) {
-            throw new Error(`${response.status} ${response.statusText}`);
-        }
-        response.text().then(data => {
-            document.getElementById(targetId).innerHTML = data;
-        });
-    }).catch(error => toastService.error(error));
+    ).catch(error => { toastService.error(error); console.log(error) });
 }
 
 function javaFormatDate(date) {
@@ -129,5 +116,11 @@ function javaFormatDate(date) {
     }
     let yyyy = date.getFullYear();
     return `${yyyy}-${mm}-${dd}`;
+}
+
+function ensureElementHasClass(elem, className) {
+    if (!elem.classList.contains(className)) {
+        elem.classList.add(className)
+    }
 }
 

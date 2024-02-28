@@ -193,8 +193,14 @@ function setField(standardSectionId, setFieldType, value, index) {
          "value": value
        };
 
-    postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((data) => {
-      // TODO måske vis ok eller fejl notifikation som toastr.js fx via data.status
+    postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((response) => {
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`);
+        }
+    }).catch(function(error) {
+        toastService.error(error);
+        console.log(error);
+        window.location.reload();
     });
 
     // set last updated date
@@ -265,7 +271,9 @@ function addRelations() {
           return responseData; // Dette returneres som et promise-svar
     })
     .catch(function(error) {
-          window.location.reload();
+        toastService.error(error);
+        console.log(error);
+        window.location.reload();
     });
 }
 

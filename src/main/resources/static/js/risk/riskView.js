@@ -151,7 +151,7 @@ function setField() {
 
     postData("/rest/risks/" + riskId + "/threats/setfield", data).then((data) => {
         toastService.info("Info", "Dine ændringer er blevet gemt")
-        }).catch(error => toastService.error(error));
+        }).catch(error => {toastService.error(error); console.log(error)});
 }
 
 function updateAverage() {

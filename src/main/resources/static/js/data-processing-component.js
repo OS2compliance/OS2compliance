@@ -30,13 +30,6 @@ let DataProcessingComponent = function () {
 
     this.addModalListeners = function(modalContainer) {
         let self = this;
-        modalContainer.addEventListener('show.bs.modal', function (event) {
-            const modal = event.target;
-            const checkBoxes = modal.querySelectorAll('input');
-            for (let i = 0; i < checkBoxes.length; i++) {
-                checkBoxes[i].checked = false;
-            }
-        });
         modalContainer.addEventListener('hide.bs.modal', function (event) {
             const modal = event.target;
             const categoryIdentifier = modal.querySelector('#categoryIdentifier').value;
@@ -52,13 +45,13 @@ let DataProcessingComponent = function () {
             for (let i = 0; i < allSelect.length; i++) {
                 if (allSelect[i].value === categoryIdentifier) {
                     targetRow = allSelect[i].parentElement.parentElement;
-                    allSelect[i].disabled = true;
                     const deleteButton = targetRow.querySelector('button');
                     deleteButton.style.display = 'block';
                     self.setPersonInformationCategories(targetRow, selectedValues);
                     self.setInformationParsedOnCategories(targetRow, null);
                 }
             }
+            self.removeEmptyInformationCategories();
             self.addEmptyInformationCategory();
         });
     }
@@ -82,8 +75,42 @@ let DataProcessingComponent = function () {
         }
         const elementById = this.modalContainer.querySelector('#categoryIdentifier');
         elementById.value = elem.value;
-        const modal = bootstrap.Modal.getOrCreateInstance(this.modalContainer);
-        modal.show();
+        let container = elem.parentElement.parentElement
+        container.querySelector('.tagin-wrapper').classList.remove('disabledBox');
+        let tagsValues = [];
+        let selectedTags = container.querySelectorAll('.tagin-tag');
+        for (let i=0; i<selectedTags.length; ++i) {
+            console.log(selectedTags[i].textContent);
+            tagsValues.push(selectedTags[i].textContent);
+        }
+        this.setPersonInformationCategories(container, tagsValues);
+    }
+
+    this.preselectValuesInModal = function(containerElem) {
+        const checkBoxes = this.modalContainer.querySelectorAll('input');
+        for (let i = 0; i < checkBoxes.length; i++) {
+            checkBoxes[i].checked = false;
+        }
+        let selectedTags = containerElem.querySelectorAll('.tagin-tag');
+        for (let i=0; i<selectedTags.length; ++i) {
+            let element = this.modalContainer.querySelector(`input[id^='${selectedTags[i].dataset.id}']`);
+            if (element != null) {
+                element.checked = true;
+            }
+        }
+    }
+
+    this.informationTypesClicked = function(elem) {
+        if (!elem.classList.contains('disabledBox')) {
+            let container = elem.parentElement.parentElement
+            let categorySelectorElem = container.querySelector(".categorySelect");
+            const elementById = this.modalContainer.querySelector('#categoryIdentifier');
+            elementById.value = categorySelectorElem.value;
+
+            this.preselectValuesInModal(elem);
+            const modal = bootstrap.Modal.getOrCreateInstance(this.modalContainer);
+            modal.show();
+        }
     }
 
     this.infoPassedOnSelectionChanged = function (elem) {
@@ -117,10 +144,12 @@ let DataProcessingComponent = function () {
         tagWrapper.innerHTML = '';
         for (let i = 0; i < tags.length; i++) {
             const tagDiv = document.createElement("span");
+            tagDiv.dataset.id = tags[i];
             tagDiv.classList = ['tagin-tag'];
             tagDiv.innerText = this.lookupInformationChoiceValue(tags[i]);
             tagWrapper.appendChild(tagDiv);
         }
+        tagWrapper.innerHTML += '&nbsp';
         selectedPersonInformation.value = tags.join(',');
         selectedRegisteredCategory.value = categoryRow.querySelector('.categorySelect').value;
     }
@@ -160,6 +189,7 @@ let DataProcessingComponent = function () {
         removeButton.setAttribute('style', 'display: none !important');
         newRow.classList.add("categoryRow");
         newRow.classList.remove("categoryRowTemplate");
+        newRow.querySelector('.tagin-wrapper').classList.add('disabledBox');
         this.setPersonInformationCategories(newRow, ['Vælg kategori'])
         this.targetElement.appendChild(newRow);
         this.updateCategorySelectionNamesOnForm();
@@ -221,12 +251,27 @@ let DataProcessingComponent = function () {
         }
     }
 
-    this.editModeCategoryInformationEditable = function (enabled) {
+    this.setEditMode = function (enabled) {
+        // show/hide buttons
+        this.editModeRemoveCategoryButtons(enabled);
+        // enable/disable category select
+        const allSelect = this.container.querySelectorAll('.categorySelect');
+        for (let i = 0; i < allSelect.length; i++) {
+            allSelect[i].disabled = !enabled;
+        }
+        // enable/disable types tag box
+        const allTypesBoxes = this.container.querySelectorAll('.tagin-wrapper');
+        for (let i = 0; i < allTypesBoxes.length; i++) {
+            if (enabled) {
+                allTypesBoxes[i].classList.remove("disabledBox");
+            } else {
+                ensureElementHasClass(allTypesBoxes[i], "disabledBox");
+            }
+        }
+
         if (enabled) {
-            this.editModeRemoveCategoryButtons(enabled);
             this.addEmptyInformationCategory();
         } else {
-            this.editModeRemoveCategoryButtons(enabled);
             this.removeEmptyInformationCategories();
             this.resetCategorySelection();
         }
