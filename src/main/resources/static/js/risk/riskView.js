@@ -149,9 +149,12 @@ function setField() {
                  "value": value
                };
 
-    postData("/rest/risks/" + riskId + "/threats/setfield", data).then((data) => {
-        toastService.info("Info", "Dine ændringer er blevet gemt")
-        }).catch(error => {toastService.error(error); console.log(error)});
+    postData("/rest/risks/" + riskId + "/threats/setfield", data).then((response) => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            toastService.info("Info", "Dine ændringer er blevet gemt")
+        }).catch(error => {toastService.error("Der er sket en fejl og kan ikke gemmes, genindlæse siden og prøv igen"); console.log(error)});
 }
 
 function updateAverage() {
@@ -412,6 +415,7 @@ function setRevisionInterval(assessmentId) {
 }
 
 function pageLoaded() {
+    initFormValidationForForm("createCustomThreatModal");
 
     const excelTextareas = document.querySelectorAll('.excel-textarea');
     for (var i = 0; i < excelTextareas.length; i++) {
