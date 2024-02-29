@@ -152,10 +152,16 @@ public class StandardController {
                 .flatMap(s -> s.getChildren().stream())
                 .filter(s -> s.getStandardSection().isSelected()).collect(Collectors.toList());
             final double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size();
-
-            final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / collect.size());
+            final double notRelevantCount = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.NOT_RELEVANT)).collect(Collectors.toList()).size();
+            final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
+
+            if (relevantCount == 0 ) {
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%"));
+            } else {
+                final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / relevantCount);
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
+            }
         }
         model.addAttribute("templates", templates);
         return "standards/supporting";
