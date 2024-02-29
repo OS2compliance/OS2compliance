@@ -195,6 +195,7 @@ public class TasksController {
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setResponsibleUser(task.getResponsibleUser());
+        existingTask.setLink(task.getLink());
 
         if (existingTask.getTaskType().equals(TaskType.CHECK)) {
             existingTask.setRepetition(task.getRepetition());

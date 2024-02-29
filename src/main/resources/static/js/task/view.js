@@ -30,6 +30,8 @@ function ViewTaskService() {
             document.getElementById('saveEditTaskBtn').hidden = false;
             document.getElementById('editTaskBtn').hidden = true;
             document.getElementById('completeBtn').hidden = true;
+            document.getElementById('realLink').hidden = true;
+            document.getElementById('linkField').hidden = false;
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -39,6 +41,8 @@ function ViewTaskService() {
             document.getElementById('saveEditTaskBtn').hidden = true;
             document.getElementById('editTaskBtn').hidden = false;
             document.getElementById('completeBtn').hidden = false;
+            document.getElementById('realLink').hidden = false;
+            document.getElementById('linkField').hidden = true;
         }
     }
 

@@ -63,6 +63,9 @@ public class Task extends Relatable {
     @Column(name = "responsible_notified")
     private Boolean hasNotifiedResponsible;
 
+    @Column
+    private String link;
+
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskLog> logs  = new HashSet<>();
 
