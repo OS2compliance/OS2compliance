@@ -169,7 +169,7 @@ public class StandardController {
 
     @Transactional
     @GetMapping("supporting/{id}")
-    public String supportingPage(final Model model, @PathVariable final String id) {
+    public String supportingPage(final Model model, @PathVariable final String id, @RequestParam(required = false) final StandardSectionStatus status) {
         final StandardTemplate template = standardTemplateDao.findByIdentifier(id);
         if (template == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -177,7 +177,8 @@ public class StandardController {
         model.addAttribute("template", template);
         model.addAttribute("relationMap", buildRelationsMap(template));
         model.addAttribute("isNSIS", template.getIdentifier().toLowerCase().startsWith("nsis"));
-            model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
+        model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
+        model.addAttribute("statusFilter", status);
 
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
