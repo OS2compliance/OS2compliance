@@ -191,6 +191,7 @@ public class TasksController {
             existingTask.setName(task.getName());
         }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
+        existingTask.setIncludeInReport(task.getIncludeInReport());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
