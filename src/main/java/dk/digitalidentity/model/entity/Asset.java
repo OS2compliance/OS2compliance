@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -122,6 +123,7 @@ public class Asset extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@OneToMany(orphanRemoval = true, mappedBy = "asset", cascade = CascadeType.ALL)
+    @JsonIgnore
 	private List<AssetSupplierMapping> suppliers = new ArrayList<>();
 
     @ManyToMany
@@ -131,6 +133,7 @@ public class Asset extends Relatable {
             inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
     )
     @ToString.Exclude
+    @JsonIgnore
     private List<User> managers = new ArrayList<>();
 
     @Override
@@ -155,6 +158,15 @@ public class Asset extends Relatable {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
     private TransferImpactAssessment tia;
+
+    @Column
+    private boolean dpiaOptOut = false;
+
+    @Column
+    private boolean threatAssessmentOptOut = false;
+
+    @Column
+    private String threatAssessmentOptOutReason;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
     private DataProtectionImpactAssessment dpia;

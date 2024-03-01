@@ -15,6 +15,7 @@ import java.util.List;
 @NoArgsConstructor
 public class DataProtectionImpactDTO {
     private Long assetId;
+    private boolean optOut;
     private List<DataProtectionImpactScreeningAnswerDTO> questions;
     private String answerA;
     private String answerB;

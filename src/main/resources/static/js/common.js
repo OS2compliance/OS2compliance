@@ -67,10 +67,22 @@ function checkInputField(my_choices, atleastOne = false) {
     }
 }
 
-async function postData(url = "", data = {}) {
+const defaultResponseHandler = function (response) {
+    if (!response.ok) {
+        throw new Error(`${response.status} ${response.statusText}`);
+    }
+    toastService.info("Info", "Dine ændringer er blevet gemt");
+}
+
+const defaultErrorHandler = function(error) {
+    toastService.error(error);
+    console.log(error);
+}
+
+async function jsonCall(method, url, data = {}) {
     var token = document.getElementsByName("_csrf")[0].getAttribute("content");
     return await fetch(url, {
-        method: "POST",
+        method: method,
         headers: {
             'X-CSRF-TOKEN': token,
             "Content-Type": "application/json"
@@ -78,6 +90,14 @@ async function postData(url = "", data = {}) {
         referrerPolicy: "no-referrer",
         body: JSON.stringify(data),
     });
+}
+
+async function postData(url, data = {}) {
+    return jsonCall("POST", url, data);
+}
+
+async function putData(url = "", data = {}) {
+    return jsonCall("PUT", url, data);
 }
 
 function asIntOrDefault(value, def) {

@@ -10,6 +10,9 @@
                     <button id="cancelDPIABtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDPIAEditState(false)" hidden>Annuller</button>
                     <button id="saveDPIABtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
                 </div>
+                <label class="mb-3">
+                    <input class="form-check-input editField" th:field="*{optOut}" type="checkbox" disabled> DPIA Fravalgt
+                </label>
                 <input name="assetId" th:value="${asset.id}" hidden>
                 <div class="accordion" id="_dm-dpiaAccordion">
                     <div class="accordion-item">

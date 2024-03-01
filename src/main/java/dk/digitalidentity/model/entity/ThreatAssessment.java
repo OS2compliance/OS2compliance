@@ -88,7 +88,7 @@ public class ThreatAssessment extends Relatable {
     @Enumerated(EnumType.STRING)
     private RiskAssessment assessment;
 
-    @ManyToMany(cascade = { CascadeType.ALL })
+    @ManyToMany
     @JoinTable(
         name = "threat_assessment_users",
         joinColumns = { @JoinColumn(name = "threat_assessment_id") },

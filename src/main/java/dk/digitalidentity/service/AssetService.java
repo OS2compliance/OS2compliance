@@ -140,4 +140,7 @@ public class AssetService {
         }
     }
 
+    public Asset save(final Asset asset) {
+        return assetDao.save(asset);
+    }
 }
