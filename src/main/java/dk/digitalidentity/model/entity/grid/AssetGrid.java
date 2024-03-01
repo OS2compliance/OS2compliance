@@ -61,4 +61,7 @@ public class AssetGrid {
     @Column
     private String localizedEnums;
 
+    @Column
+    private boolean hasThirdCountryTransfer;
+
 }

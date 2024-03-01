@@ -70,7 +70,15 @@ SELECT
     a.asset_status,
     ta.assessment,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
-    IF(properties.prop_value IS null, 0, 1) AS kitos
+    IF(properties.prop_value IS null, 0, 1) AS kitos,
+    CASE
+        WHEN EXISTS (
+            SELECT 1
+            FROM assets_suppliers
+            WHERE asset_id = a.id AND third_country_transfer = 'YES'
+        ) THEN TRUE
+        ELSE FALSE
+    END AS has_third_country_transfer
 FROM assets a
     LEFT JOIN users u on u.uuid = a.responsible_uuid
     LEFT JOIN suppliers s on s.id = a.supplier_id

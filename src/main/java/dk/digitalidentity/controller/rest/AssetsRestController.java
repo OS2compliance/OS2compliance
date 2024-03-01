@@ -98,6 +98,7 @@ public class AssetsRestController {
 				|| fieldName.equals("responsibleUserName")
 				|| fieldName.equals("updatedAt")
 				|| fieldName.equals("criticality")
-				|| fieldName.equals("assetStatus");
+				|| fieldName.equals("assetStatus")
+                || fieldName.equals("hasThirdCountryTransfer");
 	}
 }

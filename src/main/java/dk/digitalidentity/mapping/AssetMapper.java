@@ -53,6 +53,7 @@ public interface AssetMapper {
                 .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
                 .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
                 .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
+                .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
                 .build();
     }
 
