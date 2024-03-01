@@ -70,7 +70,8 @@ SELECT
     a.asset_status,
     ta.assessment,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
-    IF(properties.prop_value IS null, 0, 1) AS kitos
+    IF(properties.prop_value IS null, 0, 1) AS kitos,
+    (SELECT count(*) FROM relations r WHERE (relation_a_id = a.id and relation_a_type = 'ASSET' and relation_b_type = 'REGISTER') OR (relation_a_type = 'REGISTER' and relation_b_type = 'ASSET' and relation_b_id = a.id)) as registers
 FROM assets a
     LEFT JOIN users u on u.uuid = a.responsible_uuid
     LEFT JOIN suppliers s on s.id = a.supplier_id
