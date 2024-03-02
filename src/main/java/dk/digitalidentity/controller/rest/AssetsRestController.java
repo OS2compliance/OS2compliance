@@ -104,7 +104,8 @@ public class AssetsRestController {
 
     private void canSetFieldGuard(final String fieldName) {
         if (!(fieldName.equals("threatAssessmentOptOut") ||
-            fieldName.equals("threatAssessmentOptOutReason"))) {
+            fieldName.equals("threatAssessmentOptOutReason") ||
+            fieldName.equals("dpiaOptOut"))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }

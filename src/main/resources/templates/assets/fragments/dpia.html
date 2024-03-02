@@ -5,198 +5,208 @@
     <form id="dpiaForm" action="#" th:action="@{/assets/dpia}" th:object="${dpiaForm}" method="post" class="needs-validation" novalidate>
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-                <div class="row mb-3 gap-1">
-                    <button id="editDPIABtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDPIAEditState(true)">Rediger</button>
-                    <button id="cancelDPIABtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDPIAEditState(false)" hidden>Annuller</button>
-                    <button id="saveDPIABtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                <div id="dpiaOptOutView">
+                    <label class="mb-3">
+                        <input class="form-check-input" onchange="assetDpiaService.setDpiOptOut(this)" type="checkbox" th:checked="${asset.isDpiaOptOut}"> DPIA Fravalgt
+                    </label>
                 </div>
-                <label class="mb-3">
-                    <input class="form-check-input editField" th:field="*{optOut}" type="checkbox" disabled> DPIA Fravalgt
-                </label>
-                <input name="assetId" th:value="${asset.id}" hidden>
-                <div class="accordion" id="_dm-dpiaAccordion">
-                    <div class="accordion-item">
-                        <div class="accordion-header" id="_dm-screeningHeading">
-                            <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-screeningCollapse" aria-expanded="false" aria-controls="_dm-screeningCollapse">
-                                <span id="dpiaBadge2" class="badge">&nbsp</span>&nbsp Screening af om der bør udarbejdes en konsekvensanalyse
-                            </button>
-                        </div>
-                        <div id="_dm-screeningCollapse" class="accordion-collapse collapse" aria-labelledby="_dm-screeningHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
-                            <div class="accordion-body">
-                                <div class="row mb-3">
-                                    <table class="table table-striped">
-                                        <thead>
-                                        <tr>
-                                            <th class="col-lg-8"></th>
-                                            <th class="col-lg-2"></th>
-                                            <th class="col-lg-1"></th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr class="bg-light" style="--bs-table-accent-bg: none;"><td colspan="3"><h5>Personoplysninger</h5></td></tr>
-                                        <tr th:each="dpia, itemStat : *{questions.?[choice.category == 'Personoplysninger']}">
-                                            <td>
-                                                <span th:text="${dpia.choice.name}"></span>
-                                                <input th:name="|questions[${itemStat.index}].choice.identifier|" th:value="${dpia.choice.identifier}" hidden>
-                                            </td>
-                                            <td>
-                                                <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="handleAnswerChange()" th:name="|questions[${itemStat.index}].answer|" tabindex="-1" disabled>
-                                                    <option value=""></option>
-                                                    <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
-                                                            th:selected="${dpia.answer == choice.identifier}"
-                                                            th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
-                                                </select>
-                                            </td>
-                                            <td>
+                <div id="dpiaView">
+                    <div class="row mb-3 gap-1">
+                        <button id="editDPIABtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDPIAEditState(true)">Rediger</button>
+                        <button id="cancelDPIABtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDPIAEditState(false)" hidden>Annuller</button>
+                        <button id="saveDPIABtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                    </div>
+                    <input name="assetId" th:value="${asset.id}" hidden>
+                    <div class="accordion" id="_dm-dpiaAccordion">
+                        <div class="accordion-item">
+                            <div class="accordion-header" id="_dm-screeningHeading">
+                                <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-screeningCollapse" aria-expanded="false" aria-controls="_dm-screeningCollapse">
+                                    <span id="dpiaBadge2" class="badge">&nbsp</span>&nbsp Screening af om der bør udarbejdes en konsekvensanalyse
+                                </button>
+                            </div>
+                            <div id="_dm-screeningCollapse" class="accordion-collapse collapse" aria-labelledby="_dm-screeningHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
+                                <div class="accordion-body">
+                                    <div class="row mb-3">
+                                        <table class="table table-striped">
+                                            <thead>
+                                            <tr>
+                                                <th class="col-lg-8"></th>
+                                                <th class="col-lg-2"></th>
+                                                <th class="col-lg-1"></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr class="bg-light" style="--bs-table-accent-bg: none;"><td colspan="3"><h5>Personoplysninger</h5></td></tr>
+                                            <tr th:each="dpia, itemStat : *{questions.?[choice.category == 'Personoplysninger']}">
+                                                <td>
+                                                    <span th:text="${dpia.choice.name}"></span>
+                                                    <input th:name="|questions[${itemStat.index}].choice.identifier|" th:value="${dpia.choice.identifier}" hidden>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="assetDpiaService.handleAnswerChange()"
+                                                            th:attr="data-category=${dpia.choice.category}"
+                                                            th:name="|questions[${itemStat.index}].answer|" tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
+                                                                th:selected="${dpia.answer == choice.identifier}"
+                                                                th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
+                                                    </select>
+                                                </td>
+                                                <td>
 
-                                            </td>
-                                        </tr>
-                                        <tr class="bg-light" style="--bs-table-accent-bg: none;"><td colspan="3"><h5>Behandling</h5></td></tr>
-                                        <tr th:each="dpia, itemStat : *{questions.?[choice.category == 'Behandling']}">
-                                            <td>
-                                                <span th:text="${dpia.choice.name}"></span>
-                                                <input th:name="|questions[${itemStat.index + 3}].choice.identifier|" th:value="${dpia.choice.identifier}" hidden>
-                                            </td>
-                                            <td>
-                                                <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="handleAnswerChange()" th:name="|questions[${itemStat.index + 3}].answer|" tabindex="-1" disabled>
-                                                    <option value=""></option>
-                                                    <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
-                                                            th:selected="${dpia.answer == choice.identifier}"
-                                                            th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
-                                                </select>
-                                            </td>
-                                            <td>
+                                                </td>
+                                            </tr>
+                                            <tr class="bg-light" style="--bs-table-accent-bg: none;"><td colspan="3"><h5>Behandling</h5></td></tr>
+                                            <tr th:each="dpia, itemStat : *{questions.?[choice.category == 'Behandling']}">
+                                                <td>
+                                                    <span th:text="${dpia.choice.name}"></span>
+                                                    <input th:name="|questions[${itemStat.index + 3}].choice.identifier|" th:value="${dpia.choice.identifier}" hidden>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="assetDpiaService.handleAnswerChange()"
+                                                            th:name="|questions[${itemStat.index + 3}].answer|"
+                                                            th:attr="data-category=${dpia.choice.category}"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
+                                                                th:selected="${dpia.answer == choice.identifier}"
+                                                                th:text="${choice.caption + ' ' + (choice.description ?: '')}">
+                                                        </option>
+                                                    </select>
+                                                </td>
+                                                <td>
 
-                                            </td>
-                                        </tr>
-                                        <tr class="bg-light" style="--bs-table-accent-bg: none;"><td colspan="3"><h5>Nye teknologier</h5></td></tr>
-                                        <tr th:each="dpia, itemStat : *{questions.?[choice.category == 'Nye teknologier']}">
-                                            <td>
-                                                <span th:text="${dpia.choice.name}"></span>
-                                                <input th:name="|questions[${itemStat.index + 9}].choice.identifier|" th:value="${dpia.choice.identifier}" hidden>
-                                            </td>
-                                            <td>
-                                                <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="handleAnswerChange()" th:name="|questions[${itemStat.index + 9}].answer|" tabindex="-1" disabled>
-                                                    <option value=""></option>
-                                                    <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
-                                                            th:selected="${dpia.answer == choice.identifier}"
-                                                            th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
-                                                </select>
-                                            </td>
-                                            <td>
+                                                </td>
+                                            </tr>
+                                            <tr class="bg-light" style="--bs-table-accent-bg: none;"><td colspan="3"><h5>Nye teknologier</h5></td></tr>
+                                            <tr th:each="dpia, itemStat : *{questions.?[choice.category == 'Nye teknologier']}">
+                                                <td>
+                                                    <span th:text="${dpia.choice.name}"></span>
+                                                    <input th:name="|questions[${itemStat.index + 9}].choice.identifier|" th:value="${dpia.choice.identifier}" hidden>
+                                                </td>
+                                                <td>
+                                                    <select class="form-control form-select editField" th:id="${dpia.choice.identifier}" onchange="assetDpiaService.handleAnswerChange()"
+                                                            th:attr="data-category=${dpia.choice.category}"
+                                                            th:name="|questions[${itemStat.index + 9}].answer|" tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option th:each="choice: ${dpia.choice.values}" th:value="${choice.identifier}"
+                                                                th:selected="${dpia.answer == choice.identifier}"
+                                                                th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
+                                                    </select>
+                                                </td>
+                                                <td>
 
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
-                                </div>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
 
-                                <div class="row mb-3">
-                                    <div id="recommendationCard" class="card border-2 border-danger">
-                                        <h5 class="card-header">Anbefaling</h5>
-                                        <div class="card-body">
-                                            <h2 id="recommendation"></h2>
+                                    <div class="row mb-3">
+                                        <div id="recommendationCard" class="card border-2 border-danger">
+                                            <h5 class="card-header">Anbefaling</h5>
+                                            <div class="card-body">
+                                                <h2 id="recommendation"></h2>
+                                            </div>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="accordion-item mt-1">
-                        <div class="accordion-header" id="_dm-defAccHeadingTwo">
-                            <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-collapseDPIA" aria-expanded="true" aria-controls="_dm-collapseDPIA">
-                                Konsekvensanalyse (DPIA)
-                            </button>
-                        </div>
-                        <div id="_dm-collapseDPIA" class="accordion-collapse collapse show" aria-labelledby="_dm-defAccHeadingTwo" data-bs-parent="#_dm-dpiaAccordion" style="">
-                            <div class="accordion-body">
-                                <div class="row mb-3">
-                                    <table class="table table-striped">
-                                        <thead>
-                                        <tr>
-                                            <th class="col-7"></th>
-                                            <th class="col-5"></th>
-                                        </tr>
-                                        </thead>
-                                        <tbody>
-                                        <tr>
-                                            <td><p>A) En systematisk beskrivelse af de planlagte behandlingsaktiviteter og formålene med behandlingen, herunder i givet fald de legitime interesser, der forfølges af den dataansvarlige.</p>
-                                                <ul>
-                                                    <li>Der er taget hensyn til behandlingens karakter, omfang, sammenhæng og formål</li>
-                                                    <li>Personoplysninger, modtagere og det tidsrum personoplysningerne opbevares i registreres</li>
-                                                    <li>Der udarbejdes en funktionel beskrivelse af behandlingsaktiviteten</li>
-                                                    <li>De aktiver, som personoplysningerne er afhængige af (hardware, netværk, personer, papir eller papirforsendelseskanaler), er identificeret</li>
-                                                    <li>Der tages hensyn til overholdelse af godkendte adfærdskodekser</li>
-                                                </ul>
-                                            </td>
-                                            <td>
-                                                <div class="editor-container d-flex flex-column">
-                                                    <textarea rows="6" name="answerA" id="answerA" class="p-2 form-control editField" th:text="*{answerA}" disabled></textarea>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><p>B) En vurdering af, om behandlingsaktiviteterne er nødvendige og står i rimeligt forhold til formålene</p>
-                                                <ul>
-                                                    <li>Behandlingen er lovlig og sker ud fra et legitimt formål</li>
-                                                    <li>Den indsamlede data er relevante og begrænset til det nødvendige</li>
-                                                    <li>Den registrerede er oplyst om rettigheder, herunder retten til indsigt, berigtigelse, sletning mv.</li>
-                                                </ul>
-                                            </td>
-                                            <td>
-                                                <div class="editor-container d-flex flex-column">
-                                                    <textarea rows="6" name="answerB" id="answerB" class="p-2 form-control editField" th:text="*{answerB}" disabled></textarea>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><p>C) En vurdering af risiciene for de registreredes rettigheder og frihedsrettigheder</p>
-                                                <ul>
-                                                    <li>Oprindelse, karakter, særegenhed og alvor af risici er vurderet ift. bevarelse af fortrolighed, integritet og tilgængelighed.</li>
-                                                    <li>Der er taget hensyn til risikokilders potentielle virkninger på de registreredes rettigheder og frihedsrettigheder</li>
-                                                    <li>Potentielle trusler er identificeret og vurderet ift. sandsynlighed og konsekvens</li>
-                                                </ul>
-                                            </td>
-                                            <td>
+                        <div class="accordion-item mt-1">
+                            <div class="accordion-header" id="_dm-defAccHeadingTwo">
+                                <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-collapseDPIA" aria-expanded="true" aria-controls="_dm-collapseDPIA">
+                                    Konsekvensanalyse (DPIA)
+                                </button>
+                            </div>
+                            <div id="_dm-collapseDPIA" class="accordion-collapse collapse show" aria-labelledby="_dm-defAccHeadingTwo" data-bs-parent="#_dm-dpiaAccordion" style="">
+                                <div class="accordion-body">
+                                    <div class="row mb-3">
+                                        <table class="table table-striped">
+                                            <thead>
+                                            <tr>
+                                                <th class="col-7"></th>
+                                                <th class="col-5"></th>
+                                            </tr>
+                                            </thead>
+                                            <tbody>
+                                            <tr>
+                                                <td><p>A) En systematisk beskrivelse af de planlagte behandlingsaktiviteter og formålene med behandlingen, herunder i givet fald de legitime interesser, der forfølges af den dataansvarlige.</p>
+                                                    <ul>
+                                                        <li>Der er taget hensyn til behandlingens karakter, omfang, sammenhæng og formål</li>
+                                                        <li>Personoplysninger, modtagere og det tidsrum personoplysningerne opbevares i registreres</li>
+                                                        <li>Der udarbejdes en funktionel beskrivelse af behandlingsaktiviteten</li>
+                                                        <li>De aktiver, som personoplysningerne er afhængige af (hardware, netværk, personer, papir eller papirforsendelseskanaler), er identificeret</li>
+                                                        <li>Der tages hensyn til overholdelse af godkendte adfærdskodekser</li>
+                                                    </ul>
+                                                </td>
+                                                <td>
+                                                    <div class="editor-container d-flex flex-column">
+                                                        <textarea rows="6" name="answerA" id="answerA" class="p-2 form-control editField" th:text="*{answerA}" disabled></textarea>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><p>B) En vurdering af, om behandlingsaktiviteterne er nødvendige og står i rimeligt forhold til formålene</p>
+                                                    <ul>
+                                                        <li>Behandlingen er lovlig og sker ud fra et legitimt formål</li>
+                                                        <li>Den indsamlede data er relevante og begrænset til det nødvendige</li>
+                                                        <li>Den registrerede er oplyst om rettigheder, herunder retten til indsigt, berigtigelse, sletning mv.</li>
+                                                    </ul>
+                                                </td>
+                                                <td>
+                                                    <div class="editor-container d-flex flex-column">
+                                                        <textarea rows="6" name="answerB" id="answerB" class="p-2 form-control editField" th:text="*{answerB}" disabled></textarea>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><p>C) En vurdering af risiciene for de registreredes rettigheder og frihedsrettigheder</p>
+                                                    <ul>
+                                                        <li>Oprindelse, karakter, særegenhed og alvor af risici er vurderet ift. bevarelse af fortrolighed, integritet og tilgængelighed.</li>
+                                                        <li>Der er taget hensyn til risikokilders potentielle virkninger på de registreredes rettigheder og frihedsrettigheder</li>
+                                                        <li>Potentielle trusler er identificeret og vurderet ift. sandsynlighed og konsekvens</li>
+                                                    </ul>
+                                                </td>
+                                                <td>
 
-                                                <div class="editor-container d-flex flex-column">
-                                                    <textarea rows="6" name="answerC" id="answerC" class="p-2 form-control editField" th:text="*{answerC}" disabled></textarea>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><p>D) De foranstaltninger, der påtænkes for at imødegå disse risici, herunder garantier, sikkerhedsforanstaltninger og mekanismer, som kan sikre beskyttelse af personoplysninger og påvise overholdelse af databeskyttelsesforordningen, under hensyntagen til de registreredes og andre berørte personers rettigheder og legitime interesser</p></td>
-                                            <td>
-                                                <div class="editor-container d-flex flex-column">
-                                                    <textarea rows="6" name="answerD" id="answerD" class="p-2 form-control editField" th:text="*{answerD}" disabled></textarea>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><p>Konklusion</p></td>
-                                            <td>
-                                                <div class="editor-container d-flex flex-column">
-                                                    <textarea rows="6" name="conclusion" id="dpiaConclusion" class="p-2 form-control editField" th:text="*{conclusion}" disabled></textarea>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td><p>Link til konsekvensanalyse</p></td>
-                                            <td>
-                                                <a class="form-control-link editField" id="consequenceLink"
-                                                   th:href="*{consequenceLink}" th:text="*{consequenceLink}"></a>
-                                                <input class="form-control" th:field="*{consequenceLink}" hidden>
-                                            </td>
-                                        </tr>
-                                        </tbody>
-                                    </table>
+                                                    <div class="editor-container d-flex flex-column">
+                                                        <textarea rows="6" name="answerC" id="answerC" class="p-2 form-control editField" th:text="*{answerC}" disabled></textarea>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><p>D) De foranstaltninger, der påtænkes for at imødegå disse risici, herunder garantier, sikkerhedsforanstaltninger og mekanismer, som kan sikre beskyttelse af personoplysninger og påvise overholdelse af databeskyttelsesforordningen, under hensyntagen til de registreredes og andre berørte personers rettigheder og legitime interesser</p></td>
+                                                <td>
+                                                    <div class="editor-container d-flex flex-column">
+                                                        <textarea rows="6" name="answerD" id="answerD" class="p-2 form-control editField" th:text="*{answerD}" disabled></textarea>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><p>Konklusion</p></td>
+                                                <td>
+                                                    <div class="editor-container d-flex flex-column">
+                                                        <textarea rows="6" name="conclusion" id="dpiaConclusion" class="p-2 form-control editField" th:text="*{conclusion}" disabled></textarea>
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td><p>Link til konsekvensanalyse</p></td>
+                                                <td>
+                                                    <a class="form-control-link editField" id="consequenceLink"
+                                                       th:href="*{consequenceLink}" th:text="*{consequenceLink}"></a>
+                                                    <input class="form-control" th:field="*{consequenceLink}" hidden>
+                                                </td>
+                                            </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-
             </div>
         </div>
     </form>
@@ -204,15 +214,6 @@
 
     <script th:inline="javascript">
         /*<![CDATA[*/
-
-        /*[+
-
-        +]*/
-
-        document.addEventListener("DOMContentLoaded", function(event) {
-            handleAnswerChange();
-        });
-
 
         function setDPIAEditState(enabled) {
             const rootElement = document.getElementById('dpiaTab');
@@ -259,134 +260,7 @@
 
                 const form = document.getElementById("dpiaForm");
                 form.reset();
-                handleAnswerChange();
-            }
-        }
-
-        function handleAnswerChange() {
-            // Group 1 Personoplysninger
-            var dpia1 = document.getElementById('dpia-1');
-            var dpia2 = document.getElementById('dpia-2');
-            var dpia3 = document.getElementById('dpia-3');
-            // Group 2 Behandling
-            var dpia4 = document.getElementById('dpia-4');
-            var dpia5 = document.getElementById('dpia-5');
-            var dpia6 = document.getElementById('dpia-6');
-            var dpia7 = document.getElementById('dpia-7');
-            var dpia8 = document.getElementById('dpia-8');
-            var dpia9 = document.getElementById('dpia-9');
-            // Group 3 Nye teknologier
-            var dpia10 = document.getElementById('dpia-10');
-            var dpia11 = document.getElementById('dpia-11');
-            var dpia12 = document.getElementById('dpia-12');
-            var dpia13 = document.getElementById('dpia-13');
-
-            // Group 1 Personoplysninger
-            var dpia1Value = getElementValue(dpia1);
-            var dpia2Value = getElementValue(dpia2);
-            var dpia3Value = getElementValue(dpia3);
-            // Group 2 Behandling
-            var dpia4Value = getElementValue(dpia4);
-            var dpia5Value = getElementValue(dpia5);
-            var dpia6Value = getElementValue(dpia6);
-            var dpia7Value = getElementValue(dpia7);
-            var dpia8Value = getElementValue(dpia8);
-            var dpia9Value = getElementValue(dpia9);
-            // Group 3 Nye teknologier
-            var dpia10Value = getElementValue(dpia10);
-            var dpia11Value = getElementValue(dpia11);
-            var dpia12Value = getElementValue(dpia12);
-            var dpia13Value = getElementValue(dpia13);
-
-            var group1Result = dpia1Value || dpia2Value || dpia3Value;
-            var group2Result = dpia4Value || dpia5Value || dpia6Value || dpia7Value || dpia8Value || dpia9Value;
-            var group3Result = dpia10Value || dpia11Value || dpia12Value || dpia13Value;
-
-            var sumGroups = (group1Result ? 1 : 0) + (group2Result ? 1 : 0) + (group3Result ? 1 : 0)
-
-            var groupSumExceeded = sumGroups >= 2;
-
-            var stats = {
-                reds:0,
-                yellows: 0,
-                blanks: 0
-            }
-
-            setBadge(dpia1, dpia1Value, groupSumExceeded, stats);
-            setBadge(dpia2, dpia2Value, groupSumExceeded, stats);
-            setBadge(dpia3, dpia3Value, groupSumExceeded, stats);
-            setBadge(dpia4, dpia4Value, groupSumExceeded, stats);
-            setBadge(dpia5, dpia5Value, groupSumExceeded, stats);
-            setBadge(dpia6, dpia6Value, groupSumExceeded, stats);
-            setBadge(dpia7, dpia7Value, groupSumExceeded, stats);
-            setBadge(dpia8, dpia8Value, groupSumExceeded, stats);
-            setBadge(dpia9, dpia9Value, groupSumExceeded, stats);
-            setBadge(dpia10, dpia10Value, groupSumExceeded, stats);
-            setBadge(dpia11, dpia11Value, groupSumExceeded, stats);
-            setBadge(dpia12, dpia12Value, groupSumExceeded, stats);
-            setBadge(dpia13, dpia13Value, groupSumExceeded, stats);
-
-            var recommendation = document.getElementById("recommendation");
-            var recommendationCard = document.getElementById("recommendationCard");
-            recommendationCard.classList.remove("border-danger","border-warning","border-light");
-            const tabBadge = document.getElementById("dpiaBadge");
-            const tabBadge2 = document.getElementById("dpiaBadge2");
-            tabBadge.classList.remove("bg-yellow");
-            tabBadge.classList.remove("bg-green");
-            tabBadge.classList.remove("bg-red");
-            tabBadge.classList.remove("bg-gray-800");
-            tabBadge2.classList.remove("bg-yellow");
-            tabBadge2.classList.remove("bg-green");
-            tabBadge2.classList.remove("bg-red");
-            tabBadge2.classList.remove("bg-gray-800");
-            if (stats.reds > 0) {
-                recommendation.textContent = "Du skal udføre konsekvensanalyse da behandlingen sandsynligvis indebærer en høj risiko for de registrerede (se røde bekymringer)";
-                recommendationCard.classList.add("border-danger");
-                tabBadge.classList.add("bg-red");
-                tabBadge2.classList.add("bg-red");
-            } else if (stats.yellows > 0) {
-                recommendation.textContent = "Du skal ikke udføre konsekvensanalyse da behandlingen sandsynligvis indebærer risiko for de registrerede, men ikke en høj risiko (se gule bekymringer)";
-                recommendationCard.classList.add("border-warning");
-                tabBadge.classList.add("bg-yellow");
-                tabBadge2.classList.add("bg-yellow");
-            } else if (stats.blanks === 0) {
-                recommendation.textContent = "Du skal ikke udføre konsekvensanalyse da behandlingen sandsynligvis ikke indebærer risiko for de registrerede";
-                recommendationCard.classList.add("border-light");
-                tabBadge.classList.add("bg-green");
-                tabBadge2.classList.add("bg-green");
-            } else {
-                recommendation.textContent = "Du skal ikke udføre konsekvensanalyse da behandlingen sandsynligvis ikke indebærer risiko for de registrerede";
-                recommendationCard.classList.add("border-light");
-                tabBadge.classList.add("bg-gray-800");
-                tabBadge2.classList.add("bg-gray-800");
-            }
-
-        }
-
-        function getElementValue(element) {
-            if (element.value) {
-                if (element.value == 'dpia-yes' || element.value == 'dpia-partially' || element.value == 'dpia-dont-know') {
-                    return true;
-                } else {
-                    return false;
-                }
-            } else {
-                return false;
-            }
-        }
-
-        function setBadge(element, elementValue, groupSumExceeded, stats) {
-            if (elementValue == false) {
-                element.parentElement.nextElementSibling.innerHTML = '<div class="d-block mx-auto badge bg-gray-800">Blank</div>';
-                stats.blanks += 1;
-            } else {
-                if (groupSumExceeded || element.id == "dpia-7") {
-                    element.parentElement.nextElementSibling.innerHTML = '<div class="d-block mx-auto badge bg-danger">Rød</div>';
-                    stats.reds += 1;
-                } else {
-                    element.parentElement.nextElementSibling.innerHTML = '<div class="d-block mx-auto badge bg-warning">Gul</div>';
-                    stats.yellows += 1;
-                }
+                assetDpiaService.handleAnswerChange();
             }
         }
 
