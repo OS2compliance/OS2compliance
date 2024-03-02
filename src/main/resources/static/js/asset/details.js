@@ -90,7 +90,6 @@ function AssetDpiaService() {
                     category: e.dataset.category
                 }
             });
-        console.log(JSON.stringify(this.screeningStats))
         this.screeeningAnsweredCount = this.screeningStats.reduce((acc, e) => e.answered ? acc+1 : acc, 0);
         this.screeningCategoryStats = this.screeningStats.reduce((acc, e) => {
             acc[e.category] = !!acc[e.category] || e.value;
