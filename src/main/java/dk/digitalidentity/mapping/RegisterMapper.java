@@ -27,6 +27,7 @@ public interface RegisterMapper {
                 .consequence(nullSafe(() -> registerGrid.getConsequence().getMessage(), ""))
                 .status(nullSafe(() -> registerGrid.getStatus().getMessage(), ""))
                 .risk(nullSafe(() -> registerGrid.getRisk().getMessage(), ""))
+                .assetCount(registerGrid.getAssetCount())
                 .build();
     }
 

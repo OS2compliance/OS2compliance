@@ -46,7 +46,8 @@ SELECT
     ca.assessment as consequence,
     ta.assessment as risk,
     concat(COALESCE(r.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
-    r.status
+    r.status,
+    (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count
 FROM registers r
 LEFT JOIN consequence_assessments ca on ca.register_id = r.id
 LEFT JOIN threat_assessments ta ON ta.id = (
