@@ -48,7 +48,7 @@ public interface AssetMapper {
                 .name(assetGrid.getName())
                 .supplier(nullSafe(() -> assetGrid.getSupplier()))
                 .assetType(nullSafe(() -> assetGrid.getAssetType().getMessage()))
-                .responsibleUser(nullSafe(() -> assetGrid.getResponsibleUserName()))
+                .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
                 .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
                 .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))

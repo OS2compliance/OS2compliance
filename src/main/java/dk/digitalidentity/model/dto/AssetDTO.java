@@ -14,7 +14,7 @@ public class AssetDTO {
     private String name;
     private String supplier;
     private String assetType;
-    private String responsibleUser;
+    private String responsibleUsers;
     private String updatedAt;
     private String assessment;
     private String assetStatus;

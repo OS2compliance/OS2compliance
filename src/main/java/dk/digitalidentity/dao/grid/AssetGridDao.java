@@ -8,6 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface AssetGridDao extends JpaRepository<AssetGrid, Long>, SearchRepository {
 	Page<AssetGrid> findAll(final Pageable pageable);
-    Page<AssetGrid> findAllByResponsibleUser(User user, final Pageable pageable);
+    Page<AssetGrid> findAllByResponsibleUserUuidsContaining(String uuid, final Pageable pageable);
 
 }

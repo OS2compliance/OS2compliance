@@ -39,9 +39,10 @@ VIEW view_gridjs_registers AS
 SELECT
     r.id,
     r.name,
-    r.responsible_uuid,
-    r.responsible_ou_uuid,
-    r.department,
+    GROUP_CONCAT(DISTINCT u.name SEPARATOR ', ') as responsible_user_names,
+    GROUP_CONCAT(DISTINCT u.uuid SEPARATOR ',') as responsible_user_uuids,
+    GROUP_CONCAT(DISTINCT ou.name SEPARATOR ', ') as responsible_ou_names,
+    GROUP_CONCAT(DISTINCT d.name SEPARATOR ', ') as department_names,
     r.updated_at,
     ca.assessment as consequence,
     ta.assessment as risk,
@@ -53,8 +54,14 @@ LEFT JOIN threat_assessments ta ON ta.id = (
     SELECT MAX(tb.id) FROM threat_assessments tb
         JOIN relations rel ON rel.relation_a_id = r.id or rel.relation_b_id = r.id
         WHERE rel.relation_b_id = tb.id OR rel.relation_a_id = tb.id)
+LEFT JOIN registers_responsible_users_mapping rum ON rum.register_id = r.id
+LEFT JOIN users u ON rum.user_uuid = u.uuid
+LEFT JOIN registers_responsible_ous_mapping roum ON roum.register_id = r.id
+LEFT JOIN ous ou ON roum.ou_uuid = ou.uuid
+LEFT JOIN registers_departments_mapping rdm ON rdm.register_id = r.id
+LEFT JOIN ous d ON rdm.ou_uuid = d.uuid
 WHERE r.deleted = false
-;
+GROUP BY r.id, r.name, r.updated_at, ca.assessment, ta.assessment, r.localized_enums, ta.localized_enums, r.status;
 
 
 CREATE OR REPLACE
@@ -64,8 +71,8 @@ SELECT
     a.name,
     s.name as supplier,
     a.asset_type,
-    a.responsible_uuid,
-    u.name as responsible_user_name,
+    GROUP_CONCAT(u.name SEPARATOR ', ') as responsible_user_names,
+    GROUP_CONCAT(u.uuid SEPARATOR ',') as responsible_user_uuids,
     a.updated_at,
     a.asset_status,
     ta.assessment,
@@ -80,7 +87,6 @@ SELECT
         ELSE FALSE
     END AS has_third_country_transfer
 FROM assets a
-    LEFT JOIN users u on u.uuid = a.responsible_uuid
     LEFT JOIN suppliers s on s.id = a.supplier_id
     LEFT JOIN properties ON properties.entity_id = a.id
     LEFT JOIN threat_assessments ta ON ta.id = (
@@ -88,7 +94,11 @@ FROM assets a
             JOIN relations r ON r.relation_a_id = a.id or r.relation_b_id = a.id
             WHERE r.relation_b_id = tb.id OR r.relation_a_id = tb.id
     )
-WHERE a.deleted = false AND (properties.prop_key = 'kitos_uuid' OR properties.prop_key IS NULL);
+    LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
+    LEFT JOIN users u ON ru.user_uuid = u.uuid
+WHERE a.deleted = false AND (properties.prop_key = 'kitos_uuid' OR properties.prop_key IS NULL)
+GROUP BY a.id, a.name, s.name, a.asset_type, a.updated_at, a.asset_status, ta.assessment, a.localized_enums, ta.localized_enums, properties.prop_value;
+
 
 CREATE OR REPLACE
 VIEW view_gridjs_assessments AS

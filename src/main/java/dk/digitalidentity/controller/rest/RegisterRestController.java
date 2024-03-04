@@ -86,7 +86,7 @@ public class RegisterRestController {
             registers = registerGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, RegisterGrid.class, user);
         } else {
             // Fetch paged and sorted
-            registers = registerGridDao.findAllByResponsibleUser(user, sortAndPage);
+            registers = registerGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage) ;
         }
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));

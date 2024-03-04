@@ -16,9 +16,9 @@ public class RegisterDTO {
     private String name;
     private String packageName;
     private String description;
-    private String responsibleUser;
-    private String responsibleOU;
-    private String department;
+    private String responsibleUsers;
+    private String responsibleOUs;
+    private String departments;
     private String updatedAt;
     private String consequence;
     private String risk;

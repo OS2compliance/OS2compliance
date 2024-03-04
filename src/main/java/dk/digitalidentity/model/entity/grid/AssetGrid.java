@@ -37,12 +37,11 @@ public class AssetGrid {
 	@Enumerated(EnumType.STRING)
 	private AssetType assetType;
 
-	@ManyToOne
-	@JoinColumn(name = "responsible_uuid")
-	private User responsibleUser;
+    @Column
+    private String responsibleUserNames;
 
     @Column
-    private String responsibleUserName;
+    private String responsibleUserUuids;
 
 	@Column
 	private LocalDate updatedAt;
