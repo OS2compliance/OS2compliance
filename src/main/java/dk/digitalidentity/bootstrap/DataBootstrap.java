@@ -1,10 +1,12 @@
 package dk.digitalidentity.bootstrap;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseOldDao;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -62,6 +64,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final ThreatAssessmentService threatAssessmentService;
     private final CatalogService catalogService;
     private final TaskService taskService;
+    private final ChoiceValueDao valueDao;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -84,6 +87,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(9, this::seedV9);
         incrementAndPerformIfVersion(10, this::seedV10);
         incrementAndPerformIfVersion(11, this::seedV11);
+        incrementAndPerformIfVersion(12, this::seedV12);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -91,6 +95,15 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         if (currentVersion == version) {
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
+        }
+    }
+
+    private void seedV12() {
+        // change choice_value description for choice_value with identifier register-gdpr-p6-f
+        ChoiceValue choice = valueDao.findByIdentifier("register-gdpr-p6-f").orElse(null);
+        if (choice != null) {
+            choice.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. Første afsnit, litra f), <b>gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>");
+            valueDao.save(choice);
         }
     }
 
