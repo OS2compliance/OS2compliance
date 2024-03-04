@@ -67,7 +67,7 @@ public interface AssetMapper {
     }
 
     @Mappings({
-        @Mapping(source = "responsibleUser", target = "systemOwner"),
+        @Mapping(source = "responsibleUsers", target = "systemOwners"),
         @Mapping(source = "managers", target = "responsibleUsers"),
         @Mapping(source = "suppliers", target = "subSuppliers")
     })
@@ -115,7 +115,7 @@ public interface AssetMapper {
         @Mapping(target = "dataProcessing", ignore = true),
         @Mapping(target = "tia", ignore = true),
         @Mapping(target = "assetOversights", ignore = true),
-        @Mapping(target = "responsibleUser", source = "systemOwner"),
+        @Mapping(target = "responsibleUsers", source = "systemOwners"),
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpia", ignore = true),

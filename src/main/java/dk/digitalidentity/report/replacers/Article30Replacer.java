@@ -7,7 +7,9 @@ import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.report.DocxUtil;
 import dk.digitalidentity.service.AssetService;
@@ -120,12 +122,12 @@ public class Article30Replacer implements PlaceHolderReplacer {
         addTextRun(register.getName(), title);
         advanceCursor(cursor);
 
-        insertStandard(document, cursor, "Behandlingsansvarlig: ",
-            nullSafe(() -> register.getResponsibleUser().getName(), "Ikke angivet"));
-        insertStandard(document, cursor, "Ansvarlig forvaltning: ",
-            nullSafe(() -> register.getDepartment().getName(), "Ikke angivet"));
-        insertStandard(document, cursor, "Ansvarlig afdeling: ",
-            nullSafe(() -> register.getResponsibleOu().getName()));
+        insertStandard(document, cursor, "Behandlingsansvarlig(e): ",
+            nullSafe(() -> register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
+        insertStandard(document, cursor, "Ansvarlig forvaltning(er): ",
+            nullSafe(() -> register.getDepartments().stream().map(OrganisationUnit::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
+        insertStandard(document, cursor, "Ansvarlig afdeling(er): ",
+            nullSafe(() -> register.getResponsibleOus().stream().map(OrganisationUnit::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
         insertStandard(document, cursor, "Hvem er ansvarlig for behandling af personoplysningerne: ",
             nullSafe(() -> register.getInformationResponsible(), "Ikke angivet"));
         insertStandard(document, cursor, "Fortegnelse over behandlingsaktivitet angående: ",

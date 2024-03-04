@@ -45,8 +45,8 @@ public class AssetUpdateEO {
     @NotEmpty
     @Schema(description = "Name of the asset", requiredMode = Schema.RequiredMode.REQUIRED, example = ASSET_NAME_EXAMPLE)
     private String name;
-    @Schema(description = "System owner")
-    private UserWriteEO systemOwner;
+    @Schema(description = "System owners")
+    private List<UserWriteEO> systemOwners;
     @Schema(description = "Asset description", example = ASSET_DESCRIPTION_EXAMPLE)
     private String description;
     @Schema(description = "Type of the asset", example = ASSET_TYPE_EXAMPLE)

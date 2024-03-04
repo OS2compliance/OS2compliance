@@ -27,6 +27,7 @@ import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -82,6 +83,8 @@ public class RegisterController {
     private DataProcessingService dataProcessingService;
     @Autowired
     private TaskService taskService;
+    @Autowired
+    private UserService userService;
 
     @GetMapping
     public String registerList() {
@@ -158,9 +161,9 @@ public class RegisterController {
                          @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
                          @RequestParam(value = "name", required = false) @Valid final String name,
                          @RequestParam(value = "description", required = false) @Valid final String description,
-                         @RequestParam(value = "responsibleOu", required = false) @Valid @UUID final String responsibleOuUuid,
-                         @RequestParam(value = "department", required = false) @Valid @UUID final String departmentUuid,
-                         @RequestParam(value = "responsibleUser", required = false) @Valid @UUID final String responsibleUserUuid,
+                         @RequestParam(value = "responsibleOus", required = false) @Valid @UUID final Set<String> responsibleOuUuids,
+                         @RequestParam(value = "departments", required = false) @Valid @UUID final Set<String> departmentUuids,
+                         @RequestParam(value = "responsibleUsers", required = false) @Valid @UUID final Set<String> responsibleUserUuids,
                          @RequestParam(value = "criticality", required = false) final Criticality criticality,
                          @RequestParam(value = "purpose", required = false) final String purpose,
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
@@ -178,20 +181,17 @@ public class RegisterController {
         if (description != null) {
             register.setDescription(description);
         }
-        if (StringUtils.isNotEmpty(responsibleOuUuid)) {
-            final OrganisationUnit responsibleOu = organisationService.get(responsibleOuUuid)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            register.setResponsibleOu(responsibleOu);
+        if (responsibleOuUuids != null && !responsibleOuUuids.isEmpty()) {
+            final List<OrganisationUnit> responsibleOus = organisationService.findAllByUuids(responsibleOuUuids);
+            register.setResponsibleOus(responsibleOus);
         }
-        if (StringUtils.isNotEmpty(departmentUuid)) {
-            final OrganisationUnit departmentOu = organisationService.get(departmentUuid)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            register.setDepartment(departmentOu);
+        if (departmentUuids != null && !departmentUuids.isEmpty()) {
+            final List<OrganisationUnit> departmentOus = organisationService.findAllByUuids(responsibleOuUuids);
+            register.setDepartments(departmentOus);
         }
-        if (StringUtils.isNotEmpty(responsibleUserUuid)) {
-            final User responsibleUser = Optional.of(responsibleUserUuid).map(r -> userDao.findById(r).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .orElse(null);
-            register.setResponsibleUser(responsibleUser);
+        if (responsibleUserUuids != null && !responsibleUserUuids.isEmpty()) {
+            final List<User> responsibleUsers = userService.findAllByUuids(responsibleUserUuids);
+            register.setResponsibleUsers(responsibleUsers);
         }
         if (purpose != null) {
             register.setPurpose(purpose);
