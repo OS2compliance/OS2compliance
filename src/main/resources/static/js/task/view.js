@@ -20,7 +20,7 @@ function ViewTaskService() {
         initDatepicker("#deadlineBtn", "#deadline");
     }
 
-    this.editMode = function(enabled) {
+    this.setEditMode = function(enabled) {
         if (enabled) {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = false;
