@@ -27,7 +27,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - Fortegnelse: Alle ikke angivne felter sættes default tomme
 
 ### Added
-
+- Aktiver: Tilføjet kolonne på oversigtssiden som viser antallet af understøttede behandlingsaktiviteter
 - Opgavecenter: Mulighed for at udskrive kontrol historik
 - Opgavecenter: Mulighed for at markere i en kontrol/opgave at den skal indgå i årshjul
 - Opgavecenter: Mulighed for at angive dato interval under historik
@@ -39,7 +39,6 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - Risikovurdering: Mulighed for at oprette opgaver der relaterer sig til en bestemt trussel
 - Risikovurdering: Mulighed for at sende risikovurderings rapport til ansvarlig for et aktive/behandlingsaktivitet
 - Risikovurdering: Mulighed for at sætte et revisions interval der vil danne en tilhørende opgave
-
 - Trusselskataloger: Nyt modul for administratorer, giver mulighed for at administrere trusselskataloger 
 - Trusselskataloger: Opret, rediger, og slet trusselskataloger (Sletning kun hvis trusselskataloget ikke er i brug)
 - Trusselskataloger: Mulighed for at sætte trusselskataloger som skjulte
