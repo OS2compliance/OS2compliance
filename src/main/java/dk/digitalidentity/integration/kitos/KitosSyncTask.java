@@ -43,6 +43,7 @@ public class KitosSyncTask {
     }
 
     @Scheduled(cron = "${os2compliance.integrations.kitos.cron}")
+//    @Scheduled(initialDelay = 1000, fixedRate = 100000000)
     public void sync() {
         if (taskDisabled()) {
             return;

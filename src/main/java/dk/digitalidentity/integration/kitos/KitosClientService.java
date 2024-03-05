@@ -15,6 +15,7 @@ import dk.kitos.api.model.OrganizationResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
@@ -40,6 +41,7 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.USAGE_DELETION
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class KitosClientService {
     private final ApiV2ItSystemApi itSystemApi;
     private final ApiV2ItSystemUsageApi itSystemUsageApi;
@@ -48,16 +50,6 @@ public class KitosClientService {
     private final ApiV2ItContractApi contractApi;
     private final ApiV2DeltaFeedApi deltaFeedApi;
     private final SettingsService settingsService;
-
-    public KitosClientService(final ApiV2ItSystemApi itSystemApi, final ApiV2ItSystemUsageApi itSystemUsageApi, final ApiV2OrganizationApi organizationApi, final ApiV2ItSystemUsageRoleTypeApi systemUsageRoleTypeApi, final ApiV2ItContractApi contractApi, final ApiV2DeltaFeedApi deltaFeedApi, final SettingsService settingsService) {
-        this.itSystemApi = itSystemApi;
-        this.itSystemUsageApi = itSystemUsageApi;
-        this.organizationApi = organizationApi;
-        this.systemUsageRoleTypeApi = systemUsageRoleTypeApi;
-        this.contractApi = contractApi;
-        this.deltaFeedApi = deltaFeedApi;
-        this.settingsService = settingsService;
-    }
 
     public UUID lookupMunicipalUuid(final String cvr) {
         final List<OrganizationResponseDTO> organizations = organizationApi.getManyOrganizationV2GetOrganizations(null, null, cvr, null, null, null, 0, 1);
