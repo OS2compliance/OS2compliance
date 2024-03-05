@@ -62,7 +62,7 @@ LEFT JOIN ous ou ON roum.ou_uuid = ou.uuid
 LEFT JOIN registers_departments_mapping rdm ON rdm.register_id = r.id
 LEFT JOIN ous d ON rdm.ou_uuid = d.uuid
 WHERE r.deleted = false
-GROUP BY r.id, r.name, r.updated_at, ca.assessment, ta.assessment, r.localized_enums, ta.localized_enums, r.status;
+GROUP BY r.id;
 
 
 CREATE OR REPLACE
@@ -99,7 +99,7 @@ FROM assets a
     LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
     LEFT JOIN users u ON ru.user_uuid = u.uuid
 WHERE a.deleted = false
-GROUP BY a.id, a.name, s.name, a.asset_type, a.updated_at, a.asset_status, ta.assessment, a.localized_enums, ta.localized_enums, properties.prop_value;
+GROUP BY a.id;
 
 
 CREATE OR REPLACE
