@@ -15,30 +15,31 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
-- Dokumenter: hvis et dokument slettes, slettes tilhørende kontroller også 
-- Dashboard: Søgbar tag kolonne tilføjet 
-- Leverandør: Tilsyn aktiv kolonne tilføjet
-- Opgavecenter: Status og resultat er blevet slået sammen (>1 md til deadline grå / 30-0 dage til deadline gul / overskredet rød + resultatet)
-- Risikovurdering: Ny brugerflade, nemmere at betjene
-- Risikovurdering: Overskrift følger med ned når man scroller
-- Risikovurdering: Kategorier kan folde ud/ind
-- Risikovurdering: Fagområde forudfyldes med den ansvarliges afdeling
-- Aktiver: Alle ikke angivne felter sættes default tomme
-- Fortegnelse: Alle ikke angivne felter sættes default tomme
+- (https://os2web.atlassian.net/browse/COMPLY-30)  Dokumenter: hvis et dokument slettes, slettes tilhørende kontroller også 
+- (https://os2web.atlassian.net/browse/COMPLY-113) Dashboard: Søgbar tag kolonne tilføjet 
+- (https://os2web.atlassian.net/browse/COMPLY-19)  Leverandør: Tilsyn aktiv kolonne tilføjet
+- (https://os2web.atlassian.net/browse/COMPLY-40)  Opgavecenter: Status og resultat er blevet slået sammen (>1 md til deadline grå / 30-0 dage til deadline gul / overskredet rød + resultatet)
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Ny brugerflade, nemmere at betjene
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Overskrift følger med ned når man scroller
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Kategorier kan folde ud/ind
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Fagområde forudfyldes med den ansvarliges afdeling
+- (https://os2web.atlassian.net/browse/COMPLY-37)  Aktiver: Alle ikke angivne felter sættes default tomme
+- (https://os2web.atlassian.net/browse/COMPLY-37)  Fortegnelse: Alle ikke angivne felter sættes default tomme
 
 ### Added
-- Aktiver: Tilføjet kolonne på oversigtssiden som viser antallet af understøttede behandlingsaktiviteter
-- Opgavecenter: Mulighed for at udskrive kontrol historik
-- Opgavecenter: Mulighed for at markere i en kontrol/opgave at den skal indgå i årshjul
-- Opgavecenter: Mulighed for at angive dato interval under historik
-- Opgavecenter: Mulighed for at kopiere en opgave
-- Opgavecenter: Søgbar tag kolonne tilføjet
-- Risikovurdering: Kopier funktion til at kopiere en trusselsvurdering
-- Risikovurdering: Mulighed for at sætte "til stede på møde" (vises også i rapport)
-- Risikovurdering: Mulighed for at redigere, titel, ansvarlig, fagområde og tilstede på møde
-- Risikovurdering: Mulighed for at oprette opgaver der relaterer sig til en bestemt trussel
-- Risikovurdering: Mulighed for at sende risikovurderings rapport til ansvarlig for et aktive/behandlingsaktivitet
-- Risikovurdering: Mulighed for at sætte et revisions interval der vil danne en tilhørende opgave
-- Trusselskataloger: Nyt modul for administratorer, giver mulighed for at administrere trusselskataloger 
-- Trusselskataloger: Opret, rediger, og slet trusselskataloger (Sletning kun hvis trusselskataloget ikke er i brug)
-- Trusselskataloger: Mulighed for at sætte trusselskataloger som skjulte
+- (https://os2web.atlassian.net/browse/COMPLY-25)  Aktiver: Tilføjet kolonne på oversigtssiden som viser antallet af understøttede behandlingsaktiviteter
+- (https://os2web.atlassian.net/browse/COMPLY-24)  Fortegnelse: kolonne på oversigtssiden der viser hvor mange IT-systemet der understøtter behandlingsaktiviteten
+- (https://os2web.atlassian.net/browse/COMPLY-8)   Opgavecenter: Mulighed for at udskrive kontrol historik
+- (https://os2web.atlassian.net/browse/COMPLY-12)  Opgavecenter: Mulighed for at markere i en kontrol/opgave at den skal indgå i årshjul
+- (https://os2web.atlassian.net/browse/COMPLY-6)   Opgavecenter: Mulighed for at angive dato interval under historik
+- (https://os2web.atlassian.net/browse/COMPLY-2)   Opgavecenter: Mulighed for at kopiere en opgave
+- (https://os2web.atlassian.net/browse/COMPLY-113) Opgavecenter: Søgbar tag kolonne tilføjet
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Kopier funktion til at kopiere en trusselsvurdering
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at sætte "til stede på møde" (vises også i rapport)
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at redigere, titel, ansvarlig, fagområde og tilstede på møde
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at oprette opgaver der relaterer sig til en bestemt trussel
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at sende risikovurderings rapport til ansvarlig for et aktive/behandlingsaktivitet
+- (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at sætte et revisions interval der vil danne en tilhørende opgave
+- (https://os2web.atlassian.net/browse/COMPLY-111) Trusselskataloger: Nyt modul for administratorer, giver mulighed for at administrere trusselskataloger 
+- (https://os2web.atlassian.net/browse/COMPLY-111) Trusselskataloger: Opret, rediger, og slet trusselskataloger (Sletning kun hvis trusselskataloget ikke er i brug)
+- (https://os2web.atlassian.net/browse/COMPLY-111) Trusselskataloger: Mulighed for at sætte trusselskataloger som skjulte
