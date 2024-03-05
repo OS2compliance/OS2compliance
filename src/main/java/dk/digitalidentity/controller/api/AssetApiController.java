@@ -18,7 +18,6 @@ import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
-import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
@@ -192,7 +191,6 @@ public class AssetApiController {
             .map(s -> AssetSupplierMapping.builder()
                 .asset(asset)
                 .supplier(s)
-                .thirdCountryTransfer(ThirdCountryTransfer.UNDER_CLARIFICATION)
                 .build())
             .forEach(s -> asset.getSuppliers().add(s));
     }
