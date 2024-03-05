@@ -8,7 +8,4 @@ import lombok.Setter;
 @Setter
 public class Kitos {
     private boolean enabled = true;
-    private String email;
-    private String password;
-    private String basePath;
 }

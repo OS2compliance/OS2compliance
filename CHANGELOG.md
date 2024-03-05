@@ -19,8 +19,6 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - Dashboard: Søgbar tag kolonne tilføjet 
 - Leverandør: Tilsyn aktiv kolonne tilføjet
 - Opgavecenter: Status og resultat er blevet slået sammen (>1 md til deadline grå / 30-0 dage til deadline gul / overskredet rød + resultatet)
-- Opgavecenter: Mulighed for at kopiere en opgave
-- Opgavecenter: Søgbar tag kolonne tilføjet
 - Risikovurdering: Ny brugerflade, nemmere at betjene
 - Risikovurdering: Overskrift følger med ned når man scroller
 - Risikovurdering: Kategorier kan folde ud/ind
@@ -31,7 +29,10 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ### Added
 
 - Opgavecenter: Mulighed for at udskrive kontrol historik
+- Opgavecenter: Mulighed for at markere i en kontrol/opgave at den skal indgå i årshjul
 - Opgavecenter: Mulighed for at angive dato interval under historik
+- Opgavecenter: Mulighed for at kopiere en opgave
+- Opgavecenter: Søgbar tag kolonne tilføjet
 - Risikovurdering: Kopier funktion til at kopiere en trusselsvurdering
 - Risikovurdering: Mulighed for at sætte "til stede på møde" (vises også i rapport)
 - Risikovurdering: Mulighed for at redigere, titel, ansvarlig, fagområde og tilstede på møde
