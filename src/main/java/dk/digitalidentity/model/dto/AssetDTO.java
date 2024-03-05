@@ -19,4 +19,5 @@ public class AssetDTO {
     private String assessment;
     private String assetStatus;
     private String kitos;
+    private int registers;
 }
