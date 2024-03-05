@@ -30,7 +30,6 @@ import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.UUID;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -186,7 +185,7 @@ public class RegisterController {
             register.setResponsibleOus(responsibleOus);
         }
         if (departmentUuids != null && !departmentUuids.isEmpty()) {
-            final List<OrganisationUnit> departmentOus = organisationService.findAllByUuids(responsibleOuUuids);
+            final List<OrganisationUnit> departmentOus = organisationService.findAllByUuids(departmentUuids);
             register.setDepartments(departmentOus);
         }
         if (responsibleUserUuids != null && !responsibleUserUuids.isEmpty()) {
