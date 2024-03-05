@@ -109,7 +109,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id','kitos', 'name', 'supplier', 'assetType', 'responsibleUserName', 'updatedAt', "registers", 'assessment', 'assetStatus'];
+                        const columnIds = ['id','kitos', 'name', 'supplier', 'assetType', 'responsibleUserName', 'updatedAt', 'registers', 'assessment', 'assetStatus'];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -124,7 +124,6 @@
                 {
                     name:"kitos",
                     hidden: true
-
                 },
                 {
                     name: "Navn",
@@ -151,7 +150,8 @@
                     width: '100px'
                 },
                 {
-                    name: "Registers"
+                    name: "Antal beh.",
+                    width: '95px'
                 },
                 {
                     name: "Risiko vurdering",
