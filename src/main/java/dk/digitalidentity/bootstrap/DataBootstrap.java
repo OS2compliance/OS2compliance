@@ -99,12 +99,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void seedV12() {
-        // change choice_value description for choice_value with identifier register-gdpr-p6-f
-        ChoiceValue choice = valueDao.findByIdentifier("register-gdpr-p6-f").orElse(null);
-        if (choice != null) {
-            choice.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. Første afsnit, litra f), <b>gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>");
-            valueDao.save(choice);
-        }
+        valueDao.findByIdentifier("register-gdpr-p6-f")
+            .ifPresent(c -> c.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. Første afsnit, litra f), <b>gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"));
     }
 
     private void seedV11() {

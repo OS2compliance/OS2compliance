@@ -262,6 +262,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				t1.setResponsibleUser(user1);
 				t1.setNotifyResponsible(false);
 				t1.setName("Regndans");
+                t1.setIncludeInReport(false);
 				taskDao.save(t1);
 
 				final Task t2 = new Task();
@@ -273,6 +274,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				t2.setResponsibleUser(user1);
 				t2.setName("Kageordning");
 				t2.setNotifyResponsible(false);
+                t2.setIncludeInReport(false);
 				taskDao.save(t2);
 
 				final Task t3 = new Task();
@@ -284,6 +286,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				t3.setResponsibleOu(hjelmOu);
 				t3.setResponsibleUser(user1);
 				t3.setNotifyResponsible(false);
+                t3.setIncludeInReport(false);
 				taskDao.save(t3);
 
 				final Relation taskDoc = new Relation();
