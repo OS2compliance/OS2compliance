@@ -90,15 +90,15 @@ SELECT
     (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id) AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
-    LEFT JOIN properties ON properties.entity_id = a.id
+    LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
     LEFT JOIN threat_assessments ta ON ta.id = (
-            SELECT MAX(tb.id) FROM threat_assessments tb
-            JOIN relations r ON r.relation_a_id = a.id or r.relation_b_id = a.id
-            WHERE r.relation_b_id = tb.id OR r.relation_a_id = tb.id
-    )
+            SELECT tb.id FROM threat_assessments tb
+                JOIN relations r ON (r.relation_a_id = a.id AND r.relation_b_id=tb.id
+                                         OR r.relation_b_id = a.id AND r.relation_a_id=tb.id)
+                         ORDER BY r.id DESC LIMIT 1)
     LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
     LEFT JOIN users u ON ru.user_uuid = u.uuid
-WHERE a.deleted = false AND (properties.prop_key = 'kitos_uuid' OR properties.prop_key IS NULL)
+WHERE a.deleted = false
 GROUP BY a.id, a.name, s.name, a.asset_type, a.updated_at, a.asset_status, ta.assessment, a.localized_enums, ta.localized_enums, properties.prop_value;
 
 

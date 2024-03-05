@@ -56,7 +56,7 @@ public class AssetsRestController {
 		final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
 		Page<AssetGrid> assets = null;
 		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserName", "updatedAt", "localizedEnums");
+			final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
 			// search and page
 			assets = assetGridDao.findAllCustom(searchableProperties, search, sortAndPage, AssetGrid.class);
 		} else {

@@ -14,7 +14,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -51,6 +50,7 @@ public class Asset extends Relatable {
         inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
     )
     @ToString.Exclude
+    @JsonIgnore
     private List<User> responsibleUsers = new ArrayList<>();
 
     @Column
