@@ -83,7 +83,7 @@ public class AssetsRestController {
             assets = assetGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
         } else {
             // Fetch paged and sorted
-            assets = assetGridDao.findAllByResponsibleUser(user, sortAndPage);
+            assets = assetGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage);
         }
 
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
@@ -99,6 +99,7 @@ public class AssetsRestController {
 				|| fieldName.equals("registers")
 				|| fieldName.equals("updatedAt")
 				|| fieldName.equals("criticality")
-				|| fieldName.equals("assetStatus");
+				|| fieldName.equals("assetStatus")
+                || fieldName.equals("hasThirdCountryTransfer");
 	}
 }

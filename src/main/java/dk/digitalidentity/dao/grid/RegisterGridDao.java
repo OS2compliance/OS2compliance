@@ -8,6 +8,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface RegisterGridDao extends JpaRepository<RegisterGrid, Long>,  SearchRepository {
     Page<RegisterGrid> findAll(final Pageable pageable);
-    Page<RegisterGrid> findAllByResponsibleUser(User user, final Pageable pageable);
+    Page<RegisterGrid> findAllByResponsibleUserUuidsContaining(String uuid, final Pageable pageable);
 
 }

@@ -48,12 +48,13 @@ public interface AssetMapper {
                 .name(assetGrid.getName())
                 .supplier(nullSafe(() -> assetGrid.getSupplier()))
                 .assetType(nullSafe(() -> assetGrid.getAssetType().getMessage()))
-                .responsibleUser(nullSafe(() -> assetGrid.getResponsibleUserName()))
+                .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
                 .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
                 .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
                 .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
                 .registers(nullSafe(() -> assetGrid.getRegisters()))
+                .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
                 .build();
     }
 
@@ -67,7 +68,7 @@ public interface AssetMapper {
     }
 
     @Mappings({
-        @Mapping(source = "responsibleUser", target = "systemOwner"),
+        @Mapping(source = "responsibleUsers", target = "systemOwners"),
         @Mapping(source = "managers", target = "responsibleUsers"),
         @Mapping(source = "suppliers", target = "subSuppliers")
     })
@@ -115,7 +116,7 @@ public interface AssetMapper {
         @Mapping(target = "dataProcessing", ignore = true),
         @Mapping(target = "tia", ignore = true),
         @Mapping(target = "assetOversights", ignore = true),
-        @Mapping(target = "responsibleUser", source = "systemOwner"),
+        @Mapping(target = "responsibleUsers", source = "systemOwners"),
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpia", ignore = true),

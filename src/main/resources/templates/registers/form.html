@@ -14,21 +14,21 @@
         </div>
 
         <div class="form-group row mt-3">
-          <label th:for="${formId + 'OuSelect'}" class="col-sm-3 col-form-label">Ansvarlig afdeling</label>
+          <label th:for="${formId + 'OuSelect'}" class="col-sm-3 col-form-label">Ansvarlige afdelinger</label>
           <div class="col-sm-9">
-            <select class="form-control form-select choices__input" th:field="*{responsibleOu}"
-                    data-trigger="" name="afdeling" th:id="${formId + 'OuSelect'}" hidden="" tabindex="-1">
-              <option th:if="${register.responsibleOu} != null" th:value="${register.responsibleOu.uuid}" th:text="${register.responsibleOu.name}"></option>
+            <select class="form-control form-select choices__input" th:field="*{responsibleOus}"
+                    data-trigger="" name="afdeling" th:id="${formId + 'OuSelect'}" hidden="" tabindex="-1" multiple="multiple">
+                <option th:each="ou : *{responsibleOus}" th:value="${ou.uuid}" th:text="${ou.name}" selected></option>
             </select>
           </div>
         </div>
 
         <div class="row mt-3">
-          <label class="col-sm-3 col-form-label">Kontaktperson</label>
+          <label class="col-sm-3 col-form-label">Kontaktpersoner</label>
           <div class="col-sm-9">
-            <select class="form-control form-select choices__input" th:field="*{responsibleUser}"
-                    data-trigger="" name="ansvarlig" th:id="${formId + 'UserSelect'}" hidden="" tabindex="-1">
-                <option th:if="${register.responsibleUser} != null" th:value="${register.responsibleUser.uuid}" th:text="${register.responsibleUser.name}"></option>
+            <select class="form-control form-select choices__input" th:field="*{responsibleUsers}"
+                    data-trigger="" name="ansvarlig" th:id="${formId + 'UserSelect'}" hidden="" tabindex="-1" multiple="multiple">
+                <option th:each="user : *{responsibleUsers}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
             </select>
           </div>
         </div>

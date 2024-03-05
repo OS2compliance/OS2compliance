@@ -114,6 +114,14 @@
                                 </div>
 
                                 <div class="row mb-3">
+                                    <label for="taskType" class="col-sm-2 col-form-label">Link</label>
+                                    <div class="col-sm-10">
+                                        <a id="realLink" th:text="*{link}" th:href="*{link}" target="_blank"></a>
+                                        <input class="form-control editField" id="linkField" th:field="*{link}" hidden>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
                                     <label for="notifyResponsible" class="col-sm-2 col-form-label">Send mail til ansvarlig</label>
                                     <div class="col-sm-10" style="display:flex; align-items: center">
                                         <div class="input-group">

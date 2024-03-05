@@ -18,7 +18,6 @@ import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
-import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
@@ -47,6 +46,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
@@ -99,10 +99,9 @@ public class AssetApiController {
     @Transactional
     @ResponseStatus(HttpStatus.CREATED)
     public AssetEO create(@Valid @RequestBody final AssetCreateEO assetCreateEO) {
-        final User responsibleUser = userService.get(nullSafe(() -> assetCreateEO.getSystemOwner().getUuid()))
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "SystemOwner user not found"));
+        final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetCreateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
         final Asset asset = assetMapper.fromEO(assetCreateEO);
-        asset.setResponsibleUser(responsibleUser);
+        asset.setResponsibleUsers(responsibleUsers);
         if (assetCreateEO.getResponsibleUsers() != null) {
             addManagers(assetCreateEO.getResponsibleUsers(), asset);
         }
@@ -131,10 +130,9 @@ public class AssetApiController {
         if (asset.getVersion() != assetUpdateEO.getVersion()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Version mismatch");
         }
-        final User responsibleUser = userService.get(nullSafe(() -> assetUpdateEO.getSystemOwner().getUuid()))
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "SystemOwner user not found"));
+        final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetUpdateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
         asset.setName(assetUpdateEO.getName());
-        asset.setResponsibleUser(responsibleUser);
+        asset.setResponsibleUsers(responsibleUsers);
         asset.setDescription(assetUpdateEO.getDescription());
         asset.setAssetType(nullSafe(() -> AssetType.valueOf(assetUpdateEO.getAssetType().name())));
         asset.setDataProcessingAgreementStatus(nullSafe(() -> DataProcessingAgreementStatus.valueOf(assetUpdateEO.getDataProcessingAgreementStatus().name())));
@@ -193,7 +191,6 @@ public class AssetApiController {
             .map(s -> AssetSupplierMapping.builder()
                 .asset(asset)
                 .supplier(s)
-                .thirdCountryTransfer(ThirdCountryTransfer.UNDER_CLARIFICATION)
                 .build())
             .forEach(s -> asset.getSuppliers().add(s));
     }

@@ -66,6 +66,9 @@ public class Task extends Relatable {
     @Column(name = "include_in_report")
     private Boolean includeInReport;
 
+    @Column
+    private String link;
+
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskLog> logs  = new HashSet<>();
 

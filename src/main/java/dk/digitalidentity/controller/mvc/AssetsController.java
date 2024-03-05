@@ -350,7 +350,7 @@ public class AssetsController {
         existingAsset.setTerminationNotice(asset.getTerminationNotice());
         existingAsset.setArchive(asset.isArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
-        existingAsset.setResponsibleUser(asset.getResponsibleUser());
+        existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
         return "redirect:/assets/" + existingAsset.getId();
     }

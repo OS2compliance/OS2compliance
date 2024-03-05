@@ -13,17 +13,22 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -36,17 +41,31 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Where(clause = "deleted=false")
 public class Register extends Relatable {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsible_uuid")
-    private User responsibleUser;
+    @ManyToMany
+    @JoinTable(
+        name = "registers_responsible_users_mapping",
+        joinColumns = { @JoinColumn(name = "register_id") },
+        inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
+    )
+    @ToString.Exclude
+    private List<User> responsibleUsers = new ArrayList<>();
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsible_ou_uuid")
-    private OrganisationUnit responsibleOu;
+    @ManyToMany
+    @JoinTable(
+        name = "registers_responsible_ous_mapping",
+        joinColumns = { @JoinColumn(name = "register_id") },
+        inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
+    )
+    @ToString.Exclude
+    private List<OrganisationUnit> responsibleOus;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "department")
-    private OrganisationUnit department;
+    @ManyToMany
+    @JoinTable(
+        name = "registers_departments_mapping",
+        joinColumns = { @JoinColumn(name = "register_id") },
+        inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
+    )
+    private List<OrganisationUnit> departments;
 
     @Column
     @Enumerated(EnumType.STRING)

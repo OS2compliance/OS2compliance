@@ -43,10 +43,14 @@ import java.util.List;
 @Where(clause = "deleted=false")
 public class Asset extends Relatable {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsible_uuid")
+    @ManyToMany
+    @JoinTable(
+        name = "assets_responsible_users_mapping",
+        joinColumns = { @JoinColumn(name = "asset_id") },
+        inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
+    )
     @ToString.Exclude
-    private User responsibleUser;
+    private List<User> responsibleUsers = new ArrayList<>();
 
     @Column
     private String description;

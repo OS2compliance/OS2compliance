@@ -539,10 +539,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     }
 
     private String subHeading(final ThreatContext context) {
-        if (context.asset != null && context.asset.getResponsibleUser() != null) {
-            return "Systemejer: " + context.asset.getResponsibleUser().getName();
-        } else if (context.register != null && context.register.getResponsibleUser() != null) {
-            return "Behandlingsansvarlig: " + context.register.getResponsibleUser().getName();
+        if (context.asset != null && context.asset.getResponsibleUsers() != null && !context.asset.getResponsibleUsers().isEmpty()) {
+            return "Systemejere: " + context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+        } else if (context.register != null && context.register.getResponsibleUsers() != null && !context.register.getResponsibleUsers().isEmpty()) {
+            return "Behandlingsansvarlige: " + context.register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
         }
         if (context.threatAssessment.getResponsibleUser() != null) {
             return "Risikoejer: " + context.threatAssessment.getResponsibleUser().getName();

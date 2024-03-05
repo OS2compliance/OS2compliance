@@ -25,15 +25,23 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Fagområde forudfyldes med den ansvarliges afdeling
 - (https://os2web.atlassian.net/browse/COMPLY-37)  Aktiver: Alle ikke angivne felter sættes default tomme
 - (https://os2web.atlassian.net/browse/COMPLY-37)  Fortegnelse: Alle ikke angivne felter sættes default tomme
+- (https://os2web.atlassian.net/browse/COMPLY-31)  Fortegnelse: §6 litra f – marker med fed "f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver."
+- (https://os2web.atlassian.net/browse/COMPLY-27)  Fortegnelse: Feltet til at tilføje relationer (aktiver) under behandlingsaktiviteter må gerne være bredere, så man kan se hele navnet
+- (https://os2web.atlassian.net/browse/COMPLY-14)  Fortegnelse/Aktiver: Der mangler en overskrift over typer af personoplysninger
+- (https://os2web.atlassian.net/browse/COMPLY-8)   Fortegnelse/Aktiver: Det er ændret så man kan sætte flere ansvarlige på, både afdelinger og personer
+- (https://os2web.atlassian.net/browse/COMPLY-17)  Standard/NSIS: Mulighed for at vælge status "ikke relevant"
 
 ### Added
+- (https://os2web.atlassian.net/browse/COMPLY-42)  Aktiver: 3. landes overførsel kolonne tilføjet på oversigtssiden
 - (https://os2web.atlassian.net/browse/COMPLY-25)  Aktiver: Tilføjet kolonne på oversigtssiden som viser antallet af understøttede behandlingsaktiviteter
 - (https://os2web.atlassian.net/browse/COMPLY-24)  Fortegnelse: kolonne på oversigtssiden der viser hvor mange IT-systemet der understøtter behandlingsaktiviteten
+- (https://os2web.atlassian.net/browse/COMPLY-70)  Fortegnelse: Kolonne ved relaterede aktiver hvor det fremgår om aktivet er kritisk eller ej
 - (https://os2web.atlassian.net/browse/COMPLY-8)   Opgavecenter: Mulighed for at udskrive kontrol historik
 - (https://os2web.atlassian.net/browse/COMPLY-12)  Opgavecenter: Mulighed for at markere i en kontrol/opgave at den skal indgå i årshjul
 - (https://os2web.atlassian.net/browse/COMPLY-6)   Opgavecenter: Mulighed for at angive dato interval under historik
 - (https://os2web.atlassian.net/browse/COMPLY-2)   Opgavecenter: Mulighed for at kopiere en opgave
 - (https://os2web.atlassian.net/browse/COMPLY-113) Opgavecenter: Søgbar tag kolonne tilføjet
+- (https://os2web.atlassian.net/browse/COMPLY-109) Opgavecenter: Mulighed for at indsætte et link i en opgave
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Kopier funktion til at kopiere en trusselsvurdering
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at sætte "til stede på møde" (vises også i rapport)
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at redigere, titel, ansvarlig, fagområde og tilstede på møde

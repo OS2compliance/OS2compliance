@@ -111,26 +111,29 @@ public class RiskRestController {
         return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent()));
     }
 
-    record ResponsibleUserDTO(String elementName, String uuid, String name, String userId) {}
+    record ResponsibleUserDTO(String uuid, String name, String userId) {}
+    record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}
     @GetMapping("register")
-    public ResponsibleUserDTO getRegisterResponsibleUserAndName(@RequestParam final long registerId) {
+    public ResponsibleUsersWithElementNameDTO getRegisterResponsibleUserAndName(@RequestParam final long registerId) {
         final Register register = registerService.findById(registerId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (register.getResponsibleUser() == null) {
-            return new ResponsibleUserDTO(register.getName(),null, null, null);
+        if (register.getResponsibleUsers() == null || register.getResponsibleUsers().isEmpty()) {
+            return new ResponsibleUsersWithElementNameDTO(register.getName(),new ArrayList<>());
         }
-        return new ResponsibleUserDTO(register.getName(), register.getResponsibleUser().getUuid(), register.getResponsibleUser().getName(), register.getResponsibleUser().getUserId());
+
+        List<ResponsibleUserDTO> users = register.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
+        return new ResponsibleUsersWithElementNameDTO(register.getName(), users);
     }
 
-    record RiskUIDTO(String elementName, int rf, int of, int ri, int oi, int rt, int ot, ResponsibleUserDTO user) {}
+    record RiskUIDTO(String elementName, int rf, int of, int ri, int oi, int rt, int ot, ResponsibleUsersWithElementNameDTO users) {}
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetService.findAllById(assetIds);
-        final ResponsibleUserDTO user = !assets.isEmpty() ? getUser(assets.get(0)) : null;
+        final ResponsibleUsersWithElementNameDTO users = !assets.isEmpty() ? getUser(assets.get(0)) : null;
         final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream()
             .map(Relatable::getId).collect(Collectors.toList()));
         final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
-        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), user);
+        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), users);
     }
 
     @Transactional
@@ -237,11 +240,12 @@ public class RiskRestController {
         }
     }
 
-    private ResponsibleUserDTO getUser(final Asset asset) {
-        if (asset.getResponsibleUser() == null) {
-            return new ResponsibleUserDTO(asset.getName(), null, null, null);
+    private ResponsibleUsersWithElementNameDTO getUser(final Asset asset) {
+        if (asset.getResponsibleUsers() == null || asset.getResponsibleUsers().isEmpty()) {
+            return new ResponsibleUsersWithElementNameDTO(asset.getName(), new ArrayList<>());
         }
-        return new ResponsibleUserDTO(asset.getName(), asset.getResponsibleUser().getUuid(), asset.getResponsibleUser().getName(), asset.getResponsibleUser().getUserId());
+        List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
+        return new ResponsibleUsersWithElementNameDTO(asset.getName(), users);
     }
 
     private boolean containsField(final String fieldName) {
@@ -256,31 +260,50 @@ public class RiskRestController {
         final User user = userService.currentUser();
         final String responsibleUserName = user != null ? user.getName() : "";
         if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
-            return relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
+            List<EmailEvent> events = new ArrayList<>();
+            List<Asset> assets =  relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
                 .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
                 .map(assetService::findById)
                 .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(a -> a.getResponsibleUser() != null && a.getResponsibleUser().getEmail() != null)
-                .map(a -> EmailEvent.builder()
-                    .email(a.getResponsibleUser().getEmail())
-                    .subject("Risikovurdering for " + a.getName())
-                    .message(responsibleUserName + " har sendt dig en risikovurdering for systemet " + a.getName())
-                    .build())
-                .collect(Collectors.toList());
+                .map(Optional::get).collect(Collectors.toList());
+            for (Asset asset : assets) {
+                if (asset.getResponsibleUsers() != null) {
+                    for (User responsibleUser : asset.getResponsibleUsers()) {
+                        if (responsibleUser.getEmail() != null) {
+                            events.add(EmailEvent.builder()
+                                .email(responsibleUser.getEmail())
+                                .subject("Risikovurdering for " + asset.getName())
+                                .message(responsibleUserName + " har sendt dig en risikovurdering for systemet " + asset.getName())
+                                .build());
+                        }
+                    }
+                }
+            }
+
+            return  events;
         } else if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
-            return relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
+            List<EmailEvent> events = new ArrayList<>();
+            List<Register> registers = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
                 .map(a -> a.getRelationAType() == RelationType.REGISTER ? a.getRelationAId() : a.getRelationBId())
                 .map(registerService::findById)
                 .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(a -> a.getResponsibleUser() != null && a.getResponsibleUser().getEmail() != null)
-                .map(a -> EmailEvent.builder()
-                    .email(a.getResponsibleUser().getEmail())
-                    .subject("Risikovurdering for " + a.getName())
-                    .message(responsibleUserName + " har sendt dig en risikovurdering for behandlingsaktiviteten " + a.getName())
-                    .build())
-                .collect(Collectors.toList());
+                .map(Optional::get).collect(Collectors.toList());
+
+            for (Register register : registers) {
+                if (register.getResponsibleUsers() != null) {
+                    for (User responsibleUser : register.getResponsibleUsers()) {
+                        if (responsibleUser.getEmail() != null) {
+                            events.add(EmailEvent.builder()
+                                .email(responsibleUser.getEmail())
+                                .subject("Risikovurdering for " + register.getName())
+                                .message(responsibleUserName + " har sendt dig en risikovurdering for behandlingsaktiviteten " + register.getName())
+                                .build());
+                        }
+                    }
+                }
+            }
+
+            return events;
         }
         return Collections.emptyList();
     }

@@ -57,6 +57,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -261,6 +262,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				t1.setResponsibleUser(user1);
 				t1.setNotifyResponsible(false);
 				t1.setName("Regndans");
+                t1.setIncludeInReport(false);
 				taskDao.save(t1);
 
 				final Task t2 = new Task();
@@ -272,6 +274,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				t2.setResponsibleUser(user1);
 				t2.setName("Kageordning");
 				t2.setNotifyResponsible(false);
+                t2.setIncludeInReport(false);
 				taskDao.save(t2);
 
 				final Task t3 = new Task();
@@ -283,6 +286,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				t3.setResponsibleOu(hjelmOu);
 				t3.setResponsibleUser(user1);
 				t3.setNotifyResponsible(false);
+                t3.setIncludeInReport(false);
 				taskDao.save(t3);
 
 				final Relation taskDoc = new Relation();
@@ -299,7 +303,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				r1.setName("1. Behandling af personoplysninger i forbindelse med ydelser vedr.  jobafklaring, jobsøgning og uddannelsesforløb for ledige");
 				r1.setPurpose("Behandling af personoplysninger sker med henblik på at hjælpe ledige borgere i uddannelse eller job, hjælpe sygemeldte borgere tilbage på arbejdsmarkedet samt godkendelse af arbejdsmiljø mv. på private erhvervirksomheder, der beskæftiger ledige midlertidigt.");
 				r1.setInformationObligation(InformationObligationStatus.NO);
-				r1.setResponsibleOu(hjelmOu);
+				r1.setResponsibleOus(List.of(hjelmOu));
 				r1.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
 				r1.setCreatedBy("");
                 r1.setDataProcessing(new DataProcessing());
@@ -310,7 +314,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				r2.setName("2. Behandling af personoplysninger i forbindelse med fleksjob, løntillæg, jobrotation, virksomhedspraktik, mentorordning og voksenlærling, ressourceforløb og revalidering");
 				r2.setPurpose("Behandling af personoplysninger sker med henblik på at vurdere og følge op på sager i forbindelse med fleksjob, løntillæg, jobrotation, virksomhedspraktik, mentorordning og voksenlærling samt vurdere og følge op på sager om revalidering og ressourceforløb, herunder udarbejdelse af jobplaner og aktiviteter");
 				r2.setInformationObligation(InformationObligationStatus.NO);
-				r2.setResponsibleOu(hjelmOu);
+				r2.setResponsibleOus(List.of(hjelmOu));
 				r2.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
 				r2.setCreatedBy("");
                 r2.setDataProcessing(new DataProcessing());
@@ -321,9 +325,9 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				r3.setName("3. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge og seniorjob");
 				r3.setPurpose("Behandling af personoplysninger sker med henblik på at vurdere og følge op på sager i forbindelse med dagpenge, efterløn, feriedagpenge og seniorjob, herunder dagpenge i forbindelse med sygdom, barsel og pasning af alvorligt syge børn");
 				r3.setInformationObligation(InformationObligationStatus.YES);
-				r3.setResponsibleOu(hjelmOu);
+				r3.setResponsibleOus(List.of(hjelmOu));
 				r3.setCreatedBy("");
-				r3.setResponsibleUser(user1);
+				r3.setResponsibleUsers(List.of(user1));
 				r3.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-a", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-a", "register-gdpr-p6-e"));
                 r3.setDataProcessing(new DataProcessing());
                 r3.setStatus(RegisterStatus.NOT_STARTED);
@@ -372,7 +376,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				os2Compliance.setAssetType(AssetType.IT_SYSTEM);
 				os2Compliance.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.ON_GOING);
 				os2Compliance.setDescription("En beskrivelse");
-				os2Compliance.setResponsibleUser(user1);
+				os2Compliance.setResponsibleUsers(List.of(user1));
 				os2Compliance.setName("OS2compliance");
 				os2Compliance.setAssetStatus(AssetStatus.NOT_STARTED);
 				os2Compliance.setCriticality(Criticality.CRITICAL);
@@ -419,7 +423,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				asset1.setAssetType(AssetType.IT_SYSTEM);
 				asset1.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NOT_RELEVANT);
 				asset1.setDescription("En beskrivelse");
-				asset1.setResponsibleUser(user1);
+				asset1.setResponsibleUsers(List.of(user1));
 				asset1.setName("Asset 1");
 				asset1.setAssetStatus(AssetStatus.NOT_STARTED);
 				asset1.setCriticality(Criticality.CRITICAL);
@@ -441,7 +445,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				asset2.setAssetType(AssetType.IT_SYSTEM);
 				asset2.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.YES);
 				asset2.setDescription("En beskrivelse");
-				asset2.setResponsibleUser(user1);
+				asset2.setResponsibleUsers(List.of(user1));
 				asset2.setName("Asset 2");
 				asset2.setAssetStatus(AssetStatus.ON_GOING);
 				asset2.setCriticality(Criticality.CRITICAL);
@@ -456,7 +460,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				asset3.setAssetType(AssetType.IT_SYSTEM);
 				asset3.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.YES);
 				asset3.setDescription("En beskrivelse");
-				asset3.setResponsibleUser(user1);
+				asset3.setResponsibleUsers(List.of(user1));
 				asset3.setName("Asset 3");
 				asset3.setAssetStatus(AssetStatus.READY);
 				asset3.setCriticality(Criticality.NON_CRITICAL);
