@@ -298,3 +298,12 @@ function customDeleteRelation(element) {
         }
     });
 }
+
+function filterOnStatusChanged() {
+    var selectedStatus = document.getElementById('statusFilter').value;
+    if (selectedStatus == "ALL") {
+        window.location.href = viewUrl + templateIdentifier;
+    } else {
+        window.location.href = viewUrl + templateIdentifier + "?status=" + selectedStatus;
+    }
+}

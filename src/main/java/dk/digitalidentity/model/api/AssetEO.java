@@ -75,8 +75,8 @@ public class AssetEO {
     private String updatedBy;
     @Schema(description = "Name of the asset", requiredMode = Schema.RequiredMode.REQUIRED, example = ASSET_NAME_EXAMPLE)
     private String name;
-    @Schema(description = "System owner")
-    private UserEO systemOwner;
+    @Schema(description = "System owners")
+    private List<UserEO> systemOwners;
     @Schema(description = "Asset description", example = ASSET_DESCRIPTION_EXAMPLE)
     private String description;
     @Schema(description = "Type of the asset", example = ASSET_TYPE_EXAMPLE)

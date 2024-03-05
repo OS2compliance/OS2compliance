@@ -47,15 +47,16 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
     let selectedRegister = selectedRegisterElement.value;
     fetch( `/rest/risks/register?registerId=${selectedRegister}`)
         .then(response => response.json()
-            .then(user => {
-                if (user.uuid != null) {
+            .then(data => {
+                var user = data.users[0];
+                if (user != null) {
                     userChoicesSelect.setChoiceByValue(user.uuid);
                 } else {
                     userChoicesSelect.removeActiveItems();
                 }
 
-                if (user.elementName != null) {
-                    document.getElementById('name').value = user.elementName;
+                if (data.elementName != null) {
+                    document.getElementById('name').value = data.elementName;
                 } else {
                     document.getElementById('name').value = "";
                 }
@@ -283,8 +284,8 @@ function CreateRiskService() {
         fetch( `/rest/risks/asset?assetIds=${selectedAsset}`)
             .then(response => response.json()
                 .then(data => {
-                    let user = data.user;
-                    if (user.uuid != null) {
+                    let user = data.users?.users[0];
+                    if (user != null) {
                         this.userChoicesSelect.setChoiceByValue(user.uuid);
                     } else {
                         this.userChoicesSelect.removeActiveItems();

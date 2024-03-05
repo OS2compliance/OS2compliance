@@ -191,10 +191,12 @@ public class TasksController {
             existingTask.setName(task.getName());
         }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
+        existingTask.setIncludeInReport(task.getIncludeInReport());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setResponsibleUser(task.getResponsibleUser());
+        existingTask.setLink(task.getLink());
 
         if (existingTask.getTaskType().equals(TaskType.CHECK)) {
             existingTask.setRepetition(task.getRepetition());

@@ -86,15 +86,15 @@ public class RegisterRestController {
             registers = registerGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, RegisterGrid.class, user);
         } else {
             // Fetch paged and sorted
-            registers = registerGridDao.findAllByResponsibleUser(user, sortAndPage);
+            registers = registerGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage) ;
         }
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
     }
 
     private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("responsibleUser") || fieldName.equals("responsibleOU")
-                || fieldName.equals("updatedAt") || fieldName.equals("consequence") || fieldName.equals("risk")
-                || fieldName.equals("status");
+        return fieldName.equals("name") || fieldName.equals("responsibleUserNames") || fieldName.equals("responsibleOUNames")
+                || fieldName.equals("updatedAt") || fieldName.equals("consequence") || fieldName.equals("risk") || fieldName.equals("departmentNames")
+                || fieldName.equals("status") || fieldName.equals("assetCount");
     }
 }

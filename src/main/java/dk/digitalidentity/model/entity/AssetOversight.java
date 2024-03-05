@@ -25,7 +25,7 @@ public class AssetOversight {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
     @ManyToOne
     @JoinColumn(name = "responsible_uuid")
     private User responsibleUser;

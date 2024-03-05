@@ -283,52 +283,9 @@ function purposeFormLoaded() {
 function generalFormLoaded() {
     const form = document.getElementById('editDescId');
 
-    const departmentSelect = document.getElementById('departmentSelect');
-    departmentChoices = new Choices(departmentSelect, {
-        searchChoices: false,
-        allowHTML: true,
-        searchPlaceholderValue: 'Søg flere....',
-        classNames: {
-            containerInner: 'form-control'
-        }
-    });
-    departmentSelect.addEventListener("search",
-        function(event) {
-            updateOus(departmentChoices, event.detail.value);
-        },
-        false,
-    );
-
-    const ouSelect = document.getElementById('ouSelect');
-    ouChoices = new Choices(ouSelect, {
-        searchChoices: false,
-        allowHTML: true,
-        searchPlaceholderValue: 'Søg flere....',
-        classNames: {
-            containerInner: 'form-control'
-        }
-    });
-    ouSelect.addEventListener("search",
-        function(event) {
-            updateOus(ouChoices, event.detail.value);
-        },
-        false,
-    );
-    const userSelect = document.getElementById('userSelect');
-    userChoices = new Choices(userSelect, {
-        searchChoices: false,
-        allowHTML: true,
-        searchPlaceholderValue: 'Søg flere....',
-        classNames: {
-            containerInner: 'form-control'
-        }
-    });
-    userSelect.addEventListener("search",
-        function(event) {
-            updateUsers(userChoices, event.detail.value);
-        },
-        false,
-    );
+    departmentChoices = initOUSelect('departmentSelect', false);
+    ouChoices = initOUSelect('ouSelect', false);
+    userChoices = initUserSelect('userSelect', false);
 
     form.addEventListener('reset', (ev) => {
         ouChoices.destroy();

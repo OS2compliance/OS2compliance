@@ -287,9 +287,9 @@ public class DocxServiceTest {
     private Register createDummyRegister(final int num) {
         final Register register = new Register();
         register.setName("Behandlingsaktivitet #" + num);
-        register.setResponsibleUser(User.builder().name("Test Testtrup #" + num).build());
-        register.setResponsibleOu(OrganisationUnit.builder().name("Enhed #" + num).build());
-        register.setDepartment(OrganisationUnit.builder().name("Afdeling #" + num).build());
+        register.setResponsibleUsers(List.of(User.builder().name("Test Testtrup #" + num).build()));
+        register.setResponsibleOus(List.of(OrganisationUnit.builder().name("Enhed #" + num).build()));
+        register.setDepartments(List.of(OrganisationUnit.builder().name("Afdeling #" + num).build()));
         register.setInformationResponsible("Kommunen er dataansvarlig for behandlingen af personoplysningerne");
         register.setRegisterRegarding("Plappe");
         register.setPurpose("Behandling af personoplysninger sker med henblik på at hjælpe ledige borgere i uddannelse eller job, hjælpe sygemeldte borgere tilbage på arbejdsmarkedet samt godkendelse af arbejdsmiljø mv. på private erhvervsvirksomheder, der beskæftiger ledige midlertidigt.");

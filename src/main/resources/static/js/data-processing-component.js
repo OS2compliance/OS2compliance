@@ -190,7 +190,7 @@ let DataProcessingComponent = function () {
         newRow.classList.add("categoryRow");
         newRow.classList.remove("categoryRowTemplate");
         newRow.querySelector('.tagin-wrapper').classList.add('disabledBox');
-        this.setPersonInformationCategories(newRow, ['Vælg kategori'])
+        this.setPersonInformationCategories(newRow, ['Vælg type'])
         this.targetElement.appendChild(newRow);
         this.updateCategorySelectionNamesOnForm();
     }

@@ -80,15 +80,15 @@
                                             <input th:field="*{id}" hidden>
 
                                             <div class="row mb-3">
-                                                <label for="responsibleUser"
-                                                    class="col-sm-3 col-form-label">Systemejer</label>
+                                                <label for="responsibleUsers"
+                                                    class="col-sm-3 col-form-label">Systemejere</label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
-                                                            data-trigger="" id="responsibleUser" th:field="*{responsibleUser}" hidden=""
-                                                            tabindex="-1">
-                                                        <option th:value="${asset.responsibleUser?.uuid}"
-                                                                th:text="${asset.responsibleUser?.name}"
-                                                                th:if="${asset.responsibleUser != null}"></option>
+                                                            data-trigger="" id="responsibleUsers" th:field="*{responsibleUsers}" hidden=""
+                                                            tabindex="-1" multiple="multiple">
+                                                        <option th:each="user : *{responsibleUsers}" th:value="${user.uuid}"
+                                                                th:text="${user.name}"
+                                                                selected></option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -491,7 +491,7 @@
             suppliersChoicesEditSelect = initSuppliersSelect();
             suppliersChoicesEditSelect.disable();
             managersChoicesEditSelect.disable();
-            responsibleChoicesEditSelect = initUserSelect("responsibleUser");
+            responsibleChoicesEditSelect = initUserSelect("responsibleUsers");
             responsibleChoicesEditSelect.disable();
             editMode(false);
 

@@ -114,10 +114,27 @@
                                 </div>
 
                                 <div class="row mb-3">
+                                    <label for="taskType" class="col-sm-2 col-form-label">Link</label>
+                                    <div class="col-sm-10">
+                                        <a id="realLink" th:text="*{link}" th:href="*{link}" target="_blank"></a>
+                                        <input class="form-control editField" id="linkField" th:field="*{link}" hidden>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
                                     <label for="notifyResponsible" class="col-sm-2 col-form-label">Send mail til ansvarlig</label>
                                     <div class="col-sm-10" style="display:flex; align-items: center">
                                         <div class="input-group">
                                             <input id="notifyResponsible" class="form-check-input editField" type="checkbox" th:value="${task.notifyResponsible}" th:field="*{notifyResponsible}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="includeInReport" class="col-sm-2 col-form-label">Skal indgå i årshjul</label>
+                                    <div class="col-sm-10" style="display:flex; align-items: center">
+                                        <div class="input-group">
+                                            <input id="includeInReport" class="form-check-input editField" type="checkbox" th:value="${task.includeInReport}" th:field="*{includeInReport}">
                                         </div>
                                     </div>
                                 </div>

@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.List;
 import java.util.Set;
 
 public interface OrganisationUnitDao extends JpaRepository<OrganisationUnit, String> {
@@ -23,4 +24,5 @@ public interface OrganisationUnitDao extends JpaRepository<OrganisationUnit, Str
 
     OrganisationUnit findByUuid(String uuid);
 
+	List<OrganisationUnit> findAllByUuidInAndActiveTrue(Set<String> uuids);
 }
