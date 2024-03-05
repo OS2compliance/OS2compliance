@@ -24,4 +24,5 @@ public class RegisterDTO {
     private String risk;
     private String status;
     private Set<String> gdprChoices;
+    private int assetCount;
 }

@@ -63,6 +63,9 @@ public class Task extends Relatable {
     @Column(name = "responsible_notified")
     private Boolean hasNotifiedResponsible;
 
+    @Column(name = "include_in_report")
+    private Boolean includeInReport;
+
     @Column
     private String link;
 

@@ -130,6 +130,15 @@
                                     </div>
                                 </div>
 
+                                <div class="row mb-3">
+                                    <label for="includeInReport" class="col-sm-2 col-form-label">Skal indgå i årshjul</label>
+                                    <div class="col-sm-10" style="display:flex; align-items: center">
+                                        <div class="input-group">
+                                            <input id="includeInReport" class="form-check-input editField" type="checkbox" th:value="${task.includeInReport}" th:field="*{includeInReport}">
+                                        </div>
+                                    </div>
+                                </div>
+
                                 <th:block th:if="${completed}">
                                     <div class="row mb-3">
                                         <label for="completedDate" class="col-sm-2 col-form-label">Udført</label>

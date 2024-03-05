@@ -96,6 +96,7 @@ public class AssetsRestController {
 				|| fieldName.equals("name")
 				|| fieldName.equals("assetType")
 				|| fieldName.equals("responsibleUserName")
+				|| fieldName.equals("registers")
 				|| fieldName.equals("updatedAt")
 				|| fieldName.equals("criticality")
 				|| fieldName.equals("assetStatus")

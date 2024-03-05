@@ -47,7 +47,8 @@ SELECT
     ca.assessment as consequence,
     ta.assessment as risk,
     concat(COALESCE(r.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
-    r.status
+    r.status,
+    (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count
 FROM registers r
 LEFT JOIN consequence_assessments ca on ca.register_id = r.id
 LEFT JOIN threat_assessments ta ON ta.id = (
@@ -85,7 +86,8 @@ SELECT
             WHERE asset_id = a.id AND third_country_transfer = 'YES'
         ) THEN TRUE
         ELSE FALSE
-    END AS has_third_country_transfer
+        END AS has_third_country_transfer,
+    (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id) AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER')) as registers
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
     LEFT JOIN properties ON properties.entity_id = a.id
