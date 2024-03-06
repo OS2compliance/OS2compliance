@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -37,6 +38,7 @@ public class UserProperty {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JsonIgnore
 	private User user;
 
 }

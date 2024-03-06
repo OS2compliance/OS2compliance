@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import jakarta.persistence.Column;
@@ -74,6 +75,7 @@ public class Supplier extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@OneToMany(orphanRemoval = true, mappedBy = "supplier")
+    @JsonIgnore
 	private List<Asset> assets = new ArrayList<>();
 
 	@Override

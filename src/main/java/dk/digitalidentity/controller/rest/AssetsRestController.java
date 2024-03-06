@@ -5,20 +5,27 @@ import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.util.ReflectionHelper;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,16 +34,13 @@ import java.util.List;
 @RestController
 @RequestMapping("rest/assets")
 @RequireUser
+@RequiredArgsConstructor
 public class AssetsRestController {
+    private final AssetService assetService;
 	private final AssetGridDao assetGridDao;
 	private final AssetMapper mapper;
     private final UserDao userDao;
 
-	public AssetsRestController(final AssetGridDao assetGridDao, final AssetMapper mapper, final UserDao userDao) {
-		this.assetGridDao = assetGridDao;
-		this.mapper = mapper;
-        this.userDao = userDao;
-    }
 
 	@PostMapping("list")
 	public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
@@ -52,7 +56,7 @@ public class AssetsRestController {
 		final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
 		Page<AssetGrid> assets = null;
 		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserName", "updatedAt", "localizedEnums");
+			final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
 			// search and page
 			assets = assetGridDao.findAllCustom(searchableProperties, search, sortAndPage, AssetGrid.class);
 		} else {
@@ -78,15 +82,32 @@ public class AssetsRestController {
         final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
         Page<AssetGrid> assets = null;
         if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "supplier", "updatedAt", "localizedEnums");
+            final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
             // search and page
-            assets = assetGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
+            assets = assetGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
         } else {
             // Fetch paged and sorted
             assets = assetGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage);
         }
 
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+    }
+
+    @PutMapping("{id}/setfield")
+    public void setRiskAssessmentOptOut(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
+                                        @RequestParam(value = "value", required = false) final String value) {
+        canSetFieldGuard(fieldName);
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
+        assetService.save(asset);
+    }
+
+    private void canSetFieldGuard(final String fieldName) {
+        if (!(fieldName.equals("threatAssessmentOptOut") ||
+            fieldName.equals("threatAssessmentOptOutReason") ||
+            fieldName.equals("dpiaOptOut"))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
     }
 
 	private boolean containsField(final String fieldName) {

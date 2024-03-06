@@ -197,6 +197,7 @@ public class AssetsController {
         }
         final DataProtectionImpactDTO dpiaForm = DataProtectionImpactDTO.builder()
             .assetId(asset.getId())
+            .optOut(asset.isDpiaOptOut())
             .questions(assetDPIADTOs)
             .answerA(asset.getDpia().getAnswerA())
             .answerB(asset.getDpia().getAnswerB())
@@ -299,6 +300,7 @@ public class AssetsController {
     @PostMapping("dpia")
     public String dpia(@ModelAttribute final DataProtectionImpactDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        asset.setDpiaOptOut(dpiaForm.isOptOut());
         final DataProtectionImpactAssessment dpia = asset.getDpia();
         for (final DataProtectionImpactScreeningAnswerDTO question : dpiaForm.getQuestions()) {
             final DataProtectionImpactScreeningAnswer foundAnswer = dpia.getDpiaScreeningAnswers().stream()

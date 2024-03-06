@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -37,5 +38,6 @@ public class Property {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@ManyToOne(fetch = FetchType.LAZY)
+    @JsonIgnore
 	private Relatable entity;
 }
