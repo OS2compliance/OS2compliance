@@ -1,14 +1,13 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
-import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -34,7 +33,8 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 @Slf4j
 @RequiredArgsConstructor
 public class TaskService {
-	private final TaskDao taskDao;
+    private final DocumentDao documentDao;
+    private final TaskDao taskDao;
     private final TaskLogDao taskLogDao;
 	private final SettingsService settingsService;
     private final RelationService relationService;
@@ -65,11 +65,6 @@ public class TaskService {
 
     public List<Task> findTaskWithProperty(final String propertyName, final String propertyValue) {
         return taskDao.findByProperty(propertyName, propertyValue);
-    }
-
-    @Transactional
-    public List<Task> findTasksNearingDeadlineForUser(final User user) {
-        return taskDao.findByResponsibleUserAndNextDeadlineBefore(user, closeToDeadline());
     }
 
     @Transactional
@@ -108,14 +103,19 @@ public class TaskService {
     public void completeTask(final Task task, final TaskLog taskLog) {
         task.getLogs().add(taskLog);
         if (task.getTaskType() == TaskType.CHECK) {
-            task.setNextDeadline(getNextDeadline(task.getNextDeadline(), task.getRepetition()));
+            final LocalDate nextDeadline = getNextDeadline(task.getNextDeadline(), task.getRepetition());
             // Check if we need to move date on related assets
-            final Optional<Property> linkedDocProperty = task.getProperties().stream()
+            task.getProperties().stream()
                 .filter(p -> p.getKey().equals(ASSOCIATED_DOCUMENT_PROPERTY))
-                .findFirst();
-            if (linkedDocProperty.isPresent()) {
-
-            }
+                .findFirst()
+                .flatMap(property ->
+                    documentDao.findById(Long.parseLong(property.getValue())))
+                .ifPresent(d -> {
+                    if (d.getNextRevision().isEqual(task.getNextDeadline())) {
+                        d.setNextRevision(nextDeadline);
+                    }
+                });
+            task.setNextDeadline(nextDeadline);
         }
     }
 
