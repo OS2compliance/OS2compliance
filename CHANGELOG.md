@@ -35,6 +35,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-42)  Aktiver: 3. landes overførsel kolonne tilføjet på oversigtssiden
 - (https://os2web.atlassian.net/browse/COMPLY-25)  Aktiver: Tilføjet kolonne på oversigtssiden som viser antallet af understøttede behandlingsaktiviteter
+- (https://os2web.atlassian.net/browse/COMPLY-105) Aktiver: Mulighed for at markere at et aktiv ikke skal risikovurderes
+- (https://os2web.atlassian.net/browse/COMPLY-18)  Aktiver: Flueben på DPIA fanen, hvor der kan vælges "fravalgt" hvilket får farven i fanen til at forsvinde
 - (https://os2web.atlassian.net/browse/COMPLY-24)  Fortegnelse: kolonne på oversigtssiden der viser hvor mange IT-systemet der understøtter behandlingsaktiviteten
 - (https://os2web.atlassian.net/browse/COMPLY-70)  Fortegnelse: Kolonne ved relaterede aktiver hvor det fremgår om aktivet er kritisk eller ej
 - (https://os2web.atlassian.net/browse/COMPLY-8)   Opgavecenter: Mulighed for at udskrive kontrol historik
