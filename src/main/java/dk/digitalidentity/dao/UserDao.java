@@ -26,7 +26,7 @@ public interface UserDao extends JpaRepository<User, String>  {
     @Query("select u from User u where (u.name like :search or u.userId like :search) and u.active=true")
     Page<User> searchForUser(@Param("search") final String search, final Pageable pageable);
 
-    User findByUuidAndActiveIsTrue(String uuid);
+    Optional<User> findByUuidAndActiveIsTrue(String uuid);
 
     Optional<User> findByUserIdAndActiveIsTrue(final String userId);
 

@@ -13,8 +13,8 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardsService;
 import dk.digitalidentity.service.model.RelationDTO;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -44,18 +44,13 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("standards")
 @RequireUser
+@RequiredArgsConstructor
 public class StandardController {
-
-    @Autowired
-    private StandardsService standardsService;
-    @Autowired
-    private HttpServletRequest httpServletRequest;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private StandardSectionDao standardSectionDao;
-    @Autowired
-    private StandardTemplateDao standardTemplateDao;
+    private final StandardsService standardsService;
+    private final HttpServletRequest httpServletRequest;
+    private final RelationService relationService;
+    private final StandardSectionDao standardSectionDao;
+    private final StandardTemplateDao standardTemplateDao;
 
 
     record StandardSectionDTO(StandardSection standardSection,
@@ -146,13 +141,13 @@ public class StandardController {
     @GetMapping("supporting")
     public String supportingPage(final Model model) {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
-        for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(s -> s.isSupporting()).collect(Collectors.toList())) {
-
+        for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(StandardTemplate::isSupporting).toList()) {
             final List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
                 .flatMap(s -> s.getChildren().stream())
-                .filter(s -> s.getStandardSection().isSelected()).collect(Collectors.toList());
-            final double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size();
-            final double notRelevantCount = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.NOT_RELEVANT)).collect(Collectors.toList()).size();
+                .filter(s -> s.getStandardSection().isSelected())
+                .toList();
+            final double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).count();
+            final double notRelevantCount = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.NOT_RELEVANT)).count();
             final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
 
@@ -190,8 +185,9 @@ public class StandardController {
         final Map<Long, List<RelationDTO>> result = new HashMap<>();
 
         for (final StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
-            for(final StandardTemplateSection child : standardTemplateSection.getChildren())
-            result.put(child.getStandardSection().getId(), relationService.findRelationsAsListDTO(child.getStandardSection(), false));
+            for(final StandardTemplateSection child : standardTemplateSection.getChildren()) {
+                result.put(child.getStandardSection().getId(), relationService.findRelationsAsListDTO(child.getStandardSection(), false));
+            }
         }
         return result;
     }

@@ -1,7 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -29,10 +28,10 @@ import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.UUID;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,29 +60,18 @@ import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 @Controller
 @RequireUser
 @RequestMapping("registers")
+@RequiredArgsConstructor
 public class RegisterController {
-    @Autowired
-    private RegisterService registerService;
-    @Autowired
-    private AssetService assetService;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private ChoiceService choiceService;
-    @Autowired
-    private OrganisationService organisationService;
-    @Autowired
-    private UserDao userDao;
-    @Autowired
-    private ConsequenceAssessmentDao consequenceAssessmentDao;
-    @Autowired
-    private ScaleService scaleService;
-    @Autowired
-    private DataProcessingService dataProcessingService;
-    @Autowired
-    private TaskService taskService;
-    @Autowired
-    private UserService userService;
+    private final RegisterService registerService;
+    private final AssetService assetService;
+    private final RelationService relationService;
+    private final ChoiceService choiceService;
+    private final OrganisationService organisationService;
+    private final ConsequenceAssessmentDao consequenceAssessmentDao;
+    private final ScaleService scaleService;
+    private final DataProcessingService dataProcessingService;
+    private final TaskService taskService;
+    private final UserService userService;
 
     @GetMapping
     public String registerList() {

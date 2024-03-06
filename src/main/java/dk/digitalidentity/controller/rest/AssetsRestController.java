@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
@@ -10,6 +9,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.util.ReflectionHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +39,7 @@ public class AssetsRestController {
     private final AssetService assetService;
 	private final AssetGridDao assetGridDao;
 	private final AssetMapper mapper;
-    private final UserDao userDao;
+    private final UserService userService;
 
 
 	@PostMapping("list")
@@ -74,7 +74,7 @@ public class AssetsRestController {
                                 @RequestParam(name = "order", required = false) final String order,
                                 @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
-        final User user = userDao.findByUuidAndActiveIsTrue(uuid);
+        final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);

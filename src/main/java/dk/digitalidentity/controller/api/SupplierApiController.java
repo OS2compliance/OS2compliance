@@ -22,6 +22,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -40,16 +41,11 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @RestController
 @RequestMapping(value = "/api/v1/suppliers")
 @Tag(name = "Supplier resource")
+@RequiredArgsConstructor
 public class SupplierApiController {
     private final SupplierService supplierService;
     private final SupplierMapper supplierMapper;
     private final UserService userService;
-
-    public SupplierApiController(final SupplierService supplierService, final SupplierMapper supplierMapper, final UserService userService) {
-        this.supplierService = supplierService;
-        this.supplierMapper = supplierMapper;
-        this.userService = userService;
-    }
 
 
     @Operation(summary = "Fetch a supplier")

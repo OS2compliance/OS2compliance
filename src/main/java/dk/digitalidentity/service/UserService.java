@@ -39,7 +39,7 @@ public class UserService {
         if(StringUtils.isEmpty(uuid)) {
             return Optional.empty();
         }
-        return userDao.findById(uuid);
+        return userDao.findByUuidAndActiveIsTrue(uuid);
     }
 
     public Optional<User> findByUserId(final String userId) {
