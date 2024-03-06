@@ -32,6 +32,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -53,18 +54,12 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @RestController
 @RequestMapping(value = "/api/v1/assets")
 @Tag(name = "Assets resource")
+@RequiredArgsConstructor
 public class AssetApiController {
     private final AssetService assetService;
     private final AssetMapper assetMapper;
     private final UserService userService;
     private final SupplierService supplierService;
-
-    public AssetApiController(final AssetService assetService, final AssetMapper assetMapper, final UserService userService, final SupplierService supplierService) {
-        this.assetService = assetService;
-        this.assetMapper = assetMapper;
-        this.userService = userService;
-        this.supplierService = supplierService;
-    }
 
     @Operation(summary = "Fetch an asset")
     @ApiResponses(value = {

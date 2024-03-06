@@ -1,12 +1,11 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.DocumentDao;
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
@@ -20,21 +19,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
 @Controller
+@RequiredArgsConstructor
 public class DefaultController implements ErrorController {
 	private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
-    private final UserDao userDao;
-    private final TaskService taskService;
-    private final DocumentDao documentDao;
-
-    public DefaultController(final UserDao userDao, final TaskService taskService, final DocumentDao documentDao) {
-        this.userDao = userDao;
-        this.taskService = taskService;
-        this.documentDao = documentDao;
-    }
+    private final UserService userService;
 
     @Transactional
     @GetMapping("/dashboard")
@@ -43,7 +36,7 @@ public class DefaultController implements ErrorController {
         if (SecurityUtil.isLoggedIn()) {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();
             if(userUuid != null) {
-                final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
+                final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 model.addAttribute("user", user);
             }
 

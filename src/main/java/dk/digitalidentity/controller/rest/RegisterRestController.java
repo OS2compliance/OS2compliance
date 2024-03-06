@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.dao.grid.RegisterGridDao;
 import dk.digitalidentity.mapping.RegisterMapper;
 import dk.digitalidentity.model.dto.PageDTO;
@@ -8,17 +7,21 @@ import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -27,16 +30,11 @@ import java.util.List;
 @RestController
 @RequestMapping("rest/registers")
 @RequireUser
+@RequiredArgsConstructor
 public class RegisterRestController {
     private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
-    private final UserDao userDao;
-
-    public RegisterRestController(final RegisterGridDao registerGridDao, final RegisterMapper mapper, final UserDao userDao) {
-        this.registerGridDao = registerGridDao;
-        this.mapper = mapper;
-        this.userDao = userDao;
-    }
+    private final UserService userService;
 
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
@@ -73,7 +71,7 @@ public class RegisterRestController {
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
-        final User user = userDao.findByUuidAndActiveIsTrue(uuid);
+        final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);

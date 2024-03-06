@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
-import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.Contact;
@@ -45,7 +44,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class SupplierController {
 	private final SupplierService supplierService;
-	private final RelationDao relationDao;
 	private final ContactDao contactDao;
     private final AssetOversightDao assetOversightDao;
 
@@ -62,7 +60,7 @@ public class SupplierController {
 	public String supplier(final Model model, @PathVariable final String id) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		final List<Contact> contacts = relationDao.findRelatedToWithType(supplier.getId(), RelationType.CONTACT).stream()
+		final List<Contact> contacts = relationService.findRelatedToWithType(supplier, RelationType.CONTACT).stream()
 				.map(r -> r.getRelationAType() == RelationType.CONTACT ? r.getRelationAId() : r.getRelationBId())
 				.map(rid -> contactDao.findById(rid).orElse(null))
 				.filter(Objects::nonNull)
@@ -93,7 +91,7 @@ public class SupplierController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         final List<Task> tasks = taskService.findRelatedTasks(supplier, t -> t.getTaskType() == TaskType.CHECK);
-        relationDao.deleteRelatedTo(id);
+        relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
         supplierService.delete(supplier);
 	}

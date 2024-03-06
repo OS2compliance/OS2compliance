@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
@@ -9,6 +10,7 @@ import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.TaskDTO;
@@ -25,6 +27,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Service
@@ -101,6 +104,21 @@ public class TaskService {
         return taskDao.save(task);
     }
 
+    @Transactional
+    public void completeTask(final Task task, final TaskLog taskLog) {
+        task.getLogs().add(taskLog);
+        if (task.getTaskType() == TaskType.CHECK) {
+            task.setNextDeadline(getNextDeadline(task.getNextDeadline(), task.getRepetition()));
+            // Check if we need to move date on related assets
+            final Optional<Property> linkedDocProperty = task.getProperties().stream()
+                .filter(p -> p.getKey().equals(ASSOCIATED_DOCUMENT_PROPERTY))
+                .findFirst();
+            if (linkedDocProperty.isPresent()) {
+
+            }
+        }
+    }
+
     public boolean isTaskDone(final Task task) {
         if (task.getLogs().isEmpty()) {
             return false;
@@ -143,6 +161,21 @@ public class TaskService {
 
     public List<TaskLog> logsBetween(final Task task, final LocalDate from, final LocalDate to) {
         return taskLogDao.findAllByTaskFiltered(task, from, to);
+    }
+
+    private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
+        if (repetition == null) {
+            return deadline;
+        }
+        return switch (repetition) {
+            case MONTHLY -> deadline.plusMonths(1);
+            case QUARTERLY -> deadline.plusMonths(3);
+            case HALF_YEARLY -> deadline.plusMonths(6);
+            case YEARLY -> deadline.plusYears(1);
+            case EVERY_SECOND_YEAR -> deadline.plusYears(2);
+            case EVERY_THIRD_YEAR -> deadline.plusYears(3);
+            default -> deadline;
+        };
     }
 
 }

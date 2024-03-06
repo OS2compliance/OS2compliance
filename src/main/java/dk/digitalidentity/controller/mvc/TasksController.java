@@ -1,9 +1,5 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.DocumentDao;
-import dk.digitalidentity.dao.RelatableDao;
-import dk.digitalidentity.dao.ThreatAssessmentDao;
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
@@ -14,19 +10,21 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.DocumentService;
+import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -54,30 +52,20 @@ import java.util.Set;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 import static java.time.temporal.ChronoUnit.DAYS;
 
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Slf4j
 @Controller
 @RequestMapping("tasks")
 @RequireUser
+@RequiredArgsConstructor
 public class TasksController {
-    @Autowired
-    private ThreatAssessmentDao threatAssessmentDao;
-    @Autowired
-    private RelatableDao relatableDao;
-    @Autowired
-    private UserDao userDao;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private DocumentDao documentDao;
-    @Autowired
-    private ThreatAssessmentService threatAssessmentService;
-    @Autowired
-    private TaskService taskService;
-    @Autowired
-    private Environment environment;
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
+    private final RelatableService relatableService;
+    private final RelationService relationService;
+    private final UserService userService;
+    private final DocumentService documentService;
+    private final ThreatAssessmentService threatAssessmentService;
+    private final TaskService taskService;
+    private final Environment environment;
+    private final ApplicationEventPublisher eventPublisher;
 
 
     @GetMapping
@@ -118,10 +106,9 @@ public class TasksController {
         relationService.setRelationsAbsolute(savedTask, relations);
 
         if (riskId != null) {
-            final Relatable relatable = relatableDao.findById(riskId)
+            final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret risikovurdering ikke fundet"));
 
-            final ThreatAssessment threatAssessment = (ThreatAssessment) relatable;
             if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
                 final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
                     .filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
@@ -142,7 +129,7 @@ public class TasksController {
                 // if no response, create one and add relation
                 if (response == null) {
                     response = threatAssessmentService.createResponse(threatAssessment, null, threat);
-                    threatAssessmentDao.save(threatAssessment);
+                    threatAssessmentService.save(threatAssessment);
                 }
 
                 relationService.addRelation(savedTask, response);
@@ -156,13 +143,13 @@ public class TasksController {
                 // if no response, create one and add relation
                 if (response == null) {
                     response = threatAssessmentService.createResponse(threatAssessment, threat, null);
-                    threatAssessmentDao.save(threatAssessment);
+                    threatAssessmentService.save(threatAssessment);
                 }
 
                 relationService.addRelation(savedTask, response);
             }
 
-            relationService.addRelation(savedTask, relatable);
+            relationService.addRelation(savedTask, threatAssessment);
             return "redirect:/risks/" + riskId;
         }
 
@@ -275,6 +262,7 @@ public class TasksController {
         taskService.deleteById(lid);
     }
 
+    @SuppressWarnings("ClassEscapesDefinedScope")
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
@@ -284,7 +272,7 @@ public class TasksController {
         }
 
         final String userUuid = SecurityUtil.getLoggedInUserUuid();
-        final User user = userDao.findById(userUuid).orElse(null);
+        final User user = userService.findByUuid(userUuid).orElse(null);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ingen bruger logget ind");
         }
@@ -306,18 +294,11 @@ public class TasksController {
         if (!StringUtils.isEmpty(dto.documentLink().trim())) {
             taskLog.setDocumentationLink(dto.documentLink());
         }
-
-        if (task.getTaskType().equals(TaskType.TASK)) {
-            if (dto.documentRelation() != null) {
-                taskLog.setDocument(documentDao.findById(dto.documentRelation()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
-            }
-        } else {
-            task.setNextDeadline(getNextDeadline(task.getNextDeadline(), task.getRepetition()));
+        if (dto.documentRelation() != null) {
+            taskLog.setDocument(documentService.get(dto.documentRelation()).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
-
-        task.getLogs().add(taskLog);
-        taskService.saveTask(task);
-
+        taskService.completeTask(task, taskLog);
         return "redirect:/tasks";
     }
 
@@ -333,7 +314,7 @@ public class TasksController {
 
     @Transactional
     @PostMapping("{id}/copy")
-    public String performTaskCopyDialog(@PathVariable("id") final long id,
+    public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,
                                         @Valid @ModelAttribute final Task taskForm,
                                         @RequestParam(name = "relations", required = false) final List<Long> relations
                                         ) {
@@ -350,25 +331,9 @@ public class TasksController {
         return "redirect:/tasks/" + task.getId();
     }
 
-
     private void setupRelations(final Task task, final List<Long> relations) {
-        final List<Relatable> relatables = relatableDao.findAllById(relations);
+        final List<Relatable> relatables = relatableService.findAllById(relations);
         relatables.forEach(r -> relationService.addRelation(r, task));
-
-    }
-    private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
-        if (repetition == null) {
-            return deadline;
-        }
-        return switch (repetition) {
-            case MONTHLY -> deadline.plusMonths(1);
-            case QUARTERLY -> deadline.plusMonths(3);
-            case HALF_YEARLY -> deadline.plusMonths(6);
-            case YEARLY -> deadline.plusYears(1);
-            case EVERY_SECOND_YEAR -> deadline.plusYears(2);
-            case EVERY_THIRD_YEAR -> deadline.plusYears(3);
-            default -> deadline;
-        };
     }
 
     private boolean calculateCompleted(final Task task) {

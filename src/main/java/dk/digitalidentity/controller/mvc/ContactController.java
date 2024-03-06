@@ -1,15 +1,13 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ContactDao;
-import dk.digitalidentity.dao.RelatableDao;
-import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
-import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.RelatableService;
+import dk.digitalidentity.service.RelationService;
 import jakarta.servlet.http.HttpServletRequest;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,19 +19,15 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Controller
 @RequireUser
 @RequestMapping("contacts")
+@RequiredArgsConstructor
 public class ContactController {
-    @Autowired
-    private RelatableDao relatableDao;
-    @Autowired
-    private ContactDao contactDao;
-    @Autowired
-    private RelationDao relationDao;
-    @Autowired
-    private HttpServletRequest httpServletRequest;
+    private final RelatableService relatableService;
+    private final RelationService relationService;
+    private final ContactDao contactDao;
+    private final HttpServletRequest httpServletRequest;
 
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final String id,
@@ -44,8 +38,6 @@ public class ContactController {
             model.addAttribute("contact", contact);
             model.addAttribute("sourceRelationId", sourceRelationId);
             model.addAttribute("sourceRelationType", sourceRelationType);
-        } else {
-            // TODO Edit
         }
         return "contacts/form";
     }
@@ -56,14 +48,9 @@ public class ContactController {
                            @RequestParam(name = "sourceRelationId", required = false) final String sourceRelationId,
                            @RequestParam(name = "sourceRelationType", required = false) final String sourceRelationType) {
         final Contact savedContact = contactDao.save(contact);
-        final Relatable relationA = relatableDao.findById(Long.valueOf(sourceRelationId))
+        final Relatable relationA = relatableService.findById(Long.valueOf(sourceRelationId))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        relationDao.save(Relation.builder()
-                        .relationAId(relationA.getId())
-                        .relationAType(RelationType.valueOf(sourceRelationType))
-                        .relationBId(savedContact.getId())
-                        .relationBType(RelationType.CONTACT)
-                .build());
+        relationService.addRelation(relationA, savedContact);
         return "redirect:" + httpServletRequest.getHeader("Referer");
     }
 

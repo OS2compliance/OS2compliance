@@ -12,9 +12,9 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.RequireUser;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,21 +29,18 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.List;
 
+@SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @Controller
 @RequireUser
 @RequestMapping("relatables")
+@RequiredArgsConstructor
 public class RelatableController {
-	@Autowired
-	private RelatableDao relatableDao;
-	@Autowired
-	private RelationDao relationDao;
-    @Autowired
-    private TagDao tagDao;
-    @Autowired
-    private DocumentDao documentDao;
-    @Autowired
-    private TaskDao taskDao;
+	private final RelatableDao relatableDao;
+	private final RelationDao relationDao;
+    private final TagDao tagDao;
+    private final DocumentDao documentDao;
+    private final TaskDao taskDao;
 
 	record AddRelationDTO(long id, List<Long> relations) {}
 	@Transactional
@@ -63,7 +60,7 @@ public class RelatableController {
 						.relationBId(relatable.getId())
 						.relationBType(relatable.getRelationType())
 						.build())
-				.forEach(relation -> relationDao.save(relation));
+				.forEach(relationDao::save);
 		return getReturnPath(dto.id(), relateTo);
 	}
 

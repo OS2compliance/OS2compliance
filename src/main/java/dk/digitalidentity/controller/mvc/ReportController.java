@@ -11,9 +11,9 @@ import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.TaskService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -44,16 +44,12 @@ import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 @Controller
 @RequireUser
 @RequestMapping("reports")
+@RequiredArgsConstructor
 public class ReportController {
-
-    @Autowired
-    private StandardTemplateDao standardTemplateDao;
-    @Autowired
-    private TagDao tagDao;
-    @Autowired
-    private DocsReportGeneratorComponent docsReportGeneratorComponent;
-    @Autowired
-    private TaskService taskService;
+    private final StandardTemplateDao standardTemplateDao;
+    private final TagDao tagDao;
+    private final DocsReportGeneratorComponent docsReportGeneratorComponent;
+    private final TaskService taskService;
 
     @GetMapping
     public String reportList(final Model model) {

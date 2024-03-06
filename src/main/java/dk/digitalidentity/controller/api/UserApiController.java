@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,14 +24,10 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping(value = "/api/v1/users")
 @Tag(name = "Users resource")
+@RequiredArgsConstructor
 public class UserApiController {
     private final UserService userService;
     private final UserMapper userMapper;
-
-    public UserApiController(final UserService userService, final UserMapper userMapper) {
-        this.userService = userService;
-        this.userMapper = userMapper;
-    }
 
     @Operation(summary = "Fetch a user")
     @ApiResponses(value = {
