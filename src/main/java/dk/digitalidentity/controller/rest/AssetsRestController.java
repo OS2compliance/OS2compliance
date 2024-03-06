@@ -84,7 +84,7 @@ public class AssetsRestController {
         if (StringUtils.isNotEmpty(search)) {
             final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
             // search and page
-            assets = assetGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
+            assets = assetGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
         } else {
             // Fetch paged and sorted
             assets = assetGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage);

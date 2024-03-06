@@ -112,9 +112,16 @@ public class SearchRepositoryImpl implements SearchRepository {
 	}
 
     @Override
-    public <T> Page<T> findAllCustomForResponsibleUser(final List<String> properties, final String search,
-                                                       final Pageable page, final Class<T> entityClass, final User user) {
-        return findAllCustomExtra(properties, search, Collections.singletonList(Pair.of("responsibleUser", user)), page, entityClass);
+    public <T> Page<T> findAllForResponsibleUser(final List<String> properties, final String search,
+                                                 final Pageable page, final Class<T> entityClass, final User user) {
+        // This is a bit hacky, since some entities now have a list of responsible users, we need to se which type this is
+        // if it has multiple responsible users we search in a comma seperated string of uuids
+        try {
+            entityClass.getMethod("getResponsibleUserUuids");
+            return findAllCustomExtra(properties, search, Collections.singletonList(Pair.of("responsibleUserUuids", user.getUuid())), page, entityClass);
+        } catch (final NoSuchMethodException e) {
+            return findAllCustomExtra(properties, search, Collections.singletonList(Pair.of("responsibleUser", user)), page, entityClass);
+        }
     }
 
 }

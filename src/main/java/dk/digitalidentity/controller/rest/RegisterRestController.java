@@ -83,7 +83,7 @@ public class RegisterRestController {
         if (StringUtils.isNotEmpty(search)) {
             //search and page
             final List<String> searchableProperties = Arrays.asList("name", "responsibleOUNames", "responsibleUserNames", "updatedAt", "consequence", "risk", "status");
-            registers = registerGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, RegisterGrid.class, user);
+            registers = registerGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, RegisterGrid.class, user);
         } else {
             // Fetch paged and sorted
             registers = registerGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage) ;

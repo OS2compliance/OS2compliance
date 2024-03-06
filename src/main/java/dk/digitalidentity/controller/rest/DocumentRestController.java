@@ -79,7 +79,7 @@ public class DocumentRestController {
         if (StringUtils.isNotEmpty(search)) {
             // search and page
             final List<String> searchableProperties = Arrays.asList("id", "name", "documentType", "nextRevision", "status", "tags");
-            documents = documentGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, DocumentGrid.class, user);
+            documents = documentGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, DocumentGrid.class, user);
         } else {
             // Fetch paged and sorted
             documents = documentGridDao.findAllByResponsibleUser(user, sortAndPage);
