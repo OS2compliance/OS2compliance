@@ -6,7 +6,6 @@ import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseOldDao;
-import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -88,6 +87,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(10, this::seedV10);
         incrementAndPerformIfVersion(11, this::seedV11);
         incrementAndPerformIfVersion(12, this::seedV12);
+        incrementAndPerformIfVersion(13, this::seedV13);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -96,6 +96,17 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
         }
+    }
+
+    private void seedV13() {
+        // "register-gdpr-p7-j" is removed as option
+        valueDao.findByIdentifier("register-gdpr-p7-j")
+            .ifPresent(v -> {
+                registerService.findAllOrdered()
+                    .forEach(r -> r.getGdprChoices().remove("register-gdpr-p7-j"));
+                v.getLists().forEach(l -> l.getValues().remove(v));
+                valueDao.delete(v);
+            });
     }
 
     private void seedV12() {
