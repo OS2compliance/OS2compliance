@@ -91,6 +91,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(12, this::seedV12);
         incrementAndPerformIfVersion(13, this::seedV13);
         incrementAndPerformIfVersion(14, this::seedV14);
+        incrementAndPerformIfVersion(15, this::seedV15);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -99,6 +100,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
         }
+    }
+
+    private void seedV15() {
+        valueDao.findByIdentifier("register-gdpr-p6-f")
+            .ifPresent(c -> c.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. <b>Første afsnit, litra f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"));
     }
 
     @SneakyThrows
