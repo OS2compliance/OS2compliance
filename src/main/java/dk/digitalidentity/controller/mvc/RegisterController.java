@@ -165,6 +165,9 @@ public class RegisterController {
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (name != null) {
+            register.setName(name);
+        }
         if (description != null) {
             register.setDescription(description);
         }
