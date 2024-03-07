@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head (sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
@@ -325,7 +325,7 @@
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">Download</a></li>
-                                    <li th:if="${risk.threatAssessmentType.name() == 'ASSET'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til system ejer</a></li>
+                                    <li th:if="${risk.threatAssessmentType.name() == 'ASSET'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til systemejer</a></li>
                                     <li th:if="${risk.threatAssessmentType.name() == 'REGISTER'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til behandlingsaktivitets ejer</a></li>
                                 </ul>
                             </div>
@@ -378,7 +378,7 @@
     </div>
 </div>
 
-<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
