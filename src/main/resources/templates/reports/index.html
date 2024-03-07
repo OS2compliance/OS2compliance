@@ -35,6 +35,13 @@
             <div class="card mb-3 col-xxl-6 offset-xxl-3">
               <div class="card-body">
                 <div class="list-group">
+                    <a th:href="@{reports/yearwheel}" class="list-group-item list-group-item-action">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Årshjul</h5>
+                            <i class="pli-download-2 fs-3 text-info"></i>
+                        </div>
+                        <p class="mb-1 pe-2">List af opgaver henover året</p>
+                    </a>
                     <a th:href="@{reports/sheet(identifier='iso27002_2022')}" class="list-group-item list-group-item-action">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">SoA</h5>
