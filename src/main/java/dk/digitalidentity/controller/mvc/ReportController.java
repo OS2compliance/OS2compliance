@@ -2,13 +2,16 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
+import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -29,16 +32,19 @@ import org.springframework.web.servlet.View;
 
 import java.io.IOException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
+import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 
 @Slf4j
 @Controller
@@ -46,6 +52,7 @@ import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 @RequestMapping("reports")
 @RequiredArgsConstructor
 public class ReportController {
+    private final RelationService relationService;
     private final StandardTemplateDao standardTemplateDao;
     private final TagDao tagDao;
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
@@ -79,6 +86,20 @@ public class ReportController {
         model.addAttribute("task", task);
         model.addAttribute("taskLogs", taskLogs);
         return "reports/taskLogReport";
+    }
+
+    @GetMapping("yearwheel")
+    public ModelAndView yearWheel(final HttpServletResponse response) {
+        final LocalDate cutOff = LocalDateTime.now().minusYears(1).with(lastDayOfYear()).toLocalDate();
+        final Map<Task, List<Relatable>> taskMap = taskService.findAllTasksWithDeadlineAfter(cutOff).stream()
+            .collect(Collectors.toMap(t -> t, relationService::findAllRelatedTo));
+
+        response.setContentType("application/ms-excel");
+        response.setHeader("Content-Disposition", "attachment; filename=\"Aarshjul.xls\"");
+        final Map<String, Object> model = new HashMap<>();
+        model.put("taskMap", taskMap);
+
+        return new ModelAndView(new YearWheelView(), model);
     }
 
     @GetMapping("sheet")

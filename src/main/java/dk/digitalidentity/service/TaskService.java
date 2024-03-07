@@ -78,6 +78,10 @@ public class TaskService {
         return taskDao.findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(date);
     }
 
+    public List<Task> findAllTasksWithDeadlineAfter(final LocalDate date) {
+        return taskDao.findByNextDeadlineAfterOrderByNextDeadlineAsc(date);
+    }
+
     public Task copyTask(final Task oldTask) {
         final Task task = new Task();
         task.setName(oldTask.getName());
