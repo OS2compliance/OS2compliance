@@ -49,6 +49,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Set;
 
+import static dk.digitalidentity.util.LinkHelper.linkify;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 import static java.time.temporal.ChronoUnit.DAYS;
 
@@ -183,7 +184,7 @@ public class TasksController {
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setResponsibleUser(task.getResponsibleUser());
-        existingTask.setLink(task.getLink());
+        existingTask.setLink(linkify(task.getLink()));
 
         if (existingTask.getTaskType().equals(TaskType.CHECK)) {
             existingTask.setRepetition(task.getRepetition());
