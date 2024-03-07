@@ -6,6 +6,7 @@ import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.dao.ThreatAssessmentResponseOldDao;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -20,6 +21,7 @@ import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -88,6 +90,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(11, this::seedV11);
         incrementAndPerformIfVersion(12, this::seedV12);
         incrementAndPerformIfVersion(13, this::seedV13);
+        incrementAndPerformIfVersion(14, this::seedV14);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -96,6 +99,15 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             applier.run();
             settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
         }
+    }
+
+    @SneakyThrows
+    private void seedV14() {
+        // Add none option
+        final ChoiceValue personNoneChoice = valueDao.save(ChoiceValue.builder().identifier("dp-person-none").caption("Ingen behandling af personoplysninger").build());
+        // Add to all lists that "dp-person-cnt-1-10" is part of
+        valueDao.findByIdentifier("dp-person-cnt-1-10")
+            .ifPresent(v -> v.getLists().forEach(l -> l.getValues().add(personNoneChoice)));
     }
 
     private void seedV13() {
