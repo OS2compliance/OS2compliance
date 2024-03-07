@@ -108,12 +108,14 @@ function supportingStandartsViewLoaded() {
 
             setField(id, "STATUS", value, index)
 
-            if (value == "READY") {
+            if (value === "READY") {
                 document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-green-500" style="width: 60px">Klar</div>';
-            } else if (value == "IN_PROGRESS") {
+            } else if (value === "IN_PROGRESS") {
                 document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-blue-500" style="width: 60px">I gang</div>';
-            } else if (value == "NOT_STARTED") {
+            } else if (value === "NOT_STARTED") {
                 document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-yellow-500" style="width: 60px">Ikke startet</div>';
+            } else if (value === "NOT_RELEVANT") {
+                document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-gray-500" style="width: 60px">Ikke relevant</div>';
             }
         });
     });
