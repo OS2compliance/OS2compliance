@@ -29,7 +29,8 @@ import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.PlatformTransactionManager;
+import org.springframework.transaction.support.TransactionTemplate;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -37,6 +38,7 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
@@ -66,12 +68,12 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final CatalogService catalogService;
     private final TaskService taskService;
     private final ChoiceValueDao valueDao;
+    private final PlatformTransactionManager transactionManager;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
 
     @Override
-    @Transactional
     public void onApplicationEvent(final ApplicationReadyEvent event) {
         if (!config.isSeedData()) {
             return;
@@ -95,11 +97,15 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
-        final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
-        if (currentVersion == version) {
-            applier.run();
-            settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
-        }
+        final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.execute(status -> {
+            final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
+            if (currentVersion == version) {
+                applier.run();
+                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
+            }
+            return 0;
+        });
     }
 
     private void seedV15() {
@@ -109,11 +115,14 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
     @SneakyThrows
     private void seedV14() {
-        // Add none option
-        final ChoiceValue personNoneChoice = valueDao.save(ChoiceValue.builder().identifier("dp-person-none").caption("Ingen behandling af personoplysninger").build());
-        // Add to all lists that "dp-person-cnt-1-10" is part of
-        valueDao.findByIdentifier("dp-person-cnt-1-10")
-            .ifPresent(v -> v.getLists().forEach(l -> l.getValues().add(personNoneChoice)));
+        final Optional<ChoiceValue> existing = valueDao.findByIdentifier("dp-person-none");
+        if (existing.isEmpty()) {
+            // Add none option
+            final ChoiceValue personNoneChoice = valueDao.save(ChoiceValue.builder().identifier("dp-person-none").caption("Ingen behandling af personoplysninger").build());
+            // Add to all lists that "dp-person-cnt-1-10" is part of
+            valueDao.findByIdentifier("dp-person-cnt-1-10")
+                .ifPresent(v -> v.getLists().forEach(l -> l.getValues().add(personNoneChoice)));
+        }
     }
 
     private void seedV13() {
