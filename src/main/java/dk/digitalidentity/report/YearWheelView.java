@@ -50,20 +50,23 @@ public class YearWheelView extends AbstractXlsView  {
             createCell(row, 3, nullSafe(() -> task.getResponsibleUser().getName(), ""), style);
             createCell(row, 4, nullSafe(() -> task.getResponsibleOu().getName(), ""), style);
             createCell(row, 5, nullSafe(() -> task.getNextDeadline()), dateStyle);
-            createCell(row, 6, nullSafe(() -> task.getTags().stream().map(Tag::getValue)
+            createCell(row, 6, nullSafe(() -> task.getRepetition().getMessage()), style);
+            createCell(row, 7, nullSafe(() -> task.getTags().stream().map(Tag::getValue)
                 .collect(Collectors.joining(",")), ""), style);
-            createCell(row, 7, relatedAssets, style);
-            createCell(row, 8, nullSafe(() -> task.getDescription(), ""), style);
+            createCell(row, 8, relatedAssets, style);
+            createCell(row, 9, nullSafe(() -> task.getDescription(), ""), style);
         }
         sheet.autoSizeColumn(0);
         sheet.setColumnWidth(1, 9 * 256);
         sheet.autoSizeColumn(2);
         sheet.autoSizeColumn(3);
         sheet.autoSizeColumn(4);
+        // Date fields needs a little extra as excel shows it as danish format which takes up a bit more space
         sheet.setColumnWidth(5, 11 * 256);
         sheet.autoSizeColumn(6);
         sheet.autoSizeColumn(7);
         sheet.autoSizeColumn(8);
+        sheet.autoSizeColumn(9);
     }
 
 
@@ -80,8 +83,9 @@ public class YearWheelView extends AbstractXlsView  {
         createCell(header, 3, "Bruger navn", headerStyle);
         createCell(header, 4, "Afdeling", headerStyle);
         createCell(header, 5, "Deadline", headerStyle);
-        createCell(header, 6, "Tags", headerStyle);
-        createCell(header, 7, "Aktiv", headerStyle);
-        createCell(header, 8, "Beskrivelse", headerStyle);
+        createCell(header, 6, "Gentagelse", headerStyle);
+        createCell(header, 7, "Tags", headerStyle);
+        createCell(header, 8, "Aktiv", headerStyle);
+        createCell(header, 9, "Beskrivelse", headerStyle);
     }
 }

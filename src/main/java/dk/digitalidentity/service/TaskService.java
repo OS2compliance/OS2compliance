@@ -94,6 +94,7 @@ public class TaskService {
         task.setDescription(oldTask.getDescription());
         task.setCreatedAt(LocalDateTime.now());
         task.setCreatedBy(SecurityUtil.getLoggedInUserUuid());
+        task.setIncludeInReport(oldTask.getIncludeInReport());
 
         return taskDao.save(task);
     }

@@ -64,7 +64,7 @@ public class Task extends Relatable {
     private Boolean hasNotifiedResponsible;
 
     @Column(name = "include_in_report")
-    private Boolean includeInReport;
+    private Boolean includeInReport = false;
 
     @Column
     private String link;
