@@ -21,7 +21,7 @@ SELECT
     t.responsible_ou_uuid,
     t.next_deadline,
     t.repetition,
-    (ts.id IS NOT NULL) as completed,
+    (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
     ts.task_result AS result,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
     GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value ASC SEPARATOR ',') as tags
