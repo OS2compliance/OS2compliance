@@ -39,9 +39,9 @@
         </div>
 
         <div class="row mt-3">
-          <label for="userSelect" class="col-sm-4 col-form-label">Systemejer</label>
+          <label for="userSelect" class="col-sm-4 col-form-label">Systemejere</label>
           <div class="col-sm-8">
-            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" id="userSelect" hidden="" required></select>
+            <select class="form-control form-select choices__input" th:field="*{responsibleUsers}" data-trigger="" id="userSelect" hidden="" multiple="multiple" required></select>
             <div class="invalid-feedback">User is required</div>
           </div>
         </div>

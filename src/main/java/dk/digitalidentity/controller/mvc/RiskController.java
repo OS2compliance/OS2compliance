@@ -1,8 +1,11 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.dao.AssetDao;
+import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
-import dk.digitalidentity.dao.ThreatCatalogDao;
+import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Register;
@@ -12,23 +15,27 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
-import dk.digitalidentity.service.MailService;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.model.RiskDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -58,21 +65,24 @@ import java.util.stream.Collectors;
 @RequireUser
 @RequiredArgsConstructor
 public class RiskController {
-    private final ThreatCatalogDao threatCatalogDao;
+    private final ApplicationEventPublisher eventPublisher;
+    private final CatalogService catalogService;
     private final TaskDao taskDao;
     private final RelationService relationService;
-    private final MailService mailService;
     private final Environment environment;
     private final AssetService assetService;
     private final ThreatAssessmentService threatAssessmentService;
     private final ScaleService scaleService;
     private final TaskService taskService;
     private final RegisterService registerService;
+    private final RelationDao relationDao;
+    private final AssetDao assetDao;
+    private final UserService userService;
 
     @GetMapping
     public String riskList(final Model model) {
         model.addAttribute("risk", new ThreatAssessment());
-        model.addAttribute("threatCatalogs", threatCatalogDao.findAll());
+        model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         return "risks/index";
     }
 
@@ -81,8 +91,8 @@ public class RiskController {
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+            @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
             @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
-
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
         }
@@ -98,7 +108,7 @@ public class RiskController {
         }
 
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(threatAssessment);
-
+        savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
             relateAssets(selectedAsset, savedThreatAssessment);
         } else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
@@ -110,6 +120,26 @@ public class RiskController {
         threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
 
         return "redirect:/risks/" + savedThreatAssessment.getId();
+    }
+
+    @GetMapping("{id}/edit")
+    public String riskEditDialog(final Model model, @PathVariable("id") final long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("risk", threatAssessment);
+        return "risks/editForm";
+    }
+
+    @Transactional
+    @PostMapping("{id}/edit")
+    public String performEdit(@PathVariable("id") final long id,
+                              @Valid @ModelAttribute final ThreatAssessment assessment,
+                              @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids) {
+        final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        editedAssessment.setName(assessment.getName());
+        editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
+        editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
+        editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
+        return "redirect:/risks";
     }
 
     @GetMapping("{id}/copy")
@@ -129,6 +159,7 @@ public class RiskController {
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
                               @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
+                              @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
                               @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
         if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv.");
@@ -138,6 +169,7 @@ public class RiskController {
         }
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.copy(sourceId);
         savedThreatAssessment.setName(assessment.getName());
+        savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
             relateAssets(selectedAsset, savedThreatAssessment);
         } else if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
@@ -162,11 +194,41 @@ public class RiskController {
         model.addAttribute("consequenceExplainer", scaleService.getScaleConsequenceNumberExplainer());
         model.addAttribute("riskScoreExplainer", scaleService.getScaleRiskScoreExplainer());
         model.addAttribute("tasks", taskService.buildRelatedTasks(threatAssessment, false));
-
+        model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
+        model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         final Document document = new Document();
         document.setDocumentType(DocumentType.PROCEDURE);
         model.addAttribute("document", document);
         return "risks/view";
+    }
+
+    record RelatedRegisterDTO(long registerId, String registerName, Integer rf, Integer ri, Integer rt, Integer of, Integer oi, Integer ot) {}
+    private List<RelatedRegisterDTO> findRelatedRegisters(final ThreatAssessment threatAssessment) {
+        final List<RelatedRegisterDTO> result = new ArrayList<>();
+        if (threatAssessment.isInherit() && ThreatAssessmentType.ASSET.equals(threatAssessment.getThreatAssessmentType())) {
+            final List<Relation> relations = relationDao.findRelatedToWithType(threatAssessment.getId(), RelationType.ASSET);
+            final List<Asset> assets = relations.stream()
+                .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
+                .map(assetDao::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .toList();
+
+            final List<Long> addedIds = new ArrayList<>();
+            for (final Asset asset : assets) {
+                final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
+                final List<Register> registers = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.REGISTER).map(r -> (Register) r).toList();
+                for (final Register register : registers) {
+                    if (!addedIds.contains(register.getId())) {
+                        final ConsequenceAssessment consequenceAssessment = register.getConsequenceAssessment();
+                        result.add(new RelatedRegisterDTO(register.getId(), register.getName(), consequenceAssessment.getConfidentialityRegistered(), consequenceAssessment.getIntegrityRegistered(), consequenceAssessment.getAvailabilityRegistered(), consequenceAssessment.getConfidentialityOrganisation(), consequenceAssessment.getIntegrityOrganisation(), consequenceAssessment.getAvailabilityOrganisation()));
+                        addedIds.add(register.getId());
+                    }
+                }
+            }
+        }
+
+        return result;
     }
 
     @GetMapping("{id}/profile")
@@ -182,13 +244,35 @@ public class RiskController {
         return "risks/profile";
     }
 
+    @GetMapping("{id}/revision")
+    public String revisionForm(final Model model, @PathVariable final long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        threatAssessmentService.updateNextRevisionAssociatedTask(threatAssessment);
+        model.addAttribute("risk", threatAssessment);
+        return "risks/revisionIntervalForm";
+    }
+
+    @PostMapping("{id}/revision")
+    @Transactional
+    public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        threatAssessment.setRevisionInterval(assessment.getRevisionInterval());
+        threatAssessment.setNextRevision(assessment.getNextRevision());
+        threatAssessmentService.createOrUpdateAssociatedCheck(threatAssessment);
+        return "redirect:/risks/" + assessment.getId();
+    }
+
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void riskDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        relationService.deleteRelatedTo(lid);
-        threatAssessmentService.deleteById(lid);
+    public void riskDelete(@PathVariable final Long id) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        // All related checks should be deleted along with the threatAssessment
+        final List<Task> tasks = taskService.findRelatedTasks(threatAssessment, t -> t.getTaskType() == TaskType.CHECK);
+        taskDao.deleteAll(tasks);
+
+        relationService.deleteRelatedTo(id);
+        threatAssessmentService.deleteById(id);
     }
 
     @Transactional
@@ -213,6 +297,7 @@ public class RiskController {
 
         for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
             final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+            response.setName(threat.getDescription());
             response.setConfidentialityRegistered(riskDTO.getRf());
             response.setIntegrityRegistered(riskDTO.getRi());
             response.setAvailabilityRegistered(riskDTO.getRt());
@@ -255,7 +340,11 @@ public class RiskController {
             final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
             if (task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
                 final String message = getMessage(task);
-                mailService.sendMessage(task.getResponsibleUser().getEmail(), "Påmindelse om at udfylde risikovurdering", message);
+                eventPublisher.publishEvent(EmailEvent.builder()
+                        .message(message)
+                        .subject("Påmindelse om at udfylde risikovurdering")
+                        .email(task.getResponsibleUser().getEmail())
+                    .build());
             }
         }
     }

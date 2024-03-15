@@ -3,7 +3,6 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
-import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
@@ -25,6 +24,7 @@ import dk.digitalidentity.model.entity.DataProtectionImpactAssessment;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
@@ -34,6 +34,7 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetOversightService;
@@ -42,11 +43,12 @@ import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -71,35 +73,25 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @Controller
 @RequireUser
 @RequestMapping("assets")
+@RequiredArgsConstructor
 public class AssetsController {
-	@Autowired
-	private RelationService relationService;
-    @Autowired
-    private ChoiceService choiceService;
-	@Autowired
-	private SupplierDao supplierDao;
-	@Autowired
-	private AssetMeasuresDao assetMeasuresDao;
-	@Autowired
-	private ChoiceMeasuresDao choiceMeasuresDao;
-	@Autowired
-	private ChoiceDPIADao choiceDPIADao;
-    @Autowired
-    private DataProcessingService dataProcessingService;
-    @Autowired
-    private ScaleService scaleService;
-    @Autowired
-    private ThreatAssessmentService threatAssessmentService;
-    @Autowired
-    private AssetOversightService assetOversightService;
-    @Autowired
-    private AssetService assetService;
-    @Autowired
-    private TaskService taskService;
+	private final RelationService relationService;
+    private final ChoiceService choiceService;
+	private final SupplierService supplierService;
+	private final AssetMeasuresDao assetMeasuresDao;
+	private final ChoiceMeasuresDao choiceMeasuresDao;
+	private final ChoiceDPIADao choiceDPIADao;
+    private final DataProcessingService dataProcessingService;
+    private final ScaleService scaleService;
+    private final ThreatAssessmentService threatAssessmentService;
+    private final AssetOversightService assetOversightService;
+    private final AssetService assetService;
+    private final TaskService taskService;
 
 
 	@GetMapping
@@ -182,7 +174,7 @@ public class AssetsController {
             final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
             defaultAnswer.setAssessment(asset.getDpia());
             defaultAnswer.setChoice(choice);
-            defaultAnswer.setAnswer("dpia-dont-know");
+            defaultAnswer.setAnswer(null);
             defaultAnswer.setId(0);
             final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpia().getDpiaScreeningAnswers().stream()
                 .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))
@@ -195,6 +187,7 @@ public class AssetsController {
         }
         final DataProtectionImpactDTO dpiaForm = DataProtectionImpactDTO.builder()
             .assetId(asset.getId())
+            .optOut(asset.isDpiaOptOut())
             .questions(assetDPIADTOs)
             .answerA(asset.getDpia().getAnswerA())
             .answerB(asset.getDpia().getAnswerB())
@@ -220,7 +213,7 @@ public class AssetsController {
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
-        model.addAttribute("supplier", supplierDao.findAll());
+        model.addAttribute("supplier", supplierService.getAll());
 
 		model.addAttribute("dpiaForm", dpiaForm);
 
@@ -245,8 +238,13 @@ public class AssetsController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void assetDelete(@PathVariable final String id) {
-        final Asset asset = assetService.findById(Long.valueOf(id)).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    public void assetDelete(@PathVariable final Long id) {
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        // All related checks should be deleted along with the asset
+        final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
+        relationService.deleteRelatedTo(id);
+        taskService.deleteAll(tasks);
         assetService.deleteById(asset);
     }
 
@@ -292,6 +290,7 @@ public class AssetsController {
     @PostMapping("dpia")
     public String dpia(@ModelAttribute final DataProtectionImpactDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        asset.setDpiaOptOut(dpiaForm.isOptOut());
         final DataProtectionImpactAssessment dpia = asset.getDpia();
         for (final DataProtectionImpactScreeningAnswerDTO question : dpiaForm.getQuestions()) {
             final DataProtectionImpactScreeningAnswer foundAnswer = dpia.getDpiaScreeningAnswers().stream()
@@ -343,7 +342,7 @@ public class AssetsController {
         existingAsset.setTerminationNotice(asset.getTerminationNotice());
         existingAsset.setArchive(asset.isArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
-        existingAsset.setResponsibleUser(asset.getResponsibleUser());
+        existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
         return "redirect:/assets/" + existingAsset.getId();
     }
@@ -354,7 +353,7 @@ public class AssetsController {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 						"Could not find AcceptanceBasis Choices"));
 
-		model.addAttribute("allSuppliers", supplierDao.findAll());
+		model.addAttribute("allSuppliers", supplierService.getAll());
 
 		if (id == null) {
 			final Asset asset = assetService.get(assetId)
@@ -387,7 +386,7 @@ public class AssetsController {
 		final Asset asset = assetService.get(body.assetId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		final Optional<AssetSupplierMapping> subSupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), body.id)).findAny();
-		final Supplier supplier = supplierDao.findById(body.supplier).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		final Supplier supplier = supplierService.get(body.supplier).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (subSupplier.isPresent()) {
 			//Edit
@@ -486,7 +485,7 @@ public class AssetsController {
             return "assets/fragments/oversightModal";
         }
         if(type.equals("supplier")) {
-            final Supplier supplier = supplierDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Det angivne id findes ikke"));
+            final Supplier supplier = supplierService.get(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Det angivne id findes ikke"));
 
             model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
             model.addAttribute("supplier", supplier);

@@ -1,0 +1,90 @@
+<div th:fragment="tagReportDialog"  class="modal fade" tabindex="-1" id="tagReportDialog" aria-hidden="true">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Print tag-rapport</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label">Vælg tag</label>
+                        <div class="col-sm-9">
+                            <div class="form-check form-check-inline col-form-label" th:each="tag,iter : ${tags}">
+                                <input th:id="|tagId${tag.id}|" type="radio" class="form-check-input" onchange="selectReportTag(this);"
+                                       th:attr="data-id=${tag.id}" th:checked="${iter.index == 0}" name="reportTag">
+                                <label th:for="|tagId${tag.id}|" th:text="${tag.value}"></label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="reportFromDate">Fra dato</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input id="reportFromDate" type="text" class="form-control">
+                                <button id="reportFromDateBtn" class="btn btn-primary" type="button" >
+                                    <i class="pli-calendar-4 fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="reportToDate">Til dato</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input id="reportToDate" type="text" class="form-control">
+                                <button id="reportToDateBtn" class="btn btn-primary" type="button" >
+                                    <i class="pli-calendar-4 fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="submit" class="btn btn-primary" onclick="printTagReport()" data-bs-dismiss="modal">Print</button>
+            </div>
+        </div>
+    </div>
+
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        let fromDate = '', toDate = '';
+        let selectedTagId = 0;
+
+        function printTagReport() {
+            fetch(`/reports/tags?tag=${selectedTagId}&from=${fromDate}&to=${toDate}`)
+                .then(response => response.text()
+                    .then(data => {
+                        var win = window.open("", "Print Rapport", "height=600,width=800");
+                        win.document.write(data);
+                        win.print();
+                    }))
+                .catch(error => toastService.error(error));
+
+        }
+
+        function selectReportTag(elem) {
+            selectedTagId = elem.dataset.id;
+        }
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+            const fromPicker = initDatepicker("#reportFromDateBtn", "#reportFromDate");
+            const toPicker = initDatepicker("#reportToDateBtn", "#reportToDate");
+            fromPicker.onSelect((date, formatedDate) => {
+                fromDate = javaFormatDate(date);
+            });
+            toPicker.onSelect((date, formatedDate) => {
+                toDate = javaFormatDate(date);
+            });
+            selectReportTag(document.getElementsByName("reportTag").item(0));
+        });
+
+        /*]]>*/
+    </script>
+
+</div>

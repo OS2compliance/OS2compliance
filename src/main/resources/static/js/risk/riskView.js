@@ -1,30 +1,30 @@
+
+var token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
 function notRelevantSelectChanged() {
-    var selected = this.value;
-    var rowId = this.dataset.rowid;
-    var row = document.getElementById('row' + rowId);
-    setStyleNotRelevant(selected, rowId, row);
+    const selected = this.value;
+    const rowId = this.dataset.rowid;
+    setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
     updateAverage();
 }
 
 function notRelevantSelectInit(elem) {
-    var selected = elem.value;
-    var rowId = elem.dataset.rowid;
-    var row = document.getElementById('row' + rowId);
-    setStyleNotRelevant(selected, rowId, row);
+    const selected = elem.value;
+    const rowId = elem.dataset.rowid;
+    setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
 }
 
-function setStyleNotRelevant(selected, rowId, row) {
-    var selectAndTextareaElements = [];
-    findSelectAndTextareaElements(row, selectAndTextareaElements);
-
+function setStyleNotRelevant(selected, rowId, rowClassName) {
+    const selectAndTextareaElements = findSelectAndTextareaElements(rowClassName);
+    let rows = document.querySelectorAll('.rowId' + rowId);
     // if not relevant
-    if (selected == 'true') {
-        row.style.backgroundColor = "whitesmoke";
+    if (selected === 'true') {
+        rows.forEach(r => r.style.backgroundColor = "whitesmoke");
         disableOrEnableFields(selectAndTextareaElements, true)
 
         // reset numbers
         var selectElements = [];
-        findNumberSelects(row, selectElements);
+        rows.forEach(r => findNumberSelects(r, selectElements));
         for (var i = 0; i < selectElements.length; i++) {
                 var elem = selectElements[i];
                 elem.value = -1;
@@ -33,7 +33,7 @@ function setStyleNotRelevant(selected, rowId, row) {
         rowRiskScore.textContent = "";
         updateColorFor(rowRiskScore, "INGEN")
     } else {
-        row.style.backgroundColor = "white";
+        rows.forEach(r => r.style.backgroundColor = "transparent");
         disableOrEnableFields(selectAndTextareaElements, false)
     }
 }
@@ -43,25 +43,22 @@ function disableOrEnableFields(selectAndTextareaElements, disable) {
         if (!element.classList.contains("notRelevantSelect")) {
             element.disabled = disable;
         }
-
         if (disable) {
             element.style.backgroundColor = "whitesmoke";
         } else {
-            element.style.backgroundColor = "white";
+            element.style.backgroundColor = "transparent";
         }
     });
 }
 
-function findSelectAndTextareaElements(element, selectAndTextareaElements) {
-    for (var i = 0; i < element.children.length; i++) {
-        var child = element.children[i];
-
-        if (child.tagName === "SELECT" || child.tagName === "TEXTAREA") {
-            selectAndTextareaElements.push(child);
-        }
-
-        findSelectAndTextareaElements(child, selectAndTextareaElements);
-    }
+function findSelectAndTextareaElements(categoryClassName) {
+    const elements = document.querySelectorAll('.' + categoryClassName);
+    let resultElements = [];
+    elements.forEach(e => {
+        e.querySelectorAll('select, textarea')
+            .forEach(s => resultElements.push(s));
+    });
+    return resultElements;
 }
 
 function numberSelectChanged() {
@@ -152,9 +149,12 @@ function setField() {
                  "value": value
                };
 
-    postData("/rest/risks/" + riskId + "/threats/setfield", data).then((data) => {
-      // TODO måske vis ok eller fejl notifikation som toastr.js fx via data.status
-    });
+    postData("/rest/risks/" + riskId + "/threats/setfield", data).then((response) => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            toastService.info("Info", "Dine ændringer er blevet gemt")
+        }).catch(error => {toastService.error("Der er sket en fejl og kan ikke gemmes, genindlæse siden og prøv igen"); console.log(error)});
 }
 
 function updateAverage() {
@@ -307,7 +307,116 @@ function updateColorFor(elem, color) {
     }
 }
 
+function categoryRowClicked() {
+    var rowIndex = this.dataset.index;
+    sessionStorage.setItem(`openedRowIndex${riskId}`, rowIndex);
+    handleCategoryRow(rowIndex);
+}
+
+function handleCategoryRow(rowIndex) {
+    // hide and show belonging rows
+    var show = false;
+    var icon = document.getElementById("categoryIcon" + rowIndex);
+    const belongingRows = document.querySelectorAll('.categoryRow' + rowIndex);
+    for (var i = 0; i < belongingRows.length; i++) {
+        var elem = belongingRows[i];
+        if (elem.hidden) {
+            if (i == 0) {
+                show = true;
+            }
+            elem.hidden = false;
+        } else {
+            elem.hidden = true;
+        }
+    }
+
+    if (show) {
+        icon.classList.add("pli-arrow-up");
+        icon.classList.remove("pli-arrow-down");
+    } else {
+        icon.classList.remove("pli-arrow-up");
+        icon.classList.add("pli-arrow-down");
+    }
+
+    const relatedTasksRowsToShow = document.querySelectorAll('.relatedTasksRow' + rowIndex);
+    if (show) {
+        for (var i = 0; i < relatedTasksRowsToShow.length; i++) {
+            relatedTasksRowsToShow[i].hidden = false;
+        }
+    } else {
+        for (var i = 0; i < relatedTasksRowsToShow.length; i++) {
+            relatedTasksRowsToShow[i].hidden = true;
+        }
+    }
+}
+
+function mailReportToRelatedOwner(assessmentId) {
+    var token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    fetch( `/rest/risks/${assessmentId}/mailReport`,
+        {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token,
+            }
+        })
+        .then(response => {
+            if (response.status  > 299) {
+                response.json()
+                    .then(json => toastService.error(json.error));
+            } else {
+                toastService.info("Sendt");
+            }
+        })
+        .catch(error => {
+            toastService.error(error);
+        });
+}
+
+function createTaskClicked(elem) {
+    // Find the category row
+    let row = elem.closest('.threatRow');
+    var rowIndex = row.dataset.index;
+    sessionStorage.setItem(`openedRowIndex${riskId}`, rowIndex);
+    createTaskService.show(elem);
+}
+
+function deleteThreatClicked(elem) {
+    console.log(`delete ${elem.dataset.customid} in assessment ${elem.dataset.riskid}`)
+    Swal.fire({
+        text: `Er du sikker på du vil slette denne trusslen?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#03a9f4',
+        cancelButtonColor: '#df5645',
+        confirmButtonText: 'Ja',
+        cancelButtonText: 'Nej'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/rest/risks/${elem.dataset.riskid}/threats/${elem.dataset.customid}`,
+                {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                .then(response => location.reload())
+                .catch(error => toastService.error(error));
+        }
+    });
+}
+
+let revisionDialog;
+function setRevisionInterval(assessmentId) {
+    fetch( `/risks/${assessmentId}/revision`)
+        .then(response => response.text()
+            .then(data => {
+                let dialog = document.getElementById('revisionIntervalDialog');
+                dialog.innerHTML = data;
+                revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
+                revisionDialog.show();
+                initDatepicker("#nextRevisionBtn", "#nextRevision");
+            }))
+        .catch(error => toastService.error(error));
+}
+
 function pageLoaded() {
+    initFormValidationForForm("createCustomThreatModal");
+
     const excelTextareas = document.querySelectorAll('.excel-textarea');
     for (var i = 0; i < excelTextareas.length; i++) {
         excelTextareas[i].addEventListener('input', autoAdjustTextareaHeight, false);
@@ -352,4 +461,15 @@ function pageLoaded() {
     }
 
     updateAverage();
+
+    // foldable categories
+    const categoryRows = document.querySelectorAll('.categoryTr');
+    for (let i = 0; i < categoryRows.length; i++) {
+        handleCategoryRow(i);
+        categoryRows[i].addEventListener('click', categoryRowClicked, false);
+    }
+    const openedRow = sessionStorage.getItem(`openedRowIndex${riskId}`);
+    if (openedRow !== null && openedRow !== undefined) {
+        handleCategoryRow(openedRow);
+    }
 }

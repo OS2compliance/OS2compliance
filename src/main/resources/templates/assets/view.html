@@ -5,17 +5,13 @@
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/js/data-processing-component.js}" defer></script>
+<script th:src="@{/js/asset/details.js}" defer></script>
 
 <body class="jumping">
-    <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
     <script th:src="@{/js/tabs.js}" defer></script>
 
-    <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.css}" />
-    <link rel="stylesheet" th:href="@{/css/asset/asset.css}" />
+    <link rel="stylesheet" th:href="@{/css/assets.css}" />
     <link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
-
-    <link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
-    <script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
     <script th:src="@{/js/risk/riskProfile.js}" defer></script>
 
     <div id="root" class="root mn--max hd--expanded">
@@ -56,7 +52,7 @@
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#dataProcessingTab" type="button" role="tab" aria-controls="historik" aria-selected="false">Databehandling</button>
                             </li>
                             <li class="nav-item" role="presentation">
-                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#riskAssessmentTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${threatExists}" class="badge" th:classappend="${risk?.assessment?.name() == 'RED'} ? 'bg-red' : (${risk?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspRisikovurdering</button>
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#riskAssessmentTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span id="riskAssessmentBadge" class="badge">&nbsp</span>&nbspRisikovurdering</button>
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#oversightTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${oversights.size() > 0}" class="badge" th:classappend="${oversight?.status?.name() == 'RED'} ? 'bg-red' : (${oversight?.status?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspTilsyn</button>
@@ -84,15 +80,15 @@
                                             <input th:field="*{id}" hidden>
 
                                             <div class="row mb-3">
-                                                <label for="responsibleUser"
-                                                    class="col-sm-3 col-form-label">Systemejer</label>
+                                                <label for="responsibleUsers"
+                                                    class="col-sm-3 col-form-label">Systemejere</label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
-                                                            data-trigger="" id="responsibleUser" th:field="*{responsibleUser}" hidden=""
-                                                            tabindex="-1">
-                                                        <option th:value="${asset.responsibleUser?.uuid}"
-                                                                th:text="${asset.responsibleUser?.name}"
-                                                                th:if="${asset.responsibleUser != null}"></option>
+                                                            data-trigger="" id="responsibleUsers" th:field="*{responsibleUsers}" hidden=""
+                                                            tabindex="-1" multiple="multiple">
+                                                        <option th:each="user : *{responsibleUsers}" th:value="${user.uuid}"
+                                                                th:text="${user.name}"
+                                                                selected></option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -143,6 +139,7 @@
                                                     <select class="form-control form-select editField"
                                                             th:field="*{assetStatus}" name="assetStatus" id="assetStatus"
                                                             tabindex="-1" disabled>
+                                                        <option value=""></option>
                                                         <option
                                                             th:each="status : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
                                                             th:value="${status}" th:text="${status.message}"></option>
@@ -183,6 +180,7 @@
                                                     <select class="form-control form-select editField"
                                                         th:field="*{criticality}" name="criticality" id="criticality"
                                                         tabindex="-1" disabled>
+                                                        <option value=""></option>
                                                         <option
                                                             th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}"
                                                             th:value="${crit.name}" th:text="${crit.message}"></option>
@@ -416,18 +414,29 @@
                             <div id="dataProcessingTab" class="tab-pane fade" role="tabpanel" aria-labelledby="data-processing-tab" th:replace="~{assets/fragments/dataprocessing :: dataprocessing(${asset}, ${dataProcessing})}">
                             </div>
                             <div id="riskAssessmentTab" class="tab-pane fade" role="tabpanel" aria-labelledby="risk-assesssment-tab">
-                                <th:block th:if="${threatExists}">
-                                    <div class="mb-3 col-lg-12" style="position: relative;">
-                                        <div th:replace="~{risks/riskProfileTablesFragment :: riskProfileTablesFragment}"></div>
+                                <div>
+                                    <label class="mb-2">
+                                        <input class="form-check-input editField" onchange="assetDetailsService.setRiskAssessmentOptOut(this)" name="threatAssessmentOptOutReason" type="checkbox" th:checked="${asset.isThreatAssessmentOptOut()}"> Risikovurdering fravalgt
+                                    </label>
+                                </div>
+                                <div id="threatAssessmentOptOutView" style="display: none">
+                                    <label for="threatAssessmentOptOutText" class="mb-1">Begrundelse for fravalg:</label>
+                                    <textarea id="threatAssessmentOptOutText" class="form-control" onchange="assetDetailsService.updateThreatAssessmentOptOutReason(this)" th:text="${asset.threatAssessmentOptOutReason}"></textarea>
+                                </div>
+                                <div id="threatAssessmentView">
+                                    <div th:if="${threatExists}">
+                                        <div class="mb-3 col-lg-12" style="position: relative;">
+                                            <div th:replace="~{risks/riskProfileTablesFragment :: riskProfileTablesFragment}"></div>
+                                        </div>
+                                        <div class="mb-3 col-lg-12">
+                                            <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${unfinishedTasks}, relatableId=${risk.id}, hideRemove=true, customTitle='Udestående opgaver')}"></div>
+                                        </div>
+                                        <div th:replace="~{fragments/risks :: risksfragment(threatAssessments=${threatAssessments})}"></div>
                                     </div>
-                                    <div class="mb-3 col-lg-12">
-                                        <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${unfinishedTasks}, relatableId=${risk.id}, hideRemove=true, customTitle='Udestående opgaver')}" />
+                                    <div th:unless="${threatExists && !asset.isThreatAssessmentOptOut()}">
+                                        Ingen tilknyttede risikovurderinger
                                     </div>
-                                    <div th:replace="~{fragments/risks :: risksfragment(threatAssessments=${threatAssessments})}" />
-                                </th:block>
-                                <th:block th:unless="${threatExists}">
-                                    Ingen tilknyttede risikovurderinger
-                                </th:block>
+                                </div>
                             </div><!-- Risk Assessment tab end -->
                             <div id="oversightTab" class="tab-pane fade" role="tabpanel" aria-labelledby="oversight-tab" th:replace="~{assets/fragments/oversight :: oversight(${asset}, ${oversights})}">
                                 Oversight
@@ -454,7 +463,7 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
-    <div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+    <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -466,6 +475,9 @@
             var riskProfiles = [[${riskProfiles}]];
             var threatExists = [[${threatExists}]];
             var supplierId = [[${asset.supplier?.id}]];
+            let assetId = [[${asset.id}]];
+            let assessment = [[${risk?.assessment}]];
+            let asset = [[${asset}]];
         +]*/
 
         let managersChoicesEditSelect = null;
@@ -479,7 +491,7 @@
             suppliersChoicesEditSelect = initSuppliersSelect();
             suppliersChoicesEditSelect.disable();
             managersChoicesEditSelect.disable();
-            responsibleChoicesEditSelect = initUserSelect("responsibleUser");
+            responsibleChoicesEditSelect = initUserSelect("responsibleUsers");
             responsibleChoicesEditSelect.disable();
             editMode(false);
 

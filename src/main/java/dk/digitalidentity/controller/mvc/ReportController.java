@@ -2,48 +2,61 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
+import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
+import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
 
 import java.io.IOException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
+import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 
 @Slf4j
 @Controller
 @RequireUser
 @RequestMapping("reports")
+@RequiredArgsConstructor
 public class ReportController {
-
-    @Autowired
-    private StandardTemplateDao standardTemplateDao;
-    @Autowired
-    private TagDao tagDao;
-    @Autowired
-    private DocsReportGeneratorComponent docsReportGeneratorComponent;
-    @Autowired
-    private TaskService taskService;
+    private final RelationService relationService;
+    private final StandardTemplateDao standardTemplateDao;
+    private final TagDao tagDao;
+    private final DocsReportGeneratorComponent docsReportGeneratorComponent;
+    private final TaskService taskService;
 
     @GetMapping
     public String reportList(final Model model) {
@@ -53,9 +66,40 @@ public class ReportController {
 
 
     @GetMapping("tags")
-    public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId) {
-        model.addAttribute("tasks", taskService.allTasksWithTag(tagId));
+    public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId,
+                            @RequestParam(value = "from", required = false) final LocalDate from,
+                            @RequestParam(value = "to", required = false) final LocalDate to) {
+        final List<Task> attributeValue = taskService.allTasksWithTag(tagId);
+        model.addAttribute("tasks", attributeValue);
+        model.addAttribute("from", from != null ? from : LocalDate.MIN);
+        model.addAttribute("to", to != null ? to : LocalDate.MAX);
         return "reports/tagReport";
+    }
+
+    @GetMapping("taskLog/{taskId}")
+    public String taskLogReport(final Model model, @PathVariable("taskId") final Long taskId,
+                                @RequestParam(value = "from", required = false) final LocalDate from,
+                                @RequestParam(value = "to", required = false) final LocalDate to) {
+        final Task task = taskService.findById(taskId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<TaskLog> taskLogs = taskService.logsBetween(task, from, to);
+        model.addAttribute("task", task);
+        model.addAttribute("taskLogs", taskLogs);
+        return "reports/taskLogReport";
+    }
+
+    @GetMapping("yearwheel")
+    public ModelAndView yearWheel(final HttpServletResponse response) {
+        final LocalDate cutOff = LocalDateTime.now().minusYears(1).with(lastDayOfYear()).toLocalDate();
+        final Map<Task, List<Relatable>> taskMap = taskService.findAllTasksWithDeadlineAfter(cutOff).stream()
+            .collect(Collectors.toMap(t -> t, relationService::findAllRelatedTo));
+
+        response.setContentType("application/ms-excel");
+        response.setHeader("Content-Disposition", "attachment; filename=\"Aarshjul.xls\"");
+        final Map<String, Object> model = new HashMap<>();
+        model.put("taskMap", taskMap);
+
+        return new ModelAndView(new YearWheelView(), model);
     }
 
     @GetMapping("sheet")
@@ -87,13 +131,13 @@ public class ReportController {
                                                 @RequestParam(name = "riskId", required = false) final Long riskId,
                                                 final HttpServletResponse response) {
         if ("article30".equals(identifier)) {
-            generateDocument(response, "reports/article30/main.docx", "artikel30.docx", Collections.emptyMap());
+            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap());
         } else if ("iso27001".equals(identifier)) {
-            generateDocument(response, "reports/ISO27001/ISO27001.docx", "iso27001.docx", Collections.emptyMap());
+            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap());
         } else if ("iso27002_2022".equals(identifier)) {
-            generateDocument(response, "reports/ISO27002/ISO27002.docx", "iso27002.docx", Collections.emptyMap());
+            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap());
         } else if ("risk".equals(identifier)) {
-            generateDocument(response, "reports/risk/main.docx", "risikovurdering.docx",
+            generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.docx",
                 Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId));
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);

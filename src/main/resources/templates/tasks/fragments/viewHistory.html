@@ -1,0 +1,81 @@
+<div th:fragment="viewHistory">
+    <div class="mb-3">
+        <div class="card-header row">
+            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3">
+                <div class="input-group">
+                    <label for="filterFrom" class="col-form-label" style="width: 40px">Fra</label>
+                    <input id="filterFrom" type="text" class="form-control" name="filterFrom">
+                    <button id="filterFromBtn" class="btn btn-primary" type="button">
+                        <i class="pli-calendar-4 fs-5"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3">
+                <div class="input-group">
+                    <label for="filterTo" class="col-form-label col-2" style="width: 40px">Til</label>
+                    <input id="filterTo" type="text" class="form-control" name="filterTo">
+                    <button id="filterToBtn" class="btn btn-primary" type="button">
+                        <i class="pli-calendar-4 fs-5"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="col-sm-12 col-md-6 col-lg-4 col-xl-3">
+                <button class="btn btn-success" onclick="printTaskLogReport()">Print rapport</button>
+            </div>
+        </div>
+    </div>
+    <div id="timelinePlaceholder"></div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        /*[+
+            const timelineUrl = [[@{/tasks/__${task.id}__/timeline}]];
+        +]*/
+        let fromDate = '', toDate = '';
+        function printTaskLogReport() {
+            /*[+
+                const taskId = [[${task.id}]];
+            +]*/
+            fetch(`/reports/taskLog/${taskId}?from=${fromDate}&to=${toDate}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`${response.status} ${response.statusText}`);
+                    }
+                    response.text()
+                        .then(data => {
+                            var win = window.open("", "Print Rapport", "height=600,width=800");
+                            win.document.write(data);
+                            win.print();
+                        });
+                })
+                .catch(error => toastService.error(error));
+        }
+
+        document.addEventListener("DOMContentLoaded", function(event) {
+            const fromPicker = initDatepicker("#filterFromBtn", "#filterFrom");
+            const toPicker = initDatepicker("#filterToBtn", "#filterTo");
+            function updateTimeline() {
+                fetchHtml(`${timelineUrl}?from=${fromDate}&to=${toDate}`, 'timelinePlaceholder');
+            }
+            updateTimeline();
+
+            fromPicker.onSelect((date, formatedDate) => {
+                fromDate = javaFormatDate(date);
+            });
+            toPicker.onSelect((date, formatedDate) => {
+                toDate = javaFormatDate(date);
+            });
+            fromPicker.onClose(() => {
+                updateTimeline();
+            })
+            toPicker.onClose(() => {
+                updateTimeline();
+            })
+
+        });
+
+        /*]]>*/
+    </script>
+
+</div>

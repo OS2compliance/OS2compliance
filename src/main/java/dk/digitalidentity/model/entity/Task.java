@@ -63,6 +63,12 @@ public class Task extends Relatable {
     @Column(name = "responsible_notified")
     private Boolean hasNotifiedResponsible;
 
+    @Column(name = "include_in_report")
+    private Boolean includeInReport = false;
+
+    @Column
+    private String link;
+
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskLog> logs  = new HashSet<>();
 
@@ -77,8 +83,21 @@ public class Task extends Relatable {
 
     @Override
     public String getLocalizedEnumValues() {
-        return (taskType != null ? taskType.getMessage() : "") + " " +
-                (repetition != null ? repetition.getMessage() : "");
+        String result = "";
+        if (taskType != null) {
+            result += taskType.getMessage();
+            if (taskType == TaskType.TASK) {
+                if (logs.isEmpty()) {
+                    result += "Ikke Udført";
+                } else {
+                    result += "Udført";
+                }
+            } else if ((logs.isEmpty())) {
+                result += "Ikke Udført";
+            }
+        }
+        result += repetition != null ? repetition.getMessage() : "";
+        return result;
     }
 
     public void setNotifyResponsible(final boolean bool) {

@@ -1,8 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
-import dk.digitalidentity.dao.OrganisationUnitDao;
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -12,24 +10,28 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
+import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.hibernate.validator.constraints.UUID;
 import org.jetbrains.annotations.NotNull;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,25 +60,18 @@ import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 @Controller
 @RequireUser
 @RequestMapping("registers")
+@RequiredArgsConstructor
 public class RegisterController {
-    @Autowired
-    private RegisterService registerService;
-    @Autowired
-    private AssetService assetService;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private ChoiceService choiceService;
-    @Autowired
-    private OrganisationUnitDao organisationUnitDao;
-    @Autowired
-    private UserDao userDao;
-    @Autowired
-    private ConsequenceAssessmentDao consequenceAssessmentDao;
-    @Autowired
-    private ScaleService scaleService;
-    @Autowired
-    private DataProcessingService dataProcessingService;
+    private final RegisterService registerService;
+    private final AssetService assetService;
+    private final RelationService relationService;
+    private final ChoiceService choiceService;
+    private final OrganisationService organisationService;
+    private final ConsequenceAssessmentDao consequenceAssessmentDao;
+    private final ScaleService scaleService;
+    private final DataProcessingService dataProcessingService;
+    private final TaskService taskService;
+    private final UserService userService;
 
     @GetMapping
     public String registerList() {
@@ -90,12 +85,14 @@ public class RegisterController {
             model.addAttribute("register", new Register());
             model.addAttribute("formId", "createForm");
             model.addAttribute("formTitle", "Ny behandlingsaktivitet");
+            model.addAttribute("action", "/registers/create");
         } else {
             final Register register = registerService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             model.addAttribute("register", register);
             model.addAttribute("formId", "editForm");
             model.addAttribute("formTitle", "Rediger behandlingsaktivitet");
+            model.addAttribute("action", "/registers/" + register.getId() + "/update?showIndex=true");
         }
         return "registers/form";
     }
@@ -104,7 +101,7 @@ public class RegisterController {
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
         final Register saved = registerService.save(register);
-        return "redirect:/registers/" + register.getId();
+        return "redirect:/registers/" + saved.getId();
     }
 
     @Transactional
@@ -148,10 +145,12 @@ public class RegisterController {
     @Transactional
     @PostMapping("{id}/update")
     public String update(@PathVariable final Long id,
+                         @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
+                         @RequestParam(value = "name", required = false) @Valid final String name,
                          @RequestParam(value = "description", required = false) @Valid final String description,
-                         @RequestParam(value = "responsibleOu", required = false) @Valid @UUID final String responsibleOuUuid,
-                         @RequestParam(value = "department", required = false) @Valid @UUID final String departmentUuid,
-                         @RequestParam(value = "responsibleUser", required = false) @Valid @UUID final String responsibleUserUuid,
+                         @RequestParam(value = "responsibleOus", required = false) @Valid @UUID final Set<String> responsibleOuUuids,
+                         @RequestParam(value = "departments", required = false) @Valid @UUID final Set<String> departmentUuids,
+                         @RequestParam(value = "responsibleUsers", required = false) @Valid @UUID final Set<String> responsibleUserUuids,
                          @RequestParam(value = "criticality", required = false) final Criticality criticality,
                          @RequestParam(value = "purpose", required = false) final String purpose,
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
@@ -166,26 +165,23 @@ public class RegisterController {
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (name != null) {
+            register.setName(name);
+        }
         if (description != null) {
             register.setDescription(description);
         }
-        if (StringUtils.isNotEmpty(responsibleOuUuid)) {
-            final OrganisationUnit responsibleOu = organisationUnitDao.findById(responsibleOuUuid)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            register.setResponsibleOu(responsibleOu);
+        if (responsibleOuUuids != null && !responsibleOuUuids.isEmpty()) {
+            final List<OrganisationUnit> responsibleOus = organisationService.findAllByUuids(responsibleOuUuids);
+            register.setResponsibleOus(responsibleOus);
         }
-        if (StringUtils.isNotEmpty(departmentUuid)) {
-            final OrganisationUnit departmentOu = organisationUnitDao.findById(departmentUuid)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            register.setDepartment(departmentOu);
+        if (departmentUuids != null && !departmentUuids.isEmpty()) {
+            final List<OrganisationUnit> departmentOus = organisationService.findAllByUuids(departmentUuids);
+            register.setDepartments(departmentOus);
         }
-        if (StringUtils.isNotEmpty(responsibleUserUuid)) {
-            final User responsibleUser = Optional.of(responsibleUserUuid).map(r -> userDao.findById(r).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                    .orElse(null);
-            register.setResponsibleUser(responsibleUser);
-        }
-        if (criticality != null) {
-            register.setCriticality(criticality);
+        if (responsibleUserUuids != null && !responsibleUserUuids.isEmpty()) {
+            final List<User> responsibleUsers = userService.findAllByUuids(responsibleUserUuids);
+            register.setResponsibleUsers(responsibleUsers);
         }
         if (purpose != null) {
             register.setPurpose(purpose);
@@ -214,11 +210,14 @@ public class RegisterController {
         if (consent != null) {
             register.setConsent(consent);
         }
+        if (criticality != null) {
+            register.setCriticality(criticality);
+        }
         if (status != null) {
             register.setStatus(status);
         }
         registerService.save(register);
-        return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+        return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
     @Transactional
@@ -277,11 +276,15 @@ public class RegisterController {
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
-    public void registerDelete(@PathVariable final String id) {
-        final Long lid = Long.valueOf(id);
-        final Register register = registerService.findById(lid)
+    public void registerDelete(@PathVariable final Long id) {
+        final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        relationService.deleteRelatedTo(lid);
+
+        // All related checks should be deleted along with the register
+        final List<Task> tasks = taskService.findRelatedTasks(register, t -> t.getTaskType() == TaskType.CHECK);
+
+        relationService.deleteRelatedTo(id);
+        taskService.deleteAll(tasks);
         registerService.delete(register);
     }
 

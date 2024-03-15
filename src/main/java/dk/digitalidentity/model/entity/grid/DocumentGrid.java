@@ -46,4 +46,7 @@ public class DocumentGrid {
 
     @Column
     private String localizedEnums;
+
+    @Column
+    private String tags;
 }

@@ -15,7 +15,7 @@ OS2compliance tilgås via en browser.
 [Changelog](CHANGELOG.md)  
 [Code of Conduct](CODE_OF_CONDUCT.md)  
 [Contribution guidelines](CONTRIBUTING.md)  
-[Developer Guide](DEVELOPER_GUIDE.md)  
+[Developer Guide](https://os2compliance.github.io/OS2compliance-docs/development.html)  
 [Governance in the project](GOVERNANCE.md)  
 [OS2compliance security policies](SECURITY.md)  
   

@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -13,7 +14,6 @@ import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -43,10 +43,15 @@ import java.util.List;
 @Where(clause = "deleted=false")
 public class Asset extends Relatable {
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsible_uuid")
+    @ManyToMany
+    @JoinTable(
+        name = "assets_responsible_users_mapping",
+        joinColumns = { @JoinColumn(name = "asset_id") },
+        inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
+    )
     @ToString.Exclude
-    private User responsibleUser;
+    @JsonIgnore
+    private List<User> responsibleUsers = new ArrayList<>();
 
     @Column
     private String description;
@@ -122,6 +127,7 @@ public class Asset extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@OneToMany(orphanRemoval = true, mappedBy = "asset", cascade = CascadeType.ALL)
+    @JsonIgnore
 	private List<AssetSupplierMapping> suppliers = new ArrayList<>();
 
     @ManyToMany
@@ -131,6 +137,7 @@ public class Asset extends Relatable {
             inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
     )
     @ToString.Exclude
+    @JsonIgnore
     private List<User> managers = new ArrayList<>();
 
     @Override
@@ -155,6 +162,15 @@ public class Asset extends Relatable {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
     private TransferImpactAssessment tia;
+
+    @Column
+    private boolean dpiaOptOut = false;
+
+    @Column
+    private boolean threatAssessmentOptOut = false;
+
+    @Column
+    private String threatAssessmentOptOutReason;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
     private DataProtectionImpactAssessment dpia;

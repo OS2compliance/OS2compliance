@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -30,6 +31,7 @@ public class DataProtectionImpactScreeningAnswer {
 
     @ManyToOne
     @JoinColumn(name = "assessment_id")
+    @JsonIgnore
     private DataProtectionImpactAssessment assessment;
 
     // Choice answers from the DPIA screening

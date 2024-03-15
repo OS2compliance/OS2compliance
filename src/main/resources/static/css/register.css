@@ -1,0 +1,32 @@
+.choices.is-disabled .form-control,
+.choices.is-disabled .form-control {
+    background-color: #f3f5f9;
+    border-color: #edf1f6;
+    opacity: 1;
+}
+
+#registersDatatable td[data-column-id="suppressions"] ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+#registersDatatable td[data-column-id="suppressions"] ul > li {
+    display: table-row;
+}
+
+#registersDatatable td[data-column-id="suppressions"] ul > li > span {
+    display: table-cell;
+    min-width: 1rem;
+}
+#registersDatatable td[data-column-id="status"] {
+    vertical-align: middle;
+}
+#registersDatatable td[data-column-id="konsekvensVurdering"] {
+    vertical-align: middle;
+}
+#registersDatatable td[data-column-id="risikoVurdering"] {
+    vertical-align: middle;
+}
+#registersDatatable td[data-column-id="handlinger"] {
+    vertical-align: middle;
+}

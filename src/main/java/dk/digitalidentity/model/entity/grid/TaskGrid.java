@@ -59,4 +59,7 @@ public class TaskGrid {
 
 	@Column
 	private String localizedEnums;
+
+	@Column
+	private String tags;
 }

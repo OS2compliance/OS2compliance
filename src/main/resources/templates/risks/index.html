@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/risk/risk.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/risks/risks.css}" />
@@ -14,10 +14,10 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">Risikostyring</li>
+                                <li class="breadcrumb-item active" aria-current="page">Risikovurderinger</li>
                             </ol>
                         </nav>
-                        <h1 class="page-title mb-0 mt-2">Risikostyring</h1>
+                        <h1 class="page-title mb-0 mt-2">Risikovurderinger</h1>
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
@@ -47,13 +47,14 @@
         </div>
     </section>
     <header th:replace="~{fragments/header :: header}"></header>
-    <nav th:replace="~{fragments/navbar :: main (page='risikostyring')}"></nav>
+    <nav th:replace="~{fragments/navbar :: main (page='risikovurderinger')}"></nav>
 </div>
 
 
 <div id="copyAssessmentContainer"></div>
+<div id="editAssessmentContainer"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -77,6 +78,11 @@
     };
 
     document.addEventListener("DOMContentLoaded", function(event) {
+        const defaultClassName = {
+            table: 'table table-striped',
+            search: "form-control",
+            header: "d-flex justify-content-end"
+        };
 
         const grid = new gridjs.Grid({
             className: defaultClassName,
@@ -169,8 +175,9 @@
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>
-                                 <button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
+                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
+                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],

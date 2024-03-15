@@ -1,11 +1,12 @@
 package dk.digitalidentity.security;
 
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.SamlLoginPostProcessor;
 import dk.digitalidentity.samlmodule.model.TokenUser;
+import dk.digitalidentity.service.UserService;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
@@ -17,16 +18,14 @@ import java.util.Set;
 @Slf4j
 @Component
 @Transactional
+@RequiredArgsConstructor
 public class RolePostProcessor implements SamlLoginPostProcessor {
     public static final String ATTRIBUTE_USERID = "ATTRIBUTE_USERID";
     public static final String ATTRIBUTE_USER_UUID = "ATTRIBUTE_USER_UUID";
     public static final String ATTRIBUTE_NAME = "ATTRIBUTE_NAME";
 
-    private final UserDao userDao;
+    private final UserService userService;
 
-    public RolePostProcessor(final UserDao userDao) {
-        this.userDao = userDao;
-    }
 
     @Override
     public void process(final TokenUser tokenUser) {
@@ -52,7 +51,8 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 
     private User extractUser(final String principal) {
         final Optional<String> uuidOptional = NameIdParser.parseNameId(principal);
-        return uuidOptional.map(userDao::findByUuidAndActiveIsTrue)
-            .orElseThrow(() -> new UsernameNotFoundException("Brugeren for principal " + principal + " blev ikke fundet"));
+        return uuidOptional.map(uuid -> userService.findByUuid(uuid)
+                .orElseThrow(() -> new UsernameNotFoundException("Brugeren for principal " + principal + " blev ikke fundet")))
+            .orElseThrow(() -> new UsernameNotFoundException("Principal '" + principal + "' kunne ikke parses"));
     }
 }

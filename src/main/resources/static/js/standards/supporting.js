@@ -108,12 +108,14 @@ function supportingStandartsViewLoaded() {
 
             setField(id, "STATUS", value, index)
 
-            if (value == "READY") {
+            if (value === "READY") {
                 document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-green-500" style="width: 60px">Klar</div>';
-            } else if (value == "IN_PROGRESS") {
+            } else if (value === "IN_PROGRESS") {
                 document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-blue-500" style="width: 60px">I gang</div>';
-            } else if (value == "NOT_STARTED") {
+            } else if (value === "NOT_STARTED") {
                 document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-yellow-500" style="width: 60px">Ikke startet</div>';
+            } else if (value === "NOT_RELEVANT") {
+                document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-gray-500" style="width: 60px">Ikke relevant</div>';
             }
         });
     });
@@ -193,8 +195,14 @@ function setField(standardSectionId, setFieldType, value, index) {
          "value": value
        };
 
-    postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((data) => {
-      // TODO måske vis ok eller fejl notifikation som toastr.js fx via data.status
+    postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((response) => {
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`);
+        }
+    }).catch(function(error) {
+        toastService.error(error);
+        console.log(error);
+        window.location.reload();
     });
 
     // set last updated date
@@ -265,7 +273,9 @@ function addRelations() {
           return responseData; // Dette returneres som et promise-svar
     })
     .catch(function(error) {
-          window.location.reload();
+        toastService.error(error);
+        console.log(error);
+        window.location.reload();
     });
 }
 
@@ -289,4 +299,13 @@ function customDeleteRelation(element) {
             window.location.reload();
         }
     });
+}
+
+function filterOnStatusChanged() {
+    var selectedStatus = document.getElementById('statusFilter').value;
+    if (selectedStatus == "ALL") {
+        window.location.href = viewUrl + templateIdentifier;
+    } else {
+        window.location.href = viewUrl + templateIdentifier + "?status=" + selectedStatus;
+    }
 }

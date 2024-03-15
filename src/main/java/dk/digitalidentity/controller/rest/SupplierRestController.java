@@ -7,6 +7,7 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.RequireUser;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
@@ -25,20 +26,16 @@ import java.util.List;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
+@SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @RestController
 @RequestMapping("rest/suppliers")
 @RequireUser
+@RequiredArgsConstructor
 public class SupplierRestController {
 	private final SupplierGridDao supplierGridDao;
 	private final SupplierMapper supplierMapper;
 	private final SupplierDao supplierDao;
-
-	public SupplierRestController(final SupplierGridDao supplierGridDao, final SupplierDao supplierDao, final SupplierMapper supplierMapper) {
-		this.supplierGridDao = supplierGridDao;
-		this.supplierDao = supplierDao;
-		this.supplierMapper = supplierMapper;
-	}
 
 	record SuppliersPageWrapper(long count, List<SupplierGridDTO> suppliers) {}
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}

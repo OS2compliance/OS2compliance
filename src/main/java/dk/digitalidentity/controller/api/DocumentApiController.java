@@ -24,6 +24,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -43,16 +44,12 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @RestController
 @RequestMapping(value = "/api/v1/documents")
 @Tag(name = "Document resource")
+@RequiredArgsConstructor
 public class DocumentApiController {
     private final UserService userService;
     private final DocumentService documentService;
     private final DocumentMapper documentMapper;
 
-    public DocumentApiController(final UserService userService, final DocumentService documentService, final DocumentMapper documentMapper) {
-        this.userService = userService;
-        this.documentService = documentService;
-        this.documentMapper = documentMapper;
-    }
 
     @Operation(summary = "Fetch a document")
     @ApiResponses(value = {

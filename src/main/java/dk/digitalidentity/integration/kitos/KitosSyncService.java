@@ -215,7 +215,7 @@ public class KitosSyncService {
         if (ownerUuid != null) {
             final List<User> userEntities = userService.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, ownerUuid.toString());
             if (userEntities.size() == 1) {
-                asset.setResponsibleUser(userEntities.get(0));
+                asset.setResponsibleUsers(List.of(userEntities.get(0)));
             } else if (userEntities.isEmpty()) {
                 log.warn("User not found kitos uuid {}", ownerUuid);
             } else {

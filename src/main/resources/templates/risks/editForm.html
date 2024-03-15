@@ -1,0 +1,65 @@
+
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="|Rediger risikovurderingen '${risk.name}'|"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editRiskModalForm" class="row g-3 needs-validation" action="#" th:action="@{/risks/__${risk.id}__/edit}" th:object="${risk}" method="post" novalidate>
+                    <div class="row mt-3">
+                        <label for="editThreatAssessmentType" class="col-sm-4 col-form-label">Type</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="editThreatAssessmentType" required disabled>
+                                <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
+                                        th:value="${type}" th:text="${type.message}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="editName" class="col-sm-4 col-form-label">Titel</label>
+                        <div class="col-sm-8">
+                            <input th:field="*{name}" id="editName" type="text" class="form-control" required>
+                            <div class="invalid-feedback">Der skal angives en titel</div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <label for="editUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="editUserSelect" hidden="" tabindex="-1" required>
+                                <option th:if="${risk.responsibleUser} != null" th:value="${risk.responsibleUser.uuid}" th:text="${risk.responsibleUser.name}"></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges en risikoejer</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="editOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="editOuSelect" hidden="" tabindex="-1" required>
+                                <option th:if="${risk.responsibleOu} != null" th:value="${risk.responsibleOu.uuid}" th:text="${risk.responsibleOu.name}"></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges et fagområde</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="editPresentAtMeetingSelect" class="col-sm-4 col-form-label">Tilstede på møde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="presentAtMeeting" data-type="select-multiple"
+                                    data-trigger="" id="editPresentAtMeetingSelect" hidden="" tabindex="-1" multiple>
+                                <option th:each="user : ${risk.presentAtMeeting}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="submit" form="editRiskModalForm" class="btn btn-primary">Gem</button>
+            </div>
+        </div>
+    </div>
+
+</div>

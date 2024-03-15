@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -21,6 +22,7 @@ public class ThreatCatalogThreat {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "thread_catalog_identifier")
+    @JsonIgnore
     private ThreatCatalog threatCatalog;
 
     @Column
@@ -28,6 +30,9 @@ public class ThreatCatalogThreat {
 
     @Column
     private String description;
+
+    @Column
+    private Long sortKey;
 
     @Column
     private boolean rights;

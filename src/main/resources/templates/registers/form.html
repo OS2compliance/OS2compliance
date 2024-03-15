@@ -1,38 +1,42 @@
 <div class="modal-dialog modal-dialog-centered modal-lg">
   <div class="modal-content">
     <div class="modal-header">
-      <h5 class="modal-title" id="registerLabel" th:text="${formTitle}"></h5>
+      <h5 class="modal-title" th:text="${formTitle}"></h5>
       <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
     </div>
     <div class="modal-body">
-      <form th:id="${formId}" class="row g-3" action="#" th:action="@{/registers/create}" th:object="${register}" method="post">
+      <form th:id="${formId}" class="row g-3" action="#" th:action="${action}" th:object="${register}" method="post">
         <div class="form-group row mt-3">
           <label class="col-sm-3 col-form-label">Titel</label>
           <div class="col-sm-9">
-            <input type="text" class="form-control" id="titel" th:field="*{name}">
+            <input type="text" class="form-control" th:id="${formId + 'Titel'}" th:field="*{name}" required>
           </div>
         </div>
 
         <div class="form-group row mt-3">
-          <label for="ouSelect" class="col-sm-3 col-form-label">Ansvarlig afdeling</label>
+          <label th:for="${formId + 'OuSelect'}" class="col-sm-3 col-form-label">Ansvarlige afdelinger</label>
           <div class="col-sm-9">
-            <select class="form-control form-select choices__input" th:field="*{responsibleOu}"
-                    data-trigger="" name="afdeling" id="ouSelect" hidden="" tabindex="-1"></select>
+            <select class="form-control form-select choices__input" th:field="*{responsibleOus}"
+                    data-trigger="" name="afdeling" th:id="${formId + 'OuSelect'}" hidden="" tabindex="-1" multiple="multiple">
+                <option th:each="ou : *{responsibleOus}" th:value="${ou.uuid}" th:text="${ou.name}" selected></option>
+            </select>
           </div>
         </div>
 
         <div class="row mt-3">
-          <label class="col-sm-3 col-form-label">Kontaktperson</label>
+          <label class="col-sm-3 col-form-label">Kontaktpersoner</label>
           <div class="col-sm-9">
-            <select class="form-control form-select choices__input" th:field="*{responsibleUser}"
-                    data-trigger="" name="ansvarlig" id="userSelect" hidden="" tabindex="-1"></select>
+            <select class="form-control form-select choices__input" th:field="*{responsibleUsers}"
+                    data-trigger="" name="ansvarlig" th:id="${formId + 'UserSelect'}" hidden="" tabindex="-1" multiple="multiple">
+                <option th:each="user : *{responsibleUsers}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
+            </select>
           </div>
         </div>
 
       </form>
     </div>
     <div class="modal-footer">
-      <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+      <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
       <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
     </div>
   </div>

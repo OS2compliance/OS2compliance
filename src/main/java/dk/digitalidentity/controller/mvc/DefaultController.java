@@ -1,14 +1,11 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.DocumentDao;
-import dk.digitalidentity.dao.UserDao;
-import dk.digitalidentity.model.entity.Document;
-import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
@@ -22,38 +19,24 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 @Controller
-@RequireUser
+@RequiredArgsConstructor
 public class DefaultController implements ErrorController {
 	private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
-    private final UserDao userDao;
-    private final TaskService taskService;
-    private final DocumentDao documentDao;
-
-    public DefaultController(final UserDao userDao, final TaskService taskService, final DocumentDao documentDao) {
-        this.userDao = userDao;
-        this.taskService = taskService;
-        this.documentDao = documentDao;
-    }
+    private final UserService userService;
 
     @Transactional
     @GetMapping("/dashboard")
+    @RequireUser
 	public String index(final Model model) {
         if (SecurityUtil.isLoggedIn()) {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();
             if(userUuid != null) {
-                final User user = userDao.findByUuidAndActiveIsTrue(userUuid);
-                final List<Task> taskList = taskService.findTasksNearingDeadlineForUser(user).stream().sorted(Comparator.comparing(Task::getNextDeadline)).collect(Collectors.toList());
-                model.addAttribute("tasks", taskList);
-                final List<Document> documentList = documentDao.findAllByResponsibleUserAndNextRevisionBefore(user, LocalDate.now().plusDays(7)).stream().sorted((o1, o2) -> o1.getNextRevision().compareTo(o2.getNextRevision())).collect(Collectors.toList());
-                model.addAttribute("documents", documentList);
+                final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 model.addAttribute("user", user);
             }
 

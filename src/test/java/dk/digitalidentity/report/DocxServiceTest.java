@@ -45,6 +45,7 @@ import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -117,6 +118,8 @@ public class DocxServiceTest {
     private ThreatAssessmentService threatAssessmentServiceMock;
     @MockBean
     private SettingsService settingsServiceMock;
+    @MockBean
+    private UserService userService;
 
     @BeforeEach
     public void setup() {
@@ -284,9 +287,9 @@ public class DocxServiceTest {
     private Register createDummyRegister(final int num) {
         final Register register = new Register();
         register.setName("Behandlingsaktivitet #" + num);
-        register.setResponsibleUser(User.builder().name("Test Testtrup #" + num).build());
-        register.setResponsibleOu(OrganisationUnit.builder().name("Enhed #" + num).build());
-        register.setDepartment(OrganisationUnit.builder().name("Afdeling #" + num).build());
+        register.setResponsibleUsers(List.of(User.builder().name("Test Testtrup #" + num).build()));
+        register.setResponsibleOus(List.of(OrganisationUnit.builder().name("Enhed #" + num).build()));
+        register.setDepartments(List.of(OrganisationUnit.builder().name("Afdeling #" + num).build()));
         register.setInformationResponsible("Kommunen er dataansvarlig for behandlingen af personoplysningerne");
         register.setRegisterRegarding("Plappe");
         register.setPurpose("Behandling af personoplysninger sker med henblik på at hjælpe ledige borgere i uddannelse eller job, hjælpe sygemeldte borgere tilbage på arbejdsmarkedet samt godkendelse af arbejdsmiljø mv. på private erhvervsvirksomheder, der beskæftiger ledige midlertidigt.");
@@ -365,6 +368,7 @@ public class DocxServiceTest {
 
     private Task createDummyTask() {
         final Task t = new Task();
+        t.setId(3L);
         t.setTaskType(TaskType.TASK);
         t.setNextDeadline(LocalDate.now());
         t.setDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris convallis augue non lectus eleifend, eget sagittis nisl iaculis. Nam in mi at eros maximus mattis. Donec tempus congue diam eu pellentesque.");
@@ -402,6 +406,8 @@ public class DocxServiceTest {
 
     private static ThreatAssessmentResponse createResponseWithResidual(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setId(1L);
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.MITIGER);
         response.setProbability(3);
         response.setResidualRiskProbability(2);
@@ -412,6 +418,8 @@ public class DocxServiceTest {
     }
     private static ThreatAssessmentResponse createResponse(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setId(2L);
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.ACCEPT);
         response.setProbability(4);
         response.setIntegrityOrganisation(3);

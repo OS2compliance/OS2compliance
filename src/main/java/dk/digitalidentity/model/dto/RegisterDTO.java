@@ -16,11 +16,13 @@ public class RegisterDTO {
     private String name;
     private String packageName;
     private String description;
-    private String responsibleUser;
-    private String responsibleOU;
+    private String responsibleUsers;
+    private String responsibleOUs;
+    private String departments;
     private String updatedAt;
     private String consequence;
     private String risk;
     private String status;
     private Set<String> gdprChoices;
+    private int assetCount;
 }

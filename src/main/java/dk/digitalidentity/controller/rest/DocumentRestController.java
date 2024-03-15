@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.dao.grid.DocumentGridDao;
 import dk.digitalidentity.mapping.DocumentMapper;
 import dk.digitalidentity.model.dto.DocumentDTO;
@@ -8,18 +7,21 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.UserService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,14 +30,11 @@ import java.util.List;
 @RestController
 @RequestMapping("rest/documents")
 @RequireUser
+@RequiredArgsConstructor
 public class DocumentRestController {
-
-    @Autowired
-    private DocumentGridDao documentGridDao;
-    @Autowired
-    private DocumentMapper mapper;
-    @Autowired
-    private UserDao userDao;
+    private final DocumentGridDao documentGridDao;
+    private final DocumentMapper mapper;
+    private final UserService userService;
 
     @PostMapping("list")
     public PageDTO<DocumentDTO> list(
@@ -72,7 +71,7 @@ public class DocumentRestController {
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
-        final User user = userDao.findByUuidAndActiveIsTrue(uuid);
+        final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
@@ -81,8 +80,8 @@ public class DocumentRestController {
         Page<DocumentGrid> documents = null;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
-            final List<String> searchableProperties = Arrays.asList("id", "name", "documentType", "nextRevision", "status");
-            documents = documentGridDao.findAllCustomForResponsibleUser(searchableProperties, search, sortAndPage, DocumentGrid.class, user);
+            final List<String> searchableProperties = Arrays.asList("id", "name", "documentType", "nextRevision", "status", "tags");
+            documents = documentGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, DocumentGrid.class, user);
         } else {
             // Fetch paged and sorted
             documents = documentGridDao.findAllByResponsibleUser(user, sortAndPage);

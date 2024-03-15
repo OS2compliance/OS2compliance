@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (gridjs = true)}"></head>
 
 <body class="jumping">
 	<div id="root" class="root mn--max hd--expanded">
@@ -22,60 +22,7 @@
 					</div>
 				</div>
 			</div>
-			<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="content__boxed">
-				<div class="content__wrap">
-					<div class="row row-cols-1 row-cols-md-3 g-3" >
-						<div class="col">
-							<div class="card h-100">
-								<div class="card-body">
-									<h5 class="card-title text-center">Bruger information</h5>
-									<div style="  margin: 0.5em;">
-										<div style="display: inline-block; vertical-align: top;">
-											<p th:utext="'Navn:              ' + ${user?.name}"></p>
-											<p th:utext="'Brugernavn:        ' + ${user?.userId}"></p>
-											<p th:utext="'Email:             ' + ${user?.email}"></p>
-										</div>
-										<div style="display: inline-block; margin-left: 50px;">
-											<div style="display: inline-block; vertical-align: top;">
-												<p>Rolle(r):</p>
-												<p th:each="position : ${user?.positions}" th:text="${position?.name}">
-												</p>
-											</div>
-										</div>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col">
-							<div class="card h-100">
-								<div class="card-body">
-									<h5 class="card-title text-center">Dokumenter der kræver din opmærksomhed</h5>
-									<div th:unless="${#lists.isEmpty(documents)}" th:each="document : ${documents}">
-										<a th:text="${document?.name}  + '  ' + ${document.nextRevision}"
-											th:href="@{'/documents/' + ${document.id}}"></a>
-									</div>
-									<div th:if="${#lists.isEmpty(documents)}">
-										<p>Ingen dokumenter der nærmer sig næste revision.</p>
-									</div>
-								</div>
-							</div>
-						</div>
-						<div class="col">
-							<div class="card h-100">
-								<div class="card-body">
-									<h5 class="card-title text-center">Opgaver der kræver din opmærksomhed</h5>
-									<div th:unless="${#lists.isEmpty(tasks)}" th:each="task : ${tasks}">
-										<a th:text="${task?.name} + ' ' + ${task.nextDeadline}"
-											th:href="@{'/tasks/' + ${task.id}}">opgavenavn</a>
-									</div>
-									<div th:if="${#lists.isEmpty(tasks)}">
-										<p>Ingen opgaver der nærmer sig deadline.</p>
-									</div>
-								</div>
-							</div>
-						</div>
-					</div>
-				</div>
+			<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser or T(dk.digitalidentity.security.SecurityUtil).isAdministrator}" class="content__boxed">
 				<div class="content__wrap">
 
 					<div class="tab-base">
@@ -133,7 +80,7 @@
 		<header th:replace="~{fragments/header :: header}"></header>
 		<nav th:replace="~{fragments/navbar :: main (page='hjem')}"></nav>
 	</div>
-	<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true)}"></div>
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
@@ -182,7 +129,7 @@
 					server: {
 						url: (prev, columns) => {
 							if (!columns.length) return prev;
-							const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'nextDeadline', 'taskRepetition', 'completed'];
+							const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'nextDeadline', 'taskRepetition', 'completed', 'tags'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
@@ -265,6 +212,21 @@
 
 							return gridjs.html(''.concat(...status), 'div')
 						},
+					},
+					{
+						name: "Tags",
+						formatter: (cell, row) => {
+							var result = '<ul>';
+							if (cell != null && cell.trim() !== '') {
+								var tags = cell.split(',');
+								for (var i =0; i< tags.length; i++) {
+									result += '<li>'+tags[i]+'</li>';
+								}
+							}
+
+							result += '</ul>';
+							return gridjs.html(''.concat(...result), 'div')
+						},
 					}
 				],
 				server: {
@@ -274,7 +236,7 @@
 						'X-CSRF-TOKEN': token
 					},
 					then: data => data.content.map(task =>
-						[task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed]
+						[task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
 					),
 					total: data => data.totalCount
 				},
@@ -540,7 +502,7 @@
 					server: {
 						url: (prev, columns) => {
 							if (!columns.length) return prev;
-							const columnIds = ['id', 'name', 'documentType', 'responsibleUserId', 'responsibleOU', 'nextRevision', 'status'];
+							const columnIds = ['id', 'name', 'documentType', 'responsibleUserId', 'responsibleOU', 'nextRevision', 'status', 'tags'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
@@ -589,6 +551,21 @@
 
 							return gridjs.html(''.concat(...status), 'div')
 						},
+					},
+					{
+						name: "Tags",
+						formatter: (cell, row) => {
+							var result = '<ul>';
+							if (cell != null && cell.trim() !== '') {
+								var tags = cell.split(',');
+								for (var i =0; i< tags.length; i++) {
+									result += '<li>'+tags[i]+'</li>';
+								}
+							}
+
+							result += '</ul>';
+							return gridjs.html(''.concat(...result), 'div')
+						},
 					}
 				],
 				server: {
@@ -598,7 +575,7 @@
 						'X-CSRF-TOKEN': token
 					},
 					then: data => data.content.map(document =>
-						[document.id, document.name, document.documentType, document.responsibleUserId, document.nextRevision, document.status]
+						[document.id, document.name, document.documentType, document.responsibleUserId, document.nextRevision, document.status, document.tags]
 					),
 					total: data => data.totalCount
 				},

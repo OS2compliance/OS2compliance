@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserService {
@@ -34,11 +35,22 @@ public class UserService {
         return userDao.findById(uuid);
     }
 
+    public Optional<User> findByUuid(final String uuid) {
+        if(StringUtils.isEmpty(uuid)) {
+            return Optional.empty();
+        }
+        return userDao.findByUuidAndActiveIsTrue(uuid);
+    }
+
     public Optional<User> findByUserId(final String userId) {
         if (StringUtils.isEmpty(userId)) {
             return Optional.empty();
         }
         return userDao.findByUserIdAndActiveIsTrue(userId);
+    }
+
+    public List<User> findAllByUuids(final Set<String> userUuids) {
+        return userDao.findAllByUuidInAndActiveTrue(userUuids);
     }
 
     public List<User> findByName(final String name) {

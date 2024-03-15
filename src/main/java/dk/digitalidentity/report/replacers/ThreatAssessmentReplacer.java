@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.service.RelationService;
@@ -148,6 +149,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
             addTextRun(subHeading(context), subTitle);
             advanceCursor(cursor);
 
+            addPresentAddMeeting(document, cursor, context);
             addCriticality(document, cursor, context);
             addRiskProfile(document, cursor, context);
             addRiskExplanations(document, cursor);
@@ -488,6 +490,21 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         cell.getCTTc().addNewTcPr().addNewShd().setFill(colorHex);
     }
 
+    private void addPresentAddMeeting(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+        final List<User> present = context.threatAssessment.getPresentAtMeeting();
+        if (present == null || present.isEmpty()) {
+            return;
+        }
+        final XWPFParagraph heading = document.insertNewParagraph(cursor);
+        heading.setStyle(HEADING3);
+        addTextRun("Tilstede på mødet", heading);
+        advanceCursor(cursor);
+        final XWPFParagraph plain = document.insertNewParagraph(cursor);
+        final String presentJoined = present.stream().map(User::getName).collect(Collectors.joining(", "));
+        addTextRun(presentJoined, plain).addBreak();
+        advanceCursor(cursor);
+    }
+
     private void addCriticality(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
         if (context.asset != null || context.register != null) {
             final XWPFParagraph heading = document.insertNewParagraph(cursor);
@@ -522,10 +539,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     }
 
     private String subHeading(final ThreatContext context) {
-        if (context.asset != null && context.asset.getResponsibleUser() != null) {
-            return "Systemejer: " + context.asset.getResponsibleUser().getName();
-        } else if (context.register != null && context.register.getResponsibleUser() != null) {
-            return "Behandlingsansvarlig: " + context.register.getResponsibleUser().getName();
+        if (context.asset != null && context.asset.getResponsibleUsers() != null && !context.asset.getResponsibleUsers().isEmpty()) {
+            return "Systemejere: " + context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+        } else if (context.register != null && context.register.getResponsibleUsers() != null && !context.register.getResponsibleUsers().isEmpty()) {
+            return "Behandlingsansvarlige: " + context.register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
         }
         if (context.threatAssessment.getResponsibleUser() != null) {
             return "Risikoejer: " + context.threatAssessment.getResponsibleUser().getName();
