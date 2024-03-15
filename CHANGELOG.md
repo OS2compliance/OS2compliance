@@ -9,9 +9,14 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
-- Links felter alle steder i løsningen er lavet så de kan være 4000 tegn lange.
-- Dokumenter: Maks længde på beskrivelses felt ændret fra 255 til ~65000 tegn.
-- Aktiver: Sortering på ansvarlig, navn og leverandør fixed
+- (Ad-hoc) Links felter alle steder i løsningen er lavet så de kan være 4000 tegn lange.
+- (Ad-hoc) Dokumenter: Maks længde på beskrivelses felt ændret fra 255 til ~65000 tegn.
+- (Ad-hoc) Aktiver: Sortering på ansvarlig, navn og leverandør fixed
+- (https://github.com/OS2compliance/OS2compliance/issues/117) Send til "system ejer" skal være et ord (I risikovurderingen)
+- (https://github.com/OS2compliance/OS2compliance/issues/111) Stavefejl i risikovurderingerne
+- (https://github.com/OS2compliance/OS2compliance/issues/118) Mine opgaver: Viste ikke kontroller som tidligere var gennemført
+- (https://github.com/OS2compliance/OS2compliance/issues/109) Udvidelse af beskrivelsesfeltet for en opgave
+- (https://github.com/OS2compliance/OS2compliance/issues/116) Man kan ikke slette en ny trussel
 
 ### Changed
 
