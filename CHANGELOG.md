@@ -21,10 +21,17 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - (https://os2web.atlassian.net/browse/COMPLY-85)  Aktiver/Databehandling valgmulighederne ”ingen behandling af personoplysninger” eller "0" tilføjet
-- (https://os2web.atlassian.net/browse/COMPLY-30)  Dokumenter: hvis et dokument slettes, slettes tilhørende kontroller også 
+- (https://os2web.atlassian.net/browse/COMPLY-14)  Aktiver/Databehandling (gengivet under behandlingsaktivitet)) Der mangler en overskrift over typer af personoplysninger
+- (https://os2web.atlassian.net/browse/COMPLY-23)  Behandlingsaktivitet/Fortegnelse Mulighed for at rette overskriften på en behandlingsaktivitet
+- (https://os2web.atlassian.net/browse/COMPLY-30)  Dokumenter: hvis et dokument slettes, slettes tilhørende kontroller også
+- (https://os2web.atlassian.net/browse/COMPLY-39)  Dokumenter: Når en kontol der vedrører et dokument gennemføres skal det slå igennem på dokumentet ift. hvornår det næste gang skal revideres
 - (https://os2web.atlassian.net/browse/COMPLY-113) Dashboard: Søgbar tag kolonne tilføjet 
+- (https://os2web.atlassian.net/browse/COMPLY-46)  Dashboard: De tre øverste kasser (brugeroplysninger samt kommende deadline for opgaver og kontroller) skal slettes
+- (https://os2web.atlassian.net/browse/COMPLY-36)  Fortegnelse/Databehandling Mulighed for at redigere (slette og tilføje) i typer af personoplysninger
 - (https://os2web.atlassian.net/browse/COMPLY-19)  Leverandør: Tilsyn aktiv kolonne tilføjet
 - (https://os2web.atlassian.net/browse/COMPLY-40)  Opgavecenter: Status og resultat er blevet slået sammen (>1 md til deadline grå / 30-0 dage til deadline gul / overskredet rød + resultatet)
+- (https://os2web.atlassian.net/browse/COMPLY-9)   Opgavecenter: Afdelingsfeltet skal udfyldes automatisk når ansvarlig angives
+- (https://os2web.atlassian.net/browse/COMPLY-106) Opgavecenter: Opgaver skal kunne relatere sig til en leverandør
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Ny brugerflade, nemmere at betjene
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Overskrift følger med ned når man scroller
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Kategorier kan folde ud/ind
@@ -44,6 +51,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-25)  Aktiver: Tilføjet kolonne på oversigtssiden som viser antallet af understøttede behandlingsaktiviteter
 - (https://os2web.atlassian.net/browse/COMPLY-105) Aktiver: Mulighed for at markere at et aktiv ikke skal risikovurderes
 - (https://os2web.atlassian.net/browse/COMPLY-18)  Aktiver: Flueben på DPIA fanen, hvor der kan vælges "fravalgt" hvilket får farven i fanen til at forsvinde
+- (https://os2web.atlassian.net/browse/COMPLY-26)  Behandlingsaktiviteter: kolonne med Ansvarlig forvaltning)
 - (https://os2web.atlassian.net/browse/COMPLY-24)  Fortegnelse: kolonne på oversigtssiden der viser hvor mange IT-systemet der understøtter behandlingsaktiviteten
 - (https://os2web.atlassian.net/browse/COMPLY-70)  Fortegnelse: Kolonne ved relaterede aktiver hvor det fremgår om aktivet er kritisk eller ej
 - (https://os2web.atlassian.net/browse/COMPLY-8)   Opgavecenter: Mulighed for at udskrive kontrol historik
@@ -52,6 +60,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-2)   Opgavecenter: Mulighed for at kopiere en opgave
 - (https://os2web.atlassian.net/browse/COMPLY-113) Opgavecenter: Søgbar tag kolonne tilføjet
 - (https://os2web.atlassian.net/browse/COMPLY-109) Opgavecenter: Mulighed for at indsætte et link i en opgave
+- (https://os2web.atlassian.net/browse/COMPLY-28)  Opgavecenter: Mulighed for at redigere titlen på en opgave
 - (https://os2web.atlassian.net/browse/COMPLY-13)  Rapporter: Mulighed for at udskrive en årshjulsopgave i Excel
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Kopier funktion til at kopiere en trusselsvurdering
 - (https://os2web.atlassian.net/browse/COMPLY-88)  Risikovurdering: Mulighed for at sætte "til stede på møde" (vises også i rapport)
