@@ -22,7 +22,7 @@
 					</div>
 				</div>
 			</div>
-			<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="content__boxed">
+			<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser or T(dk.digitalidentity.security.SecurityUtil).isAdministrator}" class="content__boxed">
 				<div class="content__wrap">
 
 					<div class="tab-base">

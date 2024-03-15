@@ -2,7 +2,7 @@
 <html>
 <body>
 	<nav th:fragment="main" id="mainnav-container" class="mainnav">
-		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner">
+		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser or T(dk.digitalidentity.security.SecurityUtil).isAdministrator}" class="mainnav__inner">
 			<div class="mainnav__top-content scrollable-content pb-2">
 				<div class="mainnav__category py-3">
 					<ul class="mainnav__menu nav flex-column">
