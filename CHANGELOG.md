@@ -7,6 +7,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+
+## [1.1.0] - 2024-03-15
+
 ### Fixed
 
 - (Ad-hoc) Links felter alle steder i løsningen er lavet så de kan være 4000 tegn lange.
