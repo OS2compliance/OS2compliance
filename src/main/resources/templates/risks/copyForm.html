@@ -1,0 +1,91 @@
+
+<div class="modal fade" id="copyModal" tabindex="-1" aria-hidden="true">
+
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="|Kopier risikovurderingen '${risk.name}'|">Kopier risikovurdering</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="copyRiskModalForm" class="row g-3 needs-validation" action="#" th:action="@{/risks/__${risk.id}__/copy}" th:object="${risk}" method="post" novalidate>
+                    <input th:field="*{threatAssessmentType}" type="hidden">
+                    <input id="copySendEmail" name="sendEmail" value="false" type="hidden">
+                    <div class="row mt-3">
+                        <label for="copyThreatAssessmentType" class="col-sm-4 col-form-label">Type</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="copyThreatAssessmentType" required disabled>
+                                <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
+                                        th:value="${type}" th:text="${type.message}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="registerSelectRow" th:if="${risk.threatAssessmentType.name() == 'REGISTER'}">
+                        <label for="copyRegisterSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="copyRegisterSelect" hidden="" tabindex="-1" required>
+                                <option th:each="register : ${relatedRegisters}" th:value="${register.id}" th:text="${register.name}" selected></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges et behandlingsaktiv</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="copyAssetSelectRow" th:if="${risk.threatAssessmentType.name() == 'ASSET'}">
+                        <label for="copyAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedAsset" data-type="select-multiple"
+                                    data-trigger="" id="copyAssetSelect" hidden="" tabindex="-1" multiple required>
+                                <option th:each="asset : ${relatedAssets}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges mindst et aktiv</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="copyName" class="col-sm-4 col-form-label">Titel</label>
+                        <div class="col-sm-8">
+                            <input id="copyName" th:field="*{name}" type="text" class="form-control" required>
+                            <div class="invalid-feedback">Der skal angives en titel</div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-3">
+                        <label for="copyUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="copyUserSelect" hidden="" tabindex="-1" required>
+                                <option th:if="${risk.responsibleUser} != null" th:value="${risk.responsibleUser.uuid}" th:text="${risk.responsibleUser.name}"></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges en risikoejer</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="copyOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="copyOuSelect" hidden="" tabindex="-1" required>
+                                <option th:if="${risk.responsibleOu} != null" th:value="${risk.responsibleOu.uuid}" th:text="${risk.responsibleOu.name}"></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges et fagområde</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="copyPresentSelectRow">
+                        <label for="copyPresentAtMeetingSelect" class="col-sm-4 col-form-label">Tilstede på møde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="presentAtMeeting" data-type="select-multiple"
+                                    data-trigger="" id="copyPresentAtMeetingSelect" hidden="" tabindex="-1" multiple></select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="copySendEmailcheckbox" class="form-check-input" type="checkbox">
+                            <label for="copySendEmailcheckbox" class="form-check-label">Send som opgave til risikoejer</label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="submit" form="copyRiskModalForm" class="btn btn-primary">Opret kopi</button>
+            </div>
+        </div>
+    </div>
+
+</div>

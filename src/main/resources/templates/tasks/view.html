@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
 
-<script th:src="@{/js/task/form.js}" defer></script>
-<link rel="stylesheet" th:href="@{/css/task/tasks.css}" />
+<script th:src="@{/js/task/view.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -21,6 +21,11 @@
                         <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>
                         <p class="lead"></p>
                     </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -33,7 +38,7 @@
                             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsOpgave" type="button" role="tab" aria-controls="opgave" aria-selected="true" th:text="${task.taskType.getMessage()}"></button>
                         </li>
                         <li class="nav-item" role="presentation" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsHistorik" type="button" role="tab" aria-controls="historik" aria-selected="false">Historik</button>
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsHistorik" type="button" role="tab" aria-controls="historik" aria-selected="false">Historik&nbsp<span class="badge bg-secondary" th:text="${taskLogs.size}"></span></button>
                         </li>
                     </ul>
 
@@ -42,7 +47,7 @@
                             <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button th:unless="${completed}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button th:unless="${completed}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                    <button th:unless="${completed}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
                                     <button th:unless="${completed}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
                                 </div>
                                 <input th:field="*{id}" hidden>
@@ -109,10 +114,27 @@
                                 </div>
 
                                 <div class="row mb-3">
+                                    <label for="taskType" class="col-sm-2 col-form-label">Link</label>
+                                    <div class="col-sm-10">
+                                        <a id="realLink" th:text="*{link}" th:href="*{link}" target="_blank"></a>
+                                        <input class="form-control editField" id="linkField" th:field="*{link}" hidden>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
                                     <label for="notifyResponsible" class="col-sm-2 col-form-label">Send mail til ansvarlig</label>
                                     <div class="col-sm-10" style="display:flex; align-items: center">
                                         <div class="input-group">
                                             <input id="notifyResponsible" class="form-check-input editField" type="checkbox" th:value="${task.notifyResponsible}" th:field="*{notifyResponsible}">
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="includeInReport" class="col-sm-2 col-form-label">Skal indgå i årshjul</label>
+                                    <div class="col-sm-10" style="display:flex; align-items: center">
+                                        <div class="input-group">
+                                            <input id="includeInReport" class="form-check-input editField" type="checkbox" th:value="${task.includeInReport}" th:field="*{includeInReport}">
                                         </div>
                                     </div>
                                 </div>
@@ -162,80 +184,22 @@
                             </div>
                         </div>
                         <div id="_dm-tabsHistorik" class="tab-pane fade" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
-                            <div class="timeline" style="padding-bottom: 30px;">
-                                <div class="tl-entry" th:each="taskLog : ${taskLogs}">
-                                    <div class="tl-time">
-                                        <div th:unless="${taskLog.daysAfterDeadline} == 0" class="tl-time" th:text="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLog.daysAfterDeadline} + ')'" style="color: red;"></div>
-                                        <div th:if="${taskLog.daysAfterDeadline} == 0" class="tl-time" th:text="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')}"></div>
-                                    </div>
-                                    <div class="tl-point"></div>
-                                    <div class="tl-content card" style="width: 100%;">
-                                        <div class="card-body">
-                                            <div class="col-lg-12 row">
-                                                <div class="col-lg-6">
-                                                    <div class="mb-3">
-                                                        <label for="checkCompletedDescription" class="col-lg-12 col-form-label">Daværende beskrivelse</label>
-                                                        <textarea class="form-control col-lg-12" id="checkCompletedDescription" th:text="${taskLog.description}" rows="3" disabled readonly></textarea>
-                                                    </div>
-                                                    <div class="row mb-3">
-                                                        <label for="checkCompletedDeadline" class="col-sm-3 col-form-label">Deadline</label>
-                                                        <div class="col-sm-9">
-                                                            <input class="form-control" id="checkCompletedDeadline" th:value="${#temporals.format(taskLog.deadline, 'dd/MM-yyyy')}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                    <div class="row mb-3">
-                                                        <label for="checkCompletedPerformedBy" class="col-sm-3 col-form-label">Udført af</label>
-                                                        <div class="col-sm-9">
-                                                            <input class="form-control" id="checkCompletedPerformedBy" th:value="${taskLog.performedBy}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                    <div th:unless="${taskLog.taskResult} == null" class="row mb-3">
-                                                        <label for="checkCompletedtaskResult" class="col-sm-3 col-form-label">Resultat</label>
-                                                        <div class="col-sm-9" style="padding-top: 10px;">
-                                                            <input class="form-control" id="checkCompletedtaskResult" th:value="${taskLog.taskResult.getValue()}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                                <div class="col-lg-6">
-                                                    <div class="mb-3">
-                                                        <label for="checkCompletedComment" class="col-lg-12 col-form-label">Kommentar til udførsel</label>
-                                                        <textarea class="form-control col-lg-12" id="checkCompletedComment" th:text="${taskLog.comment}" rows="3" disabled readonly></textarea>
-                                                    </div>
-                                                    <div class="row mb-3">
-                                                        <label for="checkCompleted" class="col-sm-3 col-form-label">Udført</label>
-                                                        <div class="col-sm-9">
-                                                            <input th:unless="${taskLog.daysAfterDeadline} == 0" class="form-control" id="checkCompleted" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLog.daysAfterDeadline} + ')'" style="color: red;" disabled readonly>
-                                                            <input th:if="${taskLog.daysAfterDeadline} == 0" class="form-control" id="checkCompleted" th:value="${#temporals.format(taskLog.completedDate, 'dd/MM-yyyy')}" disabled readonly>
-                                                        </div>
-                                                    </div>
-                                                    <div th:unless="${taskLog.documentationLink} == null" class="row mb-3">
-                                                        <label for="checkCompletedDocumentationLink" class="col-sm-3 col-form-label">Link til dokumentation</label>
-                                                        <div class="col-sm-9" style="padding-top: 10px;">
-                                                            <a id="checkCompletedDocumentationLink" th:text="${taskLog.documentationLink}" th:href="${taskLog.documentationLink}"></a>
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            <div th:replace="~{tasks/fragments/viewHistory :: viewHistory}"></div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </section>
-    <header th:replace="~{fragments/header :: header}" />
-    <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}" />
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}"></nav>
 </div>
 
-<div th:replace="~{tasks/completeTask :: completeTask}" />
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${task.id})}" />
-<div th:replace="~{fragments/addTags :: addTags(relatableId=${task.id})}" />
+<div th:replace="~{tasks/completeTask :: completeTask}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${task.id})}"></div>
+<div th:replace="~{fragments/addTags :: addTags(relatableId=${task.id})}"></div>
 
-<div th:replace="~{fragments/footer :: scripts}" />
-<div th:replace="~{fragments/footer :: taskDialog}" />
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -243,18 +207,6 @@
     /*[+
         var taskId = [[${task.id}]];
     +]*/
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        loadViewAndEditForm();
-        addRelationFormLoaded();
-        addTagsFormLoaded();
-        completeTaskFormLoaded();
-
-        initFormValidationForForm('editForm');
-        initFormValidationForForm('completeTaskForm');
-        initDatepicker("#deadlineBtn", "#deadline");
-    });
-
     /*]]>*/
 </script>
 

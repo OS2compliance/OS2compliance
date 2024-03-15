@@ -15,9 +15,11 @@ import dk.kitos.api.model.OrganizationResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -35,11 +37,11 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAG
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM_OFFSET;
-import static dk.digitalidentity.integration.kitos.KitosConstants.PAGE_SIZE;
 import static dk.digitalidentity.integration.kitos.KitosConstants.USAGE_DELETION_OFFSET_USAGE_SETTING_KEY;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class KitosClientService {
     private final ApiV2ItSystemApi itSystemApi;
     private final ApiV2ItSystemUsageApi itSystemUsageApi;
@@ -48,16 +50,6 @@ public class KitosClientService {
     private final ApiV2ItContractApi contractApi;
     private final ApiV2DeltaFeedApi deltaFeedApi;
     private final SettingsService settingsService;
-
-    public KitosClientService(final ApiV2ItSystemApi itSystemApi, final ApiV2ItSystemUsageApi itSystemUsageApi, final ApiV2OrganizationApi organizationApi, final ApiV2ItSystemUsageRoleTypeApi systemUsageRoleTypeApi, final ApiV2ItContractApi contractApi, final ApiV2DeltaFeedApi deltaFeedApi, final SettingsService settingsService) {
-        this.itSystemApi = itSystemApi;
-        this.itSystemUsageApi = itSystemUsageApi;
-        this.organizationApi = organizationApi;
-        this.systemUsageRoleTypeApi = systemUsageRoleTypeApi;
-        this.contractApi = contractApi;
-        this.deltaFeedApi = deltaFeedApi;
-        this.settingsService = settingsService;
-    }
 
     public UUID lookupMunicipalUuid(final String cvr) {
         final List<OrganizationResponseDTO> organizations = organizationApi.getManyOrganizationV2GetOrganizations(null, null, cvr, null, null, null, 0, 1);
@@ -83,16 +75,13 @@ public class KitosClientService {
     }
 
     public ItSystemResponseDTO fetchItSystem(final UUID kitosUuid) {
-        return itSystemApi.getSingleItSystemV2GetItSystem(kitosUuid);
-    }
-
-    public ItSystemUsageResponseDTO fetchItSystemUsage(final UUID kitosUuid) {
-        return itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(kitosUuid);
-    }
-
-    public List<ItContractResponseDTO> fetchContractsFor(final UUID municipalUuid, final UUID usageUuid) {
-        return contractApi.getManyItContractV2GetItContracts(
-            municipalUuid, null, usageUuid, null, null, null, null, null, null, 0, PAGE_SIZE);
+        log.info("Fetching it-system {}", kitosUuid);
+        try {
+            return itSystemApi.getSingleItSystemV2GetItSystem(kitosUuid);
+        } catch (final HttpClientErrorException ex) {
+            log.warn("Could not fetch it-system with uuid: {}", kitosUuid, ex);
+        }
+        return null;
     }
 
     /**

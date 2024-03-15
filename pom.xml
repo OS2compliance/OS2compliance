@@ -135,7 +135,12 @@
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
 			<artifactId>saml-module</artifactId>
-			<version>3.0.2</version>
+			<version>3.0.7</version>
+		</dependency>
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>kitos-client</artifactId>
+			<version>1.0.4</version>
 		</dependency>
 		<dependency>
 			<groupId>jakarta.mail</groupId>
@@ -172,49 +177,6 @@
 
 	<build>
 		<plugins>
-            <plugin>
-                <groupId>org.openapitools</groupId>
-                <artifactId>openapi-generator-maven-plugin</artifactId>
-                <version>6.6.0</version>
-                <executions>
-                    <execution>
-                        <goals>
-                            <goal>generate</goal>
-                        </goals>
-                        <configuration>
-                            <inputSpec>${project.basedir}/src/main/resources/kitos-swagger.json</inputSpec>
-                            <generatorName>java</generatorName>
-                            <configOptions>
-                                <library>resttemplate</library>
-                                <openApiNullable>false</openApiNullable>
-                                <annotationLibrary>none</annotationLibrary>
-                                <sourceFolder>src/gen/java</sourceFolder>
-                                <packageName>dk.kitos.client</packageName>
-                                <apiPackage>dk.kitos.api</apiPackage>
-                                <modelPackage>dk.kitos.api.model</modelPackage>
-                                <invokerPackage>dk.kitos.client</invokerPackage>
-                            </configOptions>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>build-helper-maven-plugin</artifactId>
-                <executions>
-                    <execution>
-                        <phase>generate-sources</phase>
-                        <goals>
-                            <goal>add-source</goal>
-                        </goals>
-                        <configuration>
-                            <sources>
-                                <source>${project.build.directory}/generated-sources/openapi/src/gen/java</source>
-                            </sources>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
 			<plugin>
 				<groupId>org.hibernate.orm.tooling</groupId>
 				<artifactId>hibernate-enhance-maven-plugin</artifactId>

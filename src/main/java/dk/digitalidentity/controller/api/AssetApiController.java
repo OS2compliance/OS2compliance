@@ -18,7 +18,6 @@ import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
-import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
@@ -33,6 +32,7 @@ import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -47,24 +47,19 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @RestController
 @RequestMapping(value = "/api/v1/assets")
 @Tag(name = "Assets resource")
+@RequiredArgsConstructor
 public class AssetApiController {
     private final AssetService assetService;
     private final AssetMapper assetMapper;
     private final UserService userService;
     private final SupplierService supplierService;
-
-    public AssetApiController(final AssetService assetService, final AssetMapper assetMapper, final UserService userService, final SupplierService supplierService) {
-        this.assetService = assetService;
-        this.assetMapper = assetMapper;
-        this.userService = userService;
-        this.supplierService = supplierService;
-    }
 
     @Operation(summary = "Fetch an asset")
     @ApiResponses(value = {
@@ -99,10 +94,9 @@ public class AssetApiController {
     @Transactional
     @ResponseStatus(HttpStatus.CREATED)
     public AssetEO create(@Valid @RequestBody final AssetCreateEO assetCreateEO) {
-        final User responsibleUser = userService.get(nullSafe(() -> assetCreateEO.getSystemOwner().getUuid()))
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "SystemOwner user not found"));
+        final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetCreateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
         final Asset asset = assetMapper.fromEO(assetCreateEO);
-        asset.setResponsibleUser(responsibleUser);
+        asset.setResponsibleUsers(responsibleUsers);
         if (assetCreateEO.getResponsibleUsers() != null) {
             addManagers(assetCreateEO.getResponsibleUsers(), asset);
         }
@@ -131,10 +125,9 @@ public class AssetApiController {
         if (asset.getVersion() != assetUpdateEO.getVersion()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Version mismatch");
         }
-        final User responsibleUser = userService.get(nullSafe(() -> assetUpdateEO.getSystemOwner().getUuid()))
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "SystemOwner user not found"));
+        final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetUpdateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
         asset.setName(assetUpdateEO.getName());
-        asset.setResponsibleUser(responsibleUser);
+        asset.setResponsibleUsers(responsibleUsers);
         asset.setDescription(assetUpdateEO.getDescription());
         asset.setAssetType(nullSafe(() -> AssetType.valueOf(assetUpdateEO.getAssetType().name())));
         asset.setDataProcessingAgreementStatus(nullSafe(() -> DataProcessingAgreementStatus.valueOf(assetUpdateEO.getDataProcessingAgreementStatus().name())));
@@ -193,7 +186,6 @@ public class AssetApiController {
             .map(s -> AssetSupplierMapping.builder()
                 .asset(asset)
                 .supplier(s)
-                .thirdCountryTransfer(ThirdCountryTransfer.UNDER_CLARIFICATION)
                 .build())
             .forEach(s -> asset.getSuppliers().add(s));
     }

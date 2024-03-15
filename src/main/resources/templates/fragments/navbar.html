@@ -2,12 +2,12 @@
 <html>
 <body>
 	<nav th:fragment="main" id="mainnav-container" class="mainnav">
-		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner">
+		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser or T(dk.digitalidentity.security.SecurityUtil).isAdministrator}" class="mainnav__inner">
 			<div class="mainnav__top-content scrollable-content pb-2">
-				<div class="mainnav__categoriy py-3">
+				<div class="mainnav__category py-3">
 					<ul class="mainnav__menu nav flex-column">
 						<li class="nav-item">
-							<a href="/" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'hjem' ? 'active' : ''">
+							<a href="/dashboard" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'hjem' ? 'active' : ''">
 								<i class="pli-home fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Dashboard</span>
 							</a>
 						</li>
@@ -31,10 +31,18 @@
 								<i class="pli-office fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Leverandører</span>
 							</a>
 						</li>
-						<li class="nav-item">
-							<a th:href="@{/risks}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'risikostyring' ? 'active' : ''">
-								<i class="pli-flashlight fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Risikostyring</span>
-							</a>
+						<li class="nav-item has-sub">
+                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'risikovurderinger' || page == 'catalogs' ? 'active' : ''}">
+                                <i class="pli-flashlight fs-5 me-2"></i> <span class="nav-label ms-1">Risikostyring</span>
+                            </a>
+                            <ul class="mininav-content nav collapse">
+                                <li class="nav-item">
+                                    <a th:href="@{/risks}" class="nav-link" th:classappend="${page} == 'risikovurderinger' ? 'active' : ''">Risikovurderinger</a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
+                                    <a th:href="@{/catalogs}" class="nav-link" th:classappend="${page} == 'catalogs' ? 'active' : ''">Trusselskataloger</a>
+                                </li>
+                            </ul>
 						</li>
 						<li class="nav-item">
 							<a th:href="@{/documents}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'dokumenter' ? 'active' : ''">
@@ -51,13 +59,6 @@
 								<i class="pli-newspaper fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
 							</a>
 						</li>
-						<!--
-						<li class="nav-item">
-							<a th:href="@{/ui/events}" class="nav-link mininav-toggle collapsed">
-								<i class="pli-bulleted-list fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">LogEvents</span>
-							</a>
-						</li>
-						-->
 					</ul>
 				</div>
 

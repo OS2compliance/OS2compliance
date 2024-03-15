@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -16,6 +17,8 @@ public interface UserDao extends JpaRepository<User, String>  {
     @Query("select u.uuid from User u where u.active=true")
     Set<String> findAllActiveUuids();
 
+    List<User> findAllByUuidInAndActiveTrue(final Collection<String> uuids);
+
     @Modifying
     @Query("update User u set u.active = false where u.uuid in (:uuids)")
     int deactivateUsers(@Param("uuids") final Set<String> uuids);
@@ -23,7 +26,7 @@ public interface UserDao extends JpaRepository<User, String>  {
     @Query("select u from User u where (u.name like :search or u.userId like :search) and u.active=true")
     Page<User> searchForUser(@Param("search") final String search, final Pageable pageable);
 
-    User findByUuidAndActiveIsTrue(String uuid);
+    Optional<User> findByUuidAndActiveIsTrue(String uuid);
 
     Optional<User> findByUserIdAndActiveIsTrue(final String userId);
 

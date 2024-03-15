@@ -41,10 +41,11 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.RiskService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import lombok.SneakyThrows;
 import org.apache.commons.io.FileUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -88,7 +89,7 @@ import static org.mockito.Mockito.doReturn;
 @SpringBootTest
 @ContextConfiguration(classes = {DocxService.class, DocsReportGeneratorComponent.class,
     CommonPropertiesReplacer.class, Article30Replacer.class, ISO27001Replacer.class, ISO27002Replacer.class, DocsReportGeneratorComponent.class,
-    ThreatAssessmentReplacer.class, ScaleService.class, RiskService.class})
+    ThreatAssessmentReplacer.class, ScaleService.class, ThreatAssessmentService.class})
 @EnableConfigurationProperties(value = OS2complianceConfiguration.class)
 @TestPropertySource("/application-test.properties")
 @ActiveProfiles("test")
@@ -114,9 +115,11 @@ public class DocxServiceTest {
     @MockBean
     private TaskService taskServiceMock;
     @SpyBean
-    private RiskService riskServiceMock;
+    private ThreatAssessmentService threatAssessmentServiceMock;
     @MockBean
     private SettingsService settingsServiceMock;
+    @MockBean
+    private UserService userService;
 
     @BeforeEach
     public void setup() {
@@ -125,7 +128,7 @@ public class DocxServiceTest {
     }
 
     private void mockThreatAssessment() {
-        doReturn(Optional.of(createDummyThreatAssessment())).when(riskServiceMock).findById(any());
+        doReturn(Optional.of(createDummyThreatAssessment())).when(threatAssessmentServiceMock).findById(any());
         doReturn(Optional.of(createDummyAssets().get(0))).when(assetServiceMock).get(any());
         doReturn("scale-1-4").when(settingsServiceMock).getString(eq("scale"), any());
         doReturn(List.of(createDummyTask(), createAsset(0))).when(relationServiceMock).findAllRelatedTo(any());
@@ -136,8 +139,10 @@ public class DocxServiceTest {
         // This giant wall of mock, makes sure all choices, assets and registers needed for generating a report is present
         // when the service needs them.
         doReturn(createDummyAssets()).when(assetServiceMock).findRelatedTo(any());
-        doReturn(Arrays.asList(createDummyRegister(1), createDummyRegister(2)))
-            .when(registerServiceMock).findAll();
+        final Register dummyRegister = createDummyRegister(2);
+        dummyRegister.setDataProcessing(null);
+        doReturn(Arrays.asList(createDummyRegister(1), dummyRegister, createDummyRegister(3)))
+            .when(registerServiceMock).findAllOrdered();
         doReturn(Optional.of(ChoiceValue.builder().caption("10-100").build())).when(choiceServiceMock).getValue("dp-access-count-10-100");
         doReturn(Optional.of(ChoiceValue.builder().caption("100-1.000").build())).when(choiceServiceMock).getValue("dp-person-cnt-100-1000");
         doReturn(Optional.of(ChoiceValue.builder().caption("12 måneder efter modtagelse").build())).when(choiceServiceMock).getValue("dp-storage-duration-12mth");
@@ -282,9 +287,9 @@ public class DocxServiceTest {
     private Register createDummyRegister(final int num) {
         final Register register = new Register();
         register.setName("Behandlingsaktivitet #" + num);
-        register.setResponsibleUser(User.builder().name("Test Testtrup #" + num).build());
-        register.setResponsibleOu(OrganisationUnit.builder().name("Enhed #" + num).build());
-        register.setDepartment(OrganisationUnit.builder().name("Afdeling #" + num).build());
+        register.setResponsibleUsers(List.of(User.builder().name("Test Testtrup #" + num).build()));
+        register.setResponsibleOus(List.of(OrganisationUnit.builder().name("Enhed #" + num).build()));
+        register.setDepartments(List.of(OrganisationUnit.builder().name("Afdeling #" + num).build()));
         register.setInformationResponsible("Kommunen er dataansvarlig for behandlingen af personoplysningerne");
         register.setRegisterRegarding("Plappe");
         register.setPurpose("Behandling af personoplysninger sker med henblik på at hjælpe ledige borgere i uddannelse eller job, hjælpe sygemeldte borgere tilbage på arbejdsmarkedet samt godkendelse af arbejdsmiljø mv. på private erhvervsvirksomheder, der beskæftiger ledige midlertidigt.");
@@ -363,6 +368,7 @@ public class DocxServiceTest {
 
     private Task createDummyTask() {
         final Task t = new Task();
+        t.setId(3L);
         t.setTaskType(TaskType.TASK);
         t.setNextDeadline(LocalDate.now());
         t.setDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris convallis augue non lectus eleifend, eget sagittis nisl iaculis. Nam in mi at eros maximus mattis. Donec tempus congue diam eu pellentesque.");
@@ -400,6 +406,8 @@ public class DocxServiceTest {
 
     private static ThreatAssessmentResponse createResponseWithResidual(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setId(1L);
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.MITIGER);
         response.setProbability(3);
         response.setResidualRiskProbability(2);
@@ -410,6 +418,8 @@ public class DocxServiceTest {
     }
     private static ThreatAssessmentResponse createResponse(final ThreatCatalogThreat tct) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+        response.setId(2L);
+        response.setName(tct.getDescription());
         response.setMethod(ThreatMethod.ACCEPT);
         response.setProbability(4);
         response.setIntegrityOrganisation(3);

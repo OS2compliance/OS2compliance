@@ -31,6 +31,7 @@ import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 
+@SuppressWarnings("Convert2MethodRef")
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface AssetMapper {
 
@@ -45,13 +46,15 @@ public interface AssetMapper {
         return AssetDTO.builder()
                 .id(assetGrid.getId())
                 .name(assetGrid.getName())
-                .supplier(nullSafe(() -> assetGrid.getSupplier().getName()))
+                .supplier(nullSafe(() -> assetGrid.getSupplier()))
                 .assetType(nullSafe(() -> assetGrid.getAssetType().getMessage()))
-                .responsibleUser(nullSafe(() -> assetGrid.getResponsibleUser().getName()))
+                .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
                 .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
                 .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
                 .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
+                .registers(nullSafe(() -> assetGrid.getRegisters()))
+                .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
                 .build();
     }
 
@@ -65,7 +68,7 @@ public interface AssetMapper {
     }
 
     @Mappings({
-        @Mapping(source = "responsibleUser", target = "systemOwner"),
+        @Mapping(source = "responsibleUsers", target = "systemOwners"),
         @Mapping(source = "managers", target = "responsibleUsers"),
         @Mapping(source = "suppliers", target = "subSuppliers")
     })
@@ -113,13 +116,16 @@ public interface AssetMapper {
         @Mapping(target = "dataProcessing", ignore = true),
         @Mapping(target = "tia", ignore = true),
         @Mapping(target = "assetOversights", ignore = true),
-        @Mapping(target = "responsibleUser", source = "systemOwner"),
+        @Mapping(target = "responsibleUsers", source = "systemOwners"),
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpia", ignore = true),
         @Mapping(target = "managers", source = "responsibleUsers"),
         @Mapping(target = "deleted", ignore = true),
-        @Mapping(target = "localizedEnums", ignore = true)
+        @Mapping(target = "localizedEnums", ignore = true),
+        @Mapping(target = "threatAssessmentOptOut", ignore = true),
+        @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
+        @Mapping(target = "dpiaOptOut", ignore = true)
     })
     Asset fromEO(AssetCreateEO assetCreateEO);
 

@@ -4,6 +4,7 @@
 <body class="jumping">
 <script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
 <script type="text/javascript" th:src="@{/js/supplier/formReset.js}"></script>
+<link th:href="@{/css/suppliers.css}" rel="stylesheet">
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
         <div class="content__header content__boxed overlapping">
@@ -16,10 +17,15 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${supplier.name}"></li>
                             </ol>
                         </nav>
+                        <div class="row mt-4 mb-2">
+                            <h1 class="page-title mb-0" th:text="${supplier.name}"></h1>
+                        </div>
                     </div>
-                </div>
-                <div class="row mt-4 mb-2">
-                        <h1 class="page-title mb-0" th:text="${supplier.name}"></h1>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -157,7 +163,7 @@
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal)}"></div>
-<div th:replace="~{fragments/footer :: scripts}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 
 <script th:inline="javascript">
@@ -172,7 +178,7 @@
         fetch(formUrl)
             .then(response => response.text()
                 .then(data => document.getElementById('formDialog').innerHTML = data))
-            .catch(error => console.log(error));
+            .catch(error => toastService.error(error));
 
             addRelationFormLoaded();
     });
@@ -243,7 +249,7 @@
 
 
                 }))
-            .catch(error => console.log(error))
+            .catch(error => toastService.error(error))
         }
 
     function addRelationFormLoaded() {

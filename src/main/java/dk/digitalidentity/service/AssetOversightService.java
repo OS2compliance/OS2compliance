@@ -47,11 +47,11 @@ public class AssetOversightService {
         final Task task = new Task();
         task.setTaskType(TaskType.CHECK);
         task.setName("Kontrol af " + asset.getName());
-        task.setResponsibleUser(asset.getResponsibleUser());
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(oversight.getNewInspectionDate());
         task.setNotifyResponsible(false);
-        task.setResponsibleUser(asset.getResponsibleUser() != null ? asset.getResponsibleUser() : userService.currentUser());
+        // TODO fix så vi ikke bare tager den første, tror jeg
+        task.setResponsibleUser(asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty() ? asset.getResponsibleUsers().get(0) : userService.currentUser());
         task.getProperties().add(Property.builder()
             .entity(task)
             .key(ASSOCIATED_INSPECTION_PROPERTY)
@@ -59,7 +59,7 @@ public class AssetOversightService {
             .build()
         );
 //        setTaskRevisionInterval(document, task);
-        final Task savedTask = taskService.createTask(task);
+        final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, asset);
     }
 

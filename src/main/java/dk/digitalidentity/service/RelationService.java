@@ -8,7 +8,7 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.service.model.RelationDTO;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
@@ -23,14 +23,17 @@ import java.util.stream.Collectors;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Component
+@RequiredArgsConstructor
 public class RelationService {
     private final RelationDao relationDao;
     private final RelatableDao relatableDao;
 
-    @Autowired
-    public RelationService(final RelationDao relationDao, final RelatableDao relatableDao) {
-        this.relationDao = relationDao;
-        this.relatableDao = relatableDao;
+    public List<Relation> findRelatedToWithType(final Relatable relatable, final RelationType relatedType) {
+        return relationDao.findRelatedToWithType(relatable.getId(), relatedType);
+    }
+
+    public List<Relation> findRelatedToWithType(final List<Long> relatedToId, final RelationType relatedType) {
+        return relationDao.findRelatedToWithType(relatedToId, relatedType);
     }
 
     public List<Relatable> findAllRelatedTo(final Relatable relatable) {
@@ -63,14 +66,6 @@ public class RelationService {
         final String identifier = nullSafe(() -> asStandardSection.getTemplateSection().getStandardTemplate().getIdentifier());
         if (identifier != null) {
             return identifier;
-        }
-        return nullSafe(() -> asStandardSection.getTemplateSection().getParent().getStandardTemplate().getIdentifier());
-    }
-
-    private static String extractStandardName(final StandardSection asStandardSection) {
-        final String name = nullSafe(() -> asStandardSection.getTemplateSection().getStandardTemplate().getIdentifier());
-        if (name != null) {
-            return name;
         }
         return nullSafe(() -> asStandardSection.getTemplateSection().getParent().getStandardTemplate().getIdentifier());
     }
@@ -108,6 +103,17 @@ public class RelationService {
         relation.setRelationAType(a.getRelationType());
         relation.setRelationBId(b.getId());
         relation.setRelationBType(b.getRelationType());
+        return relationDao.save(relation);
+    }
+
+    @Transactional
+    public Relation addRelation(final Long relationAId, final RelationType relationAType,
+                                final Long relationBId, final RelationType relationBType) {
+        final Relation relation = new Relation();
+        relation.setRelationAId(relationAId);
+        relation.setRelationAType(relationAType);
+        relation.setRelationBId(relationBId);
+        relation.setRelationBType(relationBType);
         return relationDao.save(relation);
     }
 

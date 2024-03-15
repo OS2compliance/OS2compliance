@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import jakarta.persistence.Column;
@@ -15,6 +16,9 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.ResultCheckStyle;
+import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,6 +27,8 @@ import java.util.List;
 @Table(name = "suppliers")
 @Getter
 @Setter
+@SQLDelete(sql = "UPDATE suppliers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
+@Where(clause = "deleted=false")
 public class Supplier extends Relatable {
 
 	@ManyToOne(fetch = FetchType.LAZY)
@@ -69,6 +75,7 @@ public class Supplier extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	@OneToMany(orphanRemoval = true, mappedBy = "supplier")
+    @JsonIgnore
 	private List<Asset> assets = new ArrayList<>();
 
 	@Override

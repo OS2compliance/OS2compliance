@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/asset/form.js}" defer></script>
-<link rel="stylesheet" th:href="@{/css/asset/asset.css}" />
+<link rel="stylesheet" th:href="@{/css/assets.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -13,7 +13,7 @@
                     <div class="me-auto">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a th:href="@{/}">Hjem</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
                                 <li class="breadcrumb-item active" aria-current="page">Aktiver</li>
                             </ol>
                         </nav>
@@ -24,7 +24,7 @@
 						<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
 							<i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
 						</button>
-						<button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#taskFormDialog">
+						<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 							<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 						</button>
                     </div>
@@ -46,12 +46,11 @@
             </div>
         </div>
     </section>
-    <header th:replace="~{fragments/header :: header}" />
-    <nav th:replace="~{fragments/navbar :: main (page='aktiver')}" />
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
 </div>
 <div class="modal fade" id="formDialog" aria-labelledby="assetLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/footer :: scripts}" />
-<div th:replace="~{fragments/footer :: taskDialog}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <style>
 
@@ -88,7 +87,7 @@
                     formLoaded();
                     //initFormValidationForForm('formDialog');
                 }))
-            .catch(error => console.log(error))
+            .catch(error => toastService.error(error))
 
         const grid = new gridjs.Grid({
             className: defaultClassName,
@@ -110,7 +109,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id','kitos', 'name', 'supplier', 'assetType', 'responsibleUser', 'updatedAt', 'risk', 'assetStatus'];
+                        const columnIds = ['id','kitos', 'name', 'supplier', 'hasThirdCountryTransfer', 'assetType', 'responsibleUserNames', 'updatedAt', 'registers', 'assessment', 'assetStatus'];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -125,7 +124,6 @@
                 {
                     name:"kitos",
                     hidden: true
-
                 },
                 {
                     name: "Navn",
@@ -142,16 +140,32 @@
                     name: "Leverandør"
                 },
                 {
+                    name: "Tredjelandsoverførsel",
+                    formatter: (cell, row) => {
+                        if (cell) {
+                            return 'Ja';
+                        } else {
+                            return 'Nej';
+                        }
+                    }
+                },
+                {
                     name: "Type"
                 },
                 {
                     name: "Systemejer"
                 },
                 {
-                    name: "Opdateret"
+                    name: "Opdateret",
+                    width: '100px'
+                },
+                {
+                    name: "Antal beh.",
+                    width: '95px'
                 },
                 {
                     name: "Risiko vurdering",
+                    width: '100px',
                     formatter: (cell, row) => {
                         var assessment = [];
                         if (cell === "Grøn") {
@@ -167,38 +181,32 @@
                                 '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
                             ]
                         }
-                        console.log(assessment);
                         return gridjs.html(''.concat(...assessment), 'div')
                     },
                 },
                 {
                     name: "Status",
+                    width: '100px',
                     formatter: (cell, row) => {
                         var status = cell;
                         if (cell === "Ikke startet") {
-                            status = [
-                                '<div class="d-block badge bg-warning">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-warning">' + cell + '</div>'
                         } else if (cell === "I gang") {
-                            status = [
-                                '<div class="d-block badge bg-info">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-info">' + cell + '</div>'
                         } else if (cell === "Klar") {
-                            status = [
-                                '<div class="d-block badge bg-success">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-success">' + cell + '</div>'
                         }
-                        return gridjs.html(''.concat(...status), 'div')
+                        return gridjs.html(status, 'div');
                     },
                 },
                 {
                     id: 'handlinger',
                     name: 'Handlinger',
                     sort: 0,
-                    width: '10%',
+                    width: '90px',
                     formatter: (cell, row) => {
                         const assetId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'];
+                        const name = row.cells[2]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
@@ -211,8 +219,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.assetType, asset.responsibleUser, asset.updatedAt, asset.assessment, asset.assetStatus ],
-
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus ],
                 ),
                 total: data => data.totalCount
             },
@@ -236,7 +243,7 @@
 
     function deleteClicked(assetId, name) {
         Swal.fire({
-          text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra ASSET slettes også.`,
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
           icon: 'warning',
           showCancelButton: true,
           confirmButtonColor: '#03a9f4',

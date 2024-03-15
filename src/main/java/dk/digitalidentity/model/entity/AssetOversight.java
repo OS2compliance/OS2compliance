@@ -1,7 +1,6 @@
 package dk.digitalidentity.model.entity;
 
-import java.time.LocalDate;
-
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import jakarta.persistence.Column;
@@ -16,6 +15,8 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
+
+import java.time.LocalDate;
 @Entity
 @Table(name = "assets_oversight")
 @Getter
@@ -24,7 +25,7 @@ public class AssetOversight {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private int id;
+    private long id;
     @ManyToOne
     @JoinColumn(name = "responsible_uuid")
     private User responsibleUser;
@@ -38,6 +39,7 @@ public class AssetOversight {
     private AssetOversightStatus status;
     @ManyToOne
     @JoinColumn(name = "asset_id")
+    @JsonIgnore
     private Asset asset;
     @Column(name = "creation_date")
     private LocalDate creationDate;

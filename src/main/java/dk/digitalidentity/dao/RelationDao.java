@@ -14,6 +14,9 @@ public interface RelationDao extends JpaRepository<Relation, Long>  {
     @Query("select r from Relation r where (r.relationAId=:relatedId and r.relationBType=:relationType) or (r.relationBId=:relatedId and r.relationAType=:relationType)")
     List<Relation> findRelatedToWithType(@Param("relatedId") final Long relatedToId, @Param("relationType") final RelationType relatedType);
 
+    @Query("select r from Relation r where (r.relationAId in :relatedIds and r.relationBType=:relationType) or (r.relationBId in :relatedIds and r.relationAType=:relationType)")
+    List<Relation> findRelatedToWithType(@Param("relatedIds") final List<Long> relatedToId, @Param("relationType") final RelationType relatedType);
+
     @Query("select r from Relation r where (r.relationAId=:relatedId) or (r.relationBId=:relatedId)")
     List<Relation> findAllRelatedTo(@Param("relatedId") final Long relatedToId);
 

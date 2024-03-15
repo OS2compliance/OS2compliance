@@ -4,7 +4,7 @@ ClassicEditor.create(document.querySelector( '#description-editor' ), {
         window.editor = editor;
         setEditState(false)
     }).catch( error => {
-        console.error( error );
+        toastService.error(error);
     });
 
 function setEditState(editable) {

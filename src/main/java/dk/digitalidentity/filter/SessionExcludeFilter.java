@@ -16,8 +16,7 @@ public class SessionExcludeFilter extends OncePerRequestFilter {
     @SuppressWarnings("NullableProblems")
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().startsWith("/api/") || request.getRequestURI().startsWith("/manage/") ||
-            request.getRequestURI().startsWith("/swagger-ui/") || request.getRequestURI().startsWith("/v3/api-docs")) {
+        if (request.getRequestURI().startsWith("/api/") || request.getRequestURI().startsWith("/manage/") || request.getRequestURI().equals("/")) {
             request.setAttribute("org.springframework.session.web.http.SessionRepositoryFilter.FILTERED", Boolean.TRUE);
         }
         filterChain.doFilter(request, response);

@@ -20,12 +20,14 @@ public interface RegisterMapper {
         return RegisterDTO.builder()
                 .id(registerGrid.getId())
                 .name(registerGrid.getName())
-                .responsibleUser(nullSafe(() -> registerGrid.getResponsibleUser().getName(), ""))
-                .responsibleOU(nullSafe(() -> registerGrid.getResponsibleOU().getName(), ""))
+                .responsibleUsers(nullSafe(() -> registerGrid.getResponsibleUserNames(), ""))
+                .responsibleOUs(nullSafe(() -> registerGrid.getResponsibleOUNames(), ""))
+                .departments(nullSafe(() -> registerGrid.getDepartmentNames(), ""))
                 .updatedAt(nullSafe(() -> registerGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .consequence(nullSafe(() -> registerGrid.getConsequence().getMessage(), ""))
                 .status(nullSafe(() -> registerGrid.getStatus().getMessage(), ""))
                 .risk(nullSafe(() -> registerGrid.getRisk().getMessage(), ""))
+                .assetCount(registerGrid.getAssetCount())
                 .build();
     }
 

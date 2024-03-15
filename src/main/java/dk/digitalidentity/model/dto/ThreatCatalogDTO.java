@@ -17,4 +17,5 @@ public class ThreatCatalogDTO {
     private String identifier;
     @NotEmpty
     private String name;
+    private boolean hidden = false;
 }

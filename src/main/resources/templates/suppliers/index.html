@@ -1,9 +1,10 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 	<script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
 	<script type="text/javascript" th:src="@{/js/supplier/formReset.js}"></script>
+    <link th:href="@{/css/suppliers.css}" rel="stylesheet">
 	<div id="root" class="root mn--max hd--expanded">
 		<section id="content" class="content">
 			<div class="content__header content__boxed overlapping">
@@ -12,7 +13,7 @@
 						<div class="me-auto">
 							<nav aria-label="breadcrumb">
 								<ol class="breadcrumb mb-0">
-									<li class="breadcrumb-item"><a th:href="@{/}">Hjem</a></li>
+									<li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
 									<li class="breadcrumb-item active" aria-current="page">Leverandører</li>
 								</ol>
 							</nav>
@@ -23,7 +24,7 @@
 							<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
 								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny leverandør
 							</button>
-							<button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#taskFormDialog">
+							<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 							</button>
 						</div>
@@ -49,37 +50,11 @@
 		<nav th:replace="~{fragments/navbar :: main (page='leverandører')}" />
 	</div>
 
-	<div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="supplierLabel" aria-hidden="true"></div>
-	<div class="modal fade" id="formEditDialog" tabindex="-1" aria-labelledby="supplierLabel" aria-hidden="true"></div>
+	<div class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
+	<div class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: scripts}"></div>
-	<div th:replace="~{fragments/footer :: taskDialog}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
-	<style>
-
-	#suppliersDatatable td[data-column-id="suppressions"] ul {
-		list-style-type: none;
-		padding: 0;
-	}
-
-	#suppliersDatatable td[data-column-id="suppressions"] ul > li {
-		display: table-row;
-	}
-
-	#suppliersDatatable td[data-column-id="suppressions"] ul > li > span {
-		display: table-cell;
-		min-width: 1rem;
-	}
-
-	#suppliersDatatable td[data-column-id="handlinger"] {
-		text-align: center;
-	}
-
-	#suppliersDatatable td[data-column-id="status"] {
-		vertical-align: middle;
-	}
-
-	</style>
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
@@ -107,7 +82,7 @@
 
 		function deleteClicked(supplierId, name) {
             Swal.fire({
-              text: `Er du sikker på du vil slette ${name}?\nReferencer til og fra leverandøren slettes også.`,
+              text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra leverandøren slettes også.`,
               icon: 'warning',
               showCancelButton: true,
               confirmButtonColor: '#03a9f4',
@@ -133,14 +108,14 @@
 								editDialog = new bootstrap.Modal(document.getElementById('formEditDialog'));
 								editDialog.show();
 							}))
-					.catch(error => console.log(error));
+					.catch(error => toastService.error(error));
 		}
 
 		document.addEventListener("DOMContentLoaded", function(event) {
 			fetch(formUrl)
 					.then(response => response.text()
 							.then(data => document.getElementById('formDialog').innerHTML = data))
-					.catch(error => console.log(error));
+					.catch(error => toastService.error(error));
 
 			const grid = new gridjs.Grid({
 				className: defaultClassName,
@@ -189,11 +164,11 @@
 					},
 					{
 						name: "Opdateret",
-						width: '20%'
+						width: '100px'
 					},
 					{
 						name: "Status",
-						width: '10%',
+						width: '100px',
 						formatter: (cell, row) => {
 							var status = cell;
 							if (cell === "Klar") {
@@ -212,10 +187,10 @@
 						id: 'handlinger',
 						name: 'Handlinger',
 						sort: 0,
-						width: '10%',
+						width: '90px',
 						formatter: (cell, row) => {
 							const supplierId = row.cells[0]['data'];
-							const name = row.cells[1]['data'];
+                            const name = row.cells[1]['data'].replaceAll("'", "\\'");
 							return gridjs.html(
 									`<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editClicked('${supplierId}')"><i class="pli-pen-5 fs-5"></i></button>` +
 									`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${supplierId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);

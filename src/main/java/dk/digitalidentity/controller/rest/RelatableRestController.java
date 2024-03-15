@@ -14,9 +14,9 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelationService;
 import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -40,18 +40,13 @@ import java.util.Set;
 @RestController
 @RequestMapping("rest/relatable")
 @RequireUser
+@RequiredArgsConstructor
 public class RelatableRestController {
-
-    @Autowired
-    private RelatableDao relatableDao;
-    @Autowired
-    private RelatableMapper mapper;
-    @Autowired
-    private RelationDao relationDao;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private TagDao tagDao;
+    private final RelatableDao relatableDao;
+    private final RelatableMapper mapper;
+    private final RelationDao relationDao;
+    private final RelationService relationService;
+    private final TagDao tagDao;
 
     @GetMapping("autocomplete")
     public PageDTO<RelatableDTO> autocomplete(@RequestParam(value = "types", required = false) final List<RelationType> types, @RequestParam("search") final String search) {
@@ -131,16 +126,17 @@ public class RelatableRestController {
     }
 
     private String findTypeForUrl(final RelationType relationType) {
-        switch (relationType) {
-            case SUPPLIER: return "suppliers";
-            case CONTACT: return "contacts";
-            case TASK: return "tasks";
-            case DOCUMENT: return "documents";
-            case REGISTER: return "registers";
-            case ASSET: return "assets";
-            case THREAT_ASSESSMENT: return "risks";
-            case STANDARD_SECTION: return "standards/supporting";
-        }
-        throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ukendt relationType: " + relationType);
+        return switch (relationType) {
+            case SUPPLIER -> "suppliers";
+            case CONTACT -> "contacts";
+            case TASK -> "tasks";
+            case DOCUMENT -> "documents";
+            case REGISTER -> "registers";
+            case ASSET -> "assets";
+            case THREAT_ASSESSMENT -> "risks";
+            case STANDARD_SECTION -> "standards/supporting";
+            default ->
+                    throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ukendt relationType: " + relationType);
+        };
     }
 }

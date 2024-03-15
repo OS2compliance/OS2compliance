@@ -24,18 +24,21 @@
                         <label class="col-form-label col-lg-3 col-sm-12">GDPR lovhjemmel</label>
                         <div class="col-sm-12 col-lg-9 mt-2">
                             <div class="form-check" th:each="choice: ${gdprChoices}">
+                                <p th:if="${choice.identifier=='register-gdpr-valp8'}" class="mb-1 mt-2" style="position:relative; left: -22px; font-weight: bold">
+                                    Databeskyttelsesloven
+                                </p>
                                 <input th:id="${choice.identifier}" th:field="*{gdprChoices}" th:value="${choice.identifier}" th:checked="${#sets.contains(register.gdprChoices, choice.identifier)}" class="form-check-input" type="checkbox" autocomplete="off" disabled/>
-                                <label th:for="${choice.identifier}" th:text="${choice.caption + ' ' + choice.description}"></label>
+                                <label th:for="${choice.identifier}" th:utext="${choice.caption + ' ' + choice.description}"></label>
                                 <div th:if="${choice.identifier=='register-gdpr-valp6'}" class="mb-2 mt-1">
                                     <div class="form-check" th:each="choicep6: ${gdprP6Choices}">
                                         <input th:id="${choicep6.identifier}" th:field="*{gdprChoices}" th:value="${choicep6.identifier}" th:checked="${#sets.contains(register.gdprChoices, choicep6.identifier)}" class="form-check-input" type="checkbox" autocomplete="off" disabled/>
-                                        <label th:title="${choicep6.description}" th:for="${choicep6.identifier}" th:text="${choicep6.caption + ' - ' + choicep6.description}"></label>
+                                        <label th:title="${choicep6.description}" th:for="${choicep6.identifier}" th:utext="${choicep6.caption + ' - ' + choicep6.description}"></label>
                                     </div>
                                 </div>
                                 <div th:if="${choice.identifier=='register-gdpr-valp7'}" class="mb-2 mt-1" id="gdprP7">
                                     <div class="form-check" th:each="choicep7: ${gdprP7Choices}">
                                         <input th:id="${choicep7.identifier}" th:field="*{gdprChoices}" th:value="${choicep7.identifier}" th:checked="${#sets.contains(register.gdprChoices, choicep7.identifier)}" class="form-check-input" type="checkbox" autocomplete="off" disabled/>
-                                        <label th:title="${choicep7.description}" th:for="${choicep7.identifier}" th:text="${choicep7.caption + ' - ' + choicep7.description}"></label>
+                                        <label th:title="${choicep7.description}" th:for="${choicep7.identifier}" th:utext="${choicep7.caption + ' - ' + choicep7.description}"></label>
                                     </div>
                                 </div>
                             </div>
@@ -45,6 +48,7 @@
                         <label for="informationObligation" class="col-form-label col-lg-3 col-sm-12">Opfyldes oplysningspligten</label>
                         <div class="col-lg-3 col-sm-6">
                             <select class="form-control form-select" th:field="*{informationObligation}" id="informationObligation" name="informationObligation" tabindex="-1" disabled>
+                                <option value=""></option>
                                 <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationObligationStatus).values()}"
                                         th:value="${status.name}" th:text="${status.message}"></option>
                             </select>

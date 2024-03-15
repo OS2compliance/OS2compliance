@@ -20,4 +20,5 @@ public class TaskDTO {
     private String taskRepetition;
     private boolean completed;
     private TaskResult taskResult;
+    private String tags;
 }

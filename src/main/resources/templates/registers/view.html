@@ -20,11 +20,16 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${#strings.abbreviate(register.name, 25)}"></li>
                             </ol>
                         </nav>
+                        <div class="row mt-4 mb-3">
+                            <div class="col-12">
+                                <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${register.name}"></h1>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <div class="row mt-4 mb-3">
-                    <div class="col-12">
-                        <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${register.name}"></h1>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
                     </div>
                 </div>
             </div>
@@ -56,7 +61,7 @@
                             <div th:replace="~{registers/purpose :: purpose(${register})}"></div>
                         </div>
                         <div id="_dm-tabsDataProcessing" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'dataprocessing'} ? 'active show' : ''" aria-labelledby="dataprocessing-tab">
-                            <div th:replace="~{registers/fragments/dataprocessing :: dataProcessing(${dpChoices}, ${register})}"></div>
+                            <div th:replace="~{registers/dataprocessingFragment :: dataProcessing(${dpChoices}, ${register})}"></div>
                         </div>
                         <div id="_dm-tabsRisk" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'risk'} ? 'active show' : ''" aria-labelledby="risk-tab">
                             <div th:replace="~{registers/assessments :: consequence(${assessment})}"></div>
@@ -79,7 +84,7 @@
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=DocumentRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=TaskRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=AssetRelationModal)}"></div>
-<div th:replace="~{fragments/footer :: scripts}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 </body>
 

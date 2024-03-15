@@ -2,6 +2,6 @@
   "identifier": "dp-count-processing-list",
   "name": "Hvor mange behandles der personoplysninger om",
   "multiSelect": false,
-  "valueIdentifiers": ["dp-person-cnt-1-10", "dp-person-cnt-10-100", "dp-person-cnt-100-1000", "dp-person-cnt-1000-10000",
+  "valueIdentifiers": ["dp-person-none", "dp-person-cnt-1-10", "dp-person-cnt-10-100", "dp-person-cnt-100-1000", "dp-person-cnt-1000-10000",
     "dp-person-cnt-above", "dp-person-cnt-all", "dp-person-cnt-clarification"]
 }

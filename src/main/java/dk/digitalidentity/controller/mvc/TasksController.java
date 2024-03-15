@@ -1,28 +1,32 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.DocumentDao;
-import dk.digitalidentity.dao.RelatableDao;
-import dk.digitalidentity.dao.RelationDao;
-import dk.digitalidentity.dao.TaskDao;
-import dk.digitalidentity.dao.UserDao;
+import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.DocumentService;
+import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,30 +44,30 @@ import org.thymeleaf.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Set;
 
+import static dk.digitalidentity.util.LinkHelper.linkify;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 import static java.time.temporal.ChronoUnit.DAYS;
 
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Slf4j
 @Controller
 @RequestMapping("tasks")
 @RequireUser
+@RequiredArgsConstructor
 public class TasksController {
-    @Autowired
-    private TaskDao taskDao;
-    @Autowired
-    private RelationDao relationDao;
-    @Autowired
-    private RelatableDao relatableDao;
-    @Autowired
-    private UserDao userDao;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private DocumentDao documentDao;
+    private final RelatableService relatableService;
+    private final RelationService relationService;
+    private final UserService userService;
+    private final DocumentService documentService;
+    private final ThreatAssessmentService threatAssessmentService;
+    private final TaskService taskService;
+    private final Environment environment;
+    private final ApplicationEventPublisher eventPublisher;
+
 
     @GetMapping
     public String tasksList() {
@@ -77,12 +81,17 @@ public class TasksController {
             model.addAttribute("task", new Task());
             model.addAttribute("formId", "taskCreateForm");
             model.addAttribute("formTitle", "Ny opgave");
+            model.addAttribute("action", "/tasks/create");
+            model.addAttribute("relations", Collections.emptyList());
         } else {
-            final Task task = taskDao.findById(id)
+            final Task task = taskService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            final List<Relatable> relations = relationService.findAllRelatedTo(task);
             model.addAttribute("task", task);
             model.addAttribute("formId", "taskEditForm");
             model.addAttribute("formTitle", "Rediger opgave");
+            model.addAttribute("relations", relations);
+            model.addAttribute("action", "/tasks/edit?showIndex=true");
         }
         return "tasks/form";
     }
@@ -90,27 +99,17 @@ public class TasksController {
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
-                           @RequestParam(name = "relations", required = false) final List<Long> relations,
-                           @RequestParam(name = "taskRiskId", required = false) final Long riskId) {
-        final Task savedTask = taskDao.save(task);
-        if (relations != null) {
-            relations.stream()
-                .map(relatedId -> relatableDao.findById(relatedId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet")))
-                .map(relatable -> Relation.builder()
-                        .relationAId(savedTask.getId())
-                        .relationAType(savedTask.getRelationType())
-                        .relationBId(relatable.getId())
-                        .relationBType(relatable.getRelationType())
-                        .build())
-                .forEach(relation -> relationDao.save(relation));
-        }
+                           @RequestParam(name = "relations", required = false) final Set<Long> relations,
+                           @RequestParam(name = "taskRiskId", required = false) final Long riskId,
+                           @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
+                           @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
+        final Task savedTask = taskService.saveTask(task);
+        relationService.setRelationsAbsolute(savedTask, relations);
 
         if (riskId != null) {
-            final Relatable relatable = relatableDao.findById(riskId)
+            final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret risikovurdering ikke fundet"));
 
-            final ThreatAssessment threatAssessment = (ThreatAssessment) relatable;
             if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
                 final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
                     .filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
@@ -122,13 +121,36 @@ public class TasksController {
                 addRelations(savedTask, relatedRegisters);
             }
 
-            final Relation relation = Relation.builder()
-                .relationAId(savedTask.getId())
-                .relationAType(savedTask.getRelationType())
-                .relationBId(relatable.getId())
-                .relationBType(relatable.getRelationType())
-                .build();
-            relationDao.save(relation);
+            if (riskCustomId != 0) {
+                final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(riskCustomId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+                    .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(riskCustomId))
+                    .findAny().orElse(null);
+
+                // if no response, create one and add relation
+                if (response == null) {
+                    response = threatAssessmentService.createResponse(threatAssessment, null, threat);
+                    threatAssessmentService.save(threatAssessment);
+                }
+
+                relationService.addRelation(savedTask, response);
+
+            } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
+                final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(riskCatalogIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+                    .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
+                    .findAny().orElse(null);
+
+                // if no response, create one and add relation
+                if (response == null) {
+                    response = threatAssessmentService.createResponse(threatAssessment, threat, null);
+                    threatAssessmentService.save(threatAssessment);
+                }
+
+                relationService.addRelation(savedTask, response);
+            }
+
+            relationService.addRelation(savedTask, threatAssessment);
             return "redirect:/risks/" + riskId;
         }
 
@@ -137,20 +159,14 @@ public class TasksController {
 
     private void addRelations(final Task savedTask, final List<Relatable> relatables) {
         for (final Relatable relatable : relatables) {
-            final Relation relation = Relation.builder()
-                .relationAId(savedTask.getId())
-                .relationAType(savedTask.getRelationType())
-                .relationBId(relatable.getId())
-                .relationBType(relatable.getRelationType())
-                .build();
-            relationDao.save(relation);
+            relationService.addRelation(savedTask, relatable);
         }
     }
 
     @Transactional
     @PostMapping("edit")
-    public String formEdit(@ModelAttribute final Task task) {
-        final Task existingTask = taskDao.findById(task.getId())
+    public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
+        final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
@@ -159,27 +175,31 @@ public class TasksController {
         if (task.getResponsibleUser() == null) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en ansvarlig bruger");
         }
-
+        if (task.getName() != null) {
+            existingTask.setName(task.getName());
+        }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
+        existingTask.setIncludeInReport(task.getIncludeInReport());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setResponsibleUser(task.getResponsibleUser());
+        existingTask.setLink(linkify(task.getLink()));
 
         if (existingTask.getTaskType().equals(TaskType.CHECK)) {
             existingTask.setRepetition(task.getRepetition());
         }
 
-        taskDao.save(existingTask);
+        taskService.saveTask(existingTask);
 
-        return "redirect:/tasks/" + existingTask.getId();
+        return showIndex ? "redirect:/tasks" : "redirect:/tasks/" + existingTask.getId();
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
     record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
     @GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id) {
-        final Task task = taskDao.findById(id)
+        final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         model.addAttribute("task", task);
@@ -196,13 +216,24 @@ public class TasksController {
                     throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
                 }
                 final long daysAfterDeadline = calculateDaysAfterDeadline(taskLog.getDeadline(), taskLog.getCompleted());
-                model.addAttribute("taskLog", new LogDTO(taskLog.getComment(), taskLog.getCurrentDescription(), taskLog.getDocumentationLink(), taskLog.getDocument() == null ? null : taskLog.getDocument().getName(), taskLog.getDocument() == null ? null : taskLog.getDocument().getId(), taskLog.getResponsibleUserUserId() + ", " + taskLog.getResponsibleOUName(), taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
+                model.addAttribute("taskLog", new LogDTO(
+                    taskLog.getComment(),
+                    taskLog.getCurrentDescription(),
+                    taskLog.getDocumentationLink(),
+                    taskLog.getDocument() == null ? null : taskLog.getDocument().getName(), taskLog.getDocument() == null ? null : taskLog.getDocument().getId(),
+                    taskLog.getResponsibleUserUserId() + ", " + taskLog.getResponsibleOUName(),
+                    taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
             }
         } else if (task.getTaskType().equals(TaskType.CHECK)) {
             final List<LogDTO> taskLogs = new ArrayList<>();
             for (final TaskLog taskLog : task.getLogs()) {
                 final long daysAfterDeadline = calculateDaysAfterDeadline(taskLog.getDeadline(), taskLog.getCompleted());
-                taskLogs.add(new LogDTO(taskLog.getComment(), taskLog.getCurrentDescription(), taskLog.getDocumentationLink(), taskLog.getDocument() == null ? null : taskLog.getDocument().getName(), taskLog.getDocument() == null ? null : taskLog.getDocument().getId(), taskLog.getResponsibleUserUserId() + ", " + taskLog.getResponsibleOUName(), taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
+                taskLogs.add(new LogDTO(taskLog.getComment(),
+                    taskLog.getCurrentDescription(),
+                    taskLog.getDocumentationLink(),
+                    taskLog.getDocument() == null ? null : taskLog.getDocument().getName(),
+                    taskLog.getDocument() == null ? null : taskLog.getDocument().getId(),
+                    taskLog.getResponsibleUserName() + ", " + taskLog.getResponsibleOUName(), taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
             }
 
             taskLogs.sort(Comparator.comparing(LogDTO :: completedDate).reversed());
@@ -212,25 +243,37 @@ public class TasksController {
         return "tasks/view";
     }
 
+    @GetMapping("{id}/timeline")
+    public String taskTimeline(final Model model, @PathVariable final long id,
+                               @RequestParam(value = "from", required = false) final LocalDate from,
+                               @RequestParam(value = "to", required = false) final LocalDate to) {
+        final Task task = taskService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<TaskLog> taskLogs = taskService.logsBetween(task, from, to);
+        model.addAttribute("taskLogs", taskLogs);
+        return "tasks/viewTimeline";
+    }
+
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void taskDelete(@PathVariable final String id) {
         final Long lid = Long.valueOf(id);
         relationService.deleteRelatedTo(lid);
-        taskDao.deleteById(lid);
+        taskService.deleteById(lid);
     }
 
+    @SuppressWarnings("ClassEscapesDefinedScope")
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
-        final Task task = taskDao.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
         }
 
         final String userUuid = SecurityUtil.getLoggedInUserUuid();
-        final User user = userDao.findById(userUuid).orElse(null);
+        final User user = userService.findByUuid(userUuid).orElse(null);
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ingen bruger logget ind");
         }
@@ -252,34 +295,46 @@ public class TasksController {
         if (!StringUtils.isEmpty(dto.documentLink().trim())) {
             taskLog.setDocumentationLink(dto.documentLink());
         }
-
-        if (task.getTaskType().equals(TaskType.TASK)) {
-            if (dto.documentRelation() != null) {
-                taskLog.setDocument(documentDao.findById(dto.documentRelation()).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
-            }
-        } else {
-            task.setNextDeadline(getNextDeadline(task.getNextDeadline(), task.getRepetition()));
+        if (dto.documentRelation() != null) {
+            taskLog.setDocument(documentService.get(dto.documentRelation()).orElseThrow(() ->
+                new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
-
-        task.getLogs().add(taskLog);
-        taskDao.save(task);
-
+        taskService.completeTask(task, taskLog);
         return "redirect:/tasks";
     }
 
-    private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
-        if (repetition == null) {
-            return deadline;
+    @GetMapping("{id}/copy")
+    public String taskCopyDialog(final Model model, @PathVariable("id") final long id) {
+        final Task task = taskService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<Relatable> relations = relationService.findAllRelatedTo(task);
+
+        model.addAttribute("task", task);
+        model.addAttribute("relations", relations);
+        return "tasks/copyForm";
+    }
+
+    @Transactional
+    @PostMapping("{id}/copy")
+    public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,
+                                        @Valid @ModelAttribute final Task taskForm,
+                                        @RequestParam(name = "relations", required = false) final List<Long> relations
+                                        ) {
+        final Task task = taskService.copyTask(taskForm);
+        setupRelations(task, relations);
+        taskService.saveTask(task);
+        if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
+            eventPublisher.publishEvent(EmailEvent.builder()
+                    .email(task.getResponsibleUser().getEmail())
+                    .subject("Du er tildelt ansvaret for en ny opgave.")
+                    .message(newTaskEmail(task))
+                .build());
         }
-        return switch (repetition) {
-            case MONTHLY -> deadline.plusMonths(1);
-            case QUARTERLY -> deadline.plusMonths(3);
-            case HALF_YEARLY -> deadline.plusMonths(6);
-            case YEARLY -> deadline.plusYears(1);
-            case EVERY_SECOND_YEAR -> deadline.plusYears(2);
-            case EVERY_THIRD_YEAR -> deadline.plusYears(3);
-            default -> deadline;
-        };
+        return "redirect:/tasks/" + task.getId();
+    }
+
+    private void setupRelations(final Task task, final List<Long> relations) {
+        final List<Relatable> relatables = relatableService.findAllById(relations);
+        relatables.forEach(r -> relationService.addRelation(r, task));
     }
 
     private boolean calculateCompleted(final Task task) {
@@ -299,5 +354,12 @@ public class TasksController {
             days = DAYS.between(deadline, completed);
         }
         return days;
+    }
+
+    private String newTaskEmail(final Task task) {
+        final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
+        return "<p>Kære " + task.getResponsibleUser().getName() + "</p>" +
+            "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +
+            "<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>";
     }
 }

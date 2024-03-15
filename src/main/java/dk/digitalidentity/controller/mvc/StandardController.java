@@ -13,8 +13,8 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardsService;
 import dk.digitalidentity.service.model.RelationDTO;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
@@ -38,25 +38,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
 @RequestMapping("standards")
 @RequireUser
+@RequiredArgsConstructor
 public class StandardController {
-
-    @Autowired
-    private StandardsService standardsService;
-    @Autowired
-    private HttpServletRequest httpServletRequest;
-    @Autowired
-    private RelationService relationService;
-    @Autowired
-    private StandardSectionDao standardSectionDao;
-    @Autowired
-    private StandardTemplateDao standardTemplateDao;
+    private final StandardsService standardsService;
+    private final HttpServletRequest httpServletRequest;
+    private final RelationService relationService;
+    private final StandardSectionDao standardSectionDao;
+    private final StandardTemplateDao standardTemplateDao;
 
 
     record StandardSectionDTO(StandardSection standardSection,
@@ -147,16 +141,22 @@ public class StandardController {
     @GetMapping("supporting")
     public String supportingPage(final Model model) {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
-        for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(s -> s.isSupporting()).collect(Collectors.toList())) {
-
-            List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
+        for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(StandardTemplate::isSupporting).toList()) {
+            final List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
                 .flatMap(s -> s.getChildren().stream())
-                .filter(s -> s.getStandardSection().isSelected()).collect(Collectors.toList());
-            double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).collect(Collectors.toList()).size();
+                .filter(s -> s.getStandardSection().isSelected())
+                .toList();
+            final double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).count();
+            final double notRelevantCount = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.NOT_RELEVANT)).count();
+            final double relevantCount = collect.size() - notRelevantCount;
+            final DecimalFormat decimalFormat = new DecimalFormat("0.00");
 
-            final double compliance = collect.size() == 0 ? 0 : 100 * (readyCounter / collect.size());
-            DecimalFormat decimalFormat = new DecimalFormat("0.00");
-            templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
+            if (relevantCount == 0 ) {
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%"));
+            } else {
+                final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / relevantCount);
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
+            }
         }
         model.addAttribute("templates", templates);
         return "standards/supporting";
@@ -164,7 +164,7 @@ public class StandardController {
 
     @Transactional
     @GetMapping("supporting/{id}")
-    public String supportingPage(final Model model, @PathVariable final String id) {
+    public String supportingPage(final Model model, @PathVariable final String id, @RequestParam(required = false) final StandardSectionStatus status) {
         final StandardTemplate template = standardTemplateDao.findByIdentifier(id);
         if (template == null) {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND);
@@ -172,7 +172,8 @@ public class StandardController {
         model.addAttribute("template", template);
         model.addAttribute("relationMap", buildRelationsMap(template));
         model.addAttribute("isNSIS", template.getIdentifier().toLowerCase().startsWith("nsis"));
-            model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
+        model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
+        model.addAttribute("statusFilter", status);
 
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
@@ -182,11 +183,11 @@ public class StandardController {
 
     private Map<Long, List<RelationDTO>> buildRelationsMap(final StandardTemplate template) {
         final Map<Long, List<RelationDTO>> result = new HashMap<>();
-        var testData = template.getStandardTemplateSections();
 
         for (final StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
-            for(final StandardTemplateSection child : standardTemplateSection.getChildren())
-            result.put(child.getStandardSection().getId(), relationService.findRelationsAsListDTO(child.getStandardSection(), false));
+            for(final StandardTemplateSection child : standardTemplateSection.getChildren()) {
+                result.put(child.getStandardSection().getId(), relationService.findRelationsAsListDTO(child.getStandardSection(), false));
+            }
         }
         return result;
     }

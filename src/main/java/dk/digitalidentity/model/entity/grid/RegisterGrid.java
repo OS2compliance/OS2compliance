@@ -31,13 +31,17 @@ public class RegisterGrid {
     @Column
     private String name;
 
-    @ManyToOne
-    @JoinColumn(name = "responsible_uuid")
-    private User responsibleUser;
+    @Column
+    private String responsibleUserNames;
 
-    @ManyToOne
-    @JoinColumn(name = "responsible_ou_uuid")
-    private OrganisationUnit responsibleOU;
+    @Column
+    private String responsibleUserUuids;
+
+    @Column(name = "responsible_ou_names")
+    private String responsibleOUNames;
+
+    @Column
+    private String departmentNames;
 
     @Column
     private LocalDate updatedAt;
@@ -56,4 +60,7 @@ public class RegisterGrid {
 
     @Column
     private String localizedEnums;
+
+    @Column
+    private int assetCount;
 }

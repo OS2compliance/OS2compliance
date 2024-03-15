@@ -1,34 +1,33 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.AssetDao;
-import dk.digitalidentity.dao.RelationDao;
+import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessment;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class AssetService {
     private final AssetDao assetDao;
-    private final RelationDao relationDao;
-
-    public AssetService(final AssetDao assetDao, final RelationDao relationDao) {
-        this.assetDao = assetDao;
-        this.relationDao = relationDao;
-    }
+    private final RelationService relationService;
+    private final DataProcessingDao dataProcessingDao;
 
     public Optional<Asset> get(final Long id) {
         return assetDao.findById(id);
@@ -36,6 +35,14 @@ public class AssetService {
 
     public Page<Asset> getPaged(final int pageSize, final int page) {
         return assetDao.findAll(Pageable.ofSize(pageSize).withPage(page));
+    }
+
+    public List<Asset> findAllById(final Iterable<Long> ids) {
+        return assetDao.findAllById(ids);
+    }
+
+    public Optional<Asset> findById(final Long id) {
+        return assetDao.findById(id);
     }
 
     public Asset create(final Asset asset) {
@@ -68,12 +75,18 @@ public class AssetService {
         return assetDao.findByPropertyValue(key, value);
     }
 
+    public List<Asset> findAllByRelations(final List<Relation> relations) {
+        final List<Long> lookupIds = relations.stream()
+            .map(r -> r.getRelationAType() == RelationType.ASSET
+                ? r.getRelationAId()
+                : r.getRelationBId())
+            .toList();
+        return assetDao.findAllById(lookupIds);
+    }
+
     public List<Asset> findRelatedTo(final Register register) {
-        return relationDao.findRelatedToWithType(register.getId(), RelationType.ASSET).stream()
-            .map(r -> r.getRelationAType() == RelationType.ASSET ? r.getRelationAId() : r.getRelationBId())
-            .map(rid -> assetDao.findById(rid).orElse(null))
-            .filter(Objects::nonNull)
-            .collect(Collectors.toList());
+        final List<Relation> relations = relationService.findRelatedToWithType(register, RelationType.ASSET);
+        return findAllByRelations(relations);
     }
 
     public List<Asset> findBySupplier(final Supplier supplier) {
@@ -110,8 +123,11 @@ public class AssetService {
         };
     }
 
-    public void deleteById(final Long id) {
-        assetDao.deleteById(id);
+    @Transactional
+    public void deleteById(final Asset asset) {
+        relationService.deleteRelatedTo(asset.getId());
+        dataProcessingDao.delete(asset.getDataProcessing());
+        assetDao.delete(asset);
     }
 
 
@@ -124,4 +140,7 @@ public class AssetService {
         }
     }
 
+    public Asset save(final Asset asset) {
+        return assetDao.save(asset);
+    }
 }

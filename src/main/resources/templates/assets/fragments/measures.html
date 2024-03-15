@@ -17,7 +17,7 @@
                         <thead>
                             <tr>
                                 <th class="col-lg-1">Kategori</th>
-                                <th class="col-lg-4">Foranstaltninger</th>
+                                <th class="col-lg-4">Tekniske foranstaltninger</th>
                                 <th class="col-lg-2">Svar</th>
                                 <th class="col-lg-3">Noter</th>
                             </tr>
@@ -32,6 +32,7 @@
                                 <td>
                                     <select class="form-control form-select editField" th:name="|measures[${itemStat.index}].answer|" onchange="measureStateChanged()"
                                             th:id="|measureSelect${measure.identifier}|" tabindex="-1" disabled>
+                                        <option value=""></option>
                                         <option th:each="choice: ${measure.choice.values}" th:value="${choice.identifier}"
                                             th:selected="${measure.answer == choice.identifier}"
                                             th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>

@@ -155,7 +155,7 @@
                     });
                     dpChoiceElements.push(supplierChoices);
                 }))
-            .catch(error => console.log(error))
+            .catch(error => toastService.error(error))
         }
 
         function setDataprocessingEditState(enabled) {
@@ -214,7 +214,7 @@
                                 label: `${e.name}`}
                         }), 'value', 'label', true);
                     }))
-                .catch(error => console.log(error));
+                .catch(error => toastService.error(error));
         }
 
         function newSubsupplier() {

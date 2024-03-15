@@ -97,11 +97,11 @@ public class DataProcessingService {
         final Task task = new Task();
         task.setTaskType(TaskType.CHECK);
         task.setName("Tilsyn af " + asset.getName());
-        task.setResponsibleUser(asset.getResponsibleUser());
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
-        task.setResponsibleUser(asset.getResponsibleUser() != null ? asset.getResponsibleUser() : userService.currentUser());
+        // TODO fix så vi ikke bare tager den første, tror jeg
+        task.setResponsibleUser(asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty() ? asset.getResponsibleUsers().get(0) : userService.currentUser());
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
             .entity(task)
@@ -110,7 +110,7 @@ public class DataProcessingService {
             .build()
         );
         setTaskRevisionInterval(asset, task);
-        final Task savedTask = taskService.createTask(task);
+        final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, asset);
     }
 

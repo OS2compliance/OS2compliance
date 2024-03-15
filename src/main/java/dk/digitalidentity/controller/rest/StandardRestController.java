@@ -9,8 +9,8 @@ import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.RequireUser;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -24,11 +24,10 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping("rest/standards")
 @RequireUser
+@RequiredArgsConstructor
 public class StandardRestController {
-    @Autowired
-    private StandardSectionDao standardSectionDao;
-    @Autowired
-    private UserDao userDao;
+    private final StandardSectionDao standardSectionDao;
+    private final UserDao userDao;
 
     record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
@@ -51,6 +50,10 @@ public class StandardRestController {
     }
 
     private void handleResponsibleUser(final StandardSection standardSection, final String value) {
+        if(value.isEmpty()) {
+            standardSection.setResponsibleUser(null);
+            return;
+        }
         final User user = userDao.findById(value).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
         standardSection.setResponsibleUser(user);
     }

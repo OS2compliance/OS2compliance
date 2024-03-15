@@ -3,7 +3,7 @@
 <body>
 <div th:fragment="general(register, documents, assets, tasks)">
     <div class="card shadow-none">
-        <link th:href="@{/css/register/generelt.css}" rel="stylesheet">
+        <link th:href="@{/css/register.css}" rel="stylesheet">
         <form id="editDescId" class="row" action="#" th:action="@{/registers/__${register.id}__/update}" th:object="${register}" name="generelt" method="post">
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
@@ -23,6 +23,7 @@
                         <div class="form-group row">
                             <label for="status" class="col-form-label">Status</label>
                             <select class="form-control form-select" th:field="*{status}" name="status" id="status" tabindex="-1" disabled>
+                                <option value=""></option>
                                 <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.RegisterStatus).values()}"
                                         th:value="${status}" th:text="${status.message}"></option>
                             </select>
@@ -30,6 +31,7 @@
                         <div class="form-group row">
                             <label for="criticality" class="col-form-label">Kritikalitet</label>
                             <select class="form-control form-select" th:field="*{criticality}" name="criticality" id="criticality" tabindex="-1" disabled>
+                                <option value=""></option>
                                 <option th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}"
                                         th:value="${crit.name}" th:text="${crit.message}"></option>
                             </select>
@@ -41,24 +43,24 @@
                     </div>
                     <div class="col-sm-12 col-lg-6">
                         <div class="form-group row">
-                            <label for="departmentSelect" class="col-form-label">Ansvarlig forvaltning</label>
-                            <select class="form-select choices__input" th:field="*{department}"
-                                    data-trigger="" name="forvaltning" id="departmentSelect" tabindex="-1" disabled>
-                                <option th:value="${register.department?.uuid}" th:text="${register.department?.name}"></option>
+                            <label for="departmentSelect" class="col-form-label">Ansvarlige forvaltninger</label>
+                            <select class="form-select choices__input" th:field="*{departments}"
+                                    data-trigger="" name="forvaltning" id="departmentSelect" tabindex="-1" multiple="multiple" disabled>
+                                <option th:each="department : *{departments}" th:value="${department.uuid}" th:text="${department.name}" selected></option>
                             </select>
                         </div>
                         <div class="form-group row">
-                            <label for="ouSelect" class="col-form-label">Ansvarlig afdeling</label>
-                            <select class="form-select choices__input" th:field="*{responsibleOu}"
-                                    data-trigger="" name="afdeling" id="ouSelect" tabindex="-1" disabled>
-                                <option th:value="${register.responsibleOu?.uuid}" th:text="${register.responsibleOu?.name}"></option>
+                            <label for="ouSelect" class="col-form-label">Ansvarlige afdelinger</label>
+                            <select class="form-select choices__input" th:field="*{responsibleOus}"
+                                    data-trigger="" name="afdeling" id="ouSelect" tabindex="-1" multiple="multiple" disabled>
+                                <option th:each="ou : *{responsibleOus}" th:value="${ou.uuid}" th:text="${ou.name}" selected></option>
                             </select>
                         </div>
                         <div>
-                            <label for="userSelect" class="col-form-label">Behandlingsansvarlig</label>
-                            <select class="form-select choices__input" th:field="*{responsibleUser}"
-                                    data-trigger="" name="ansvarlig" id="userSelect" tabindex="-1" disabled>
-                                <option th:if="${register.responsibleUser != null}" th:value="${register.responsibleUser.uuid}" th:text="${register.responsibleUser.name}"></option>
+                            <label for="userSelect" class="col-form-label">Behandlingsansvarlige</label>
+                            <select class="form-select choices__input" th:field="*{responsibleUsers}"
+                                    data-trigger="" name="ansvarlig" id="userSelect" tabindex="-1" multiple="multiple" disabled>
+                                <option th:each="user : *{responsibleUsers}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
                             </select>
                         </div>
                     </div>
@@ -96,6 +98,7 @@
                                     <th>Land</th>
                                     <th>Tredjelandsoverførsel</th>
                                     <th>Acceptgrundlag</th>
+                                    <th>Kritikalitet</th>
                                     <th style="width: 40px"></th>
                                 </tr>
                             </thead>
@@ -109,6 +112,7 @@
                                     <td th:text="${relatedAsset.asset.supplier?.country}"></td>
                                     <td th:text="${relatedAsset.thirdCountryTransfer?.message}"></td>
                                     <td th:text="${@choiceService.getCaption(relatedAsset.acceptanceBasis, '')}"></td>
+                                    <td th:text="${relatedAsset.asset.criticality?.message}"></td>
                                     <td title="Fjern relation">
                                         <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}"></i>
                                     </td>

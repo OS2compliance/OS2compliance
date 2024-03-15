@@ -2,18 +2,21 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
-import dk.digitalidentity.dao.RelationDao;
-import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.SupplierService;
+import dk.digitalidentity.service.TaskService;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -38,23 +41,15 @@ import java.util.stream.Collectors;
 @Controller
 @RequestMapping("suppliers")
 @RequireUser
+@RequiredArgsConstructor
 public class SupplierController {
-	private final SupplierDao supplierDao;
-	private final RelationDao relationDao;
+	private final SupplierService supplierService;
 	private final ContactDao contactDao;
     private final AssetOversightDao assetOversightDao;
 
     private final RelationService relationService;
     private final AssetService assetService;
-
-	public SupplierController(final SupplierDao supplierDao, final RelationDao relationDao, final ContactDao contactDao, final AssetOversightDao assetOversightDao, final RelationService relationService, final AssetService assetService) {
-		this.supplierDao = supplierDao;
-		this.relationDao = relationDao;
-		this.contactDao = contactDao;
-		this.assetOversightDao = assetOversightDao;
-		this.relationService = relationService;
-        this.assetService = assetService;
-    }
+    private final TaskService taskService;
 
 	@GetMapping
 	public String suppliersList() {
@@ -63,9 +58,9 @@ public class SupplierController {
 
 	@GetMapping("{id}")
 	public String supplier(final Model model, @PathVariable final String id) {
-		final Supplier supplier = supplierDao.findById(Long.valueOf(id))
+		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		final List<Contact> contacts = relationDao.findRelatedToWithType(supplier.getId(), RelationType.CONTACT).stream()
+		final List<Contact> contacts = relationService.findRelatedToWithType(supplier, RelationType.CONTACT).stream()
 				.map(r -> r.getRelationAType() == RelationType.CONTACT ? r.getRelationAId() : r.getRelationBId())
 				.map(rid -> contactDao.findById(rid).orElse(null))
 				.filter(Objects::nonNull)
@@ -91,10 +86,14 @@ public class SupplierController {
 	@DeleteMapping("{id}")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
-	public void supplierDelete(@PathVariable final String id) {
-		final Long lid = Long.valueOf(id);
-		relationDao.deleteRelatedTo(lid);
-		supplierDao.deleteById(lid);
+	public void supplierDelete(@PathVariable final Long id) {
+        final Supplier supplier = supplierService.get(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        final List<Task> tasks = taskService.findRelatedTasks(supplier, t -> t.getTaskType() == TaskType.CHECK);
+        relationService.deleteRelatedTo(id);
+        taskService.deleteAll(tasks);
+        supplierService.delete(supplier);
 	}
 
 	@GetMapping("form")
@@ -104,7 +103,7 @@ public class SupplierController {
 			model.addAttribute("formId", "createForm");
 			model.addAttribute("formTitle", "Ny leverandør");
 		} else {
-			final Supplier supplier = supplierDao.findById(id)
+			final Supplier supplier = supplierService.get(id)
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 			model.addAttribute("supplier", supplier);
 			model.addAttribute("formId", "editForm");
@@ -117,7 +116,7 @@ public class SupplierController {
 	@PostMapping("form")
 	public String formPost(@ModelAttribute final Supplier supplier) {
 		if (supplier.getId() != null) {
-			final Supplier existingSupplier = supplierDao.findById(supplier.getId())
+			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 			existingSupplier.setStatus(supplier.getStatus());
 			existingSupplier.setCvr(supplier.getCvr());
@@ -131,9 +130,9 @@ public class SupplierController {
 			existingSupplier.setPersonalInfo(supplier.isPersonalInfo());
 			existingSupplier.setDataProcessor(supplier.isDataProcessor());
 			existingSupplier.setDescription(supplier.getDescription());
-			supplierDao.save(existingSupplier);
+			supplierService.save(existingSupplier);
 		} else {
-			supplierDao.save(supplier);
+            supplierService.save(supplier);
 		}
 		return "redirect:/suppliers";
 	}
@@ -147,7 +146,7 @@ public class SupplierController {
                                                                        @RequestParam("address") final String address,
                                                                        @RequestParam("country") final String country,
                                                                        @RequestParam("cvr") final String cvr) {
-		final Supplier supplier = supplierDao.findById(Long.valueOf(id))
+		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		supplier.setDescription(description);
         supplier.setStatus(status);
@@ -156,7 +155,7 @@ public class SupplierController {
         supplier.setCity(city);
         supplier.setAddress(address);
         supplier.setCountry(country);
-		supplierDao.save(supplier);
+		supplierService.save(supplier);
 		return "redirect:/suppliers/" + id;
 	}
 

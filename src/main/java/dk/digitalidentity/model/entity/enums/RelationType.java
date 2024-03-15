@@ -12,7 +12,8 @@ public enum RelationType {
 	REGISTER("Fortegnelse"),
 	ASSET("Aktiv"),
 	STANDARD_SECTION("Standarder"),
-	THREAT_ASSESSMENT("Risikovurdering");
+	THREAT_ASSESSMENT("Risikovurdering"),
+	THREAT_ASSESSMENT_RESPONSE("Risikovurderingssvar");
 
 	private final String message;
 

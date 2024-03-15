@@ -19,7 +19,7 @@
                         </nav>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -33,6 +33,15 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                                <div class="row col-lg-12 mb-3">
+                                    <label for="statusFilter" class="col-sm-2 col-form-label">Filtrér på status</label>
+                                    <div class="col-sm-4">
+                                        <select class="form-control form-select" id="statusFilter" onChange="filterOnStatusChanged();">
+                                            <option th:selected="${statusFilter == null}" value="ALL">Alle</option>
+                                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${statusFilter == status}"></option>
+                                        </select>
+                                    </div>
+                                </div>
                                 <table class="col-lg-12 table">
                                     <thead>
                                     <tr class="bg-light">
@@ -55,7 +64,7 @@
                                                 <td></td>
                                                 <td></td>
                                             </tr>
-                                            <th:block th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
+                                            <th:block th:if="${statusFilter == null OR section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
                                                 <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
                                                     <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${section.section} + ' ' + ${section.description}"></td>
                                                     <td th:unless="${isNSIS}" th:id="'selectedTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.selected} ? 'Tilvalgt' : 'Fravalgt'" style="font-weight: bold;"></td>
@@ -64,9 +73,10 @@
                                                     <td th:id="'dateTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${#temporals.format(section.standardSection.updatedAt, 'dd-MM-yyyy')}" style="font-weight: bold;"></td>
                                                     <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.name}" style="font-weight: bold;"></td>
                                                     <td th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}">
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED == section.standardSection.status} " class="d-block badge bg-yellow-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS == section.standardSection.status} " class="d-block badge bg-blue-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 60px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED == section.standardSection.status} " class="d-block badge bg-yellow-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS == section.standardSection.status} " class="d-block badge bg-blue-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT == section.standardSection.status} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                     </td>
                                                 </tr>
                                                 <tr class="hidden">
@@ -163,7 +173,7 @@
 
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
 <script type="text/javascript" th:src="@{/js/ckeditor/ckeditor.js}" defer></script>
-<div th:replace="~{fragments/footer :: scripts}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

@@ -37,6 +37,10 @@ public class SupplierService {
         return supplierDao.findById(id);
     }
 
+    public Supplier save(final Supplier supplier) {
+        return supplierDao.save(supplier);
+    }
+
     public Supplier update(final Supplier supplier) {
         supplier.getProperties()
             .forEach(p -> p.setEntity(supplier));

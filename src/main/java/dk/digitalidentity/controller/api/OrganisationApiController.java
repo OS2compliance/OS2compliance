@@ -12,6 +12,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.PositiveOrZero;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -23,14 +24,11 @@ import org.springframework.web.server.ResponseStatusException;
 @RestController
 @RequestMapping(value = "/api/v1/organisations")
 @Tag(name = "Organisations resource")
+@RequiredArgsConstructor
 public class OrganisationApiController {
     private final OrganisationService organisationService;
     private final OrganisationUnitMapper organisationUnitMapper;
 
-    public OrganisationApiController(final OrganisationService organisationService, final OrganisationUnitMapper organisationUnitMapper) {
-        this.organisationService = organisationService;
-        this.organisationUnitMapper = organisationUnitMapper;
-    }
 
     @Operation(summary = "Fetch an organisation unit")
     @ApiResponses(value = {

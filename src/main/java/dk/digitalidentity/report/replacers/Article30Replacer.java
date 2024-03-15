@@ -7,7 +7,9 @@ import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.report.DocxUtil;
 import dk.digitalidentity.service.AssetService;
@@ -101,7 +103,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
     }
 
     private void insertArticle30(final XWPFParagraph p, final XWPFRun placeHolderRun) {
-        final List<Register> allArticle30 = registerService.findAll();
+        final List<Register> allArticle30 = registerService.findAllOrdered();
         placeHolderRun.setText("", 0);
         try (final XmlCursor cursor = setCursorToNextStartToken(p.getCTP())) {
             boolean initial = true;
@@ -120,12 +122,12 @@ public class Article30Replacer implements PlaceHolderReplacer {
         addTextRun(register.getName(), title);
         advanceCursor(cursor);
 
-        insertStandard(document, cursor, "Behandlingsansvarlig: ",
-            nullSafe(() -> register.getResponsibleUser().getName(), "Ikke angivet"));
-        insertStandard(document, cursor, "Ansvarlig forvaltning: ",
-            nullSafe(() -> register.getDepartment().getName(), "Ikke angivet"));
-        insertStandard(document, cursor, "Ansvarlig afdeling: ",
-            nullSafe(() -> register.getResponsibleOu().getName()));
+        insertStandard(document, cursor, "Behandlingsansvarlig(e): ",
+            nullSafe(() -> register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
+        insertStandard(document, cursor, "Ansvarlig forvaltning(er): ",
+            nullSafe(() -> register.getDepartments().stream().map(OrganisationUnit::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
+        insertStandard(document, cursor, "Ansvarlig afdeling(er): ",
+            nullSafe(() -> register.getResponsibleOus().stream().map(OrganisationUnit::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
         insertStandard(document, cursor, "Hvem er ansvarlig for behandling af personoplysningerne: ",
             nullSafe(() -> register.getInformationResponsible(), "Ikke angivet"));
         insertStandard(document, cursor, "Fortegnelse over behandlingsaktivitet angående: ",
@@ -165,39 +167,42 @@ public class Article30Replacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         insertAssetTable(table, assetService.findRelatedTo(register));
 
-        insertBoldParagraph(document, cursor, "Hvem har adgang til personoplysningerne:");
-        insertAccessWhoList(document, cursor, register);
+        if (register.getDataProcessing() != null) {
 
-        insertBoldParagraph(document, cursor, "Hvor mange har adgang til personoplysningerne:");
-        final String accessCountValue = getChoiceCaption(register.getDataProcessing().getAccessCountIdentifier());
-        paragraph = insertNormalParagraph(document, cursor);
-        addTextRun(accessCountValue, paragraph);
+            insertBoldParagraph(document, cursor, "Hvem har adgang til personoplysningerne:");
+            insertAccessWhoList(document, cursor, register);
 
-        insertBoldParagraph(document, cursor, "Hvor mange behandles der personoplysninger om:");
-        final String personCountCaption = getChoiceCaption(register.getDataProcessing().getPersonCountIdentifier());
-        paragraph = insertNormalParagraph(document, cursor);
-        addTextRun(personCountCaption, paragraph);
+            insertBoldParagraph(document, cursor, "Hvor mange har adgang til personoplysningerne:");
+            final String accessCountValue = getChoiceCaption(register.getDataProcessing().getAccessCountIdentifier());
+            paragraph = insertNormalParagraph(document, cursor);
+            addTextRun(accessCountValue, paragraph);
 
-        table = paragraph.getBody().insertNewTbl(cursor);
-        advanceCursor(cursor);
-        insertInformationCategoriesTable(table, register.getDataProcessing());
+            insertBoldParagraph(document, cursor, "Hvor mange behandles der personoplysninger om:");
+            final String personCountCaption = getChoiceCaption(register.getDataProcessing().getPersonCountIdentifier());
+            paragraph = insertNormalParagraph(document, cursor);
+            addTextRun(personCountCaption, paragraph);
 
-        paragraph = insertBoldParagraph(document, cursor, "Hvor længe opbevares personoplysningerne: ");
-        final String storageTimeCaption = getChoiceCaption(register.getDataProcessing().getStorageTimeIdentifier());
-        addTextRun(storageTimeCaption, paragraph);
-        if (register.getDataProcessing().getElaboration() != null) {
-            addBoldTextRun(register.getDataProcessing().getElaboration() + ": ", paragraph);
-            addTextRun(register.getDataProcessing().getElaboration(), paragraph);
+            table = paragraph.getBody().insertNewTbl(cursor);
+            advanceCursor(cursor);
+            insertInformationCategoriesTable(table, register.getDataProcessing());
+
+            paragraph = insertBoldParagraph(document, cursor, "Hvor længe opbevares personoplysningerne: ");
+            final String storageTimeCaption = getChoiceCaption(register.getDataProcessing().getStorageTimeIdentifier());
+            addTextRun(storageTimeCaption, paragraph);
+            if (register.getDataProcessing().getElaboration() != null) {
+                addBoldTextRun(register.getDataProcessing().getElaboration() + ": ", paragraph);
+                addTextRun(register.getDataProcessing().getElaboration(), paragraph);
+            }
+
+            insertStandard(document, cursor,
+                "Er der udarbejdet sletteprocedure: ",
+                nullSafe(() -> register.getDataProcessing().getDeletionProcedure().getMessage(), "")
+            );
+            insertStandard(document, cursor,
+                "Link til sletteprocedure: ",
+                nullSafe(() -> register.getDataProcessing().getDeletionProcedureLink(), "")
+            );
         }
-
-        insertStandard(document, cursor,
-            "Er der udarbejdet sletteprocedure: ",
-            nullSafe(() -> register.getDataProcessing().getDeletionProcedure().getMessage(), "")
-            );
-        insertStandard(document, cursor,
-            "Link til sletteprocedure: ",
-            nullSafe(() -> register.getDataProcessing().getDeletionProcedureLink(), "")
-            );
     }
 
     private String getChoiceCaption(final String valueIdentifier) {

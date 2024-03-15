@@ -50,7 +50,7 @@ public class AssetEO {
     public enum ChoiceOfSupervisionModel {
         SELFCONTROL, PHYSICAL_SUPERVISION, ISAE_3000, ISAE_3402, ISRS_4400, SUPERVISION_JUSTIFIED_SUSPICION,
         MANAGEMENT_STATEMENT, WRITTEN_CONTROL, SUPERVISION_FORM_DECLARATION_OF_FAITH_AND_LAWS,
-        SWORN_STATEMENT, INDEPENDENT_AUDIT, SOC_STATEMENT
+        SWORN_STATEMENT, INDEPENDENT_AUDIT, SOC_STATEMENT, DSD
     }
     public enum NextInspection {
         DATE, MONTH, QUARTER, HALF_YEAR, YEAR, EVERY_2_YEARS, EVERY_3_YEARS
@@ -75,8 +75,8 @@ public class AssetEO {
     private String updatedBy;
     @Schema(description = "Name of the asset", requiredMode = Schema.RequiredMode.REQUIRED, example = ASSET_NAME_EXAMPLE)
     private String name;
-    @Schema(description = "System owner")
-    private UserEO systemOwner;
+    @Schema(description = "System owners")
+    private List<UserEO> systemOwners;
     @Schema(description = "Asset description", example = ASSET_DESCRIPTION_EXAMPLE)
     private String description;
     @Schema(description = "Type of the asset", example = ASSET_TYPE_EXAMPLE)

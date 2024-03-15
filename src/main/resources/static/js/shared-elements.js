@@ -10,7 +10,7 @@ function updateDocumentRelations(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateUsers(targetChoice, search) {
@@ -23,21 +23,8 @@ function updateUsers(targetChoice, search) {
                         label: `(${e.userId}) ${e.name}`}
                 }), 'value', 'label', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
-function updateKitos(targetChoice, search) {
-    fetch( `/rest/kitos/autocomplete?search=${search}`)
-        .then(response => response.json()
-            .then(data => {
-                targetChoice.setChoices(data.content.map(e => {
-                    return {
-                        value: e.uuid,
-                        label: `(${e.name}) ${e.uuid}`}
-                }), 'value', 'label', true);
-            }))
-        .catch(error => console.log(error));
-}
-
 
 function updateOus(targetChoice, search) {
     fetch( `/rest/ous/autocomplete?search=${search}`)
@@ -45,7 +32,7 @@ function updateOus(targetChoice, search) {
             .then(data => {
                 targetChoice.setChoices(data.content, 'uuid', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelations(choices, search) {
@@ -59,7 +46,7 @@ function updateRelations(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateTags(choices, search) {
@@ -73,13 +60,15 @@ function updateTags(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
-function initUserSelect(elementId) {
+function initUserSelect(elementId, prefetch = true) {
     const userSelect = document.getElementById(elementId);
     const userChoices = initSelect(userSelect);
-    updateUsers(userChoices, "");
+    if (prefetch) {
+        updateUsers(userChoices, "");
+    }
     userSelect.addEventListener("search",
         function(event) {
             updateUsers(userChoices, event.detail.value);
@@ -89,27 +78,12 @@ function initUserSelect(elementId) {
     return userChoices;
 }
 
-function initKitosSelect(elementId) {
-    const select = document.getElementById(elementId);
-    if (select === null) {
-        return;
-    }
-    const choices = initSelect(select);
-    updateKitos(choices, "");
-    select.addEventListener("search",
-        function (event) {
-            updateKitos(choices, event.detail.value)
-        },
-        false
-    );
-    return choices;
-
-}
-
-function initOUSelect(elementId) {
+function initOUSelect(elementId, prefetch = true) {
     const ouSelect = document.getElementById(elementId);
     const ouChoices = initSelect(ouSelect);
-    updateOus(ouChoices, "");
+    if (prefetch) {
+        updateOus(ouChoices, "");
+    }
     ouSelect.addEventListener("search",
         function(event) {
             updateOus(ouChoices, event.detail.value);
@@ -117,26 +91,6 @@ function initOUSelect(elementId) {
         false,
     );
     return ouChoices;
-}
-
-let createTaskRelationSelect = null;
-function initCreateTaskRelationSelect() {
-    const relationsSelect = document.getElementById('createTaskRelationsSelect');
-    const relationsChoice = initSelect(relationsSelect);
-    updateRelations(relationsChoice, "");
-    relationsSelect.addEventListener("search",
-        function(event) {
-            updateRelations(relationsChoice, event.detail.value);
-        },
-        false,
-    );
-    relationsSelect.addEventListener("change",
-        function(event) {
-            updateRelations(relationsChoice, "");
-        },
-        false,
-    );
-    createTaskRelationSelect = relationsChoice;
 }
 
 function initTagSelect(id) {
@@ -155,7 +109,6 @@ function initTagSelect(id) {
         },
         false,
     );
-    createTaskTagSelect = tagsChoice;
 }
 
 function initDocumentRelationSelect() {
@@ -187,7 +140,7 @@ function updateRelationsForDocument(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsAssetsOnly(choices, search) {
@@ -201,7 +154,7 @@ function updateRelationsAssetsOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsTasksOnly(choices, search) {
@@ -215,7 +168,7 @@ function updateRelationsTasksOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsDocumentsOnly(choices, search) {
@@ -229,7 +182,7 @@ function updateRelationsDocumentsOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsRegistersOnly(choices, search) {
@@ -243,7 +196,7 @@ function updateRelationsRegistersOnly(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
 
 function updateRelationsForStandardSection(choices, search) {
@@ -257,61 +210,8 @@ function updateRelationsForStandardSection(choices, search) {
                     }
                 }), 'id', 'name', true);
             }))
-        .catch(error => console.log(error));
+        .catch(error => toastService.error(error));
 }
-
-function selectCreateTaskOption(value) {
-    const form = document.querySelector('#taskCreateForm');
-    const repetitionField = form.querySelector('#repetition');
-    if (value === 'TASK') {
-        repetitionField.value = 'NONE';
-    }
-    repetitionField.disabled = value !== 'CHECK';
-}
-
-function taskFormReset() {
-    const form = document.querySelector('#taskCreateForm');
-    form.reset();
-    selectCreateTaskOption('TASK');
-}
-
-let createTaskUserChoicesEditSelect = null;
-let createTaskOuChoicesEditSelect = null;
-
-function sharedTaskFormLoaded() {
-    selectCreateTaskOption('TASK');
-
-    initDatepicker("#taskDeadlineBtn", "#taskDeadline");
-    createTaskUserChoicesEditSelect = initUserSelect('taskUserSelect');
-    createTaskOuChoicesEditSelect = initOUSelect('taskOuSelect');
-    createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
-        checkInputField(createTaskUserChoicesEditSelect);
-    });
-    initFormValidationForForm('taskCreateForm',
-        () => validateChoices(createTaskUserChoicesEditSelect, createTaskOuChoicesEditSelect));
-}
-
-function loadSharedElements() {
-    fetch(`/tasks/form`)
-        .then(response => response.text()
-            .then(data => {
-                document.getElementById('taskFormDialog').innerHTML = data;
-                sharedTaskFormLoaded();
-                initCreateTaskRelationSelect();
-                initTagSelect('createTaskTagsSelect');
-            }))
-        .catch(error => console.log(error))
-}
-
-function loadSettingElement(pageType){
-    return fetch(`/settings/form`)
-    .then(response => response.text()
-        .then(data => {
-            document.getElementById('settings').innerHTML = data;;
-        }))
-    .catch(error => console.log(error));
-}
-
 
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");

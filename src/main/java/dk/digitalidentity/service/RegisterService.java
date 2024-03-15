@@ -6,12 +6,15 @@ import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.enums.RelationType;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class RegisterService {
@@ -34,8 +37,41 @@ public class RegisterService {
         return registerDao.findByPackageName("kl_article30");
     }
 
-    public List<Register> findAll() {
-        return registerDao.findAll();
+    public List<Register> findAllByRelations(final List<Relation> relations) {
+        final List<Long> lookupIds = relations.stream()
+            .map(r -> r.getRelationAType() == RelationType.REGISTER
+                ? r.getRelationAId()
+                : r.getRelationBId())
+            .toList();
+        return registerDao.findAllById(lookupIds);
+    }
+
+    public List<Register> findAllOrdered() {
+        return registerDao.findByDeletedFalse()
+            .stream()
+            .sorted((r1, r2) -> {
+                final String[] splits1 = StringUtils.split(r1.getName(), " ");
+                final String[] splits2 = StringUtils.split(r2.getName(), " ");
+                if (splits1.length > 1 && splits2.length > 1) {
+                    final String d1 = StringUtils.getDigits(splits1[0]);
+                    final String d2 = StringUtils.getDigits(splits2[0]);
+                    if (d1.isEmpty() && d2.isEmpty()) {
+                        return splits1[0].compareTo(splits2[0]);
+                    } else if (!d1.isEmpty() && !d2.isEmpty()) {
+                        return (Long.parseLong(d1) > Long.parseLong(d2)) ? 1 : -1;
+                    } else if (d1.isEmpty()) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
+                } else if (splits1.length > 1) {
+                    return -1;
+                } else if (splits2.length > 1) {
+                    return 1;
+                }
+                return 0;
+            })
+            .collect(Collectors.toList());
     }
 
     public boolean existByName(final String title) {
@@ -46,9 +82,6 @@ public class RegisterService {
     public Register save(final Register register) {
         if (register.getDataProcessing() == null) {
             register.setDataProcessing(new DataProcessing());
-        }
-        if (register.getStatus() == null) {
-            register.setStatus(RegisterStatus.NOT_STARTED);
         }
         final Register savedRegister = registerDao.save(register);
         if (savedRegister.getConsequenceAssessment() == null) {

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="da">
 
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 
 <body class="jumping">
 <link rel="stylesheet" th:href="@{/css/standard/buttons.css}"/>
@@ -13,7 +13,7 @@
 					<div class="me-auto">
 						<nav aria-label="breadcrumb">
 							<ol class="breadcrumb mb-0">
-								<li class="breadcrumb-item"><a th:href="@{/}">Hjem</a></li>
+								<li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
 								<li class="breadcrumb-item active" aria-current="page">Standarder</li>
 							</ol>
 						</nav>
@@ -22,8 +22,7 @@
 
 						</div>
 						<div class="align-self-center d-inline-flex">
-							<button type="button" class="btn btn-success btn-lg hstack gap-2" data-bs-toggle="modal" data-bs-target="#taskFormDialog"
-								style="margin-bottom: 8px; height: 45px">
+							<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 							<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 						</button>
 					</div>
@@ -139,8 +138,7 @@
 	<header th:replace="~{fragments/header :: header}"></header>
 	<nav th:replace="~{fragments/navbar :: main (page='standarder')}"></nav>
 </div>
-<div th:replace="~{fragments/footer :: scripts}"></div>
-<div th:replace="~{fragments/footer :: taskDialog}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
 	/*<![CDATA[*/

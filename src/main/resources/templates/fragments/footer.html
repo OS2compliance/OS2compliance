@@ -2,17 +2,24 @@
 <html>
 <body>
 
-<div th:fragment="taskDialog">
-	<div class="modal fade" id="taskFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
-	<script th:inline="javascript">
-		document.addEventListener("DOMContentLoaded", function(event) {
-			loadSharedElements();
-		});
-	</script>
+<div th:fragment="footer">
+    <div class="toast" id="toastTemplate">
+        <div class="toast-header">
+            <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
+                <rect width="100%" height="100%" fill="#007aff"></rect>
+            </svg>
+            <strong class="me-auto">Bootstrap</strong>
+            <button type="button" class="btn-close" data-bs-dismiss="toast" aria-label="Close"></button>
+        </div>
+        <div class="toast-body"></div>
+    </div>
+    <div class="toast-container position-fixed bottom-0 end-0 p-3" style="z-index: 1060 !important;" id="toastContainer">
+    </div>
+    <script th:src="@{/js/toast-service.js}" defer></script>
 
-</div>
-
-<div th:fragment="scripts">
+    <div th:if="${taskDialog == true}" class="modal fade" id="taskFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
+    <script th:if="${taskDialog == true}" th:src="@{/js/task/create-task-service.js}" defer></script>
+    <script th:src="@{/js/settings/settings-service.js}" defer></script>
 
 	<script th:src="@{/js/common.js}" defer></script>
 	<script th:src="@{/js/form-validation.js}" defer></script>
@@ -21,12 +28,13 @@
 	<script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}" defer></script>
 	<script th:src="@{/webjars/nifty/3.0.1/vendors/bootstrap/bootstrap.min.js}" defer></script>
 	<script th:src="@{/webjars/nifty/3.0.1/js/nifty.js}" defer></script>
-    <script th:src="@{/webjars/nifty/3.0.1/vendors/gridjs/gridjs.umd.min.js}" defer></script>
+    <script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}"></script>
+
+    <script th:if="${gridjs == true}" th:src="@{/webjars/nifty/3.0.1/vendors/gridjs/gridjs.umd.min.js}" defer></script>
+
     <script nomodule th:src="@{/webjars/nifty/3.0.1/vendors/ionicons/ionicons.js}"></script>
-	<script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}"></script>
 	<script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
 	<script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
-	<script th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
-
+	<script th:if="${sweetalerts == true}" th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
 </div>
 </body>
