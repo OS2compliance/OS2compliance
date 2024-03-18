@@ -1,5 +1,6 @@
 package dk.digitalidentity.security;
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.SamlLoginPostProcessor;
@@ -23,7 +24,7 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
     public static final String ATTRIBUTE_USERID = "ATTRIBUTE_USERID";
     public static final String ATTRIBUTE_USER_UUID = "ATTRIBUTE_USER_UUID";
     public static final String ATTRIBUTE_NAME = "ATTRIBUTE_NAME";
-
+    private final OS2complianceConfiguration configuration;
     private final UserService userService;
 
 
@@ -41,7 +42,13 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 
         final Set<SamlGrantedAuthority> authorities = new HashSet<>();
         for(final var a : tokenUser.getAuthorities()) {
-            authorities.add(new SamlGrantedAuthority(a.getAuthority()));
+            if (configuration.getAuthorityAdministrator().equals(a.getAuthority())) {
+                authorities.add(new SamlGrantedAuthority(Roles.ADMINISTRATOR));
+                authorities.add(new SamlGrantedAuthority(Roles.USER));
+            }
+            if (configuration.getAuthorityUser().equals(a.getAuthority())) {
+                authorities.add(new SamlGrantedAuthority(Roles.USER));
+            }
         }
         authorities.add(new SamlGrantedAuthority(Roles.AUTHENTICATED));
         // Add roles coming directly from the database.
