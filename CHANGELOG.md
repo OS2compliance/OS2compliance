@@ -7,6 +7,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- (https://github.com/OS2compliance/OS2compliance/issues/126) Manglende validering af at et aktiv er valgt
+
 
 ## [1.1.0] - 2024-03-15
 
