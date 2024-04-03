@@ -17,6 +17,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public interface RegisterMapper {
 
     default RegisterDTO toDTO(final RegisterGrid registerGrid) {
+        //noinspection Convert2MethodRef
         return RegisterDTO.builder()
                 .id(registerGrid.getId())
                 .name(registerGrid.getName())
@@ -25,8 +26,11 @@ public interface RegisterMapper {
                 .departments(nullSafe(() -> registerGrid.getDepartmentNames(), ""))
                 .updatedAt(nullSafe(() -> registerGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .consequence(nullSafe(() -> registerGrid.getConsequence().getMessage(), ""))
+                .consequenceOrder(registerGrid.getConsequenceOrder())
                 .status(nullSafe(() -> registerGrid.getStatus().getMessage(), ""))
+                .statusOrder(registerGrid.getStatusOrder())
                 .risk(nullSafe(() -> registerGrid.getRisk().getMessage(), ""))
+                .riskOrder(registerGrid.getRiskOrder())
                 .assetCount(registerGrid.getAssetCount())
                 .build();
     }

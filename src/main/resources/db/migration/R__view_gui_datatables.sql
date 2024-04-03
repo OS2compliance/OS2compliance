@@ -21,8 +21,20 @@ SELECT
     t.responsible_ou_uuid,
     t.next_deadline,
     t.repetition,
-    (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
+    (CASE WHEN t.repetition = 'NONE' THEN 10
+        WHEN t.repetition = 'MONTHLY' THEN 2
+        WHEN t.repetition = 'QUARTERLY' THEN 3
+        WHEN t.repetition = 'HALF_YEARLY' THEN 4
+        WHEN t.repetition = 'YEARLY' THEN 5
+        WHEN t.repetition = 'EVERY_SECOND_YEAR' THEN 6
+        WHEN t.repetition = 'EVERY_THIRD_YEAR' THEN 7
+        END) as repetition_order,
     ts.task_result AS result,
+    (CASE WHEN ts.task_result = 'NO_ERROR' THEN 1
+          WHEN ts.task_result = 'NO_CRITICAL_ERROR' THEN 2
+          WHEN ts.task_result = 'CRITICAL_ERROR' THEN 3
+        END) as task_result_order,
+    (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
     GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value ASC SEPARATOR ',') as tags
 FROM tasks t
@@ -45,9 +57,21 @@ SELECT
     GROUP_CONCAT(DISTINCT d.name SEPARATOR ', ') as department_names,
     r.updated_at,
     ca.assessment as consequence,
+    (CASE WHEN ca.assessment = 'GREEN' THEN 1
+          WHEN ca.assessment = 'YELLOW' THEN 2
+          WHEN ca.assessment = 'RED' THEN 3
+        END) as consequence_order,
     ta.assessment as risk,
+    (CASE WHEN ta.assessment = 'GREEN' THEN 1
+          WHEN ta.assessment = 'YELLOW' THEN 2
+          WHEN ta.assessment = 'RED' THEN 3
+        END) as risk_order,
     concat(COALESCE(r.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     r.status,
+    (CASE WHEN r.status = 'NOT_STARTED' THEN 1
+          WHEN r.status = 'IN_PROGRESS' THEN 2
+          WHEN r.status = 'READY' THEN 3
+        END) as status_order,
     (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count
 FROM registers r
 LEFT JOIN consequence_assessments ca on ca.register_id = r.id
@@ -76,7 +100,15 @@ SELECT
     GROUP_CONCAT(u.uuid SEPARATOR ',') as responsible_user_uuids,
     a.updated_at,
     a.asset_status,
+    (CASE WHEN a.asset_status = 'NOT_STARTED' THEN 1
+          WHEN a.asset_status = 'ON_GOING' THEN 2
+          WHEN a.asset_status = 'READY' THEN 3
+        END) as asset_status_order,
     ta.assessment,
+    (CASE WHEN ta.assessment = 'GREEN' THEN 1
+          WHEN ta.assessment = 'YELLOW' THEN 2
+          WHEN ta.assessment = 'RED' THEN 3
+          END) as assessment_order,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos,
     CASE
@@ -113,6 +145,10 @@ SELECT
     t.updated_at as date,
     t.assessment,
     t.localized_enums,
+    (CASE WHEN t.assessment = 'GREEN' THEN 1
+          WHEN t.assessment = 'YELLOW' THEN 2
+          WHEN t.assessment = 'RED' THEN 3
+        END) as assessment_order,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks
 FROM
     threat_assessments t
@@ -124,9 +160,24 @@ SELECT
     d.id,
     d.name,
     d.document_type,
+    (CASE WHEN d.document_type = 'OTHER' THEN 1
+          WHEN d.document_type = 'WORKFLOW' THEN 2
+          WHEN d.document_type = 'DATA_PROCESSING_AGREEMENT' THEN 3
+          WHEN d.document_type = 'CONTRACT' THEN 4
+          WHEN d.document_type = 'CONTROL' THEN 5
+          WHEN d.document_type = 'MANAGEMENT_REPORT' THEN 6
+          WHEN d.document_type = 'PROCEDURE' THEN 7
+          WHEN d.document_type = 'RISK_ASSESSMENT_REPORT' THEN 8
+          WHEN d.document_type = 'SUPERVISORY_REPORT' THEN 9
+          WHEN d.document_type = 'GUIDE' THEN 10
+          END) as document_type_order,
     d.responsible_uuid,
     d.next_revision,
     d.status,
+    (CASE WHEN d.status = 'NOT_STARTED' THEN 1
+          WHEN d.status = 'IN_PROGRESS' THEN 2
+          WHEN d.status = 'READY' THEN 3
+          END) as status_order,
     d.localized_enums,
     GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value ASC SEPARATOR ',') as tags
 FROM documents d

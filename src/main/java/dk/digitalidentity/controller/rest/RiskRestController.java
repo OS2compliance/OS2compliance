@@ -121,7 +121,7 @@ public class RiskRestController {
             return new ResponsibleUsersWithElementNameDTO(register.getName(),new ArrayList<>());
         }
 
-        List<ResponsibleUserDTO> users = register.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
+        final List<ResponsibleUserDTO> users = register.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
         return new ResponsibleUsersWithElementNameDTO(register.getName(), users);
     }
 
@@ -250,13 +250,13 @@ public class RiskRestController {
         if (asset.getResponsibleUsers() == null || asset.getResponsibleUsers().isEmpty()) {
             return new ResponsibleUsersWithElementNameDTO(asset.getName(), new ArrayList<>());
         }
-        List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
+        final List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
         return new ResponsibleUsersWithElementNameDTO(asset.getName(), users);
     }
 
     private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("type") || fieldName.equals("user") || fieldName.equals("ou")
-                || fieldName.equals("date") || fieldName.equals("tasks") || fieldName.equals("assessment");
+        return fieldName.equals("name") || fieldName.equals("type") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
+                || fieldName.equals("date") || fieldName.equals("tasks") || fieldName.equals("assessment") || fieldName.equals("assessmentOrder");
     }
 
     /**
@@ -266,15 +266,15 @@ public class RiskRestController {
         final User user = userService.currentUser();
         final String responsibleUserName = user != null ? user.getName() : "";
         if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
-            List<EmailEvent> events = new ArrayList<>();
-            List<Asset> assets =  relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
+            final List<EmailEvent> events = new ArrayList<>();
+            final List<Asset> assets =  relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
                 .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
                 .map(assetService::findById)
                 .filter(Optional::isPresent)
                 .map(Optional::get).collect(Collectors.toList());
-            for (Asset asset : assets) {
+            for (final Asset asset : assets) {
                 if (asset.getResponsibleUsers() != null) {
-                    for (User responsibleUser : asset.getResponsibleUsers()) {
+                    for (final User responsibleUser : asset.getResponsibleUsers()) {
                         if (responsibleUser.getEmail() != null) {
                             events.add(EmailEvent.builder()
                                 .email(responsibleUser.getEmail())
@@ -288,16 +288,16 @@ public class RiskRestController {
 
             return  events;
         } else if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
-            List<EmailEvent> events = new ArrayList<>();
-            List<Register> registers = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
+            final List<EmailEvent> events = new ArrayList<>();
+            final List<Register> registers = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
                 .map(a -> a.getRelationAType() == RelationType.REGISTER ? a.getRelationAId() : a.getRelationBId())
                 .map(registerService::findById)
                 .filter(Optional::isPresent)
                 .map(Optional::get).collect(Collectors.toList());
 
-            for (Register register : registers) {
+            for (final Register register : registers) {
                 if (register.getResponsibleUsers() != null) {
-                    for (User responsibleUser : register.getResponsibleUsers()) {
+                    for (final User responsibleUser : register.getResponsibleUsers()) {
                         if (responsibleUser.getEmail() != null) {
                             events.add(EmailEvent.builder()
                                 .email(responsibleUser.getEmail())

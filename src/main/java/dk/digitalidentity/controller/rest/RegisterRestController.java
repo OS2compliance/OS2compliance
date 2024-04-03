@@ -92,7 +92,7 @@ public class RegisterRestController {
 
     private boolean containsField(final String fieldName) {
         return fieldName.equals("name") || fieldName.equals("responsibleUserNames") || fieldName.equals("responsibleOUNames")
-                || fieldName.equals("updatedAt") || fieldName.equals("consequence") || fieldName.equals("risk") || fieldName.equals("departmentNames")
-                || fieldName.equals("status") || fieldName.equals("assetCount");
+                || fieldName.equals("updatedAt") || fieldName.equals("consequenceOrder") || fieldName.equals("riskOrder") || fieldName.equals("departmentNames")
+                || fieldName.equals("statusOrder") || fieldName.equals("assetCount");
     }
 }

@@ -33,6 +33,9 @@ public class DocumentGrid {
     @Enumerated(EnumType.STRING)
     private DocumentType documentType;
 
+    @Column(name = "document_type_order")
+    private Integer documentTypeOrder;
+
     @ManyToOne
     @JoinColumn(name = "responsible_uuid")
     private User responsibleUser;
@@ -43,6 +46,9 @@ public class DocumentGrid {
     @Column
     @Enumerated(EnumType.STRING)
     private DocumentStatus status;
+
+    @Column
+    private Integer statusOrder;
 
     @Column
     private String localizedEnums;

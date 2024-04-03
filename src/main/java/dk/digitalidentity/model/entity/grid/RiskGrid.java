@@ -53,5 +53,8 @@ public class RiskGrid {
     private RiskAssessment assessment;
 
     @Column
+    private Integer assessmentOrder;
+
+    @Column
     private String localizedEnums;
 }

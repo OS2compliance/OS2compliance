@@ -12,10 +12,11 @@ import lombok.NoArgsConstructor;
 public class RiskDTO {
     private Long id;
     private String name;
-    private String user;
-    private String ou;
+    private String responsibleUser;
+    private String responsibleOU;
     private String type;
     private String date;
     private Integer tasks;
     private String assessment;
+    private Integer assessmentOrder;
 }

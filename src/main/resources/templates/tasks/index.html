@@ -102,7 +102,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'taskType', 'responsibleUser', 'responsibleOU', 'tags', 'nextDeadline', 'taskRepetition', '', 'taskResult'];
+                        const columnIds = ['id', 'name', 'taskType', 'responsibleUser.name', 'responsibleOU.name', 'tags', 'nextDeadline', 'taskRepetition', '', 'completed'];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));

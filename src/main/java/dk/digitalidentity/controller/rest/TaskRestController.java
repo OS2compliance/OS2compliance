@@ -92,8 +92,8 @@ public class TaskRestController {
     }
 
     private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("taskType") || fieldName.equals("responsibleUser") || fieldName.equals("responsibleOU")
+        return fieldName.equals("name") || fieldName.equals("taskType") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
                 || fieldName.equals("nextDeadline") || fieldName.equals("taskRepetition")
-                || fieldName.equals("taskResult") || fieldName.equals("tags");
+                || fieldName.equals("taskResult") || fieldName.equals("tags") || fieldName.equals("completed");
     }
 }

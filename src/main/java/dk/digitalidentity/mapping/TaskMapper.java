@@ -14,6 +14,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface TaskMapper {
 
+    @SuppressWarnings("Convert2MethodRef")
     default TaskDTO toDTO(final TaskGrid taskGrid) {
         return TaskDTO.builder()
                 .id(taskGrid.getId())
@@ -22,8 +23,10 @@ public interface TaskMapper {
                 .responsibleOU(nullSafe(() -> taskGrid.getResponsibleOU().getName()))
                 .nextDeadline(nullSafe(() -> taskGrid.getNextDeadline().format(DK_DATE_FORMATTER)))
                 .taskRepetition(nullSafe(() -> taskGrid.getTaskRepetition().getMessage()))
+                .taskRepetitionOrder(taskGrid.getTaskRepetitionOrder())
                 .taskType(nullSafe(() -> taskGrid.getTaskType().getMessage()))
                 .taskResult(nullSafe(() -> taskGrid.getTaskResult()))
+                .taskResultOrder(taskGrid.getTaskResultOrder())
                 .completed(nullSafe(taskGrid::isCompleted))
                 .tags(nullSafe(() -> taskGrid.getTags()))
                 .build();

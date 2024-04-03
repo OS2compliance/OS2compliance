@@ -51,7 +51,9 @@ public interface AssetMapper {
                 .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
                 .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
+                .assessmentOrder(assetGrid.getAssessmentOrder())
                 .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
+
                 .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
                 .registers(nullSafe(() -> assetGrid.getRegisters()))
                 .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
