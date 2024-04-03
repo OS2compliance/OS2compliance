@@ -151,8 +151,10 @@ function supportingStandartsViewLoaded() {
                 setField(id, "SELECTED", checked, index);
 
                 if (checked) {
+                    document.getElementById('statusTD' + index).style.display = "block";
                     document.getElementById('selectedTD' + index).textContent = "Tilvalgt";
                 } else {
+                    document.getElementById('statusTD' + index).style.display = "none";
                     document.getElementById('selectedTD' + index).textContent = "Fravalgt";
                 }
             });
