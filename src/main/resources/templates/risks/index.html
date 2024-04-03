@@ -104,7 +104,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'type', 'ou', 'user', 'tasks', 'date', 'assessment'];
+                        const columnIds = ['id', 'name', 'type', 'responsibleOU.name', 'responsibleUser.name', 'tasks', 'date', 'assessmentOrder'];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -188,7 +188,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(risk =>
-                    [ risk.id, risk.name, risk.type, risk.ou, risk.user, risk.tasks, risk.date, risk.assessment]
+                    [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.assessment]
                 ),
                 total: data => data.totalCount
             },

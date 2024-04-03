@@ -18,7 +18,9 @@ public class TaskDTO {
     private String responsibleOU;
     private String nextDeadline;
     private String taskRepetition;
+    private Integer taskRepetitionOrder;
     private boolean completed;
     private TaskResult taskResult;
+    private Integer taskResultOrder;
     private String tags;
 }

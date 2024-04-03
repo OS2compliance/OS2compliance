@@ -21,8 +21,11 @@ public class RegisterDTO {
     private String departments;
     private String updatedAt;
     private String consequence;
+    private Integer consequenceOrder;
     private String risk;
+    private Integer riskOrder;
     private String status;
+    private Integer statusOrder;
     private Set<String> gdprChoices;
     private int assetCount;
 }

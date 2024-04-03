@@ -17,6 +17,7 @@ public class AssetDTO {
     private String responsibleUsers;
     private String updatedAt;
     private String assessment;
+    private Integer assessmentOrder;
     private String assetStatus;
     private String kitos;
     private boolean hasThirdCountryTransfer;

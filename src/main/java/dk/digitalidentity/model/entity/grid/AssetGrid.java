@@ -1,6 +1,5 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
@@ -9,8 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -50,12 +47,18 @@ public class AssetGrid {
 	@Enumerated(EnumType.STRING)
 	private AssetStatus assetStatus;
 
+	@Column
+	private Integer assetStatusOrder;
+
     @Column(name = "kitos")
     private boolean kitos;
 
     @Column
     @Enumerated(EnumType.STRING)
     private RiskAssessment assessment;
+
+    @Column
+    private Integer assessmentOrder;
 
     @Column
     private String localizedEnums;
