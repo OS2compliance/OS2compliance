@@ -10,7 +10,10 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - (https://github.com/OS2compliance/OS2compliance/issues/126) Manglende validering af at et aktiv er valgt
 - (https://github.com/OS2compliance/OS2compliance/issues/125) Status fjernet fra fravalgte sektioner i iso2700X
+- (https://github.com/OS2compliance/OS2compliance/issues/97)  Sortering på kolonner med rød/gul/grøn
 
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-160) Understøttelse af fk-adgangsstyring
 
 ## [1.1.0] - 2024-03-15
 

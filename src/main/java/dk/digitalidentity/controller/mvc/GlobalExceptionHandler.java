@@ -29,7 +29,7 @@ public class GlobalExceptionHandler {
         if (AnnotationUtils.findAnnotation (e.getClass(), ResponseStatus.class) != null) {
             throw e;
         }
-        log.error("Unhandled error", e);
+        log.error("Unhandled error, method: {}, url: {}", request.getMethod(), request.getRequestURI(), e);
         return errorView(request, "errors/technicalError");
     }
 
