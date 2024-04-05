@@ -131,7 +131,7 @@ public class StandardController {
         final List<StandardTemplateSectionDTO> sections = new ArrayList<>();
         sections.add(standardSection("9"));
 
-        model.addAttribute("sectionName", "act");
+        model.addAttribute("sectionName", "check");
         model.addAttribute("sections", sections);
         return "standards/iso27001";
     }
