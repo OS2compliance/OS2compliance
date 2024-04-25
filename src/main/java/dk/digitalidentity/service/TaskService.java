@@ -3,6 +3,7 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
@@ -101,6 +102,15 @@ public class TaskService {
 
     @Transactional
     public Task saveTask(final Task task) {
+        if (task.getTaskType() == TaskType.CHECK) {
+            findLinkedDocument(task)
+                .ifPresent(d -> {
+                    // Deadline was changed on the task, reflect this on the document next revision
+                    if (!d.getNextRevision().isEqual(task.getNextDeadline())) {
+                        d.setNextRevision(task.getNextDeadline());
+                    }
+                });
+        }
         return taskDao.save(task);
     }
 
@@ -110,11 +120,7 @@ public class TaskService {
         if (task.getTaskType() == TaskType.CHECK) {
             final LocalDate nextDeadline = getNextDeadline(task.getNextDeadline(), task.getRepetition());
             // Check if we need to move date on related assets
-            task.getProperties().stream()
-                .filter(p -> p.getKey().equals(ASSOCIATED_DOCUMENT_PROPERTY))
-                .findFirst()
-                .flatMap(property ->
-                    documentDao.findById(Long.parseLong(property.getValue())))
+            findLinkedDocument(task)
                 .ifPresent(d -> {
                     if (d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(nextDeadline);
@@ -166,6 +172,14 @@ public class TaskService {
 
     public List<TaskLog> logsBetween(final Task task, final LocalDate from, final LocalDate to) {
         return taskLogDao.findAllByTaskFiltered(task, from, to);
+    }
+
+    private Optional<Document> findLinkedDocument(final Task task) {
+        return task.getProperties().stream()
+            .filter(p -> p.getKey().equals(ASSOCIATED_DOCUMENT_PROPERTY))
+            .findFirst()
+            .flatMap(property ->
+                documentDao.findById(Long.parseLong(property.getValue())));
     }
 
     private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {
