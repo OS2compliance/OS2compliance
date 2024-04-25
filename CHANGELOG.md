@@ -13,6 +13,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/97)  Sortering på kolonner med rød/gul/grøn
 - (https://github.com/OS2compliance/OS2compliance/issues/135) Fix dead links from registers
 - (https://github.com/OS2compliance/OS2compliance/issues/131) Fejl i samspillet mellem dokument og opgave ift. dato (Syddjurs)
+- (https://github.com/OS2compliance/OS2compliance/issues/133) Eksterne links skal åbne på en ny fane
 
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-160) Understøttelse af fk-adgangsstyring
