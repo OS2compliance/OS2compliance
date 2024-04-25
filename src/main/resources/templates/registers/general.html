@@ -142,7 +142,7 @@
                             <tbody>
                                 <tr th:each="document : ${documents}">
                                     <td class="col-lg-10">
-                                        <a th:text="${document.name} + ' - ' + ${document.nextRevision}" th:href="@{documents/{id}(id=${document.id})}"></a>
+                                        <a th:text="${document.name} + ' - ' + ${document.nextRevision}" th:href="@{/documents/{id}(id=${document.id})}"></a>
                                     </td>
                                     <td class="col-lg-2" title="Fjern relation">
                                         <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
@@ -169,7 +169,7 @@
                             <tbody>
                             <tr th:each="task : ${tasks}">
                                 <td class="col-lg-10">
-                                    <a th:text="${task.nextDeadline} + ' ' + ${task.name} + ' (' + ${task.responsibleUser.name} + ')'" th:href="@{tasks/{id}(id=${task.id})}"></a>
+                                    <a th:text="${task.nextDeadline} + ' ' + ${task.name} + ' (' + ${task.responsibleUser.name} + ')'" th:href="@{/tasks/{id}(id=${task.id})}"></a>
                                 </td>
                                 <td class="col-lg-2" title="Fjern relation">
                                     <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
