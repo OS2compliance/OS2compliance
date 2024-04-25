@@ -12,6 +12,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -49,6 +50,13 @@ public class DefaultController implements ErrorController {
 	public String errorPage(final Model model, final HttpServletRequest request) {
 		final Map<String, Object> body = getErrorAttributes(new ServletWebRequest(request));
         model.addAllAttributes(body);
+        if (model.containsAttribute("EXCEPTION")) {
+            final Exception ex = (Exception) model.getAttribute("EXCEPTION");
+            if (ex instanceof UsernameNotFoundException) {
+                return "errors/userNotFound";
+            }
+        }
+
 		return "error";
 	}
 
