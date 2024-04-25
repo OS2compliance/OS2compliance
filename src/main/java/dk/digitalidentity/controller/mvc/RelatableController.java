@@ -14,7 +14,6 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.RequireUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -140,7 +139,7 @@ public class RelatableController {
         return "redirect:/";
     }
 
-    @NotNull private String getReturnPath(final long id, final Relatable relatable) {
+    private String getReturnPath(final long id, final Relatable relatable) {
         if (relatable.getRelationType().equals(RelationType.DOCUMENT)) {
             return "redirect:/documents/" + id;
         }

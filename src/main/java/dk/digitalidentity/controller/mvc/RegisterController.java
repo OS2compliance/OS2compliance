@@ -31,7 +31,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.UUID;
-import org.jetbrains.annotations.NotNull;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,7 +54,6 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 
-@SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Slf4j
 @Controller
 @RequireUser
@@ -288,14 +286,12 @@ public class RegisterController {
         registerService.delete(register);
     }
 
-    @NotNull
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted(Comparator.comparingInt(a -> asNumber(a.getCaption())))
                 .collect(Collectors.toList());
     }
 
-    @NotNull
     private static List<ChoiceValue> sortChoicesAlpha(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted((a, b) -> a.getCaption().compareToIgnoreCase(b.getCaption()))
