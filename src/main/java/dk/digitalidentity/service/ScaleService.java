@@ -42,6 +42,29 @@ public class ScaleService {
             ))
             .build(),
         ScaleExplainers.builder()
+            .type(RiskScaleType.SCALE_1_4_KL)
+            .riskScore(List.of(
+                "Risikoscore = sandsynlighed * konsekvens",
+                "1-3 = Lav risiko (grøn)",
+                "4-6 = Under middel risiko (lysegrøn)",
+                "7-11 = Middel risiko (gul)",
+                "12-14 = Ovr middel risiko (orange)",
+                "15-16 = Høj risiko (rød)"
+            ))
+            .probabilityScore(List.of(
+                "1 = Usandsynligt",
+                "2 = Mindre sandsynligt",
+                "3 = Sandsynligt",
+                "4 = Forventet"
+            ))
+            .consequenceNumber(List.of(
+                "1 = Lav",
+                "2 = Medium",
+                "3 = Høj",
+                "4 = Meget høj"
+            ))
+            .build(),
+        ScaleExplainers.builder()
             .type(RiskScaleType.SCALE_1_10)
             .riskScore(Collections.emptyList())
             .probabilityScore(Collections.emptyList())
@@ -83,7 +106,7 @@ public class ScaleService {
     }
 
     private String getScaleTypeString() {
-        return settingsService.getString("scale","scale-1-4");
+        return settingsService.getString("scale", RiskScaleType.SCALE_1_4.name());
     }
 
     private String getRiskScoreExplainer(final RiskScaleType riskScaleType) {
@@ -109,22 +132,41 @@ public class ScaleService {
         final Map<String, String> map = new HashMap<>();
         switch (riskScaleType) {
             case SCALE_1_4 -> {
-                map.put("1,1", "GRØN");
-                map.put("1,2", "GRØN");
-                map.put("1,3", "GRØN");
-                map.put("1,4", "GUL");
-                map.put("2,1", "GRØN");
-                map.put("2,2", "GRØN");
-                map.put("2,3", "GUL");
-                map.put("2,4", "GUL");
-                map.put("3,1", "GRØN");
-                map.put("3,2", "GUL");
-                map.put("3,3", "GUL");
-                map.put("3,4", "RØD");
-                map.put("4,1", "GUL");
-                map.put("4,2", "GUL");
-                map.put("4,3", "RØD");
-                map.put("4,4", "RØD");
+                map.put("1,1", "#87AD27");
+                map.put("1,2", "#87AD27");
+                map.put("1,3", "#87AD27");
+                map.put("1,4", "#FFDE07");
+                map.put("2,1", "#87AD27");
+                map.put("2,2", "#87AD27");
+                map.put("2,3", "#FFDE07");
+                map.put("2,4", "#FFDE07");
+                map.put("3,1", "#87AD27");
+                map.put("3,2", "#FFDE07");
+                map.put("3,3", "#FFDE07");
+                map.put("3,4", "#DF5645");
+                map.put("4,1", "#FFDE07");
+                map.put("4,2", "#FFDE07");
+                map.put("4,3", "#DF5645");
+                map.put("4,4", "#DF5645");
+                return map;
+            }
+            case SCALE_1_4_KL -> {
+                map.put("1,1", "#1DB255");
+                map.put("1,2", "#1DB255");
+                map.put("1,3", "#1DB255");
+                map.put("1,4", "#93D259");
+                map.put("2,1", "#1DB255");
+                map.put("2,2", "#93D259");
+                map.put("2,3", "#93D259");
+                map.put("2,4", "#FDFF3C");
+                map.put("3,1", "#1DB255");
+                map.put("3,2", "#93D259");
+                map.put("3,3", "#FDFF3C");
+                map.put("3,4", "#FCC231");
+                map.put("4,1", "#93D259");
+                map.put("4,2", "#FDFF3C");
+                map.put("4,3", "#FCC231");
+                map.put("4,4", "#FA0020");
                 return map;
             }
             case SCALE_1_10 -> {
@@ -140,15 +182,17 @@ public class ScaleService {
     }
 
     public RiskScaleType switchScale(final String s) {
-        // Why is this needed
-        if(isVariantOf(s, "{4=RØD, 3=GUL, 2=GUL, 1=GRØN}")) {
+        try {
+            return RiskScaleType.valueOf(s);
+        } catch (final IllegalArgumentException ex) {
+            if(isVariantOf(s, "{4=RØD, 3=GUL, 2=GUL, 1=GRØN}")) {
+                return RiskScaleType.SCALE_1_4;
+            }
+            if(isVariantOf(s, "{1=GRØN, 2=GRØN, 3=GRØN, 4=GUL, 5=GUL, 6=GUL, 7=GUL, 8=RØD, 9=RØD, 10=RØD}")) {
+                return RiskScaleType.SCALE_1_10;
+            }
             return RiskScaleType.SCALE_1_4;
         }
-        if(isVariantOf(s, "{1=GRØN, 2=GRØN, 3=GRØN, 4=GUL, 5=GUL, 6=GUL, 7=GUL, 8=RØD, 9=RØD, 10=RØD}")) {
-            return RiskScaleType.SCALE_1_10;
-        }
-
-        return RiskScaleType.SCALE_1_4;
 	}
 
     private boolean isVariantOf(final String s1, final String s2) {

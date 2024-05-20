@@ -138,6 +138,18 @@ function javaFormatDate(date) {
     return `${yyyy}-${mm}-${dd}`;
 }
 
+function foregroundColorForHex(rrggbb) {
+    if (rrggbb == null) {
+        return "";
+    }
+    const red = parseInt(rrggbb.substring(1,3), 16);
+    const green = parseInt(rrggbb.substring(3,5), 16);
+    const blue = parseInt(rrggbb.substring(5,7), 16);
+    const avg = (red + green + blue) / 3;
+    console.log(avg)
+    return avg > 150 ? "black" : "white";
+}
+
 function ensureElementHasClass(elem, className) {
     if (!elem.classList.contains(className)) {
         elem.classList.add(className)

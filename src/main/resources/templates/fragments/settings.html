@@ -8,7 +8,7 @@
       </div>
       <div class="modal-body">
         <form id="riskSettingsForm" class="row g-3" action="#" th:action="@{/settings/update}" style="margin-bottom: 25px;"
-          th:object="${Settings}" method="post">
+          th:object="${settings}" method="post">
           <a class="btn btn-primary" data-bs-toggle="collapse" href="#riskPart" role="button" aria-expanded="false" aria-controls="riskPart">
             Risiko
           </a>
@@ -26,7 +26,7 @@
                       <select style="color:black;" class="form-control form-select" data-trigger="" name="riskScale" id="riskScaleSelect"
                         tabindex="-1" th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                         <option style="color: black;" th:each="scale : ${T(dk.digitalidentity.model.entity.enums.RiskScaleType).values()}"
-                          th:value="${scale.getValue()}" th:text="${scale}"
+                          th:value="${scale.name()}" th:text="${scale.getName()}"
                           th:selected="${scale.name() == @scaleService.switchScale(setting.settingValue).name()}"></option>
                       </select>
                     </div>

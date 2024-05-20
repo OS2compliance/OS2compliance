@@ -37,7 +37,7 @@ public class SettingsController {
 	public String form(final Model model) {
         final SettingsDTO settings = new SettingsDTO();
         settings.addList(settingsService.getByEditable());
-		model.addAttribute("Settings", settings);
+		model.addAttribute("settings", settings);
         model.addAttribute("page", getParentType(httpServletRequest.getHeader("Referer")));
         model.addAttribute("kitosRoles", kitosService.kitosRoles());
         model.addAttribute("kitosEnabled", configuration.getIntegrations().getKitos().isEnabled());
