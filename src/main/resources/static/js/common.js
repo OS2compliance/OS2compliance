@@ -146,7 +146,6 @@ function foregroundColorForHex(rrggbb) {
     const green = parseInt(rrggbb.substring(3,5), 16);
     const blue = parseInt(rrggbb.substring(5,7), 16);
     const avg = (red + green + blue) / 3;
-    console.log(avg)
     return avg > 150 ? "black" : "white";
 }
 
