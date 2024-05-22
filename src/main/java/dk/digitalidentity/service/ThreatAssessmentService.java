@@ -346,17 +346,9 @@ public class ThreatAssessmentService {
         }
 
         if (highestRiskNotAcceptedRiskScore != -1) {
-            final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
-            final String color = colorMap.get(globalHighestConsequence + "," + globalHighestprobability);
-            if ("GRØN".equals(color)) {
-                savedThreatAssessment.setAssessment(RiskAssessment.GREEN);
-            } else if ("GUL".equals(color)) {
-                savedThreatAssessment.setAssessment(RiskAssessment.YELLOW);
-            } else if ("RØD".equals(color)) {
-                savedThreatAssessment.setAssessment(RiskAssessment.RED);
-            } else {
-                savedThreatAssessment.setAssessment(null);
-            }
+            final RiskAssessment assessment =
+                scaleService.getRiskAssessmentForRisk(globalHighestConsequence * globalHighestprobability);
+            savedThreatAssessment.setAssessment(assessment);
         } else {
             savedThreatAssessment.setAssessment(null);
         }

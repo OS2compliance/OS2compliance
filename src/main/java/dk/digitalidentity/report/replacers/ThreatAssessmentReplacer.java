@@ -280,8 +280,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private void addRiskExplanations(final XWPFDocument document, final XmlCursor cursor) {
         final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
         tableParagraph.setAlignment(ParagraphAlignment.CENTER);
-        final ScaleService.ScaleExplainers scaleExplainers =
-            ScaleService.scaleExplainerFor(scaleService.getScaleType());
+        final ScaleService.ScaleSetting scaleExplainers =
+            ScaleService.scaleSettingsForType(scaleService.getScaleType());
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         table.setTableAlignment(TableRowAlign.CENTER);

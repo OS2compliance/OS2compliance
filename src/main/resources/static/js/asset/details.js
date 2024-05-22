@@ -38,8 +38,12 @@ function AssetDetailsService() {
             ensureElementHasClass(badgeElem, 'bg-red');
         } else if ('YELLOW' === assessment) {
             ensureElementHasClass(badgeElem, 'bg-yellow');
+        } else if ('ORANGE' === assessment) {
+            ensureElementHasClass(badgeElem, 'bg-orange');
         } else if ('GREEN' === assessment) {
             ensureElementHasClass(badgeElem, 'bg-green');
+        } else if ('LIGHT_GREEN' === assessment) {
+            ensureElementHasClass(badgeElem, 'bg-green-300');
         } else {
             ensureElementHasClass(badgeElem, 'bg-gray-800');
         }

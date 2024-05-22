@@ -27,7 +27,7 @@
                         tabindex="-1" th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                         <option style="color: black;" th:each="scale : ${T(dk.digitalidentity.model.entity.enums.RiskScaleType).values()}"
                           th:value="${scale.name()}" th:text="${scale.getName()}"
-                          th:selected="${scale.name() == @scaleService.switchScale(setting.settingValue).name()}"></option>
+                          th:selected="${scale.name() == @scaleService.getCurrentScaleType(setting.settingValue).name()}"></option>
                       </select>
                     </div>
                   </div>
