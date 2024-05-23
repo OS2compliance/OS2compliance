@@ -31,7 +31,7 @@ function setStyleNotRelevant(selected, rowId, rowClassName) {
         }
         var rowRiskScore = document.getElementById('row' + rowId + 'RiskScore');
         rowRiskScore.textContent = "";
-        updateColorFor(rowRiskScore, "INGEN")
+        updateColorFor(rowRiskScore, null)
     } else {
         rows.forEach(r => r.style.backgroundColor = "transparent");
         disableOrEnableFields(selectAndTextareaElements, false)
@@ -115,7 +115,7 @@ function calculateRisk(row, rowId, rowRiskScore) {
 
     if (probability == 0 || highestScore == 0) {
         rowRiskScore.textContent = "";
-        updateColorFor(rowRiskScore, "INGEN");
+        updateColorFor(rowRiskScore, null);
 
     } else {
         rowRiskScore.textContent = probability * highestScore;
@@ -280,7 +280,7 @@ function updateResidualRiskUIValue(value, elem, rowId) {
 function calculateResidualRiskScore(residualRiskProbabilitySelect, residualRiskConsequenceSelect, rowResidualRiskScore) {
     if (residualRiskProbabilitySelect.value == '-1' || residualRiskConsequenceSelect.value == '-1') {
         rowResidualRiskScore.textContent = '';
-        updateColorFor(rowResidualRiskScore, "INGEN");
+        updateColorFor(rowResidualRiskScore, null);
         return;
     }
 
@@ -291,20 +291,8 @@ function calculateResidualRiskScore(residualRiskProbabilitySelect, residualRiskC
 }
 
 function updateColorFor(elem, color) {
-    // the color codes is the colors used for btns
-    if (color === "GRØN") {
-        elem.style.backgroundColor = "#87ad27";
-        elem.style.color = "white";
-    } else if (color === "GUL") {
-        elem.style.backgroundColor = "#FFDE07FF";
-        elem.style.color = "black";
-    } else if (color === "RØD") {
-        elem.style.backgroundColor = "#df5645";
-        elem.style.color = "white";
-    } else {
-        elem.style.backgroundColor = "";
-        elem.style.color = "#75868f";
-    }
+    elem.style.backgroundColor = color;
+    elem.style.color = foregroundColorForHex(color);
 }
 
 function categoryRowClicked() {

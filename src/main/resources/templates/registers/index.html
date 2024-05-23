@@ -136,8 +136,12 @@
 							let assessment = cell;
 							if (cell === "Grøn") {
 								assessment = '<div class="badge bg-green align-top" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Lysgrøn") {
+								assessment = '<div class="badge bg-green-300 align-top" style="width: 60px">' + cell + '</div>';
 							} else if (cell === "Gul") {
 								assessment = '<div class="badge bg-yellow-500 align-top" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Orange") {
+								assessment = '<div class="badge bg-orange align-top" style="width: 60px">' + cell + '</div>';
 							} else if (cell === "Rød") {
 								assessment = '<div class="badge bg-red align-top" style="width: 60px">' + cell + '</div>';
 							}
@@ -151,8 +155,12 @@
 							let assessment = '';
 							if (cell === "Grøn") {
 								assessment = '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Lysgrøn") {
+								assessment = '<div class="d-block badge bg-green-300" style="width: 60px">' + cell + '</div>';
 							} else if (cell === "Gul") {
 								assessment = '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Orange") {
+								assessment = '<div class="d-block badge bg-orange" style="width: 60px">' + cell + '</div>';
 							} else if (cell === "Rød") {
 								assessment = '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>';
 							}

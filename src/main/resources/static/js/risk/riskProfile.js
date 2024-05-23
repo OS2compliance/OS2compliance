@@ -10,20 +10,8 @@ function setColors() {
 }
 
 function updateColorFor(elem, color) {
-    // the color codes is the colors used for btns
-    if (color === "GRØN") {
-        elem.style.backgroundColor = "#87ad27";
-        elem.style.color = "white";
-    } else if (color === "GUL") {
-        elem.style.backgroundColor = "#FFDE07FF";
-        elem.style.color = "black";
-    } else if (color === "RØD") {
-        elem.style.backgroundColor = "#df5645";
-        elem.style.color = "white";
-    } else {
-        elem.style.backgroundColor = "";
-        elem.style.color = "#75868f";
-    }
+    elem.style.backgroundColor = color;
+    elem.style.color = foregroundColorForHex(color);
 }
 
 function setBeforeNumbers() {

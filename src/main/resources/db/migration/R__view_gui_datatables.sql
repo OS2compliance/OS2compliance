@@ -63,8 +63,10 @@ SELECT
         END) as consequence_order,
     ta.assessment as risk,
     (CASE WHEN ta.assessment = 'GREEN' THEN 1
-          WHEN ta.assessment = 'YELLOW' THEN 2
-          WHEN ta.assessment = 'RED' THEN 3
+          WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+          WHEN ta.assessment = 'YELLOW' THEN 3
+          WHEN ta.assessment = 'ORANGE' THEN 4
+          WHEN ta.assessment = 'RED' THEN 5
         END) as risk_order,
     concat(COALESCE(r.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     r.status,
@@ -106,9 +108,11 @@ SELECT
         END) as asset_status_order,
     ta.assessment,
     (CASE WHEN ta.assessment = 'GREEN' THEN 1
-          WHEN ta.assessment = 'YELLOW' THEN 2
-          WHEN ta.assessment = 'RED' THEN 3
-          END) as assessment_order,
+          WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+          WHEN ta.assessment = 'YELLOW' THEN 3
+          WHEN ta.assessment = 'ORANGE' THEN 4
+          WHEN ta.assessment = 'RED' THEN 5
+        END) as assessment_order,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos,
     CASE
@@ -146,8 +150,10 @@ SELECT
     t.assessment,
     t.localized_enums,
     (CASE WHEN t.assessment = 'GREEN' THEN 1
-          WHEN t.assessment = 'YELLOW' THEN 2
-          WHEN t.assessment = 'RED' THEN 3
+          WHEN t.assessment = 'LIGHT_GREEN' THEN 2
+          WHEN t.assessment = 'YELLOW' THEN 3
+          WHEN t.assessment = 'ORANGE' THEN 4
+          WHEN t.assessment = 'RED' THEN 5
         END) as assessment_order,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks
 FROM
