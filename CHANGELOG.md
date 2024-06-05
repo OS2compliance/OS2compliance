@@ -15,6 +15,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/131) Fejl i samspillet mellem dokument og opgave ift. dato (Syddjurs)
 - (https://github.com/OS2compliance/OS2compliance/issues/134) Intetsigende fejlside
 - (https://github.com/OS2compliance/OS2compliance/issues/133) Eksterne links skal åbne på en ny fane
+- (https://github.com/OS2compliance/OS2compliance/issues/141) Manglende visning af data
 - (https://github.com/OS2compliance/OS2compliance/issues/145) Kopiering af kontrol fejler
 - (https://github.com/OS2compliance/OS2compliance/issues/148) Sortering under mine opgaver
 
