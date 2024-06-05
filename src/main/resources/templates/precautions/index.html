@@ -60,6 +60,7 @@
     /*<![CDATA[*/
     /*[+
         const data = [[${precautions}]];
+        const assetRelations = [[${relatedAssets}]];
         const viewUrl = [[@{/precautions/}]];
         const formUrl = [[@{/precautions/form}]];
         const copyFormUrl = [[@{/precautions/copy}]];
@@ -98,6 +99,21 @@
                 {
                     id: "description",
                     name: "Beskrivelse"
+                },
+                {
+                    id: "assets",
+                    name: "Aktiver",
+                    sort: 0,
+                    formatter: (cell, row) => {
+                        const id = row.cells[0]['data'];
+                        const relatedAssets = assetRelations.filter((relation) => relation.precautionId == id);
+                        var html = '<ul>'
+                        for (const relation of relatedAssets) {
+                          html += '<li><a href="/assets/' + relation.assetId + '">' + relation.assetName + '</a></li>'
+                        }
+                        html += '</ul>'
+                        return gridjs.html(html);
+                    }
                 },
                 {
                     id: "actions",

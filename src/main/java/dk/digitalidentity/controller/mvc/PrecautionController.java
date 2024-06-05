@@ -1,8 +1,11 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.Precaution;
+import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.service.PrecautionService;
+import dk.digitalidentity.service.RelationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -16,7 +19,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -25,67 +30,22 @@ import java.util.List;
 @RequiredArgsConstructor
 public class PrecautionController {
     private final PrecautionService precautionService;
+    private final RelationService relationService;
 
+    record AssetRelationDTO(long precautionId, String assetName, long assetId) {}
     @GetMapping
     public String precautionList(final Model model) {
         final List<Precaution> precautions = precautionService.findAll();
         model.addAttribute("precautions", precautions);
+
+        final List<AssetRelationDTO> allRelatedToPrecaution = new ArrayList<>();
+        for (Precaution precaution : precautions) {
+            allRelatedToPrecaution.addAll(relationService.findAllRelatedTo(precaution).stream().filter(r -> r.getRelationType().equals(RelationType.ASSET)).map( r -> new AssetRelationDTO(precaution.getId(), r.getName(), r.getId())).collect(Collectors.toList()));
+        }
+        model.addAttribute("relatedAssets", allRelatedToPrecaution);
+
         return "precautions/index";
     }
-
-//    @GetMapping("{identifier}")
-//    public String view(final Model model, @PathVariable final String identifier) {
-//        final ThreatCatalog threatCatalog = threatCatalogService.get(identifier)
-//            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-//        model.addAttribute("catalog", threatCatalog);
-//        return "catalogs/view";
-//    }
-//
-//    @GetMapping("threatForm")
-//    public String threatForm(final Model model, @RequestParam(name = "catalogIdentifier") final String catalogIdentifier, @RequestParam(name = "identifier", required = false) final String identifier) {
-//        final ThreatCatalog catalog = threatCatalogService.get(catalogIdentifier)
-//            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-//        model.addAttribute("catalog", catalog);
-//        if (identifier == null) {
-//            model.addAttribute("threat", new ThreatCatalogThreat());
-//            model.addAttribute("formId", "createForm");
-//            model.addAttribute("formTitle", "Ny trussel");
-//        } else {
-//            final ThreatCatalogThreat threat = catalog.getThreats().stream()
-//                .filter(t -> identifier.equals(t.getIdentifier()))
-//                .findFirst()
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-//            model.addAttribute("threat", threat);
-//            model.addAttribute("formId", "editForm");
-//            model.addAttribute("formTitle", "Rediger trussel");
-//        }
-//        return "catalogs/threatForm";
-//    }
-//
-//    @Transactional
-//    @PostMapping("threatForm")
-//    public String threatFormPost(@RequestParam(name = "catalogIdentifier") final String catalogIdentifier, @ModelAttribute final ThreatCatalogThreat threat) {
-//        final ThreatCatalog catalog = threatCatalogService.get(catalogIdentifier)
-//            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-//        final ThreatCatalogThreat existingThreat = catalog.getThreats().stream()
-//            .filter(t -> threat.getIdentifier().equals(t.getIdentifier()))
-//            .findFirst()
-//            .orElseGet(() -> {
-//                // New threat, make sure to set the sort key to max
-//                final long currentMax = catalog.getThreats().stream()
-//                    .filter(t -> StringUtils.equalsIgnoreCase(t.getThreatType(), threat.getThreatType()))
-//                    .mapToLong(ThreatCatalogThreat::getSortKey)
-//                    .filter(Objects::nonNull)
-//                    .max().orElse(0L);
-//                threat.setIdentifier(UUID.randomUUID().toString());
-//                threat.setThreatCatalog(catalog);
-//                threat.setSortKey(currentMax+1);
-//                return threatCatalogService.saveThreat(threat);
-//            });
-//        existingThreat.setThreatType(threat.getThreatType());
-//        existingThreat.setDescription(threat.getDescription());
-//        return "redirect:/catalogs/" + catalogIdentifier;
-//    }
 
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
@@ -103,17 +63,6 @@ public class PrecautionController {
         }
         return "precautions/form";
     }
-//
-//    @GetMapping("copy")
-//    public String copyForm(final Model model, @RequestParam(name = "id") final String id) {
-//        final ThreatCatalog catalog = threatCatalogService.get(id)
-//            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-//        model.addAttribute("action", "catalogs/copy");
-//        model.addAttribute("catalog", catalog);
-//        model.addAttribute("formId", "copyForm");
-//        model.addAttribute("formTitle", "Kopier trusselskatalog");
-//        return "catalogs/form";
-//    }
 
     @Transactional
     @PostMapping("form")
@@ -129,12 +78,4 @@ public class PrecautionController {
         }
         return "redirect:/precautions";
     }
-
-//    @Transactional
-//    @PostMapping("copy")
-//    public String copyPost(@ModelAttribute final ThreatCatalog catalog) {
-//        threatCatalogService.copyToNew(catalog);
-//        return "redirect:/catalogs";
-//    }
-
 }

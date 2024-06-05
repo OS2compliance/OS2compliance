@@ -120,4 +120,8 @@ public class RelationService {
     public void deleteRelatedTo(final Long lid) {
         relationDao.deleteRelatedTo(lid);
     }
+
+    public void deleteAll(List<Relation> toDelete) {
+        relationDao.deleteAll(toDelete);
+    }
 }

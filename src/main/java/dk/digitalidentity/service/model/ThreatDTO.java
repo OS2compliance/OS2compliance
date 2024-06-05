@@ -1,5 +1,6 @@
 package dk.digitalidentity.service.model;
 
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import lombok.Getter;
@@ -39,6 +40,7 @@ public class ThreatDTO {
 
     private final String problem;
     private final String existingMeasures;
+    private final List<Relatable> relatedPrecautions;
     private final ThreatMethod method;
     private final String elaboration;
     private final int residualRiskConsequence;
