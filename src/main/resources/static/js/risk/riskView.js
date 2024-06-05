@@ -430,8 +430,6 @@ function setPrecautions() {
                  "precautionIds": precautionIds
                };
 
-   console.log(data);
-
     postData("/rest/risks/" + riskId + "/threats/setPrecautions", data).then((response) => {
             if (!response.ok) {
                 throw new Error(`${response.status} ${response.statusText}`);
@@ -506,7 +504,6 @@ function pageLoaded() {
 
         // threat data
         var dbType = relationsSelect.dataset.dbtype;
-        console.log(dbType)
         var id = relationsSelect.dataset.id;
         var identifier = relationsSelect.dataset.identifier;
 
