@@ -16,6 +16,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/134) Intetsigende fejlside
 - (https://github.com/OS2compliance/OS2compliance/issues/133) Eksterne links skal åbne på en ny fane
 - (https://github.com/OS2compliance/OS2compliance/issues/145) Kopiering af kontrol fejler
+- (https://github.com/OS2compliance/OS2compliance/issues/148) Sortering under mine opgaver
 
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-160) Understøttelse af fk-adgangsstyring
