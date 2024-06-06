@@ -1,4 +1,4 @@
-# Change Log in OS2 projects/products
+# Change Log in OS2compliance
 
 All notable changes to the project MUST be documented in this file.
 
