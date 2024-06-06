@@ -213,6 +213,20 @@ function updateRelationsForStandardSection(choices, search) {
         .catch(error => toastService.error(error));
 }
 
+function updateRelationsPrecautionsOnly(choices, search) {
+    fetch( `/rest/relatable/autocomplete?types=PRECAUTION&search=${search}`)
+        .then(response => response.json()
+            .then(data => {
+                choices.setChoices(data.content.map(reg => {
+                    return {
+                        id: reg.id,
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60)
+                    }
+                }), 'id', 'name', true);
+            }))
+        .catch(error => toastService.error(error));
+}
+
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     userChoicesEditSelect = initUserSelect('userSelect');
