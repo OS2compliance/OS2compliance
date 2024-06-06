@@ -15,4 +15,5 @@ public class TaskDTO {
     private String responsibleUser;
     private String deadline;
     private boolean passedDeadline;
+    private String statusBadgeHtml;
 }
