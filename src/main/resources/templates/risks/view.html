@@ -249,6 +249,14 @@
                                             </td>
                                         </tr>
                                         <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
+                                            <td class="riskViewTh">Tilknyttede foranstaltninger</td>
+                                            <td class="riskViewTd editCell" colspan="13">
+                                                <select class="form-control form-select choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" multiple>
+                                                    <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name}" selected></option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
                                             <td class="riskViewTh">Uddybning af risikohåndtering</td>
                                             <td class="riskViewTd editCell" colspan="13">
                                                 <div class="excel-textarea-container">

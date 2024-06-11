@@ -8,8 +8,10 @@ import dk.digitalidentity.model.dto.RiskDTO;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
@@ -22,6 +24,7 @@ import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -84,6 +87,7 @@ public class RiskRestController {
     private final RiskGridDao riskGridDao;
     private final RiskMapper mapper;
     private final UserService userService;
+    private final PrecautionService precautionService;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -167,26 +171,8 @@ public class RiskRestController {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
         }
 
-        ThreatAssessmentResponse response;
-        if (dto.dbType().equals(ThreatDatabaseType.CATALOG)) {
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(dto.identifier())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            response = threatAssessment.getThreatAssessmentResponses().stream()
-                .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
-                .findAny()
-                .orElse(null);
-            if (response == null) {
-                response = threatAssessmentService.createResponse(threatAssessment, threat, null);
-            }
-        } else if (dto.dbType().equals(ThreatDatabaseType.CUSTOM)) {
-            final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(dto.id())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            response = threatAssessment.getThreatAssessmentResponses().stream()
-                .filter(r -> r.getCustomThreat() != null && Objects.equals(r.getCustomThreat().getId(), threat.getId()))
-                .findAny()
-                .orElse(null);
-            if (response == null) {
-                response = threatAssessmentService.createResponse(threatAssessment, null, threat);
-            }
-        } else {
+        ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
+        if (response == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -211,6 +197,84 @@ public class RiskRestController {
         threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
+    @PostMapping("{id}/threats/setPrecautions")
+    public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (threatAssessment.getThreatAssessmentResponses() == null) {
+            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+        }
+
+        ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
+        if (response == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        // create response precaution relations
+        List<Relation> existingPrecautionRelations = relationService.findRelatedToWithType(response, RelationType.PRECAUTION);
+        for (long value : dto.precautionIds) {
+            Optional<Precaution> precautionOptional = precautionService.get(value);
+            if (precautionOptional.isPresent() && existingPrecautionRelations.stream().noneMatch(r -> (r.getRelationAId() == value && r.getRelationAType().equals(RelationType.PRECAUTION)) || (r.getRelationBId() == value && r.getRelationBType().equals(RelationType.PRECAUTION)))) {
+                relationService.addRelation(precautionOptional.get(), response);
+            }
+        }
+
+        // delete response precaution relations
+        final List<Relation> toDelete = new ArrayList<>();
+        for (Relation existingPrecautionRelation : existingPrecautionRelations) {
+            long idToLookFor = existingPrecautionRelation.getRelationAType().equals(RelationType.PRECAUTION) ? existingPrecautionRelation.getRelationAId() : existingPrecautionRelation.getRelationBId();
+            if (!dto.precautionIds.contains(idToLookFor)) {
+                toDelete.add(existingPrecautionRelation);
+            }
+        }
+        relationService.deleteAll(toDelete);
+
+        // update asset precaution relations
+        final List<Relation> relatedAssets = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
+        for (Relation assetRelation : relatedAssets) {
+            Optional<Asset> assetOptional = assetService.get(assetRelation.getRelationAType().equals(RelationType.ASSET) ? assetRelation.getRelationAId() : assetRelation.getRelationBId());
+            if (assetOptional.isPresent()) {
+                Asset asset = assetOptional.get();
+                List<Relation> existingAssetPrecautionRelations = relationService.findRelatedToWithType(asset, RelationType.PRECAUTION);
+                for (long value : dto.precautionIds) {
+                    Optional<Precaution> precautionOptional = precautionService.get(value);
+                    if (precautionOptional.isPresent() && existingAssetPrecautionRelations.stream().noneMatch(r -> (r.getRelationAId() == value && r.getRelationAType().equals(RelationType.PRECAUTION)) || (r.getRelationBId() == value && r.getRelationBType().equals(RelationType.PRECAUTION)))) {
+                        relationService.addRelation(precautionOptional.get(), asset);
+                    }
+                }
+            }
+        }
+
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private ThreatAssessmentResponse getRelevantResponse(ThreatAssessment threatAssessment, ThreatDatabaseType threatType, Long threatId, String threatIdentifier) {
+        ThreatAssessmentResponse response = null;
+        if (threatType.equals(ThreatDatabaseType.CATALOG)) {
+            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            response = threatAssessment.getThreatAssessmentResponses().stream()
+                .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
+                .findAny()
+                .orElse(null);
+            if (response == null) {
+                response = threatAssessmentService.createResponse(threatAssessment, threat, null);
+            }
+        } else if (threatType.equals(ThreatDatabaseType.CUSTOM)) {
+            final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(threatId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            response = threatAssessment.getThreatAssessmentResponses().stream()
+                .filter(r -> r.getCustomThreat() != null && Objects.equals(r.getCustomThreat().getId(), threat.getId()))
+                .findAny()
+                .orElse(null);
+            if (response == null) {
+                response = threatAssessmentService.createResponse(threatAssessment, null, threat);
+            }
+        }
+
+        return response;
     }
 
     @Transactional
