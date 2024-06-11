@@ -136,7 +136,7 @@ function clearTitle(btnElement) {
 
 function updateTitleFor(btnElement, value) {
     let consequenceScaleElement = consequenceScale[value-1];
-    if (consequenceScaleElement !== undefined) {
+    if (consequenceScaleElement !== undefined && consequenceScaleElement !== '-') {
         btnElement.setAttribute('title', consequenceScaleElement);
     }
 }
@@ -172,7 +172,7 @@ function updateConsequenceStatus(value) {
 }
 
 function updateOrganisationAssessmentAvg() {
-    function orgAvg(elem1, elem2) {
+    function orgMax(elem1, elem2) {
         const value1 = parseInt(elem1.value);
         const value2 = parseInt(elem2.value);
         if (isNaN(value1) && isNaN(value2)) {
@@ -190,7 +190,7 @@ function updateOrganisationAssessmentAvg() {
         const eco = document.getElementById(`${id}Eco`);
         const targetBtn = document.getElementById(`${id}Btn`);
         const targetInput = document.getElementById(id);
-        let avg = orgAvg(rep, eco);
+        let avg = orgMax(rep, eco);
         if (avg !== undefined) {
             targetBtn.innerText = "" + avg;
             targetInput.value = avg;
@@ -209,9 +209,9 @@ function updateOrganisationAssessmentAvg() {
     updateForField('availabilityOrganisation');
 }
 
-function updateAssessmentTotalAvg() {
-    const averageOrganisation = document.getElementById('averageOrganisation');
-    const averageRegistered = document.getElementById('averageRegistered');
+function updateAssessmentTotalMax() {
+    const maxOrganisation = document.getElementById('maxOrganisation');
+    const maxRegistered = document.getElementById('maxRegistered');
     const confidentialityRegistered = document.getElementById('confidentialityRegistered');
     const integrityRegistered = document.getElementById('integrityRegistered');
     const availabilityRegistered = document.getElementById('availabilityRegistered');
@@ -219,20 +219,15 @@ function updateAssessmentTotalAvg() {
     const integrityOrganisation = document.getElementById('integrityOrganisation');
     const availabilityOrganisation = document.getElementById('availabilityOrganisation');
 
-    let divisor = 0, totalDivisor = 0;
-    let sum = 0, totalSum = 0;
-    function addToAvg(element) {
-        let value = parseInt(element.value);
-        if (!isNaN(value)) {
-            divisor += 1; totalDivisor += 1;
-            sum += value; totalSum += value;
-        }
+    function maxValue(element1, element2, element3) {
+        let value1 = asIntOrDefault(element1.value, 0);
+        let value2 = asIntOrDefault(element2.value, 0);
+        let value3 = asIntOrDefault(element3.value, 0);
+        return Math.max(value1, value2, value3);
     }
-    function updateTargets(element) {
-        if (divisor !== 0) {
-            let avgRegistered = Math.round(100 * (sum / divisor)) / 100;
-            element.innerText = "" + avgRegistered;
-            let value = asIntOrDefault(avgRegistered,0);
+    function updateTargets(element, value) {
+        if (value !== undefined && value > 0 && value !== '-') {
+            element.innerText = "" + value;
             updateColorFor(element, scaleMap[value]);
             updateTitleFor(element, value);
         } else {
@@ -241,19 +236,15 @@ function updateAssessmentTotalAvg() {
             clearTitle(element);
         }
     }
-    addToAvg(confidentialityRegistered);
-    addToAvg(integrityRegistered);
-    addToAvg(availabilityRegistered);
-    updateTargets(averageRegistered);
-    divisor = sum = 0;
-    addToAvg(confidentialityOrganisation);
-    addToAvg(integrityOrganisation);
-    addToAvg(availabilityOrganisation);
-    updateTargets(averageOrganisation);
 
-    if (totalDivisor > 0) {
-        let avg = Math.round(totalSum / totalDivisor);
-        updateConsequenceStatus(avg);
+    let maxRegValue = maxValue(confidentialityRegistered, integrityRegistered, availabilityRegistered);
+    updateTargets(maxRegistered, maxRegValue);
+    let maxOrgValue = maxValue(confidentialityOrganisation, integrityOrganisation, availabilityOrganisation);
+    updateTargets(maxOrganisation, maxOrgValue);
+
+    let totalMax = Math.max(maxRegValue, maxOrgValue);
+    if (totalMax > 0) {
+        updateConsequenceStatus(totalMax);
     }
 }
 
@@ -301,18 +292,24 @@ function assessmentFormLoaded() {
     updateAssessmentTitles();
     updateAssessmentColors();
     updateOrganisationAssessmentAvg();
-    updateAssessmentTotalAvg();
+    updateAssessmentTotalMax();
 }
 
 function updatedAssessmentValue(value, property, color) {
     const propertyElement = document.getElementById(property);
     const propertyBtnElement = document.getElementById(property + 'Btn');
-    propertyElement.value = value;
-    propertyBtnElement.innerText = value;
+    if (value !== '-') {
+        propertyElement.value = value;
+        propertyBtnElement.innerText = value;
+    } else {
+        propertyElement.value = '';
+        propertyBtnElement.innerText = '-';
+    }
+
     updateTitleFor(propertyBtnElement, value);
     updateColorFor(propertyBtnElement, color);
     updateOrganisationAssessmentAvg();
-    updateAssessmentTotalAvg();
+    updateAssessmentTotalMax();
 }
 
 function purposeFormLoaded() {
