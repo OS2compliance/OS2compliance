@@ -154,7 +154,7 @@ function setField() {
                 throw new Error(`${response.status} ${response.statusText}`);
             }
             toastService.info("Info", "Dine ændringer er blevet gemt")
-        }).catch(error => {toastService.error("Der er sket en fejl og kan ikke gemmes, genindlæse siden og prøv igen"); console.log(error)});
+        }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
 }
 
 function updateAverage() {
@@ -402,6 +402,42 @@ function setRevisionInterval(assessmentId) {
         .catch(error => toastService.error(error));
 }
 
+function updateRelatedPrecautions(choices, search, threatType, threatId, threatIdentifier) {
+    fetch( `/rest/relatable/autocomplete/relatedprecautions?search=${search}&threatType=${threatType}&threatIdentifier=${threatIdentifier}&threatId=${threatId}&riskId=${riskId}`)
+        .then(response => response.json()
+            .then(data => {
+                choices.setChoices(data.content.map(reg => {
+                    return {
+                        id: reg.id,
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60)
+                    }
+                }), 'id', 'name', true);
+            }))
+        .catch(error => toastService.error(error));
+}
+
+function setPrecautions() {
+    var dbType = this.dataset.dbtype;
+    var threatId = this.dataset.id;
+    var threatIdentifier = this.dataset.identifier;
+    const selected = this.querySelectorAll('option:checked');
+    const precautionIds = Array.from(selected).map(el => el.value);
+
+    var data = {
+                 "threatType": dbType,
+                 "threatId": threatId,
+                 "threatIdentifier": threatIdentifier,
+                 "precautionIds": precautionIds
+               };
+
+    postData("/rest/risks/" + riskId + "/threats/setPrecautions", data).then((response) => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            toastService.info("Info", "Dine ændringer er blevet gemt")
+        }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
+}
+
 function pageLoaded() {
     initFormValidationForForm("createCustomThreatModal");
 
@@ -459,5 +495,34 @@ function pageLoaded() {
     const openedRow = sessionStorage.getItem(`openedRowIndex${riskId}`);
     if (openedRow !== null && openedRow !== undefined) {
         handleCategoryRow(openedRow);
+    }
+
+    // precaution choice.js
+    const precautionChoiceSelects = document.querySelectorAll('.select-precaution');
+    for (var i = 0; i < precautionChoiceSelects.length; i++) {
+        const relationsSelect = precautionChoiceSelects[i];
+
+        // threat data
+        var dbType = relationsSelect.dataset.dbtype;
+        var id = relationsSelect.dataset.id;
+        var identifier = relationsSelect.dataset.identifier;
+
+        let relationsChoice = initSelect(relationsSelect);
+        updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier);
+        relationsSelect.addEventListener("search",
+            function(event) {
+                updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier);
+            },
+            false,
+        );
+        relationsSelect.addEventListener("change",
+            function(event) {
+                updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier);
+            },
+            false,
+        );
+
+        // on change listener
+        relationsSelect.addEventListener('change', setPrecautions, false);
     }
 }

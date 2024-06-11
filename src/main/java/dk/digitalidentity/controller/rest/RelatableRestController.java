@@ -6,13 +6,23 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.RelatableMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RelatableDTO;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.Tag;
+import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -34,7 +44,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -47,6 +60,9 @@ public class RelatableRestController {
     private final RelationDao relationDao;
     private final RelationService relationService;
     private final TagDao tagDao;
+    private final ThreatAssessmentService threatAssessmentService;
+    private final AssetService assetService;
+    private final PrecautionService precautionService;
 
     @GetMapping("autocomplete")
     public PageDTO<RelatableDTO> autocomplete(@RequestParam(value = "types", required = false) final List<RelationType> types, @RequestParam("search") final String search) {
@@ -80,6 +96,68 @@ public class RelatableRestController {
         } else {
             final Page<Tag> result = tagDao.searchByValueLikeIgnoreCase("%" + search + "%", page);
             return new PageDTO<>(result.getTotalElements(), result.getContent());
+        }
+    }
+
+    @GetMapping("autocomplete/relatedprecautions")
+    public PageDTO<RelatableDTO> autocompletePrecautions(@RequestParam("search") final String search, @RequestParam("threatId") final long threatId, @RequestParam("threatType") final ThreatDatabaseType threatType, @RequestParam("threatIdentifier") final String threatIdentifier, @RequestParam("riskId") final long riskId) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (threatAssessment.getThreatAssessmentResponses() == null) {
+            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+        }
+
+        ThreatAssessmentResponse response;
+        if (threatType.equals(ThreatDatabaseType.CATALOG)) {
+            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            response = threatAssessment.getThreatAssessmentResponses().stream()
+                .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
+                .findAny()
+                .orElse(null);
+            if (response == null) {
+                response = threatAssessmentService.createResponse(threatAssessment, threat, null);
+            }
+        } else if (threatType.equals(ThreatDatabaseType.CUSTOM)) {
+            final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(threatId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            response = threatAssessment.getThreatAssessmentResponses().stream()
+                .filter(r -> r.getCustomThreat() != null && Objects.equals(r.getCustomThreat().getId(), threat.getId()))
+                .findAny()
+                .orElse(null);
+            if (response == null) {
+                response = threatAssessmentService.createResponse(threatAssessment, null, threat);
+            }
+        } else {
+            return new PageDTO<>(0L, new ArrayList<>());
+        }
+
+        final Pageable page = PageRequest.of(0, 25, Sort.by("createdAt").descending());
+        List<RelationType> relationTypes = new ArrayList<>();
+        relationTypes.add(RelationType.PRECAUTION);
+        if (StringUtils.length(search) == 0) {
+
+            // if any show precautions related to related assets first
+            List<Precaution> toShow = new ArrayList<>();
+            final List<Relation> relatedAssets = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
+            for (Relation assetRelation : relatedAssets) {
+                Optional<Asset> assetOptional = assetService.get(assetRelation.getRelationAType().equals(RelationType.ASSET) ? assetRelation.getRelationAId() : assetRelation.getRelationBId());
+                if (assetOptional.isPresent()) {
+                    Asset asset = assetOptional.get();
+                    List<Relation> existingAssetPrecautionRelations = relationService.findRelatedToWithType(asset, RelationType.PRECAUTION);
+                    for (Relation existingAssetPrecautionRelation : existingAssetPrecautionRelations) {
+                        Optional<Precaution> precautionOptional = precautionService.get(existingAssetPrecautionRelation.getRelationAType().equals(RelationType.PRECAUTION) ? existingAssetPrecautionRelation.getRelationAId() : existingAssetPrecautionRelation.getRelationBId());
+                        precautionOptional.ifPresent(toShow::add);
+                    }
+                }
+            }
+
+            if (toShow.isEmpty()) {
+                final Page<Relatable> all = relatableDao.findByRelationTypeIn(relationTypes, page);
+                return mapper.toDTO(all);
+            } else {
+                return new PageDTO<>((long) toShow.size(), toShow.stream().map(p -> new RelatableDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage())).collect(Collectors.toList()));
+            }
+        } else {
+            return mapper.toDTO(relatableDao.searchByRelationTypeInAndNameLikeIgnoreCase(relationTypes, "%" + search + "%", page));
         }
     }
 
