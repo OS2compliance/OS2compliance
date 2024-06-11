@@ -130,6 +130,17 @@ function clearColors(element) {
     element.classList.remove('bg-green');
 }
 
+function clearTitle(btnElement) {
+    btnElement.removeAttribute('title');
+}
+
+function updateTitleFor(btnElement, value) {
+    let consequenceScaleElement = consequenceScale[value-1];
+    if (consequenceScaleElement !== undefined) {
+        btnElement.setAttribute('title', consequenceScaleElement);
+    }
+}
+
 function updateColorFor(btnElement, value) {
     clearColors(btnElement);
     if (value === 'GRØN') {
@@ -183,10 +194,13 @@ function updateOrganisationAssessmentAvg() {
         if (avg !== undefined) {
             targetBtn.innerText = "" + avg;
             targetInput.value = avg;
-            updateColorFor(targetBtn, scaleMap[asIntOrDefault(avg, 0)]);
+            let value = asIntOrDefault(avg, 0);
+            updateColorFor(targetBtn, scaleMap[value]);
+            updateTitleFor(targetBtn, value);
         } else {
             targetBtn.innerText = "-";
             targetInput.value = '';
+            clearTitle(targetBtn);
             clearColors(targetBtn);
         }
     }
@@ -218,10 +232,13 @@ function updateAssessmentTotalAvg() {
         if (divisor !== 0) {
             let avgRegistered = Math.round(100 * (sum / divisor)) / 100;
             element.innerText = "" + avgRegistered;
-            updateColorFor(element, scaleMap[asIntOrDefault(avgRegistered,0)]);
+            let value = asIntOrDefault(avgRegistered,0);
+            updateColorFor(element, scaleMap[value]);
+            updateTitleFor(element, value);
         } else {
             element.innerText = "-";
             clearColors(element);
+            clearTitle(element);
         }
     }
     addToAvg(confidentialityRegistered);
@@ -238,6 +255,26 @@ function updateAssessmentTotalAvg() {
         let avg = Math.round(totalSum / totalDivisor);
         updateConsequenceStatus(avg);
     }
+}
+
+function updateAssessmentTitles() {
+    function updateFor(elemId) {
+        const elemBtn = document.getElementById(elemId + 'Btn');
+        const elem = document.getElementById(elemId);
+        updateTitleFor(elemBtn, elem.value);
+    }
+    updateFor('confidentialityRegistered');
+    updateFor('confidentialityOrganisation');
+    updateFor('confidentialityOrganisationRep');
+    updateFor('confidentialityOrganisationEco');
+    updateFor('integrityRegistered');
+    updateFor('integrityOrganisation');
+    updateFor('integrityOrganisationRep');
+    updateFor('integrityOrganisationEco');
+    updateFor('availabilityRegistered');
+    updateFor('availabilityOrganisation');
+    updateFor('availabilityOrganisationRep');
+    updateFor('availabilityOrganisationEco');
 }
 
 function updateAssessmentColors() {
@@ -261,6 +298,7 @@ function updateAssessmentColors() {
 }
 
 function assessmentFormLoaded() {
+    updateAssessmentTitles();
     updateAssessmentColors();
     updateOrganisationAssessmentAvg();
     updateAssessmentTotalAvg();
@@ -271,6 +309,7 @@ function updatedAssessmentValue(value, property, color) {
     const propertyBtnElement = document.getElementById(property + 'Btn');
     propertyElement.value = value;
     propertyBtnElement.innerText = value;
+    updateTitleFor(propertyBtnElement, value);
     updateColorFor(propertyBtnElement, color);
     updateOrganisationAssessmentAvg();
     updateAssessmentTotalAvg();
