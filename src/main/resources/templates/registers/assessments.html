@@ -7,8 +7,8 @@
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
-                    <button id="editAssessmentBtn" type="button" class="btn btn-secondary btn-xs" onclick="setAssessmentEditState(true)">Rediger</button>
-                    <button id="cancelAssessmentBtn" type="button" onclick="setAssessmentEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="editAssessmentBtn" type="button" class="btn btn-secondary btn-xs" onclick="registerAssessmentService.setAssessmentEditState(true)">Rediger</button>
+                    <button id="cancelAssessmentBtn" type="button" onclick="registerAssessmentService.setAssessmentEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
                     <button id="saveAssessmentBtn" form="editAssessmentId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                 </div>
             </div>
@@ -44,8 +44,8 @@
                             <div class="btn-group">
                                 <button id="confidentialityRegisteredBtn" th:text="${assessment.confidentialityRegistered} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'confidentialityRegistered', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'confidentialityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityRegistered', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -53,8 +53,8 @@
                             <div class="btn-group">
                                 <button id="confidentialityOrganisationRepBtn" th:text="${assessment.confidentialityOrganisationRep} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'confidentialityOrganisationRep', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityOrganisationRep', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -62,8 +62,8 @@
                             <div class="btn-group">
                                 <button id="confidentialityOrganisationEcoBtn" th:text="${assessment.confidentialityOrganisationEco} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'confidentialityOrganisationEco', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityOrganisationEco', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -71,8 +71,8 @@
                             <div class="btn-group">
                                 <button id="confidentialityOrganisationBtn" th:text="${assessment.confidentialityOrganisation} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'confidentialityOrganisation', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityOrganisation', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -86,8 +86,8 @@
                             <div class="btn-group">
                                 <button id="integrityRegisteredBtn" th:text="${assessment.integrityRegistered} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'integrityRegistered', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'integrityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integrityRegistered', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integrityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -95,8 +95,8 @@
                             <div class="btn-group">
                                 <button id="integrityOrganisationRepBtn" th:text="${assessment.integrityOrganisationRep} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'integrityOrganisationRep', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'integrityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integrityOrganisationRep', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integrityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -104,8 +104,8 @@
                             <div class="btn-group">
                                 <button id="integrityOrganisationEcoBtn" th:text="${assessment.integrityOrganisationEco} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'integrityOrganisationEco', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'integrityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integrityOrganisationEco', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integrityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -113,8 +113,8 @@
                             <div class="btn-group">
                                 <button id="integrityOrganisationBtn" th:text="${assessment.integrityOrganisation} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'integrityOrganisation', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'integrityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integrityOrganisation', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integrityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -128,8 +128,8 @@
                             <div class="btn-group">
                                 <button id="availabilityRegisteredBtn" th:text="${assessment.availabilityRegistered} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'availabilityRegistered', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'availabilityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityRegistered', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -137,8 +137,8 @@
                             <div class="btn-group">
                                 <button id="availabilityOrganisationRepBtn" th:text="${assessment.availabilityOrganisationRep} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'availabilityOrganisationRep', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityOrganisationRep', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -146,8 +146,8 @@
                             <div class="btn-group">
                                 <button id="availabilityOrganisationEcoBtn" th:text="${assessment.availabilityOrganisationEco} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'availabilityOrganisationEco', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityOrganisationEco', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -155,8 +155,8 @@
                             <div class="btn-group">
                                 <button id="availabilityOrganisationBtn" th:text="${assessment.availabilityOrganisation} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="updatedAssessmentValue('-', 'availabilityOrganisation', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityOrganisation', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -179,15 +179,10 @@
     </div>
     <script th:inline="javascript">
         /*<![CDATA[*/
-
         /*[+
             var scaleMap = [[${scale}]];
             var consequenceScale = [[${consequenceScale}]];
         +]*/
-
-        document.addEventListener("DOMContentLoaded", function(event) {
-            assessmentFormLoaded();
-        });
         /*]]>*/
     </script>
 </div>

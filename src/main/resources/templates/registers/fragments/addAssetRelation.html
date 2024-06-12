@@ -12,15 +12,18 @@
                         <div class="row mt-3">
                             <label for="AssetRelationModalrelationsSelect" class="col-sm-2 col-form-label">Aktiver</label>
                             <div class="col-sm-10">
-                                <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger=""
+                                <select th:if="${relation == null}" class="form-control form-select choices__input" data-type="select-multiple" data-trigger=""
                                         name="relations" id="AssetRelationModalrelationsSelect" hidden="" tabindex="-1"></select>
                             </div>
                         </div>
                         <div class="row mt-3">
                             <label for="AssetRelationModalRiskScale" class="col-sm-2 col-form-label">Risko vægtning</label>
                             <div class="col-sm-10 d-flex">
-                                <input id="AssetRelationModalRiskScalePercent" type="text" max="100" min="0" value="100%" class="d-inline form-control" style="width: 90px" readonly>
-                                <input type="range" name="properties[riskScale]" max="100" min="0" step="5" value="100" class="ms-3 mt-2 d-inline form-control form-range" id="AssetRelationModalRiskScale"
+                                <input id="AssetRelationModalRiskScalePercent" type="text" max="100" min="0" class="d-inline form-control"
+                                       style="width: 90px" th:value="${relation?.properties != null ? relation?.properties['riskScale'] : '100%'}" readonly>
+                                <input type="range" name="properties[riskScale]" max="100" min="0" step="5"
+                                       class="ms-3 mt-2 d-inline form-control form-range" id="AssetRelationModalRiskScale"
+                                       th:value="${relation?.properties != null ? relation?.properties['riskScale'] : '100'}"
                                        oninput="assetRiskScaleUpdated(this.value)" onchange="assetRiskScaleUpdated(this.value)">
                             </div>
                         </div>

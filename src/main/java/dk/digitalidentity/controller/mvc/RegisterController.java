@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -285,6 +286,18 @@ public class RegisterController {
         relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
         registerService.delete(register);
+    }
+
+    @GetMapping("{id}/relations/{rid}")
+    @Transactional
+    public String editRelation(final Model model, @PathVariable("id") final Long entityId, @PathVariable("rid") final Long relationId) {
+        final Register register = registerService.findById(entityId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Relation relation = relationService.findRelationById(relationId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("relatableId", register.getId());
+        model.addAttribute("relation", relation);
+        return "registers/fragments/addAssetRelation";
     }
 
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {

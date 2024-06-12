@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -27,6 +28,10 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public class RelationService {
     private final RelationDao relationDao;
     private final RelatableDao relatableDao;
+
+    public Optional<Relation> findRelationById(final Long id) {
+        return relationDao.findById(id);
+    }
 
     public List<Relation> findRelatedToWithType(final Relatable relatable, final RelationType relatedType) {
         return relationDao.findRelatedToWithType(relatable.getId(), relatedType);

@@ -69,10 +69,24 @@ public class RelatableController {
 						.relationBType(relatable.getRelationType())
 						.build())
 				.map(relationDao::save)
-                .forEach(relation -> addRelationProperties(relation, dto.properties));
+                .forEach(relation -> setRelationProperties(relation, dto.properties));
 		return getReturnPath(dto.id(), relateTo);
 	}
 
+
+    record UpdateRelationDTO(long id, Map<String, String> properties) {
+        public UpdateRelationDTO {
+            properties = new HashMap<>();
+        }
+    }
+    @Transactional
+    @PostMapping("relations/update/{id}")
+    public String updateRelation(@ModelAttribute final UpdateRelationDTO dto, @PathVariable final long id) {
+        final Relatable relateTo = relatableDao.findById(dto.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Relation existingRelation = relationDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        setRelationProperties(existingRelation, dto.properties);
+        return getReturnPath(dto.id(), relateTo);
+    }
 
     @DeleteMapping("{id}/relations/{relatedId}/{relatedType}/remove")
 	@ResponseStatus(value = HttpStatus.OK)
@@ -172,7 +186,7 @@ public class RelatableController {
     }
 
 
-    private void addRelationProperties(final Relation relation, final Map<String, String> properties) {
+    private void setRelationProperties(final Relation relation, final Map<String, String> properties) {
         if (properties != null) {
             final Set<RelationProperty> relationProperties = properties.entrySet().stream().map(e -> RelationProperty.builder()
                     .relation(relation)
