@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -246,7 +247,7 @@ public class RegisterController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
         final List<ChoiceValue> gdprChoices = sortChoicesNumeric(gdprChoiceList);
         final List<Relatable> relatedAssets = relationService.findAllRelatedTo(register).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
-        final List<AssetSupplierMapping> assetSupplierMappingList = relatedAssets.stream().map(Asset.class::cast).map(r -> assetService.findMainSupplier(r)).collect(Collectors.toList());
+        final List<AssetSupplierMapping> assetSupplierMappingList = relatedAssets.stream().map(Asset.class::cast).map(assetService::findMainSupplier).collect(Collectors.toList());
 
         model.addAttribute("section", section);
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
@@ -288,16 +289,27 @@ public class RegisterController {
         registerService.delete(register);
     }
 
-    @GetMapping("{id}/relations/{rid}")
+    @GetMapping("{id}/relations/{relatedId}/{relatedType}")
     @Transactional
-    public String editRelation(final Model model, @PathVariable("id") final Long entityId, @PathVariable("rid") final Long relationId) {
-        final Register register = registerService.findById(entityId)
+    public String editRelation(final Model model, @PathVariable final long id, @PathVariable final long relatedId, @PathVariable final RelationType relatedType) {
+        final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final Relation relation = relationService.findRelationById(relationId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Relation relation = relationService.findRelationEntity(register, relatedId, relatedType);
+        final Asset asset;
+        if (relation.getRelationAType() == RelationType.ASSET) {
+            asset = assetService.get(relation.getRelationAId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+        } else {
+            asset = assetService.get(relation.getRelationBId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+        }
         model.addAttribute("relatableId", register.getId());
         model.addAttribute("relation", relation);
-        return "registers/fragments/addAssetRelation";
+        model.addAttribute("asset", asset);
+        model.addAttribute("relatedType", relatedType);
+        model.addAttribute("properties", relation.getProperties().stream()
+            .collect(Collectors.toMap(RelationProperty::getKey, RelationProperty::getValue)));
+        return "registers/fragments/editAssetRelation";
     }
 
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {

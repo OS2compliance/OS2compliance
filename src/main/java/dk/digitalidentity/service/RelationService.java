@@ -9,9 +9,11 @@ import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.service.model.RelationDTO;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -29,6 +31,16 @@ public class RelationService {
     private final RelationDao relationDao;
     private final RelatableDao relatableDao;
 
+    @Transactional
+    public Relation save(final Relation relation) {
+        return relationDao.save(relation);
+    }
+
+    @Transactional
+    public void delete(final Relation relation) {
+        relationDao.delete(relation);
+    }
+
     public Optional<Relation> findRelationById(final Long id) {
         return relationDao.findById(id);
     }
@@ -39,6 +51,14 @@ public class RelationService {
 
     public List<Relation> findRelatedToWithType(final List<Long> relatedToId, final RelationType relatedType) {
         return relationDao.findRelatedToWithType(relatedToId, relatedType);
+    }
+
+    public Relation findRelationEntity(final Relatable relatedTo, final long relatedId, final RelationType relatedType) {
+        final List<Relation> related = relationDao.findAllRelatedTo(relatedTo.getId());
+        return related.stream()
+            .filter(r -> (r.getRelationAId() == relatedId && r.getRelationAType().equals(relatedType)) || (r.getRelationBId() == relatedId && r.getRelationBType().equals(relatedType)))
+            .findAny()
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet"));
     }
 
     public List<Relatable> findAllRelatedTo(final Relatable relatable) {
@@ -126,7 +146,7 @@ public class RelationService {
         relationDao.deleteRelatedTo(lid);
     }
 
-    public void deleteAll(List<Relation> toDelete) {
+    public void deleteAll(final List<Relation> toDelete) {
         relationDao.deleteAll(toDelete);
     }
 }

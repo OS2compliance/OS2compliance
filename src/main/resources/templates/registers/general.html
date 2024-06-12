@@ -116,7 +116,7 @@
                                     <td th:text="${relatedAsset.asset.criticality?.message}"></td>
                                     <td>100%</td>
                                     <td>
-                                        <button onclick="editRelation(this)" class="btn btn-icon btn-outline-light btn-xs" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}">
+                                        <button onclick="registerGeneralService.showEditRelationDialog(this)" class="btn btn-icon btn-outline-light btn-xs" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}">
                                             <i class="pli-pencil fs-5"></i>
                                         </button>
                                         <button onclick="deleteRelation(this)" class="btn btn-icon btn-outline-light btn-xs" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}">

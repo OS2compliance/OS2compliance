@@ -121,6 +121,30 @@ function RegisterGeneralService() {
         }
     }
 
+    this.showEditRelationDialog = function(elem) {
+        const registerId = elem.getAttribute('data-relatableid');
+        const relationId = elem.getAttribute('data-relationid');
+        const relationType = elem.getAttribute('data-relationtype');
+        fetch(`/registers/${registerId}/relations/${relationId}/${relationType}`)
+            .then(response => response.text()
+                .then(data => {
+                    let holder = document.getElementById('EditRelationModalHolder');
+                    holder.innerHTML = data;
+                    let editRelationModalDialog = document.getElementById('EditRelationModal');
+                    let relationsSelect = editRelationModalDialog.querySelector('#EditRelationModalrelationsSelect');
+                    let relationsChoice = initSelect(relationsSelect);
+
+                    const editRelationModal = new bootstrap.Modal(editRelationModalDialog);
+                    editRelationModal.show();
+                }))
+            .catch(error => toastService.error(error));
+    }
+
+    this.editRiskScaleUpdated = function (value) {
+        let percentElement = document.getElementById('EditRelationModalRiskScalePercent');
+        percentElement.value = value + "%";
+    }
+
 }
 
 /**
@@ -406,26 +430,33 @@ function RegisterAssessmentService() {
 
 }
 
+let registerDataprocessingService = new RegisterDataprocessingService();
+function RegisterDataprocessingService() {
+    this.init = function() {}
+
+    this.setDataprocessingEditState = function(editable) {
+        const rootElement = document.getElementById('dataprocessingForm');
+        document.getElementById('saveDataProcessingBtn').hidden = !editable;
+        document.getElementById('cancelDataProcessingBtn').hidden = !editable;
+        document.getElementById('editDataProcessingBtn').hidden = editable;
+        rootElement.querySelectorAll('.editField').forEach(elem => {
+            elem.disabled = !editable;
+            if (elem.tagName === "A") {
+                elem.hidden = editable;
+                elem.nextElementSibling.hidden = !editable;
+            }
+        });
+        if (!editable) {
+            rootElement.reset();
+        }
+        editModeCategoryInformationEditable(editable);
+    }
+
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     registerGeneralService.init();
     registerPurposeService.init();
     registerAssessmentService.init();
+    registerDataprocessingService.init();
 });
-
-function setDataprocessingEditState(editable) {
-    const rootElement = document.getElementById('dataprocessingForm');
-    document.getElementById('saveDataProcessingBtn').hidden = !editable;
-    document.getElementById('cancelDataProcessingBtn').hidden = !editable;
-    document.getElementById('editDataProcessingBtn').hidden = editable;
-    rootElement.querySelectorAll('.editField').forEach(elem => {
-        elem.disabled = !editable;
-        if (elem.tagName === "A") {
-            elem.hidden = editable;
-            elem.nextElementSibling.hidden = !editable;
-        }
-    });
-    if (!editable) {
-        rootElement.reset();
-    }
-    editModeCategoryInformationEditable(editable);
-}
