@@ -332,7 +332,8 @@
                                     <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">Download</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='WORD')}">Download</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='PDF')}">Download som PDF</a></li>
                                     <li th:if="${risk.threatAssessmentType.name() == 'ASSET'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til systemejer</a></li>
                                     <li th:if="${risk.threatAssessmentType.name() == 'REGISTER'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til behandlingsaktivitets ejer</a></li>
                                 </ul>

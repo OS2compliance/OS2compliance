@@ -2,33 +2,45 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
+import dk.digitalidentity.report.replacers.ThreatAssessmentReplacer;
 import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.Context;
+import org.xhtmlrenderer.pdf.ITextRenderer;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +50,8 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
+import static dk.digitalidentity.report.DocxUtil.addTextRun;
+import static dk.digitalidentity.report.DocxUtil.advanceCursor;
 
 @Service
 @RequiredArgsConstructor
@@ -48,6 +62,7 @@ public class ThreatAssessmentService {
     private final ThreatAssessmentDao threatAssessmentDao;
     private final TaskService taskService;
     private final UserService userService;
+    private final TemplateEngine templateEngine;
 
     public Optional<ThreatAssessment> findById(final Long assessmentId) {
         return threatAssessmentDao.findById(assessmentId);
@@ -397,6 +412,148 @@ public class ThreatAssessmentService {
         response.setThreatCatalogThreat(threatCatalogThreat);
         threatAssessment.getThreatAssessmentResponses().add(response);
         return response;
+    }
+
+    public byte[] getThreatAssessmentPdf(ThreatAssessment threatAssessment) throws IOException {
+        var html = getThreatAssessmentHtml(threatAssessment);
+        return convertHtmlToPdf(html);
+    }
+
+    private String getThreatAssessmentHtml(ThreatAssessment threatAssessment) {
+        final List<Relatable> relations = relationService.findAllRelatedTo(threatAssessment);
+        List<Task> riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
+            .map(Task.class::cast)
+            .collect(Collectors.toList());
+        List<Task> otherTasks = new ArrayList<>();
+        Asset riskAsset = null;
+        Register riskRegister = null;
+        final List<Long> riskAssessmentTasksIds = riskAssessmentTasks.stream().map(Relatable::getId).toList();
+        if (ThreatAssessmentType.ASSET == threatAssessment.getThreatAssessmentType()) {
+            final Optional<Asset> asset = relations.stream().filter(r -> r.getRelationType() == RelationType.ASSET)
+                .map(Asset.class::cast)
+                .findFirst();
+            if (asset.isPresent()) {
+                riskAsset = asset.get();
+                otherTasks = relationService.findAllRelatedTo(riskAsset).stream()
+                    .filter(related -> related.getRelationType() == RelationType.TASK)
+                    .filter(related -> !riskAssessmentTasksIds.contains(related.getId()))
+                    .map(Task.class::cast)
+                    .filter(t -> !taskService.isTaskDone(t))
+                    .collect(Collectors.toList());
+            }
+        } else if (ThreatAssessmentType.REGISTER == threatAssessment.getThreatAssessmentType()) {
+            final Optional<Register> register = relations.stream().filter(r -> r.getRelationType() == RelationType.REGISTER)
+                .map(Register.class::cast)
+                .findFirst();
+            if (register.isPresent()) {
+                riskRegister = register.get();
+                otherTasks = relationService.findAllRelatedTo(riskRegister).stream()
+                    .filter(related -> related.getRelationType() == RelationType.TASK)
+                    .filter(related -> !riskAssessmentTasksIds.contains(related.getId()))
+                    .map(Task.class::cast)
+                    .filter(t -> !taskService.isTaskDone(t))
+                    .collect(Collectors.toList());
+            }
+        }
+
+        var context = new Context();
+        context.setVariable("title", threatAssessment.getName());
+        context.setVariable("subHeader", getSubHeading(threatAssessment, riskAsset, riskRegister));
+        context.setVariable("present", getPresent(threatAssessment));
+        context.setVariable("criticality", getCriticality(riskAsset, riskRegister));
+
+        // risk profile
+        context.setVariable("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
+        context.setVariable("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
+        List<RiskProfileDTO> riskProfiles = buildRiskProfileDTOs(threatAssessment);
+        context.setVariable("riskProfiles", riskProfiles);
+        context.setVariable("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
+
+        // threat list
+        Map<String, List<ThreatDTO>> threatList = buildThreatList(context.threatAssessment);
+        final int[] idx = { 1 };
+        threatList.forEach((threatType, threats) -> {
+            threats.forEach(t -> {
+                final XWPFTableRow row = table.getRow(idx[0]);
+                final RiskProfileDTO profile = context.riskProfileDTOList.stream()
+                    .filter(rp -> rp.getIndex() == t.getIndex())
+                    .findFirst().orElse(null);
+                if (profile != null) {
+                    setCellTextSmall(row, 0, "" + (t.getIndex() + 1));
+                    setCellTextSmall(row, 1, threatType);
+                    setCellTextSmall(row, 2, t.getThreat());
+
+                    final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
+                    final int score = profile.getProbability() * profile.getConsequence();
+                    setCellTextSmallCentered(row, 3, "" + profile.getProbability());
+                    setCellTextSmallCentered(row, 4, "" + profile.getConsequence());
+                    setCellTextSmallCentered(row, 5, "" + score);
+                    setCellBackgroundColor(row.getCell(5), color);
+                    setCellTextSmall(row, 6, t.getProblem());
+                    setCellTextSmall(row, 7, t.getExistingMeasures());
+                    setCellTextSmall(row, 8, t.getMethod() != null ? t.getMethod().getMessage() : "");
+                    setCellTextSmall(row, 9, t.getElaboration());
+                    idx[0]++;
+                }
+            });
+        });
+
+
+        return templateEngine.process("reports/risk_view_pdf", context);
+    }
+
+    private String getCriticality(final Asset asset, final Register register) {
+        StringBuilder stringBuilder = new StringBuilder();
+        if (asset != null) {
+            stringBuilder.append("<p>");
+            stringBuilder.append("Systemet er: ");
+            stringBuilder.append(asset.getCriticality() != null ? asset.getCriticality().getMessage() : "Ikke udfyldt");
+            stringBuilder.append("</p>");
+            stringBuilder.append("<p>");
+            stringBuilder.append("Nødplan: ");
+            stringBuilder.append(asset.getEmergencyPlanLink() != null ? asset.getEmergencyPlanLink() : "Ikke udfyldt");
+            stringBuilder.append("</p>");
+        } else if (register != null) {
+            stringBuilder.append("<p>");
+            stringBuilder.append("Behandlingsaktiviteten er: ");
+            stringBuilder.append(register.getCriticality() != null ? register.getCriticality().getMessage() : "Ikke udfyldt");
+            stringBuilder.append("</p>");
+            stringBuilder.append("<p>");
+            stringBuilder.append("Nødplan: ");
+            stringBuilder.append(register.getEmergencyPlanLink() != null ? register.getEmergencyPlanLink() : "Ikke udfyldt");
+            stringBuilder.append("</p>");
+        }
+        return stringBuilder.toString();
+    }
+
+    private String getPresent(final ThreatAssessment threatAssessment) {
+        if (threatAssessment.getPresentAtMeeting() == null || threatAssessment.getPresentAtMeeting().isEmpty()) {
+            return null;
+        }
+        return threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", "));
+    }
+
+    private String getSubHeading(final ThreatAssessment threatAssessment, final Asset asset, final Register register) {
+        if (asset != null && asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
+            return "Systemejere: " + asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+        } else if (register != null && register.getResponsibleUsers() != null && !register.getResponsibleUsers().isEmpty()) {
+            return "Behandlingsansvarlige: " + register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+        }
+        if (threatAssessment.getResponsibleUser() != null) {
+            return "Risikoejer: " + threatAssessment.getResponsibleUser().getName();
+        }
+        return "Risikoejer ikke udfyldt";
+    }
+
+    private byte[] convertHtmlToPdf(String html) throws IOException {
+        var outputStream = new ByteArrayOutputStream();
+        var renderer = new ITextRenderer();
+        renderer.setDocumentFromString(html);
+        renderer.layout();
+        renderer.createPDF(outputStream);
+        var result = outputStream.toByteArray();
+        outputStream.close();
+        return result;
     }
 
     private static void setTaskRevisionInterval(final ThreatAssessment assessment, final Task task) {
