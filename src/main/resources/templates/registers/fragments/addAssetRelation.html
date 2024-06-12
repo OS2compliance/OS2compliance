@@ -1,0 +1,43 @@
+<th:block th:fragment="addAssetRelation">
+    <div class="modal fade" th:id="AssetRelationModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tilføj relation</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body" style="min-height: 200px;">
+                    <form id="addRelationForm" class="row form-inline g-3" action="#" th:action="@{/relatables/relations/add}" method="post">
+                        <input name="id" id="relatableIdInput" th:value="${relatableId}" type="hidden">
+                        <div class="row mt-3">
+                            <label for="AssetRelationModalrelationsSelect" class="col-sm-2 col-form-label">Aktiver</label>
+                            <div class="col-sm-10">
+                                <select class="form-control form-select choices__input" data-type="select-multiple" data-trigger=""
+                                        name="relations" id="AssetRelationModalrelationsSelect" hidden="" tabindex="-1"></select>
+                            </div>
+                        </div>
+                        <div class="row mt-3">
+                            <label for="AssetRelationModalRiskScale" class="col-sm-2 col-form-label">Risko vægtning</label>
+                            <div class="col-sm-10 d-flex">
+                                <input id="AssetRelationModalRiskScalePercent" type="text" max="100" min="0" value="100%" class="d-inline form-control" style="width: 90px" readonly>
+                                <input type="range" name="properties[riskScale]" max="100" min="0" step="5" value="100" class="ms-3 mt-2 d-inline form-control form-range" id="AssetRelationModalRiskScale"
+                                       oninput="assetRiskScaleUpdated(this.value)" onchange="assetRiskScaleUpdated(this.value)">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuller</button>
+                    <button type="submit" form="addRelationForm" class="btn btn-secondary">Gem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script th:inline="javascript">
+        function assetRiskScaleUpdated(value) {
+            let percentElement = document.getElementById('AssetRelationModalRiskScalePercent');
+            percentElement.value = value + "%";
+        }
+    </script>
+</th:block>

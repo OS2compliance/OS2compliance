@@ -8,6 +8,7 @@ import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -26,7 +27,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
@@ -41,7 +46,11 @@ public class RelatableController {
     private final DocumentDao documentDao;
     private final TaskDao taskDao;
 
-	record AddRelationDTO(long id, List<Long> relations) {}
+	record AddRelationDTO(long id, List<Long> relations, Map<String, String> properties) {
+        public AddRelationDTO {
+            properties = new HashMap<>();
+        }
+    }
 	@Transactional
 	@PostMapping("relations/add")
 	public String addRelations(@ModelAttribute final AddRelationDTO dto) {
@@ -59,11 +68,13 @@ public class RelatableController {
 						.relationBId(relatable.getId())
 						.relationBType(relatable.getRelationType())
 						.build())
-				.forEach(relationDao::save);
+				.map(relationDao::save)
+                .forEach(relation -> addRelationProperties(relation, dto.properties));
 		return getReturnPath(dto.id(), relateTo);
 	}
 
-	@DeleteMapping("{id}/relations/{relatedId}/{relatedType}/remove")
+
+    @DeleteMapping("{id}/relations/{relatedId}/{relatedType}/remove")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
 	public String deleteRelation(@PathVariable final long id, @PathVariable final long relatedId, @PathVariable final RelationType relatedType) {
@@ -159,4 +170,18 @@ public class RelatableController {
             return "redirect:/";
         }
     }
+
+
+    private void addRelationProperties(final Relation relation, final Map<String, String> properties) {
+        if (properties != null) {
+            final Set<RelationProperty> relationProperties = properties.entrySet().stream().map(e -> RelationProperty.builder()
+                    .relation(relation)
+                    .key(e.getKey())
+                    .value(e.getValue())
+                    .build())
+                .collect(Collectors.toSet());
+            relation.setProperties(relationProperties);
+        }
+    }
+
 }

@@ -80,10 +80,9 @@
 </div>
 
 <div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=AssetRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=DocumentRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=TaskRelationModal)}"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=AssetRelationModal)}"></div>
+<div th:replace="~{registers/fragments/addAssetRelation :: addAssetRelation(relatableId=${register.id})}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true)}"></div>
 
 </body>

@@ -99,6 +99,7 @@
                                     <th>Tredjelandsoverførsel</th>
                                     <th>Acceptgrundlag</th>
                                     <th>Kritikalitet</th>
+                                    <th>Risiko vægtning</th>
                                     <th style="width: 40px"></th>
                                 </tr>
                             </thead>
@@ -113,6 +114,7 @@
                                     <td th:text="${relatedAsset.thirdCountryTransfer?.message}"></td>
                                     <td th:text="${@choiceService.getCaption(relatedAsset.acceptanceBasis, '')}"></td>
                                     <td th:text="${relatedAsset.asset.criticality?.message}"></td>
+                                    <td>100%</td>
                                     <td title="Fjern relation">
                                         <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}"></i>
                                     </td>

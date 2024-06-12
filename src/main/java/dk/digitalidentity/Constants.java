@@ -25,6 +25,8 @@ public interface Constants {
     String ISO27001_REPORT_TEMPLATE_DOC = "reports/ISO27001/ISO27001.docx";
     String ARTICLE_30_REPORT_TEMPLATE_DOC = "reports/article30/main.docx";
 
+    String RIST_SCALE_PROPERTY_NAME = "riskScale";
+
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
             .appendValue(DAY_OF_MONTH, 2)
