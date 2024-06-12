@@ -10,8 +10,8 @@
 
         @page {
             size: A4;
-            margin-top: 15%;
-            margin-bottom: 15%;
+            margin-top: 10%;
+            margin-bottom: 10%;
             margin-left: 11%;
             margin-right: 5%;
             @top-center { content: element(header); }
@@ -23,10 +23,7 @@
             padding: 10px !important;
             border: 1px solid black;
             display: inline-block;
-        }
-
-        div.label-input-row {
-            display: block !important;
+            font-size: 9px;
         }
 
         tr, th, td {
@@ -43,18 +40,17 @@
             width: 50%;
         }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
+        .riskProfileTable {
             font-size: 12px;
             text-align: left;
         }
 
-        th, td {
-            border: 1px solid #ddd;
+        table {
+            border-collapse: collapse;
+            width: 100%;
         }
 
-       img {
+        img {
             display: block;
             margin: auto;
             object-fit: contain;
@@ -66,14 +62,17 @@
             vertical-align: top;
         }
 
-        .table-container-profile {
-            overflow: auto;
+        tr {
+            page-break-inside:avoid
+        }
+
+        .threatAndTasksTables {
+            font-size: 9px;
         }
 
     </style>
 </head>
 <body>
-<div>
     <h1 th:text="'Ledelsesrapport for risikovurdering af ' + ${title}" style="text-align: center;"></h1>
     <h2 th:text="${subHeader}" style="text-align: center;"></h2>
 
@@ -91,7 +90,7 @@
             <h4>Risikoprofil før risikohåndtering</h4>
             <div class="col-12">
                 <div>
-                    <table id="riskProfileBefore" style="height: 250px;">
+                    <table id="riskProfileBefore" class="riskProfileTable" style="height: 250px;">
                         <tr th:each="consequence, stat : ${reversedScale}" class="tr-profile">
                             <td th:if="${stat.index} == 0" th:rowspan="${#lists.size(reversedScale)} + 2"
                                 style="border: none; max-width: 25px;">
@@ -122,7 +121,7 @@
             <h4>Risikoprofil efter risikohåndtering</h4>
             <div class="col-12">
             <div>
-                <table id="riskProfileAfter" style="height: 250px;">
+                <table id="riskProfileAfter" class="riskProfileTable" style="height: 250px;">
                     <tr th:each="consequence, stat : ${reversedScale}" class="tr-profile">
                         <td th:if="${stat.index} == 0" th:rowspan="${#lists.size(reversedScale)} + 2"
                             style="border: none; max-width: 25px;">
@@ -155,65 +154,117 @@
     </div>
     <br/>
     <div class="box-row">
-        <div class="box left" style="width:100px !important;">
-            <div class="label-input-row">
-                <label for="address">Sted:</label>
-                <p class="preformatted" id="address">Test</p>
+        <div class="box" style="width:130px !important;">
+            <div>
+                <b>Sandsynligheds skala</b>
+                <p th:each="row : ${probabilityScore}" th:text="${row}"></p>
             </div>
         </div>
-        <div class="box center" style="width:100px !important;">
-            <div class="label-input-row">
-                <label>Mødedeltagere: </label>
-                <p>Teeest testessen</p>
+        <div class="box" style="width:150px !important;">
+            <div>
+                <b>Konsekvens skala</b>
+                <p th:each="row : ${consequenceNumber}" th:text="${row}"></p>
             </div>
         </div>
-        <div class="box right" style="width:200px !important;">
-            <div class="label-input-row">
-                <label for="agenda">Dagsorden:</label>
-                <p class="preformatted" id="agenda"> TEeeeeeest</p>
+        <div class="box" style="width:220px !important;">
+            <div>
+                <b>Risikoscore scala</b>
+                <p th:each="row : ${riskScore}" th:text="${row}"></p>
             </div>
         </div>
     </div>
 
+    <div>
+        <h3 th:text="'Trusselsvurdering for ' + ${title}"></h3>
+        <table class="threatAndTasksTables">
+            <thead>
+                <tr>
+                    <th>Nr.</th>
+                    <th>Type af trussel</th>
+                    <th>Trussel</th>
+                    <th>Sandsynlighed</th>
+                    <th>Højeste konsekvens</th>
+                    <th>Risiko score</th>
+                    <th>Problemstilling</th>
+                    <th>Eksisterende foranstaltninger</th>
+                    <th>Risikohåndtering</th>
+                    <th>Uddybning af risikohåndtering</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="threat : ${threatsForPDF}">
+                    <td th:text="${threat.index}"></td>
+                    <td th:text="${threat.threatType}"></td>
+                    <td th:text="${threat.threat}"></td>
+                    <td th:text="${threat.probability}"></td>
+                    <td th:text="${threat.consequence}"></td>
+                    <td th:text="${threat.score}" th:style="'background-color:' + ${threat.color}"></td>
+                    <td th:text="${threat.problem}"></td>
+                    <td th:text="${threat.existingMeasures}"></td>
+                    <td th:text="${threat.method}"></td>
+                    <td th:text="${threat.elaboration}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
     <br/>
 
-    <h3 th:text="'Trusselsvurdering for ' + ${title}"></h3>
-    <table>
-        <thead>
-            <tr>
-                <th>Nr.</th>
-                <th>Type af trussel</th>
-                <th>Trussel</th>
-                <th>Sandsynlighed</th>
-                <th>Højeste konsekvens</th>
-                <th>Risiko score</th>
-                <th>Problemstilling</th>
-                <th>Eksisterende foranstaltninger</th>
-                <th>Risikohåndtering</th>
-                <th>Uddybning af risikohåndtering</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="threat : ${threats}">
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-            </tr>
-        </tbody>
-    </table>
-    <br/>
-    <h3>Opgaver oprettet under risikovurderingen</h3>
-    <br/>
-    <h3>Øvrige igangværende opgaver</h3>
+    <div>
+        <h3>Opgaver oprettet under risikovurderingen</h3>
+        <table class="threatAndTasksTables">
+            <thead>
+                <tr>
+                    <th>Opgave navn</th>
+                    <th>Beskrivelse</th>
+                    <th>Frekvens</th>
+                    <th>Deadline</th>
+                    <th>Ansvarlig</th>
+                    <th>Afdeling</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="task : ${tasksForPDF}">
+                    <td th:text="${task.name}"></td>
+                    <td th:text="${task.description}"></td>
+                    <td th:text="${task.taskType}"></td>
+                    <td th:text="${task.nextDeadline}"></td>
+                    <td th:text="${task.responsible}"></td>
+                    <td th:text="${task.department}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
     <br/>
 
-</div>
+    <div>
+        <h3>Øvrige igangværende opgaver</h3>
+        <table class="threatAndTasksTables">
+            <thead>
+                <tr>
+                    <th>Opgave navn</th>
+                    <th>Beskrivelse</th>
+                    <th>Frekvens</th>
+                    <th>Deadline</th>
+                    <th>Ansvarlig</th>
+                    <th>Afdeling</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="task : ${otherTasksForPDF}">
+                    <td th:text="${task.name}"></td>
+                    <td th:text="${task.description}"></td>
+                    <td th:text="${task.taskType}"></td>
+                    <td th:text="${task.nextDeadline}"></td>
+                    <td th:text="${task.responsible}"></td>
+                    <td th:text="${task.department}"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <br/>
+
 </body>
 </html>

@@ -29,6 +29,7 @@ import dk.digitalidentity.service.model.ThreatDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
+import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
@@ -52,6 +53,8 @@ import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.report.DocxUtil.addTextRun;
 import static dk.digitalidentity.report.DocxUtil.advanceCursor;
+import static dk.digitalidentity.report.DocxUtil.getCell;
+import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
 @RequiredArgsConstructor
@@ -464,42 +467,75 @@ public class ThreatAssessmentService {
 
         // risk profile
         context.setVariable("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
-        context.setVariable("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
         List<RiskProfileDTO> riskProfiles = buildRiskProfileDTOs(threatAssessment);
         context.setVariable("riskProfiles", riskProfiles);
+        final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
         context.setVariable("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
 
-        // threat list
-        Map<String, List<ThreatDTO>> threatList = buildThreatList(context.threatAssessment);
-        final int[] idx = { 1 };
-        threatList.forEach((threatType, threats) -> {
-            threats.forEach(t -> {
-                final XWPFTableRow row = table.getRow(idx[0]);
-                final RiskProfileDTO profile = context.riskProfileDTOList.stream()
-                    .filter(rp -> rp.getIndex() == t.getIndex())
-                    .findFirst().orElse(null);
-                if (profile != null) {
-                    setCellTextSmall(row, 0, "" + (t.getIndex() + 1));
-                    setCellTextSmall(row, 1, threatType);
-                    setCellTextSmall(row, 2, t.getThreat());
+        // scale explainers
+        final ScaleService.ScaleSetting scaleExplainers = ScaleService.scaleSettingsForType(scaleService.getScaleType());
+        context.setVariable("probabilityScore", scaleExplainers.getProbabilityScore());
+        context.setVariable("consequenceNumber", scaleExplainers.getConsequenceNumber());
+        context.setVariable("riskScore", scaleExplainers.getRiskScore());
 
-                    final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
-                    final int score = profile.getProbability() * profile.getConsequence();
-                    setCellTextSmallCentered(row, 3, "" + profile.getProbability());
-                    setCellTextSmallCentered(row, 4, "" + profile.getConsequence());
-                    setCellTextSmallCentered(row, 5, "" + score);
-                    setCellBackgroundColor(row.getCell(5), color);
-                    setCellTextSmall(row, 6, t.getProblem());
-                    setCellTextSmall(row, 7, t.getExistingMeasures());
-                    setCellTextSmall(row, 8, t.getMethod() != null ? t.getMethod().getMessage() : "");
-                    setCellTextSmall(row, 9, t.getElaboration());
-                    idx[0]++;
-                }
-            });
-        });
+        // threat list
+        Map<String, List<ThreatDTO>> threatList = buildThreatList(threatAssessment);
+        context.setVariable("threatsForPDF", buildThreatsForPDF(threatList, riskProfiles, colorMap));
+
+        // taskLists
+        context.setVariable("tasksForPDF", buildTasks(riskAssessmentTasks));
+        context.setVariable("otherTasksForPDF", buildTasks(otherTasks));
 
 
         return templateEngine.process("reports/risk_view_pdf", context);
+    }
+
+    record TaskPDFDTO(String name, String description, String taskType, String nextDeadline, String responsible, String department) {}
+    private List<TaskPDFDTO> buildTasks(List<Task> riskAssessmentTasks) {
+        List<TaskPDFDTO> result = new ArrayList<>();
+        riskAssessmentTasks.forEach(
+            task -> {
+                result.add(new TaskPDFDTO(
+                    task.getName(),
+                    task.getDescription(),
+                    task.getTaskType().getMessage(),
+                    DK_DATE_FORMATTER.format(task.getNextDeadline()),
+                    nullSafe(() -> task.getResponsibleUser().getName()),
+                    nullSafe(() -> task.getResponsibleOu().getName())
+                ));
+            }
+        );
+        return result;
+    }
+
+    record ThreatPDFDTO(int index, String threatType, String threat, int probability, int consequence, int score, String color, String problem, String existingMeasures, String method, String elaboration) {}
+    private List<ThreatPDFDTO> buildThreatsForPDF(Map<String, List<ThreatDTO>> threatList, List<RiskProfileDTO> riskProfiles, Map<String, String> colorMap) {
+        List<ThreatPDFDTO> result = new ArrayList<>();
+        threatList.forEach((threatType, threats) -> {
+            threats.forEach(t -> {
+                final RiskProfileDTO profile = riskProfiles.stream()
+                    .filter(rp -> rp.getIndex() == t.getIndex())
+                    .findFirst().orElse(null);
+                if (profile != null) {
+                    final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
+                    final int score = profile.getProbability() * profile.getConsequence();
+                    result.add(new ThreatPDFDTO(
+                    t.getIndex() + 1,
+                        threatType,
+                        t.getThreat(),
+                        profile.getProbability(),
+                        profile.getConsequence(),
+                        score,
+                        color,
+                        t.getProblem(),
+                        t.getExistingMeasures(),
+                        t.getMethod() != null ? t.getMethod().getMessage() : "",
+                        t.getElaboration()
+                    ));
+                }
+            });
+        });
+        return result;
     }
 
     private String getCriticality(final Asset asset, final Register register) {
