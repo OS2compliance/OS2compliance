@@ -1,4 +1,4 @@
-package dk.digitalidentity.service.model;
+package dk.digitalidentity.model.dto;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
 import lombok.AllArgsConstructor;
@@ -8,7 +8,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @AllArgsConstructor
-public class RelationDTO {
+public class RelatedDTO {
     private long id;
     private String name;
     private RelationType relationType;

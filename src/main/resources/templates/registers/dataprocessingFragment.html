@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div class="accordion-item" th:each="asset: ${relatedAssets}">
+        <div class="accordion-item" th:with="asset=${relationDto.b}" th:each="relationDto: ${relatedAssets}">
             <div class="accordion-header" th:id="'accHeader' + ${asset.id}">
                 <button class="accordion-button bg-secondary text-white shadow-none collapsed" type="button" data-bs-toggle="collapse" th:text="${asset.name}" th:data-bs-target="'#asset' + ${asset.id}" aria-expanded="false" aria-controls="_dm-defAccCollapseTwo">
                 </button>

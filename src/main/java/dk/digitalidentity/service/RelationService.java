@@ -3,11 +3,12 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.exception.BadRelationException;
+import dk.digitalidentity.model.dto.RelatedDTO;
+import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.service.model.RelationDTO;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -69,8 +70,19 @@ public class RelationService {
                 .collect(Collectors.toList());
     }
 
-    public List<RelationDTO> findRelationsAsListDTO(final Relatable relatedTo, final boolean includeTaskLogs) {
-        final List<RelationDTO> relationDTOS = new ArrayList<>();
+    public <A extends Relatable> List<RelationDTO<A, Relatable>> findRelations(final A relatedTo, final RelationType relatedType) {
+        final List<Relation> related = relationDao.findAllRelatedTo(relatedTo.getId());
+        return related.stream()
+                .filter(r -> r.getRelationAType().equals(relatedType) || r.getRelationBType().equals(relatedType))
+                .map(r -> RelationDTO.from(relatedTo, relatableDao.findById(r.getRelationAType() == relatedType
+                    ? r.getRelationAId()
+                    : r.getRelationBId())
+                    .orElseThrow(), r))
+                .collect(Collectors.toList());
+    }
+
+    public List<RelatedDTO> findRelationsAsListDTO(final Relatable relatedTo, final boolean includeTaskLogs) {
+        final List<RelatedDTO> relationDTOS = new ArrayList<>();
         for (final Relatable relatable : findAllRelatedTo(relatedTo)) {
             if (!includeTaskLogs && relatable.getRelationType().equals(RelationType.TASK_LOG)) {
                 continue;
@@ -78,10 +90,10 @@ public class RelationService {
 
             if (relatable.getRelationType().equals(RelationType.STANDARD_SECTION)) {
                 final StandardSection asStandardSection = (StandardSection) relatable;
-                relationDTOS.add(new RelationDTO(relatable.getId(), relatable.getName(), relatable.getRelationType(),
+                relationDTOS.add(new RelatedDTO(relatable.getId(), relatable.getName(), relatable.getRelationType(),
                     extractStandardIdentifier(asStandardSection)));
             } else {
-                relationDTOS.add(new RelationDTO(relatable.getId(), relatable.getName(), relatable.getRelationType(), null));
+                relationDTOS.add(new RelatedDTO(relatable.getId(), relatable.getName(), relatable.getRelationType(), null));
             }
         }
         return relationDTOS;

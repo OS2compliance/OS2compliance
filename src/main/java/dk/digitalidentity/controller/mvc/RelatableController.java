@@ -184,13 +184,14 @@ public class RelatableController {
 
     private void setRelationProperties(final Relation relation, final Map<String, String> properties) {
         if (properties != null) {
+            relation.getProperties().clear();
             final Set<RelationProperty> relationProperties = properties.entrySet().stream().map(e -> RelationProperty.builder()
                     .relation(relation)
                     .key(e.getKey())
                     .value(e.getValue())
                     .build())
                 .collect(Collectors.toSet());
-            relation.setProperties(relationProperties);
+            relation.getProperties().addAll(relationProperties);
         }
     }
 
