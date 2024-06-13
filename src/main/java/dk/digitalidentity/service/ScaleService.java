@@ -13,6 +13,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @Transactional
 @Service
@@ -159,6 +161,12 @@ public class ScaleService {
         Function<RiskAssessment, String> assessmentColorLookup;
     }
 
+    public Map<Integer, String> getConsequenceNumberDescriptions() {
+        final List<String> consequenceNumber = scaleSettingsForType(getScaleType()).consequenceNumber;
+        return IntStream.range(0, consequenceNumber.size())
+            .boxed()
+            .collect(Collectors.toMap(idx -> idx, consequenceNumber::get));
+    }
 
     public RiskScaleType getScaleType() {
         return getCurrentScaleType(getScaleTypeString());

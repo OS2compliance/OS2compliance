@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -10,6 +11,8 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -30,6 +33,7 @@ import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -52,6 +56,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.RISK_SCALE_PROPERTY_NAME;
 import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 
 @Slf4j
@@ -244,8 +249,17 @@ public class RegisterController {
         final ChoiceList gdprChoiceList = choiceService.findChoiceList("register-gdpr")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
         final List<ChoiceValue> gdprChoices = sortChoicesNumeric(gdprChoiceList);
-        final List<Relatable> relatedAssets = relationService.findAllRelatedTo(register).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
-        final List<AssetSupplierMapping> assetSupplierMappingList = relatedAssets.stream().map(Asset.class::cast).map(r -> assetService.findMainSupplier(r)).collect(Collectors.toList());
+        final List<RelationDTO<Register, Relatable>> relatedAssets = relationService.findRelations(register, RelationType.ASSET);
+
+        // The code below transforms a list of related assets into a list of pairs.
+        // Each pair contains the value of "RISK_SCALE_PROPERTY_NAME" (or a default of 100 if not available) and
+        // the primary supplier for the asset.
+        final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = relatedAssets.stream()
+            .map(r -> Pair.of(r.getProperties().entrySet().stream()
+                .filter(p -> p.getKey().equals(RISK_SCALE_PROPERTY_NAME)).findFirst().map(v -> Integer.valueOf(v.getValue()))
+                .orElse(100), (Asset)r.getB()))
+            .map(r -> Pair.of(r.getLeft(), assetService.findMainSupplier(r.getRight())))
+            .collect(Collectors.toList());
 
         model.addAttribute("section", section);
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
@@ -266,6 +280,7 @@ public class RegisterController {
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
             .collect(Collectors.toList()));
         model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
+        model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
 
         return "registers/view";
@@ -284,6 +299,29 @@ public class RegisterController {
         relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
         registerService.delete(register);
+    }
+
+    @GetMapping("{id}/relations/{relatedId}/{relatedType}")
+    @Transactional
+    public String editRelation(final Model model, @PathVariable final long id, @PathVariable final long relatedId, @PathVariable final RelationType relatedType) {
+        final Register register = registerService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Relation relation = relationService.findRelationEntity(register, relatedId, relatedType);
+        final Asset asset;
+        if (relation.getRelationAType() == RelationType.ASSET) {
+            asset = assetService.get(relation.getRelationAId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+        } else {
+            asset = assetService.get(relation.getRelationBId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+        model.addAttribute("relatableId", register.getId());
+        model.addAttribute("relation", relation);
+        model.addAttribute("asset", asset);
+        model.addAttribute("relatedType", relatedType);
+        model.addAttribute("properties", relation.getProperties().stream()
+            .collect(Collectors.toMap(RelationProperty::getKey, RelationProperty::getValue)));
+        return "registers/fragments/editAssetRelation";
     }
 
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
