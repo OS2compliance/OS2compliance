@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -29,6 +30,7 @@ import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -75,6 +77,7 @@ public class RegisterController {
     private final DataProcessingService dataProcessingService;
     private final TaskService taskService;
     private final UserService userService;
+    private final ThreatAssessmentService threatAssessmentService;
 
     @GetMapping
     public String registerList() {
@@ -261,6 +264,12 @@ public class RegisterController {
             .map(r -> Pair.of(r.getLeft(), assetService.findMainSupplier(r.getRight())))
             .collect(Collectors.toList());
 
+        final List<RegisterAssetRiskDTO> assetThreatAssessments = assetSupplierMappingList.stream()
+            .map(a -> threatAssessmentService.calculateRiskForRegistersRelatedAssets(a.getValue().getAsset(), a.getKey()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .toList();
+
         model.addAttribute("section", section);
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
@@ -279,6 +288,7 @@ public class RegisterController {
         model.addAttribute("threatAssessments", allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
             .collect(Collectors.toList()));
+        model.addAttribute("assetThreatAssessments", assetThreatAssessments);
         model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);

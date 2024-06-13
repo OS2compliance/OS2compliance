@@ -66,6 +66,7 @@
                         <div id="_dm-tabsRisk" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'risk'} ? 'active show' : ''" aria-labelledby="risk-tab">
                             <div th:replace="~{registers/assessments :: consequence(${assessment})}"></div>
                             <div th:replace="~{fragments/risks :: risksfragment(threatAssessments=${threatAssessments})}"></div>
+                            <div th:replace="~{registers/fragments/assetRisks :: assetRisks(threatAssessments=${threatAssessments})}"></div>
                         </div>
                     </div>
                 </div>
