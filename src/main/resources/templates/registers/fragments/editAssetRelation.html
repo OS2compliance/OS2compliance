@@ -13,7 +13,7 @@
                             <label for="EditRelationModalrelationsSelect" class="col-sm-2 col-form-label">Aktiver</label>
                             <div class="col-sm-10">
                                 <select class="form-control form-select choices__input" data-trigger=""
-                                        name="relations" id="EditRelationModalrelationsSelect" hidden="" tabindex="-1">
+                                        name="relations" id="EditRelationModalrelationsSelect" hidden="" tabindex="-1" disabled>
                                     <option th:value="${asset.getId()}" th:text="${'Aktiv: ' + asset.getName()}"></option>
                                 </select>
                             </div>

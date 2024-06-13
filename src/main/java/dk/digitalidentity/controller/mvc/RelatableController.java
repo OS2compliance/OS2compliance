@@ -28,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -67,6 +68,7 @@ public class RelatableController {
 						.relationAType(relateTo.getRelationType())
 						.relationBId(relatable.getId())
 						.relationBType(relatable.getRelationType())
+                        .properties(new HashSet<>())
 						.build())
 				.map(relationService::save)
                 .forEach(relation -> setRelationProperties(relation, dto.properties));
