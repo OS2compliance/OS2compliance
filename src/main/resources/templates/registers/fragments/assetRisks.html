@@ -1,0 +1,49 @@
+<th:block th:fragment="assetRisks">
+    <div class="card shadow-none col-lg-12 mb-3">
+        <div class="card-header toolbar">
+            <h5 class="toolbar-start m-0">Risikovurderinger fra tilknyttede aktiver</h5>
+        </div>
+        <div class="card-body">
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th class="col-lg-8">Risikovurdering</th>
+                    <th class="col-lg-2">Dato</th>
+                    <th class="col-lg-1">Risikoscore</th>
+                    <th class="col-lg-1">Vægtet risikoscore</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="assetThreatAssessment : ${assetThreatAssessments}" th:with="threatAssessment = ${assetThreatAssessment.threatAssessment}">
+                    <td>
+                        <a th:href="'/risks/' + ${threatAssessment.id}">
+                            <span th:text="${threatAssessment.name}"></span>
+                        </a>
+                    </td>
+                    <td th:text="${#temporals.format(assetThreatAssessment.date, 'dd-MM-yyyy')}"></td>
+                    <td th:unless="${threatAssessment.assessment == null}">
+                        <div class="d-inline-flex">
+                            <div th:text="${#numbers.formatDecimal(assetThreatAssessment.riskScore,1,1)}" class="me-2" style="width: 35px"></div>
+                            <div th:if="${threatAssessment.assessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).GREEN}" style="width: 100px" class="d-block badge bg-green" th:text="${threatAssessment.assessment.message}"></div>
+                            <div th:if="${threatAssessment.assessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).YELLOW}" style="width: 100px" class="d-block badge bg-yellow" th:text="${threatAssessment.assessment.message}"></div>
+                            <div th:if="${threatAssessment.assessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).RED}" style="width: 100px" class="d-block badge bg-danger" th:text="${threatAssessment.assessment.message}"></div>
+                        </div>
+                    </td>
+                    <td th:unless="${threatAssessment.assessment == null}">
+                        <div class="d-inline-flex">
+                            <div th:text="|(${assetThreatAssessment.weightedPct}%) ${#numbers.formatDecimal(assetThreatAssessment.weightedRiskScore,1,1)}|" class="me-2" style="width: 65px"></div>
+                            <div th:if="${assetThreatAssessment.weightedAssessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).GREEN}" style="width: 100px" class="d-block badge bg-green" th:text="${assetThreatAssessment.weightedAssessment.message}"></div>
+                            <div th:if="${assetThreatAssessment.weightedAssessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).YELLOW}" style="width: 100px" class="d-block badge bg-yellow" th:text="${assetThreatAssessment.weightedAssessment.message}"></div>
+                            <div th:if="${assetThreatAssessment.weightedAssessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).RED}" style="width: 100px" class="d-block badge bg-danger" th:text="${assetThreatAssessment.weightedAssessment.message}"></div>
+                        </div>
+                    </td>
+                    <td th:if="${threatAssessment.assessment == null}">
+                    </td>
+                    <td th:if="${threatAssessment.assessment == null}">
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
