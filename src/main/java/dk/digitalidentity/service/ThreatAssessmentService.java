@@ -248,16 +248,7 @@ public class ThreatAssessmentService {
      */
     private Double calculateRiskScore(final List<RiskProfileDTO> riskProfileDTOs) {
         return riskProfileDTOs.stream()
-            .mapToDouble(r -> {
-                final int probability = r.getProbability();
-                final int consequence = r.getConsequence();
-                // Needs to be clarified with Nina
-//                if (r.getResidualConsequence() > 0 && r.getResidualProbability() > 0) {
-//                    consequence = r.getResidualConsequence();
-//                    probability = r.getResidualProbability();
-//                }
-                return probability * consequence;
-            })
+            .mapToDouble(r -> r.getProbability() * r.getConsequence())
             .filter(i -> i > 0)
             .max()
             .orElse(0);
