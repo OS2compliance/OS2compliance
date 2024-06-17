@@ -4,7 +4,6 @@ import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.RiskScaleType;
 import lombok.Builder;
 import lombok.Getter;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,7 +76,6 @@ public class ScaleService {
                 "4 = Graverende/ødelæggende"
             ))
             .build(),
-
         ScaleSetting.builder()
             .type(RiskScaleType.SCALE_1_4_KL)
             .colorsMatrix(
@@ -118,15 +116,6 @@ public class ScaleService {
                     }
                 }
             )
-            .assessmentColorLookup(
-                a -> switch (a) {
-                    case RED -> "FA0020";
-                    case ORANGE -> null;
-                    case GREEN -> null;
-                    case LIGHT_GREEN -> null;
-                    case YELLOW -> null;
-                }
-            )
             .riskScore(List.of(
                 "Risikoscore = sandsynlighed * konsekvens",
                 "1-3 = Lav risiko (grøn)",
@@ -146,6 +135,64 @@ public class ScaleService {
                 "2 = Medium",
                 "3 = Høj",
                 "4 = Meget høj"
+            ))
+            .build(),
+        ScaleSetting.builder()
+            .type(RiskScaleType.SCALE_1_4_HERNING)
+            .colorsMatrix(
+                    new HashMap<>() {{
+                        put("1,1", "#1DB255");
+                        put("1,2", "#1DB255");
+                        put("1,3", "#FDFF3C");
+                        put("1,4", "#FDFF3C");
+                        put("2,1", "#1DB255");
+                        put("2,2", "#FDFF3C");
+                        put("2,3", "#FDFF3C");
+                        put("2,4", "#FCC231");
+                        put("3,1", "#FDFF3C");
+                        put("3,2", "#FDFF3C");
+                        put("3,3", "#FCC231");
+                        put("3,4", "#FA0020");
+                        put("4,1", "#FDFF3C");
+                        put("4,2", "#FCC231");
+                        put("4,3", "#FA0020");
+                        put("4,4", "#FA0020");
+                    }}
+            )
+            .assessmentLookup(
+                r -> {
+                    if (r == null) {
+                        return null;
+                    }
+                    if (r <= 2) {
+                        return RiskAssessment.GREEN;
+                    } else if (r <= 7) {
+                        return RiskAssessment.YELLOW;
+                    } else if (r <= 11) {
+                        return RiskAssessment.ORANGE;
+                    } else {
+                        return RiskAssessment.RED;
+                    }
+                }
+            )
+            .riskScore(List.of(
+                "Risikoscore = sandsynlighed * konsekvens",
+                "1-2 = Lav (grøn)",
+                "3-7 = Under middel (gul)",
+                "8-11 = Over middel (orange)",
+                "12-16 = Høj (rød)"
+            ))
+            .probabilityScore(List.of(
+                "1 = Lav (Usandsynligt)",
+                "2 = Medium (Mindre sandsynligt)",
+                "3 = Høj (Sandsynligt)",
+                "4 = Meget høj (Forventet)"
+            ))
+            .consequenceNumber(List.of(
+                "1 = Lav (Ubetydelig, uvæsentlig)",
+                "2 = Medium (Mindre alvorlig, generende)",
+                "3 = Høj (Alvorlig, kritisk)",
+                "4 = Meget høj (Graverende, meget kritisk)"
             ))
             .build()
     );
@@ -231,7 +278,4 @@ public class ScaleService {
         }
 	}
 
-    private boolean isVariantOf(final String s1, final String s2) {
-        return StringUtils.getDigits(s1).length() == StringUtils.getDigits(s2).length();
-    }
 }
