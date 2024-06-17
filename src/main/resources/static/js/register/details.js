@@ -277,17 +277,23 @@ function RegisterAssessmentService() {
         updateFor('availabilityOrganisationEco');
     }
 
+    this.enumColorToBtn = function(color) {
+        if (color === 'GRØN') {
+            return 'btn-success';
+        } else if (color === 'GUL') {
+            return 'btn-yellow';
+        } else if (color === 'ORANGE') {
+            return 'btn-warning';
+        } else if (color === 'RØD') {
+            return 'btn-danger';
+        } else {
+            return 'btn-danger';
+        }
+    }
+
     this.updateColorFor = function(btnElement, value) {
         this.clearColors(btnElement);
-        if (value === 'GRØN') {
-            btnElement.classList.add('btn-success');
-        } else if (value === 'GUL') {
-            btnElement.classList.add('btn-yellow');
-        } else if (value === 'RØD') {
-            btnElement.classList.add('btn-danger');
-        } else {
-            btnElement.classList.add('btn-danger');
-        }
+        btnElement.classList.add(this.enumColorToBtn(value));
     }
 
     this.clearColors = function(element) {
@@ -393,21 +399,28 @@ function RegisterAssessmentService() {
     }
 
 
+    this.enumColorToAssessment = function (color) {
+        if (color === 'GRØN') {
+            return 'GREEN';
+        } else if (color === 'GUL') {
+            return 'YELLOW';
+        } else if (color === 'ORANGE') {
+            return 'ORANGE';
+        } else if (color === 'RØD') {
+            return 'RED';
+        } else {
+            return 'RED';
+        }
+    };
+
     this.updateConsequenceStatus = function(value) {
         const assessmentBadge = document.getElementById('assessmentBadge');
         const assessmentElement = document.getElementById('assessment');
         this.clearColors(assessmentBadge);
         const ival = asIntOrDefault(value, 0);
-        if (ival === 1) {
-            assessmentBadge.classList.add('bg-green');
-            assessmentElement.value = 'GREEN';
-        } else if (ival > 1 && ival < 4) {
-            assessmentBadge.classList.add('bg-yellow');
-            assessmentElement.value = 'YELLOW';
-        } else if (ival) {
-            assessmentBadge.classList.add('bg-red');
-            assessmentElement.value = 'RED';
-        }
+        let color = scaleMap["" + ival];
+        assessmentBadge.classList.add(this.enumColorToBtn(color));
+        assessmentElement.value = this.enumColorToAssessment(color);
     }
 
 

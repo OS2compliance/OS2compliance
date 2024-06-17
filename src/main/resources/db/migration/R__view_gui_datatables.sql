@@ -58,8 +58,10 @@ SELECT
     r.updated_at,
     ca.assessment as consequence,
     (CASE WHEN ca.assessment = 'GREEN' THEN 1
-          WHEN ca.assessment = 'YELLOW' THEN 2
-          WHEN ca.assessment = 'RED' THEN 3
+          WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+          WHEN ca.assessment = 'YELLOW' THEN 3
+          WHEN ca.assessment = 'ORANGE' THEN 4
+          WHEN ca.assessment = 'RED' THEN 5
         END) as consequence_order,
     ta.assessment as risk,
     (CASE WHEN ta.assessment = 'GREEN' THEN 1
