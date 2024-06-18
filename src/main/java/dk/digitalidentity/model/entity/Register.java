@@ -5,17 +5,16 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
@@ -115,6 +114,10 @@ public class Register extends Relatable {
     @PrimaryKeyJoinColumn
     private ConsequenceAssessment consequenceAssessment;
 
+    @Column
+    @Enumerated(EnumType.STRING)
+    private RiskAssessment assetRiskAssessment;
+
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "data_processing_id", referencedColumnName = "id")
     private DataProcessing dataProcessing;
@@ -127,6 +130,7 @@ public class Register extends Relatable {
     @Override
     public String getLocalizedEnumValues() {
         return (status != null ? status.getMessage() : "") +
-                (consequenceAssessment != null ? nullSafe(() -> consequenceAssessment.getAssessment().getMessage(), "") : "");
+            (consequenceAssessment != null ? nullSafe(() -> consequenceAssessment.getAssessment().getMessage(), "") : "") +
+            (assetRiskAssessment != null ? assetRiskAssessment.getMessage() : "");
     }
 }

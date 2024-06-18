@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -50,7 +51,7 @@ public class RelationService {
         return relationDao.findRelatedToWithType(relatable.getId(), relatedType);
     }
 
-    public List<Relation> findRelatedToWithType(final List<Long> relatedToId, final RelationType relatedType) {
+    public List<Relation> findRelatedToWithType(final Collection<Long> relatedToId, final RelationType relatedType) {
         return relationDao.findRelatedToWithType(relatedToId, relatedType);
     }
 

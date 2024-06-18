@@ -26,11 +26,11 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
+import dk.digitalidentity.service.RegisterAssetAssessmentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
-import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -58,7 +58,6 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.Constants.RISK_SCALE_PROPERTY_NAME;
 import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 
 @Slf4j
@@ -68,6 +67,7 @@ import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 @RequiredArgsConstructor
 public class RegisterController {
     private final RegisterService registerService;
+    private final RegisterAssetAssessmentService registerAssetAssessmentService;
     private final AssetService assetService;
     private final RelationService relationService;
     private final ChoiceService choiceService;
@@ -77,7 +77,6 @@ public class RegisterController {
     private final DataProcessingService dataProcessingService;
     private final TaskService taskService;
     private final UserService userService;
-    private final ThreatAssessmentService threatAssessmentService;
 
     @GetMapping
     public String registerList() {
@@ -252,23 +251,10 @@ public class RegisterController {
         final ChoiceList gdprChoiceList = choiceService.findChoiceList("register-gdpr")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
         final List<ChoiceValue> gdprChoices = sortChoicesNumeric(gdprChoiceList);
+
         final List<RelationDTO<Register, Relatable>> relatedAssets = relationService.findRelations(register, RelationType.ASSET);
-
-        // The code below transforms a list of related assets into a list of pairs.
-        // Each pair contains the value of "RISK_SCALE_PROPERTY_NAME" (or a default of 100 if not available) and
-        // the primary supplier for the asset.
-        final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = relatedAssets.stream()
-            .map(r -> Pair.of(r.getProperties().entrySet().stream()
-                .filter(p -> p.getKey().equals(RISK_SCALE_PROPERTY_NAME)).findFirst().map(v -> Integer.valueOf(v.getValue()))
-                .orElse(100), (Asset)r.getB()))
-            .map(r -> Pair.of(r.getLeft(), assetService.findMainSupplier(r.getRight())))
-            .collect(Collectors.toList());
-
-        final List<RegisterAssetRiskDTO> assetThreatAssessments = assetSupplierMappingList.stream()
-            .map(a -> threatAssessmentService.calculateRiskForRegistersRelatedAssets(a.getValue().getAsset(), a.getKey()))
-            .filter(Optional::isPresent)
-            .map(Optional::get)
-            .toList();
+        final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
+        final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
         model.addAttribute("section", section);
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
