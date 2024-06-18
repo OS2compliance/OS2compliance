@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.core.env.PropertyResolver;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -37,6 +38,7 @@ public class RegisterAssetAssessmentService {
     private final ThreatAssessmentService threatAssessmentService;
     private final RegisterService registerService;
     private final ScaleService scaleService;
+    private final PropertyResolver propertyResolver;
     @PersistenceContext
     private EntityManager entityManager;
 
@@ -132,10 +134,10 @@ public class RegisterAssetAssessmentService {
                 .build());
         if (score >= 1) {
             property.setValue(scaleService.getRiskAssessmentForRisk(score).name());
+            register.getProperties().add(property);
         } else {
-            property.setValue(null);
+            register.getProperties().remove(property);
         }
-        register.getProperties().add(property);
         log.info("updateAssetAssessment done, took {}ms", System.currentTimeMillis() - millis);
     }
 

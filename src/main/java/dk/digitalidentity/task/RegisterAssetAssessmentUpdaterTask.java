@@ -19,8 +19,8 @@ public class RegisterAssetAssessmentUpdaterTask {
     private final OS2complianceConfiguration configuration;
 
     @Transactional
-//    @Scheduled(cron = "${os2compliance.register_asset_assessment.cron}")
-    @Scheduled(fixedRate = 10000000)
+    @Scheduled(cron = "${os2compliance.register_asset_assessment.cron}")
+//    @Scheduled(fixedRate = 10000000)
     public void updateAssessments() {
         if (!configuration.isSchedulingEnabled()) {
             return;
