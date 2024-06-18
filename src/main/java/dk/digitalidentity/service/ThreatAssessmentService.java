@@ -216,6 +216,7 @@ public class ThreatAssessmentService {
      * @return An Optional containing the calculated RegisterAssetRiskDTO if a threat assessment is found for the asset,
      *         otherwise an empty Optional.
      */
+    @Transactional
     public Optional<RegisterAssetRiskDTO> calculateRiskForRegistersRelatedAssets(final Asset asset, final Integer riskScale) {
         final List<Relation> relatedToWithType = relationService.findRelatedToWithType(asset, RelationType.THREAT_ASSESSMENT);
         return relatedToWithType.stream()
@@ -297,6 +298,7 @@ public class ThreatAssessmentService {
 		return new RiskDTO(highestRF, highestOF, highestRI, highestOI, highestRT, highestOT);
 	}
 
+    @Transactional
     public List<RiskProfileDTO> buildRiskProfileDTOs(final ThreatAssessment threatAssessment) {
         final List<RiskProfileDTO> riskProfiles = new ArrayList<>();
         final Map<String, List<ThreatDTO>> threatMap = buildThreatList(threatAssessment);

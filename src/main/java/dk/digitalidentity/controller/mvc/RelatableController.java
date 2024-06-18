@@ -1,6 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.event.RelationAddedEvent;
+import dk.digitalidentity.event.RelationUpdatedEvent;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -15,6 +17,7 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -41,6 +44,7 @@ import java.util.stream.Collectors;
 @RequestMapping("relatables")
 @RequiredArgsConstructor
 public class RelatableController {
+    private final ApplicationEventPublisher eventPublisher;
     private final RelatableService relatableService;
     private final RelationService relationService;
     private final DocumentService documentService;
@@ -71,7 +75,11 @@ public class RelatableController {
                         .properties(new HashSet<>())
 						.build())
 				.map(relationService::save)
-                .forEach(relation -> setRelationProperties(relation, dto.properties));
+                .forEach(relation -> {
+                    setRelationProperties(relation, dto.properties);
+                    relationService.save(relation);
+                    eventPublisher.publishEvent(new RelationAddedEvent(relation.getId()));
+                });
 		return getReturnPath(dto.id(), relateTo);
 	}
 
@@ -88,6 +96,7 @@ public class RelatableController {
         final Relatable relatedTo = relatableService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final Relation toUpdate = relationService.findRelationEntity(relatedTo, relatedId, relatedType);
         setRelationProperties(toUpdate, dto.properties);
+        eventPublisher.publishEvent(new RelationUpdatedEvent(toUpdate.getId()));
         return getReturnPath(id, relatedTo);
     }
 

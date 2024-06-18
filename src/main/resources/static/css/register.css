@@ -27,6 +27,9 @@
 #registersDatatable td[data-column-id="risikoVurdering"] {
     vertical-align: middle;
 }
+#registersDatatable td[data-column-id="aktivVurdering"] {
+    vertical-align: middle;
+}
 #registersDatatable td[data-column-id="handlinger"] {
     vertical-align: middle;
 }

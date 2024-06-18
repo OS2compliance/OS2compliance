@@ -4,9 +4,14 @@ import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.FlushModeType;
+import jakarta.persistence.PersistenceContext;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -14,10 +19,13 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ASSET_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.RISK_SCALE_PROPERTY_NAME;
 
 @Service
@@ -29,7 +37,8 @@ public class RegisterAssetAssessmentService {
     private final ThreatAssessmentService threatAssessmentService;
     private final RegisterService registerService;
     private final ScaleService scaleService;
-
+    @PersistenceContext
+    private EntityManager entityManager;
 
     /**
      * This method takes a list of related assets and transforms it into a list of pairs.
@@ -40,6 +49,7 @@ public class RegisterAssetAssessmentService {
      * @return a list of pairs, where each pair contains an integer value representing the risk scale property and an AssetSupplierMapping object representing the primary supplier
      *  for the asset
      */
+    @Transactional
     public List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList(final List<RelationDTO<Register, Relatable>> relatedAssets) {
         return relatedAssets.stream()
             .map(r -> Pair.of(r.getProperties().entrySet().stream()
@@ -56,6 +66,7 @@ public class RegisterAssetAssessmentService {
      *  the primary supplier for the asset
      * @return a list of RegisterAssetRiskDTO objects, each containing the threat assessment, date, risk score, weighted percentage, weighted assessment, and weighted risk score
      */
+    @Transactional
     public List<RegisterAssetRiskDTO> assetThreatAssessments(final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList) {
         return assetSupplierMappingList.stream()
             .map(a -> threatAssessmentService.calculateRiskForRegistersRelatedAssets(a.getValue().getAsset(), a.getKey()))
@@ -65,7 +76,45 @@ public class RegisterAssetAssessmentService {
     }
 
     @Transactional
+    public void updateAllRelatedToThreatAssessment(final Long threatAssessmentId) {
+        entityManager.setFlushMode(FlushModeType.COMMIT);
+        final List<Relation> relatedAssets = relationService.findRelatedToWithType(Collections.singletonList(threatAssessmentId), RelationType.ASSET);
+        final Set<Long> assetIds = relatedAssets.stream().map(r -> r.getRelationAType() == RelationType.ASSET ? r.getRelationAId() : r.getRelationBId())
+            .collect(Collectors.toSet());
+        final Set<Long> registerIds = relationService.findRelatedToWithType(assetIds, RelationType.REGISTER).stream()
+            .map(r -> r.getRelationAType() == RelationType.REGISTER ? r.getRelationAId() : r.getRelationBId())
+            .collect(Collectors.toSet());
+        registerIds.stream()
+            .map(registerService::findById)
+            .filter(Optional::isPresent)
+            .forEach(r -> updateAssetAssessment(r.get()));
+    }
+
+    @Transactional
+    public void updateAllRelatedToAsset(final Long assetId) {
+        entityManager.setFlushMode(FlushModeType.COMMIT);
+        final Set<Long> registerIds = relationService.findRelatedToWithType(Collections.singletonList(assetId), RelationType.REGISTER).stream()
+            .map(r -> r.getRelationAType() == RelationType.REGISTER ? r.getRelationAId() : r.getRelationBId())
+            .collect(Collectors.toSet());
+        registerIds.stream()
+            .map(registerService::findById)
+            .filter(Optional::isPresent)
+            .forEach(r -> updateAssetAssessment(r.get()));
+    }
+
+    @Transactional
+    public void updateAssetAssessment(final Long registerId) {
+        registerService.findById(registerId).ifPresent(this::updateAssetAssessment);
+    }
+
+    @Transactional
+    public void updateAssetAssessmentAll() {
+        registerService.findAll().forEach(this::updateAssetAssessment);
+    }
+
+    @Transactional
     public void updateAssetAssessment(final Register register) {
+        entityManager.setFlushMode(FlushModeType.COMMIT);
         final long millis = System.currentTimeMillis();
         final List<RelationDTO<Register, Relatable>> relatedAssets = relationService.findRelations(register, RelationType.ASSET);
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = assetSupplierMappingList(relatedAssets);
@@ -75,11 +124,18 @@ public class RegisterAssetAssessmentService {
             .map(Optional::get)
             .mapToInt(r -> r.getWeightedRiskScore().intValue())
             .max().orElse(0);
+        final Property property = register.getProperties().stream()
+            .filter(p -> p.getKey().equals(ASSET_ASSESSMENT_PROPERTY))
+            .findFirst().orElseGet(() -> Property.builder()
+                .key(ASSET_ASSESSMENT_PROPERTY)
+                .entity(register)
+                .build());
         if (score >= 1) {
-            register.setAssetRiskAssessment(scaleService.getRiskAssessmentForRisk(score));
+            property.setValue(scaleService.getRiskAssessmentForRisk(score).name());
         } else {
-            register.setAssetRiskAssessment(null);
+            property.setValue(null);
         }
+        register.getProperties().add(property);
         log.info("updateAssetAssessment done, took {}ms", System.currentTimeMillis() - millis);
     }
 

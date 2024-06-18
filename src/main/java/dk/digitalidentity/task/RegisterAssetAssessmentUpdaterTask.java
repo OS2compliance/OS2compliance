@@ -1,8 +1,8 @@
 package dk.digitalidentity.task;
 
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.service.RegisterAssetAssessmentService;
-import dk.digitalidentity.service.RegisterService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -15,15 +15,18 @@ import org.springframework.stereotype.Component;
 @EnableScheduling
 @RequiredArgsConstructor
 public class RegisterAssetAssessmentUpdaterTask {
-    private final RegisterService registerService;
     private final RegisterAssetAssessmentService registerAssetAssessmentService;
+    private final OS2complianceConfiguration configuration;
 
     @Transactional
-    @Scheduled(cron = "${os2compliance.register_asset_assessment.cron}")
-//    @Scheduled(fixedRate = 10000000)
+//    @Scheduled(cron = "${os2compliance.register_asset_assessment.cron}")
+    @Scheduled(fixedRate = 10000000)
     public void updateAssessments() {
+        if (!configuration.isSchedulingEnabled()) {
+            return;
+        }
         log.info("Started: Updating Registers asset assessments");
-        registerService.findAll().forEach(registerAssetAssessmentService::updateAssetAssessment);
+        registerAssetAssessmentService.updateAssetAssessmentAll();
         log.info("Finished: Updating Registers asset assessments");
     }
 

@@ -10,6 +10,7 @@ import static java.time.temporal.ChronoField.YEAR;
 
 public interface Constants {
 
+    String ASSET_ASSESSMENT_PROPERTY = "asset_assessment";
     String NEEDS_CVR_UPDATE_PROPERTY = "cvr_update";
     String CVR_UPDATED_PROPERTY = "cvr_updated_at";
     String ASSOCIATED_DOCUMENT_PROPERTY = "linked_doc";
