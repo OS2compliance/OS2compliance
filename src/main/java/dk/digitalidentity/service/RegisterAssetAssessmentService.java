@@ -132,11 +132,10 @@ public class RegisterAssetAssessmentService {
                 .key(ASSET_ASSESSMENT_PROPERTY)
                 .entity(register)
                 .build());
+        register.getProperties().remove(property);
         if (score >= 1) {
             property.setValue(scaleService.getRiskAssessmentForRisk(score).name());
             register.getProperties().add(property);
-        } else {
-            register.getProperties().remove(property);
         }
         log.info("updateAssetAssessment done, took {}ms", System.currentTimeMillis() - millis);
     }
