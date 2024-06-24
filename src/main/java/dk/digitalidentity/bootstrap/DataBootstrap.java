@@ -117,10 +117,6 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void seedV16() {
-        valueDao.findByIdentifier("register-gdpr-valp6")
-            .ifPresent(c -> c.setCaption(""));
-        valueDao.findByIdentifier("register-gdpr-valp7")
-            .ifPresent(c -> c.setCaption(""));
         try {
             choiceImporter.importValues("./data/choices/register-values.json");
             choiceImporter.updateValues("./data/choices/register-values.json");
@@ -133,6 +129,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         } catch (final IOException e) {
             log.error("Failed to update choice list during migration", e);
         }
+        valueDao.findByIdentifier("register-gdpr-valp6")
+            .ifPresent(c -> c.setCaption(""));
+        valueDao.findByIdentifier("register-gdpr-valp7")
+            .ifPresent(c -> c.setCaption(""));
     }
 
     @SneakyThrows
