@@ -322,7 +322,7 @@ public class RegisterController {
 
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
-                .sorted(Comparator.comparingInt(a -> asNumber(a.getCaption())))
+                .sorted(Comparator.comparingInt(a -> asNumber(a.getIdentifier())))
                 .collect(Collectors.toList());
     }
 
