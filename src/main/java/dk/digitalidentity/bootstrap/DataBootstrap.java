@@ -22,6 +22,7 @@ import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -49,6 +50,7 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
  * this class does that by keeping track of what data version is the current one and then updating the data incrementally.
  * Much like flyway but for the actual database content and not structure.
  */
+@Slf4j
 @Order(100)
 @Component
 @RequiredArgsConstructor
@@ -94,6 +96,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(13, this::seedV13);
         incrementAndPerformIfVersion(14, this::seedV14);
         incrementAndPerformIfVersion(15, this::seedV15);
+        incrementAndPerformIfVersion(16, this::seedV16);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -111,6 +114,25 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private void seedV15() {
         valueDao.findByIdentifier("register-gdpr-p6-f")
             .ifPresent(c -> c.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. <b>Første afsnit, litra f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"));
+    }
+
+    private void seedV16() {
+        valueDao.findByIdentifier("register-gdpr-valp6")
+            .ifPresent(c -> c.setCaption(""));
+        valueDao.findByIdentifier("register-gdpr-valp7")
+            .ifPresent(c -> c.setCaption(""));
+        try {
+            choiceImporter.importValues("./data/choices/register-values.json");
+            choiceImporter.updateValues("./data/choices/register-values.json");
+            choiceImporter.importList("./data/choices/register-gdpr-p7.json");
+            final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
+            sortedResources.sort(Comparator.comparing(Resource::getFilename));
+            for (final Resource register : sortedResources) {
+                registerImporter.updateRegisterGdprChoices(register);
+            }
+        } catch (final IOException e) {
+            log.error("Failed to update choice list during migration", e);
+        }
     }
 
     @SneakyThrows
