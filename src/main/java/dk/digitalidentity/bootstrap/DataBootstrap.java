@@ -124,6 +124,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
             sortedResources.sort(Comparator.comparing(Resource::getFilename));
             for (final Resource register : sortedResources) {
+                registerImporter.importRegister(register);
                 registerImporter.updateRegisterGdprChoices(register);
             }
         } catch (final IOException e) {
