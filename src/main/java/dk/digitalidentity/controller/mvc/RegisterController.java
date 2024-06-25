@@ -147,7 +147,6 @@ public class RegisterController {
         return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
-    @Transactional
     @PostMapping("{id}/update")
     public String update(@PathVariable final Long id,
                          @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,

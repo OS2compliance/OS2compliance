@@ -160,6 +160,7 @@ function RegisterPurposeService() {
         const cancelBtn = document.querySelector('#cancelPurposeBtn');
         const saveBtn = document.querySelector('#savePurposeBtn');
         const purpose = document.querySelector('#purpose');
+        const purposeNotes = document.querySelector('#purposeNotes');
         const informationObligationDesc = document.querySelector('#informationObligationDesc');
         const informationObligation = document.querySelector('#informationObligation');
         const checkboxes = document.getElementsByClassName("form-check-input");
@@ -176,6 +177,7 @@ function RegisterPurposeService() {
         consent.readOnly = !editable;
         informationObligation.disabled = !editable;
         purpose.readOnly = !editable;
+        purposeNotes.readOnly = !editable;
         if (!editable) {
             const form = document.querySelector('#editPurposeId');
             form.reset();
