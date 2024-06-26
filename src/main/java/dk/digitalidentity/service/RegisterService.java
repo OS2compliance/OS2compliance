@@ -78,6 +78,10 @@ public class RegisterService {
         return registerDao.existsByName(title);
     }
 
+    public Optional<Register> findByName(final String name) {
+        return registerDao.findByName(name);
+    }
+
     @Transactional
     public Register save(final Register register) {
         if (register.getDataProcessing() == null) {
