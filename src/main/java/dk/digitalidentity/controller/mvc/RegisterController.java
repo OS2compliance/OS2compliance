@@ -178,14 +178,20 @@ public class RegisterController {
         if (responsibleOuUuids != null && !responsibleOuUuids.isEmpty()) {
             final List<OrganisationUnit> responsibleOus = organisationService.findAllByUuids(responsibleOuUuids);
             register.setResponsibleOus(responsibleOus);
+        } else {
+            register.setResponsibleOus(null);
         }
         if (departmentUuids != null && !departmentUuids.isEmpty()) {
             final List<OrganisationUnit> departmentOus = organisationService.findAllByUuids(departmentUuids);
             register.setDepartments(departmentOus);
+        } else {
+            register.setDepartments(null);
         }
         if (responsibleUserUuids != null && !responsibleUserUuids.isEmpty()) {
             final List<User> responsibleUsers = userService.findAllByUuids(responsibleUserUuids);
             register.setResponsibleUsers(responsibleUsers);
+        } else {
+            register.setResponsibleUsers(null);
         }
         if (purpose != null) {
             register.setPurpose(purpose);

@@ -37,7 +37,7 @@ public class OrganisationRestController {
     public PageDTO<OrganisationUnitDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());
         if (StringUtils.length(search) == 0) {
-            return mapper.toDTO(organisationUnitDao.findAll(page));
+            return mapper.toDTO(organisationUnitDao.findAllByActiveTrue(page));
         } else {
             return mapper.toDTO(organisationUnitDao.searchForOU("%" + search + "%", page));
         }
