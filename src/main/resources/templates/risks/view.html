@@ -145,9 +145,9 @@
                                     </tr>
                                     <th:block th:each="row : ${type.value}">
                                         <tr class="threatRow" th:classappend="'categoryRow' + ${stat.index} + ' rowId'+${row.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index},data-index=${stat.index}">
-                                            <td class="riskViewTd"  th:text="${row.index} + 1" rowspan="5"></td>
-                                            <td class="riskViewTd"  th:text="${row.threat}" rowspan="5" style="vertical-align: top"></td>
-                                            <td style="height: inherit" class="riskViewTd editCell" rowspan="5" >
+                                            <td class="riskViewTd"  th:text="${row.index} + 1" rowspan="6"></td>
+                                            <td class="riskViewTd"  th:text="${row.threat}" rowspan="6" style="vertical-align: top"></td>
+                                            <td style="height: inherit" class="riskViewTd editCell" rowspan="6" >
                                                 <select style="height: 100%" class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
                                                     <option value="false" th:selected="${row.notRelevant} == false"></option>
                                                     <option value="true" th:selected="${row.notRelevant} == true">Ikke relevant</option>
@@ -251,7 +251,7 @@
                                         <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
                                             <td class="riskViewTh">Tilknyttede foranstaltninger</td>
                                             <td class="riskViewTd editCell" colspan="13">
-                                                <select class="form-control form-select choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" multiple>
+                                                <select class="choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" multiple>
                                                     <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name}" selected></option>
                                                 </select>
                                             </td>

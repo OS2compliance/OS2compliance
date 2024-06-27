@@ -507,8 +507,7 @@ function pageLoaded() {
         var id = relationsSelect.dataset.id;
         var identifier = relationsSelect.dataset.identifier;
 
-        let relationsChoice = initSelect(relationsSelect);
-        updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier);
+        let relationsChoice = initSelect(relationsSelect, "excel-textarea");
         relationsSelect.addEventListener("search",
             function(event) {
                 updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier);
