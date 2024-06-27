@@ -6,7 +6,7 @@ function truncateString(str, num) {
     return str.slice(0, num) + '...'
 }
 
-const initSelect = (element) => {
+const initSelect = (element, containerInner = 'form-control') => {
     let choices = new Choices(element, {
         searchChoices: false,
         removeItemButton: true,
@@ -16,7 +16,7 @@ const initSelect = (element) => {
         itemSelectText: 'Vælg',
         noChoicesText: 'Søg...',
         classNames: {
-            containerInner: 'form-control'
+            containerInner: containerInner
         },
         duplicateItemsAllowed: false,
     });
