@@ -5,7 +5,7 @@ The development team is strongly committed to responsible reporting and disclosu
 
 ## Reporting security issues
 
-**Short version: please report security issues by emailing insert-mail@os2.eu.**
+**Short version: please report security issues by emailing os2compliance@os2.eu
 
 If you discover security issues in **OS2compliance** or related projects under the same
 organization, we request you to disclose these in a *responsible* way by e-mailing to
