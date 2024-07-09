@@ -18,6 +18,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/141) Manglende visning af data
 - (https://github.com/OS2compliance/OS2compliance/issues/145) Kopiering af kontrol fejler
 - (https://github.com/OS2compliance/OS2compliance/issues/148) Sortering under mine opgaver
+- (https://github.com/OS2compliance/OS2compliance/issues/156) Der modtages mail med deadline trods opgaven er løst
 
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-160) Understøttelse af fk-adgangsstyring
