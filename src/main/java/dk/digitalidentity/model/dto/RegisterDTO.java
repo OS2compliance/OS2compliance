@@ -28,4 +28,6 @@ public class RegisterDTO {
     private Integer statusOrder;
     private Set<String> gdprChoices;
     private int assetCount;
+    private String assetAssessment;
+    private Integer assetAssessmentOrder;
 }

@@ -2,7 +2,9 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +45,7 @@ public class NotifyServiceTest {
     @Test
     public void canSendNotification() {
         // Given
+        events.clear();
         final Task dummyTask = createDummyTask();
         doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
 
@@ -61,6 +64,7 @@ public class NotifyServiceTest {
     @Test
     public void willNotSendNotificationMultipleTimes() {
         // Given
+        events.clear();
         final Task dummyTask = createDummyTask();
         doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
 
@@ -77,6 +81,22 @@ public class NotifyServiceTest {
         assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUser().getEmail());
         assertThat(emailEvent.getSubject()).isEqualTo("Deadline Notifikation");
         assertThat(emailEvent.getMessage()).isEqualTo(expectedMessage());
+    }
+
+    @Test
+    public void willNotNotifyTaskThatAreDone() {
+        // Given
+        events.clear();
+        final Task dummyTask = createDummyTask();
+        dummyTask.setTaskType(TaskType.TASK);
+        dummyTask.getLogs().add(new TaskLog());
+        doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
+
+        // When
+        notifyService.notifyTask(dummyTask.getId());
+
+        // Then
+        assertThat(events.stream().toArray()).isEmpty();
     }
 
     private static String expectedMessage() {

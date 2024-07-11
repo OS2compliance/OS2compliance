@@ -58,8 +58,10 @@ SELECT
     r.updated_at,
     ca.assessment as consequence,
     (CASE WHEN ca.assessment = 'GREEN' THEN 1
-          WHEN ca.assessment = 'YELLOW' THEN 2
-          WHEN ca.assessment = 'RED' THEN 3
+          WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+          WHEN ca.assessment = 'YELLOW' THEN 3
+          WHEN ca.assessment = 'ORANGE' THEN 4
+          WHEN ca.assessment = 'RED' THEN 5
         END) as consequence_order,
     ta.assessment as risk,
     (CASE WHEN ta.assessment = 'GREEN' THEN 1
@@ -74,7 +76,14 @@ SELECT
           WHEN r.status = 'IN_PROGRESS' THEN 2
           WHEN r.status = 'READY' THEN 3
         END) as status_order,
-    (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count
+    (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count,
+    pr.prop_value as asset_assessment,
+    (CASE WHEN pr.prop_value = 'GREEN' THEN 1
+          WHEN pr.prop_value = 'LIGHT_GREEN' THEN 2
+          WHEN pr.prop_value = 'YELLOW' THEN 3
+          WHEN pr.prop_value = 'ORANGE' THEN 4
+          WHEN pr.prop_value = 'RED' THEN 5
+        END) as asset_assessment_order
 FROM registers r
 LEFT JOIN consequence_assessments ca on ca.register_id = r.id
 LEFT JOIN threat_assessments ta ON ta.id = (
@@ -87,6 +96,7 @@ LEFT JOIN registers_responsible_ous_mapping roum ON roum.register_id = r.id
 LEFT JOIN ous ou ON roum.ou_uuid = ou.uuid
 LEFT JOIN registers_departments_mapping rdm ON rdm.register_id = r.id
 LEFT JOIN ous d ON rdm.ou_uuid = d.uuid
+LEFT JOIN properties pr on pr.entity_id=r.id and pr.prop_key='asset_assessment'
 WHERE r.deleted = false
 GROUP BY r.id;
 

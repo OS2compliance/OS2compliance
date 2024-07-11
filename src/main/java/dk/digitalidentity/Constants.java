@@ -10,6 +10,7 @@ import static java.time.temporal.ChronoField.YEAR;
 
 public interface Constants {
 
+    String ASSET_ASSESSMENT_PROPERTY = "asset_assessment";
     String NEEDS_CVR_UPDATE_PROPERTY = "cvr_update";
     String CVR_UPDATED_PROPERTY = "cvr_updated_at";
     String ASSOCIATED_DOCUMENT_PROPERTY = "linked_doc";
@@ -23,6 +24,8 @@ public interface Constants {
     String ISO27002_REPORT_TEMPLATE_DOC = "reports/ISO27002/ISO27002.docx";
     String ISO27001_REPORT_TEMPLATE_DOC = "reports/ISO27001/ISO27001.docx";
     String ARTICLE_30_REPORT_TEMPLATE_DOC = "reports/article30/main.docx";
+
+    String RISK_SCALE_PROPERTY_NAME = "riskScale";
 
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()

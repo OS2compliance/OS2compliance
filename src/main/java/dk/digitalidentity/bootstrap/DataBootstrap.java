@@ -4,24 +4,17 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
-import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
-import dk.digitalidentity.dao.ThreatAssessmentResponseOldDao;
-import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
-import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
-import dk.digitalidentity.service.TaskService;
-import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
@@ -38,8 +31,6 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -49,6 +40,7 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
  * this class does that by keeping track of what data version is the current one and then updating the data incrementally.
  * Much like flyway but for the actual database content and not structure.
  */
+@Slf4j
 @Order(100)
 @Component
 @RequiredArgsConstructor
@@ -57,16 +49,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final ThreatCatalogImporter threatCatalogImporter;
     private final StandardTemplateImporter templateImporter;
     private final TagDao tagDao;
-    private final RegisterService registerService;
     private final RegisterImporter registerImporter;
     private final OS2complianceConfiguration config;
     private final SettingsService settingsService;
     private final StandardTemplateSectionDao standardTemplateSectionDao;
-    private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
-    private final ThreatAssessmentResponseOldDao threatAssessmentResponseOldDao;
-    private final ThreatAssessmentService threatAssessmentService;
     private final CatalogService catalogService;
-    private final TaskService taskService;
     private final ChoiceValueDao valueDao;
     private final PlatformTransactionManager transactionManager;
 
@@ -94,6 +81,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(13, this::seedV13);
         incrementAndPerformIfVersion(14, this::seedV14);
         incrementAndPerformIfVersion(15, this::seedV15);
+        incrementAndPerformIfVersion(16, this::seedV16);
+        incrementAndPerformIfVersion(17, this::seedV17);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -113,37 +102,28 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             .ifPresent(c -> c.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. <b>Første afsnit, litra f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"));
     }
 
-    @SneakyThrows
+    private void seedV16() {
+        // No longer needed
+    }
+
+    private void seedV17() {
+
+    }
+
     private void seedV14() {
-        final Optional<ChoiceValue> existing = valueDao.findByIdentifier("dp-person-none");
-        if (existing.isEmpty()) {
-            // Add none option
-            final ChoiceValue personNoneChoice = valueDao.save(ChoiceValue.builder().identifier("dp-person-none").caption("Ingen behandling af personoplysninger").build());
-            // Add to all lists that "dp-person-cnt-1-10" is part of
-            valueDao.findByIdentifier("dp-person-cnt-1-10")
-                .ifPresent(v -> v.getLists().forEach(l -> l.getValues().add(personNoneChoice)));
-        }
+        // No longer needed
     }
 
     private void seedV13() {
-        // "register-gdpr-p7-j" is removed as option
-        valueDao.findByIdentifier("register-gdpr-p7-j")
-            .ifPresent(v -> {
-                registerService.findAllOrdered()
-                    .forEach(r -> r.getGdprChoices().remove("register-gdpr-p7-j"));
-                v.getLists().forEach(l -> l.getValues().remove(v));
-                valueDao.delete(v);
-            });
+        // No longer needed
     }
 
     private void seedV12() {
-        valueDao.findByIdentifier("register-gdpr-p6-f")
-            .ifPresent(c -> c.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. Første afsnit, litra f), <b>gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"));
+        // No longer needed
     }
 
     private void seedV11() {
-        // Touch all tasks to regenerate the localized enums field
-        taskService.saveAll(taskService.findAll().stream().peek(t -> t.setVersion(t.getVersion()+1)).collect(Collectors.toList()));
+        // No longer needed
     }
 
     /*
@@ -163,60 +143,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void seedV9() {
-        threatAssessmentResponseOldDao.findAll().forEach(
-            old -> {
-                final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
-                response.setNotRelevant(old.isNotRelevant());
-                response.setProbability(old.getProbability());
-                response.setConfidentialityRegistered(old.getConfidentialityRegistered());
-                response.setConfidentialityOrganisation(old.getConfidentialityOrganisation());
-                response.setIntegrityRegistered(old.getIntegrityRegistered());
-                response.setIntegrityOrganisation(old.getIntegrityOrganisation());
-                response.setAvailabilityRegistered(old.getAvailabilityRegistered());
-                response.setAvailabilityOrganisation(old.getAvailabilityOrganisation());
-                response.setProblem(old.getProblem());
-                response.setExistingMeasures(old.getExistingMeasures());
-                response.setMethod(old.getMethod());
-                response.setElaboration(old.getElaboration());
-                response.setResidualRiskProbability(old.getResidualRiskProbability());
-                response.setResidualRiskConsequence(old.getResidualRiskConsequence());
-                response.setThreatAssessment(old.getThreatAssessment());
-                response.setThreatCatalogThreat(old.getThreatCatalogThreat());
-                response.setCustomThreat(old.getCustomThreat());
-
-                if (old.getThreatAssessment() != null) {
-                    response.setName(StringUtils.truncate(old.getThreatAssessment().getName(), 768));
-                }
-                if (old.getCustomThreat() != null) {
-                    response.setName(StringUtils.truncate(old.getCustomThreat().getDescription(), 768));
-                }
-                threatAssessmentResponseDao.save(response);
-            }
-        );
-
-        final List<ThreatAssessmentResponse> responses = threatAssessmentResponseDao.findAll();
-        for (final ThreatAssessmentResponse response : responses) {
-            if (response.getCustomThreat() != null) {
-                response.setName(response.getCustomThreat().getDescription());
-            } else if (response.getThreatCatalogThreat() != null) {
-                response.setName(response.getThreatCatalogThreat().getDescription());
-            }
-        }
-        threatAssessmentResponseDao.saveAll(responses);
+        // No longer needed
     }
 
     private void seedV8() {
-        // Prefix registers with 0 if they only have one digit
-        registerService.findAllArticle30().stream()
-            .filter(r -> {
-                final String[] split = StringUtils.split(r.getName(), ".");
-                if (split.length > 1) {
-                    final String digits = StringUtils.getDigits(split[0]);
-                    return digits.length() == 1;
-                }
-                return false;
-            })
-            .forEach(r -> r.setName('0' + r.getName()));
+        // No longer needed
     }
 
     private void seedV7() {
@@ -228,43 +159,23 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void seedV6() {
-        // subsections weren't displaying their association with parent. Changed format from 1 to parent.1 (ex 3.1.1 section 1 becomes 3.1.1.1)
-        try {
-            templateImporter.updateStandardSections("./data/standards/nsis2_sections.json");
-        } catch (final IOException e) {
-            throw  new RuntimeException(e);
-        }
+        // No longer needed
     }
 
     private void seedV5() {
-        // Article 30 registers had mistakenly been marked with $10 they should have had $8
-        registerService.findAllArticle30().stream()
-            .filter(r -> r.getGdprChoices().contains("register-gdpr-valp10"))
-            .forEach(r -> {
-                r.getGdprChoices().remove("register-gdpr-valp10");
-                r.getGdprChoices().add("register-gdpr-valp8");
-            });
+        // No longer needed
     }
 
     private void seedV4() {
-        // Reimport measures as new options was added.
-        try {
-            choiceImporter.importValues("./data/choices/measures-values.json");
-            // Delete and reimport the measure choices
-            choiceImporter.importMeasuresList("./data/choices/measures-list.json");
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
+        // No longer needed
     }
 
     private void seedV3() {
-        // Threat assessment status field, needs update (again)
-        threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
+        // No longer needed
     }
 
     private void seedV2() {
-        // Threat assessment status field, we need to update them all
-        threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
+        // No longer needed
     }
 
     private void seedV1() {

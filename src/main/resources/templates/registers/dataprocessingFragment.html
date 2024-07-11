@@ -13,8 +13,8 @@
                         <div class="card-header toolbar border-0 pb-0">
                             <div class="toolbar-start"></div>
                             <div class="toolbar-end">
-                                <button id="editDataProcessingBtn" type="button" class="btn btn-secondary btn-xs" onclick="setDataprocessingEditState(true)">Rediger</button>
-                                <button id="cancelDataProcessingBtn" type="button" onclick="setDataprocessingEditState(false)" class="btn btn-light btn-xs" hidden="hidden">Annuller</button>
+                                <button id="editDataProcessingBtn" type="button" class="btn btn-secondary btn-xs" onclick="registerDataprocessingService.setDataprocessingEditState(true)">Rediger</button>
+                                <button id="cancelDataProcessingBtn" type="button" onclick="registerDataprocessingService.setDataprocessingEditState(false)" class="btn btn-light btn-xs" hidden="hidden">Annuller</button>
                                 <button id="saveDataProcessingBtn" form="dataprocessingForm" type="submit" class="btn btn-secondary btn-xs" hidden="hidden">Gem</button>
                             </div>
                         </div>
@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div class="accordion-item" th:each="asset: ${relatedAssets}">
+        <div class="accordion-item" th:with="asset=${relationDto.b}" th:each="relationDto: ${relatedAssets}">
             <div class="accordion-header" th:id="'accHeader' + ${asset.id}">
                 <button class="accordion-button bg-secondary text-white shadow-none collapsed" type="button" data-bs-toggle="collapse" th:text="${asset.name}" th:data-bs-target="'#asset' + ${asset.id}" aria-expanded="false" aria-controls="_dm-defAccCollapseTwo">
                 </button>

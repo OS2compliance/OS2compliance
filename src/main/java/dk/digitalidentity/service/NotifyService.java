@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,8 +25,12 @@ public class NotifyService {
     public void notifyTask(final Long taskId) {
         final Task task = taskService.findById(taskId)
             .orElseThrow(() -> new IllegalArgumentException("Task with id: " + taskId + " not found"));
+        if (task.getTaskType() == TaskType.TASK && !task.getLogs().isEmpty()) {
+            // Do not notify task already done
+            return;
+        }
         if (task.getHasNotifiedResponsible() != null && task.getHasNotifiedResponsible()) {
-            log.warn("Task '" + task.getName() + "' already notified");
+            log.warn("Task '{}' already notified", task.getName());
             return;
         }
         final LocalDate today = LocalDate.now();

@@ -20,6 +20,7 @@ import dk.digitalidentity.model.entity.ChoiceValue;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -59,24 +60,32 @@ public class ChoiceListImporter {
                 .filter(v -> !valueDao.existsByIdentifier(v.getIdentifier()))
                 .map(mapper::fromDTO)
                 .forEach(valueDao::save);
+    }
 
+    @Transactional
+    public void updateValues(final String filename) throws IOException {
+        final ChoiceValueDTO[] values = objectMapper.readValue(new ClassPathResource(filename).getInputStream(), ChoiceValueDTO[].class);
+        Arrays.stream(values)
+            .forEach(v -> valueDao.findByIdentifier(v.getIdentifier())
+                .ifPresent(entity -> {
+                    entity.setCaption(v.getCaption());
+                    entity.setDescription(v.getDescription());
+                }));
     }
 
     public void importList(final String filename) throws IOException {
-        log.info("Importing choice list " + filename);
+        log.info("Importing choice list {}", filename);
         final InputStream inputStream = new ClassPathResource(filename).getInputStream();
         final String jsonString = new String(inputStream.readAllBytes(), StandardCharsets.UTF_8);
         final ChoiceListDTO list = objectMapper.readValue(jsonString, ChoiceListDTO.class);
-        if (!listDao.existsByIdentifier(list.getIdentifier())) {
-            final ChoiceList entity = mapper.fromDTO(list);
-            final List<ChoiceValue> values = list.getValueIdentifiers().stream()
-                    .map(vid -> valueDao.findByIdentifier(vid).orElseThrow(() -> new RuntimeException("Value not found " + vid)))
-                    .collect(Collectors.toList());
-            entity.setValues(values);
-            listDao.save(entity);
-        }
+        final ChoiceList entity = listDao.findByIdentifier(list.getIdentifier())
+            .orElseGet(() -> mapper.fromDTO(list));
+        final List<ChoiceValue> values = list.getValueIdentifiers().stream()
+                .map(vid -> valueDao.findByIdentifier(vid).orElseThrow(() -> new RuntimeException("Value not found " + vid)))
+                .collect(Collectors.toList());
+        entity.setValues(values);
+        listDao.save(entity);
     }
-
 
     public void importMeasuresList(final String filename) throws IOException {
         final InputStream inputStream = new ClassPathResource(filename).getInputStream();

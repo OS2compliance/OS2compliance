@@ -1,4 +1,4 @@
-# Change Log in OS2 projects/products
+# Change Log in OS2compliance
 
 All notable changes to the project MUST be documented in this file.
 
@@ -18,9 +18,20 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/141) Manglende visning af data
 - (https://github.com/OS2compliance/OS2compliance/issues/145) Kopiering af kontrol fejler
 - (https://github.com/OS2compliance/OS2compliance/issues/148) Sortering under mine opgaver
+- (https://github.com/OS2compliance/OS2compliance/issues/156) Der modtages mail med deadline trods opgaven er løst
+- (https://github.com/OS2compliance/OS2compliance/issues/150) Aktiver sorteres ikke alfabetisk (Herning)
+- (https://github.com/OS2compliance/OS2compliance/issues/151) Hvis først man sætter en ansvarlig på en behandlingsaktivitet, så kan denne ikke slettes / sættes til blank igen
+- (https://github.com/OS2compliance/OS2compliance/issues/153) Ikke muligt at flytte trussel i trusselskatalog
+- (https://os2web.atlassian.net/browse/COMPLY-35) Fortegnelse/Formål & lovhjemmel: Artikel 9 er forkert
+- (https://os2web.atlassian.net/browse/COMPLY-32) Fortegnelse/Formål & lovhjemmel: Fjern teksten "§6" og "§7"
 
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-160) Understøttelse af fk-adgangsstyring
+- (https://os2web.atlassian.net/browse/COMPLY-194) Fortegnelse: KL fortegnelsen skal opdateres med oprettelse af en ny behandlingsaktivitet
+- (https://os2web.atlassian.net/browse/COMPLY-197) Katalog over foranstaltninger (Syddjurs)
+- (https://os2web.atlassian.net/browse/COMPLY-167) Fortegnelse/Konsekvens- og risikovurdering: Risikovurderinger for de tilknyttede IT-systemer der er risikovurderet skal vises under Konsekvens- og Risikovurdering
+- (https://os2web.atlassian.net/browse/COMPLY-181) Fortegnelse/Konsekvens- og risikovurdering: Ved valg af konsekvens mangler der tekst med skalabeskrivelse – lige nu står der bare 1, 2, 3 og 4
+- (https://os2web.atlassian.net/browse/COMPLY-192) Fortegnelse/Konsekvens- og risikovurdering: Det skal ikke være Gns. vurdering som nu, men max. værdi for kolonnen som vises. Det skal også være max værdi der vises på fortegnelsessiden i kolonnen "konsekvensvurdering"
 
 ## [1.1.0] - 2024-03-15
 

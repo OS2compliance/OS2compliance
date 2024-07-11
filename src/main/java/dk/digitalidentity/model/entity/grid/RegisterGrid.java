@@ -68,4 +68,11 @@ public class RegisterGrid {
 
     @Column
     private int assetCount;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private RiskAssessment assetAssessment;
+
+    @Column
+    private Integer assetAssessmentOrder;
 }

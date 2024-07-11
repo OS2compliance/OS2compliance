@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
+import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
@@ -21,15 +22,12 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
-import dk.digitalidentity.report.replacers.ThreatAssessmentReplacer;
 import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.poi.xwpf.usermodel.XWPFParagraph;
-import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
@@ -42,6 +40,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -51,9 +50,6 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
-import static dk.digitalidentity.report.DocxUtil.addTextRun;
-import static dk.digitalidentity.report.DocxUtil.advanceCursor;
-import static dk.digitalidentity.report.DocxUtil.getCell;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
@@ -221,7 +217,55 @@ public class ThreatAssessmentService {
         }
         return null;
     }
-	public RiskDTO calculateRiskFromRegisters(final List<Long> assetIds) {
+
+    /**
+     * Calculates the risk for assets related to a register.
+     *
+     * @param asset       The asset to calculate the risk for.
+     * @param riskScale   The risk scale to be applied in the calculation.
+     * @return An Optional containing the calculated RegisterAssetRiskDTO if a threat assessment is found for the asset,
+     *         otherwise an empty Optional.
+     */
+    @Transactional
+    public Optional<RegisterAssetRiskDTO> calculateRiskForRegistersRelatedAssets(final Asset asset, final Integer riskScale) {
+        final List<Relation> relatedToWithType = relationService.findRelatedToWithType(asset, RelationType.THREAT_ASSESSMENT);
+        return relatedToWithType.stream()
+            .map(relation -> threatAssessmentDao.findById(relation.getRelationAType() == RelationType.THREAT_ASSESSMENT
+                ? relation.getRelationAId() : relation.getRelationBId()))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .max(Comparator.comparing(ThreatAssessment::getCreatedAt))
+            .map(threatAssessment -> {
+                final List<RiskProfileDTO> riskProfileDTOs = buildRiskProfileDTOs(threatAssessment);
+                final Double riskScore = calculateRiskScore(riskProfileDTOs);
+                final double weight = riskScale / 100.0;
+                final RegisterAssetRiskDTO registerAssetRiskDTO = new RegisterAssetRiskDTO();
+                registerAssetRiskDTO.setThreatAssessment(threatAssessment);
+                registerAssetRiskDTO.setDate(registerAssetRiskDTO.getDate());
+                registerAssetRiskDTO.setRiskScore(riskScore);
+                registerAssetRiskDTO.setWeightedPct(riskScale);
+                registerAssetRiskDTO.setWeightedRiskScore(riskScore * weight);
+                final RiskAssessment weightedAssessment =
+                    scaleService.getRiskAssessmentForRisk((int) Math.ceil(riskScore * weight));
+                registerAssetRiskDTO.setWeightedAssessment(weightedAssessment);
+                return registerAssetRiskDTO;
+            });
+    }
+
+    /**
+     * Calculates the risk score based on a list of RiskProfileDTO objects.
+     * @param riskProfileDTOs The list of RiskProfileDTO objects containing the risk profile information.
+     * @return The calculated risk score.
+     */
+    private Double calculateRiskScore(final List<RiskProfileDTO> riskProfileDTOs) {
+        return riskProfileDTOs.stream()
+            .mapToDouble(r -> r.getProbability() * r.getConsequence())
+            .filter(i -> i > 0)
+            .max()
+            .orElse(0);
+    }
+
+    public RiskDTO calculateRiskFromRegisters(final List<Long> assetIds) {
 		final List<Register> registers = relationService.findRelatedToWithType(assetIds, RelationType.REGISTER).stream()
 				.map(r -> r.getRelationAType() == RelationType.REGISTER ? r.getRelationAId() : r.getRelationBId())
 				.map(rid -> registerDao.findById(rid).orElse(null))
@@ -264,6 +308,7 @@ public class ThreatAssessmentService {
 		return new RiskDTO(highestRF, highestOF, highestRI, highestOI, highestRT, highestOT);
 	}
 
+    @Transactional
     public List<RiskProfileDTO> buildRiskProfileDTOs(final ThreatAssessment threatAssessment) {
         final List<RiskProfileDTO> riskProfiles = new ArrayList<>();
         final Map<String, List<ThreatDTO>> threatMap = buildThreatList(threatAssessment);
@@ -290,7 +335,7 @@ public class ThreatAssessmentService {
                 .findAny().orElse(null);
             final ThreatDTO dto;
             if (response != null) {
-                List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
+                final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
                 dto = new ThreatDTO(0, response.getId(), threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
                 addRelatedTasks(response, dto);
             } else {
@@ -314,7 +359,7 @@ public class ThreatAssessmentService {
             final ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(threat.getId())).findAny().orElse(null);
             final ThreatDTO dto;
             if (response != null) {
-                List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
+                final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
                 dto = new ThreatDTO(threat.getId(), response.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
                 dto.setIndex(index++);
                 addRelatedTasks(response, dto);

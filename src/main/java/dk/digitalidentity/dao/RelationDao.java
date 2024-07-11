@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 
 public interface RelationDao extends JpaRepository<Relation, Long>  {
@@ -15,7 +16,7 @@ public interface RelationDao extends JpaRepository<Relation, Long>  {
     List<Relation> findRelatedToWithType(@Param("relatedId") final Long relatedToId, @Param("relationType") final RelationType relatedType);
 
     @Query("select r from Relation r where (r.relationAId in :relatedIds and r.relationBType=:relationType) or (r.relationBId in :relatedIds and r.relationAType=:relationType)")
-    List<Relation> findRelatedToWithType(@Param("relatedIds") final List<Long> relatedToId, @Param("relationType") final RelationType relatedType);
+    List<Relation> findRelatedToWithType(@Param("relatedIds") final Collection<Long> relatedToId, @Param("relationType") final RelationType relatedType);
 
     @Query("select r from Relation r where (r.relationAId=:relatedId) or (r.relationBId=:relatedId)")
     List<Relation> findAllRelatedTo(@Param("relatedId") final Long relatedToId);

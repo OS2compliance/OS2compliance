@@ -7,6 +7,7 @@ import dk.digitalidentity.service.RegisterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -30,6 +31,13 @@ public class RegisterImporter {
         if (!registerService.existByName(registerDTO.getName())) {
             registerService.save(registerMapper.fromDTO(registerDTO));
         }
+    }
 
+    @Transactional
+    public void updateRegisterGdprChoices(final Resource resource) throws IOException {
+        final String jsonString = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+        final RegisterDTO registerDTO = objectMapper.readValue(jsonString, RegisterDTO.class);
+        registerService.findByName(registerDTO.getName())
+            .ifPresent(register -> register.setGdprChoices(registerDTO.getGdprChoices()));
     }
 }

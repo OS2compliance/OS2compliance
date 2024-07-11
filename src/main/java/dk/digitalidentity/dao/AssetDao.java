@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,6 +17,10 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
 
     @Query("select a from Asset a inner join Property p on p.entity=a where p.key=:key")
     List<Asset> findWithPropertyKey(@Param("key") final String key);
+
+    List<Asset> findAllByIdInAndDeletedFalse(Collection<Long> ids);
+
+    Optional<Asset> findByIdAndDeletedFalse(final Long id);
 
     List<Asset> findBySupplier(final Supplier supplier);
 

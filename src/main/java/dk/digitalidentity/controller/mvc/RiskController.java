@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
@@ -118,6 +119,7 @@ public class RiskController {
             createTaskAndSendMail(savedThreatAssessment);
         }
         threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
+        eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(savedThreatAssessment.getId()).build());
 
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
@@ -282,6 +284,7 @@ public class RiskController {
         customThreat.setThreatAssessment(threatAssessment);
         threatAssessment.getCustomThreats().add(customThreat);
         threatAssessmentService.save(threatAssessment);
+        eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(id).build());
 
         return "redirect:/risks/" + id;
     }

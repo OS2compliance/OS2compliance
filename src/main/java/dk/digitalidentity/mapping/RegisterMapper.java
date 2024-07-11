@@ -32,6 +32,8 @@ public interface RegisterMapper {
                 .risk(nullSafe(() -> registerGrid.getRisk().getMessage(), ""))
                 .riskOrder(registerGrid.getRiskOrder())
                 .assetCount(registerGrid.getAssetCount())
+                .assetAssessment(nullSafe(() -> registerGrid.getAssetAssessment().getMessage()))
+                .assetAssessmentOrder(registerGrid.getAssetAssessmentOrder())
                 .build();
     }
 

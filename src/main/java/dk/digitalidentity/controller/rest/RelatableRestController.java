@@ -49,6 +49,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+@SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @RestController
 @RequestMapping("rest/relatable")
@@ -131,20 +132,20 @@ public class RelatableRestController {
         }
 
         final Pageable page = PageRequest.of(0, 25, Sort.by("createdAt").descending());
-        List<RelationType> relationTypes = new ArrayList<>();
+        final List<RelationType> relationTypes = new ArrayList<>();
         relationTypes.add(RelationType.PRECAUTION);
         if (StringUtils.length(search) == 0) {
 
             // if any show precautions related to related assets first
-            List<Precaution> toShow = new ArrayList<>();
+            final List<Precaution> toShow = new ArrayList<>();
             final List<Relation> relatedAssets = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
-            for (Relation assetRelation : relatedAssets) {
-                Optional<Asset> assetOptional = assetService.get(assetRelation.getRelationAType().equals(RelationType.ASSET) ? assetRelation.getRelationAId() : assetRelation.getRelationBId());
+            for (final Relation assetRelation : relatedAssets) {
+                final Optional<Asset> assetOptional = assetService.get(assetRelation.getRelationAType().equals(RelationType.ASSET) ? assetRelation.getRelationAId() : assetRelation.getRelationBId());
                 if (assetOptional.isPresent()) {
-                    Asset asset = assetOptional.get();
-                    List<Relation> existingAssetPrecautionRelations = relationService.findRelatedToWithType(asset, RelationType.PRECAUTION);
-                    for (Relation existingAssetPrecautionRelation : existingAssetPrecautionRelations) {
-                        Optional<Precaution> precautionOptional = precautionService.get(existingAssetPrecautionRelation.getRelationAType().equals(RelationType.PRECAUTION) ? existingAssetPrecautionRelation.getRelationAId() : existingAssetPrecautionRelation.getRelationBId());
+                    final Asset asset = assetOptional.get();
+                    final List<Relation> existingAssetPrecautionRelations = relationService.findRelatedToWithType(asset, RelationType.PRECAUTION);
+                    for (final Relation existingAssetPrecautionRelation : existingAssetPrecautionRelations) {
+                        final Optional<Precaution> precautionOptional = precautionService.get(existingAssetPrecautionRelation.getRelationAType().equals(RelationType.PRECAUTION) ? existingAssetPrecautionRelation.getRelationAId() : existingAssetPrecautionRelation.getRelationBId());
                         precautionOptional.ifPresent(toShow::add);
                     }
                 }
@@ -180,7 +181,7 @@ public class RelatableRestController {
                 .relationBId(relatable.getId())
                 .relationBType(relatable.getRelationType())
                 .build())
-            .forEach(relation -> relationDao.save(relation));
+            .forEach(relationDao::save);
 
         final Set<Long> addedIds = new HashSet<>();
         final List<AddedRelationDTO> relationsToReturn = new ArrayList<>();
