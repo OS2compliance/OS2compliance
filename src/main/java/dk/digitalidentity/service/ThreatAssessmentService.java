@@ -41,6 +41,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -516,6 +517,8 @@ public class ThreatAssessmentService {
         context.setVariable("riskProfiles", riskProfiles);
         final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
         context.setVariable("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
+        context.setVariable("riskProfilesValueMap", buildRiskProfileValueMap(riskProfiles));
+        context.setVariable("riskProfilesValueMapAfter", buildRiskProfileValueMapAfter(riskProfiles));
 
         // scale explainers
         final ScaleService.ScaleSetting scaleExplainers = ScaleService.scaleSettingsForType(scaleService.getScaleType());
@@ -533,6 +536,41 @@ public class ThreatAssessmentService {
 
 
         return templateEngine.process("reports/risk_view_pdf", context);
+    }
+
+    private Map<String,String> buildRiskProfileValueMap(List<RiskProfileDTO> riskProfiles) {
+        Map<String,String> result = new HashMap<>();
+        for (RiskProfileDTO riskProfile : riskProfiles) {
+            String key = riskProfile.getConsequence() + "," + riskProfile.getProbability();
+            if (result.containsKey(key)) {
+                result.compute(key, (k, current) -> current + ", " + (riskProfile.getIndex() + 1));
+            } else {
+                result.put(key, Integer.toString(riskProfile.getIndex() + 1));
+            }
+        }
+        return result;
+    }
+
+    private Map<String,String> buildRiskProfileValueMapAfter(List<RiskProfileDTO> riskProfiles) {
+        Map<String,String> result = new HashMap<>();
+        for (RiskProfileDTO riskProfile : riskProfiles) {
+            if (riskProfile.getResidualConsequence() != -1 && riskProfile.getResidualProbability() != -1) {
+                String key = riskProfile.getResidualConsequence() + "," + riskProfile.getResidualProbability();
+                if (result.containsKey(key)) {
+                    result.compute(key, (k, current) -> current + ", " + (riskProfile.getIndex() + 1) + "*");
+                } else {
+                    result.put(key, (riskProfile.getIndex() + 1) + "*");
+                }
+            } else {
+                String key = riskProfile.getConsequence() + "," + riskProfile.getProbability();
+                if (result.containsKey(key)) {
+                    result.compute(key, (k, current) -> current + ", " + (riskProfile.getIndex() + 1));
+                } else {
+                    result.put(key, Integer.toString(riskProfile.getIndex() + 1));
+                }
+            }
+        }
+        return result;
     }
 
     record TaskPDFDTO(String name, String description, String taskType, String nextDeadline, String responsible, String department) {}
