@@ -22,6 +22,6 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
 
     Optional<Asset> findByIdAndDeletedFalse(final Long id);
 
-    List<Asset> findBySupplier(final Supplier supplier);
+    List<Asset> findBySupplierAndDeletedFalse(final Supplier supplier);
 
 }

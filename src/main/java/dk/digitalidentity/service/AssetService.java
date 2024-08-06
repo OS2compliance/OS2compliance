@@ -91,7 +91,7 @@ public class AssetService {
     }
 
     public List<Asset> findBySupplier(final Supplier supplier) {
-        return assetDao.findBySupplier(supplier);
+        return assetDao.findBySupplierAndDeletedFalse(supplier);
     }
 
     /**
