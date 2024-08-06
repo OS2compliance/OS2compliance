@@ -27,6 +27,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-32) Fortegnelse/Formål & lovhjemmel: Fjern teksten "§6" og "§7"
 
 ### Added
+- (https://github.com/OS2compliance/OS2compliance/issues/165) Oprettelse af en ny systemtype under aktiver der hedder ”Ydelse”
 - (https://os2web.atlassian.net/browse/COMPLY-160) Understøttelse af fk-adgangsstyring
 - (https://os2web.atlassian.net/browse/COMPLY-194) Fortegnelse: KL fortegnelsen skal opdateres med oprettelse af en ny behandlingsaktivitet
 - (https://os2web.atlassian.net/browse/COMPLY-197) Katalog over foranstaltninger (Syddjurs)

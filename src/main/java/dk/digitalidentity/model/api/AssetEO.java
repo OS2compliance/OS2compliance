@@ -42,7 +42,7 @@ import static dk.digitalidentity.model.api.Examples.VERSION_EXAMPLE;
 @Schema(name = "Asset")
 public class AssetEO {
     public enum AssetType {
-        IT_SYSTEM, MODULE, SERVER
+        IT_SYSTEM, MODULE, SERVER, SERVICE
     }
     public enum DataProcessingAgreementStatus {
         YES, NO, ON_GOING, NOT_RELEVANT
