@@ -9,7 +9,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
 
 public interface RelatableDao extends JpaRepository<Relatable, Long> {
-    Page<Relatable> searchByNameLikeIgnoreCase(final String query, final Pageable pageable);
-	Page<Relatable> findByRelationTypeIn(List<RelationType> types, Pageable page);
-	Page<Relatable> searchByRelationTypeInAndNameLikeIgnoreCase(List<RelationType> relationTypes, String query, Pageable page);
+    Page<Relatable> searchByNameLikeIgnoreCaseAndDeletedFalse(final String query, final Pageable pageable);
+	Page<Relatable> findByRelationTypeInAndDeletedFalse(List<RelationType> types, Pageable page);
+	Page<Relatable> searchByRelationTypeInAndNameLikeIgnoreCaseAndDeletedFalse(List<RelationType> relationTypes, String query, Pageable page);
+
+    Page<Relatable> findAllByDeletedFalse(final Pageable pageable);
 }

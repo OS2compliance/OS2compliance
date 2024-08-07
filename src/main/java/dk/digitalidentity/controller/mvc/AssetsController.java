@@ -247,6 +247,7 @@ public class AssetsController {
         final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
         relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
+        asset.getSuppliers().clear();
         assetService.deleteById(asset);
     }
 

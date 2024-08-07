@@ -71,17 +71,17 @@ public class RelatableRestController {
 
         if (types == null || types.isEmpty()) {
             if (StringUtils.length(search) == 0) {
-                final Page<Relatable> all = relatableDao.findAll(page);
+                final Page<Relatable> all = relatableDao.findAllByDeletedFalse(page);
                 return mapper.toDTO(all);
             } else {
-                return mapper.toDTO(relatableDao.searchByNameLikeIgnoreCase("%" + search + "%", page));
+                return mapper.toDTO(relatableDao.searchByNameLikeIgnoreCaseAndDeletedFalse("%" + search + "%", page));
             }
         } else {
             if (StringUtils.length(search) == 0) {
-                final Page<Relatable> all = relatableDao.findByRelationTypeIn(types, page);
+                final Page<Relatable> all = relatableDao.findByRelationTypeInAndDeletedFalse(types, page);
                 return mapper.toDTO(all);
             } else {
-                return mapper.toDTO(relatableDao.searchByRelationTypeInAndNameLikeIgnoreCase(types, "%" + search + "%", page));
+                return mapper.toDTO(relatableDao.searchByRelationTypeInAndNameLikeIgnoreCaseAndDeletedFalse(types, "%" + search + "%", page));
             }
         }
 
@@ -152,13 +152,13 @@ public class RelatableRestController {
             }
 
             if (toShow.isEmpty()) {
-                final Page<Relatable> all = relatableDao.findByRelationTypeIn(relationTypes, page);
+                final Page<Relatable> all = relatableDao.findByRelationTypeInAndDeletedFalse(relationTypes, page);
                 return mapper.toDTO(all);
             } else {
                 return new PageDTO<>((long) toShow.size(), toShow.stream().map(p -> new RelatableDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage())).collect(Collectors.toList()));
             }
         } else {
-            return mapper.toDTO(relatableDao.searchByRelationTypeInAndNameLikeIgnoreCase(relationTypes, "%" + search + "%", page));
+            return mapper.toDTO(relatableDao.searchByRelationTypeInAndNameLikeIgnoreCaseAndDeletedFalse(relationTypes, "%" + search + "%", page));
         }
     }
 
