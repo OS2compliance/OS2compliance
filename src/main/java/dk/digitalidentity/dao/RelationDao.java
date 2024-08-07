@@ -6,6 +6,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.List;
@@ -22,6 +23,7 @@ public interface RelationDao extends JpaRepository<Relation, Long>  {
     List<Relation> findAllRelatedTo(@Param("relatedId") final Long relatedToId);
 
     @Modifying
+    @Transactional
     @Query("delete from Relation r where r.relationBId=:relationId or r.relationAId=:relationId")
     int deleteRelatedTo(@Param("relationId") final Long relationId);
 }
