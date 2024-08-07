@@ -69,7 +69,8 @@ public class OS2SyncService {
         user.setUuid(hierarchyUser.getUuid());
         user.setName(hierarchyUser.getName());
         user.setEmail(hierarchyUser.getEmail());
-        user.setPositions(hierarchyUser.getPositions().stream()
+        user.getPositions().clear();
+        user.getPositions().addAll(hierarchyUser.getPositions().stream()
             .map(p -> toPosition(user, p))
             .collect(Collectors.toSet()));
         user.setActive(true);
