@@ -120,6 +120,7 @@ public class SupplierController {
 		if (supplier.getId() != null) {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            existingSupplier.setName(supplier.getName());
 			existingSupplier.setStatus(supplier.getStatus());
 			existingSupplier.setCvr(supplier.getCvr());
 			existingSupplier.setZip(supplier.getZip());
