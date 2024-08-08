@@ -24,6 +24,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/153) Ikke muligt at flytte trussel i trusselskatalog
 - (https://github.com/OS2compliance/OS2compliance/issues/167) Fejl i risikovurderingen (Jammerbugt)
 - (https://github.com/OS2compliance/OS2compliance/issues/168) Tilknytning til slettet IT-system fjernes ikke automatisk på leverandøren når it-systemet slettes
+- (https://github.com/OS2compliance/OS2compliance/issues/173) Man kan ikke fjerne relationer på leverandør siden
 - (https://os2web.atlassian.net/browse/COMPLY-35) Fortegnelse/Formål & lovhjemmel: Artikel 9 er forkert
 - (https://os2web.atlassian.net/browse/COMPLY-32) Fortegnelse/Formål & lovhjemmel: Fjern teksten "§6" og "§7"
 
