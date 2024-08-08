@@ -61,6 +61,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
 import org.springframework.util.ResourceUtils;
+import org.thymeleaf.TemplateEngine;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -89,7 +90,7 @@ import static org.mockito.Mockito.doReturn;
 @SpringBootTest
 @ContextConfiguration(classes = {DocxService.class, DocsReportGeneratorComponent.class,
     CommonPropertiesReplacer.class, Article30Replacer.class, ISO27001Replacer.class, ISO27002Replacer.class, DocsReportGeneratorComponent.class,
-    ThreatAssessmentReplacer.class, ScaleService.class, ThreatAssessmentService.class})
+    ThreatAssessmentReplacer.class, ScaleService.class, ThreatAssessmentService.class, TemplateEngine.class})
 @EnableConfigurationProperties(value = OS2complianceConfiguration.class)
 @TestPropertySource("/application-test.properties")
 @ActiveProfiles("test")
