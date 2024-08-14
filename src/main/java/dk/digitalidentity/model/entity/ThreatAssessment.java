@@ -2,8 +2,10 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,6 +51,14 @@ public class ThreatAssessment extends Relatable {
     @JoinColumn(name = "threat_catalog_identifier")
     private ThreatCatalog threatCatalog;
 
+    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JoinColumn(name = "threat_assessment_report_s3_document_id")
+    private S3Document threatAssessmentReportS3Document;
+
+    @ManyToOne
+    @JoinColumn(name = "threat_assessment_report_user_uuid")
+    private User threatAssessmentReportApprover;
+
     @Column
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate nextRevision;
@@ -88,6 +98,11 @@ public class ThreatAssessment extends Relatable {
     @Enumerated(EnumType.STRING)
     private RiskAssessment assessment;
 
+    @Column
+    @Enumerated(EnumType.STRING)
+    private ThreatAssessmentReportApprovalStatus threatAssessmentReportApprovalStatus;
+
+
     @ManyToMany
     @JoinTable(
         name = "threat_assessment_users",
@@ -110,6 +125,7 @@ public class ThreatAssessment extends Relatable {
     @Override
     public String getLocalizedEnumValues() {
         return (assessment != null ? assessment.getMessage() : "") + " " +
-                (threatAssessmentType != null ? threatAssessmentType.getMessage() : "");
+                (threatAssessmentType != null ? threatAssessmentType.getMessage() : "") +
+                (threatAssessmentReportApprovalStatus != null ? threatAssessmentReportApprovalStatus.getMessage() : "");
     }
 }

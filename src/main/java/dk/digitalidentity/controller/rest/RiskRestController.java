@@ -1,11 +1,13 @@
 package dk.digitalidentity.controller.rest;
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.mapping.RiskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
+import dk.digitalidentity.model.dto.enums.ReportFormat;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
@@ -13,21 +15,25 @@ import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
@@ -89,6 +95,8 @@ public class RiskRestController {
     private final RiskMapper mapper;
     private final UserService userService;
     private final PrecautionService precautionService;
+    private final OS2complianceConfiguration configuration;
+    private final S3Service s3Service;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -141,24 +149,70 @@ public class RiskRestController {
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), users);
     }
 
+    record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
     @Transactional
     @PostMapping("{id}/mailReport")
-    public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id) throws IOException {
+    public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final List<EmailEvent> emailEvents = buildEmailEventsToRelatedResponsible(threatAssessment);
-        if (emailEvents.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No responsible found");
+        final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
+        if (responsibleUser.getEmail() == null || responsibleUser.getEmail().isBlank()) {
+            return new ResponseEntity<>("Den valgte bruger har ikke nogen email tilknyttet, og rapporten kan derfor ikke sendes.", HttpStatus.BAD_REQUEST);
         }
-        try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(RISK_ASSESSMENT_TEMPLATE_DOC,
-            Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
-            final File outputFile = File.createTempFile(UUID.randomUUID().toString(), ".docx");
-            myDocument.write(new FileOutputStream(outputFile));
-            emailEvents.forEach(e -> e.getAttachments().add(
-                new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),
-                    "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".docx"))
-            );
+        if (dto.format == null) {
+            return new ResponseEntity<>("Der skal vælges et format", HttpStatus.BAD_REQUEST);
         }
-        emailEvents.forEach(eventPublisher::publishEvent);
+
+        final User user = userService.currentUser();
+        final String loggedInUserName = user != null ? user.getName() : "";
+
+        String mailMessage = "<p>" + loggedInUserName + " har sendt dig risikovurderingen med titlen " + threatAssessment.getName() + "</p>";
+        if (dto.message != null && !dto.message.isBlank()) {
+            String message = dto.message.replace("\n", "<br/>");
+            mailMessage += "<p>Personen har skrevet denne besked til dig:</p><p>" + message + "</p>";
+        }
+        if (dto.sign) {
+            mailMessage += "<p>Rapporten skal signeres. Det kan du gøre ved at følge dette link: <a href=\"" + configuration.getBaseUrlForCompliance() + "/sign/" + id + "\">" + configuration.getBaseUrlForCompliance() + "/sign/" + id + "</a></p>";
+        }
+
+        final EmailEvent emailEvent = EmailEvent.builder()
+            .email(responsibleUser.getEmail())
+            .subject("Risikovurdering " + threatAssessment.getName())
+            .message(mailMessage)
+            .build();
+
+        if (dto.format.equals(ReportFormat.WORD)) {
+            try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(RISK_ASSESSMENT_TEMPLATE_DOC,
+                Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
+                final File outputFile = File.createTempFile(UUID.randomUUID().toString(), ".docx");
+                myDocument.write(new FileOutputStream(outputFile));
+                emailEvent.getAttachments().add(new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),
+                    "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".docx"));
+            }
+        } else if (dto.format.equals(ReportFormat.PDF)) {
+            byte[] byteData = threatAssessmentService.getThreatAssessmentPdf(threatAssessment);
+            String uuid = UUID.randomUUID().toString();
+            File pdfFile = File.createTempFile(uuid, ".pdf");
+            try (FileOutputStream fos = new FileOutputStream(pdfFile)) {
+                fos.write(byteData);
+            }
+            emailEvent.getAttachments().add(new EmailEvent.EmailAttachement(pdfFile.getAbsolutePath(),
+                "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".pdf"));
+
+            if (dto.sign) {
+                String key = s3Service.upload(uuid + ".pdf", byteData);
+                S3Document s3Document = new S3Document();
+                s3Document.setS3FileKey(key);
+                threatAssessment.setThreatAssessmentReportS3Document(s3Document);
+            }
+        }
+
+        if (dto.sign) {
+            threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.WAITING);
+            threatAssessment.setThreatAssessmentReportApprover(responsibleUser);
+            threatAssessmentService.save(threatAssessment);
+        }
+
+        eventPublisher.publishEvent(emailEvent);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -324,60 +378,4 @@ public class RiskRestController {
         return fieldName.equals("name") || fieldName.equals("type") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
                 || fieldName.equals("date") || fieldName.equals("tasks") || fieldName.equals("assessment") || fieldName.equals("assessmentOrder");
     }
-
-    /**
-     * Will create email events, where the receiver is the related asset/register's responsible user
-     */
-    private List<EmailEvent> buildEmailEventsToRelatedResponsible(final ThreatAssessment threatAssessment) {
-        final User user = userService.currentUser();
-        final String responsibleUserName = user != null ? user.getName() : "";
-        if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
-            final List<EmailEvent> events = new ArrayList<>();
-            final List<Asset> assets =  relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
-                .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
-                .map(assetService::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get).collect(Collectors.toList());
-            for (final Asset asset : assets) {
-                if (asset.getResponsibleUsers() != null) {
-                    for (final User responsibleUser : asset.getResponsibleUsers()) {
-                        if (responsibleUser.getEmail() != null) {
-                            events.add(EmailEvent.builder()
-                                .email(responsibleUser.getEmail())
-                                .subject("Risikovurdering for " + asset.getName())
-                                .message(responsibleUserName + " har sendt dig en risikovurdering for systemet " + asset.getName())
-                                .build());
-                        }
-                    }
-                }
-            }
-
-            return  events;
-        } else if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
-            final List<EmailEvent> events = new ArrayList<>();
-            final List<Register> registers = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
-                .map(a -> a.getRelationAType() == RelationType.REGISTER ? a.getRelationAId() : a.getRelationBId())
-                .map(registerService::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get).collect(Collectors.toList());
-
-            for (final Register register : registers) {
-                if (register.getResponsibleUsers() != null) {
-                    for (final User responsibleUser : register.getResponsibleUsers()) {
-                        if (responsibleUser.getEmail() != null) {
-                            events.add(EmailEvent.builder()
-                                .email(responsibleUser.getEmail())
-                                .subject("Risikovurdering for " + register.getName())
-                                .message(responsibleUserName + " har sendt dig en risikovurdering for behandlingsaktiviteten " + register.getName())
-                                .build());
-                        }
-                    }
-                }
-            }
-
-            return events;
-        }
-        return Collections.emptyList();
-    }
-
 }
