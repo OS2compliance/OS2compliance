@@ -20,6 +20,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
@@ -199,6 +200,10 @@ public class RiskController {
         model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
         model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         model.addAttribute("defaultSendReportTo", getFirstRelatedResponsible(threatAssessment));
+
+        boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
+        model.addAttribute("signed", signed);
+
         final Document document = new Document();
         document.setDocumentType(DocumentType.PROCEDURE);
         model.addAttribute("document", document);

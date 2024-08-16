@@ -29,13 +29,17 @@ public class S3Service {
 
 	public String upload(String filename, byte[] file) {
 		String key = config.getS3().getFolderName() + "/" + filename;
-		s3Client.putObject(PutObjectRequest.builder()
-						.bucket(config.getS3().getBucketName())
-						.key(key)
-						.build(),
-				RequestBody.fromBytes(file));
-		return key;
+		return uploadWithKey(key, file);
 	}
+
+    public String uploadWithKey(String key, byte[] file) {
+        s3Client.putObject(PutObjectRequest.builder()
+                .bucket(config.getS3().getBucketName())
+                .key(key)
+                .build(),
+            RequestBody.fromBytes(file));
+        return key;
+    }
 
 	public byte[] downloadBytes(String key) throws IOException {
 		final String bucket = config.getS3().getBucketName();

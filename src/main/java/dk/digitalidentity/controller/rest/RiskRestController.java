@@ -22,17 +22,16 @@ import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
@@ -65,7 +64,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -97,6 +95,7 @@ public class RiskRestController {
     private final PrecautionService precautionService;
     private final OS2complianceConfiguration configuration;
     private final S3Service s3Service;
+    private final S3DocumentService s3DocumentService;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -153,7 +152,7 @@ public class RiskRestController {
     @Transactional
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
-        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
         if (responsibleUser.getEmail() == null || responsibleUser.getEmail().isBlank()) {
             return new ResponseEntity<>("Den valgte bruger har ikke nogen email tilknyttet, og rapporten kan derfor ikke sendes.", HttpStatus.BAD_REQUEST);
@@ -170,14 +169,10 @@ public class RiskRestController {
             String message = dto.message.replace("\n", "<br/>");
             mailMessage += "<p>Personen har skrevet denne besked til dig:</p><p>" + message + "</p>";
         }
-        if (dto.sign) {
-            mailMessage += "<p>Rapporten skal signeres. Det kan du gøre ved at følge dette link: <a href=\"" + configuration.getBaseUrlForCompliance() + "/sign/" + id + "\">" + configuration.getBaseUrlForCompliance() + "/sign/" + id + "</a></p>";
-        }
 
         final EmailEvent emailEvent = EmailEvent.builder()
             .email(responsibleUser.getEmail())
             .subject("Risikovurdering " + threatAssessment.getName())
-            .message(mailMessage)
             .build();
 
         if (dto.format.equals(ReportFormat.WORD)) {
@@ -191,27 +186,29 @@ public class RiskRestController {
         } else if (dto.format.equals(ReportFormat.PDF)) {
             byte[] byteData = threatAssessmentService.getThreatAssessmentPdf(threatAssessment);
             String uuid = UUID.randomUUID().toString();
+
+            if (dto.sign) {
+                String key = s3Service.upload(uuid + ".pdf", byteData);
+                S3Document s3Document = new S3Document();
+                s3Document.setS3FileKey(key);
+                s3Document = s3DocumentService.save(s3Document);
+                threatAssessment.setThreatAssessmentReportS3Document(s3Document);
+                threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.WAITING);
+                threatAssessment.setThreatAssessmentReportApprover(responsibleUser);
+                threatAssessment = threatAssessmentService.save(threatAssessment);
+
+                mailMessage += "<p>Rapporten skal signeres. Det kan du gøre ved at følge dette link: <a href=\"" + configuration.getBaseUrlForCompliance() + "/sign/view/" + s3Document.getId() + "\">" + configuration.getBaseUrlForCompliance() + "/sign/view/" + s3Document.getId() + "</a></p>";
+            }
+
             File pdfFile = File.createTempFile(uuid, ".pdf");
             try (FileOutputStream fos = new FileOutputStream(pdfFile)) {
                 fos.write(byteData);
             }
             emailEvent.getAttachments().add(new EmailEvent.EmailAttachement(pdfFile.getAbsolutePath(),
                 "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".pdf"));
-
-            if (dto.sign) {
-                String key = s3Service.upload(uuid + ".pdf", byteData);
-                S3Document s3Document = new S3Document();
-                s3Document.setS3FileKey(key);
-                threatAssessment.setThreatAssessmentReportS3Document(s3Document);
-            }
         }
 
-        if (dto.sign) {
-            threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.WAITING);
-            threatAssessment.setThreatAssessmentReportApprover(responsibleUser);
-            threatAssessmentService.save(threatAssessment);
-        }
-
+        emailEvent.setMessage(mailMessage);
         eventPublisher.publishEvent(emailEvent);
 
         return new ResponseEntity<>(HttpStatus.OK);

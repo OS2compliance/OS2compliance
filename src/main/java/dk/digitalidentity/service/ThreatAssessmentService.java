@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -64,6 +65,9 @@ public class ThreatAssessmentService {
     private final UserService userService;
     private final TemplateEngine templateEngine;
 
+    public ThreatAssessment findByS3Document(S3Document s3Document) {
+        return threatAssessmentDao.findByThreatAssessmentReportS3DocumentId(s3Document.getId());
+    }
     public Optional<ThreatAssessment> findById(final Long assessmentId) {
         return threatAssessmentDao.findById(assessmentId);
     }

@@ -51,7 +51,7 @@ public class ThreatAssessment extends Relatable {
     @JoinColumn(name = "threat_catalog_identifier")
     private ThreatCatalog threatCatalog;
 
-    @ManyToOne(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ManyToOne
     @JoinColumn(name = "threat_assessment_report_s3_document_id")
     private S3Document threatAssessmentReportS3Document;
 
@@ -125,7 +125,7 @@ public class ThreatAssessment extends Relatable {
     @Override
     public String getLocalizedEnumValues() {
         return (assessment != null ? assessment.getMessage() : "") + " " +
-                (threatAssessmentType != null ? threatAssessmentType.getMessage() : "") +
+                (threatAssessmentType != null ? threatAssessmentType.getMessage() : "") + " " +
                 (threatAssessmentReportApprovalStatus != null ? threatAssessmentReportApprovalStatus.getMessage() : "");
     }
 }

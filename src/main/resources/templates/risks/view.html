@@ -334,6 +334,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='WORD')}">Download</a></li>
                                     <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='PDF')}">Download som PDF</a></li>
+                                    <li th:if="${signed}"><a class="dropdown-item" th:href="'/sign/pdf/' + ${risk.threatAssessmentReportS3Document.id}">Download signeret rapport</a></li>
                                     <li class="hideIfReadOnly"><a data-bs-toggle="modal" data-bs-target="#sendReportModal" class="dropdown-item">Send</a></li>
                                 </ul>
                             </div>

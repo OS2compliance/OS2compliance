@@ -2,6 +2,7 @@ package dk.digitalidentity.config;
 
 import dk.digitalidentity.config.property.Integration;
 import dk.digitalidentity.config.property.Mail;
+import dk.digitalidentity.config.property.PdfCertificate;
 import dk.digitalidentity.config.property.S3;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,4 +33,6 @@ public class OS2complianceConfiguration {
 	private Mail mail = new Mail();
     @NestedConfigurationProperty
     private S3 s3 = new S3();
+    @NestedConfigurationProperty
+    private PdfCertificate pdfCertificate = new PdfCertificate();
 }
