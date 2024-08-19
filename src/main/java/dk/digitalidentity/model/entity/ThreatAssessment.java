@@ -100,7 +100,7 @@ public class ThreatAssessment extends Relatable {
 
     @Column
     @Enumerated(EnumType.STRING)
-    private ThreatAssessmentReportApprovalStatus threatAssessmentReportApprovalStatus;
+    private ThreatAssessmentReportApprovalStatus threatAssessmentReportApprovalStatus = ThreatAssessmentReportApprovalStatus.NOT_SENT;
 
 
     @ManyToMany
