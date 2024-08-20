@@ -22,6 +22,7 @@ public class OS2complianceConfiguration {
     private boolean seedData = true;
     private String authorityUser;
     private String authorityAdministrator;
+    private String baseUrlForCompliance;
     @NestedConfigurationProperty
     private Municipal municipal = new Municipal();
 	@NestedConfigurationProperty

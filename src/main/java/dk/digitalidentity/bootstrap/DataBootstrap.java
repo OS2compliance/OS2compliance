@@ -83,6 +83,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(15, this::seedV15);
         incrementAndPerformIfVersion(16, this::seedV16);
         incrementAndPerformIfVersion(17, this::seedV17);
+        incrementAndPerformIfVersion(18, this::seedV18);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -95,6 +96,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             }
             return 0;
         });
+    }
+
+    private void seedV18() {
+        settingsService.createSetting("inactiveResponsibleEmail","" , "general", true);
     }
 
     private void seedV15() {

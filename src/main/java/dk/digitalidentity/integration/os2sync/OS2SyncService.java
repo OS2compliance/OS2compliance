@@ -9,6 +9,7 @@ import dk.digitalidentity.integration.os2sync.api.HierarchyUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Position;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.service.NotifyService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,6 +28,8 @@ public class OS2SyncService {
     private OrganisationUnitDao organisationUnitDao;
     @Autowired
     private UserDao userDao;
+    @Autowired
+    private NotifyService notifyService;
 
     @Transactional
     public void persistHierarchy(final HierarchyResult result) {
@@ -42,8 +45,9 @@ public class OS2SyncService {
                 .map(User::getUuid)
                 .collect(Collectors.toSet());
         existingUuids.removeAll(newUuids);
-        final int deactivatedOUs = userDao.deactivateUsers(existingUuids);
-        log.info("Deactivated {} users", deactivatedOUs);
+        final int deactivatedUsers = userDao.deactivateUsers(existingUuids);
+        log.info("Deactivated {} users", deactivatedUsers);
+        notifyService.notifyAboutInactiveUsers(existingUuids);
     }
 
     private void persistOUs(final List<HierarchyOU> ous) {

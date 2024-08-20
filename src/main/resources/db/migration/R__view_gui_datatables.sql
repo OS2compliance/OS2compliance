@@ -201,3 +201,99 @@ FROM documents d
     LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted=false
 GROUP BY d.id;
+
+CREATE OR REPLACE
+VIEW view_gridjs_inactive_responsible_users AS
+SELECT
+    uuid,
+    name,
+    user_id,
+    email,
+    GROUP_CONCAT(DISTINCT id ORDER BY id SEPARATOR ',') AS responsible_relatable_ids
+FROM (
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        t.id
+    FROM users u
+    LEFT JOIN tasks t ON u.uuid = t.responsible_uuid
+    WHERE u.active = false
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        d.id
+    FROM users u
+    LEFT JOIN documents d ON u.uuid = d.responsible_uuid
+    WHERE u.active = false
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        s.id
+    FROM users u
+    LEFT JOIN standard_sections s ON u.uuid = s.responsible_user_uuid
+    WHERE u.active = false
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        su.id
+    FROM users u
+    LEFT JOIN suppliers su ON u.uuid = su.responsible_uuid
+    WHERE u.active = false
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        ta.id
+    FROM users u
+    LEFT JOIN threat_assessments ta ON u.uuid = ta.responsible_uuid
+    WHERE u.active = false
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        r.id
+    FROM users u
+    LEFT JOIN registers_responsible_users_mapping rr ON u.uuid = rr.user_uuid
+    LEFT JOIN registers r ON rr.register_id = r.id
+    WHERE u.active = false
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        a.id
+    FROM users u
+    LEFT JOIN assets_responsible_users_mapping ar ON u.uuid = ar.user_uuid
+    LEFT JOIN assets a ON ar.asset_id = a.id
+    WHERE u.active = false
+) AS combined_ids
+GROUP BY uuid, name, user_id, email;
+

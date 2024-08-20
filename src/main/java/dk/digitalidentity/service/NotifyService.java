@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -46,4 +47,9 @@ public class NotifyService {
             .build());
     }
 
+    public void notifyAboutInactiveUsers(Set<String> existingUuids) {
+        if (!existingUuids.isEmpty()) {
+
+        }
+    }
 }
