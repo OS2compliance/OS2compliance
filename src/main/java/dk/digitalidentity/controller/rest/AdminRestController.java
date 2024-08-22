@@ -1,28 +1,39 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.grid.InactiveResponsibleGridDao;
-import dk.digitalidentity.mapping.InactiveResponsibleMapper;
-import dk.digitalidentity.model.dto.InactiveResponsibleDTO;
-import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.dto.RiskDTO;
-import dk.digitalidentity.model.entity.grid.InactiveResponsibleGrid;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.view.ResponsibleUserView;
 import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.DocumentService;
+import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.RelatableService;
+import dk.digitalidentity.service.ResponsibleUserViewService;
+import dk.digitalidentity.service.StandardSectionService;
+import dk.digitalidentity.service.SupplierService;
+import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
 import java.util.List;
-
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -30,36 +41,74 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 @RequireAdminstrator
 @RequiredArgsConstructor
 public class AdminRestController {
-    private final InactiveResponsibleGridDao inactiveResponsibleGridDao;
-    private final InactiveResponsibleMapper mapper;
+    private final UserService userService;
+    private final ResponsibleUserViewService responsibleUserViewService;
+    private final RelatableService relatableService;
+    private final AssetService assetService;
+    private final DocumentService documentService;
+    private final RegisterService registerService;
+    private final StandardSectionService standardSectionService;
+    private final SupplierService supplierService;
+    private final TaskService taskService;
+    private final ThreatAssessmentService threatAssessmentService;
 
-    @PostMapping("inactive/list")
-    public PageDTO<InactiveResponsibleDTO> list(
-        @RequestParam(name = "search", required = false) final String search,
-        @RequestParam(name = "page", required = false) final Integer page,
-        @RequestParam(name = "size", required = false) final Integer size,
-        @RequestParam(name = "order", required = false) final String order,
-        @RequestParam(name = "dir", required = false) final String dir
-    ) {
-        Sort sort = null;
-        if (isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
-        }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
-        final Page<InactiveResponsibleGrid> risks;
-        if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "userId");
-            risks = inactiveResponsibleGridDao.findAllCustom(searchableProperties, search, sortAndPage, InactiveResponsibleGrid.class);
-        } else {
-            // Fetch paged and sorted
-            risks = inactiveResponsibleGridDao.findAll(sortAndPage);
-        }
-        assert risks != null;
-        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent()));
-    }
+    public record TransferResponsibilityDTO(String transferFrom, String transferTo) {}
+    @Transactional
+    @PostMapping("transferresponsibility")
+    public ResponseEntity<?> mailReportToSystemOwner(@RequestBody final TransferResponsibilityDTO dto) {
+        User userTo = userService.findByUuid(dto.transferTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ResponsibleUserView userFrom = responsibleUserViewService.findByUserUuid(dto.transferFrom);
 
-    private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("userId");
+        // null means the person has no responsibilities
+        if (userFrom == null) {
+            return new ResponseEntity<>(HttpStatus.OK);
+        }
+
+        List<Long> ids = userFrom.getResponsibleRelatableIds().stream().map(Long::parseLong).collect(Collectors.toList());
+        List<Relatable> relatables = relatableService.findAllById(ids);
+
+        for (Relatable responsibleFor : relatables) {
+            switch (responsibleFor.getRelationType()) {
+                case ASSET:
+                    Asset asset = (Asset) responsibleFor;
+                    asset.getResponsibleUsers().removeIf(u -> u.getUuid().equals(dto.transferFrom));
+                    asset.getResponsibleUsers().add(userTo);
+                    assetService.save(asset);
+                    break;
+                case DOCUMENT:
+                    Document document = (Document) responsibleFor;
+                    document.setResponsibleUser(userTo);
+                    documentService.update(document);
+                    break;
+                case REGISTER:
+                    Register register = (Register) responsibleFor;
+                    register.getResponsibleUsers().removeIf(u -> u.getUuid().equals(dto.transferFrom));
+                    register.getResponsibleUsers().add(userTo);
+                    registerService.save(register);
+                    break;
+                case STANDARD_SECTION:
+                    StandardSection standardSection = (StandardSection) responsibleFor;
+                    standardSection.setResponsibleUser(userTo);
+                    standardSectionService.save(standardSection);
+                    break;
+                case SUPPLIER:
+                    Supplier supplier = (Supplier) responsibleFor;
+                    supplier.setResponsibleUser(userTo);
+                    supplierService.save(supplier);
+                    break;
+                case TASK:
+                    Task task = (Task) responsibleFor;
+                    task.setResponsibleUser(userTo);
+                    taskService.saveTask(task);
+                    break;
+                case THREAT_ASSESSMENT:
+                    ThreatAssessment threatAssessment = (ThreatAssessment) responsibleFor;
+                    threatAssessment.setResponsibleUser(userTo);
+                    threatAssessmentService.save(threatAssessment);
+                    break;
+            }
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

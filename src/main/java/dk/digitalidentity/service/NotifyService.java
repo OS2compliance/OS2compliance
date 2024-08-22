@@ -3,15 +3,18 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.view.ResponsibleUserView;
 import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
 import java.util.Set;
 
 @Slf4j
@@ -21,6 +24,8 @@ public class NotifyService {
     private final DISAML_Configuration diSamlConfiguration;
     private final TaskService taskService;
     private final ApplicationEventPublisher eventPublisher;
+    private final ResponsibleUserViewService responsibleUserViewService;
+    private final SettingsService settingsService;
 
     @Transactional
     public void notifyTask(final Long taskId) {
@@ -47,9 +52,31 @@ public class NotifyService {
             .build());
     }
 
-    public void notifyAboutInactiveUsers(Set<String> existingUuids) {
-        if (!existingUuids.isEmpty()) {
+    public void notifyAboutInactiveUsers(Set<String> newlyInactiveUuids) {
+        if (!newlyInactiveUuids.isEmpty()) {
+            String email = settingsService.getString("inactiveResponsibleEmail", null);
+            if (StringUtils.hasLength(email)) {
+                List<ResponsibleUserView> responsibleUsers = responsibleUserViewService.findAllIn(newlyInactiveUuids);
+                if (! responsibleUsers.isEmpty()) {
+                    final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
+                    String msg = "<p>En eller flere brugere med ansvar er blevet inaktive.</p>" +
+                        "<p>Se de inaktive brugere og overfør deres ansvar her: <a href=\"" + baseUrl + "/admin/inactive\">" + baseUrl + "/admin/inactive</a></p>" +
+                        "<p>Nye inaktive brugere:</p>"+
+                        "<ul>";
 
+                    for (ResponsibleUserView responsibleUser : responsibleUsers) {
+                        msg += "<li>" + responsibleUser.getName() + "(" + responsibleUser.getUserId() + ")</li>";
+                    }
+
+                    msg += "</ul>";
+
+                    eventPublisher.publishEvent(EmailEvent.builder()
+                        .email(email)
+                        .subject("Nye inaktive ansvarlige")
+                        .message(msg)
+                        .build());
+                }
+            }
         }
     }
 }
