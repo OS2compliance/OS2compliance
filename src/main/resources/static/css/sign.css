@@ -1,0 +1,66 @@
+.card-body {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100%;
+}
+
+.btn-group {
+    width: 100%;
+    justify-content: center;
+    margin-bottom: 20px;
+}
+
+.btn-group .btn,
+.btn-group .form-control {
+    padding: 10px 20px;
+    max-width: 150px;
+    text-align: center;
+}
+
+.input-group-append .btn {
+    max-width: 50px;
+}
+
+.btn-group .input-group {
+    max-width: 150px;
+}
+
+.pdf-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-group .input-group {
+    max-width: 150px;
+    display: flex;
+    justify-content: center;
+}
+
+.btn-group .input-group .form-control {
+    flex: 0 1 70px;
+    padding: 5px 10px;
+    text-align: center;
+    height: 100%;
+    box-sizing: border-box;
+}
+
+.input-group-append .btn {
+    flex: 0 1 40px;
+    padding: 5px 10px;
+    text-align: center;
+    height: 100%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.input-group .form-control,
+.input-group-append .btn {
+    border-radius: 0;
+}
+
+
