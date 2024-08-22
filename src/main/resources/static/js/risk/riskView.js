@@ -338,26 +338,28 @@ function handleCategoryRow(rowIndex) {
     }
 }
 
-function mailReportToRelatedOwner(assessmentId) {
-    var token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    fetch( `/rest/risks/${assessmentId}/mailReport`,
-        {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': token,
-            }
-        })
-        .then(response => {
-            if (response.status  > 299) {
-                response.json()
-                    .then(json => toastService.error(json.error));
-            } else {
-                toastService.info("Sendt");
-            }
-        })
-        .catch(error => {
-            toastService.error(error);
-        });
+function mailReport() {
+    var sendReportTo = document.getElementById('sendReportTo').value;
+    var reportMessage = document.getElementById('reportMessage').value;
+    var reportFormat = document.getElementById('reportFormat').value;
+    var signReport = document.getElementById('signReport').checked;
+    var data = {
+                 "sendTo": sendReportTo,
+                 "message": reportMessage,
+                 "format": reportFormat,
+                 "sign": signReport
+               };
+
+    postData(`/rest/risks/${riskId}/mailReport`, data).then((response) => {
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`);
+        }
+        toastService.info("Sendt");
+        document.querySelector('#sendReportModal .btn-close').click();
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    }).catch(error => {toastService.error(error)});
 }
 
 function createTaskClicked(elem) {
@@ -523,5 +525,44 @@ function pageLoaded() {
 
         // on change listener
         relationsSelect.addEventListener('change', setPrecautions, false);
+    }
+
+    // init send to select
+    let responsibleSelect = document.getElementById('sendReportTo');
+    if(responsibleSelect !== null) {
+        initUserSelect('sendReportTo');
+    }
+
+    // checkbox listener
+    let signReportCheckbox = document.getElementById('signReport');
+    signReportCheckbox.addEventListener('change', function() {
+        let formatSelect = document.getElementById('reportFormat');
+        if (this.checked) {
+            formatSelect.value = 'PDF';
+            formatSelect.disabled = true;
+        } else {
+            formatSelect.disabled = false;
+        }
+    });
+
+    // make page read only depending on report status
+    if (threatAssessmentReportApprovalStatus != null && (threatAssessmentReportApprovalStatus == "WAITING" || threatAssessmentReportApprovalStatus == "SIGNED")) {
+        document.querySelectorAll('input, textarea, select').forEach(function(element) {
+            element.readOnly = true;
+        });
+        document.querySelectorAll('input, textarea, select, button').forEach(function(element) {
+            element.disabled = true;
+        });
+        document.querySelectorAll('.disableIfReadonly').forEach(function(element) {
+            element.onclick = function(event) {
+                event.preventDefault();
+            };
+        });
+        document.querySelectorAll('.showIfReadOnly').forEach(function(element) {
+            element.style.display = 'block';
+        });
+        document.querySelectorAll('.hideIfReadOnly').forEach(function(element) {
+            element.style.display = 'none';
+        });
     }
 }

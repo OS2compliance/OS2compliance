@@ -68,7 +68,21 @@
 
         .threatAndTasksTables {
             font-size: 9px;
+            word-wrap: break-word;
+            table-layout: fixed;
+            width: 100%;
         }
+
+        .threatAndTasksTables td, .threatAndTasksTables th {
+            overflow-wrap: break-word;
+            max-width: 100px;
+            white-space: normal;
+        }
+
+        table {
+            max-width: 100%;
+        }
+
 
         .riskScoreField {
             width: 65px !important;

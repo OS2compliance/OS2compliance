@@ -20,6 +20,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
@@ -198,6 +199,11 @@ public class RiskController {
         model.addAttribute("tasks", taskService.buildRelatedTasks(threatAssessment, false));
         model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
         model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
+        model.addAttribute("defaultSendReportTo", getFirstRelatedResponsible(threatAssessment));
+
+        boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
+        model.addAttribute("signed", signed);
+
         final Document document = new Document();
         document.setDocumentType(DocumentType.PROCEDURE);
         model.addAttribute("document", document);
@@ -372,5 +378,42 @@ public class RiskController {
                 "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +
                 "\", da du er risikoejer på en ny risikovurdering.</p>" +
                 "<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>";
+    }
+
+    private User getFirstRelatedResponsible(final ThreatAssessment threatAssessment) {
+        if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
+            final List<Asset> assets =  relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
+                .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
+                .map(assetService::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get).collect(Collectors.toList());
+            for (final Asset asset : assets) {
+                if (asset.getResponsibleUsers() != null) {
+                    for (final User responsibleUser : asset.getResponsibleUsers()) {
+                        if (responsibleUser.getEmail() != null) {
+                            return responsibleUser;
+                        }
+                    }
+                }
+            }
+
+        } else if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
+            final List<Register> registers = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
+                .map(a -> a.getRelationAType() == RelationType.REGISTER ? a.getRelationAId() : a.getRelationBId())
+                .map(registerService::findById)
+                .filter(Optional::isPresent)
+                .map(Optional::get).collect(Collectors.toList());
+
+            for (final Register register : registers) {
+                if (register.getResponsibleUsers() != null) {
+                    for (final User responsibleUser : register.getResponsibleUsers()) {
+                        if (responsibleUser.getEmail() != null) {
+                            return responsibleUser;
+                        }
+                    }
+                }
+            }
+        }
+        return null;
     }
 }

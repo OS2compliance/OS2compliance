@@ -156,6 +156,7 @@ SELECT
     t.responsible_uuid,
     t.responsible_ou_uuid,
     t.threat_assessment_type as type,
+    t.threat_assessment_report_approval_status,
     t.updated_at as date,
     t.assessment,
     t.localized_enums,

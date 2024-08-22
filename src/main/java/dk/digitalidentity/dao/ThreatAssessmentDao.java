@@ -7,5 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface ThreatAssessmentDao extends JpaRepository<ThreatAssessment, Long> {
 
     long countByThreatCatalog(final ThreatCatalog threatCatalog);
+    ThreatAssessment findByThreatAssessmentReportS3DocumentId(long id);
 
 }

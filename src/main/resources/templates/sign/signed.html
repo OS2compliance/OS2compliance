@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head}"></head>
+<link rel="stylesheet" th:href="@{/css/sign.css}" />
+
+<body class="jumping">
+<script th:src="@{/js/sign/sign.js}" defer></script>
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item"><a th:href="'/sign/view/' + ${id}">Se rapport</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Rapport signeret</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Rapport signeret</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <a th:href="'/sign/pdf/' + ${id}" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-download"></i> <span class="vr"></span> Download signeret rapport
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card">
+                            <div class="card-body">
+                                <p>Rapporten er nu signeret.</p>
+                                <a th:if="${threatAssessmentId != null}" th:href="'/risks/' + ${threatAssessmentId}">Gå til risikovurdering</a>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='signering')}"></nav>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (pdf = true)}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    /*[+
+    +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+    });
+
+    /*]]>*/
+</script>
+
+</body>
+</html>

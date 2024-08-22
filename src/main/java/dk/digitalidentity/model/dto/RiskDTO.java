@@ -19,4 +19,5 @@ public class RiskDTO {
     private Integer tasks;
     private String assessment;
     private Integer assessmentOrder;
+    private String threatAssessmentReportApprovalStatus;
 }
