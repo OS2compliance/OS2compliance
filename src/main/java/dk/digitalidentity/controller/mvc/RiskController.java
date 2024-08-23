@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -18,6 +19,8 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentType;
+import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
+import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
@@ -26,6 +29,7 @@ import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
+import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -80,6 +84,7 @@ public class RiskController {
     private final RelationDao relationDao;
     private final AssetDao assetDao;
     private final UserService userService;
+    private final EmailTemplateService emailTemplateService;
 
     @GetMapping
     public String riskList(final Model model) {
@@ -346,14 +351,31 @@ public class RiskController {
 
     private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
         if (savedThreatAssessment.getResponsibleUser() != null) {
-            final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
-            if (task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
-                final String message = getMessage(task);
-                eventPublisher.publishEvent(EmailEvent.builder()
+            EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REMINDER);
+            if (template.isEnabled()) {
+                final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
+                if (task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
+                    final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
+                    final String recipient = task.getResponsibleUser().getName();
+                    final String objectName = task.getName();
+                    final String link = "<a href=\"" + url + "\">" + url + "</a>";
+
+                    String title = template.getTitle();
+                    title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+                    title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+                    title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+                    String message = template.getMessage();
+                    message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+                    message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+                    message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+                    eventPublisher.publishEvent(EmailEvent.builder()
                         .message(message)
-                        .subject("Påmindelse om at udfylde risikovurdering")
+                        .subject(title)
                         .email(task.getResponsibleUser().getEmail())
-                    .build());
+                        .build());
+                }
+            } else {
+                log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
             }
         }
     }
@@ -370,14 +392,6 @@ public class RiskController {
         final Register register = registerService.findById(selectedRegister).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
         relationService.addRelation(savedThreatAssessment, register);
-    }
-
-    private String getMessage(final Task task) {
-        final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
-        return "<p>Kære " + task.getResponsibleUser().getName() + "</p>" +
-                "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +
-                "\", da du er risikoejer på en ny risikovurdering.</p>" +
-                "<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>";
     }
 
     private User getFirstRelatedResponsible(final ThreatAssessment threatAssessment) {

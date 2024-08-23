@@ -1,7 +1,10 @@
 package dk.digitalidentity.controller.rest;
 
+import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.dto.EmailTemplateDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
@@ -11,8 +14,10 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
 import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DocumentService;
+import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.ResponsibleUserViewService;
@@ -24,14 +29,20 @@ import dk.digitalidentity.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -51,6 +62,48 @@ public class AdminRestController {
     private final SupplierService supplierService;
     private final TaskService taskService;
     private final ThreatAssessmentService threatAssessmentService;
+    private final EmailTemplateService emailTemplateService;
+    private final ApplicationEventPublisher eventPublisher;
+
+
+    @PostMapping(value = "mailtemplate/save")
+    @ResponseBody
+    public ResponseEntity<String> updateTemplate(@RequestBody EmailTemplateDTO emailTemplateDTO, @RequestParam("tryEmail") boolean tryEmail) {
+        toValid3ByteUTF8String(emailTemplateDTO);
+
+        if (tryEmail) {
+            final User user = userService.currentUser();
+            if (user != null) {
+                String email = user.getEmail();
+                if (email != null) {
+                    final EmailEvent emailEvent = EmailEvent.builder()
+                        .email(email)
+                        .subject(emailTemplateDTO.getTitle())
+                        .message(emailTemplateDTO.getMessage())
+                        .build();
+
+                    eventPublisher.publishEvent(emailEvent);
+
+                    return new ResponseEntity<>("Test email sendt til " + email, HttpStatus.OK);
+                }
+            }
+
+            return new ResponseEntity<>("Du har ingen email adresse registreret!", HttpStatus.CONFLICT);
+        }
+        else {
+
+            EmailTemplate template = emailTemplateService.findById(emailTemplateDTO.getId());
+            if (template == null) {
+                return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+            }
+
+            template.setMessage(emailTemplateDTO.getMessage());
+            template.setTitle(emailTemplateDTO.getTitle());
+            emailTemplateService.save(template);
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
     public record TransferResponsibilityDTO(String transferFrom, String transferTo) {}
     @Transactional
@@ -110,5 +163,34 @@ public class AdminRestController {
         }
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    /*
+     * we can store anything above 3 bytes - so replace it with the ?-icon
+     * found here: https://stackoverflow.com/questions/9260836/how-to-replace-remove-4-byte-characters-from-a-utf-8-string-in-java
+     */
+    public void toValid3ByteUTF8String(EmailTemplateDTO emailTemplateDTO)  {
+        String LAST_3_BYTE_UTF_CHAR = "\uFFFF";
+        String REPLACEMENT_CHAR = "\uFFFD";
+        String message = emailTemplateDTO.getMessage();
+        final int length = message.length();
+        StringBuilder builder = new StringBuilder(length);
+        for (int offset = 0; offset < length; ) {
+            final int codepoint = message.codePointAt(offset);
+
+            // do something with the codepoint
+            if (codepoint > LAST_3_BYTE_UTF_CHAR.codePointAt(0)) {
+                builder.append(REPLACEMENT_CHAR);
+            } else {
+                if (Character.isValidCodePoint(codepoint)) {
+                    builder.appendCodePoint(codepoint);
+                } else {
+                    builder.append(REPLACEMENT_CHAR);
+                }
+            }
+            offset += Character.charCount(codepoint);
+        }
+
+        emailTemplateDTO.setMessage(builder.toString());
     }
 }

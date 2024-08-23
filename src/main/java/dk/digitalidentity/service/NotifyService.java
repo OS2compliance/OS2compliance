@@ -1,13 +1,17 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
+import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
 import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -26,6 +30,7 @@ public class NotifyService {
     private final ApplicationEventPublisher eventPublisher;
     private final ResponsibleUserViewService responsibleUserViewService;
     private final SettingsService settingsService;
+    private final EmailTemplateService emailTemplateService;
 
     @Transactional
     public void notifyTask(final Long taskId) {
@@ -39,17 +44,35 @@ public class NotifyService {
             log.warn("Task '{}' already notified", task.getName());
             return;
         }
-        final LocalDate today = LocalDate.now();
-        final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
-        final String msg = "Din opgave " + task.getName() + " har deadline om " + ChronoUnit.DAYS.between(today, task.getNextDeadline()) + " dag(e).\n" +
-            " Du kan finde opgaven her: " + baseUrl + "/tasks/" +  task.getId();
-        task.setHasNotifiedResponsible(true);
 
-        eventPublisher.publishEvent(EmailEvent.builder()
+        EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
+        if (template.isEnabled()) {
+            final LocalDate today = LocalDate.now();
+            final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
+            final String url = baseUrl + "/tasks/" +  task.getId();
+            final String link = "<a href=\"" + url + "\">" + url + "</a>";
+            final String recipient = task.getResponsibleUser().getName();
+            final String objectName = task.getName();
+            final long days = ChronoUnit.DAYS.between(today, task.getNextDeadline());
+
+            String title = template.getTitle();
+            title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+            title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+            title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+            title = title.replace(EmailTemplatePlaceholder.DAYS_TILL_DEADLINE.getPlaceholder(), Long.toString(days));
+            String message = template.getMessage();
+            message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+            message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+            message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+            message = message.replace(EmailTemplatePlaceholder.DAYS_TILL_DEADLINE.getPlaceholder(), Long.toString(days));
+            eventPublisher.publishEvent(EmailEvent.builder()
+                .message(message)
+                .subject(title)
                 .email(task.getResponsibleUser().getEmail())
-                .subject("Deadline Notifikation")
-                .message(msg)
-            .build());
+                .build());
+        } else {
+            log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+        }
     }
 
     public void notifyAboutInactiveUsers(Set<String> newlyInactiveUuids) {
@@ -57,24 +80,34 @@ public class NotifyService {
             String email = settingsService.getString("inactiveResponsibleEmail", null);
             if (StringUtils.hasLength(email)) {
                 List<ResponsibleUserView> responsibleUsers = responsibleUserViewService.findAllIn(newlyInactiveUuids);
-                if (! responsibleUsers.isEmpty()) {
-                    final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
-                    String msg = "<p>En eller flere brugere med ansvar er blevet inaktive.</p>" +
-                        "<p>Se de inaktive brugere og overfør deres ansvar her: <a href=\"" + baseUrl + "/admin/inactive\">" + baseUrl + "/admin/inactive</a></p>" +
-                        "<p>Nye inaktive brugere:</p>"+
-                        "<ul>";
+                if (!responsibleUsers.isEmpty()) {
+                    EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
+                    if (template.isEnabled()) {
+                        final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
+                        final String url = baseUrl + "/admin/inactive";
+                        final String link = "<a href=\"" + url + "\">" + url + "</a>";
+                        String userList = "<ul>";
 
-                    for (ResponsibleUserView responsibleUser : responsibleUsers) {
-                        msg += "<li>" + responsibleUser.getName() + "(" + responsibleUser.getUserId() + ")</li>";
+                        for (ResponsibleUserView responsibleUser : responsibleUsers) {
+                            userList += "<li>" + responsibleUser.getName() + "(" + responsibleUser.getUserId() + ")</li>";
+                        }
+
+                        userList += "</ul>";
+
+                        String title = template.getTitle();
+                        title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+                        title = title.replace(EmailTemplatePlaceholder.USER_LIST.getPlaceholder(), userList);
+                        String message = template.getMessage();
+                        message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+                        message = message.replace(EmailTemplatePlaceholder.USER_LIST.getPlaceholder(), userList);
+                        eventPublisher.publishEvent(EmailEvent.builder()
+                            .message(message)
+                            .subject(title)
+                            .email(email)
+                            .build());
+                    } else {
+                        log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
                     }
-
-                    msg += "</ul>";
-
-                    eventPublisher.publishEvent(EmailEvent.builder()
-                        .email(email)
-                        .subject("Nye inaktive ansvarlige")
-                        .message(msg)
-                        .build());
                 }
             }
         }
