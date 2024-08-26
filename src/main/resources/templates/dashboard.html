@@ -103,6 +103,15 @@
 			header: "d-flex justify-content-end"
 		};
 
+        // load saved state
+        const gridKey = window.location.pathname;
+        const gridKeySearch = gridKey + '-task-search'
+        const gridKeySort = gridKey + '-task-sort';
+        const savedSearchTask = localStorage.getItem(gridKeySearch);
+        const savedSortTask = JSON.parse(localStorage.getItem(gridKeySort)) || [];
+
+        let initialTaskLoadDone = false;  // flag to ensure initial load only happens once
+
 		const updateUrl = (prev, query) => {
 			return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 		};
@@ -113,7 +122,9 @@
 				className: defaultClassName,
 				search: {
 					server: {
-						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
+						url: (prev, keyword) =>  {
+						    return updateUrl(prev, `search=${keyword}`)
+                        }
 					},
                     debounceTimeout: 1000
 				},
@@ -132,6 +143,11 @@
 							const columnIds = ['id', 'name', 'taskType', 'responsibleUser.name', 'responsibleOU.name', 'nextDeadline', 'taskRepetition', 'completed', 'tags'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
+
+							// save sort state
+                            const sortState = { index: col.index, direction: col.direction };
+                            localStorage.setItem(gridKeySort, JSON.stringify(sortState));
+
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
 						}
 					}
@@ -257,7 +273,49 @@
 				}
 			}).render(document.getElementById("tasksDatatable"));
 
-			const gridAssets = new gridjs.Grid({
+			// set state on grid
+            gridTasks.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialTaskLoadDone) {
+
+                    // wait a little extra for grid search to be initialized or it won't work
+                    setTimeout(function(){
+                        const searchInput = document.querySelector('#tasksDatatable .gridjs-search-input');
+                            if (searchInput) {
+                                searchInput.addEventListener('input', function() {
+                                    console.log("value " + this.value);
+                                    if (this.value === '') {
+                                        localStorage.removeItem(gridKeySearch);
+                                    } else {
+                                        localStorage.setItem(gridKeySearch, this.value);
+                                    }
+                                });
+                            }
+                    }, 500);
+
+                    // set search state first
+                    if (savedSearchTask) {
+                        gridTasks.updateConfig({
+                            search: {
+                                keyword: savedSearchTask,
+                                server: gridTasks.config.search.server
+                            }
+                        }).forceRender();
+                    }
+
+                    // set sort state after search state (search state updates the table)
+                    if (savedSortTask) {
+                        const gridColumnIds = ['id', 'opgavenavn', 'opgaveType', 'ansvarlig', 'afdeling', 'deadline', 'gentages', 'status', 'tags'];
+                        const selectedGridColumnId = gridColumnIds[savedSortTask.index];
+                        sortColumnById(document.getElementById("tasksDatatable"), selectedGridColumnId, savedSortTask.direction);
+                    }
+
+                    initialTaskLoadDone = true;  // ensure this only runs once
+                }
+            });
+
+		    const gridAssets = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
 					server: {

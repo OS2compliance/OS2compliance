@@ -284,3 +284,42 @@ function deleteTag(element) {
         window.location.reload();
     });
 }
+
+function sortColumnById(gridElement, columnId, sortOrder) {
+    const header = gridElement.querySelector(`th[data-column-id="${columnId}"]`);
+
+    if (!header) {
+        console.error(`No column found with id: ${columnId}`);
+        return;
+    }
+
+    const sortButton = header.querySelector('.gridjs-sort');
+    if (!sortButton) {
+        console.error(`No sort button found for column: ${columnId}`);
+        return;
+    }
+
+    const isNeutral = sortButton.classList.contains('gridjs-sort-neutral');
+    const isAscending = sortButton.classList.contains('gridjs-sort-asc');
+    const isDescending = sortButton.classList.contains('gridjs-sort-desc');
+
+    if (isNeutral) {
+        if (sortOrder === 1) {
+            sortButton.click(); // click once for asc
+
+        } else {
+            sortButton.click(); // click once for asc
+            sortButton.click(); // click once more for desc
+        }
+    }
+    else if (isAscending) {
+        if (sortOrder === -1) {
+            sortButton.click(); // click once for desc
+        }
+    }
+    else if (isDescending) {
+        if (sortOrder === 1) {
+            sortButton.click(); // click one for asc
+        }
+    }
+}
