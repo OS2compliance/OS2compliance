@@ -103,7 +103,7 @@
 			header: "d-flex justify-content-end"
 		};
 
-        // load saved state
+        // load saved state task
         const gridKey = window.location.pathname;
         const gridKeySearch = gridKey + '-task-search'
         const gridKeySort = gridKey + '-task-sort';
@@ -302,7 +302,8 @@
                     }
 
                     // set sort state after search state (search state updates the table)
-                    if (savedSortTask) {
+                    if (savedSortTask && savedSortTask.index != null && savedSortTask.direction != null) {
+                        // the gridColumnIds are found via inspecting the UI. Remember also adding hidden columns
                         const gridColumnIds = ['id', 'opgavenavn', 'opgaveType', 'ansvarlig', 'afdeling', 'deadline', 'gentages', 'status', 'tags'];
                         const selectedGridColumnId = gridColumnIds[savedSortTask.index];
                         sortColumnById(document.getElementById("tasksDatatable"), selectedGridColumnId, savedSortTask.direction);
@@ -311,6 +312,14 @@
                     initialTaskLoadDone = true;  // ensure this only runs once
                 }
             });
+
+            // load saved state assets
+            const assetGridKey = window.location.pathname;
+            const assetGridKeySearch = assetGridKey + '-asset-search'
+            const assetGridKeySort = assetGridKey + '-asset-sort';
+            const savedSearchAsset = localStorage.getItem(assetGridKeySearch);
+            const savedSortAsset = JSON.parse(localStorage.getItem(assetGridKeySort)) || [];
+            let initialAssetLoadDone = false;  // flag to ensure initial load only happens once
 
 		    const gridAssets = new gridjs.Grid({
 				className: defaultClassName,
@@ -335,6 +344,11 @@
 							const columnIds = ['id', 'name', 'supplier', 'assetType', 'responsibleUser', 'updatedAt', 'assessmentOrder', 'assetStatusOrder'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
+
+							// save sort state
+                            const sortState = { index: col.index, direction: col.direction };
+                            localStorage.setItem(assetGridKeySort, JSON.stringify(sortState));
+
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
 						}
 					}
@@ -416,6 +430,56 @@
 				}
 			}).render(document.getElementById("assetsDatatable"));
 
+			// set state on grid
+            gridAssets.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialAssetLoadDone) {
+
+                    // wait a little extra for grid search to be initialized or it won't work
+                    setTimeout(function(){
+                        const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
+                            if (searchInput) {
+                                searchInput.addEventListener('input', function() {
+                                    if (this.value === '') {
+                                        localStorage.removeItem(assetGridKeySearch);
+                                    } else {
+                                        localStorage.setItem(assetGridKeySearch, this.value);
+                                    }
+                                });
+                            }
+                    }, 500);
+
+                    // set search state first
+                    if (savedSearchAsset) {
+                        gridAssets.updateConfig({
+                            search: {
+                                keyword: savedSearchAsset,
+                                server: gridAssets.config.search.server
+                            }
+                        }).forceRender();
+                    }
+
+                    // set sort state after search state (search state updates the table)
+                    if (savedSortAsset && savedSortAsset.index != null && savedSortAsset.direction != null) {
+                        // the gridColumnIds are found via inspecting the UI. Remember also adding hidden columns
+                        const gridColumnIds = ["id", "navn", "leverandør", "type", "ansvarligBruger", "opdateret", "risikovurdering", "status"];
+                        const selectedGridColumnId = gridColumnIds[savedSortAsset.index];
+                        sortColumnById(document.getElementById("assetsDatatable"), selectedGridColumnId, savedSortAsset.direction);
+                    }
+
+                    initialAssetLoadDone = true;  // ensure this only runs once
+                }
+            });
+
+            // load saved state registers
+            const registerGridKey = window.location.pathname;
+            const registerGridKeySearch = registerGridKey + '-register-search'
+            const registerGridKeySort = registerGridKey + '-register-sort';
+            const savedSearchRegister = localStorage.getItem(registerGridKeySearch);
+            const savedSortRegister = JSON.parse(localStorage.getItem(registerGridKeySort)) || [];
+            let initialRegisterLoadDone = false;  // flag to ensure initial load only happens once
+
 			const gridRegisters = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
@@ -439,6 +503,11 @@
 							const columnIds = ['id', 'name', 'responsibleUser', 'responsibleOUNames', 'updatedAt', 'consequenceOrder', 'statusOrder'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
+
+							// save sort state
+                            const sortState = { index: col.index, direction: col.direction };
+                            localStorage.setItem(registerGridKeySort, JSON.stringify(sortState));
+
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
 						}
 					}
@@ -537,7 +606,57 @@
 				}
 			}).render(document.getElementById("registersDatatable"));
 
-			const grid = new gridjs.Grid({
+			// set state on grid
+            gridRegisters.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialRegisterLoadDone) {
+
+                    // wait a little extra for grid search to be initialized or it won't work
+                    setTimeout(function(){
+                        const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
+                            if (searchInput) {
+                                searchInput.addEventListener('input', function() {
+                                    if (this.value === '') {
+                                        localStorage.removeItem(registerGridKeySearch);
+                                    } else {
+                                        localStorage.setItem(registerGridKeySearch, this.value);
+                                    }
+                                });
+                            }
+                    }, 500);
+
+                    // set search state first
+                    if (savedSearchRegister) {
+                        gridRegisters.updateConfig({
+                            search: {
+                                keyword: savedSearchRegister,
+                                server: gridRegisters.config.search.server
+                            }
+                        }).forceRender();
+                    }
+
+                    // set sort state after search state (search state updates the table)
+                    if (savedSortRegister && savedSortRegister.index != null && savedSortRegister.direction != null) {
+                        // the gridColumnIds are found via inspecting the UI. Remember also adding hidden columns
+                        const gridColumnIds = ['id', 'titel', 'ansvarligAfdeling', 'responsibleUser', 'senestRedigeret', 'konsekvensVurdering', 'status'];
+                        const selectedGridColumnId = gridColumnIds[savedSortRegister.index];
+                        sortColumnById(document.getElementById("registersDatatable"), selectedGridColumnId, savedSortRegister.direction);
+                    }
+
+                    initialRegisterLoadDone = true;  // ensure this only runs once
+                }
+            });
+
+
+            // load saved state documents
+            const documentGridKey = window.location.pathname;
+            const documentGridKeySearch = documentGridKey + '-document-search'
+            const documentGridKeySort = documentGridKey + '-document-sort';
+            const savedSearchDocument = localStorage.getItem(documentGridKeySearch);
+            const savedSortDocument = JSON.parse(localStorage.getItem(documentGridKeySort)) || [];
+            let initialDocumentLoadDone = false;  // flag to ensure initial load only happens once
+			const gridDocuments = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
 					server: {
@@ -560,6 +679,11 @@
 							const columnIds = ['id', 'name', 'documentType', '', 'nextRevision', 'statusOrder', 'tags'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
+
+							// save sort state
+                            const sortState = { index: col.index, direction: col.direction };
+                            localStorage.setItem(documentGridKeySort, JSON.stringify(sortState));
+
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
 						}
 					}
@@ -584,7 +708,7 @@
 						hidden: true
 					},
 					{
-						name: "Næste revidering",
+						name: "Næste revidering"
 					},
 					{
 						name: "Status",
@@ -650,6 +774,48 @@
 					}
 				}
 			}).render(document.getElementById("documentsDatatable"));
+
+			// set state on grid
+            gridDocuments.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialDocumentLoadDone) {
+
+                    // wait a little extra for grid search to be initialized or it won't work
+                    setTimeout(function(){
+                        const searchInput = document.querySelector('#documentsDatatable .gridjs-search-input');
+                            if (searchInput) {
+                                searchInput.addEventListener('input', function() {
+                                    if (this.value === '') {
+                                        localStorage.removeItem(documentGridKeySearch);
+                                    } else {
+                                        localStorage.setItem(documentGridKeySearch, this.value);
+                                    }
+                                });
+                            }
+                    }, 500);
+
+                    // set search state first
+                    if (savedSearchDocument) {
+                        gridDocuments.updateConfig({
+                            search: {
+                                keyword: savedSearchDocument,
+                                server: gridDocuments.config.search.server
+                            }
+                        }).forceRender();
+                    }
+
+                    // set sort state after search state (search state updates the table)
+                    if (savedSortDocument && savedSortDocument.index != null && savedSortDocument.direction != null) {
+                        // the gridColumnIds are found via inspecting the UI. Remember also adding hidden columns
+                        const gridColumnIds = ['id', 'titel', 'dokumentype', '', 'næsteRevidering', 'status', 'tags'];
+                        const selectedGridColumnId = gridColumnIds[savedSortDocument.index];
+                        sortColumnById(document.getElementById("documentsDatatable"), selectedGridColumnId, savedSortDocument.direction);
+                    }
+
+                    initialDocumentLoadDone = true;  // ensure this only runs once
+                }
+            });
 		});
 		/*]]>*/
 	</script>
