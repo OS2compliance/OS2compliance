@@ -122,9 +122,7 @@
 				className: defaultClassName,
 				search: {
 					server: {
-						url: (prev, keyword) =>  {
-						    return updateUrl(prev, `search=${keyword}`)
-                        }
+						url: (prev, keyword) =>  updateUrl(prev, `search=${keyword}`)
 					},
                     debounceTimeout: 1000
 				},
@@ -284,7 +282,6 @@
                         const searchInput = document.querySelector('#tasksDatatable .gridjs-search-input');
                             if (searchInput) {
                                 searchInput.addEventListener('input', function() {
-                                    console.log("value " + this.value);
                                     if (this.value === '') {
                                         localStorage.removeItem(gridKeySearch);
                                     } else {
