@@ -304,21 +304,29 @@ function sortColumnById(gridElement, columnId, sortOrder) {
     const isDescending = sortButton.classList.contains('gridjs-sort-desc');
 
     if (isNeutral) {
+        console.log("neutral")
         if (sortOrder === 1) {
+            console.log("click")
             sortButton.click(); // click once for asc
 
         } else {
+            console.log("click")
             sortButton.click(); // click once for asc
+            console.log("click")
             sortButton.click(); // click once more for desc
         }
     }
     else if (isAscending) {
+        console.log("asc")
         if (sortOrder === -1) {
+            console.log("click")
             sortButton.click(); // click once for desc
         }
     }
     else if (isDescending) {
+        console.log("desc")
         if (sortOrder === 1) {
+            console.log("click")
             sortButton.click(); // click one for asc
         }
     }
