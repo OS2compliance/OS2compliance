@@ -7,11 +7,31 @@
         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
       </div>
       <div class="modal-body">
-        <form id="riskSettingsForm" class="row g-3" action="#" th:action="@{/settings/update}" style="margin-bottom: 25px;"
-          th:object="${settings}" method="post">
-          <a class="btn btn-primary" data-bs-toggle="collapse" href="#riskPart" role="button" aria-expanded="false" aria-controls="riskPart">
-            Risiko
-          </a>
+        <form id="riskSettingsForm" class="row g-3" action="#" th:action="@{/settings/update}" style="margin-bottom: 25px;" th:object="${settings}" method="post">
+            <a class="btn btn-primary" data-bs-toggle="collapse" href="#generalPart" role="button" aria-expanded="false" aria-controls="riskPart">
+                Generelt
+            </a>
+            <div class="collapse" id="generalPart" th:classappend="${page} == 'inactiveUsers' ? 'show' : ''">
+                <div class="card card-body">
+                    <div th:each="setting, itemStat :  *{settingsList}">
+                        <div th:if="${setting.association} == 'general'" class="row mt-3">
+                            <label for="inactiveResponsibleEmailInput" class="col-sm-12 col-form-label" style="color: black;">Email til notifikation om inaktive ansvarlige</label>
+                            <div th:if="${setting.settingKey} == 'inactiveResponsibleEmail'">
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}" />
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}" />
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}" />
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}" />
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}" />
+                                <input style="color:black;" class="form-control" name="inactiveResponsibleEmail" id="inactiveResponsibleEmailInput"
+                                       th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <a class="btn btn-primary" data-bs-toggle="collapse" href="#riskPart" role="button" aria-expanded="false" aria-controls="riskPart">
+                Risiko
+            </a>
             <div class="collapse" id="riskPart" th:classappend="${page} == 'risks' ? 'show' : ''">
               <div class="card card-body">
                 <div th:each="setting, itemStat :  *{settingsList}">
