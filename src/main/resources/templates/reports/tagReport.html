@@ -2,24 +2,24 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head}" />
 <body class="jumping">
-<div class="card m-2" th:each="task: ${tasks}">
-    <h1 class="card-header bg-light" th:text="${task.name}"></h1>
+<div class="card m-2" th:each="taskAndLogs: ${tasksAndLogs}">
+    <h1 class="card-header bg-light" th:text="${taskAndLogs.left.name}"></h1>
     <div class="card-body">
         <div class="row">
-            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.responsibleUser?.name}"></div>
+            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${taskAndLogs.left.responsibleUser?.name}"></div>
         </div>
         <div class="row">
-            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig afdeling:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.responsibleOu?.name}"></div>
+            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig afdeling:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${taskAndLogs.left.responsibleOu?.name}"></div>
         </div>
         <div class="row">
-            <div class="col-lg-2 col-sm-3"><h5>Gentagelse:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.repetition?.message}"></div>
+            <div class="col-lg-2 col-sm-3"><h5>Gentagelse:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${taskAndLogs.left.repetition?.message}"></div>
         </div>
         <div class="row mb-4">
-            <div class="col-lg-2 col-sm-3"><h5>Beskrivelse:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${task.description}"></div>
+            <div class="col-lg-2 col-sm-3"><h5>Beskrivelse:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${taskAndLogs.left.description}"></div>
         </div>
 
         <div class="timeline mb-4">
-            <div th:each="log: ${task.logs}" class="tl-entry active" th:if="${log.completed != null && !log.completed.isBefore(from) && !log.completed.isAfter(to)}">
+            <div th:each="log: ${taskAndLogs.right}" class="tl-entry active" th:if="${log.completed != null && !log.completed.isBefore(from) && !log.completed.isAfter(to)}">
                 <div class="tl-time">
                     <div class="tl-time" th:text="${#temporals.format(log.completed, 'd/MM-yyyy')}"></div>
                 </div>

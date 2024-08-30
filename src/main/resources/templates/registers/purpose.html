@@ -3,7 +3,7 @@
 <body>
 <div th:fragment="purpose(register)">
     <div class="card shadow-none">
-        <form id="editPurposeId" class="row" action="#" th:action="@{/registers/__${register.id}__/update(section='purpose')}" th:object="${register}" name="purpose" method="post">
+        <form id="editPurposeId" class="row" action="#" th:action="@{/registers/__${register.id}__/purpose}" th:object="${register}" name="purpose" method="post">
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
