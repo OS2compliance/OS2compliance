@@ -27,6 +27,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/172) Kan ikke rette Navn på Leverandør
 - (https://github.com/OS2compliance/OS2compliance/issues/173) Man kan ikke fjerne relationer på leverandør siden
 - (https://github.com/OS2compliance/OS2compliance/issues/179) Tab af data når formål & lovahjemmel opdateres
+- (https://github.com/OS2compliance/OS2compliance/issues/176) Søgning på navn fejler hvis ikke der søges på fulde navn
 - (https://os2web.atlassian.net/browse/COMPLY-35) Fortegnelse/Formål & lovhjemmel: Artikel 9 er forkert
 - (https://os2web.atlassian.net/browse/COMPLY-32) Fortegnelse/Formål & lovhjemmel: Fjern teksten "§6" og "§7"
 
