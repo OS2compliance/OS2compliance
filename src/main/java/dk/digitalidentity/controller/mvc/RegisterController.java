@@ -156,16 +156,10 @@ public class RegisterController {
                          @RequestParam(value = "departments", required = false) @Valid @UUID final Set<String> departmentUuids,
                          @RequestParam(value = "responsibleUsers", required = false) @Valid @UUID final Set<String> responsibleUserUuids,
                          @RequestParam(value = "criticality", required = false) final Criticality criticality,
-                         @RequestParam(value = "purpose", required = false) final String purpose,
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
-                         @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
-                         @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
                          @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
                          @RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
-                         @RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
-                         @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
                          @RequestParam(required = false) final String section,
-                         @RequestParam(value = "consent", required = false) final String consent,
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -193,32 +187,14 @@ public class RegisterController {
         } else {
             register.setResponsibleUsers(null);
         }
-        if (purpose != null) {
-            register.setPurpose(purpose);
-        }
         if (emergencyPlanLink != null) {
             register.setEmergencyPlanLink(emergencyPlanLink);
-        }
-        if (gdprChoices != null) {
-            register.setGdprChoices(gdprChoices);
-        }
-        if (informationObligationStatus != null) {
-            register.setInformationObligation(informationObligationStatus);
-        }
-        if (informationObligationDesc != null) {
-            register.setInformationObligationDesc(informationObligationDesc);
         }
         if (informationResponsible != null) {
             register.setInformationResponsible(informationResponsible);
         }
         if (registerRegarding != null) {
             register.setRegisterRegarding(registerRegarding);
-        }
-        if (purposeNotes != null) {
-            register.setPurposeNotes(purposeNotes);
-        }
-        if (consent != null) {
-            register.setConsent(consent);
         }
         if (criticality != null) {
             register.setCriticality(criticality);
@@ -228,6 +204,38 @@ public class RegisterController {
         }
         registerService.save(register);
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+    }
+
+    @Transactional
+    @PostMapping("{id}/purpose")
+    public String purpose(@PathVariable final Long id,
+                          @RequestParam(value = "purpose", required = false) final String purpose,
+                          @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
+                          @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
+                          @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
+                          @RequestParam(value = "consent", required = false) final String consent,
+                          @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
+        final Register register = registerService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (purpose != null) {
+            register.setPurpose(purpose);
+        }
+        if (gdprChoices != null) {
+            register.setGdprChoices(gdprChoices);
+        }
+        if (purposeNotes != null) {
+            register.setPurposeNotes(purposeNotes);
+        }
+        if (consent != null) {
+            register.setConsent(consent);
+        }
+        if (informationObligationStatus != null) {
+            register.setInformationObligation(informationObligationStatus);
+        }
+        if (informationObligationDesc != null) {
+            register.setInformationObligationDesc(informationObligationDesc);
+        }
+        return "redirect:/registers/" + id + "?section=purpose";
     }
 
     @Transactional
