@@ -5,7 +5,7 @@ import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.DataProcessing;
-import dk.digitalidentity.model.entity.DataProtectionImpactAssessment;
+import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Supplier;
@@ -48,9 +48,9 @@ public class AssetService {
 
     public Asset create(final Asset asset) {
         final Asset saved = assetDao.save(asset);
-        if (saved.getDpia() == null) {
-            saved.setDpia(new DataProtectionImpactAssessment());
-            saved.getDpia().setAsset(saved);
+        if (saved.getDpiaScreening() == null) {
+            saved.setDpiaScreening(new DataProtectionImpactAssessmentScreening());
+            saved.getDpiaScreening().setAsset(saved);
         }
         if (saved.getDataProcessing() == null) {
             saved.setDataProcessing(new DataProcessing());

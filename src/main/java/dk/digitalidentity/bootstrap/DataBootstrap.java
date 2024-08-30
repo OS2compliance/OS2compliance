@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
@@ -56,6 +57,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final CatalogService catalogService;
     private final ChoiceValueDao valueDao;
     private final PlatformTransactionManager transactionManager;
+    private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -84,6 +86,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(16, this::seedV16);
         incrementAndPerformIfVersion(17, this::seedV17);
         incrementAndPerformIfVersion(18, this::seedV18);
+        incrementAndPerformIfVersion(19, this::seedV19);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -97,6 +100,16 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+    private void seedV19() {
+        try {
+            dpiaTemplateSectionImporter.importDPIATemplateSections("./data/dpia/dpia_template_sections.json");
+        }
+        catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
     private void seedV18() {
         settingsService.createSetting("inactiveResponsibleEmail","" , "general", true);

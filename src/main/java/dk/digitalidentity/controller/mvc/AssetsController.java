@@ -20,7 +20,7 @@ import dk.digitalidentity.model.entity.ChoiceDPIA;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceMeasure;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.DataProtectionImpactAssessment;
+import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
@@ -173,11 +173,11 @@ public class AssetsController {
 		final List<ChoiceDPIA> choiceDPIA = choiceDPIADao.findAll();
         for (final ChoiceDPIA choice : choiceDPIA) {
             final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
-            defaultAnswer.setAssessment(asset.getDpia());
+            defaultAnswer.setAssessment(asset.getDpiaScreening());
             defaultAnswer.setChoice(choice);
             defaultAnswer.setAnswer(null);
             defaultAnswer.setId(0);
-            final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpia().getDpiaScreeningAnswers().stream()
+            final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpiaScreening().getDpiaScreeningAnswers().stream()
                 .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))
                 .findAny().orElse(defaultAnswer);
             final DataProtectionImpactScreeningAnswerDTO dpiaDTO = new DataProtectionImpactScreeningAnswerDTO();
@@ -190,12 +190,7 @@ public class AssetsController {
             .assetId(asset.getId())
             .optOut(asset.isDpiaOptOut())
             .questions(assetDPIADTOs)
-            .answerA(asset.getDpia().getAnswerA())
-            .answerB(asset.getDpia().getAnswerB())
-            .answerC(asset.getDpia().getAnswerC())
-            .answerD(asset.getDpia().getAnswerD())
-            .conclusion(asset.getDpia().getConclusion())
-            .consequenceLink(asset.getDpia().getConsequenceLink())
+            .consequenceLink(asset.getDpiaScreening().getConsequenceLink())
             .build();
 
         // Oversights
@@ -294,7 +289,7 @@ public class AssetsController {
     public String dpia(@ModelAttribute final DataProtectionImpactDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         asset.setDpiaOptOut(dpiaForm.isOptOut());
-        final DataProtectionImpactAssessment dpia = asset.getDpia();
+        final DataProtectionImpactAssessmentScreening dpia = asset.getDpiaScreening();
         for (final DataProtectionImpactScreeningAnswerDTO question : dpiaForm.getQuestions()) {
             final DataProtectionImpactScreeningAnswer foundAnswer = dpia.getDpiaScreeningAnswers().stream()
                 .filter(a -> a.getChoice().getIdentifier().equalsIgnoreCase(question.getChoice().getIdentifier()))
@@ -308,11 +303,6 @@ public class AssetsController {
                 });
             foundAnswer.setAnswer(question.getAnswer());
         }
-        dpia.setAnswerA(dpiaForm.getAnswerA());
-        dpia.setAnswerB(dpiaForm.getAnswerB());
-        dpia.setAnswerC(dpiaForm.getAnswerC());
-        dpia.setAnswerD(dpiaForm.getAnswerD());
-        dpia.setConclusion(dpiaForm.getConclusion());
         dpia.setConsequenceLink(dpiaForm.getConsequenceLink());
 
         return "redirect:/assets/" + dpiaForm.getAssetId();
@@ -527,6 +517,12 @@ public class AssetsController {
 
         existingAsset.getTia().setTransferCaseDescription(asset.getTia().getTransferCaseDescription());
         return "redirect:/assets/" + existingAsset.getId();
+    }
+
+    @GetMapping("dpia/schema")
+    public String dpiaSchema(final Model model) {
+
+        return "dpia/schema";
     }
 
 }

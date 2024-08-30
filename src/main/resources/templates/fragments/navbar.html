@@ -22,7 +22,7 @@
 							</a>
 						</li>
                         <li class="nav-item has-sub">
-                            <a href="#"  class="nav-link mininav-toggle collapsed" th:classappend="${page == 'aktiver' || page == 'precautions' ? 'active' : ''}">
+                            <a href="#"  class="nav-link mininav-toggle collapsed" th:classappend="${page == 'aktiver' || page == 'precautions' || page == 'dpia' ? 'active' : ''}">
                                 <i class="pli-crane fs-5 me-2"></i> <span class="nav-label ms-1">Aktiver</span>
                             </a>
                             <ul class="mininav-content nav collapse">
@@ -31,6 +31,9 @@
                                 </li>
                                 <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
                                     <a th:href="@{/precautions}" class="nav-link" th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
+                                    <a th:href="@{/assets/dpia/schema}" class="nav-link" th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyse</a>
                                 </li>
                             </ul>
                         </li>

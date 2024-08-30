@@ -1,8 +1,10 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.digitalidentity.config.StringListNullSafeConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -17,17 +19,18 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "dpia")
 @Getter
 @Setter
-public class DataProtectionImpactAssessment {
+public class DPIA {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
-    private Long id;
+    private long id;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -36,27 +39,20 @@ public class DataProtectionImpactAssessment {
     @JsonIgnore
     private Asset asset;
 
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @OneToMany(orphanRemoval = true, mappedBy = "assessment", cascade = CascadeType.ALL)
-    private List<DataProtectionImpactScreeningAnswer> dpiaScreeningAnswers = new ArrayList<>();
+    @Column(name = "dpia_checked_choice_list_identifiers")
+    @Convert(converter = StringListNullSafeConverter.class)
+    private Set<String> checks = new HashSet<>();
 
-    @Column(name = "answer_a")
-    private String answerA;
-
-    @Column(name = "answer_b")
-    private String answerB;
-
-    @Column(name = "answer_c")
-    private String answerC;
-
-    @Column(name = "answer_d")
-    private String answerD;
+    @Column(name = "dpia_checked_threat_assessments_ids")
+    @Convert(converter = StringListNullSafeConverter.class)
+    private Set<String> checkedThreatAssessmentIds = new HashSet<>();
 
     @Column
     private String conclusion;
 
-    @Column(name = "consequence_link")
-    private String consequenceLink;
-
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
+    @JsonIgnore
+    private List<DPIAResponseSection> dpiaResponseSections = new ArrayList<>();
 }
