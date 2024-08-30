@@ -119,6 +119,7 @@
 			const gridTasks = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchTask,
 					server: {
 						url: (prev, keyword) =>  updateUrl(prev, `search=${keyword}`)
 					},
@@ -270,28 +271,15 @@
                 // only apply saved state on the first load
                 if (!initialTaskLoadDone) {
 
-                    // wait a little extra for grid search to be initialized or it won't work
-                    setTimeout(function(){
-                        const searchInput = document.querySelector('#tasksDatatable .gridjs-search-input');
-                            if (searchInput) {
-                                searchInput.addEventListener('input', function() {
-                                    if (this.value === '') {
-                                        localStorage.removeItem(gridKeySearch);
-                                    } else {
-                                        localStorage.setItem(gridKeySearch, this.value);
-                                    }
-                                });
+                    const searchInput = document.querySelector('#tasksDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(gridKeySearch);
+                            } else {
+                                localStorage.setItem(gridKeySearch, this.value);
                             }
-                    }, 500);
-
-                    // set search state first
-                    if (savedSearchTask) {
-                        gridTasks.updateConfig({
-                            search: {
-                                keyword: savedSearchTask,
-                                server: gridTasks.config.search.server
-                            }
-                        }).forceRender();
+                        });
                     }
 
                     initialTaskLoadDone = true;  // ensure this only runs once
@@ -307,6 +295,7 @@
 		    const gridAssets = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchAsset,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -414,28 +403,15 @@
                 // only apply saved state on the first load
                 if (!initialAssetLoadDone) {
 
-                    // wait a little extra for grid search to be initialized or it won't work
-                    setTimeout(function(){
-                        const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
-                            if (searchInput) {
-                                searchInput.addEventListener('input', function() {
-                                    if (this.value === '') {
-                                        localStorage.removeItem(assetGridKeySearch);
-                                    } else {
-                                        localStorage.setItem(assetGridKeySearch, this.value);
-                                    }
-                                });
+                    const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(assetGridKeySearch);
+                            } else {
+                                localStorage.setItem(assetGridKeySearch, this.value);
                             }
-                    }, 500);
-
-                    // set search state first
-                    if (savedSearchAsset) {
-                        gridAssets.updateConfig({
-                            search: {
-                                keyword: savedSearchAsset,
-                                server: gridAssets.config.search.server
-                            }
-                        }).forceRender();
+                        });
                     }
 
                     initialAssetLoadDone = true;  // ensure this only runs once
@@ -451,6 +427,7 @@
 			const gridRegisters = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchRegister,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -575,28 +552,15 @@
                 // only apply saved state on the first load
                 if (!initialRegisterLoadDone) {
 
-                    // wait a little extra for grid search to be initialized or it won't work
-                    setTimeout(function(){
-                        const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
-                            if (searchInput) {
-                                searchInput.addEventListener('input', function() {
-                                    if (this.value === '') {
-                                        localStorage.removeItem(registerGridKeySearch);
-                                    } else {
-                                        localStorage.setItem(registerGridKeySearch, this.value);
-                                    }
-                                });
+                    const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(registerGridKeySearch);
+                            } else {
+                                localStorage.setItem(registerGridKeySearch, this.value);
                             }
-                    }, 500);
-
-                    // set search state first
-                    if (savedSearchRegister) {
-                        gridRegisters.updateConfig({
-                            search: {
-                                keyword: savedSearchRegister,
-                                server: gridRegisters.config.search.server
-                            }
-                        }).forceRender();
+                        });
                     }
 
                     initialRegisterLoadDone = true;  // ensure this only runs once
@@ -612,6 +576,7 @@
 			const gridDocuments = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchDocument,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -729,28 +694,15 @@
                 // only apply saved state on the first load
                 if (!initialDocumentLoadDone) {
 
-                    // wait a little extra for grid search to be initialized or it won't work
-                    setTimeout(function(){
-                        const searchInput = document.querySelector('#documentsDatatable .gridjs-search-input');
-                            if (searchInput) {
-                                searchInput.addEventListener('input', function() {
-                                    if (this.value === '') {
-                                        localStorage.removeItem(documentGridKeySearch);
-                                    } else {
-                                        localStorage.setItem(documentGridKeySearch, this.value);
-                                    }
-                                });
+                    const searchInput = document.querySelector('#documentsDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(documentGridKeySearch);
+                            } else {
+                                localStorage.setItem(documentGridKeySearch, this.value);
                             }
-                    }, 500);
-
-                    // set search state first
-                    if (savedSearchDocument) {
-                        gridDocuments.updateConfig({
-                            search: {
-                                keyword: savedSearchDocument,
-                                server: gridDocuments.config.search.server
-                            }
-                        }).forceRender();
+                        });
                     }
 
                     initialDocumentLoadDone = true;  // ensure this only runs once

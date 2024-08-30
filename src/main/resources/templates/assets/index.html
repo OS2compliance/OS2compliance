@@ -98,6 +98,7 @@
         const grid = new gridjs.Grid({
             className: defaultClassName,
             search: {
+                keyword: savedSearchAsset,
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -260,29 +261,15 @@
             // only apply saved state on the first load
             if (!initialAssetLoadDone) {
 
-                // wait a little extra for grid search to be initialized or it won't work
-                setTimeout(function(){
-                    const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
-                        if (searchInput) {
-                            searchInput.addEventListener('input', function() {
-                                if (this.value === '') {
-                                    localStorage.removeItem(assetGridKeySearch);
-                                } else {
-                                    localStorage.setItem(assetGridKeySearch, this.value);
-                                }
-                            });
+                const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        if (this.value === '') {
+                            localStorage.removeItem(assetGridKeySearch);
+                        } else {
+                            localStorage.setItem(assetGridKeySearch, this.value);
                         }
-                }, 500);
-
-                // set search state first
-                if (savedSearchAsset) {
-                    grid.updateConfig({
-                        search: {
-                            keyword: savedSearchAsset,
-                            server: grid.config.search.server
-                        }
-                    }).forceRender();
-
+                    });
                 }
 
                 initialAssetLoadDone = true;  // ensure this only runs once
