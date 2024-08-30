@@ -11,6 +11,7 @@ import dk.digitalidentity.model.dto.enums.ReportFormat;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -20,6 +21,8 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
+import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
@@ -28,6 +31,7 @@ import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
@@ -42,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -96,6 +101,8 @@ public class RiskRestController {
     private final OS2complianceConfiguration configuration;
     private final S3Service s3Service;
     private final S3DocumentService s3DocumentService;
+    private final Environment environment;
+    private final EmailTemplateService emailTemplateService;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -162,17 +169,10 @@ public class RiskRestController {
         }
 
         final User user = userService.currentUser();
-        final String loggedInUserName = user != null ? user.getName() : "";
-
-        String mailMessage = "<p>" + loggedInUserName + " har sendt dig risikovurderingen med titlen " + threatAssessment.getName() + "</p>";
-        if (dto.message != null && !dto.message.isBlank()) {
-            String message = dto.message.replace("\n", "<br/>");
-            mailMessage += "<p>Personen har skrevet denne besked til dig:</p><p>" + message + "</p>";
-        }
+        S3Document s3Document = null;
 
         final EmailEvent emailEvent = EmailEvent.builder()
             .email(responsibleUser.getEmail())
-            .subject("Risikovurdering " + threatAssessment.getName())
             .build();
 
         if (dto.format.equals(ReportFormat.WORD)) {
@@ -189,15 +189,13 @@ public class RiskRestController {
 
             if (dto.sign) {
                 String key = s3Service.upload(uuid + ".pdf", byteData);
-                S3Document s3Document = new S3Document();
+                s3Document = new S3Document();
                 s3Document.setS3FileKey(key);
                 s3Document = s3DocumentService.save(s3Document);
                 threatAssessment.setThreatAssessmentReportS3Document(s3Document);
                 threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.WAITING);
                 threatAssessment.setThreatAssessmentReportApprover(responsibleUser);
                 threatAssessment = threatAssessmentService.save(threatAssessment);
-
-                mailMessage += "<p>Rapporten skal signeres. Det kan du gøre ved at følge dette link: <a href=\"" + configuration.getBaseUrlForCompliance() + "/sign/view/" + s3Document.getId() + "\">" + configuration.getBaseUrlForCompliance() + "/sign/view/" + s3Document.getId() + "</a></p>";
             }
 
             File pdfFile = File.createTempFile(uuid, ".pdf");
@@ -208,10 +206,40 @@ public class RiskRestController {
                 "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".pdf"));
         }
 
-        emailEvent.setMessage(mailMessage);
+        final String loggedInUserName = user != null ? user.getName() : "";
+        final String recipient = responsibleUser.getEmail();
+        final String messageFromSender = dto.message.replace("\n", "<br/>");
+        final String objectName = threatAssessment.getName();
+        EmailTemplate template = dto.sign
+            ? emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REPORT_TO_SIGN)
+            : emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REPORT);
+
+        if (template.isEnabled()) {
+            String link = dto.sign
+                ? "<a href=\"" + environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "\">"
+                + environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "</a>"
+                : "";
+
+            String title = formatTemplateString(template.getTitle(), recipient, objectName, messageFromSender, loggedInUserName, link);
+            String message = formatTemplateString(template.getMessage(), recipient, objectName, messageFromSender, loggedInUserName, link);
+
+            emailEvent.setMessage(message);
+            emailEvent.setSubject(title);
+        } else {
+            log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+        }
+
         eventPublisher.publishEvent(emailEvent);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private String formatTemplateString(String templateString, String recipient, String objectName, String messageFromSender, String sender, String link) {
+        return templateString.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient)
+            .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName)
+            .replace(EmailTemplatePlaceholder.MESSAGE_FROM_SENDER.getPlaceholder(), messageFromSender)
+            .replace(EmailTemplatePlaceholder.SENDER.getPlaceholder(), sender)
+            .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
     }
 
     record SetFieldDTO(@NotNull SetFieldType setFieldType, @NotNull ThreatDatabaseType dbType, Long id, String identifier, @NotNull String value) {}
