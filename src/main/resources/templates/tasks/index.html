@@ -82,9 +82,16 @@
 
     document.addEventListener("DOMContentLoaded", function() {
 
-        new gridjs.Grid({
+        // load saved state tasks
+        const taskGridKey = window.location.pathname;
+        const taskGridKeySearch = taskGridKey + '-task-search'
+        const savedSearchTask = localStorage.getItem(taskGridKeySearch);
+        let initialTaskLoadDone = false;  // flag to ensure initial load only happens once
+
+        const grid = new gridjs.Grid({
             className: defaultClassName,
             search: {
+                keyword: savedSearchTask,
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -259,6 +266,27 @@
                 }
             }
         }).render( document.getElementById( "tasksDatatable" ));
+
+        // set state on grid
+        grid.on('ready', function() {
+
+            // only apply saved state on the first load
+            if (!initialTaskLoadDone) {
+
+                const searchInput = document.querySelector('#tasksDatatable .gridjs-search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        if (this.value === '') {
+                            localStorage.removeItem(taskGridKeySearch);
+                        } else {
+                            localStorage.setItem(taskGridKeySearch, this.value);
+                        }
+                    });
+                }
+
+                initialTaskLoadDone = true;  // ensure this only runs once
+            }
+        });
     });
 
 

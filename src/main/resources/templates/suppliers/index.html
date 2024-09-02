@@ -117,9 +117,16 @@
 							.then(data => document.getElementById('formDialog').innerHTML = data))
 					.catch(error => toastService.error(error));
 
+            // load saved state suppliers
+            const supplierGridKey = window.location.pathname;
+            const supplierGridKeySearch = supplierGridKey + '-supplier-search'
+            const savedSearchSupplier = localStorage.getItem(supplierGridKeySearch);
+            let initialSupplierLoadDone = false;  // flag to ensure initial load only happens once
+
 			const grid = new gridjs.Grid({
 				className: defaultClassName,
 				 search: {
+				    keyword: savedSearchSupplier,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -224,6 +231,27 @@
 					}
 			  	}
 			}).render( document.getElementById( "suppliersDatatable" ));
+
+			// set state on grid
+            grid.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialSupplierLoadDone) {
+
+                    const searchInput = document.querySelector('#suppliersDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(supplierGridKeySearch);
+                            } else {
+                                localStorage.setItem(supplierGridKeySearch, this.value);
+                            }
+                        });
+                    }
+
+                    initialSupplierLoadDone = true;  // ensure this only runs once
+                }
+            });
 		});
 
 		/*]]>*/
