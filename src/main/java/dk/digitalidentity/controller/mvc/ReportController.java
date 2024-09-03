@@ -18,6 +18,7 @@ import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -36,6 +37,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +75,12 @@ public class ReportController {
                             @RequestParam(value = "from", required = false) final LocalDate from,
                             @RequestParam(value = "to", required = false) final LocalDate to) {
         final List<Task> attributeValue = taskService.allTasksWithTag(tagId);
-        model.addAttribute("tasks", attributeValue);
+        final List<Pair<Task, List<TaskLog>>> tasksAndLogs = attributeValue.stream()
+                .map(t -> Pair.of(t, t.getLogs().stream()
+                    .sorted(Comparator.comparing(TaskLog::getCreatedAt))
+                    .toList()))
+                .toList();
+        model.addAttribute("tasksAndLogs", tasksAndLogs);
         model.addAttribute("from", from != null ? from : LocalDate.MIN);
         model.addAttribute("to", to != null ? to : LocalDate.MAX);
         return "reports/tagReport";

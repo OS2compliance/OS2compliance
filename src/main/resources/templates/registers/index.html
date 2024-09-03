@@ -86,6 +86,7 @@
 			const grid = new gridjs.Grid({
 				className: defaultClassName,
 				 search: {
+				    keyword: savedSearchRegister,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -259,30 +260,16 @@
                 // only apply saved state on the first load
                 if (!initialRegisterLoadDone) {
 
-                    // wait a little extra for grid search to be initialized or it won't work
-                    setTimeout(function(){
-                        const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
-                        if (searchInput) {
-                            searchInput.addEventListener('input', function() {
-                                if (this.value === '') {
-                                    localStorage.removeItem(registerGridKeySearch);
-                                } else {
-                                    localStorage.setItem(registerGridKeySearch, this.value);
-                                }
-                            });
-                        }
-
-                    }, 500);
-
-                    // set search state first
-                    if (savedSearchRegister) {
-                        grid.updateConfig({
-                            search: {
-                                keyword: savedSearchRegister,
-                                server: grid.config.search.server
+                    const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
+                    console.log(searchInput);
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(registerGridKeySearch);
+                            } else {
+                                localStorage.setItem(registerGridKeySearch, this.value);
                             }
-                        }).forceRender();
-
+                        });
                     }
 
                     initialRegisterLoadDone = true;  // ensure this only runs once

@@ -31,7 +31,8 @@ public class UserRestController {
         if (StringUtils.length(search) == 0) {
             return userMapper.toDTO(userDao.findAll(page));
         } else {
-            return userMapper.toDTO(userDao.searchForUser("%" + search + "%", page));
+            final String replacedString = search.replace(' ', '%');
+            return userMapper.toDTO(userDao.searchForUser("%" + replacedString + "%", page));
         }
 
     }

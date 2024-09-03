@@ -19,7 +19,7 @@ public interface OrganisationUnitDao extends JpaRepository<OrganisationUnit, Str
     @Query("update OrganisationUnit ou set ou.active = false where ou.uuid in (:uuids)")
     int deactivateOUs(@Param("uuids") final Set<String> uuids);
 
-    @Query("select ou from OrganisationUnit ou where ou.active=true and ou.name like :search")
+    @Query("select ou from OrganisationUnit ou where ou.active=true and ou.name like :search order by length(ou.name) asc, ou.name")
     Page<OrganisationUnit> searchForOU(@Param("search") final String search, final Pageable pageable);
 
     OrganisationUnit findByUuid(String uuid);
