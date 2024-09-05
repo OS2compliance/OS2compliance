@@ -137,7 +137,7 @@ public class RegisterAssetAssessmentService {
             property.setValue(scaleService.getRiskAssessmentForRisk(score).name());
             register.getProperties().add(property);
         }
-        log.info("updateAssetAssessment done, took {}ms", System.currentTimeMillis() - millis);
+        log.debug("updateAssetAssessment done, took {}ms", System.currentTimeMillis() - millis);
     }
 
 }
