@@ -104,6 +104,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private void seedV19() {
         try {
             dpiaTemplateSectionImporter.importDPIATemplateSections("./data/dpia/dpia_template_sections.json");
+            choiceImporter.importValues("./data/choices/dpia-quality-values.json");
+            choiceImporter.importList("./data/choices/dpia-quality-list.json");
         }
         catch (IOException e) {
             throw new RuntimeException(e);

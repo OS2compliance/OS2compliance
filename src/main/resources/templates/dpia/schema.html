@@ -37,7 +37,22 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-
+                                <div class="accordion" id="dpiaSchema">
+                                    <div class="accordion-item mb-1" th:each="section : ${templateSections}">
+                                        <div class="accordion-header" th:id="'header_section_' + ${section.id}">
+                                            <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse_section_' + ${section.id}" aria-expanded="false">
+                                                <span class="badge">&nbsp</span>&nbsp <span th:text="${section.heading}"></span>
+                                            </button>
+                                        </div>
+                                        <div th:id="'collapse_section_' + ${section.id}" class="accordion-collapse collapse" data-bs-parent="#dpiaSchema" style="">
+                                            <div class="accordion-body">
+                                                <div class="row mb-3">
+                                                    Heeeej
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -57,8 +72,6 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        var formUrl = [[@{/catalogs/threatForm}]];
-        var restUrl = [[@{/rest/catalogs}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 

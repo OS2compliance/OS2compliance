@@ -19,6 +19,7 @@ import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceDPIA;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceMeasure;
+import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
@@ -40,6 +41,7 @@ import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -92,6 +94,7 @@ public class AssetsController {
     private final AssetOversightService assetOversightService;
     private final AssetService assetService;
     private final TaskService taskService;
+    private final DPIATemplateSectionService dpiaTemplateSectionService;
 
 
 	@GetMapping
@@ -521,7 +524,11 @@ public class AssetsController {
 
     @GetMapping("dpia/schema")
     public String dpiaSchema(final Model model) {
+        List<DPIATemplateSection> templateSections = dpiaTemplateSectionService.findAll().stream()
+            .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
+            .collect(Collectors.toList());
 
+        model.addAttribute("templateSections", templateSections);
         return "dpia/schema";
     }
 
