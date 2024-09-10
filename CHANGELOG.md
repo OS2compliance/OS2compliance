@@ -7,6 +7,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2024-09-10
+
 ### Fixed
 - (https://github.com/OS2compliance/OS2compliance/issues/126) Manglende validering af at et aktiv er valgt
 - (https://github.com/OS2compliance/OS2compliance/issues/125) Status fjernet fra fravalgte sektioner i iso2700X
@@ -26,7 +28,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/168) Tilknytning til slettet IT-system fjernes ikke automatisk på leverandøren når it-systemet slettes
 - (https://github.com/OS2compliance/OS2compliance/issues/172) Kan ikke rette Navn på Leverandør
 - (https://github.com/OS2compliance/OS2compliance/issues/173) Man kan ikke fjerne relationer på leverandør siden
-- (https://github.com/OS2compliance/OS2compliance/issues/179) Tab af data når formål & lovahjemmel opdateres
+- (https://github.com/OS2compliance/OS2compliance/issues/179) Tab af data når formål & lovhjemmel opdateres
 - (https://github.com/OS2compliance/OS2compliance/issues/176) Søgning på navn fejler hvis ikke der søges på fulde navn
 - (https://github.com/OS2compliance/OS2compliance/issues/178) Fejl rækkefølge i NSIS tag rapport
 - (https://os2web.atlassian.net/browse/COMPLY-35) Fortegnelse/Formål & lovhjemmel: Artikel 9 er forkert
