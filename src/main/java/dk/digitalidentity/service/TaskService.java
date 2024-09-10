@@ -3,6 +3,7 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
@@ -20,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -101,6 +103,15 @@ public class TaskService {
 
     @Transactional
     public Task saveTask(final Task task) {
+        if (task.getTaskType() == TaskType.CHECK) {
+            findLinkedDocument(task)
+                .ifPresent(d -> {
+                    // Deadline was changed on the task, reflect this on the document next revision
+                    if (!d.getNextRevision().isEqual(task.getNextDeadline())) {
+                        d.setNextRevision(task.getNextDeadline());
+                    }
+                });
+        }
         return taskDao.save(task);
     }
 
@@ -110,11 +121,7 @@ public class TaskService {
         if (task.getTaskType() == TaskType.CHECK) {
             final LocalDate nextDeadline = getNextDeadline(task.getNextDeadline(), task.getRepetition());
             // Check if we need to move date on related assets
-            task.getProperties().stream()
-                .filter(p -> p.getKey().equals(ASSOCIATED_DOCUMENT_PROPERTY))
-                .findFirst()
-                .flatMap(property ->
-                    documentDao.findById(Long.parseLong(property.getValue())))
+            findLinkedDocument(task)
                 .ifPresent(d -> {
                     if (d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(nextDeadline);
@@ -145,9 +152,43 @@ public class TaskService {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;
             }
-            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUser().getName(), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now())));
+            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUser().getName(), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
         }
         return relatedTasks;
+    }
+
+    public String findHtmlStatusBadgeForTask(Task task) {
+        if (task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+            return "<div class=\"d-block badge bg-success\">Udført</div>";
+        } else {
+            LocalDate deadline = task.getNextDeadline();
+            LocalDate today = LocalDate.now();
+            long diff = ChronoUnit.DAYS.between(today, deadline);
+
+            Optional<TaskLog> newestLogOptional = task.getLogs().stream().max((item1, item2) -> Long.compare(item1.getId(), item2.getId()));
+            TaskLog newestLog = null;
+            if (newestLogOptional.isPresent()) {
+                newestLog = newestLogOptional.get();
+            }
+
+            String statusText = "Ikke udført";
+            if (newestLog != null) {
+                switch (newestLog.getTaskResult()) {
+                    case NO_ERROR -> statusText = "Ingen fejl";
+                    case NO_CRITICAL_ERROR -> statusText = "Ingen kritiske fejl";
+                    case CRITICAL_ERROR -> statusText = "Kritiske fejl";
+                }
+            }
+
+            if (diff < 0) {
+                return "<div class=\"d-block badge bg-danger\">" + statusText + "</div>";
+            } else if (diff < 31 && diff >= 0) {
+                return "<div class=\"d-block badge bg-warning\">" + statusText + "</div>";
+            } else {
+                return "<div class=\"d-block badge bg-gray-800\">" + statusText + "</div>";
+            }
+
+        }
     }
 
     private LocalDate closeToDeadline() {
@@ -166,6 +207,14 @@ public class TaskService {
 
     public List<TaskLog> logsBetween(final Task task, final LocalDate from, final LocalDate to) {
         return taskLogDao.findAllByTaskFiltered(task, from, to);
+    }
+
+    private Optional<Document> findLinkedDocument(final Task task) {
+        return task.getProperties().stream()
+            .filter(p -> p.getKey().equals(ASSOCIATED_DOCUMENT_PROPERTY))
+            .findFirst()
+            .flatMap(property ->
+                documentDao.findById(Long.parseLong(property.getValue())));
     }
 
     private LocalDate getNextDeadline(final LocalDate deadline, final TaskRepetition repetition) {

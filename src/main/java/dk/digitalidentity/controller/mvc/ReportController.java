@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
@@ -13,9 +14,11 @@ import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -34,6 +37,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -57,6 +61,7 @@ public class ReportController {
     private final TagDao tagDao;
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
     private final TaskService taskService;
+    private final ThreatAssessmentService threatAssessmentService;
 
     @GetMapping
     public String reportList(final Model model) {
@@ -70,7 +75,12 @@ public class ReportController {
                             @RequestParam(value = "from", required = false) final LocalDate from,
                             @RequestParam(value = "to", required = false) final LocalDate to) {
         final List<Task> attributeValue = taskService.allTasksWithTag(tagId);
-        model.addAttribute("tasks", attributeValue);
+        final List<Pair<Task, List<TaskLog>>> tasksAndLogs = attributeValue.stream()
+                .map(t -> Pair.of(t, t.getLogs().stream()
+                    .sorted(Comparator.comparing(TaskLog::getCreatedAt))
+                    .toList()))
+                .toList();
+        model.addAttribute("tasksAndLogs", tasksAndLogs);
         model.addAttribute("from", from != null ? from : LocalDate.MIN);
         model.addAttribute("to", to != null ? to : LocalDate.MAX);
         return "reports/tagReport";
@@ -129,38 +139,50 @@ public class ReportController {
     @GetMapping("word")
     public @ResponseBody ResponseEntity<?> word(@RequestParam(name = "identifier") final String identifier,
                                                 @RequestParam(name = "riskId", required = false) final Long riskId,
+                                                @RequestParam(name = "type", required = false, defaultValue = "WORD") String type,
                                                 final HttpServletResponse response) {
         if ("article30".equals(identifier)) {
-            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap());
+            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap(), false, null);
         } else if ("iso27001".equals(identifier)) {
-            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap());
+            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap(), false, null);
         } else if ("iso27002_2022".equals(identifier)) {
-            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap());
+            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap(), false, null);
         } else if ("risk".equals(identifier)) {
-            generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.docx",
-                Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId));
+            if (type.equals("WORD")) {
+                generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.docx",
+                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), false, riskId);
+            } else if (type.equals("PDF")) {
+                generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.pdf",
+                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), true, riskId);
+            }
         }
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
-                                  final Map<String, String> parameters) {
+        final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {
         try {
             final long start = System.currentTimeMillis();
-            try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters)) {
-
-                // Set the content type and attachment header.
+            if (toPDF) {
+                ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "ThreatAssessment not found"));
+                byte[] byteData = threatAssessmentService.getThreatAssessmentPdf(threatAssessment);
                 response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
-                response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
-
-                // Copy the stream to the response's output stream.
-                myDocument.write(response.getOutputStream());
+                response.setContentType("application/pdf");
+                response.getOutputStream().write(byteData);
                 response.flushBuffer();
+            } else {
+                try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters)) {
+                    response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
+                    response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+                    myDocument.write(response.getOutputStream());
+                    response.flushBuffer();
+                }
             }
             final long end = System.currentTimeMillis();
-            log.info("Elapsed Time in milli seconds: "+ (end-start));
+            log.info("Elapsed Time in milliseconds: " + (end - start));
         } catch (final IOException e) {
-            log.error("Unable to generate docx file. ", e);
+            log.error("Unable to generate document. ", e);
         }
     }
+
 }

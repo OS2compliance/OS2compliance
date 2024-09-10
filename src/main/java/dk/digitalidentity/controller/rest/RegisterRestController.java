@@ -47,8 +47,10 @@ public class RegisterRestController {
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.ASC, "name");
         }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
         Page<RegisterGrid> registers = null;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
@@ -75,8 +77,10 @@ public class RegisterRestController {
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.ASC, "name");
         }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
         Page<RegisterGrid> registers = null;
         if (StringUtils.isNotEmpty(search)) {
             //search and page
@@ -92,7 +96,7 @@ public class RegisterRestController {
 
     private boolean containsField(final String fieldName) {
         return fieldName.equals("name") || fieldName.equals("responsibleUserNames") || fieldName.equals("responsibleOUNames")
-                || fieldName.equals("updatedAt") || fieldName.equals("consequence") || fieldName.equals("risk") || fieldName.equals("departmentNames")
-                || fieldName.equals("status") || fieldName.equals("assetCount");
+                || fieldName.equals("updatedAt") || fieldName.equals("consequenceOrder") || fieldName.equals("riskOrder") || fieldName.equals("departmentNames") || fieldName.equals("assetAssessmentOrder")
+                || fieldName.equals("statusOrder") || fieldName.equals("assetCount");
     }
 }

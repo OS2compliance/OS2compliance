@@ -17,5 +17,6 @@ public class ThreatCatalogDTO {
     private String identifier;
     @NotEmpty
     private String name;
+    @Builder.Default
     private boolean hidden = false;
 }

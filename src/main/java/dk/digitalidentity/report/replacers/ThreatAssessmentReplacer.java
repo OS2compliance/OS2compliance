@@ -280,8 +280,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private void addRiskExplanations(final XWPFDocument document, final XmlCursor cursor) {
         final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
         tableParagraph.setAlignment(ParagraphAlignment.CENTER);
-        final ScaleService.ScaleExplainers scaleExplainers =
-            ScaleService.scaleExplainerFor(scaleService.getScaleType());
+        final ScaleService.ScaleSetting scaleExplainers =
+            ScaleService.scaleSettingsForType(scaleService.getScaleType());
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         table.setTableAlignment(TableRowAlign.CENTER);
@@ -467,12 +467,12 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         final XWPFTableRow footerRow = table.getRow(table.getNumberOfRows()-1);
         for (int i = 0; i < gridSize; ++i) {
             final XWPFTableCell footer = getCell(footerRow, i);
-            setCellBackgroundColor(footer, "GRÅ");
+            setCellBackgroundColor(footer, "#393939");
             footer.getParagraphs().get(0).setAlignment(ParagraphAlignment.CENTER);
             footer.setText(i > 0 ? "" + i : "");
             footer.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
             final XWPFTableCell leftScaleCell = getCell(table.getRow(i), 0);
-            setCellBackgroundColor(leftScaleCell, "GRÅ");
+            setCellBackgroundColor(leftScaleCell, "#393939");
             leftScaleCell.setText(i == (gridSize-1 ) ? "" : "" + (gridSize - (i+1)));
             leftScaleCell.getParagraphs().get(0).setAlignment(ParagraphAlignment.CENTER);
             leftScaleCell.setVerticalAlignment(XWPFTableCell.XWPFVertAlign.CENTER);
@@ -480,14 +480,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     }
 
     private void setCellBackgroundColor(final XWPFTableCell cell, final String color) {
-        final String colorHex = switch (color) {
-            case "GRØN" -> "87ad27";
-            case "RØD" -> "df5645";
-            case "GUL" -> "ffde07";
-            case "GRÅ" -> "393939";
-            default -> "ffffff";
-        };
-        cell.getCTTc().addNewTcPr().addNewShd().setFill(colorHex);
+        cell.getCTTc().addNewTcPr().addNewShd().setFill(StringUtils.removeStart(color, "#"));
     }
 
     private void addPresentAddMeeting(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {

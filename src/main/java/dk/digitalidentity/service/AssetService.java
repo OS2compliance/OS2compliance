@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -30,19 +31,19 @@ public class AssetService {
     private final DataProcessingDao dataProcessingDao;
 
     public Optional<Asset> get(final Long id) {
-        return assetDao.findById(id);
+        return assetDao.findByIdAndDeletedFalse(id);
     }
 
     public Page<Asset> getPaged(final int pageSize, final int page) {
         return assetDao.findAll(Pageable.ofSize(pageSize).withPage(page));
     }
 
-    public List<Asset> findAllById(final Iterable<Long> ids) {
-        return assetDao.findAllById(ids);
+    public List<Asset> findAllById(final Collection<Long> ids) {
+        return assetDao.findAllByIdInAndDeletedFalse(ids);
     }
 
     public Optional<Asset> findById(final Long id) {
-        return assetDao.findById(id);
+        return assetDao.findByIdAndDeletedFalse(id);
     }
 
     public Asset create(final Asset asset) {
@@ -90,7 +91,7 @@ public class AssetService {
     }
 
     public List<Asset> findBySupplier(final Supplier supplier) {
-        return assetDao.findBySupplier(supplier);
+        return assetDao.findBySupplierAndDeletedFalse(supplier);
     }
 
     /**

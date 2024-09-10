@@ -28,9 +28,11 @@ public interface DocumentMapper {
                 .id(documentGrid.getId())
                 .name(documentGrid.getName())
                 .documentType(nullSafe(() -> documentGrid.getDocumentType().getMessage()))
+                .documentTypeOrder(documentGrid.getDocumentTypeOrder())
                 .responsibleUser(nullSafe(() -> documentGrid.getResponsibleUser().getName(), ""))
                 .nextRevision(nullSafe(() -> documentGrid.getNextRevision().format(DK_DATE_FORMATTER)))
                 .status(nullSafe(() -> documentGrid.getStatus().getMessage()))
+                .statusOrder(documentGrid.getStatusOrder())
                 .tags(nullSafe(() -> documentGrid.getTags()))
                 .build();
     }

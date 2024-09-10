@@ -31,7 +31,7 @@ function setStyleNotRelevant(selected, rowId, rowClassName) {
         }
         var rowRiskScore = document.getElementById('row' + rowId + 'RiskScore');
         rowRiskScore.textContent = "";
-        updateColorFor(rowRiskScore, "INGEN")
+        updateColorFor(rowRiskScore, null)
     } else {
         rows.forEach(r => r.style.backgroundColor = "transparent");
         disableOrEnableFields(selectAndTextareaElements, false)
@@ -115,7 +115,7 @@ function calculateRisk(row, rowId, rowRiskScore) {
 
     if (probability == 0 || highestScore == 0) {
         rowRiskScore.textContent = "";
-        updateColorFor(rowRiskScore, "INGEN");
+        updateColorFor(rowRiskScore, null);
 
     } else {
         rowRiskScore.textContent = probability * highestScore;
@@ -154,7 +154,7 @@ function setField() {
                 throw new Error(`${response.status} ${response.statusText}`);
             }
             toastService.info("Info", "Dine ændringer er blevet gemt")
-        }).catch(error => {toastService.error("Der er sket en fejl og kan ikke gemmes, genindlæse siden og prøv igen"); console.log(error)});
+        }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
 }
 
 function updateAverage() {
@@ -280,7 +280,7 @@ function updateResidualRiskUIValue(value, elem, rowId) {
 function calculateResidualRiskScore(residualRiskProbabilitySelect, residualRiskConsequenceSelect, rowResidualRiskScore) {
     if (residualRiskProbabilitySelect.value == '-1' || residualRiskConsequenceSelect.value == '-1') {
         rowResidualRiskScore.textContent = '';
-        updateColorFor(rowResidualRiskScore, "INGEN");
+        updateColorFor(rowResidualRiskScore, null);
         return;
     }
 
@@ -291,20 +291,8 @@ function calculateResidualRiskScore(residualRiskProbabilitySelect, residualRiskC
 }
 
 function updateColorFor(elem, color) {
-    // the color codes is the colors used for btns
-    if (color === "GRØN") {
-        elem.style.backgroundColor = "#87ad27";
-        elem.style.color = "white";
-    } else if (color === "GUL") {
-        elem.style.backgroundColor = "#FFDE07FF";
-        elem.style.color = "black";
-    } else if (color === "RØD") {
-        elem.style.backgroundColor = "#df5645";
-        elem.style.color = "white";
-    } else {
-        elem.style.backgroundColor = "";
-        elem.style.color = "#75868f";
-    }
+    elem.style.backgroundColor = color;
+    elem.style.color = foregroundColorForHex(color);
 }
 
 function categoryRowClicked() {
@@ -350,26 +338,28 @@ function handleCategoryRow(rowIndex) {
     }
 }
 
-function mailReportToRelatedOwner(assessmentId) {
-    var token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    fetch( `/rest/risks/${assessmentId}/mailReport`,
-        {
-            method: 'POST',
-            headers: {
-                'X-CSRF-TOKEN': token,
-            }
-        })
-        .then(response => {
-            if (response.status  > 299) {
-                response.json()
-                    .then(json => toastService.error(json.error));
-            } else {
-                toastService.info("Sendt");
-            }
-        })
-        .catch(error => {
-            toastService.error(error);
-        });
+function mailReport() {
+    var sendReportTo = document.getElementById('sendReportTo').value;
+    var reportMessage = document.getElementById('reportMessage').value;
+    var reportFormat = document.getElementById('reportFormat').value;
+    var signReport = document.getElementById('signReport').checked;
+    var data = {
+                 "sendTo": sendReportTo,
+                 "message": reportMessage,
+                 "format": reportFormat,
+                 "sign": signReport
+               };
+
+    postData(`/rest/risks/${riskId}/mailReport`, data).then((response) => {
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`);
+        }
+        toastService.info("Sendt");
+        document.querySelector('#sendReportModal .btn-close').click();
+        setTimeout(() => {
+            window.location.reload();
+        }, 1000);
+    }).catch(error => {toastService.error(error)});
 }
 
 function createTaskClicked(elem) {
@@ -412,6 +402,42 @@ function setRevisionInterval(assessmentId) {
                 initDatepicker("#nextRevisionBtn", "#nextRevision");
             }))
         .catch(error => toastService.error(error));
+}
+
+function updateRelatedPrecautions(choices, search, threatType, threatId, threatIdentifier) {
+    fetch( `/rest/relatable/autocomplete/relatedprecautions?search=${search}&threatType=${threatType}&threatIdentifier=${threatIdentifier}&threatId=${threatId}&riskId=${riskId}`)
+        .then(response => response.json()
+            .then(data => {
+                choices.setChoices(data.content.map(reg => {
+                    return {
+                        id: reg.id,
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60)
+                    }
+                }), 'id', 'name', true);
+            }))
+        .catch(error => toastService.error(error));
+}
+
+function setPrecautions() {
+    var dbType = this.dataset.dbtype;
+    var threatId = this.dataset.id;
+    var threatIdentifier = this.dataset.identifier;
+    const selected = this.querySelectorAll('option:checked');
+    const precautionIds = Array.from(selected).map(el => el.value);
+
+    var data = {
+                 "threatType": dbType,
+                 "threatId": threatId,
+                 "threatIdentifier": threatIdentifier,
+                 "precautionIds": precautionIds
+               };
+
+    postData("/rest/risks/" + riskId + "/threats/setPrecautions", data).then((response) => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            toastService.info("Info", "Dine ændringer er blevet gemt")
+        }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
 }
 
 function pageLoaded() {
@@ -471,5 +497,72 @@ function pageLoaded() {
     const openedRow = sessionStorage.getItem(`openedRowIndex${riskId}`);
     if (openedRow !== null && openedRow !== undefined) {
         handleCategoryRow(openedRow);
+    }
+
+    // precaution choice.js
+    const precautionChoiceSelects = document.querySelectorAll('.select-precaution');
+    for (var i = 0; i < precautionChoiceSelects.length; i++) {
+        const relationsSelect = precautionChoiceSelects[i];
+
+        // threat data
+        var dbType = relationsSelect.dataset.dbtype;
+        var id = relationsSelect.dataset.id;
+        var identifier = relationsSelect.dataset.identifier;
+
+        let relationsChoice = initSelect(relationsSelect, "excel-textarea");
+        relationsSelect.addEventListener("search",
+            function(event) {
+                updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier);
+            },
+            false,
+        );
+        relationsSelect.addEventListener("change",
+            function(event) {
+                updateRelatedPrecautions(relationsChoice, "", dbType, id, identifier);
+            },
+            false,
+        );
+
+        // on change listener
+        relationsSelect.addEventListener('change', setPrecautions, false);
+    }
+
+    // init send to select
+    let responsibleSelect = document.getElementById('sendReportTo');
+    if(responsibleSelect !== null) {
+        initUserSelect('sendReportTo');
+    }
+
+    // checkbox listener
+    let signReportCheckbox = document.getElementById('signReport');
+    signReportCheckbox.addEventListener('change', function() {
+        let formatSelect = document.getElementById('reportFormat');
+        if (this.checked) {
+            formatSelect.value = 'PDF';
+            formatSelect.disabled = true;
+        } else {
+            formatSelect.disabled = false;
+        }
+    });
+
+    // make page read only depending on report status
+    if (threatAssessmentReportApprovalStatus != null && (threatAssessmentReportApprovalStatus == "WAITING" || threatAssessmentReportApprovalStatus == "SIGNED")) {
+        document.querySelectorAll('input, textarea, select').forEach(function(element) {
+            element.readOnly = true;
+        });
+        document.querySelectorAll('input, textarea, select, button').forEach(function(element) {
+            element.disabled = true;
+        });
+        document.querySelectorAll('.disableIfReadonly').forEach(function(element) {
+            element.onclick = function(event) {
+                event.preventDefault();
+            };
+        });
+        document.querySelectorAll('.showIfReadOnly').forEach(function(element) {
+            element.style.display = 'block';
+        });
+        document.querySelectorAll('.hideIfReadOnly').forEach(function(element) {
+            element.style.display = 'none';
+        });
     }
 }

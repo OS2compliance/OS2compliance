@@ -28,7 +28,7 @@
                             </ol>
                         </nav>
                         <h1 class="page-title mb-0 mt-2" th:text="${risk.name}"></h1>
-                        <p class="lead"></p>
+                        <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten er sendt til signering</p>
                     </div>
                     <div class="align-self-center d-inline-flex">
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -145,9 +145,9 @@
                                     </tr>
                                     <th:block th:each="row : ${type.value}">
                                         <tr class="threatRow" th:classappend="'categoryRow' + ${stat.index} + ' rowId'+${row.index}" th:id="'row' + ${row.index}" th:attr="data-rowid=${row.index},data-index=${stat.index}">
-                                            <td class="riskViewTd"  th:text="${row.index} + 1" rowspan="5"></td>
-                                            <td class="riskViewTd"  th:text="${row.threat}" rowspan="5" style="vertical-align: top"></td>
-                                            <td style="height: inherit" class="riskViewTd editCell" rowspan="5" >
+                                            <td class="riskViewTd"  th:text="${row.index} + 1" rowspan="6"></td>
+                                            <td class="riskViewTd"  th:text="${row.threat}" rowspan="6" style="vertical-align: top"></td>
+                                            <td style="height: inherit" class="riskViewTd editCell" rowspan="6" >
                                                 <select style="height: 100%" class="notRelevantSelect setField" th:id="'notRelevant' + ${row.index}" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="NOT_RELEVANT" th:value="${row.notRelevant}">
                                                     <option value="false" th:selected="${row.notRelevant} == false"></option>
                                                     <option value="true" th:selected="${row.notRelevant} == true">Ikke relevant</option>
@@ -249,6 +249,14 @@
                                             </td>
                                         </tr>
                                         <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
+                                            <td class="riskViewTh">Tilknyttede foranstaltninger</td>
+                                            <td class="riskViewTd editCell" colspan="13">
+                                                <select class="choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" multiple>
+                                                    <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name}" selected></option>
+                                                </select>
+                                            </td>
+                                        </tr>
+                                        <tr th:classappend="'categoryRow' + ${stat.index} + ' rowId' + ${row.index}">
                                             <td class="riskViewTh">Uddybning af risikohåndtering</td>
                                             <td class="riskViewTd editCell" colspan="13">
                                                 <div class="excel-textarea-container">
@@ -324,9 +332,10 @@
                                     <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
                                 </a>
                                 <ul class="dropdown-menu dropdown-menu-end">
-                                    <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id})}">Download</a></li>
-                                    <li th:if="${risk.threatAssessmentType.name() == 'ASSET'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til systemejer</a></li>
-                                    <li th:if="${risk.threatAssessmentType.name() == 'REGISTER'}"><a th:onclick="|mailReportToRelatedOwner(${risk.id})|" class="dropdown-item">Send til behandlingsaktivitets ejer</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='WORD')}">Download</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='PDF')}">Download som PDF</a></li>
+                                    <li th:if="${signed}"><a class="dropdown-item" th:href="'/sign/pdf/' + ${risk.threatAssessmentReportS3Document.id}">Download signeret rapport</a></li>
+                                    <li class="hideIfReadOnly"><a data-bs-toggle="modal" data-bs-target="#sendReportModal" class="dropdown-item">Send</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -378,6 +387,53 @@
     </div>
 </div>
 
+<div class="modal fade" id="sendReportModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Send rapport</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mt-3">
+                    <label for="sendReportTo" class="col-sm-4 col-form-label">Send til</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" data-trigger="" id="sendReportTo" hidden="" tabindex="-1">
+                            <option th:if="${defaultSendReportTo} != null" th:value="${defaultSendReportTo.uuid}" th:text="${defaultSendReportTo.name}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="reportMessage" class="col-sm-4 col-form-label">Besked</label>
+                    <div class="col-sm-8">
+                        <textarea rows="5" class="form-control" id="reportMessage"></textarea>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="reportFormat" class="col-sm-4 col-form-label">Format</label>
+                    <div class="col-sm-8">
+                        <select class="form-control" id="reportFormat" style="text-align: left">
+                            <option value="WORD">Word</option>
+                            <option value="PDF">PDF</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="signReport" class="col-sm-4 col-form-label">Skal signeres</label>
+                    <div class="col-sm-8" style="padding-top: 10px;">
+                        <input id="signReport" class="form-check-input" type="checkbox">
+                        <small>Dette kan kun gøres en gang, herefter bliver rapporten skrivebeskyttet</small>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button class="btn btn-primary" onclick="mailReport()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
@@ -385,6 +441,7 @@
 
     /*[+
         var riskId = [[${risk.id}]];
+        var threatAssessmentReportApprovalStatus = [[${risk.threatAssessmentReportApprovalStatus}]];
         var scaleMap = [[${scale}]];
         var riskScoreColorMap = [[${riskScoreColorMap}]];
     +]*/

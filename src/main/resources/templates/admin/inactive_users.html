@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
+<body class="jumping">
+<script th:src="@{/js/admin/inactive_users.js}" defer></script>
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Inaktive ansvarlige</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Inaktive ansvarlige</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#transferResponsibilityModal">
+                            <i class="ti-angle-double-right"></i> <span class="vr"></span> Overfør ansvar
+                        </button>
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="inactiveUsersDatatable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='inactiveUsers')}"></nav>
+</div>
+
+<div class="modal fade" id="transferResponsibilityModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Overfør ansvar</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mt-3">
+                    <label for="transferFrom" class="col-sm-4 col-form-label">Overfør ansvar fra</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" data-trigger="" id="transferFrom" hidden="" tabindex="-1">
+                        </select>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <label for="transferTo" class="col-sm-4 col-form-label">Overfør ansvar til</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" data-trigger="" id="transferTo" hidden="" tabindex="-1">
+                        </select>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button class="btn btn-primary" onclick="transferResponsibility()">Overfør</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        const data = [[${users}]];
+    +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        pageLoaded()
+    });
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

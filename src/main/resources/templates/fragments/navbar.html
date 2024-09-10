@@ -2,7 +2,7 @@
 <html>
 <body>
 	<nav th:fragment="main" id="mainnav-container" class="mainnav">
-		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser or T(dk.digitalidentity.security.SecurityUtil).isAdministrator}" class="mainnav__inner">
+		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner">
 			<div class="mainnav__top-content scrollable-content pb-2">
 				<div class="mainnav__category py-3">
 					<ul class="mainnav__menu nav flex-column">
@@ -21,11 +21,19 @@
 								<i class="pli-address-book-2 fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Fortegnelse</span>
 							</a>
 						</li>
-						<li class="nav-item">
-							<a th:href="@{/assets}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'aktiver' ? 'active' : ''">
-								<i class="pli-crane fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Aktiver</span>
-							</a>
-						</li>
+                        <li class="nav-item has-sub">
+                            <a href="#"  class="nav-link mininav-toggle collapsed" th:classappend="${page == 'aktiver' || page == 'precautions' ? 'active' : ''}">
+                                <i class="pli-crane fs-5 me-2"></i> <span class="nav-label ms-1">Aktiver</span>
+                            </a>
+                            <ul class="mininav-content nav collapse">
+                                <li class="nav-item">
+                                    <a th:href="@{/assets}" class="nav-link" th:classappend="${page} == 'aktiver' ? 'active' : ''">Aktiver</a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
+                                    <a th:href="@{/precautions}" class="nav-link" th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
+                                </li>
+                            </ul>
+                        </li>
 						<li class="nav-item">
 							<a th:href="@{/suppliers}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'leverandører' ? 'active' : ''">
 								<i class="pli-office fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Leverandører</span>
@@ -59,6 +67,19 @@
 								<i class="pli-newspaper fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
 							</a>
 						</li>
+                        <li class="nav-item has-sub" sec:authorize="hasRole('ROLE_administrator')">
+                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' ? 'active' : ''}">
+                                <i class="pli-stamp fs-5 me-2"></i> <span class="nav-label ms-1">Administrativt</span>
+                            </a>
+                            <ul class="mininav-content nav collapse">
+                                <li class="nav-item">
+                                    <a th:href="@{/admin/inactive}" class="nav-link" th:classappend="${page} == 'inactiveUsers' ? 'active' : ''">Inaktive ansvarlige</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a th:href="@{/admin/mailtemplates}" class="nav-link" th:classappend="${page} == 'mailtemplates' ? 'active' : ''">Mailskabeloner</a>
+                                </li>
+                            </ul>
+                        </li>
 					</ul>
 				</div>
 

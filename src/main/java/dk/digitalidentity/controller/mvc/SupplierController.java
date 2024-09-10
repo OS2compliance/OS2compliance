@@ -71,7 +71,9 @@ public class SupplierController {
         final List<Relatable> documents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
         final List<Relatable> tasks = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
 
-        final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream().filter(o -> o.getAsset().getSupplier().equals(supplier)).collect(Collectors.toList());
+        final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
+            .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
+            .collect(Collectors.toList());
 
         model.addAttribute("oversights", assetOversights);
 		model.addAttribute("supplier", supplier);
@@ -118,6 +120,7 @@ public class SupplierController {
 		if (supplier.getId() != null) {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            existingSupplier.setName(supplier.getName());
 			existingSupplier.setStatus(supplier.getStatus());
 			existingSupplier.setCvr(supplier.getCvr());
 			existingSupplier.setZip(supplier.getZip());

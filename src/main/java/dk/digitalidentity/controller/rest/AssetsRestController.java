@@ -52,8 +52,10 @@ public class AssetsRestController {
 		if (StringUtils.isNotEmpty(order) && containsField(order)) {
 			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
 			sort = Sort.by(direction, order);
-		}
-		final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+		} else {
+            sort = Sort.by(Sort.Direction.ASC, "name");
+        }
+		final Pageable sortAndPage = PageRequest.of(page, size, sort);
 		Page<AssetGrid> assets = null;
 		if (StringUtils.isNotEmpty(search)) {
 			final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
@@ -78,8 +80,10 @@ public class AssetsRestController {
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.ASC, "name");
         }
-        final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
         Page<AssetGrid> assets = null;
         if (StringUtils.isNotEmpty(search)) {
             final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
@@ -111,16 +115,16 @@ public class AssetsRestController {
     }
 
 	private boolean containsField(final String fieldName) {
-		return fieldName.equals("assessment")
+		return fieldName.equals("assessmentOrder")
 				|| fieldName.equals("supplier")
 				|| fieldName.equals("risk")
 				|| fieldName.equals("name")
 				|| fieldName.equals("assetType")
-				|| fieldName.equals("responsibleUserName")
+				|| fieldName.equals("responsibleUserNames")
 				|| fieldName.equals("registers")
 				|| fieldName.equals("updatedAt")
 				|| fieldName.equals("criticality")
-				|| fieldName.equals("assetStatus")
+				|| fieldName.equals("assetStatusOrder")
                 || fieldName.equals("hasThirdCountryTransfer");
 	}
 }

@@ -48,8 +48,10 @@ public class TaskRestController {
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.ASC, "nextDeadline");
         }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
         Page<TaskGrid> tasks = null;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
@@ -76,8 +78,10 @@ public class TaskRestController {
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.ASC, "nextDeadline");
         }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
         final Page<TaskGrid> tasks;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
@@ -92,8 +96,8 @@ public class TaskRestController {
     }
 
     private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("taskType") || fieldName.equals("responsibleUser") || fieldName.equals("responsibleOU")
+        return fieldName.equals("name") || fieldName.equals("taskType") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
                 || fieldName.equals("nextDeadline") || fieldName.equals("taskRepetition")
-                || fieldName.equals("taskResult") || fieldName.equals("tags");
+                || fieldName.equals("taskResult") || fieldName.equals("tags") || fieldName.equals("completed");
     }
 }

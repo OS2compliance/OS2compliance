@@ -47,8 +47,10 @@ public class DocumentRestController {
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.ASC, "name");
         }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
         Page<DocumentGrid> documents = null;
         if (StringUtils.isNotEmpty(search)) {
             // search and page
@@ -91,7 +93,7 @@ public class DocumentRestController {
     }
 
     private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("documentType") || fieldName.equals("responsibleUser")
-                || fieldName.equals("nextRevision") || fieldName.equals("status");
+        return fieldName.equals("name") || fieldName.equals("documentType") || fieldName.equals("documentTypeOrder") || fieldName.equals("responsibleUser.name")
+                || fieldName.equals("nextRevision") || fieldName.equals("status") || fieldName.equals("statusOrder");
     }
 }

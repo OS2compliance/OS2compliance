@@ -6,7 +6,7 @@ function truncateString(str, num) {
     return str.slice(0, num) + '...'
 }
 
-const initSelect = (element) => {
+const initSelect = (element, containerInner = 'form-control') => {
     let choices = new Choices(element, {
         searchChoices: false,
         removeItemButton: true,
@@ -16,7 +16,7 @@ const initSelect = (element) => {
         itemSelectText: 'Vælg',
         noChoicesText: 'Søg...',
         classNames: {
-            containerInner: 'form-control'
+            containerInner: containerInner
         },
         duplicateItemsAllowed: false,
     });
@@ -136,6 +136,17 @@ function javaFormatDate(date) {
     }
     let yyyy = date.getFullYear();
     return `${yyyy}-${mm}-${dd}`;
+}
+
+function foregroundColorForHex(rrggbb) {
+    if (rrggbb == null) {
+        return "";
+    }
+    const red = parseInt(rrggbb.substring(1,3), 16);
+    const green = parseInt(rrggbb.substring(3,5), 16);
+    const blue = parseInt(rrggbb.substring(5,7), 16);
+    const avg = (red + green + blue) / 3;
+    return avg > 150 ? "black" : "white";
 }
 
 function ensureElementHasClass(elem, className) {

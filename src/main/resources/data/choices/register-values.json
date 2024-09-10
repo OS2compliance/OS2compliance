@@ -1,12 +1,12 @@
 [
   {
     "identifier": "register-gdpr-valp6",
-    "caption": "§6",
+    "caption": "",
     "description": "Behandling af personoplysninger efter Artikel 6 stk. 1",
     "childListIdentifier": "register-gdpr-p6"
   }, {
     "identifier": "register-gdpr-valp7",
-    "caption": "§7",
+    "caption": "",
     "description": "Behandling af personoplysninger efter Artikel 9 stk. 2 (særlige kategorier af personoplysninger)",
     "childListIdentifier": "register-gdpr-p7"
   }, {
@@ -61,51 +61,56 @@
 },{
   "identifier": "register-gdpr-p6-f",
   "caption": "f",
-  "description": "Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. Første afsnit, litra f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver."
+  "description": "Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. Første afsnit, litra f), <b>gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"
 },
 {
   "identifier": "register-gdpr-p7-a",
   "caption": "a",
-  "description": "Den registrerede har givet udtrykkeligt samtykke til behandlingen"
+  "description": "Den registrerede har givet udtrykkeligt samtykke til behandling af sådanne personoplysninger til et eller flere specifikke formål, medmindre det i EU-retten eller medlemsstaternes nationale ret er fastsat, at det i stk. 1 omhandlede forbud ikke kan hæves ved den registreredes samtykke."
 },
 {
   "identifier": "register-gdpr-p7-b",
   "caption": "b",
-  "description": "Behandlingen er nødvendig af hensyn til en kontrakt med den registrerede"
+  "description": "Behandling er nødvendig for at overholde den dataansvarliges eller den registreredes arbejds-, sundheds- og socialretlige forpligtelser og specifikke rettigheder, for så vidt den har hjemmel i EU-retten eller medlemsstaternes nationale ret eller en kollektiv overenskomst i medfør af medlemsstaternes nationale ret, som giver fornødne garantier for den registreredes grundlæggende rettigheder og interesser."
 },
 {
   "identifier": "register-gdpr-p7-c",
   "caption": "c",
-  "description": "Behandlingen er nødvendig af hensyn til en retlig forpligtelse"
+  "description": "Behandling er nødvendig for at beskytte den registreredes eller en anden fysisk persons vitale interesser i tilfælde, hvor den registrerede fysisk eller juridisk ikke er i stand til at give samtykke."
 },
 {
   "identifier": "register-gdpr-p7-d",
   "caption": "d",
-  "description": "Behandlingen er nødvendig af hensyn til den registrerede eller en anden fysisk  persons vitale interesser"
+  "description": "Behandling foretages af en stiftelse, en sammenslutning eller et andet organ, som ikke arbejder med gevinst for øje, og hvis sigte er af politisk, filosofisk, religiøs eller fagforeningsmæssig art, som led i organets legitime aktiviteter og med de fornødne garantier, og på betingelse af at behandlingen alene vedrører organets medlemmer, tidligere medlemmer eller personer, der på grund af organets formål er i regelmæssig kontakt hermed, og at personoplysningerne ikke videregives uden for organet uden den registreredes samtykke."
 },
 {
   "identifier": "register-gdpr-p7-e",
   "caption": "e",
-  "description": "Behandling vedrører personoplysninger, som tydeligvis er offentliggjort af den registrerede"
+  "description": "Behandling vedrører personoplysninger, som tydeligvis er offentliggjort af den registrerede."
 },
 {
   "identifier": "register-gdpr-p7-f",
   "caption": "f",
-  "description": "Behandling er nødvendig af hensyn til en opgave i samfundets interesse eller offentlig myndighedsudøvelse"
+  "description": "Behandling er nødvendig, for at retskrav kan fastlægges, gøres gældende eller forsvares, eller når domstole handler i deres egenskab af domstol."
 },
 {
   "identifier": "register-gdpr-p7-g",
   "caption": "g",
-  "description": "Behandlingen er nødvendig af hensyn til en legitim interesse, som ikke overgås af den registreredes interesser eller rettigheder"
+  "description": "Behandling er nødvendig af hensyn til væsentlige samfundsinteresser på grundlag af EU-retten eller medlemsstaternes nationale ret og står i rimeligt forhold til det mål, der forfølges, respekterer det væsentligste indhold af retten til databeskyttelse og sikrer passende og specifikke foranstaltninger til beskyttelse af den registreredes grundlæggende rettigheder og interesser."
 },
 {
   "identifier": "register-gdpr-p7-h",
   "caption": "h",
-  "description": "Behandling er nødvendig med henblik på behandling eller forvaltning af social og sundhedsomsorg i henhold til lov"
+  "description": "Behandling er nødvendig med henblik på forebyggende medicin eller arbejdsmedicin til vurdering af arbejdstagerens erhvervsevne, medicinsk diagnose, ydelse af social- og sundhedsomsorg eller -behandling eller forvaltning af socialog sundhedsomsorg og -tjenester på grundlag af EU-retten eller medlemsstaternes nationale ret eller i henhold til en kontrakt med en sundhedsperson og underlagt de betingelser og garantier, der er omhandlet i stk. 3."
 },
 {
   "identifier": "register-gdpr-p7-i",
   "caption": "i",
-  "description": "Behandling er nødvendig af hensyn til samfundsinteresser på folkesundhedsområdet"
+  "description": "Behandling er nødvendig af hensyn til samfundsinteresser på folkesundhedsområdet, f.eks. beskyttelse mod alvorlige grænseoverskridende sundhedsrisici eller sikring af høje kvalitets- og sikkerhedsstandarder for sundhedspleje og lægemidler eller medicinsk udstyr på grundlag af EU-retten eller medlemsstaternes nationale ret, som fastsætter passende og specifikke foranstaltninger til beskyttelse af den registreredes rettigheder og frihedsrettigheder, navnlig tavshedspligt."
+},
+{
+  "identifier": "register-gdpr-p7-j",
+  "caption": "j",
+  "description": "Behandling er nødvendig til arkivformål i samfundets interesse, til videnskabelige eller historiske forskningsformål eller til statistiske formål i overensstemmelse med artikel 89, stk. 1, på grundlag af EU-retten eller medlemsstaternes nationale ret og står i rimeligt forhold til det mål, der forfølges, respekterer det væsentligste indhold af retten til databeskyttelse og sikrer passende og specifikke foranstaltninger til beskyttelse af den registreredes grundlæggende rettigheder og interesser."
 }
 ]

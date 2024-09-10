@@ -3,6 +3,7 @@ package dk.digitalidentity.model.entity.grid;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -53,5 +54,12 @@ public class RiskGrid {
     private RiskAssessment assessment;
 
     @Column
+    private Integer assessmentOrder;
+
+    @Column
     private String localizedEnums;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private ThreatAssessmentReportApprovalStatus threatAssessmentReportApprovalStatus;
 }

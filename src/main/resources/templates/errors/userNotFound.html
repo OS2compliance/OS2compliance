@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head th:replace="~{fragments/header :: head}"></head>
+
+<body class="jumping">
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex" style="justify-content: center;">
+                    <div>
+                        <h2 style="text-align: center;">
+                            Vi kunne ikke finde din bruger i systemet.<br>
+                            Kontakt din it-afdeling, hvis du mener dette er en fejl.
+                        </h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+</div>
+
+</body>
+
+</html>

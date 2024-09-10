@@ -31,10 +31,7 @@ function updateRelSearch(choices, search) {
 function standardsFormLoaded() {
     let editors = document.querySelectorAll(`textarea[name=description]`)
     for (let i=0; i<editors.length; ++i) {
-        ClassicEditor.create(editors[i])
-            .catch( error => {
-                toastService.error(error);
-            });
+        window.CreateCkEditor(editors[i], editor => {});
     }
     let docSelects = document.querySelectorAll(`select[name=documents]`)
     for (let i = 0; i < docSelects.length; i++) {

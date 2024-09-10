@@ -14,6 +14,7 @@ let DataProcessingComponent = function () {
     this.init = function (container, registeredCategories, informationChoices1, informationChoices2) {
         dataProcessingServices.push(this);
 
+        this.container = container;
         this.modalContainer = container.querySelector("#modalPersonOplysninger");
         if (this.modalContainer !== undefined) {
             this.modalContainer = document.getElementById("modalPersonOplysninger");
@@ -21,7 +22,6 @@ let DataProcessingComponent = function () {
             document.body.appendChild(this.modalContainer);
             this.addModalListeners(this.modalContainer);
         }
-        this.container = container;
         this.targetElement = container.querySelector(".categoriesTarget");
         this.registeredCategories = registeredCategories;
         this.informationChoices1 = informationChoices1;

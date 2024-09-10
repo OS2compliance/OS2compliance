@@ -18,11 +18,13 @@ public interface RiskMapper {
                 .id(riskGrid.getId())
                 .type(riskGrid.getType().getMessage())
                 .assessment(riskGrid.getAssessment() == null ? "NONE" : riskGrid.getAssessment().getMessage())
-                .ou(nullSafe(() -> riskGrid.getResponsibleOU().getName()))
-                .user(nullSafe(() -> riskGrid.getResponsibleUser().getName()))
+                .assessmentOrder(riskGrid.getAssessmentOrder())
+                .responsibleOU(nullSafe(() -> riskGrid.getResponsibleOU().getName()))
+                .responsibleUser(nullSafe(() -> riskGrid.getResponsibleUser().getName()))
                 .date(riskGrid.getDate().format(DK_DATE_FORMATTER))
                 .tasks(riskGrid.getTasks())
                 .name(riskGrid.getName())
+                .threatAssessmentReportApprovalStatus(riskGrid.getThreatAssessmentReportApprovalStatus().getMessage())
                 .build();
     }
 

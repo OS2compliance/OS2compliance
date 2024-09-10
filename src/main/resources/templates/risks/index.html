@@ -84,9 +84,16 @@
             header: "d-flex justify-content-end"
         };
 
+        // load saved state risks
+        const riskGridKey = window.location.pathname;
+        const riskGridKeySearch = riskGridKey + '-risk-search'
+        const savedSearchRisk = localStorage.getItem(riskGridKeySearch);
+        let initialRiskLoadDone = false;  // flag to ensure initial load only happens once
+
         const grid = new gridjs.Grid({
             className: defaultClassName,
             search: {
+                keyword: savedSearchRisk,
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -104,7 +111,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'type', 'ou', 'user', 'tasks', 'date', 'assessment'];
+                        const columnIds = ['id', 'name', 'type', 'responsibleOU.name', 'responsibleUser.name', 'tasks', 'date', 'threatAssessmentReportApprovalStatus', 'assessmentOrder'];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -144,6 +151,10 @@
                     width: '10%'
                 },
                 {
+                    name: "Status",
+                    width: '10%'
+                },
+                {
                     name: "Risikovurdering",
                     width: '10%',
                     formatter: (cell, row) => {
@@ -152,9 +163,17 @@
                             status = [
                                 '<div class="d-block badge bg-green">' + cell + '</div>'
                             ]
+                        } else if (cell === "Lysgrøn") {
+                            status = [
+                                '<div class="d-block badge bg-green-300">' + cell + '</div>'
+                            ]
                         } else if (cell === "Gul") {
                             status = [
                                 '<div class="d-block badge bg-yellow">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Orange") {
+                            status = [
+                                '<div class="d-block badge bg-orange">' + cell + '</div>'
                             ]
                         } else if (cell === "Rød") {
                             status = [
@@ -188,7 +207,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(risk =>
-                    [ risk.id, risk.name, risk.type, risk.ou, risk.user, risk.tasks, risk.date, risk.assessment]
+                    [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.threatAssessmentReportApprovalStatus, risk.assessment]
                 ),
                 total: data => data.totalCount
             },
@@ -208,6 +227,27 @@
                 }
             }
         }).render( document.getElementById( "risksDatatable" ));
+
+        // set state on grid
+        grid.on('ready', function() {
+
+            // only apply saved state on the first load
+            if (!initialRiskLoadDone) {
+
+                const searchInput = document.querySelector('#risksDatatable .gridjs-search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        if (this.value === '') {
+                            localStorage.removeItem(riskGridKeySearch);
+                        } else {
+                            localStorage.setItem(riskGridKeySearch, this.value);
+                        }
+                    });
+                }
+
+                initialRiskLoadDone = true;  // ensure this only runs once
+            }
+        });
     });
 
     function deleteClicked(riskId, name) {

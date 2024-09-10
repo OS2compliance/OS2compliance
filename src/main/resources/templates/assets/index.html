@@ -89,9 +89,16 @@
                 }))
             .catch(error => toastService.error(error))
 
+        // load saved state assets
+        const assetGridKey = window.location.pathname;
+        const assetGridKeySearch = assetGridKey + '-asset-search'
+        const savedSearchAsset = localStorage.getItem(assetGridKeySearch);
+        let initialAssetLoadDone = false;  // flag to ensure initial load only happens once
+
         const grid = new gridjs.Grid({
             className: defaultClassName,
             search: {
+                keyword: savedSearchAsset,
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -109,7 +116,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id','kitos', 'name', 'supplier', 'hasThirdCountryTransfer', 'assetType', 'responsibleUserNames', 'updatedAt', 'registers', 'assessment', 'assetStatus'];
+                        const columnIds = ['id','kitos', 'name', 'supplier', 'hasThirdCountryTransfer', 'assetType', 'responsibleUserNames', 'updatedAt', 'registers', 'assessmentOrder', 'assetStatusOrder'];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -172,9 +179,17 @@
                             assessment = [
                                 '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
                             ]
+                        } else if (cell === "Lysgrøn") {
+                            assessment = [
+                                '<div class="d-block badge bg-green-300" style="width: 60px">' + cell + '</div>'
+                            ]
                         } else if (cell === "Gul") {
                             assessment = [
                                 '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Orange") {
+                            assessment = [
+                                '<div class="d-block badge bg-orange" style="width: 60px">' + cell + '</div>'
                             ]
                         } else if (cell === "Rød") {
                             assessment = [
@@ -239,6 +254,27 @@
                 }
             }
         }).render( document.getElementById( "assetsDatatable" ));
+
+        // set state on grid
+        grid.on('ready', function() {
+
+            // only apply saved state on the first load
+            if (!initialAssetLoadDone) {
+
+                const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        if (this.value === '') {
+                            localStorage.removeItem(assetGridKeySearch);
+                        } else {
+                            localStorage.setItem(assetGridKeySearch, this.value);
+                        }
+                    });
+                }
+
+                initialAssetLoadDone = true;  // ensure this only runs once
+            }
+        });
     });
 
     function deleteClicked(assetId, name) {

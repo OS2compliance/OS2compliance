@@ -1,7 +1,5 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.OrganisationUnit;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
@@ -10,8 +8,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -51,16 +47,32 @@ public class RegisterGrid {
     private ConsequenceAssessment consequence;
 
     @Column
+    private Integer consequenceOrder;
+
+    @Column
     @Enumerated(EnumType.STRING)
     private RiskAssessment risk;
+
+    @Column
+    private Integer riskOrder;
 
     @Column
     @Enumerated(EnumType.STRING)
     private RegisterStatus status;
 
     @Column
+    private Integer statusOrder;
+
+    @Column
     private String localizedEnums;
 
     @Column
     private int assetCount;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private RiskAssessment assetAssessment;
+
+    @Column
+    private Integer assetAssessmentOrder;
 }

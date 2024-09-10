@@ -50,12 +50,18 @@ public class TaskGrid {
 	@Enumerated(EnumType.STRING)
 	private TaskRepetition taskRepetition;
 
+    @Column(name = "repetition_order")
+    private Integer taskRepetitionOrder;
+
 	@Column
 	private boolean completed;
 
     @Column(name = "result")
     @Enumerated(EnumType.STRING)
     private TaskResult taskResult;
+
+    @Column
+    private Integer taskResultOrder;
 
 	@Column
 	private String localizedEnums;

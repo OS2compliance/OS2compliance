@@ -7,34 +7,30 @@ function supportingStandartsViewLoaded() {
         var elem = editors[i];
         const editorId = elem.id;
         const index = elem.dataset.index;
-        ClassicEditor.create(elem)
-            .then(editor => {
-                var type = editor.sourceElement.dataset.type;
-                editor.editing.view.document.on('blur', () => {
-                    var id = editor.sourceElement.dataset.id;
-                    setField(id, type, editor.getData(), index)
-                });
-
-                if (type == 'DESCRIPTION') {
-                    editorDescriptionInstances[index] = {
-                                                editor: editor,
-                                                editing: false
-                                             };
-                } else if (type == 'NSIS_PRACTICE') {
-                    editorPracticeInstances[index] = {
-                                                        editor: editor,
-                                                        editing: false
-                                                     };
-                } else if (type == 'NSIS_SMART') {
-                    editorSmartInstances[index] = {
-                                                      editor: editor,
-                                                      editing: false
-                                                   };
-                }
-            })
-            .catch( error => {
-                toastService.error(error);
+        window.CreateCkEditor(elem, editor => {
+            var type = editor.sourceElement.dataset.type;
+            editor.editing.view.document.on('blur', () => {
+                var id = editor.sourceElement.dataset.id;
+                setField(id, type, editor.getData(), index)
             });
+
+            if (type == 'DESCRIPTION') {
+                editorDescriptionInstances[index] = {
+                    editor: editor,
+                    editing: false
+                };
+            } else if (type == 'NSIS_PRACTICE') {
+                editorPracticeInstances[index] = {
+                    editor: editor,
+                    editing: false
+                };
+            } else if (type == 'NSIS_SMART') {
+                editorSmartInstances[index] = {
+                    editor: editor,
+                    editing: false
+                };
+            }
+        });
     }
 
     const userSelects = document.querySelectorAll('.responsibleUserSelect');
@@ -151,8 +147,10 @@ function supportingStandartsViewLoaded() {
                 setField(id, "SELECTED", checked, index);
 
                 if (checked) {
+                    document.getElementById('statusTD' + index).style.display = "block";
                     document.getElementById('selectedTD' + index).textContent = "Tilvalgt";
                 } else {
+                    document.getElementById('statusTD' + index).style.display = "none";
                     document.getElementById('selectedTD' + index).textContent = "Fravalgt";
                 }
             });

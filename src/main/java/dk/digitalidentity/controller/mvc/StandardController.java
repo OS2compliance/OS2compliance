@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
+import dk.digitalidentity.model.dto.RelatedDTO;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.StandardTemplate;
@@ -11,7 +12,6 @@ import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardsService;
-import dk.digitalidentity.service.model.RelationDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -131,7 +131,7 @@ public class StandardController {
         final List<StandardTemplateSectionDTO> sections = new ArrayList<>();
         sections.add(standardSection("9"));
 
-        model.addAttribute("sectionName", "act");
+        model.addAttribute("sectionName", "check");
         model.addAttribute("sections", sections);
         return "standards/iso27001";
     }
@@ -181,8 +181,8 @@ public class StandardController {
         return "standards/supporting_view";
     }
 
-    private Map<Long, List<RelationDTO>> buildRelationsMap(final StandardTemplate template) {
-        final Map<Long, List<RelationDTO>> result = new HashMap<>();
+    private Map<Long, List<RelatedDTO>> buildRelationsMap(final StandardTemplate template) {
+        final Map<Long, List<RelatedDTO>> result = new HashMap<>();
 
         for (final StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
             for(final StandardTemplateSection child : standardTemplateSection.getChildren()) {

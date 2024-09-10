@@ -210,10 +210,12 @@ function CreateRiskService() {
         });
 
         this.assetChoicesSelect.passedElement.element.addEventListener('change', function() {
+            self.clearAssetValidationError();
             self.loadAssetSection();
         });
         let selectedRegisterElement = this.getScopedElementById("registerSelect");
         this.registerChoicesSelect.passedElement.element.addEventListener('change', function() {
+            self.clearRegisterValidationError();
             loadRegisterResponsible(selectedRegisterElement, self.userChoicesSelect);
         });
 
@@ -222,12 +224,15 @@ function CreateRiskService() {
         });
 
         const presentSelect = this.getScopedElementById('presentAtMeetingSelect');
-        if (assetSelect !== null) {
+        if (presentSelect !== null) {
             this.presentSelect = initUserSelect('presentAtMeetingSelect');
         }
 
         initFormValidationForForm("createRiskModal",
-            () => this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect));
+            () => {
+                return this.validateEntitySelection() &&
+                    this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect);
+            });
 
     }
 
@@ -245,6 +250,7 @@ function CreateRiskService() {
         this.getScopedElementById("inheritRow").style.display = 'none';
         this.registerChoicesSelect.removeActiveItems();
         this.assetChoicesSelect.removeActiveItems();
+        this.selectedType = selectedType;
     }
 
     this.userChanged = function (userUuid) {
@@ -255,6 +261,43 @@ function CreateRiskService() {
                     this.ouChoicesSelect.setChoiceByValue(data.uuid);
                 })).catch(error => toastService.error(error));
     }
+
+    this.clearRegisterValidationError = function() {
+        this.getScopedElementById("registerSelect").parentElement.classList.remove('is-invalid');
+        this.getScopedElementById("registerError").classList.remove('show');
+    }
+
+    this.clearAssetValidationError = function() {
+        this.getScopedElementById("assetSelect").parentElement.classList.remove('is-invalid');
+        this.getScopedElementById("assetError").classList.remove('show');
+    }
+
+    this.validateEntitySelection = function () {
+        let result = true;
+        if (this.selectedType === "ASSET") {
+            // Check that at least one asset is selected
+            let assetSelect = this.getScopedElementById("assetSelect");
+            let assetSelected = assetSelect.value !== "";
+            if (assetSelected) {
+                this.clearAssetValidationError();
+            } else {
+                assetSelect.parentElement.classList.add('is-invalid');
+                this.getScopedElementById("assetError").classList.add('show');
+            }
+            result &= assetSelected;
+        } else if (this.selectedType === 'REGISTER') {
+            let registerSelect = this.getScopedElementById("registerSelect");
+            let registerSelected = registerSelect.value !== "";
+            if (registerSelected) {
+                this.clearRegisterValidationError();
+            } else {
+                registerSelect.parentElement.classList.add('is-invalid');
+                this.getScopedElementById("registerError").classList.add('show');
+            }
+            result &= registerSelected;
+        }
+        return result;
+    };
 
     this.validateChoicesAndCheckboxesRisk = function (...choiceList) {
         let result = true;
@@ -275,7 +318,6 @@ function CreateRiskService() {
             organisation.classList.remove('is-invalid');
             this.getScopedElementById("checkboxError").classList.remove('show');
         }
-
         return result;
     }
 

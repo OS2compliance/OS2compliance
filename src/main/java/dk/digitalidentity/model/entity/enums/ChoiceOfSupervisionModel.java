@@ -17,7 +17,8 @@ public enum ChoiceOfSupervisionModel {
     SWORN_STATEMENT("Tro- og love erklæring"),
     INDEPENDENT_AUDIT("Uafhængig revisionserklæring uden typeangivelse"),
     SOC_STATEMENT("SOC-erklæring"),
-    DSD("DSD");
+    DSD("DSD"),
+    DBS("DBS");
 
     private final String message;
 

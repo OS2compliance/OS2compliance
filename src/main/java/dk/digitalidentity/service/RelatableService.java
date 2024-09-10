@@ -5,6 +5,7 @@ import dk.digitalidentity.model.entity.Relatable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -18,6 +19,9 @@ public class RelatableService {
     }
 
     public List<Relatable> findAllById(final List<Long> relationIds) {
+        if (relationIds == null || relationIds.isEmpty()) {
+            return Collections.emptyList();
+        }
         return relatableDao.findAllById(relationIds);
     }
 

@@ -6,6 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_adgang') or hasRole('ROLE_administrator')")
+@PreAuthorize("hasRole('ROLE_adgang')")
 public @interface RequireUser {
 }
