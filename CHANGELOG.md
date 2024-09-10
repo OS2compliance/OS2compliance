@@ -42,6 +42,12 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-167) Fortegnelse/Konsekvens- og risikovurdering: Risikovurderinger for de tilknyttede IT-systemer der er risikovurderet skal vises under Konsekvens- og Risikovurdering
 - (https://os2web.atlassian.net/browse/COMPLY-181) Fortegnelse/Konsekvens- og risikovurdering: Ved valg af konsekvens mangler der tekst med skalabeskrivelse – lige nu står der bare 1, 2, 3 og 4
 - (https://os2web.atlassian.net/browse/COMPLY-192) Fortegnelse/Konsekvens- og risikovurdering: Det skal ikke være Gns. vurdering som nu, men max. værdi for kolonnen som vises. Det skal også være max værdi der vises på fortegnelsessiden i kolonnen "konsekvensvurdering"
+- (https://os2web.atlassian.net/browse/COMPLY-195) Overblik over hvornår opgaver er løst
+- (https://os2web.atlassian.net/browse/COMPLY-196) Udvidelse af antal tegn i tekstfelt
+- (https://os2web.atlassian.net/browse/COMPLY-198) Signering af risikovurdering (Syddjurs)
+- (https://os2web.atlassian.net/browse/COMPLY-99)  Overblik over ansvarlige der er stoppet og mulighed for at massetildele ejerskab til en anden
+- (https://os2web.atlassian.net/browse/COMPLY-130) Mulighed for tilretning af mailtekster
+- (https://os2web.atlassian.net/browse/COMPLY-139) (Alle/forsider) Når man klikker tilbage, så skal man komme tilbage til den søgning og sortering man var ved
 
 ## [1.1.0] - 2024-03-15
 
