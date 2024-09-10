@@ -216,7 +216,7 @@ public class RiskRestController {
 
         if (template.isEnabled()) {
             String link = dto.sign
-                ? "<a href=\"" + environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "\">"
+                ? "<a href=\"" + environment.getProperty("di.saml.sp.baseUrl") + "/sign/preview/" + s3Document.getId() + "\">"
                 + environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "</a>"
                 : "";
 

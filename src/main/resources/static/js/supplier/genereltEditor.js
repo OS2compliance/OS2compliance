@@ -1,11 +1,10 @@
-ClassicEditor.create(document.querySelector( '#description-editor' ), {
-    licenseKey: ''
-}).then( editor => {
+
+document.addEventListener("DOMContentLoaded", () => {
+    window.CreateCkEditor(document.querySelector('#description-editor'), editor => {
         window.editor = editor;
-        setEditState(false)
-    }).catch( error => {
-        toastService.error(error);
+        setEditState(false);
     });
+});
 
 function setEditState(editable) {
     const editDesc = document.querySelector('#editDescId');
