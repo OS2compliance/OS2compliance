@@ -1,0 +1,22 @@
+.dpiaSchemaTh:hover {
+    background-color: #26a69a;
+    border: 0.5px solid #E8E8E8;
+    color: whitesmoke;
+}
+
+.dpiaSchemaTh, .dpiaSchemaTd {
+    border: 0.5px solid #E8E8E8;
+    padding: 8px;
+    overflow-wrap: break-word;
+    font-size: 11px;
+}
+
+.dpiaSchemaTh {
+    color: black;
+    font-weight: normal;
+}
+
+.dpiaSchemaSectionTr {
+    background-color: #f9fafc;
+    border: 0.5px solid #E8E8E8;
+}

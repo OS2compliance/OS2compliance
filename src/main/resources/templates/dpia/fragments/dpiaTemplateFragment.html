@@ -1,0 +1,103 @@
+<th:block th:fragment="dpiaTemplateFragment">
+    <table id="dpiaSchema" style="width: 100%">
+        <tbody>
+            <th:block th:each="section : ${templateSections}">
+                <tr class="dpiaSchemaSectionTr"  th:data-sectionid="${section.id}">
+                    <th class="dpiaSchemaTh">
+                        <em class="pli-arrow-up fs-4" th:id="'sectionIcon' + ${section.id}"></em> &nbsp;
+                        <span th:text="${section.heading}"></span>
+                        <span style="float:right;">
+                            <th:block th:if="${section.canOptOut}">
+                                <input type="checkbox" class="form-check-input" th:checked="${section.hasOptedOut}" autocomplete="off" th:id="'sectionCheckbox' + ${section.id}" th:data-sectionid="${section.id}" />
+                                <label style="margin-left: 5px;">Undlades</label> &nbsp;
+                            </th:block>
+                            <button th:if="${section.sortKey != minSectionSortKey}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortSectionHigherBtn" th:data-sectionid="${section.id}" th:data-sortkey="${section.sortKey}"><i class="pli-up fs-5"></i></button>
+                            <button th:if="${section.sortKey != maxSectionSortKey}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortSectionLowerBtn" th:data-sectionid="${section.id}" th:data-sortkey="${section.sortKey}"><i class="pli-down fs-5"></i></button>
+                        </span>
+                    </th>
+                </tr>
+                <tr th:classappend="'sectionRow' + ${section.id}">
+                    <td>
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="col-lg-3">Spørgsmål</th>
+                                    <th class="col-lg-5">Vejledning</th>
+                                    <th class="col-lg-3">Skabelon for besvarelse</th>
+                                    <th class="col-lg-1">Handlinger</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            <th:block th:if="${section.identifier == 'scope'}">
+                                <tr>
+                                    <td>Systemets navn</td>
+                                    <td></td>
+                                    <td>Skal automatisk indlæses fra aktivfanen ”Generelt”</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Systemejer</td>
+                                    <td></td>
+                                    <td>Skal automatisk indlæses fra aktivfanen ”Generelt”</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Systemtype</td>
+                                    <td></td>
+                                    <td>Skal automatisk indlæses fra aktivfanen ”Generelt”</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Leverandør</td>
+                                    <td></td>
+                                    <td>Skal automatisk indlæses fra aktivfanen ”Generelt”</td>
+                                    <td></td>
+                                </tr>
+                                <tr>
+                                    <td>Systemansvarlig</td>
+                                    <td></td>
+                                    <td>Skal automatisk indlæses fra aktivfanen ”Generelt”</td>
+                                    <td></td>
+                                </tr>
+                            </th:block>
+                            <tr th:each="question : ${section.dpiaTemplateQuestions}">
+                                <td th:text="${question.question}"></td>
+                                <td>
+                                    <div class="editor-container">
+                                        <textarea name="instructions" class="p-2" rows="4" th:data-questionid="${question.id}" th:text="${question.instructions}"></textarea>
+                                    </div>
+                                </td>
+                                <td th:utext="${question.answerTemplate}"></td>
+                                <td>
+                                    <button th:if="${question.sortKey != section.minQuestionSortKey}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortQuestionHigherBtn" th:data-questionid="${question.id}"><i class="pli-up fs-5"></i></button>
+                                    <button th:if="${question.sortKey != section.maxQuestionSortKey}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortQuestionLowerBtn" th:data-questionid="${question.id}"><i class="pli-down fs-5"></i></button>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+            </th:block>
+
+            <tr class="dpiaSchemaSectionTr" data-sectionid="Risks">
+                <th class="dpiaSchemaTh">
+                    <em class="pli-arrow-up fs-4" id="sectionIconRisks"></em> &nbsp;
+                    Risikovurderinger
+                </th>
+            </tr>
+            <tr class="sectionRowRisks">
+                <td>Denne sektion vil indeholde en liste af gennemførte risikovurderinger af aktivet. Her vil det være muligt at vælge hvilke, der skal medtages i det samlede materiale.</td>
+            </tr>
+
+            <tr class="dpiaSchemaSectionTr" data-sectionid="Conclusions">
+                <th class="dpiaSchemaTh">
+                    <em class="pli-arrow-up fs-4" id="sectionIconConclusions"></em> &nbsp;
+                    Konklusion
+                </th>
+            </tr>
+            <tr class="sectionRowConclusions">
+                <td>Denne sektion vil indeholde et tekstfelt til at skrive en konklusion.</td>
+            </tr>
+        </tbody>
+    </table>
+</th:block>

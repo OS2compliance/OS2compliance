@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
+<head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
+<script th:src="@{/js/dpia/schema.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/dpia_schema.css}" />
+
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
         <div class="content__header content__boxed overlapping">
@@ -11,11 +14,11 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">Konsekvensanalyse</li>
+                                <li class="breadcrumb-item active" aria-current="page">Skema til konsekvensanalyse</li>
                             </ol>
                         </nav>
                         <div class="row mt-4 mb-2">
-                            <h1 class="page-title mb-0">Konsekvensanalyse</h1>
+                            <h1 class="page-title mb-0">Skema til konsekvensanalyse</h1>
                         </div>
                     </div>
                     <div class="align-self-center d-inline-flex">
@@ -32,32 +35,15 @@
 
         <div class="content__boxed rounded-0">
             <div class="content__wrap">
-
                 <article class="d-md-flex gap-4">
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div class="accordion" id="dpiaSchema">
-                                    <div class="accordion-item mb-1" th:each="section : ${templateSections}">
-                                        <div class="accordion-header" th:id="'header_section_' + ${section.id}">
-                                            <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" th:data-bs-target="'#collapse_section_' + ${section.id}" aria-expanded="false">
-                                                <span class="badge">&nbsp</span>&nbsp <span th:text="${section.heading}"></span>
-                                            </button>
-                                        </div>
-                                        <div th:id="'collapse_section_' + ${section.id}" class="accordion-collapse collapse" data-bs-parent="#dpiaSchema" style="">
-                                            <div class="accordion-body">
-                                                <div class="row mb-3">
-                                                    Heeeej
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+                                <div id="schemaPlaceholder"></div>
                             </div>
                         </div>
                     </div>
                 </article>
-
             </div>
         </div>
     </section>
@@ -67,13 +53,17 @@
 </div>
 
 
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (textEditor = true, taskDialog = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        pageLoaded()
+    });
 
     /*]]>*/
 </script>

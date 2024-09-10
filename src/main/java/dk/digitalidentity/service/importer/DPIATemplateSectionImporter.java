@@ -32,6 +32,7 @@ public class DPIATemplateSectionImporter {
         for (DPIATemplateSectionDTO dto : values) {
             DPIATemplateSection dpiaTemplateSection = new DPIATemplateSection();
             dpiaTemplateSection.setSortKey(dto.getSortKey());
+            dpiaTemplateSection.setIdentifier(dto.getIdentifier());
             dpiaTemplateSection.setHeading(dto.getHeader());
             dpiaTemplateSection.setExplainer(dto.getExplainer());
             dpiaTemplateSection.setCanOptOut(dto.isCanOptOut());

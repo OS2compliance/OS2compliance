@@ -5,10 +5,16 @@ import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.DPIATemplateQuestion;
+import dk.digitalidentity.model.entity.DPIATemplateSection;
+import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.DPIATemplateQuestionService;
+import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.util.ReflectionHelper;
 import lombok.RequiredArgsConstructor;
@@ -19,15 +25,19 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 @Slf4j
@@ -40,6 +50,8 @@ public class AssetsRestController {
 	private final AssetGridDao assetGridDao;
 	private final AssetMapper mapper;
     private final UserService userService;
+    private final DPIATemplateQuestionService dpiaTemplateQuestionService;
+    private final DPIATemplateSectionService dpiaTemplateSectionService;
 
 
 	@PostMapping("list")
@@ -104,6 +116,113 @@ public class AssetsRestController {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
         assetService.save(asset);
+    }
+
+    record DPIASetFieldDTO(long id, String fieldName, String value) {}
+    @PutMapping("dpia/schema/question/setfield")
+    public void setDPIAQuestionField( @RequestBody final DPIASetFieldDTO dto) {
+        canSetDPIAQuestionFieldGuard(dto.fieldName);
+        final DPIATemplateQuestion dpiaTemplateQuestion = dpiaTemplateQuestionService.findById(dto.id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ReflectionHelper.callSetterWithParam(DPIATemplateQuestion.class, dpiaTemplateQuestion, dto.fieldName, dto.value);
+        dpiaTemplateQuestionService.save(dpiaTemplateQuestion);
+    }
+
+    @PutMapping("dpia/schema/section/setfield")
+    public void setDPIASectionField( @RequestBody final DPIASetFieldDTO dto) {
+        canSetDPIASectionFieldGuard(dto.fieldName);
+        // TODO duer ikke med sortKey her - alle andre skal også rykkes. Find de andre metoder.
+        final DPIATemplateSection dpiaTemplateSection = dpiaTemplateSectionService.findById(dto.id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ReflectionHelper.callSetterWithParam(DPIATemplateSection.class, dpiaTemplateSection, dto.fieldName, dto.value);
+        dpiaTemplateSectionService.save(dpiaTemplateSection);
+    }
+
+    @PostMapping("dpia/schema/section/{id}/up")
+    public ResponseEntity<?> reorderUp(@PathVariable("id") final long id) {
+        reorderSections(id, false);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("dpia/schema/section/{id}/down")
+    public ResponseEntity<?> reorderDown(@PathVariable("id") final long id) {
+        reorderSections(id, true);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("dpia/schema/question/{id}/up")
+    public ResponseEntity<?> reorderQuestionUp(@PathVariable("id") final long id) {
+        reorderQuestions(id, false);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @PostMapping("dpia/schema/question/{id}/down")
+    public ResponseEntity<?> reorderQuestionDown(@PathVariable("id") final long id) {
+        reorderQuestions(id, true);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private void reorderQuestions(final long id, final boolean backwards) {
+        final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final List<DPIATemplateQuestion> allQuestionsInSection = dpiaTemplateQuestionService.findAll().stream()
+            .filter(q -> !q.isDeleted() && q.getDpiaTemplateSection().getId() == question.getDpiaTemplateSection().getId())
+            .sorted(sortDPIATemplateQuestionComparator(backwards))
+            .toList();
+        if (!allQuestionsInSection.isEmpty()) {
+            DPIATemplateQuestion last = null;
+            for (final DPIATemplateQuestion currentQuestion : allQuestionsInSection) {
+                if (last != null && currentQuestion.getId() == id) {
+                    final Long newKey = last.getSortKey();
+                    last.setSortKey(currentQuestion.getSortKey());
+                    currentQuestion.setSortKey(newKey);
+                    dpiaTemplateQuestionService.save(last);
+                    dpiaTemplateQuestionService.save(currentQuestion);
+                    break;
+                }
+                last = currentQuestion;
+            }
+        }
+
+    }
+
+    private static Comparator<DPIATemplateQuestion> sortDPIATemplateQuestionComparator(final boolean backwards) {
+        final Comparator<DPIATemplateQuestion> comparator = Comparator.comparing(DPIATemplateQuestion::getSortKey);
+        return backwards ? comparator.reversed() : comparator;
+    }
+
+    private void reorderSections(final long id, final boolean backwards) {
+        final List<DPIATemplateSection> allSections = dpiaTemplateSectionService.findAll().stream()
+            .sorted(sortDPIATemplateSectionComparator(backwards))
+            .toList();
+        if (!allSections.isEmpty()) {
+            DPIATemplateSection last = null;
+            for (final DPIATemplateSection currentSection : allSections) {
+                if (last != null && currentSection.getId() == id) {
+                    final Long newKey = last.getSortKey();
+                    last.setSortKey(currentSection.getSortKey());
+                    currentSection.setSortKey(newKey);
+                    dpiaTemplateSectionService.save(last);
+                    dpiaTemplateSectionService.save(currentSection);
+                    break;
+                }
+                last = currentSection;
+            }
+        }
+
+    }
+
+    private static Comparator<DPIATemplateSection> sortDPIATemplateSectionComparator(final boolean backwards) {
+        final Comparator<DPIATemplateSection> comparator = Comparator.comparing(DPIATemplateSection::getSortKey);
+        return backwards ? comparator.reversed() : comparator;
+    }
+
+    private void canSetDPIAQuestionFieldGuard(final String fieldName) {
+        if (!fieldName.equals("instructions")) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+    }
+    private void canSetDPIASectionFieldGuard(final String fieldName) {
+        if (!(fieldName.equals("instructions") || fieldName.equals("hasOptedOut"))) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
     }
 
     private void canSetFieldGuard(final String fieldName) {

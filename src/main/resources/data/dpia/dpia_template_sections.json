@@ -1,6 +1,7 @@
 [
   {
     "sortKey": 0,
+    "identifier": "scope",
     "header": "Resume og scope",
     "canOptOut": false,
     "dpiaTemplateQuestions": [
@@ -18,6 +19,7 @@
   },
   {
     "sortKey": 1,
+    "identifier": "description",
     "header": "Systematisk beskrivelse af behandlingsaktiviteten ",
     "explainer": "Ifølge databeskyttelsesreglerne skal en konsekvensanalyse indeholde en systematisk beskrivelse af de planlagte behandlingsaktiviteter. Det er forudsætningen for at kunne foretage en fyldestgørende vurdering af aktivitetens lovlighed samt identificere alle relevante risici.<br/>Skemaet nedenfor er et udgangspunkt for, hvilke dele af behandlingsaktiviteten der skal beskrives. Spørgsmålene skal tjene som en rettesnor og behøver ikke nødvendigvis alle blive besvaret konkret og fyldestgørende. <br/>Det væsentligste er, at der er tale om en fuldstændig og helhedsorienteret beskrivelse af behandlingsaktiviteten som gør det muligt at foretage den nødvendige vurdering af lovligheden og identificere risiciene samt de relevante mitigerende foranstaltninger<br/>",
     "canOptOut": true,
@@ -68,6 +70,7 @@
   },
   {
     "sortKey": 2,
+    "identifier": "description_ai",
     "header": "Systematisk beskrivelse af aktiviteten ved AI",
     "explainer": "Ifølge databeskyttelsesreglerne skal en konsekvensanalyse indeholde en systematisk beskrivelse af de planlagte behandlingsaktiviteter. Det er forudsætningen for at kunne foretage en fyldestgørende vurdering af aktivitetens lovlighed samt identificere alle relevante risici.<br/>Skemaet nedenfor er et udgangspunkt for, hvilke dele af behandlingsaktiviteten der skal beskrives. Spørgsmålene skal tjene som en rettesnor og behøver ikke nødvendigvis alle blive besvaret konkret og fyldestgørende. <br/>Det væsentligste er, at der er tale om en fuldstændig og helhedsorienteret beskrivelse af behandlingsaktiviteten som gør det muligt at foretage den nødvendige vurdering af lovligheden og identificere risiciene samt de relevante mitigerende foranstaltninger.<br/>",
     "canOptOut": true,
@@ -123,6 +126,7 @@
   },
   {
     "sortKey": 3,
+    "identifier": "legal",
     "header": "Vurdering af lovlighed",
     "canOptOut": true,
     "dpiaTemplateQuestions": [
@@ -226,6 +230,7 @@
   },
   {
     "sortKey": 4,
+    "identifier": "legal_ai",
     "header": "Vurdering af lovlighed ved AI ",
     "canOptOut": true,
     "dpiaTemplateQuestions": [
@@ -384,6 +389,7 @@
   },
   {
     "sortKey": 5,
+    "identifier": "interest",
     "header": "Interessentinddragelse",
     "canOptOut": false,
     "dpiaTemplateQuestions": [
@@ -406,6 +412,7 @@
   },
   {
     "sortKey": 6,
+    "identifier": "management",
     "header": "Ledelsesgodkendelse",
     "canOptOut": false,
     "dpiaTemplateQuestions": [
@@ -417,6 +424,7 @@
   },
   {
     "sortKey": 7,
+    "identifier": "responsible",
     "header": "Ansvarlig for konsekvensanalyse",
     "canOptOut": false,
     "dpiaTemplateQuestions": [

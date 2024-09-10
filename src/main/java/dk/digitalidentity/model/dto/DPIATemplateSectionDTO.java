@@ -16,6 +16,7 @@ import java.util.List;
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class DPIATemplateSectionDTO {
     private long sortKey;
+    private String identifier;
     private String header;
     private String explainer;
     private boolean canOptOut;

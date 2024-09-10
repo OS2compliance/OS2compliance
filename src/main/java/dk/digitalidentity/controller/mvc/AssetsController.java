@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
@@ -19,11 +20,16 @@ import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceDPIA;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceMeasure;
+import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
+import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.RelationProperty;
+import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -48,8 +54,18 @@ import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.validation.Valid;
+import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
+import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
@@ -524,12 +540,31 @@ public class AssetsController {
 
     @GetMapping("dpia/schema")
     public String dpiaSchema(final Model model) {
+        return "dpia/schema";
+    }
+
+    record TemplateSectionDTO(long id, Long sortKey, String identifier, String heading, String explainer, boolean canOptOut, boolean hasOptedOut, List<DPIATemplateQuestion> dpiaTemplateQuestions, long minQuestionSortKey, long maxQuestionSortKey) {}
+    @GetMapping("dpia/schema/fragment")
+    @Transactional
+    public String editRelation(final Model model) {
         List<DPIATemplateSection> templateSections = dpiaTemplateSectionService.findAll().stream()
             .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
             .collect(Collectors.toList());
 
-        model.addAttribute("templateSections", templateSections);
-        return "dpia/schema";
+        List<TemplateSectionDTO> templateSectionDTOS = new ArrayList<>();
+        for (DPIATemplateSection section : templateSections) {
+            List<DPIATemplateQuestion> questions = section.getDpiaTemplateQuestions().stream().filter(q -> !q.isDeleted()).sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey)).collect(Collectors.toList());
+            long minSortKey = questions.get(0).getSortKey();
+            long maxSortKey = questions.get(questions.size() - 1).getSortKey();
+            TemplateSectionDTO dto = new TemplateSectionDTO(section.getId(), section.getSortKey(), section.getIdentifier(), section.getHeading(),
+                section.getExplainer(), section.isCanOptOut(), section.isHasOptedOut(), questions, minSortKey, maxSortKey);
+            templateSectionDTOS.add(dto);
+        }
+
+        model.addAttribute("templateSections", templateSectionDTOS);
+        model.addAttribute("minSectionSortKey", templateSections.get(0).getSortKey());
+        model.addAttribute("maxSectionSortKey", templateSections.get(templateSections.size() - 1).getSortKey());
+        return "dpia/fragments/dpiaTemplateFragment";
     }
 
 }

@@ -32,6 +32,9 @@ public class DPIATemplateSection {
     private Long sortKey;
 
     @Column(nullable = false)
+    private String identifier;
+
+    @Column(nullable = false)
     private String heading;
 
     @Column
