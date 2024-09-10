@@ -1,6 +1,8 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.dao.EmailTemplateDao;
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
@@ -31,7 +33,7 @@ import static org.mockito.Mockito.doReturn;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {NotifyService.class})
+@ContextConfiguration(classes = {NotifyService.class, EmailTemplateService.class})
 @EnableConfigurationProperties(value = DISAML_Configuration.class)
 @RecordApplicationEvents
 public class NotifyServiceTest {
@@ -41,6 +43,12 @@ public class NotifyServiceTest {
     private ApplicationEvents events;
     @MockBean
     private TaskService taskService;
+    @MockBean
+    private ResponsibleUserViewService responsibleUserViewService;
+    @MockBean
+    private SettingsService settingsService;
+    @MockBean
+    private EmailTemplateDao emailTemplateDao;
 
     @Test
     public void canSendNotification() {
@@ -48,6 +56,7 @@ public class NotifyServiceTest {
         events.clear();
         final Task dummyTask = createDummyTask();
         doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
+        mockDummyTemplate();
 
         // When
         notifyService.notifyTask(dummyTask.getId());
@@ -67,6 +76,7 @@ public class NotifyServiceTest {
         events.clear();
         final Task dummyTask = createDummyTask();
         doReturn(Optional.of(dummyTask)).when(taskService).findById(any());
+        mockDummyTemplate();
 
         // When
         IntStream.of(10).forEach(i -> {
@@ -99,9 +109,19 @@ public class NotifyServiceTest {
         assertThat(events.stream().toArray()).isEmpty();
     }
 
+
+    private void mockDummyTemplate() {
+        final EmailTemplate dummyTemplate = new EmailTemplate();
+        dummyTemplate.setEnabled(true);
+        dummyTemplate.setTitle("Deadline Notifikation");
+        dummyTemplate.setMessage("Din opgave opgave navn har deadline om {dage} dag(e).\n" +
+            "     Du kan finde opgaven her: {link}");
+        doReturn(dummyTemplate).when(emailTemplateDao).findByTemplateType(any());
+    }
+
     private static String expectedMessage() {
         return "Din opgave opgave navn har deadline om " + ChronoUnit.DAYS.between(LocalDate.now(), LocalDate.now().plusDays(5)) + " dag(e).\n" +
-            " Du kan finde opgaven her: https://os2compliance:8343/tasks/1";
+            "     Du kan finde opgaven her: <a href=\"https://os2compliance:8343/tasks/1\">https://os2compliance:8343/tasks/1</a>";
     }
 
     private static Task createDummyTask() {
@@ -111,6 +131,7 @@ public class NotifyServiceTest {
         t.setHasNotifiedResponsible(false);
         t.setNextDeadline(LocalDate.now().plusDays(5));
         t.setResponsibleUser(User.builder()
+                .name("Test Testrup")
                 .email("dev@null")
             .build());
         return t;
