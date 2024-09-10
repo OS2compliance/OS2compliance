@@ -32,15 +32,11 @@ function save(payload, tryEmail) {
 function pageLoaded() {
     let editors = document.querySelectorAll(`textarea[name=message]`)
     for (let i=0; i<editors.length; ++i) {
-        ClassicEditor.create(editors[i])
-            .then(editor => {
-                            editor.editing.view.document.on('blur', () => {
-                                currentEditingMessage = editor.getData();
-                            });
-                        })
-            .catch( error => {
-                toastService.error(error);
-            });
+        window.CreateCkEditor(editors[i], editor => {
+            editor.editing.view.document.on('blur', () => {
+                currentEditingMessage = editor.getData();
+            })
+        });
     }
 
     document.getElementById('templateDropdown').addEventListener('change', function() {
