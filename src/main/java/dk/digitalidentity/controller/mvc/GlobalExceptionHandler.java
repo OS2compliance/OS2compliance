@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 
 import java.util.Map;
@@ -31,6 +32,11 @@ public class GlobalExceptionHandler {
         }
         log.error("Unhandled error, method: {}, url: {}", request.getMethod(), request.getRequestURI(), e);
         return errorView(request, "errors/technicalError");
+    }
+
+    @ExceptionHandler(value = ResponseStatusException.class)
+    public ModelAndView defaultErrorHandler(final HttpServletRequest request, final ResponseStatusException e) throws Exception {
+        throw e;
     }
 
     @ExceptionHandler(value = {AccessDeniedException.class, UsernameNotFoundException.class})

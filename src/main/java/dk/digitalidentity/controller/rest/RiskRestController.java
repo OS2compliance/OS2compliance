@@ -1,29 +1,42 @@
 package dk.digitalidentity.controller.rest;
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.mapping.RiskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
+import dk.digitalidentity.model.dto.enums.ReportFormat;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.EmailTemplate;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
+import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.S3DocumentService;
+import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
@@ -33,6 +46,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -55,7 +69,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -84,6 +97,12 @@ public class RiskRestController {
     private final RiskGridDao riskGridDao;
     private final RiskMapper mapper;
     private final UserService userService;
+    private final PrecautionService precautionService;
+    private final OS2complianceConfiguration configuration;
+    private final S3Service s3Service;
+    private final S3DocumentService s3DocumentService;
+    private final Environment environment;
+    private final EmailTemplateService emailTemplateService;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -136,26 +155,91 @@ public class RiskRestController {
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), users);
     }
 
+    record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
     @Transactional
     @PostMapping("{id}/mailReport")
-    public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id) throws IOException {
-        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final List<EmailEvent> emailEvents = buildEmailEventsToRelatedResponsible(threatAssessment);
-        if (emailEvents.isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "No responsible found");
+    public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
+        ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
+        if (responsibleUser.getEmail() == null || responsibleUser.getEmail().isBlank()) {
+            return new ResponseEntity<>("Den valgte bruger har ikke nogen email tilknyttet, og rapporten kan derfor ikke sendes.", HttpStatus.BAD_REQUEST);
         }
-        try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(RISK_ASSESSMENT_TEMPLATE_DOC,
-            Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
-            final File outputFile = File.createTempFile(UUID.randomUUID().toString(), ".docx");
-            myDocument.write(new FileOutputStream(outputFile));
-            emailEvents.forEach(e -> e.getAttachments().add(
-                new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),
-                    "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".docx"))
-            );
+        if (dto.format == null) {
+            return new ResponseEntity<>("Der skal vælges et format", HttpStatus.BAD_REQUEST);
         }
-        emailEvents.forEach(eventPublisher::publishEvent);
+
+        final User user = userService.currentUser();
+        S3Document s3Document = null;
+
+        final EmailEvent emailEvent = EmailEvent.builder()
+            .email(responsibleUser.getEmail())
+            .build();
+
+        if (dto.format.equals(ReportFormat.WORD)) {
+            try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(RISK_ASSESSMENT_TEMPLATE_DOC,
+                Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
+                final File outputFile = File.createTempFile(UUID.randomUUID().toString(), ".docx");
+                myDocument.write(new FileOutputStream(outputFile));
+                emailEvent.getAttachments().add(new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),
+                    "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".docx"));
+            }
+        } else if (dto.format.equals(ReportFormat.PDF)) {
+            byte[] byteData = threatAssessmentService.getThreatAssessmentPdf(threatAssessment);
+            String uuid = UUID.randomUUID().toString();
+
+            if (dto.sign) {
+                String key = s3Service.upload(uuid + ".pdf", byteData);
+                s3Document = new S3Document();
+                s3Document.setS3FileKey(key);
+                s3Document = s3DocumentService.save(s3Document);
+                threatAssessment.setThreatAssessmentReportS3Document(s3Document);
+                threatAssessment.setThreatAssessmentReportApprovalStatus(ThreatAssessmentReportApprovalStatus.WAITING);
+                threatAssessment.setThreatAssessmentReportApprover(responsibleUser);
+                threatAssessment = threatAssessmentService.save(threatAssessment);
+            }
+
+            File pdfFile = File.createTempFile(uuid, ".pdf");
+            try (FileOutputStream fos = new FileOutputStream(pdfFile)) {
+                fos.write(byteData);
+            }
+            emailEvent.getAttachments().add(new EmailEvent.EmailAttachement(pdfFile.getAbsolutePath(),
+                "Ledelsesrapport for risikovurdering af " + threatAssessment.getName() + ".pdf"));
+        }
+
+        final String loggedInUserName = user != null ? user.getName() : "";
+        final String recipient = responsibleUser.getEmail();
+        final String messageFromSender = dto.message.replace("\n", "<br/>");
+        final String objectName = threatAssessment.getName();
+        EmailTemplate template = dto.sign
+            ? emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REPORT_TO_SIGN)
+            : emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REPORT);
+
+        if (template.isEnabled()) {
+            String link = dto.sign
+                ? "<a href=\"" + environment.getProperty("di.saml.sp.baseUrl") + "/sign/preview/" + s3Document.getId() + "\">"
+                + environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "</a>"
+                : "";
+
+            String title = formatTemplateString(template.getTitle(), recipient, objectName, messageFromSender, loggedInUserName, link);
+            String message = formatTemplateString(template.getMessage(), recipient, objectName, messageFromSender, loggedInUserName, link);
+
+            emailEvent.setMessage(message);
+            emailEvent.setSubject(title);
+        } else {
+            log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+        }
+
+        eventPublisher.publishEvent(emailEvent);
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private String formatTemplateString(String templateString, String recipient, String objectName, String messageFromSender, String sender, String link) {
+        return templateString.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient)
+            .replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName)
+            .replace(EmailTemplatePlaceholder.MESSAGE_FROM_SENDER.getPlaceholder(), messageFromSender)
+            .replace(EmailTemplatePlaceholder.SENDER.getPlaceholder(), sender)
+            .replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
     }
 
     record SetFieldDTO(@NotNull SetFieldType setFieldType, @NotNull ThreatDatabaseType dbType, Long id, String identifier, @NotNull String value) {}
@@ -167,26 +251,8 @@ public class RiskRestController {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
         }
 
-        ThreatAssessmentResponse response;
-        if (dto.dbType().equals(ThreatDatabaseType.CATALOG)) {
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(dto.identifier())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            response = threatAssessment.getThreatAssessmentResponses().stream()
-                .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
-                .findAny()
-                .orElse(null);
-            if (response == null) {
-                response = threatAssessmentService.createResponse(threatAssessment, threat, null);
-            }
-        } else if (dto.dbType().equals(ThreatDatabaseType.CUSTOM)) {
-            final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(dto.id())).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            response = threatAssessment.getThreatAssessmentResponses().stream()
-                .filter(r -> r.getCustomThreat() != null && Objects.equals(r.getCustomThreat().getId(), threat.getId()))
-                .findAny()
-                .orElse(null);
-            if (response == null) {
-                response = threatAssessmentService.createResponse(threatAssessment, null, threat);
-            }
-        } else {
+        final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
+        if (response == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
 
@@ -209,8 +275,86 @@ public class RiskRestController {
 
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.save(threatAssessment);
         threatAssessmentService.setThreatAssessmentColor(savedThreatAssessment);
+        eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(id).build());
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
+    @PostMapping("{id}/threats/setPrecautions")
+    public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
+        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        if (threatAssessment.getThreatAssessmentResponses() == null) {
+            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+        }
+
+        final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
+        if (response == null) {
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+        }
+
+        // create response precaution relations
+        final List<Relation> existingPrecautionRelations = relationService.findRelatedToWithType(response, RelationType.PRECAUTION);
+        for (final long value : dto.precautionIds) {
+            final Optional<Precaution> precautionOptional = precautionService.get(value);
+            if (precautionOptional.isPresent() && existingPrecautionRelations.stream().noneMatch(r -> (r.getRelationAId() == value && r.getRelationAType().equals(RelationType.PRECAUTION)) || (r.getRelationBId() == value && r.getRelationBType().equals(RelationType.PRECAUTION)))) {
+                relationService.addRelation(precautionOptional.get(), response);
+            }
+        }
+
+        // delete response precaution relations
+        final List<Relation> toDelete = new ArrayList<>();
+        for (final Relation existingPrecautionRelation : existingPrecautionRelations) {
+            final long idToLookFor = existingPrecautionRelation.getRelationAType().equals(RelationType.PRECAUTION) ? existingPrecautionRelation.getRelationAId() : existingPrecautionRelation.getRelationBId();
+            if (!dto.precautionIds.contains(idToLookFor)) {
+                toDelete.add(existingPrecautionRelation);
+            }
+        }
+        relationService.deleteAll(toDelete);
+
+        // update asset precaution relations
+        final List<Relation> relatedAssets = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
+        for (final Relation assetRelation : relatedAssets) {
+            final Optional<Asset> assetOptional = assetService.get(assetRelation.getRelationAType().equals(RelationType.ASSET) ? assetRelation.getRelationAId() : assetRelation.getRelationBId());
+            if (assetOptional.isPresent()) {
+                final Asset asset = assetOptional.get();
+                final List<Relation> existingAssetPrecautionRelations = relationService.findRelatedToWithType(asset, RelationType.PRECAUTION);
+                for (final long value : dto.precautionIds) {
+                    final Optional<Precaution> precautionOptional = precautionService.get(value);
+                    if (precautionOptional.isPresent() && existingAssetPrecautionRelations.stream().noneMatch(r -> (r.getRelationAId() == value && r.getRelationAType().equals(RelationType.PRECAUTION)) || (r.getRelationBId() == value && r.getRelationBType().equals(RelationType.PRECAUTION)))) {
+                        relationService.addRelation(precautionOptional.get(), asset);
+                    }
+                }
+            }
+        }
+
 
         return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private ThreatAssessmentResponse getRelevantResponse(final ThreatAssessment threatAssessment, final ThreatDatabaseType threatType, final Long threatId, final String threatIdentifier) {
+        ThreatAssessmentResponse response = null;
+        if (threatType.equals(ThreatDatabaseType.CATALOG)) {
+            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            response = threatAssessment.getThreatAssessmentResponses().stream()
+                .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
+                .findAny()
+                .orElse(null);
+            if (response == null) {
+                response = threatAssessmentService.createResponse(threatAssessment, threat, null);
+            }
+        } else if (threatType.equals(ThreatDatabaseType.CUSTOM)) {
+            final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(threatId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            response = threatAssessment.getThreatAssessmentResponses().stream()
+                .filter(r -> r.getCustomThreat() != null && Objects.equals(r.getCustomThreat().getId(), threat.getId()))
+                .findAny()
+                .orElse(null);
+            if (response == null) {
+                response = threatAssessmentService.createResponse(threatAssessment, null, threat);
+            }
+        }
+
+        return response;
     }
 
     @Transactional
@@ -228,6 +372,7 @@ public class RiskRestController {
             });
         threatAssessment.getCustomThreats().remove(customThreat);
         threatAssessmentService.save(threatAssessment);
+        eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(id).build());
 
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
@@ -258,60 +403,4 @@ public class RiskRestController {
         return fieldName.equals("name") || fieldName.equals("type") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
                 || fieldName.equals("date") || fieldName.equals("tasks") || fieldName.equals("assessment") || fieldName.equals("assessmentOrder");
     }
-
-    /**
-     * Will create email events, where the receiver is the related asset/register's responsible user
-     */
-    private List<EmailEvent> buildEmailEventsToRelatedResponsible(final ThreatAssessment threatAssessment) {
-        final User user = userService.currentUser();
-        final String responsibleUserName = user != null ? user.getName() : "";
-        if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
-            final List<EmailEvent> events = new ArrayList<>();
-            final List<Asset> assets =  relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
-                .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
-                .map(assetService::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get).collect(Collectors.toList());
-            for (final Asset asset : assets) {
-                if (asset.getResponsibleUsers() != null) {
-                    for (final User responsibleUser : asset.getResponsibleUsers()) {
-                        if (responsibleUser.getEmail() != null) {
-                            events.add(EmailEvent.builder()
-                                .email(responsibleUser.getEmail())
-                                .subject("Risikovurdering for " + asset.getName())
-                                .message(responsibleUserName + " har sendt dig en risikovurdering for systemet " + asset.getName())
-                                .build());
-                        }
-                    }
-                }
-            }
-
-            return  events;
-        } else if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.REGISTER) {
-            final List<EmailEvent> events = new ArrayList<>();
-            final List<Register> registers = relationService.findRelatedToWithType(threatAssessment, RelationType.REGISTER).stream()
-                .map(a -> a.getRelationAType() == RelationType.REGISTER ? a.getRelationAId() : a.getRelationBId())
-                .map(registerService::findById)
-                .filter(Optional::isPresent)
-                .map(Optional::get).collect(Collectors.toList());
-
-            for (final Register register : registers) {
-                if (register.getResponsibleUsers() != null) {
-                    for (final User responsibleUser : register.getResponsibleUsers()) {
-                        if (responsibleUser.getEmail() != null) {
-                            events.add(EmailEvent.builder()
-                                .email(responsibleUser.getEmail())
-                                .subject("Risikovurdering for " + register.getName())
-                                .message(responsibleUserName + " har sendt dig en risikovurdering for behandlingsaktiviteten " + register.getName())
-                                .build());
-                        }
-                    }
-                }
-            }
-
-            return events;
-        }
-        return Collections.emptyList();
-    }
-
 }

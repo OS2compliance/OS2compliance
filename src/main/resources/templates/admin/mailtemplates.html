@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head (textEditor = true)}"></head>
+<body class="jumping">
+<script th:src="@{/js/admin/mailtemplates.js}" defer></script>
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Mailskabeloner</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Mailskabeloner</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <form class="form-horizontal">
+                                            <div class="form-group row mb-2">
+                                                <label class="col-lg-2 control-label">Skabelon</label>
+
+                                                <div class="col-lg-8">
+                                                    <select class="form-control m-b col-lg-8" id="templateDropdown">
+                                                        <option th:each="template : ${templates}" th:value="${template.id}" th:text="${template.templateTypeText}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-lg-12">
+                                        <form th:each="template : ${templates}" class="form-horizontal templateForm" th:id="'template' + ${template.id}" style="display: none;">
+                                            <input type="hidden" name="id" th:value="${template.id}"/>
+                                            <input type="hidden" name="enabled" th:value="${template.enabled}" />
+
+                                            <div class="form-group row mb-2">
+                                                <label class="col-lg-2 control-label">Overskrift</label>
+                                                <div class="col-lg-8">
+                                                    <input name="title" th:value="${template.title}" class="form-control" />
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row mb-2">
+                                                <label class="col-lg-2 control-label">Brødtekst</label>
+                                                <div class="col-lg-8">
+                                                    <div class="editor-container">
+                                                        <textarea name="message" class="p-2" style="width:100%;" rows="10" th:text="${template.message}"></textarea>
+                                                    </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row mb-4">
+                                                <div class="col-lg-2"></div>
+                                                <div class="col-lg-10">
+                                                    <button type="button" style="margin-right: 5px;" class="btn btn-lg btn-primary col-xs-2 buttonSubmit">Gem</button>
+                                                    <button type="button" style="margin-right: 5px;" class="btn btn-lg btn-warning col-xs-2 buttonTest">Test email</button>
+                                                </div>
+                                            </div>
+
+                                            <div class="form-group row">
+                                                <div class="col-lg-2"></div>
+                                                <div class="col-lg-8">
+                                                    <h4>Pladsholdere:</h4>
+                                                    <p>Nedenfor kan du se en liste over alle de pladsholdere der kan anvendes i ovenstående skabelon. Der er en kort beskrivelse til hver pladsholder, så du nemt kan se hvad pladsholderen vil indeholde. Bemærk at listen af pladsholdere er forskellige for hver skabelon.</p>
+                                                    <table class="table">
+                                                        <thead>
+                                                            <tr>
+                                                                <th style="width: 250px;">Pladsholder</th>
+                                                                <th>Beskrivelse</th>
+                                                            </tr>
+                                                        </thead>
+                                                        <tbody>
+                                                            <tr th:each="placeholder : ${template.emailTemplatePlaceholders}">
+                                                                <td th:text="${placeholder.placeholder}"/>
+                                                                <td th:text="${placeholder.description}"/>
+                                                            </tr>
+                                                        </tbody>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='mailtemplates')}"></nav>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (textEditor = true, taskDialog = true)}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var restUrl = [[@{/rest/admin/mailtemplate/save}]];
+    +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        pageLoaded()
+    });
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

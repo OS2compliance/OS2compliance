@@ -47,8 +47,10 @@ public class DocumentRestController {
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.ASC, "name");
         }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
         Page<DocumentGrid> documents = null;
         if (StringUtils.isNotEmpty(search)) {
             // search and page

@@ -80,19 +80,27 @@ public class CatalogController {
             .findFirst()
             .orElseGet(() -> {
                 // New threat, make sure to set the sort key to max
-                final long currentMax = catalog.getThreats().stream()
-                    .filter(t -> StringUtils.equalsIgnoreCase(t.getThreatType(), threat.getThreatType()))
-                    .mapToLong(ThreatCatalogThreat::getSortKey)
-                    .filter(Objects::nonNull)
-                    .max().orElse(0L);
+                final long currentMax = getMaxSortKeyInType(threat.getThreatType(), catalog);
                 threat.setIdentifier(UUID.randomUUID().toString());
                 threat.setThreatCatalog(catalog);
                 threat.setSortKey(currentMax+1);
                 return threatCatalogService.saveThreat(threat);
             });
+        if (!existingThreat.getThreatType().equalsIgnoreCase(threat.getThreatType())) {
+            // Ohh boy they changed category type, we need a new
+            existingThreat.setSortKey(getMaxSortKeyInType(threat.getThreatType(), catalog) + 1);
+        }
         existingThreat.setThreatType(threat.getThreatType());
         existingThreat.setDescription(threat.getDescription());
         return "redirect:/catalogs/" + catalogIdentifier;
+    }
+
+    private static long getMaxSortKeyInType(final String threatType, final ThreatCatalog catalog) {
+        return catalog.getThreats().stream()
+            .filter(t -> StringUtils.equalsIgnoreCase(t.getThreatType(), threatType))
+            .mapToLong(ThreatCatalogThreat::getSortKey)
+            .filter(Objects::nonNull)
+            .max().orElse(0L);
     }
 
     @GetMapping("form")

@@ -213,6 +213,20 @@ function updateRelationsForStandardSection(choices, search) {
         .catch(error => toastService.error(error));
 }
 
+function updateRelationsPrecautionsOnly(choices, search) {
+    fetch( `/rest/relatable/autocomplete?types=PRECAUTION&search=${search}`)
+        .then(response => response.json()
+            .then(data => {
+                choices.setChoices(data.content.map(reg => {
+                    return {
+                        id: reg.id,
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60)
+                    }
+                }), 'id', 'name', true);
+            }))
+        .catch(error => toastService.error(error));
+}
+
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     userChoicesEditSelect = initUserSelect('userSelect');
@@ -230,14 +244,25 @@ function deleteRelation(element) {
     var relationId = element.dataset.relationid;
     var relationType = element.dataset.relationtype;
     var token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
-    fetch('/relatables/' + id + '/relations/' + relationId + '/' + relationType + '/remove', {
-        method: 'DELETE',
-        headers: {
-            'X-CSRF-TOKEN': token,
+    Swal.fire({
+        text: `Er du sikker på du vil slette relationen?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#03a9f4',
+        cancelButtonColor: '#df5645',
+        confirmButtonText: 'Ja',
+        cancelButtonText: 'Nej'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch('/relatables/' + id + '/relations/' + relationId + '/' + relationType + '/remove', {
+                method: 'DELETE',
+                headers: {
+                    'X-CSRF-TOKEN': token,
+                }
+            }).then(() => {
+                window.location.reload();
+            });
         }
-    }).then(() => {
-        window.location.reload();
     });
 }
 

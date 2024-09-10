@@ -103,6 +103,13 @@
 			header: "d-flex justify-content-end"
 		};
 
+        // load saved state task
+        const gridKey = window.location.pathname;
+        const gridKeySearch = gridKey + '-task-search'
+        const savedSearchTask = localStorage.getItem(gridKeySearch);
+
+        let initialTaskLoadDone = false;  // flag to ensure initial load only happens once
+
 		const updateUrl = (prev, query) => {
 			return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 		};
@@ -112,8 +119,9 @@
 			const gridTasks = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchTask,
 					server: {
-						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
+						url: (prev, keyword) =>  updateUrl(prev, `search=${keyword}`)
 					},
                     debounceTimeout: 1000
 				},
@@ -257,9 +265,37 @@
 				}
 			}).render(document.getElementById("tasksDatatable"));
 
-			const gridAssets = new gridjs.Grid({
+			// set state on grid
+            gridTasks.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialTaskLoadDone) {
+
+                    const searchInput = document.querySelector('#tasksDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(gridKeySearch);
+                            } else {
+                                localStorage.setItem(gridKeySearch, this.value);
+                            }
+                        });
+                    }
+
+                    initialTaskLoadDone = true;  // ensure this only runs once
+                }
+            });
+
+            // load saved state assets
+            const assetGridKey = window.location.pathname;
+            const assetGridKeySearch = assetGridKey + '-asset-search'
+            const savedSearchAsset = localStorage.getItem(assetGridKeySearch);
+            let initialAssetLoadDone = false;  // flag to ensure initial load only happens once
+
+		    const gridAssets = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchAsset,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -361,9 +397,37 @@
 				}
 			}).render(document.getElementById("assetsDatatable"));
 
+			// set state on grid
+            gridAssets.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialAssetLoadDone) {
+
+                    const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(assetGridKeySearch);
+                            } else {
+                                localStorage.setItem(assetGridKeySearch, this.value);
+                            }
+                        });
+                    }
+
+                    initialAssetLoadDone = true;  // ensure this only runs once
+                }
+            });
+
+            // load saved state registers
+            const registerGridKey = window.location.pathname;
+            const registerGridKeySearch = registerGridKey + '-register-search'
+            const savedSearchRegister = localStorage.getItem(registerGridKeySearch);
+            let initialRegisterLoadDone = false;  // flag to ensure initial load only happens once
+
 			const gridRegisters = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchRegister,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -482,9 +546,37 @@
 				}
 			}).render(document.getElementById("registersDatatable"));
 
-			const grid = new gridjs.Grid({
+			// set state on grid
+            gridRegisters.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialRegisterLoadDone) {
+
+                    const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(registerGridKeySearch);
+                            } else {
+                                localStorage.setItem(registerGridKeySearch, this.value);
+                            }
+                        });
+                    }
+
+                    initialRegisterLoadDone = true;  // ensure this only runs once
+                }
+            });
+
+
+            // load saved state documents
+            const documentGridKey = window.location.pathname;
+            const documentGridKeySearch = documentGridKey + '-document-search'
+            const savedSearchDocument = localStorage.getItem(documentGridKeySearch);
+            let initialDocumentLoadDone = false;  // flag to ensure initial load only happens once
+			const gridDocuments = new gridjs.Grid({
 				className: defaultClassName,
 				search: {
+				    keyword: savedSearchDocument,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -529,7 +621,7 @@
 						hidden: true
 					},
 					{
-						name: "Næste revidering",
+						name: "Næste revidering"
 					},
 					{
 						name: "Status",
@@ -595,6 +687,27 @@
 					}
 				}
 			}).render(document.getElementById("documentsDatatable"));
+
+			// set state on grid
+            gridDocuments.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialDocumentLoadDone) {
+
+                    const searchInput = document.querySelector('#documentsDatatable .gridjs-search-input');
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(documentGridKeySearch);
+                            } else {
+                                localStorage.setItem(documentGridKeySearch, this.value);
+                            }
+                        });
+                    }
+
+                    initialDocumentLoadDone = true;  // ensure this only runs once
+                }
+            });
 		});
 		/*]]>*/
 	</script>

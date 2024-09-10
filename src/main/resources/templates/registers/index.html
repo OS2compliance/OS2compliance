@@ -77,9 +77,16 @@
 		};
 
 		document.addEventListener("DOMContentLoaded", function(event) {
+		    // load saved state registers
+            const registerGridKey = window.location.pathname;
+            const registerGridKeySearch = registerGridKey + '-register-search'
+            const savedSearchRegister = localStorage.getItem(registerGridKeySearch);
+            let initialRegisterLoadDone = false;  // flag to ensure initial load only happens once
+
 			const grid = new gridjs.Grid({
 				className: defaultClassName,
 				 search: {
+				    keyword: savedSearchRegister,
 					server: {
 						url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
 					},
@@ -97,7 +104,7 @@
 					server: {
 						url: (prev, columns) => {
 							if (!columns.length) return prev;
-							const columnIds = ['id', 'name', 'responsibleOUNames', 'departmentNames', 'responsibleUserNames', 'updatedAt', 'consequenceOrder', 'riskOrder', 'statusOrder', 'assetCount'];
+							const columnIds = ['id', 'name', 'responsibleOUNames', 'departmentNames', 'responsibleUserNames', 'updatedAt', 'consequenceOrder', 'riskOrder', 'assetAssessmentOrder', 'statusOrder', 'assetCount'];
 							const col = columns[0]; // multiColumn false
 							const order = columnIds[col.index];
 							return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -168,6 +175,25 @@
 						},
 					},
 					{
+						name: "Risiko aktiver",
+						width: "100px",
+						formatter: (cell, row) => {
+							let assessment = '';
+							if (cell === "Grøn") {
+								assessment = '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Lysgrøn") {
+								assessment = '<div class="d-block badge bg-green-300" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Gul") {
+								assessment = '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Orange") {
+								assessment = '<div class="d-block badge bg-orange" style="width: 60px">' + cell + '</div>';
+							} else if (cell === "Rød") {
+								assessment = '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>';
+							}
+							return gridjs.html(assessment, 'div');
+						},
+					},
+					{
 						name: "Status",
                         width: '100px',
 						formatter: (cell, row) => {
@@ -207,7 +233,7 @@
 						'X-CSRF-TOKEN': token
 					},
 					then: data => data.content.map(register =>
-						[ register.id, register.name, register.responsibleOUs, register.departments, register.responsibleUsers, register.updatedAt, register.consequence, register.risk, register.status, register.assetCount ]
+						[ register.id, register.name, register.responsibleOUs, register.departments, register.responsibleUsers, register.updatedAt, register.consequence, register.risk, register.assetAssessment, register.status, register.assetCount ]
 					),
 					total: data => data.totalCount
 				},
@@ -227,6 +253,28 @@
 					}
 			  	}
 			}).render( document.getElementById( "registersDatatable" ));
+
+			// set state on grid
+            grid.on('ready', function() {
+
+                // only apply saved state on the first load
+                if (!initialRegisterLoadDone) {
+
+                    const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
+                    console.log(searchInput);
+                    if (searchInput) {
+                        searchInput.addEventListener('input', function() {
+                            if (this.value === '') {
+                                localStorage.removeItem(registerGridKeySearch);
+                            } else {
+                                localStorage.setItem(registerGridKeySearch, this.value);
+                            }
+                        });
+                    }
+
+                    initialRegisterLoadDone = true;  // ensure this only runs once
+                }
+            });
 		});
 
 		function deleteClicked(registerId, name) {

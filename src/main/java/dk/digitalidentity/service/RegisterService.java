@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,17 +18,11 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class RegisterService {
-
     private final RegisterDao registerDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
     private final DataProcessingDao dataProcessingDao;
-
-    public RegisterService(final RegisterDao registerDao, final ConsequenceAssessmentDao consequenceAssessmentDao, final DataProcessingDao dataProcessingDao) {
-        this.registerDao = registerDao;
-        this.consequenceAssessmentDao = consequenceAssessmentDao;
-        this.dataProcessingDao = dataProcessingDao;
-    }
 
     public Optional<Register> findById(final Long id) {
         return registerDao.findById(id);
@@ -44,6 +39,10 @@ public class RegisterService {
                 : r.getRelationBId())
             .toList();
         return registerDao.findAllById(lookupIds);
+    }
+
+    public List<Register> findAll() {
+        return registerDao.findByDeletedFalse();
     }
 
     public List<Register> findAllOrdered() {
@@ -103,4 +102,5 @@ public class RegisterService {
         consequenceAssessmentDao.delete(register.getConsequenceAssessment());
         registerDao.delete(register);
     }
+
 }

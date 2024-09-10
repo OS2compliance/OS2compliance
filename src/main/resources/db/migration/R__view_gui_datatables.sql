@@ -58,8 +58,10 @@ SELECT
     r.updated_at,
     ca.assessment as consequence,
     (CASE WHEN ca.assessment = 'GREEN' THEN 1
-          WHEN ca.assessment = 'YELLOW' THEN 2
-          WHEN ca.assessment = 'RED' THEN 3
+          WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
+          WHEN ca.assessment = 'YELLOW' THEN 3
+          WHEN ca.assessment = 'ORANGE' THEN 4
+          WHEN ca.assessment = 'RED' THEN 5
         END) as consequence_order,
     ta.assessment as risk,
     (CASE WHEN ta.assessment = 'GREEN' THEN 1
@@ -74,7 +76,14 @@ SELECT
           WHEN r.status = 'IN_PROGRESS' THEN 2
           WHEN r.status = 'READY' THEN 3
         END) as status_order,
-    (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count
+    (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count,
+    pr.prop_value as asset_assessment,
+    (CASE WHEN pr.prop_value = 'GREEN' THEN 1
+          WHEN pr.prop_value = 'LIGHT_GREEN' THEN 2
+          WHEN pr.prop_value = 'YELLOW' THEN 3
+          WHEN pr.prop_value = 'ORANGE' THEN 4
+          WHEN pr.prop_value = 'RED' THEN 5
+        END) as asset_assessment_order
 FROM registers r
 LEFT JOIN consequence_assessments ca on ca.register_id = r.id
 LEFT JOIN threat_assessments ta ON ta.id = (
@@ -87,6 +96,7 @@ LEFT JOIN registers_responsible_ous_mapping roum ON roum.register_id = r.id
 LEFT JOIN ous ou ON roum.ou_uuid = ou.uuid
 LEFT JOIN registers_departments_mapping rdm ON rdm.register_id = r.id
 LEFT JOIN ous d ON rdm.ou_uuid = d.uuid
+LEFT JOIN properties pr on pr.entity_id=r.id and pr.prop_key='asset_assessment'
 WHERE r.deleted = false
 GROUP BY r.id;
 
@@ -146,6 +156,7 @@ SELECT
     t.responsible_uuid,
     t.responsible_ou_uuid,
     t.threat_assessment_type as type,
+    t.threat_assessment_report_approval_status,
     t.updated_at as date,
     t.assessment,
     t.localized_enums,
@@ -191,3 +202,100 @@ FROM documents d
     LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted=false
 GROUP BY d.id;
+
+CREATE OR REPLACE
+VIEW view_responsible_users AS
+SELECT
+    uuid,
+    name,
+    user_id,
+    email,
+    active,
+    GROUP_CONCAT(DISTINCT id ORDER BY id SEPARATOR ',') AS responsible_relatable_ids
+FROM (
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        u.active,
+        t.id
+    FROM users u
+    LEFT JOIN tasks t ON u.uuid = t.responsible_uuid
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        u.active,
+        d.id
+    FROM users u
+    LEFT JOIN documents d ON u.uuid = d.responsible_uuid
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        u.active,
+        s.id
+    FROM users u
+    LEFT JOIN standard_sections s ON u.uuid = s.responsible_user_uuid
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        u.active,
+        su.id
+    FROM users u
+    LEFT JOIN suppliers su ON u.uuid = su.responsible_uuid
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        u.active,
+        ta.id
+    FROM users u
+    LEFT JOIN threat_assessments ta ON u.uuid = ta.responsible_uuid
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        u.active,
+        r.id
+    FROM users u
+    LEFT JOIN registers_responsible_users_mapping rr ON u.uuid = rr.user_uuid
+    LEFT JOIN registers r ON rr.register_id = r.id
+
+    UNION ALL
+
+    SELECT
+        u.uuid,
+        u.name,
+        u.user_id,
+        u.email,
+        u.active,
+        a.id
+    FROM users u
+    LEFT JOIN assets_responsible_users_mapping ar ON u.uuid = ar.user_uuid
+    LEFT JOIN assets a ON ar.asset_id = a.id
+) AS combined_ids
+GROUP BY uuid, name, user_id, email, active
+HAVING responsible_relatable_ids IS NOT NULL AND responsible_relatable_ids <> '';

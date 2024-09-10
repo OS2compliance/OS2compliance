@@ -3,12 +3,12 @@
 <body>
 <div th:fragment="purpose(register)">
     <div class="card shadow-none">
-        <form id="editPurposeId" class="row" action="#" th:action="@{/registers/__${register.id}__/update(section='purpose')}" th:object="${register}" name="purpose" method="post">
+        <form id="editPurposeId" class="row" action="#" th:action="@{/registers/__${register.id}__/purpose}" th:object="${register}" name="purpose" method="post">
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
-                    <button id="editPurposeBtn" type="button" class="btn btn-secondary btn-xs" onclick="setPurposeEditState(true)">Rediger</button>
-                    <button id="cancelPurposeBtn" type="button" onclick="setPurposeEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="editPurposeBtn" type="button" class="btn btn-secondary btn-xs" onclick="registerPurposeService.setPurposeEditState(true)">Rediger</button>
+                    <button id="cancelPurposeBtn" type="button" onclick="registerPurposeService.setPurposeEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
                     <button id="savePurposeBtn" form="editPurposeId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                 </div>
             </div>
@@ -76,11 +76,6 @@
             </div>
         </form>
     </div>
-    <script th:inline="javascript">
-        document.addEventListener("DOMContentLoaded", function(event) {
-            purposeFormLoaded();
-        });
-    </script>
 </div>
 </body>
 </html>

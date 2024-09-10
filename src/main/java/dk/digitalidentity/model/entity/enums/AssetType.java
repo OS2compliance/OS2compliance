@@ -7,7 +7,8 @@ import lombok.Getter;
 public enum AssetType {
     IT_SYSTEM("IT-system"),
     MODULE("Modul"),
-    SERVER("Server");
+    SERVER("Server"),
+    SERVICE("Ydelse");
     private final String message;
 
     AssetType(final String message) {

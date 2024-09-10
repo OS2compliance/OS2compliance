@@ -2,6 +2,8 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
+import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -10,6 +12,8 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
@@ -22,6 +26,7 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
+import dk.digitalidentity.service.RegisterAssetAssessmentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
@@ -30,6 +35,7 @@ import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -61,6 +67,7 @@ import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 @RequiredArgsConstructor
 public class RegisterController {
     private final RegisterService registerService;
+    private final RegisterAssetAssessmentService registerAssetAssessmentService;
     private final AssetService assetService;
     private final RelationService relationService;
     private final ChoiceService choiceService;
@@ -140,7 +147,6 @@ public class RegisterController {
         return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
-    @Transactional
     @PostMapping("{id}/update")
     public String update(@PathVariable final Long id,
                          @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
@@ -150,16 +156,10 @@ public class RegisterController {
                          @RequestParam(value = "departments", required = false) @Valid @UUID final Set<String> departmentUuids,
                          @RequestParam(value = "responsibleUsers", required = false) @Valid @UUID final Set<String> responsibleUserUuids,
                          @RequestParam(value = "criticality", required = false) final Criticality criticality,
-                         @RequestParam(value = "purpose", required = false) final String purpose,
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
-                         @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
-                         @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
                          @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
                          @RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
-                         @RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
-                         @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
                          @RequestParam(required = false) final String section,
-                         @RequestParam(value = "consent", required = false) final String consent,
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -172,41 +172,29 @@ public class RegisterController {
         if (responsibleOuUuids != null && !responsibleOuUuids.isEmpty()) {
             final List<OrganisationUnit> responsibleOus = organisationService.findAllByUuids(responsibleOuUuids);
             register.setResponsibleOus(responsibleOus);
+        } else {
+            register.setResponsibleOus(null);
         }
         if (departmentUuids != null && !departmentUuids.isEmpty()) {
             final List<OrganisationUnit> departmentOus = organisationService.findAllByUuids(departmentUuids);
             register.setDepartments(departmentOus);
+        } else {
+            register.setDepartments(null);
         }
         if (responsibleUserUuids != null && !responsibleUserUuids.isEmpty()) {
             final List<User> responsibleUsers = userService.findAllByUuids(responsibleUserUuids);
             register.setResponsibleUsers(responsibleUsers);
-        }
-        if (purpose != null) {
-            register.setPurpose(purpose);
+        } else {
+            register.setResponsibleUsers(null);
         }
         if (emergencyPlanLink != null) {
             register.setEmergencyPlanLink(emergencyPlanLink);
-        }
-        if (gdprChoices != null) {
-            register.setGdprChoices(gdprChoices);
-        }
-        if (informationObligationStatus != null) {
-            register.setInformationObligation(informationObligationStatus);
-        }
-        if (informationObligationDesc != null) {
-            register.setInformationObligationDesc(informationObligationDesc);
         }
         if (informationResponsible != null) {
             register.setInformationResponsible(informationResponsible);
         }
         if (registerRegarding != null) {
             register.setRegisterRegarding(registerRegarding);
-        }
-        if (purposeNotes != null) {
-            register.setPurposeNotes(purposeNotes);
-        }
-        if (consent != null) {
-            register.setConsent(consent);
         }
         if (criticality != null) {
             register.setCriticality(criticality);
@@ -216,6 +204,38 @@ public class RegisterController {
         }
         registerService.save(register);
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+    }
+
+    @Transactional
+    @PostMapping("{id}/purpose")
+    public String purpose(@PathVariable final Long id,
+                          @RequestParam(value = "purpose", required = false) final String purpose,
+                          @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
+                          @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
+                          @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
+                          @RequestParam(value = "consent", required = false) final String consent,
+                          @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
+        final Register register = registerService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (purpose != null) {
+            register.setPurpose(purpose);
+        }
+        if (gdprChoices != null) {
+            register.setGdprChoices(gdprChoices);
+        }
+        if (purposeNotes != null) {
+            register.setPurposeNotes(purposeNotes);
+        }
+        if (consent != null) {
+            register.setConsent(consent);
+        }
+        if (informationObligationStatus != null) {
+            register.setInformationObligation(informationObligationStatus);
+        }
+        if (informationObligationDesc != null) {
+            register.setInformationObligationDesc(informationObligationDesc);
+        }
+        return "redirect:/registers/" + id + "?section=purpose";
     }
 
     @Transactional
@@ -244,8 +264,10 @@ public class RegisterController {
         final ChoiceList gdprChoiceList = choiceService.findChoiceList("register-gdpr")
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find GDPR Choices"));
         final List<ChoiceValue> gdprChoices = sortChoicesNumeric(gdprChoiceList);
-        final List<Relatable> relatedAssets = relationService.findAllRelatedTo(register).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
-        final List<AssetSupplierMapping> assetSupplierMappingList = relatedAssets.stream().map(Asset.class::cast).map(r -> assetService.findMainSupplier(r)).collect(Collectors.toList());
+
+        final List<RelationDTO<Register, Relatable>> relatedAssets = relationService.findRelations(register, RelationType.ASSET);
+        final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
+        final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
         model.addAttribute("section", section);
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
@@ -265,7 +287,9 @@ public class RegisterController {
         model.addAttribute("threatAssessments", allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
             .collect(Collectors.toList()));
+        model.addAttribute("assetThreatAssessments", assetThreatAssessments);
         model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
+        model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
 
         return "registers/view";
@@ -284,6 +308,29 @@ public class RegisterController {
         relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
         registerService.delete(register);
+    }
+
+    @GetMapping("{id}/relations/{relatedId}/{relatedType}")
+    @Transactional
+    public String editRelation(final Model model, @PathVariable final long id, @PathVariable final long relatedId, @PathVariable final RelationType relatedType) {
+        final Register register = registerService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final Relation relation = relationService.findRelationEntity(register, relatedId, relatedType);
+        final Asset asset;
+        if (relation.getRelationAType() == RelationType.ASSET) {
+            asset = assetService.get(relation.getRelationAId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+        } else {
+            asset = assetService.get(relation.getRelationBId())
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR));
+        }
+        model.addAttribute("relatableId", register.getId());
+        model.addAttribute("relation", relation);
+        model.addAttribute("asset", asset);
+        model.addAttribute("relatedType", relatedType);
+        model.addAttribute("properties", relation.getProperties().stream()
+            .collect(Collectors.toMap(RelationProperty::getKey, RelationProperty::getValue)));
+        return "registers/fragments/editAssetRelation";
     }
 
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {

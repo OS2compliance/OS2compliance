@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
@@ -9,6 +10,8 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
+import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -16,6 +19,7 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.DocumentService;
+import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
@@ -67,6 +71,7 @@ public class TasksController {
     private final TaskService taskService;
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
+    private final EmailTemplateService emailTemplateService;
 
 
     @GetMapping
@@ -323,11 +328,29 @@ public class TasksController {
         setupRelations(task, relations);
         taskService.saveTask(task);
         if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
-            eventPublisher.publishEvent(EmailEvent.builder()
+            EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
+            if (template.isEnabled()) {
+                final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
+                final String recipient = task.getResponsibleUser().getName();
+                final String objectName = task.getName();
+                final String link = "<a href=\"" + url + "\">" + url + "</a>";
+
+                String title = template.getTitle();
+                title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+                title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+                title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+                String message = template.getMessage();
+                message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+                message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+                message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+                eventPublisher.publishEvent(EmailEvent.builder()
+                    .message(message)
+                    .subject(title)
                     .email(task.getResponsibleUser().getEmail())
-                    .subject("Du er tildelt ansvaret for en ny opgave.")
-                    .message(newTaskEmail(task))
-                .build());
+                    .build());
+            } else {
+                log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+            }
         }
         return "redirect:/tasks/" + task.getId();
     }
@@ -354,12 +377,5 @@ public class TasksController {
             days = DAYS.between(deadline, completed);
         }
         return days;
-    }
-
-    private String newTaskEmail(final Task task) {
-        final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
-        return "<p>Kære " + task.getResponsibleUser().getName() + "</p>" +
-            "<p>Du er blevet tildelt opgaven med navn: \"" + task.getName() +
-            "<p>Du kan finde opgaven her: <a href=\"" + url + "\">" + url + "</a>";
     }
 }

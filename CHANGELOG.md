@@ -7,6 +7,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [1.2.0] - 2024-09-10
+
 ### Fixed
 - (https://github.com/OS2compliance/OS2compliance/issues/126) Manglende validering af at et aktiv er valgt
 - (https://github.com/OS2compliance/OS2compliance/issues/125) Status fjernet fra fravalgte sektioner i iso2700X
@@ -19,9 +21,33 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/145) Kopiering af kontrol fejler
 - (https://github.com/OS2compliance/OS2compliance/issues/148) Sortering under mine opgaver
 - (https://github.com/OS2compliance/OS2compliance/issues/156) Der modtages mail med deadline trods opgaven er løst
+- (https://github.com/OS2compliance/OS2compliance/issues/150) Aktiver sorteres ikke alfabetisk (Herning)
+- (https://github.com/OS2compliance/OS2compliance/issues/151) Hvis først man sætter en ansvarlig på en behandlingsaktivitet, så kan denne ikke slettes / sættes til blank igen
+- (https://github.com/OS2compliance/OS2compliance/issues/153) Ikke muligt at flytte trussel i trusselskatalog
+- (https://github.com/OS2compliance/OS2compliance/issues/167) Fejl i risikovurderingen (Jammerbugt)
+- (https://github.com/OS2compliance/OS2compliance/issues/168) Tilknytning til slettet IT-system fjernes ikke automatisk på leverandøren når it-systemet slettes
+- (https://github.com/OS2compliance/OS2compliance/issues/172) Kan ikke rette Navn på Leverandør
+- (https://github.com/OS2compliance/OS2compliance/issues/173) Man kan ikke fjerne relationer på leverandør siden
+- (https://github.com/OS2compliance/OS2compliance/issues/179) Tab af data når formål & lovhjemmel opdateres
+- (https://github.com/OS2compliance/OS2compliance/issues/176) Søgning på navn fejler hvis ikke der søges på fulde navn
+- (https://github.com/OS2compliance/OS2compliance/issues/178) Fejl rækkefølge i NSIS tag rapport
+- (https://os2web.atlassian.net/browse/COMPLY-35) Fortegnelse/Formål & lovhjemmel: Artikel 9 er forkert
+- (https://os2web.atlassian.net/browse/COMPLY-32) Fortegnelse/Formål & lovhjemmel: Fjern teksten "§6" og "§7"
 
 ### Added
+- (https://github.com/OS2compliance/OS2compliance/issues/165) Oprettelse af en ny systemtype under aktiver der hedder ”Ydelse”
 - (https://os2web.atlassian.net/browse/COMPLY-160) Understøttelse af fk-adgangsstyring
+- (https://os2web.atlassian.net/browse/COMPLY-194) Fortegnelse: KL fortegnelsen skal opdateres med oprettelse af en ny behandlingsaktivitet
+- (https://os2web.atlassian.net/browse/COMPLY-197) Katalog over foranstaltninger (Syddjurs)
+- (https://os2web.atlassian.net/browse/COMPLY-167) Fortegnelse/Konsekvens- og risikovurdering: Risikovurderinger for de tilknyttede IT-systemer der er risikovurderet skal vises under Konsekvens- og Risikovurdering
+- (https://os2web.atlassian.net/browse/COMPLY-181) Fortegnelse/Konsekvens- og risikovurdering: Ved valg af konsekvens mangler der tekst med skalabeskrivelse – lige nu står der bare 1, 2, 3 og 4
+- (https://os2web.atlassian.net/browse/COMPLY-192) Fortegnelse/Konsekvens- og risikovurdering: Det skal ikke være Gns. vurdering som nu, men max. værdi for kolonnen som vises. Det skal også være max værdi der vises på fortegnelsessiden i kolonnen "konsekvensvurdering"
+- (https://os2web.atlassian.net/browse/COMPLY-195) Overblik over hvornår opgaver er løst
+- (https://os2web.atlassian.net/browse/COMPLY-196) Udvidelse af antal tegn i tekstfelt
+- (https://os2web.atlassian.net/browse/COMPLY-198) Signering af risikovurdering (Syddjurs)
+- (https://os2web.atlassian.net/browse/COMPLY-99)  Overblik over ansvarlige der er stoppet og mulighed for at massetildele ejerskab til en anden
+- (https://os2web.atlassian.net/browse/COMPLY-130) Mulighed for tilretning af mailtekster
+- (https://os2web.atlassian.net/browse/COMPLY-139) (Alle/forsider) Når man klikker tilbage, så skal man komme tilbage til den søgning og sortering man var ved
 
 ## [1.1.0] - 2024-03-15
 
