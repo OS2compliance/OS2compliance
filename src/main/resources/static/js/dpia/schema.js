@@ -1,23 +1,22 @@
 function refreshSchema() {
+    showSpinner();
     fetch(`/assets/dpia/schema/fragment`)
         .then(response => response.text()
             .then(data => {
                 let placeholder = document.getElementById('schemaPlaceholder');
                 placeholder.innerHTML = data;
 
+                /*
                 let editors = document.querySelectorAll(`textarea[name=instructions]`);
                 for (let i = 0; i < editors.length; ++i) {
-                    ClassicEditor.create(editors[i])
-                        .then(editor => {
-                            editor.editing.view.document.on('blur', () => {
-                                var textarea = editors[i];
-                                setFieldOnQuestion(textarea.dataset.questionid, "instructions", editor.getData());
-                            });
-                        })
-                        .catch(error => {
-                            toastService.error(error);
+                    window.CreateCkEditor(editors[i], editor => {
+                        editor.editing.view.document.on('blur', () => {
+                            var textarea = editors[i];
+                            setFieldOnQuestion(textarea.dataset.questionid, "instructions", editor.getData());
                         });
+                    });
                 }
+                */
 
                 // Bind foldable section events after content is loaded
                 const sectionRows = document.querySelectorAll('.dpiaSchemaSectionTr');
@@ -26,6 +25,11 @@ function refreshSchema() {
                     var sectionId = row.dataset.sectionid;
                     handleSectionRow(sectionId);
                     row.addEventListener('click', sectionRowClicked, false);
+                }
+
+                const openedSection = sessionStorage.getItem(`openedSchemaSectionId`);
+                if (openedSection !== null && openedSection !== undefined) {
+                    handleSectionRow(openedSection);
                 }
 
                 // Bind change event for checkboxes
@@ -58,8 +62,27 @@ function refreshSchema() {
                     var btn = questionSortLowerBtns[i];
                     btn.addEventListener('click', sortQuestionLower, false);
                 }
+
+                // bind click event delete question btns
+                const questionDeleteBtns = document.querySelectorAll('.deleteQuestion');
+                for (let i = 0; i < questionDeleteBtns.length; i++) {
+                    var btn = questionDeleteBtns[i];
+                    btn.addEventListener('click', deleteQuestion, false);
+                }
+
+                // bind click event edit question btns
+                const questionEditBtns = document.querySelectorAll('.editQuestion');
+                for (let i = 0; i < questionEditBtns.length; i++) {
+                    var btn = questionEditBtns[i];
+                    btn.addEventListener('click', editQuestion, false);
+                }
+
+                hideSpinner();
             }))
-        .catch(error => toastService.error(error));
+        .catch(error => {
+                           toastService.error(error);
+                           hideSpinner();
+                       });
 }
 
 function sortSectionHigher(event) {
@@ -96,15 +119,11 @@ function sortQuestionLower(event) {
                 .catch(error => toastService.error(error));
 }
 
-function setFieldOnQuestion(questionId, fieldName, value) {
-    var data = {
-        "id": questionId,
-        "fieldName": fieldName,
-        "value": value
-    };
-    putData(`/rest/assets/dpia/schema/question/setfield`, data)
-        .then(defaultResponseHandler)
-        .catch(defaultErrorHandler);
+function deleteQuestion() {
+    var questionId = parseInt(this.dataset.questionid);
+    deleteData(`/rest/assets/dpia/schema/question/${questionId}/delete`)
+      .then(response => refreshSchema())
+      .catch(defaultErrorHandler);
 }
 
 function setFieldOnSection(sectionId, fieldName, value) {
@@ -120,6 +139,7 @@ function setFieldOnSection(sectionId, fieldName, value) {
 
 function sectionRowClicked() {
     var sectionId = this.dataset.sectionid;
+    sessionStorage.setItem(`openedSchemaSectionId`, sectionId);
     handleSectionRow(sectionId);
 }
 
@@ -156,6 +176,51 @@ function handleSectionRow(sectionId) {
     }
 }
 
+function editQuestion() {
+    var questionId = parseInt(this.dataset.questionid);
+    fetch(`${questionFormUrl}?id=${questionId}`)
+        .then(response => response.text()
+            .then(data => {
+                let dialog = document.getElementById('editQuestionDialog');
+                dialog.innerHTML = data;
+                editDialog = new bootstrap.Modal(document.getElementById('editQuestionDialog'));
+
+                let editorTextArea = document.getElementById('editInstructions');
+                window.CreateCkEditor(editorTextArea, editor => {
+                    editor.editing.view.document.on('blur', () => {
+                        editorTextArea.value = editor.getData();
+                    });
+                });
+
+                editDialog.show();
+            }))
+        .catch(error => toastService.error(error));
+}
+
+function showSpinner() {
+    document.getElementById('spinner').style.display = 'block';
+    document.getElementById('schemaPlaceholder').style.display = 'none';
+}
+
+function hideSpinner() {
+    document.getElementById('spinner').style.display = 'none';
+    document.getElementById('schemaPlaceholder').style.display = 'block';
+}
+
 function pageLoaded() {
-    refreshSchema();  // refreshSchema now also handles event binding
+    fetch(questionFormUrl)
+                .then(response => response.text()
+                    .then(data => {
+                                    document.getElementById('createQuestionDialog').innerHTML = data;
+
+                                    let editorTextArea = document.getElementById('createInstructions');
+                                    window.CreateCkEditor(editorTextArea, editor => {
+                                        editor.editing.view.document.on('blur', () => {
+                                            editorTextArea.value = editor.getData();
+                                        });
+                                    });
+                                  }))
+                .catch(error => toastService.error(error));
+
+    refreshSchema();
 }

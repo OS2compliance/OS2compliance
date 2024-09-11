@@ -18,8 +18,6 @@ import org.hibernate.annotations.Where;
 @Table(name = "dpia_template_question")
 @Getter
 @Setter
-@SQLDelete(sql = "UPDATE threat_catalogs SET deleted = true WHERE identifier=?", check = ResultCheckStyle.COUNT)
-@Where(clause = "deleted=false")
 public class DPIATemplateQuestion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

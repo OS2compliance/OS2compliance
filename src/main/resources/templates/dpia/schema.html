@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (textEditor = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/dpia/schema.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/dpia_schema.css}" />
@@ -39,6 +39,20 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                                <div id="spinner" class="sk-circle-fade" style="display: none;">
+                                    <div class="sk-circle1 sk-circle"></div>
+                                    <div class="sk-circle2 sk-circle"></div>
+                                    <div class="sk-circle3 sk-circle"></div>
+                                    <div class="sk-circle4 sk-circle"></div>
+                                    <div class="sk-circle5 sk-circle"></div>
+                                    <div class="sk-circle6 sk-circle"></div>
+                                    <div class="sk-circle7 sk-circle"></div>
+                                    <div class="sk-circle8 sk-circle"></div>
+                                    <div class="sk-circle9 sk-circle"></div>
+                                    <div class="sk-circle10 sk-circle"></div>
+                                    <div class="sk-circle11 sk-circle"></div>
+                                    <div class="sk-circle12 sk-circle"></div>
+                                </div>
                                 <div id="schemaPlaceholder"></div>
                             </div>
                         </div>
@@ -48,16 +62,19 @@
         </div>
     </section>
 
+    <div class="modal fade" tabindex="-1" id="createQuestionDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editQuestionDialog" aria-hidden="true"></div>
+
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='dpia')}"></nav>
 </div>
-
 
 <div th:replace="~{fragments/footer :: footer (textEditor = true, taskDialog = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
+        var questionFormUrl = [[@{/assets/dpia/schema/question/form}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 

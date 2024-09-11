@@ -16,15 +16,16 @@
                         </span>
                     </th>
                 </tr>
-                <tr th:classappend="'sectionRow' + ${section.id}">
-                    <td>
+                <tr th:classappend="'sectionRow' + ${section.id}" style="border: 0.5px solid #E8E8E8;">
+                    <td style="padding: 30px;">
+                        <p th:utext="${section.explainer}"></p>
                         <table class="table">
                             <thead>
                                 <tr>
-                                    <th class="col-lg-3">Spørgsmål</th>
-                                    <th class="col-lg-5">Vejledning</th>
-                                    <th class="col-lg-3">Skabelon for besvarelse</th>
-                                    <th class="col-lg-1">Handlinger</th>
+                                    <th>Spørgsmål</th>
+                                    <th>Vejledning</th>
+                                    <th>Skabelon for besvarelse</th>
+                                    <th style="width: 150px;">Handlinger</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -63,12 +64,12 @@
                             <tr th:each="question : ${section.dpiaTemplateQuestions}">
                                 <td th:text="${question.question}"></td>
                                 <td>
-                                    <div class="editor-container">
-                                        <textarea name="instructions" class="p-2" rows="4" th:data-questionid="${question.id}" th:text="${question.instructions}"></textarea>
-                                    </div>
+                                    <p th:utext="${question.instructions}"></p>
                                 </td>
                                 <td th:utext="${question.answerTemplate}"></td>
                                 <td>
+                                    <button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 editQuestion" th:data-questionid="${question.id}"><i class="pli-pencil fs-5"></i></button>
+                                    <button type="button" class="btn btn-icon btn-outline-light btn-xs me-1 deleteQuestion" th:data-questionid="${question.id}"><i class="pli-trash fs-5"></i></button>
                                     <button th:if="${question.sortKey != section.minQuestionSortKey}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortQuestionHigherBtn" th:data-questionid="${question.id}"><i class="pli-up fs-5"></i></button>
                                     <button th:if="${question.sortKey != section.maxQuestionSortKey}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1 sortQuestionLowerBtn" th:data-questionid="${question.id}"><i class="pli-down fs-5"></i></button>
                                 </td>
@@ -85,8 +86,8 @@
                     Risikovurderinger
                 </th>
             </tr>
-            <tr class="sectionRowRisks">
-                <td>Denne sektion vil indeholde en liste af gennemførte risikovurderinger af aktivet. Her vil det være muligt at vælge hvilke, der skal medtages i det samlede materiale.</td>
+            <tr class="sectionRowRisks" style="border: 0.5px solid #E8E8E8;">
+                <td style="padding: 30px;">Denne sektion vil indeholde en liste af gennemførte risikovurderinger af aktivet. Her vil det være muligt at vælge hvilke, der skal medtages i det samlede materiale.</td>
             </tr>
 
             <tr class="dpiaSchemaSectionTr" data-sectionid="Conclusions">
@@ -95,8 +96,8 @@
                     Konklusion
                 </th>
             </tr>
-            <tr class="sectionRowConclusions">
-                <td>Denne sektion vil indeholde et tekstfelt til at skrive en konklusion.</td>
+            <tr class="sectionRowConclusions" style="border: 0.5px solid #E8E8E8;">
+                <td style="padding: 30px;">Denne sektion vil indeholde et tekstfelt til at skrive en konklusion.</td>
             </tr>
         </tbody>
     </table>

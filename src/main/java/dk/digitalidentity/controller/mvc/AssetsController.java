@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.mvc;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
@@ -25,11 +24,7 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
-import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
-import dk.digitalidentity.model.entity.RelationProperty;
-import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -47,6 +42,7 @@ import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
@@ -54,24 +50,15 @@ import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
 import jakarta.validation.Valid;
-import lombok.EqualsAndHashCode;
 import lombok.RequiredArgsConstructor;
-import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -98,7 +85,7 @@ import java.util.stream.Collectors;
 @RequestMapping("assets")
 @RequiredArgsConstructor
 public class AssetsController {
-	private final RelationService relationService;
+    private final RelationService relationService;
     private final ChoiceService choiceService;
 	private final SupplierService supplierService;
 	private final AssetMeasuresDao assetMeasuresDao;
@@ -111,6 +98,7 @@ public class AssetsController {
     private final AssetService assetService;
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
+    private final DPIATemplateQuestionService dpiaTemplateQuestionService;
 
 
 	@GetMapping
@@ -565,6 +553,68 @@ public class AssetsController {
         model.addAttribute("minSectionSortKey", templateSections.get(0).getSortKey());
         model.addAttribute("maxSectionSortKey", templateSections.get(templateSections.size() - 1).getSortKey());
         return "dpia/fragments/dpiaTemplateFragment";
+    }
+
+    record DPIATemplateQuestionForm(Long id, String title, String instructions, Long sectionId) {}
+    @GetMapping("dpia/schema/question/form")
+    public String questionForm(final Model model, @RequestParam(name = "id", required = false) final Long id) {
+        model.addAttribute("action", "schema/question/form");
+        if (id == null) {
+            model.addAttribute("question", new DPIATemplateQuestionForm(null, "", "", null));
+            model.addAttribute("formId", "createForm");
+            model.addAttribute("instructionsId", "createInstructions");
+            model.addAttribute("formTitle", "Nyt spørgsmål");
+        } else {
+            final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            model.addAttribute("question", new DPIATemplateQuestionForm(question.getId(), question.getQuestion(), question.getInstructions(), question.getDpiaTemplateSection().getId()));
+            model.addAttribute("formId", "editForm");
+            model.addAttribute("instructionsId", "editInstructions");
+            model.addAttribute("formTitle", "Rediger spørgsmål");
+        }
+
+        List<DPIATemplateSection> templateSections = dpiaTemplateSectionService.findAll().stream()
+            .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
+            .collect(Collectors.toList());
+        model.addAttribute("sections", templateSections);
+
+        return "dpia/fragments/questionForm";
+    }
+
+    @PostMapping("dpia/schema/question/form")
+    public String formPost(@ModelAttribute final DPIATemplateQuestionForm dpiaTemplateQuestionForm) {
+        DPIATemplateSection section = dpiaTemplateSectionService.findById(dpiaTemplateQuestionForm.sectionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+        if (!StringUtils.hasLength(dpiaTemplateQuestionForm.title)) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+        }
+
+        if (dpiaTemplateQuestionForm.id != null) {
+            DPIATemplateQuestion dpiaTemplateQuestion = dpiaTemplateQuestionService.findById(dpiaTemplateQuestionForm.id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            dpiaTemplateQuestion.setQuestion(dpiaTemplateQuestionForm.title);
+            dpiaTemplateQuestion.setInstructions(dpiaTemplateQuestionForm.instructions);
+
+            if (dpiaTemplateQuestion.getDpiaTemplateSection().getId() != section.getId()) {
+                long maxSortKey = section.getDpiaTemplateQuestions().stream().max(Comparator.comparing(q -> q.getSortKey())).get().getSortKey();
+                dpiaTemplateQuestion.setDpiaTemplateSection(section);
+                dpiaTemplateQuestion.setSortKey(maxSortKey);
+            }
+
+            dpiaTemplateQuestionService.save(dpiaTemplateQuestion);
+        } else {
+
+            long maxSortKey = section.getDpiaTemplateQuestions().stream().max(Comparator.comparing(q -> q.getSortKey())).get().getSortKey();
+
+            DPIATemplateQuestion dpiaTemplateQuestion = new DPIATemplateQuestion();
+            dpiaTemplateQuestion.setQuestion(dpiaTemplateQuestionForm.title);
+            dpiaTemplateQuestion.setInstructions(dpiaTemplateQuestionForm.instructions);
+            dpiaTemplateQuestion.setDpiaTemplateSection(section);
+            dpiaTemplateQuestion.setSortKey(maxSortKey);
+
+            section.getDpiaTemplateQuestions().add(dpiaTemplateQuestion);
+            dpiaTemplateSectionService.save(section);
+
+        }
+        return "redirect:/assets/dpia/schema";
     }
 
 }

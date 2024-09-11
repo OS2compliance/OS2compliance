@@ -7,8 +7,6 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
-import dk.digitalidentity.model.entity.ThreatCatalog;
-import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireUser;
@@ -26,7 +24,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -119,18 +117,9 @@ public class AssetsRestController {
     }
 
     record DPIASetFieldDTO(long id, String fieldName, String value) {}
-    @PutMapping("dpia/schema/question/setfield")
-    public void setDPIAQuestionField( @RequestBody final DPIASetFieldDTO dto) {
-        canSetDPIAQuestionFieldGuard(dto.fieldName);
-        final DPIATemplateQuestion dpiaTemplateQuestion = dpiaTemplateQuestionService.findById(dto.id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        ReflectionHelper.callSetterWithParam(DPIATemplateQuestion.class, dpiaTemplateQuestion, dto.fieldName, dto.value);
-        dpiaTemplateQuestionService.save(dpiaTemplateQuestion);
-    }
-
     @PutMapping("dpia/schema/section/setfield")
     public void setDPIASectionField( @RequestBody final DPIASetFieldDTO dto) {
         canSetDPIASectionFieldGuard(dto.fieldName);
-        // TODO duer ikke med sortKey her - alle andre skal også rykkes. Find de andre metoder.
         final DPIATemplateSection dpiaTemplateSection = dpiaTemplateSectionService.findById(dto.id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ReflectionHelper.callSetterWithParam(DPIATemplateSection.class, dpiaTemplateSection, dto.fieldName, dto.value);
         dpiaTemplateSectionService.save(dpiaTemplateSection);
@@ -157,6 +146,14 @@ public class AssetsRestController {
     @PostMapping("dpia/schema/question/{id}/down")
     public ResponseEntity<?> reorderQuestionDown(@PathVariable("id") final long id) {
         reorderQuestions(id, true);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @DeleteMapping("dpia/schema/question/{id}/delete")
+    public ResponseEntity<?> deleteQuestion(@PathVariable("id") final long id) {
+        final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        question.setDeleted(true);
+        dpiaTemplateQuestionService.save(question);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
@@ -214,13 +211,8 @@ public class AssetsRestController {
         return backwards ? comparator.reversed() : comparator;
     }
 
-    private void canSetDPIAQuestionFieldGuard(final String fieldName) {
-        if (!fieldName.equals("instructions")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
-        }
-    }
     private void canSetDPIASectionFieldGuard(final String fieldName) {
-        if (!(fieldName.equals("instructions") || fieldName.equals("hasOptedOut"))) {
+        if (!(fieldName.equals("hasOptedOut"))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
