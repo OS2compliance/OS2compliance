@@ -7,7 +7,7 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body" style="min-height: 200px;">
-                    <form id="completeTaskForm" class="row g-3 needs-validation" action="#" th:action="@{/tasks/complete}" method="post" th:object="${completionForm}" novalidate>
+                    <form th:name="${referral}" id="completeTaskForm" class="row g-3 needs-validation" action="#" th:action="${referral} ?  @{/tasks/complete} + '?referral=' + ${referral} :  @{/tasks/complete}" method="post" th:object="${completionForm}" novalidate>
                         <input name="taskId" th:value="${task.id}" type="hidden">
                         <div class="row mt-3" th:if="${task.taskType.name() == 'CHECK'}">
                             <label for="taskResultSelect" class="col-sm-4 col-form-label">Resultat </label>

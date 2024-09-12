@@ -51,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
@@ -203,7 +204,7 @@ public class TasksController {
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
     record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
     @GetMapping("{id}")
-    public String form(final Model model, @PathVariable final long id) {
+    public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -271,7 +272,7 @@ public class TasksController {
     @SuppressWarnings("ClassEscapesDefinedScope")
     @Transactional
     @PostMapping("complete")
-    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
+    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
@@ -305,6 +306,11 @@ public class TasksController {
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
         taskService.completeTask(task, taskLog);
+        if(!Objects.equals(null, referral)) {
+            if(referral.equals("dashboard")) {
+                return "redirect:/dashboard";
+            }
+        }
         return "redirect:/tasks";
     }
 
