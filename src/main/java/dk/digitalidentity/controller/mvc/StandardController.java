@@ -192,6 +192,7 @@ public class StandardController {
         return result;
     }
 
+    /**Deprecated, but too scared to delete incase it wrecks something else I am not aware of. **/
     @Transactional
     @PostMapping(value = "save", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
     public String save(@RequestParam("id") final Long id,

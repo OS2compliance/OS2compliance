@@ -41,6 +41,7 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
         tokenUser.setUsername(user.getUuid());
 
         final Set<SamlGrantedAuthority> authorities = new HashSet<>();
+
         for(final var a : tokenUser.getAuthorities()) {
             if (configuration.getAuthorityAdministrator().equals(a.getAuthority())) {
                 authorities.add(new SamlGrantedAuthority(Roles.ADMINISTRATOR));
