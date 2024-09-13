@@ -98,7 +98,7 @@ function submitForm(event, button, state) {
     let statusSelect = document.getElementById(`statusSelect${sectionId}`);
     let statusValue = statusSelect.value;  // Single select, can use .value
     let documentsSelect = document.getElementById(`documentsSelect${sectionId}`);
-    let readDescription = document.getElementById(`descriptionRead${sectionId}`).textContent;
+    let editDescript = document.querySelector("#editorContainer" + sectionId + "> div > div.ck.ck-editor__main > div > p").innerHTML;
 
     //manually handle submit with fetch
     let form = document.getElementById(`sectionForm${sectionId}`);
@@ -106,12 +106,13 @@ function submitForm(event, button, state) {
 
     let data = {
         id: sectionId,
-        description: readDescription,
+        description: editDescript,
         documents: [...documentsSelect.options].map(opt => opt.value),
         relations: [...relationsSelect.options].map(opt => opt.value),
         status: statusValue
     }
 
+    console.log(data)
     postData(form.getAttribute('action'), data)
         .then(response => {
             if (response.status == 200) {
@@ -155,9 +156,9 @@ function submitForm(event, button, state) {
                 
 
                 //update ui textbox for descript
-                let description = document.getElementById(`descriptionRead${sectionId}`);
-
-
+                let description = document.getElementById(`descriptionRead${sectionId}`)
+                description.innerHTML = editDescript;
+                
                 statusSelect.value = statusValue;
             }
             else {

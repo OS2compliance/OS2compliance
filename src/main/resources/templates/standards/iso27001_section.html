@@ -22,7 +22,7 @@
             <td th:text="${section.templateSection.section + ' ' + section.templateSection.description}"></td>
             <td>
                 <div class="editor-container" th:id="${'editorContainer' + section.id}" style="display: none">
-                    <textarea th:form="${'sectionForm' + section.id}" name="description" class="p-2" th:text="${section.description}"></textarea>
+                    <textarea th:form="${'sectionForm' + section.id}" name="description" class="p-2" th:text="${section.description}" ></textarea>
                 </div>
                 <div th:id="${'descriptionRead' + section.id}" style="display: block" th:utext="${section.description}"></div>
             </td>
