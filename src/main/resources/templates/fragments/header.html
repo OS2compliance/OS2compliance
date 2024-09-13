@@ -17,10 +17,21 @@
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.css}" />
 <link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
 <link th:if="${sweetalerts == true}" rel="stylesheet" th:href="@{/vendor/sweetalert2/sweetalert2.min.css}" />
-
+<link th:if="${textEditor == true}" rel="stylesheet" th:href="@{/vendor/ckeditor5/ckeditor5.css}" />
 
 <link rel="stylesheet" th:href="@{/css/global.css}" />
-
+<script type="importmap">
+    {
+        "imports": {
+            "ckeditor5": "/vendor/ckeditor5/ckeditor5.js",
+            "ckeditor5/": "/vendor/ckeditor5/"
+        }
+    }
+</script>
+<script th:if="${textEditor == true}" type="module">
+    import { CreateCkEditor } from "/js/create-ckeditor.js";
+    window.CreateCkEditor = CreateCkEditor;
+</script>
 
 </head>
 
@@ -31,7 +42,7 @@
 		<div class="header__brand">
 			<div class="brand-wrap">
 				<a href="./dashboard">
-					<img src="/img/OS2compliance_logo.svg" alt="OS2compliance Logo" width="120">
+                    <img src="/img/OS2compliance_logo.svg" alt="OS2compliance Logo" width="120">
 				</a>
 			</div>
 		</div>

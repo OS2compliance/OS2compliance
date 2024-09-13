@@ -2,7 +2,6 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.dao.RelationDao;
-import dk.digitalidentity.exception.BadRelationException;
 import dk.digitalidentity.model.dto.RelatedDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
 import dk.digitalidentity.model.entity.Relatable;
@@ -10,6 +9,7 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -27,6 +27,7 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
+@Slf4j
 @Component
 @RequiredArgsConstructor
 public class RelationService {
@@ -67,7 +68,11 @@ public class RelationService {
         final List<Relation> related = relationDao.findAllRelatedTo(relatable.getId());
         return related.stream()
                 .map(r -> Objects.equals(r.getRelationAId(), relatable.getId()) ? r.getRelationBId() : r.getRelationAId())
-                .map(rid -> relatableDao.findById(rid).orElseThrow(() -> new BadRelationException(rid)))
+                .map(rid -> relatableDao.findById(rid).orElseGet(() -> {
+                    log.error("Could not look up related entity {}, source relation type {}, id {}", rid, relatable.getRelationType(), relatable.getId());
+                    return null;
+                }))
+                .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }
 

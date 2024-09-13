@@ -152,7 +152,7 @@
 					{
 						name: "Opgavenavn",
 						formatter: (cell, row) => {
-							const url = tasksViewUrl + row.cells[0]['data'];
+							const url = tasksViewUrl + row.cells[0]['data'] + "?referral=dashboard";
 							return gridjs.html(`<a href="${url}">${cell}</a>`);
 						}
 					},
