@@ -17,16 +17,16 @@ import lombok.Setter;
 @Setter
 public class DBSAsset extends Relatable {
 
+    @Column
+    private Long dbsId;
+
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "dbs_supplier")
-    private DBSSUpplier supplier;
+    @JoinColumn(name = "dbs_supplier_id")
+    private DBSSupplier supplier;
 
     @Column
-    private String name;
-
-    @Column
-    private boolean applicable;
+    private Boolean applicable;
 
     @Override
     public RelationType getRelationType() {

@@ -15,8 +15,7 @@ public enum RelationType {
 	THREAT_ASSESSMENT("Risikovurdering"),
 	THREAT_ASSESSMENT_RESPONSE("Risikovurderingssvar"),
     PRECAUTION("Foranstaltning"),
-    DBSASSET("Asset"),
-    DBSSUPPLIER("Supplier")
+    DBSASSET("Asset")
     ;
 
 	private final String message;

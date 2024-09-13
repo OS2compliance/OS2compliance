@@ -1,15 +1,15 @@
 package dk.digitalidentity.task;
 
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
-import dk.digitalidentity.service.DBSService;
-import dk.digitalidentity.service.RegisterAssetAssessmentService;
-import jakarta.transaction.Transactional;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+
+import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.integration.dbs.DBSService;
+import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
 @Component
