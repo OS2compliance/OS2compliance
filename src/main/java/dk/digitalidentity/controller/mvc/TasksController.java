@@ -29,6 +29,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -44,14 +45,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
-import org.thymeleaf.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
@@ -306,10 +305,8 @@ public class TasksController {
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
         taskService.completeTask(task, taskLog);
-        if(!Objects.equals(null, referral)) {
-            if(referral.equals("dashboard")) {
-                return "redirect:/dashboard";
-            }
+        if ("dashboard".equals(referral)) {
+            return "redirect:/dashboard";
         }
         return "redirect:/tasks";
     }
