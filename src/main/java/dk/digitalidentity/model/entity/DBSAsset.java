@@ -18,7 +18,7 @@ import lombok.Setter;
 public class DBSAsset extends Relatable {
 
     @Column
-    private Long dbsId;
+    private String dbsId;
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)

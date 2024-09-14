@@ -1,10 +1,7 @@
 package dk.digitalidentity.model.entity;
 
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
-
-import org.springframework.format.annotation.DateTimeFormat;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -34,8 +31,7 @@ public class DBSSupplier {
     private String name;
 
     @Column
-    @DateTimeFormat(pattern = "dd/MM-yyyy")
-    private LocalDate nextRevision;
+    private String nextRevision;
 
     @OneToMany(mappedBy = "supplier", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DBSAsset> assets = new ArrayList<>();
