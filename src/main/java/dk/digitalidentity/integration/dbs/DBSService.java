@@ -12,7 +12,6 @@ import dk.dbs.api.model.ItSystem;
 import dk.dbs.api.model.PageEOItSystem;
 import dk.dbs.api.model.PageEOSupplier;
 import dk.dbs.api.model.Supplier;
-import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
 import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
 import dk.digitalidentity.model.entity.DBSAsset;
@@ -27,7 +26,6 @@ public class DBSService {
 
 	private final ItSystemsResourceApi itsystemResourceApi;
 	private final SupplierResourceApi supplierResourceApi;
-	private final DBSAssetDao dbsAssetDao;
 	private final DBSSupplierDao dbsSupplierDao;
 
 	public void sync(String cvr) {
@@ -38,10 +36,11 @@ public class DBSService {
 		itSystems = itSystems.stream().filter(i -> i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr))).toList();
 		
 		List<DBSSupplier> existingDBSSuppliers = dbsSupplierDao.findAll();
+		log.info("Found suppliers locally: " + existingDBSSuppliers.size());
 		List<DBSSupplier> toBeDeletedSuppliers = new ArrayList<>();
 		for (DBSSupplier dbsSupplier : existingDBSSuppliers) {
 			//Remove if no longer exists in DBS
-			if (suppliers.stream().noneMatch(s -> s.getId() == dbsSupplier.getDbsId())) {
+			if (suppliers.stream().noneMatch(s -> Objects.equals(s.getId(), dbsSupplier.getDbsId()))) {
 				toBeDeletedSuppliers.add(dbsSupplier);
 			}
 		}
@@ -50,51 +49,62 @@ public class DBSService {
 		List<DBSSupplier> toBeUpdated = new ArrayList<>();
 		for (Supplier supplier : suppliers) {
 			// Add if isn't locally stored
-			if (existingDBSSuppliers.stream().noneMatch(s -> s.getDbsId() == supplier.getId())) {
+			if (existingDBSSuppliers.stream().noneMatch(s -> Objects.equals(s.getDbsId(), supplier.getId()))) {
 				DBSSupplier dbsSupplier = new DBSSupplier();
 				dbsSupplier.setDbsId(supplier.getId());
 				dbsSupplier.setName(supplier.getName());
 				if (supplier.getNextRevision() != null) {
 					dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
 				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, dbsSupplier, itSystems);
+				List<DBSAsset> assets = getAssetsForSupplier(supplier, itSystems);
 				dbsSupplier.setAssets(assets);
 
 				toBeAdded.add(dbsSupplier);
 			} else {
 				//Update
-				DBSSupplier existingDBSSupplier = existingDBSSuppliers.stream().filter(s -> s.getDbsId() == supplier.getId()).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
-				existingDBSSupplier.setName(supplier.getName());
-				if (supplier.getNextRevision() != null) {
-					existingDBSSupplier.setNextRevision(supplier.getNextRevision().getValue());
-				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, existingDBSSupplier, itSystems);
-				// Remove if the DBS list doesn't contain it anymore
-				existingDBSSupplier.getAssets().removeIf(local -> assets.stream().noneMatch(x -> x.getDbsId() == local.getDbsId()));
-				// Add ItSystems(converted to DBSAssets) that are not already in the database
-				existingDBSSupplier.getAssets().addAll(assets.stream().filter(a -> existingDBSSupplier.getAssets().stream().noneMatch(x -> x.getDbsId() == a.getDbsId())).toList());
+				DBSSupplier existingDBSSupplier = existingDBSSuppliers.stream().filter(existing -> Objects.equals(existing.getDbsId(), supplier.getId())).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
 				
-				toBeUpdated.add(existingDBSSupplier);
-				dbsSupplierDao.save(existingDBSSupplier);
+				boolean changes = false;
+                if (!Objects.equals(existingDBSSupplier.getName(), supplier.getName())) {
+				    existingDBSSupplier.setName(supplier.getName());
+				    changes  = true;
+				}
+				if (supplier.getNextRevision() != null && !Objects.equals(existingDBSSupplier.getNextRevision(), supplier.getNextRevision().getValue())) {
+					existingDBSSupplier.setNextRevision(supplier.getNextRevision().getValue());
+					changes = true;
+				}
+				List<DBSAsset> assets = getAssetsForSupplier(supplier, itSystems);
+				
+				// Remove if the DBS list doesn't contain it anymore
+				if (existingDBSSupplier.getAssets().removeIf(local -> assets.stream().noneMatch(x -> Objects.equals(x.getDbsId(), local.getDbsId())))) {
+				    changes = true;
+				}
+				// Add ItSystems(converted to DBSAssets) that are not already in the database
+				if (existingDBSSupplier.getAssets().addAll(assets.stream().filter(a -> existingDBSSupplier.getAssets().stream().noneMatch(x -> Objects.equals(x.getDbsId(), a.getDbsId()))).toList())) {
+				    changes = true;
+				}
+				
+				if (changes) {
+				    toBeUpdated.add(existingDBSSupplier);
+				}
 			}
 		}
 		
 		log.info("Adding {} suppliers.", toBeAdded.size());
-		toBeAdded.forEach(supplier -> dbsSupplierDao.save(supplier));
+		toBeAdded.forEach(dbsSupplierDao::save);
 		log.info("Updating {} suppliers.", toBeUpdated.size());
-//		toBeUpdated.forEach(supplier -> dbsSupplierDao.save(supplier));
+		toBeUpdated.forEach(dbsSupplierDao::save);
 		log.info("Removing {} suppliers.", toBeDeletedSuppliers.size());
 		dbsSupplierDao.deleteAll(toBeDeletedSuppliers);
 	}
 
-	private List<DBSAsset> getAssetsForSupplier(Supplier supplier, DBSSupplier dbsSupplier, List<ItSystem> itSystems) {
+	private List<DBSAsset> getAssetsForSupplier(Supplier supplier, List<ItSystem> itSystems) {
 		List<DBSAsset> result = new ArrayList<>();
 		for (ItSystem itSystem : itSystems) {
-			if (itSystem.getSupplier().getId() == supplier.getId()) {
+			if (Objects.equals(itSystem.getSupplier().getId(), supplier.getId())) {
 				DBSAsset asset = new DBSAsset();
 				asset.setDbsId(itSystem.getUuid());
 				asset.setName(itSystem.getName());
-				asset.setSupplier(dbsSupplier);
 				result.add(asset);
 			}
 		}
