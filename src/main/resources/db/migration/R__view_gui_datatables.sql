@@ -299,3 +299,12 @@ FROM (
 ) AS combined_ids
 GROUP BY uuid, name, user_id, email, active
 HAVING responsible_relatable_ids IS NOT NULL AND responsible_relatable_ids <> '';
+
+CREATE OR REPLACE
+VIEW view_gridjs_dbs_assets AS
+SELECT
+    a.id,
+    a.name
+FROM dbs_asset a
+WHERE a.deleted = false
+GROUP BY a.id;

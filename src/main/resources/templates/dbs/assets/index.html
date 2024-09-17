@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
+<body class="jumping">
+<script th:src="@{/js/asset/form.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/assets.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Aktiver</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Aktiver</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+						<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+							<i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
+						</button>
+						<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+							<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+						</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                                <div id="assetsDatatable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='dbs_aktiver')}"></nav>
+</div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+
+<style>
+
+
+</style>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    /*[+
+        var gridDBSAssetsUrl = [[@{/rest/dbs/assets/list}]];
+    +]*/
+
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    const defaultClassName = {
+        table: 'table table-striped',
+        search: "form-control",
+        header: "d-flex justify-content-end"
+    };
+
+    const updateUrl = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    const editableCellAttributes = (data, row, col) => {
+        if (row) {
+            return {contentEditable: 'true', 'data-element-id': row.cells[0].data};
+        }
+        else {
+            return {}
+        }
+    };
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+
+        // load saved state assets
+        const assetGridKey = window.location.pathname;
+        console.log(assetGridKey);
+        const assetGridKeySearch = assetGridKey + '-asset-search'
+        const savedSearchAsset = localStorage.getItem(assetGridKeySearch);
+        let initialAssetLoadDone = false;  // flag to ensure initial load only happens once
+
+        const grid = new gridjs.Grid({
+            className: defaultClassName,
+            search: {
+                enabled: true,
+                keyword: savedSearchAsset,
+                server: {
+                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
+                },
+                debounceTimeout: 1000
+            },
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = ['id', 'name' ];
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
+                    }
+                }
+            },
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
+                },
+                {
+                    name: "Navn",
+                    'attributes': editableCellAttributes
+                }
+            ],
+            server:{
+                url: gridDBSAssetsUrl,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(asset =>
+                    [ asset.id, asset.name ],
+                ),
+                total: data => data.totalCount
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'aktiver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        }).render( document.getElementById( "assetsDatatable" ));
+
+        // set state on grid
+        grid.on('ready', function() {
+
+            // only apply saved state on the first load
+            if (!initialAssetLoadDone) {
+
+                const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        if (this.value === '') {
+                            localStorage.removeItem(assetGridKeySearch);
+                        } else {
+                            localStorage.setItem(assetGridKeySearch, this.value);
+                        }
+                    });
+                }
+
+                initialAssetLoadDone = true;  // ensure this only runs once
+            }
+        });
+    });
+
+    function deleteClicked(assetId, name) {
+        Swal.fire({
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#03a9f4',
+          cancelButtonColor: '#df5645',
+          confirmButtonText: 'Ja',
+          cancelButtonText: 'Nej'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                    .then(() => {
+                        window.location.reload();
+                    });
+          }
+        })
+    }
+
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

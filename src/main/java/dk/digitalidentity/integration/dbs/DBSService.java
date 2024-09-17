@@ -36,7 +36,6 @@ public class DBSService {
 		itSystems = itSystems.stream().filter(i -> i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr))).toList();
 		
 		List<DBSSupplier> existingDBSSuppliers = dbsSupplierDao.findAll();
-		log.info("Found suppliers locally: " + existingDBSSuppliers.size());
 		List<DBSSupplier> toBeDeletedSuppliers = new ArrayList<>();
 		for (DBSSupplier dbsSupplier : existingDBSSuppliers) {
 			//Remove if no longer exists in DBS
@@ -65,9 +64,9 @@ public class DBSService {
 				DBSSupplier existingDBSSupplier = existingDBSSuppliers.stream().filter(existing -> Objects.equals(existing.getDbsId(), supplier.getId())).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
 				
 				boolean changes = false;
-                if (!Objects.equals(existingDBSSupplier.getName(), supplier.getName())) {
-				    existingDBSSupplier.setName(supplier.getName());
-				    changes  = true;
+				if (!Objects.equals(existingDBSSupplier.getName(), supplier.getName())) {
+					existingDBSSupplier.setName(supplier.getName());
+					changes  = true;
 				}
 				if (supplier.getNextRevision() != null && !Objects.equals(existingDBSSupplier.getNextRevision(), supplier.getNextRevision().getValue())) {
 					existingDBSSupplier.setNextRevision(supplier.getNextRevision().getValue());
@@ -77,24 +76,24 @@ public class DBSService {
 				
 				// Remove if the DBS list doesn't contain it anymore
 				if (existingDBSSupplier.getAssets().removeIf(local -> assets.stream().noneMatch(x -> Objects.equals(x.getDbsId(), local.getDbsId())))) {
-				    changes = true;
+					changes = true;
 				}
 				// Add ItSystems(converted to DBSAssets) that are not already in the database
 				if (existingDBSSupplier.getAssets().addAll(assets.stream().filter(a -> existingDBSSupplier.getAssets().stream().noneMatch(x -> Objects.equals(x.getDbsId(), a.getDbsId()))).toList())) {
-				    changes = true;
+					changes = true;
 				}
 				
 				if (changes) {
-				    toBeUpdated.add(existingDBSSupplier);
+					toBeUpdated.add(existingDBSSupplier);
 				}
 			}
 		}
 		
-		log.info("Adding {} suppliers.", toBeAdded.size());
+		log.debug("Adding {} suppliers.", toBeAdded.size());
 		toBeAdded.forEach(dbsSupplierDao::save);
-		log.info("Updating {} suppliers.", toBeUpdated.size());
+		log.debug("Updating {} suppliers.", toBeUpdated.size());
 		toBeUpdated.forEach(dbsSupplierDao::save);
-		log.info("Removing {} suppliers.", toBeDeletedSuppliers.size());
+		log.debug("Removing {} suppliers.", toBeDeletedSuppliers.size());
 		dbsSupplierDao.deleteAll(toBeDeletedSuppliers);
 	}
 
