@@ -12,17 +12,14 @@ import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardsService;
-import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
@@ -33,11 +30,9 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -47,7 +42,6 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class StandardController {
     private final StandardsService standardsService;
-    private final HttpServletRequest httpServletRequest;
     private final RelationService relationService;
     private final StandardSectionDao standardSectionDao;
     private final StandardTemplateDao standardTemplateDao;
@@ -190,29 +184,6 @@ public class StandardController {
             }
         }
         return result;
-    }
-
-    /**Deprecated, but too scared to delete incase it wrecks something else I am not aware of. **/
-    @Transactional
-    @PostMapping(value = "save", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-    public String save(@RequestParam("id") final Long id,
-                       @RequestParam("description") final String description,
-                       @RequestParam(value = "documents", required = false) final Set<Long> documents,
-                       @RequestParam(value = "relations", required = false) final Set<Long> relations,
-                       @RequestParam("status") final StandardSectionStatus status) {
-        final StandardSection section = standardSectionDao.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final HashSet<Long> combinedRelations = new HashSet<>();
-        if (documents != null) {
-            combinedRelations.addAll(documents);
-        }
-        if (relations != null) {
-            combinedRelations.addAll(relations);
-        }
-        relationService.setRelationsAbsolute(section, combinedRelations);
-        section.setStatus(status);
-        section.setDescription(description);
-        return "redirect:" + httpServletRequest.getHeader("Referer");
     }
 
     private StandardTemplateSectionDTO standardSection(final String topic) {
