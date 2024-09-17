@@ -3,7 +3,9 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
+import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
 import dk.digitalidentity.model.dto.DataProtectionImpactDTO;
@@ -49,6 +51,7 @@ import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -80,6 +83,7 @@ import java.util.stream.Collectors;
 @RequestMapping("assets")
 @RequiredArgsConstructor
 public class AssetsController {
+    private final ApplicationEventPublisher eventPublisher;
 	private final RelationService relationService;
     private final ChoiceService choiceService;
 	private final SupplierService supplierService;
@@ -91,6 +95,7 @@ public class AssetsController {
     private final ThreatAssessmentService threatAssessmentService;
     private final AssetOversightService assetOversightService;
     private final AssetService assetService;
+    private final AssetMapper assetMapper;
     private final TaskService taskService;
 
 
@@ -346,6 +351,10 @@ public class AssetsController {
         existingAsset.setArchive(asset.isArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
+
+        eventPublisher.publishEvent(AssetUpdatedEvent.builder()
+                .asset(assetMapper.toEO(existingAsset))
+            .build());
 
         return "redirect:/assets/" + existingAsset.getId();
     }
