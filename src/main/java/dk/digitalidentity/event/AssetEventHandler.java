@@ -1,8 +1,10 @@
 package dk.digitalidentity.event;
 
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.kitos.KitosClientService;
 import dk.digitalidentity.model.api.AssetEO;
 import dk.digitalidentity.model.api.PropertyEO;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.scheduling.annotation.Async;
@@ -14,23 +16,23 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_USAGE_UU
 
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class AssetEventHandler {
     private final KitosClientService clientService;
-
-    public AssetEventHandler(final KitosClientService clientService) {
-        this.clientService = clientService;
-    }
+    private final OS2complianceConfiguration configuration;
 
     @Async
     @EventListener
     public void assetUpdated(final AssetUpdatedEvent event) {
         final AssetEO asset = event.getAsset();
-        findKitosUsageUuid(asset).ifPresent(uuid -> {
-            if (asset.getCriticality() != null) {
-                clientService.updateBusinessCritical(uuid, asset.getCriticality().equals(AssetEO.Criticality.CRITICAL));
-                log.info("Updated criticality for asset: {}", asset.getId());
-            }
-        });
+        if (configuration.getIntegrations().getKitos().isEnabled()) {
+            findKitosUsageUuid(asset).ifPresent(uuid -> {
+                if (asset.getCriticality() != null) {
+                    clientService.updateBusinessCritical(uuid, asset.getCriticality().equals(AssetEO.Criticality.CRITICAL));
+                    log.info("Updated criticality for asset: {}", asset.getId());
+                }
+            });
+        }
     }
 
     private static Optional<String> findKitosUsageUuid(final AssetEO asset) {
