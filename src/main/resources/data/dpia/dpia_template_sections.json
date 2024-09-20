@@ -38,7 +38,7 @@
         "sortKey": 2,
         "question": "Datastrømme",
         "instructions": "Beskriv hvilke persondata der vil blive behandlet som led i den omhandlede behandlingsaktivitet: Hvilke type(r) af data behandles? Omfatter det særligt beskyttelsesværdige data som fx lokationsdata, økonomiske forhold, sociale forhold eller lignende? Omfatter det særlige kategorier af data eller data om strafbare forhold? Hvor stort er omfanget af data? Hvordan indsamles, bruges og opbevares data og hvor længe? Hvor indsamles data fra? Hvor stammer data fra? Hvilke formål blev data oprindeligt indsamlet til? Hvad er varigheden af behandlingen (isoleret, midlertidig, regelmæssig, vedvarende)?",
-        "answerTemplate": "<p>Hvem har adgang til personoplysningerne: {personoplysninger_hvem}</p><p>Hvem har adgang til personoplysningerne: {personoplysninger_hvor_mange}</p><p>Typer af personoplysninger: {personoplysninger_typer}</p><p>Typer af personoplysninger fritekst: {personoplysninger_typer_fritekst}</p>"
+        "answerTemplate": "<b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvem}</p><b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvor_mange}</p><b>Typer af personoplysninger:</b><p>{personoplysninger_typer}</p><b>Typer af personoplysninger fritekst:</b><p>{personoplysninger_typer_fritekst}</p>"
       },
       {
         "sortKey": 3,
@@ -49,7 +49,7 @@
         "sortKey": 4,
         "question": "Kategorier af registrerede",
         "instructions": "Beskriv hvilke kategorier af registrerede data vedrører. Omfatter det børn, patienter, ældre eller andre sårbare grupper? Hvad er antallet af registrerede ved start og på lang sigt?",
-        "answerTemplate": "<p>Kategorier af registrerede: {kategorier_af_registrerede}</p>"
+        "answerTemplate": "<b>Kategorier af registrerede:</b><p>{kategorier_af_registrerede}</p>"
       },
       {
         "sortKey": 5,
@@ -94,7 +94,7 @@
         "sortKey": 3,
         "question": "Datastrømme",
         "instructions": "Beskriv hvilke persondata der vil blive behandlet som led i udvikling og drift af AI-løsningen: Hvilke type(r) af data behandles? Hvilke typer bruges til henholdsvis (i) udvikling, (ii) test og (iii) drift? Omfatter det særligt beskyttelsesværdige data som fx lokationsdata, økonomiske forhold, sociale forhold eller lignende? Omfatter det særlige kategorier af data eller data om strafbare forhold? Hvor stort er omfanget af data? Hvordan indsamles, bruges og opbevares data og hvor længe? Hvor indsamles data fra? Hvor stammer data fra? Hvilke formål blev data oprindeligt indsamlet til? Hvad er varigheden af behandlingen (isoleret, midlertidig, regelmæssig, vedvarende)?",
-        "answerTemplate": "<p>Hvem har adgang til personoplysningerne: {personoplysninger_hvem}</p><p>Hvem har adgang til personoplysningerne: {personoplysninger_hvor_mange}</p><p>Typer af personoplysninger: {personoplysninger_typer}</p><p>Typer af personoplysninger fritekst: {personoplysninger_typer_fritekst}</p>"
+        "answerTemplate": "<b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvem}</p><b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvor_mange}</p><b>Typer af personoplysninger:</b><p>{personoplysninger_typer}</p><b>Typer af personoplysninger fritekst:</b><p>{personoplysninger_typer_fritekst}</p>"
       },
       {
         "sortKey": 4,
@@ -105,7 +105,7 @@
         "sortKey": 5,
         "question": "Kategorier af registrerede",
         "instructions": "Beskriv hvilke kategorier af registrerede data vedrører. Omfatter det børn, patienter, ældre eller andre sårbare grupper? Hvad er antallet af registrerede ved start og på lang sigt?",
-        "answerTemplate": "<p>Kategorier af registrerede: {kategorier_af_registrerede}</p>"
+        "answerTemplate": "<b>Kategorier af registrerede:</b><p>{kategorier_af_registrerede}</p>"
       },
       {
         "sortKey": 6,
@@ -169,7 +169,7 @@
         "sortKey": 7,
         "question": "Princippet om opbevaringsbegrænsning",
         "instructions": "<u>Artikel 5, stk. 1, litra e, og præambelbetragtning nr. 39</u><br/>Beskriv vurderingen af, hvor længe det er nødvendigt at opbevare personoplysningerne, samt hvordan det sikres, at oplysningerne slettes efter udløbet af perioden.<br/>",
-        "answerTemplate": "<p>Hvor længe opbevares personoplysningerne: {personoplysninger_hvor_længe}</p><p>Link til sletteprocedure: {slettelink}</p>"
+        "answerTemplate": "<b>Hvor længe opbevares personoplysningerne:</b><p>{personoplysninger_hvor_længe}</p><b>Link til sletteprocedure:</b><p>{slettelink}</p>"
       },
       {
         "sortKey": 8,
@@ -283,7 +283,7 @@
         "sortKey": 9,
         "question": "Princippet om opbevaringsbegrænsning",
         "instructions": "<u>Artikel 5, stk. 1, litra e, og præambelbetragtning nr. 39</u><br/>Beskriv vurderingen af, hvor længe det er nødvendigt at opbevare trænings- og testdatasæt, samt hvordan det sikres, at data slettes efter udløbet af perioden<br/>",
-        "answerTemplate": "<p>Hvor længe opbevares personoplysningerne: {personoplysninger_hvor_længe}</p><p>Link til sletteprocedure: {slettelink}</p>"
+        "answerTemplate": "<b>Hvor længe opbevares personoplysningerne:</b><p>{personoplysninger_hvor_længe}</p><b>Link til sletteprocedure:</b><p>{slettelink}</p>"
       },
       {
         "sortKey": 10,

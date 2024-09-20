@@ -5,7 +5,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <form id="copyRiskModalForm" class="row g-3 needs-validation" action="#" th:action="@{/risks/__${risk.id}__/revision}" th:object="${risk}" method="post" novalidate>
+            <form id="revisionModalForm" class="row g-3 needs-validation" action="#" th:action="@{/assets/__${asset.id}__/revision}" th:object="${RevisionFormDTO}" method="post" novalidate>
                 <div class="row mt-3">
                     <label for="nextRevision" class="col-lg-4 col-form-label">Revideringsdato</label>
                     <div class="col-lg-8">
@@ -31,7 +31,7 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
-            <button type="submit" form="copyRiskModalForm" class="btn btn-primary">Gem</button>
+            <button type="submit" form="revisionModalForm" class="btn btn-primary">Gem</button>
         </div>
     </div>
 </div>

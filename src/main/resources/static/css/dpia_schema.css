@@ -20,3 +20,48 @@
     background-color: #f9fafc;
     border: 0.5px solid #E8E8E8;
 }
+
+blockquote {
+    border-left: 5px solid #ccc;
+    font-style: italic;
+    margin-left: 0;
+    margin-right: 0;
+    overflow: hidden;
+    padding-left: 1.5em;
+    padding-right: 1.5em;
+}
+
+/* styling for tables made by the editor*/
+figure {
+    width: 100% !important;
+}
+
+figure.table {
+    border-radius: 0;
+}
+
+figure.table table {
+    border: 1px double #b3b3b3;
+    border-collapse: collapse;
+    border-spacing: 0;
+    height: 100%;
+    width: 100%;
+}
+
+figure.table table tr {
+    border: 1px double #b3b3b3;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+figure.table table tr td {
+    border: 1px double #b3b3b3;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
+
+figure.table table tr th {
+    border: 1px double #b3b3b3;
+    border-collapse: collapse;
+    border-spacing: 0;
+}
