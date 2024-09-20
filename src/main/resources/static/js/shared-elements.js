@@ -63,6 +63,19 @@ function updateTags(choices, search) {
         .catch(error => toastService.error(error));
 }
 
+function updateAssets(targetChoice, search) {
+    fetch( `/rest/assets/autocomplete?search=${search}`)
+        .then(response => response.json()
+            .then(data => {
+                targetChoice.setChoices(data.content.map(a => {
+                    return {
+                        value: a.id,
+                        label: `${a.name}`}
+                }), 'value', 'label', true);
+            }))
+        .catch(error => toastService.error(error));
+}
+
 function initUserSelect(elementId, prefetch = true) {
     const userSelect = document.getElementById(elementId);
     const userChoices = initSelect(userSelect);
@@ -127,6 +140,21 @@ function initDocumentRelationSelect() {
         },
         false,
     );
+}
+
+function initAssetSelect(elementId, prefetch = true) {
+    const assetSelect = document.getElementById(elementId);
+    const assetChoices = initSelect(assetSelect);
+    if (prefetch) {
+        updateAssets(assetChoices, "");
+    }
+    assetSelect.addEventListener("search",
+        function(event) {
+            updateAssets(assetChoices, event.detail.value);
+        },
+        false,
+    );
+    return assetChoices;
 }
 
 function updateRelationsForDocument(choices, search) {

@@ -21,12 +21,12 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-						<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
-							<i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
-						</button>
-						<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-							<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-						</button>
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+                            <i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
+                        </button>
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
                     </div>
                 </div>
             </div>
@@ -61,6 +61,7 @@
 
     /*[+
         var gridDBSAssetsUrl = [[@{/rest/dbs/assets/list}]];
+        var gridDBSAssetsUpdateUrl = [[@{/rest/dbs/assets/update}]];
     +]*/
 
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -86,6 +87,8 @@
 
     document.addEventListener("DOMContentLoaded", function(event) {
 
+        var tableDiv = document.getElementById("assetsDatatable");
+
         // load saved state assets
         const assetGridKey = window.location.pathname;
         console.log(assetGridKey);
@@ -104,7 +107,7 @@
                 debounceTimeout: 1000
             },
             pagination: {
-                limit: 50,
+                limit: 5,
                 server: {
                     url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
                 }
@@ -115,7 +118,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name' ];
+                        const columnIds = ['id', 'name', 'supplier' ];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -129,7 +132,28 @@
                 },
                 {
                     name: "Navn",
-                    'attributes': editableCellAttributes
+                },
+                {
+                    name: "Assets",
+                    'attributes': editableCellAttributes,
+                    formatter: (cell, row) => {
+//                         console.log(cell);
+                        const dbsAssetId = row.cells[0]['data'];
+
+                        var options = '';
+                        for (let index = 0; index < cell.length; ++index) {
+                            const asset = cell[index];
+                            options += `<option value="${asset.id}" selected>${asset.name}</option>`;
+                        }
+
+                        return gridjs.html(
+                                `<select class="form-control form-select choices__input" data-trigger="" data-assetid="${dbsAssetId}" name="assets" id="assetsSelect${dbsAssetId}" hidden="" tabindex="-1" multiple="multiple">` +
+                                options +
+                                `</select>`);
+                    }
+                },
+                {
+                    name: "Supplier"
                 }
             ],
             server:{
@@ -139,7 +163,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.name ],
+                    [ asset.id, asset.name, asset.assets, asset.supplier ],
                 ),
                 total: data => data.totalCount
             },
@@ -158,11 +182,83 @@
                     'page': (page) => `Side ${page}`
                 }
             }
-        }).render( document.getElementById( "assetsDatatable" ));
+        }).render(tableDiv);
+        
+        let savedValue;
+
+        tableDiv.addEventListener('focusin', ev => {
+        	console.log(`IN:${ev.target.tagName}`);
+            if (ev.target.tagName === 'INPUT') {
+                savedValue = getChildrenToArray(ev.target.parentNode.children);
+                console.log(`SavedValue: ${savedValue}`);
+            }
+        });
+
+        tableDiv.addEventListener('focusout', ev => {
+        	console.log(`OUT:${ev.target.tagName}`);
+            if (ev.target.tagName === 'INPUT') {
+                const columnId = ev.target.closest('td').dataset.columnId;
+                console.log(`column: ${columnId}`);
+                const elementId = ev.target.closest('td').dataset.elementId
+                console.log(`element: ${elementId}`);
+
+                if (compareArrays(savedValue, getChildrenToArray(ev.target.parentNode.children)) == false) {
+                    console.log("calling update");
+                    fetch(gridDBSAssetsUpdateUrl, {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
+                        body: JSON.stringify({
+                            id: elementId,
+                            [ev.target.closest('td').dataset.columnId]: getChildrenToArray(ev.target.parentNode.children),
+                        }),
+                    });
+                }
+                savedValue = undefined;
+            }
+        });
+
+//         tableDiv.addEventListener('keydown', ev => {
+//             if (ev.target.tagName === 'INPUT') {
+//                 if (ev.key === 'Escape') {
+//                 	const choices = new Choices(Array.from(ev.target.parentNode.children).find(child => child.tagName === 'SELECT'));
+                	
+//                 	console.log(choices.getValue(true));
+                	
+//                     //choices.removeActiveItemsByValue
+                	
+//                     ev.target.blur();
+//                 }
+//                 else if (ev.key === 'Enter') {
+//                     ev.preventDefault();
+//                     ev.target.blur();
+//                 }
+//             }
+//         });
 
         // set state on grid
         grid.on('ready', function() {
-
+            // Initialize all Asset dropdowns
+        	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(x => x.id).forEach(x => {
+        	    initAssetSelect(x, false);
+        	    var element = document.getElementById(x);
+        	    if (element) {
+                element.addEventListener('removeItem',
+                    function(event) {
+                        console.log(x);
+                        console.log(element);
+	                    fetch(gridDBSAssetsUpdateUrl, {
+	                        method: 'POST',
+	                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
+	                        body: JSON.stringify({
+	                            id: element.dataset.assetid,
+	                            assets: Array.from(element.selectedOptions).map(op => op.value)
+	                        }),
+	                    });
+	                },false
+                );
+        	    }
+        	});
+        	
             // only apply saved state on the first load
             if (!initialAssetLoadDone) {
 
@@ -182,6 +278,26 @@
         });
     });
 
+    function compareArrays(arr1, arr2) {
+        if (!arr1)
+            return false;
+        if (!arr2)
+            return false;
+        if(arr1 === arr2)
+            return true;
+        if (arr1.length != arr2.length)
+            return false;
+        
+        arr1.sort();
+        arr2.sort();
+
+        return JSON.stringify(arr1) === JSON.stringify(arr2);
+    }
+    
+    function getChildrenToArray(children) {
+        return Array.from(Array.from(children).find(child => child.tagName === 'SELECT').selectedOptions).map(op => op.value)
+    }
+    
     function deleteClicked(assetId, name) {
         Swal.fire({
           text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,

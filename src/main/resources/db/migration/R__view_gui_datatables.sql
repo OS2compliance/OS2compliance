@@ -304,7 +304,12 @@ CREATE OR REPLACE
 VIEW view_gridjs_dbs_assets AS
 SELECT
     a.id,
-    a.name
+    a.name,
+    s.name as supplier,
+    GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',') AS assets 
 FROM dbs_asset a
+    LEFT JOIN dbs_supplier s on a.dbs_supplier_id = s.id
+    LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
+    LEFT JOIN assets a2 on r.relation_a_id = a2.id OR r.relation_b_id = a2.id
 WHERE a.deleted = false
 GROUP BY a.id;

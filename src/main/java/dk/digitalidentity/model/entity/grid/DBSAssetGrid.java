@@ -1,8 +1,13 @@
 package dk.digitalidentity.model.entity.grid;
 
+import java.util.List;
+
 import org.hibernate.annotations.Immutable;
 
+import dk.digitalidentity.config.AssetListConverter;
+import dk.digitalidentity.model.entity.Asset;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
@@ -21,8 +26,12 @@ public class DBSAssetGrid {
 	@Column
 	private String name;
 
-//    @Column
-//    private String supplier;
+    @Column
+    private String supplier;
+
+    @Column
+    @Convert(converter = AssetListConverter.class)
+    private List<Asset> assets;
 
 //	@Column
 //	@Enumerated(EnumType.STRING)

@@ -1,5 +1,24 @@
 package dk.digitalidentity.controller.rest;
 
+import java.util.Arrays;
+import java.util.List;
+
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
@@ -13,22 +32,6 @@ import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.util.ReflectionHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
-
-import java.util.Arrays;
-import java.util.List;
 
 @Slf4j
 @RestController
@@ -40,6 +43,7 @@ public class AssetsRestController {
 	private final AssetGridDao assetGridDao;
 	private final AssetMapper mapper;
     private final UserService userService;
+    private final AssetDao assetDao;
 
 
 	@PostMapping("list")
@@ -127,4 +131,17 @@ public class AssetsRestController {
 				|| fieldName.equals("assetStatusOrder")
                 || fieldName.equals("hasThirdCountryTransfer");
 	}
+
+    @GetMapping("autocomplete")
+    public PageDTO<AssetDTO> autocomplete(@RequestParam("search") final String search) {
+        final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());
+        if (StringUtils.length(search) == 0) {
+            return mapper.toDTO(assetDao.findAll(page));
+        } else {
+            final String replacedString = search.replace(' ', '%');
+            return mapper.toDTO(assetDao.searchForAsset("%" + replacedString + "%", page));
+        }
+
+    }
+
 }

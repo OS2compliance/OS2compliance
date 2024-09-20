@@ -1,5 +1,22 @@
 package dk.digitalidentity.mapping;
 
+import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
+import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
+import static dk.digitalidentity.util.NullSafe.nullSafe;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.BooleanUtils;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.mapstruct.ReportingPolicy;
+import org.springframework.data.domain.Page;
+
 import dk.digitalidentity.model.api.AssetCreateEO;
 import dk.digitalidentity.model.api.AssetEO;
 import dk.digitalidentity.model.api.PageEO;
@@ -8,27 +25,13 @@ import dk.digitalidentity.model.api.SupplierShallowEO;
 import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import org.apache.commons.lang3.BooleanUtils;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
-import org.mapstruct.ReportingPolicy;
-import org.springframework.data.domain.Page;
-
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Set;
-
-import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
-import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
-import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 
 @SuppressWarnings("Convert2MethodRef")
@@ -61,6 +64,32 @@ public interface AssetMapper {
     }
 
     List<AssetDTO> toDTO(List<AssetGrid> assetGrids);
+
+    //TODO this needs cleanup. Maybe create ShallowAssetDTO instead
+    default AssetDTO toDTO(final Asset asset) {
+        return AssetDTO.builder()
+                .id(asset.getId())
+                .name(asset.getName())
+                .supplier(nullSafe(() -> asset.getSupplier().getName()))
+                .assetType(nullSafe(() -> asset.getAssetType().getMessage()))
+                .responsibleUsers(nullSafe(() -> asset.getResponsibleUsers().stream().map(u -> u.getName()).collect(Collectors.joining(","))))
+                .updatedAt(nullSafe(() -> asset.getUpdatedAt().format(DK_DATE_FORMATTER)))
+//                .assessment(nullSafe(() -> asset.getAssessment().getMessage()))
+//                .assessmentOrder(asset.getAssessmentOrder())
+                .assetStatus(nullSafe(() -> asset.getAssetStatus().getMessage()))
+
+//                .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(asset.isKitos())))
+//                .registers(nullSafe(() -> asset.getRegisters()))
+//                .hasThirdCountryTransfer(asset.isHasThirdCountryTransfer())
+                .build();
+    }
+
+    //TODO better name
+    List<AssetDTO> toDTO2(List<Asset> asset);
+    
+    default PageDTO<AssetDTO> toDTO(final Page<Asset> assets) {
+        return new PageDTO<>(assets.getTotalElements(), toDTO2(assets.getContent()));
+    }
 
     default SupplierShallowEO toShallowEO(final AssetSupplierMapping mapping) {
         return SupplierShallowEO.builder()

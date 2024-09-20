@@ -26,7 +26,7 @@ public class RegisterAssetAssessmentUpdaterTask {
             return;
         }
         log.info("Started: Updating Registers asset assessments");
-        registerAssetAssessmentService.updateAssetAssessmentAll();
+//        registerAssetAssessmentService.updateAssetAssessmentAll();
         log.info("Finished: Updating Registers asset assessments");
     }
 

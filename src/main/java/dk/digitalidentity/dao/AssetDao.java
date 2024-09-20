@@ -1,14 +1,17 @@
 package dk.digitalidentity.dao;
 
-import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.Supplier;
+import java.util.Collection;
+import java.util.List;
+import java.util.Optional;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Optional;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Supplier;
 
 public interface AssetDao extends JpaRepository<Asset, Long> {
 
@@ -23,5 +26,8 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
     Optional<Asset> findByIdAndDeletedFalse(final Long id);
 
     List<Asset> findBySupplierAndDeletedFalse(final Supplier supplier);
+
+    @Query("select a from Asset a where a.name like :search and a.deleted=false")
+    Page<Asset> searchForAsset(@Param("search") final String search, final Pageable pageable);
 
 }
