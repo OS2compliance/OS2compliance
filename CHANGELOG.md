@@ -7,6 +7,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- (https://github.com/OS2compliance/OS2compliance/issues/187) Notifikations mail loop
+
 ## [1.2.0] - 2024-09-10
 
 ### Fixed
