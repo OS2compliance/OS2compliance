@@ -44,6 +44,7 @@ public class NotifyService {
             log.warn("Task '{}' already notified", task.getName());
             return;
         }
+        task.setHasNotifiedResponsible(true);
 
         EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
         if (template.isEnabled()) {

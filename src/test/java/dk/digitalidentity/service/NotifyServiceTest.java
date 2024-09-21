@@ -63,6 +63,7 @@ public class NotifyServiceTest {
 
         // Then
         assertThat(dummyTask.getNotifyResponsible()).isTrue();
+        assertThat(dummyTask.getHasNotifiedResponsible()).isTrue();
         final EmailEvent emailEvent = events.stream(EmailEvent.class)
             .findFirst().orElseGet(() -> fail("Event not received"));
         assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUser().getEmail());
@@ -85,6 +86,7 @@ public class NotifyServiceTest {
 
         // Then
         assertThat(dummyTask.getNotifyResponsible()).isTrue();
+        assertThat(dummyTask.getHasNotifiedResponsible()).isTrue();
 
         final EmailEvent emailEvent = events.stream(EmailEvent.class)
             .findFirst().orElseGet(() -> fail("Event not received"));
