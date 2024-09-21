@@ -28,8 +28,9 @@ public class AssetEventHandler {
         if (configuration.getIntegrations().getKitos().isEnabled()) {
             findKitosUsageUuid(asset).ifPresent(uuid -> {
                 if (asset.getCriticality() != null) {
-                    clientService.updateBusinessCritical(uuid, asset.getCriticality().equals(AssetEO.Criticality.CRITICAL));
-                    log.info("Updated criticality for asset: {}", asset.getId());
+                    // TODO Enable
+                    // clientService.updateBusinessCritical(uuid, asset.getCriticality().equals(AssetEO.Criticality.CRITICAL));
+                    log.info("Would have updated criticality for asset: {}", asset.getId());
                 }
             });
         }
