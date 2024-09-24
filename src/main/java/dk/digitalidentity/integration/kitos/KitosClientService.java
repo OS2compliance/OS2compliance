@@ -152,7 +152,6 @@ public class KitosClientService {
         }
         update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
         itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
-
     }
 
     public <T> List<T> deltaFetch(final String settingsKey,

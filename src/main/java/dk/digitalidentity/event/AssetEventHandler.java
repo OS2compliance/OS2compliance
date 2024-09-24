@@ -24,6 +24,7 @@ public class AssetEventHandler {
     @Async
     @EventListener
     public void assetUpdated(final AssetUpdatedEvent event) {
+        log.info("Asset updated event fired");
         final AssetEO asset = event.getAsset();
         if (configuration.getIntegrations().getKitos().isEnabled()) {
             findKitosUsageUuid(asset).ifPresent(uuid -> {
