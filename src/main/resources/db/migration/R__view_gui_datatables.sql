@@ -305,6 +305,7 @@ VIEW view_gridjs_dbs_assets AS
 SELECT
     a.id,
     a.name,
+    a.last_sync,
     s.name as supplier,
     GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',') AS assets 
 FROM dbs_asset a

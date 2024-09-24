@@ -1,5 +1,6 @@
 package dk.digitalidentity.integration.dbs;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -35,6 +36,8 @@ public class DBSService {
 		//Filter only itSystems related to this cvr
 		itSystems = itSystems.stream().filter(i -> i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr))).toList();
 		
+		LocalDate lastSync = LocalDate.now();
+		
 		List<DBSSupplier> existingDBSSuppliers = dbsSupplierDao.findAll();
 		List<DBSSupplier> toBeDeletedSuppliers = new ArrayList<>();
 		for (DBSSupplier dbsSupplier : existingDBSSuppliers) {
@@ -55,7 +58,7 @@ public class DBSService {
 				if (supplier.getNextRevision() != null) {
 					dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
 				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, itSystems);
+				List<DBSAsset> assets = getAssetsForSupplier(supplier, dbsSupplier, itSystems, lastSync);
 				dbsSupplier.setAssets(assets);
 
 				toBeAdded.add(dbsSupplier);
@@ -72,7 +75,7 @@ public class DBSService {
 					existingDBSSupplier.setNextRevision(supplier.getNextRevision().getValue());
 					changes = true;
 				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, itSystems);
+				List<DBSAsset> assets = getAssetsForSupplier(supplier, existingDBSSupplier, itSystems, lastSync);
 				
 				// Remove if the DBS list doesn't contain it anymore
 				if (existingDBSSupplier.getAssets().removeIf(local -> assets.stream().noneMatch(x -> Objects.equals(x.getDbsId(), local.getDbsId())))) {
@@ -97,13 +100,15 @@ public class DBSService {
 		dbsSupplierDao.deleteAll(toBeDeletedSuppliers);
 	}
 
-	private List<DBSAsset> getAssetsForSupplier(Supplier supplier, List<ItSystem> itSystems) {
+	private List<DBSAsset> getAssetsForSupplier(Supplier supplier, DBSSupplier dbsSupplier, List<ItSystem> itSystems, LocalDate lastSync) {
 		List<DBSAsset> result = new ArrayList<>();
 		for (ItSystem itSystem : itSystems) {
 			if (Objects.equals(itSystem.getSupplier().getId(), supplier.getId())) {
 				DBSAsset asset = new DBSAsset();
 				asset.setDbsId(itSystem.getUuid());
 				asset.setName(itSystem.getName());
+				asset.setSupplier(dbsSupplier);
+				asset.setLastSync(lastSync);
 				result.add(asset);
 			}
 		}

@@ -1,5 +1,7 @@
 package dk.digitalidentity.model.entity;
 
+import java.time.LocalDate;
+
 import dk.digitalidentity.model.entity.enums.RelationType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,6 +27,9 @@ public class DBSAsset extends Relatable {
 
     @Column
     private Boolean applicable;
+
+    @Column
+    private LocalDate lastSync;
 
     @Override
     public RelationType getRelationType() {

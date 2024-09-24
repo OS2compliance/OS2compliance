@@ -23,6 +23,7 @@ CREATE TABLE dbs_asset (
 
     applicable                    BOOLEAN NULL,
     dbs_supplier_id               BIGINT NOT NULL,
+    last_sync                     DATE NULL,
 
     CONSTRAINT dbs_asset_pk PRIMARY KEY (id),
     CONSTRAINT dbs_asset_unique UNIQUE KEY (dbs_id),

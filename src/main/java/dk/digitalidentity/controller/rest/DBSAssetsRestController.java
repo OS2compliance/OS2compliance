@@ -94,16 +94,8 @@ public class DBSAssetsRestController {
     }
 
 	private boolean containsField(final String fieldName) {
-		return fieldName.equals("assessmentOrder")
+		return fieldName.equals("lastSync")
 				|| fieldName.equals("supplier")
-				|| fieldName.equals("risk")
-				|| fieldName.equals("name")
-				|| fieldName.equals("assetType")
-				|| fieldName.equals("responsibleUserNames")
-				|| fieldName.equals("registers")
-				|| fieldName.equals("updatedAt")
-				|| fieldName.equals("criticality")
-				|| fieldName.equals("assetStatusOrder")
-                || fieldName.equals("hasThirdCountryTransfer");
+				|| fieldName.equals("name");
 	}
 }

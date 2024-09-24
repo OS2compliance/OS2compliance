@@ -18,18 +18,18 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 /**
- * Converts a CSV list into a Set of Strings. Null values are treated as empty list
+ * Converts a list of comma
  */
 @Component
 @Converter
 @Configurable
 public class AssetListConverter implements AttributeConverter<List<Asset>, String> {
-    
-    private final Supplier<AssetDao> assetDao;
+	
+	private final Supplier<AssetDao> assetDao;
 
-    public AssetListConverter(ObjectProvider<AssetDao> assetDao) {
-        this.assetDao = SingletonSupplier.of(() -> assetDao.getObject());
-    }
+	public AssetListConverter(ObjectProvider<AssetDao> assetDao) {
+		this.assetDao = SingletonSupplier.of(() -> assetDao.getObject());
+	}
 
 	@Override
 	public String convertToDatabaseColumn(final List<Asset> list) {

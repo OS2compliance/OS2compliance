@@ -76,22 +76,12 @@
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
 
-    const editableCellAttributes = (data, row, col) => {
-        if (row) {
-            return {contentEditable: 'true', 'data-element-id': row.cells[0].data};
-        }
-        else {
-            return {}
-        }
-    };
-
     document.addEventListener("DOMContentLoaded", function(event) {
 
         var tableDiv = document.getElementById("assetsDatatable");
 
         // load saved state assets
         const assetGridKey = window.location.pathname;
-        console.log(assetGridKey);
         const assetGridKeySearch = assetGridKey + '-asset-search'
         const savedSearchAsset = localStorage.getItem(assetGridKeySearch);
         let initialAssetLoadDone = false;  // flag to ensure initial load only happens once
@@ -118,7 +108,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'supplier' ];
+                        const columnIds = ['id', 'name', '', 'lastSync', 'supplier' ];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -135,9 +125,8 @@
                 },
                 {
                     name: "Assets",
-                    'attributes': editableCellAttributes,
+                    sort: false,
                     formatter: (cell, row) => {
-//                         console.log(cell);
                         const dbsAssetId = row.cells[0]['data'];
 
                         var options = '';
@@ -147,10 +136,13 @@
                         }
 
                         return gridjs.html(
-                                `<select class="form-control form-select choices__input" data-trigger="" data-assetid="${dbsAssetId}" name="assets" id="assetsSelect${dbsAssetId}" hidden="" tabindex="-1" multiple="multiple">` +
+                                `<select class="form-control form-select choices__input" data-assetid="${dbsAssetId}" name="assets" id="assetsSelect${dbsAssetId}" hidden="" tabindex="-1" multiple="multiple">` +
                                 options +
                                 `</select>`);
                     }
+                },
+                {
+                    name: "Sidst hentet"
                 },
                 {
                     name: "Supplier"
@@ -163,7 +155,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.name, asset.assets, asset.supplier ],
+                    [ asset.id, asset.name, asset.assets, asset.lastSync, asset.supplier ],
                 ),
                 total: data => data.totalCount
             },
@@ -184,79 +176,14 @@
             }
         }).render(tableDiv);
         
-        let savedValue;
-
-        tableDiv.addEventListener('focusin', ev => {
-        	console.log(`IN:${ev.target.tagName}`);
-            if (ev.target.tagName === 'INPUT') {
-                savedValue = getChildrenToArray(ev.target.parentNode.children);
-                console.log(`SavedValue: ${savedValue}`);
-            }
-        });
-
-        tableDiv.addEventListener('focusout', ev => {
-        	console.log(`OUT:${ev.target.tagName}`);
-            if (ev.target.tagName === 'INPUT') {
-                const columnId = ev.target.closest('td').dataset.columnId;
-                console.log(`column: ${columnId}`);
-                const elementId = ev.target.closest('td').dataset.elementId
-                console.log(`element: ${elementId}`);
-
-                if (compareArrays(savedValue, getChildrenToArray(ev.target.parentNode.children)) == false) {
-                    console.log("calling update");
-                    fetch(gridDBSAssetsUpdateUrl, {
-                        method: 'POST',
-                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
-                        body: JSON.stringify({
-                            id: elementId,
-                            [ev.target.closest('td').dataset.columnId]: getChildrenToArray(ev.target.parentNode.children),
-                        }),
-                    });
-                }
-                savedValue = undefined;
-            }
-        });
-
-//         tableDiv.addEventListener('keydown', ev => {
-//             if (ev.target.tagName === 'INPUT') {
-//                 if (ev.key === 'Escape') {
-//                 	const choices = new Choices(Array.from(ev.target.parentNode.children).find(child => child.tagName === 'SELECT'));
-                	
-//                 	console.log(choices.getValue(true));
-                	
-//                     //choices.removeActiveItemsByValue
-                	
-//                     ev.target.blur();
-//                 }
-//                 else if (ev.key === 'Enter') {
-//                     ev.preventDefault();
-//                     ev.target.blur();
-//                 }
-//             }
-//         });
-
         // set state on grid
         grid.on('ready', function() {
-            // Initialize all Asset dropdowns
-        	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(x => x.id).forEach(x => {
-        	    initAssetSelect(x, false);
-        	    var element = document.getElementById(x);
-        	    if (element) {
-                element.addEventListener('removeItem',
-                    function(event) {
-                        console.log(x);
-                        console.log(element);
-	                    fetch(gridDBSAssetsUpdateUrl, {
-	                        method: 'POST',
-	                        headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
-	                        body: JSON.stringify({
-	                            id: element.dataset.assetid,
-	                            assets: Array.from(element.selectedOptions).map(op => op.value)
-	                        }),
-	                    });
-	                },false
-                );
-        	    }
+            // Initialize all Asset Choices.js
+        	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(select => select.id).forEach(elementId => {
+        	    var assetChoices = initAssetSelect(elementId, true);
+        	    
+        	    assetChoices.passedElement.element.addEventListener('removeItem', handleAddRemoveEvent, false);
+        	    assetChoices.passedElement.element.addEventListener('addItem', handleAddRemoveEvent, false);
         	});
         	
             // only apply saved state on the first load
@@ -278,26 +205,23 @@
         });
     });
 
-    function compareArrays(arr1, arr2) {
-        if (!arr1)
-            return false;
-        if (!arr2)
-            return false;
-        if(arr1 === arr2)
-            return true;
-        if (arr1.length != arr2.length)
-            return false;
-        
-        arr1.sort();
-        arr2.sort();
+    async function handleAddRemoveEvent(event) {
+        const response = await fetch(gridDBSAssetsUpdateUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
+            body: JSON.stringify({
+                id: event.target.dataset.assetid,
+                assets: Array.from(event.target.selectedOptions).map(op => op.value)
+            }),
+        }).then(response => {
+            if (!response.ok) {
+                throw new Error(`${response.status} ${response.statusText}`);
+            }
+            toastService.info("Info", "Dine ændringer er blevet gemt")
+        }
+        ).catch(error => { toastService.error(error); console.log(error) });
+    }
 
-        return JSON.stringify(arr1) === JSON.stringify(arr2);
-    }
-    
-    function getChildrenToArray(children) {
-        return Array.from(Array.from(children).find(child => child.tagName === 'SELECT').selectedOptions).map(op => op.value)
-    }
-    
     function deleteClicked(assetId, name) {
         Swal.fire({
           text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,

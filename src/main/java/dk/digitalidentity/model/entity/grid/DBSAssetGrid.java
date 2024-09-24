@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.hibernate.annotations.Immutable;
@@ -26,50 +27,14 @@ public class DBSAssetGrid {
 	@Column
 	private String name;
 
+	@Column
+	private LocalDate lastSync;
+
     @Column
     private String supplier;
 
     @Column
     @Convert(converter = AssetListConverter.class)
     private List<Asset> assets;
-
-//	@Column
-//	@Enumerated(EnumType.STRING)
-//	private AssetType assetType;
-//
-//    @Column
-//    private String responsibleUserNames;
-//
-//    @Column
-//    private String responsibleUserUuids;
-//
-//	@Column
-//	private LocalDate updatedAt;
-//
-//	@Column
-//	@Enumerated(EnumType.STRING)
-//	private AssetStatus assetStatus;
-//
-//	@Column
-//	private Integer assetStatusOrder;
-//
-//    @Column(name = "kitos")
-//    private boolean kitos;
-//
-//    @Column
-//    @Enumerated(EnumType.STRING)
-//    private RiskAssessment assessment;
-//
-//    @Column
-//    private Integer assessmentOrder;
-//
-//    @Column
-//    private String localizedEnums;
-//
-//    @Column
-//    private int registers;
-//
-//    @Column
-//    private boolean hasThirdCountryTransfer;
 
 }
