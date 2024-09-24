@@ -18,7 +18,7 @@ import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;
 
 /**
- * Converts a list of comma
+ * Converts a list of comma separated IDs to entity list
  */
 @Component
 @Converter

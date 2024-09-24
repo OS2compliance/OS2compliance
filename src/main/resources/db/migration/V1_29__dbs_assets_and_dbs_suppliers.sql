@@ -1,7 +1,7 @@
 CREATE TABLE dbs_supplier (
     id                            BIGINT AUTO_INCREMENT NOT NULL,
     dbs_id                        BIGINT NOT NULL,
-    name                          VARCHAR(100) NULL,
+    name                          VARCHAR(768) NULL,
     next_revision                 VARCHAR(50) NULL,
 
     CONSTRAINT dbs_supplier_pk PRIMARY KEY (id),

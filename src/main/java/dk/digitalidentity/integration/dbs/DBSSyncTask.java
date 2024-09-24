@@ -18,8 +18,8 @@ public class DBSSyncTask {
 	private final OS2complianceConfiguration configuration;
 
 	@Transactional
-//    @Scheduled(cron = "${os2compliance.dbs.cron}")
-	@Scheduled(fixedRate = 20 * 1000)
+    @Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
+//	@Scheduled(fixedRate = 20 * 1000)
 	public void syncTask() {
 		if (taskDisabled()) {
 			return;
