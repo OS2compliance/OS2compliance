@@ -14,7 +14,9 @@ public enum RelationType {
 	STANDARD_SECTION("Standarder"),
 	THREAT_ASSESSMENT("Risikovurdering"),
 	THREAT_ASSESSMENT_RESPONSE("Risikovurderingssvar"),
-    PRECAUTION("Foranstaltning");
+    PRECAUTION("Foranstaltning"),
+    DBSASSET("DBSAsset")
+    ;
 
 	private final String message;
 

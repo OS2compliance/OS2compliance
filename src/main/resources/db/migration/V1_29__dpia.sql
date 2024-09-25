@@ -14,7 +14,7 @@ CREATE TABLE dpia (
    next_revision datetime NULL,
    revision_interval VARCHAR(255) NULL,
    CONSTRAINT pk_dpia PRIMARY KEY (id)
-);
+) collate = utf8mb4_danish_ci;;
 
 ALTER TABLE dpia ADD CONSTRAINT FK_ASSET_DPIA_ON_ASSET FOREIGN KEY (asset_id) REFERENCES assets (id);
 
@@ -27,7 +27,7 @@ CREATE TABLE dpia_template_section (
    can_opt_out BOOLEAN NOT NULL DEFAULT FALSE,
    has_opted_out BOOLEAN NOT NULL DEFAULT FALSE,
    CONSTRAINT pk_dpia_template_section PRIMARY KEY (id)
-);
+) collate = utf8mb4_danish_ci;;
 
 CREATE TABLE dpia_template_question (
    id BIGINT AUTO_INCREMENT NOT NULL,
@@ -38,7 +38,7 @@ CREATE TABLE dpia_template_question (
    answer_template TEXT NULL,
    deleted BOOLEAN NULL,
    CONSTRAINT pk_dpia_template_question PRIMARY KEY (id)
-);
+) collate = utf8mb4_danish_ci;;
 
 ALTER TABLE dpia_template_question ADD CONSTRAINT FK_DPIA_TEMPLATE_QUESTION_ON_DPIA_TEMPLATE_SECTION FOREIGN KEY (dpia_template_section_id) REFERENCES dpia_template_section (id);
 
@@ -48,7 +48,7 @@ CREATE TABLE dpia_response_section (
    dpia_template_section_id BIGINT NULL,
    selected BIT(1) NULL,
    CONSTRAINT pk_dpia_response_section PRIMARY KEY (id)
-);
+) collate = utf8mb4_danish_ci;;
 
 ALTER TABLE dpia_response_section ADD CONSTRAINT FK_DPIA_RESPONSE_SECTION_ON_DPIA FOREIGN KEY (dpia_id) REFERENCES dpia (id) ON DELETE CASCADE;
 ALTER TABLE dpia_response_section ADD CONSTRAINT FK_DPIA_RESPONSE_SECTION_ON_DPIA_TEMPLATE_SECTION FOREIGN KEY (dpia_template_section_id) REFERENCES dpia_template_section (id);
@@ -59,7 +59,7 @@ CREATE TABLE dpia_response_section_answer (
    dpia_template_question_id BIGINT NULL,
    response TEXT NULL,
    CONSTRAINT pk_dpia_response_section_answer PRIMARY KEY (id)
-);
+) collate = utf8mb4_danish_ci;;
 
 ALTER TABLE dpia_response_section_answer ADD CONSTRAINT FK_DPIA_RESPONSE_SECTION_ANSWER_ON_DPIA_RESPONSE_SECTION FOREIGN KEY (dpia_response_section_id) REFERENCES dpia_response_section (id) ON DELETE CASCADE;
 ALTER TABLE dpia_response_section_answer ADD CONSTRAINT FK_DPIA_RESPONSE_SECTION_ANSWER_ON_DPIA_TEMPLATE_QUESTION FOREIGN KEY (dpia_template_question_id) REFERENCES dpia_template_question (id);
@@ -72,7 +72,7 @@ CREATE TABLE dpia_report (
    report_approver_name VARCHAR(255) NOT NULL,
    dpia_report_approval_status VARCHAR(255) NOT NULL,
    CONSTRAINT pk_dpia_report PRIMARY KEY (id)
-);
+) collate = utf8mb4_danish_ci;;
 
 ALTER TABLE dpia_report ADD CONSTRAINT FK_DPIA_REPORT_ON_DPIA FOREIGN KEY (dpia_id) REFERENCES dpia (id);
 ALTER TABLE dpia_report ADD CONSTRAINT FK_DPIA_REPORT_ON_DPIA_REPORT_S3_DOCUMENT FOREIGN KEY (dpia_report_s3_document_id) REFERENCES s3_document (id);

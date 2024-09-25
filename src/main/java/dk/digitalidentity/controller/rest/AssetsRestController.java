@@ -1,11 +1,10 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.dao.grid.AssetGridDao;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+
 import dk.digitalidentity.event.EmailEvent;
-import dk.digitalidentity.mapping.AssetMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
-import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAReport;
 import dk.digitalidentity.model.entity.DPIAResponseSection;
@@ -15,13 +14,9 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.S3Document;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -29,10 +24,6 @@ import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
-import dk.digitalidentity.service.UserService;
-import dk.digitalidentity.util.ReflectionHelper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
@@ -48,6 +39,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -57,14 +49,25 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import dk.digitalidentity.dao.AssetDao;
+import dk.digitalidentity.dao.grid.AssetGridDao;
+import dk.digitalidentity.mapping.AssetMapper;
+import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.util.ReflectionHelper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Comparator;
-import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -86,6 +89,7 @@ public class AssetsRestController {
     private final EmailTemplateService emailTemplateService;
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
+    private final AssetDao assetDao;
 
 
 	@PostMapping("list")
@@ -449,6 +453,6 @@ public class AssetsRestController {
         ByteArrayOutputStream bos = new ByteArrayOutputStream();
         new BrowserCompactXmlSerializer(properties).writeToStream(tagNode, bos);
 
-        return (new String(bos.toByteArray(), Charset.forName("UTF-8")));
+        return (bos.toString(StandardCharsets.UTF_8));
     }
 }

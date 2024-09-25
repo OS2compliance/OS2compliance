@@ -156,6 +156,11 @@
 			<version>1.0.4</version>
 		</dependency>
 		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>dbs-client</artifactId>
+			<version>1.0.3</version>
+		</dependency>
+		<dependency>
 			<groupId>jakarta.mail</groupId>
 			<artifactId>jakarta.mail-api</artifactId>
 			<version>2.1.2</version>
@@ -221,6 +226,24 @@
             <version>2.29</version>
         </dependency>
     </dependencies>
+
+    <profiles>
+        <profile>
+            <id>dev</id>
+            <properties>
+                <activatedProperties>dev</activatedProperties>
+            </properties>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+        </profile>
+        <profile>
+            <id>prod</id>
+            <properties>
+                <activatedProperties>prod</activatedProperties>
+            </properties>
+        </profile>
+    </profiles>
 
 	<build>
 		<plugins>
