@@ -100,6 +100,11 @@ async function putData(url = "", data = {}) {
     return jsonCall("PUT", url, data);
 }
 
+async function deleteData(url) {
+    return jsonCall("DELETE", url, {});
+}
+
+
 function asIntOrDefault(value, def) {
     const parsed = parseInt(value);
     if (isNaN(parsed)) {

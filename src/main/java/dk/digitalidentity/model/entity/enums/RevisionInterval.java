@@ -3,7 +3,7 @@ package dk.digitalidentity.model.entity.enums;
 import lombok.Getter;
 
 @Getter
-public enum ThreatAssessmentRevisionInterval {
+public enum RevisionInterval {
     NONE("Ingen"),
     YEARLY("Årlig"),
     EVERY_SECOND_YEAR("Hvert 2. år"),
@@ -11,7 +11,7 @@ public enum ThreatAssessmentRevisionInterval {
 
     private final String message;
 
-    ThreatAssessmentRevisionInterval(final String message) {
+    RevisionInterval(final String message) {
         this.message = message;
     }
 

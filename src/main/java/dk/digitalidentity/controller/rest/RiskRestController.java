@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
@@ -98,7 +97,6 @@ public class RiskRestController {
     private final RiskMapper mapper;
     private final UserService userService;
     private final PrecautionService precautionService;
-    private final OS2complianceConfiguration configuration;
     private final S3Service s3Service;
     private final S3DocumentService s3DocumentService;
     private final Environment environment;

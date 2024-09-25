@@ -24,7 +24,7 @@ import jakarta.persistence.Converter;
 @Converter
 @Configurable
 public class AssetListConverter implements AttributeConverter<List<Asset>, String> {
-	
+
 	private final Supplier<AssetDao> assetDao;
 
 	public AssetListConverter(ObjectProvider<AssetDao> assetDao) {

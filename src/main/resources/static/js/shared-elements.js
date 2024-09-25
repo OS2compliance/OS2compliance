@@ -64,7 +64,7 @@ function updateTags(choices, search) {
 }
 
 function updateAssets(targetChoice, search) {
-    fetch( `/rest/assets/autocomplete?search=${search}`)
+    fetch( `/rest/relatable/autocomplete?types=ASSET&search=${search}&dir=ASC&sort=name`)
         .then(response => response.json()
             .then(data => {
                 targetChoice.setChoices(data.content.map(a => {

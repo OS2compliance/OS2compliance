@@ -6,7 +6,7 @@ CREATE TABLE dbs_supplier (
 
     CONSTRAINT dbs_supplier_pk PRIMARY KEY (id),
     CONSTRAINT dbs_supplier_unique UNIQUE KEY (dbs_id)
-);
+) collate = utf8mb4_danish_ci;;
 
 CREATE TABLE dbs_asset (
     id                            BIGINT AUTO_INCREMENT NOT NULL,
@@ -28,4 +28,4 @@ CREATE TABLE dbs_asset (
     CONSTRAINT dbs_asset_pk PRIMARY KEY (id),
     CONSTRAINT dbs_asset_unique UNIQUE KEY (dbs_id),
     CONSTRAINT dbs_asset_dbs_supplier_FK FOREIGN KEY (dbs_supplier_id) REFERENCES dbs_supplier(id) ON DELETE CASCADE
-);
+) collate = utf8mb4_danish_ci;;

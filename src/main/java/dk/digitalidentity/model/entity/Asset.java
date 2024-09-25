@@ -167,13 +167,19 @@ public class Asset extends Relatable {
     private boolean dpiaOptOut = false;
 
     @Column
+    private String dpiaOptOutReason;
+
+    @Column
     private boolean threatAssessmentOptOut = false;
 
     @Column
     private String threatAssessmentOptOutReason;
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
-    private DataProtectionImpactAssessment dpia;
+    private DataProtectionImpactAssessmentScreening dpiaScreening;
+
+    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
+    private DPIA dpia;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

@@ -65,32 +65,6 @@ public interface AssetMapper {
 
     List<AssetDTO> toDTO(List<AssetGrid> assetGrids);
 
-    //TODO this needs cleanup. Maybe create ShallowAssetDTO instead
-    default AssetDTO toDTO(final Asset asset) {
-        return AssetDTO.builder()
-                .id(asset.getId())
-                .name(asset.getName())
-                .supplier(nullSafe(() -> asset.getSupplier().getName()))
-                .assetType(nullSafe(() -> asset.getAssetType().getMessage()))
-                .responsibleUsers(nullSafe(() -> asset.getResponsibleUsers().stream().map(u -> u.getName()).collect(Collectors.joining(","))))
-                .updatedAt(nullSafe(() -> asset.getUpdatedAt().format(DK_DATE_FORMATTER)))
-//                .assessment(nullSafe(() -> asset.getAssessment().getMessage()))
-//                .assessmentOrder(asset.getAssessmentOrder())
-                .assetStatus(nullSafe(() -> asset.getAssetStatus().getMessage()))
-
-//                .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(asset.isKitos())))
-//                .registers(nullSafe(() -> asset.getRegisters()))
-//                .hasThirdCountryTransfer(asset.isHasThirdCountryTransfer())
-                .build();
-    }
-
-    //TODO better name
-    List<AssetDTO> toDTO2(List<Asset> asset);
-    
-    default PageDTO<AssetDTO> toDTO(final Page<Asset> assets) {
-        return new PageDTO<>(assets.getTotalElements(), toDTO2(assets.getContent()));
-    }
-
     default SupplierShallowEO toShallowEO(final AssetSupplierMapping mapping) {
         return SupplierShallowEO.builder()
             .id(mapping.getSupplier().getId())
@@ -151,12 +125,14 @@ public interface AssetMapper {
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpia", ignore = true),
+        @Mapping(target = "dpiaScreening", ignore = true),
         @Mapping(target = "managers", source = "responsibleUsers"),
         @Mapping(target = "deleted", ignore = true),
         @Mapping(target = "localizedEnums", ignore = true),
         @Mapping(target = "threatAssessmentOptOut", ignore = true),
         @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
-        @Mapping(target = "dpiaOptOut", ignore = true)
+        @Mapping(target = "dpiaOptOut", ignore = true),
+        @Mapping(target = "dpiaOptOutReason", ignore = true)
     })
     Asset fromEO(AssetCreateEO assetCreateEO);
 

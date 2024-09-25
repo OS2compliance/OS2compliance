@@ -19,7 +19,7 @@ public class DBSSyncTask {
 
 	@Transactional
     @Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
-//	@Scheduled(fixedRate = 20 * 1000)
+//	@Scheduled(fixedRate = 1000000000L)
 	public void syncTask() {
 		if (taskDisabled()) {
 			return;

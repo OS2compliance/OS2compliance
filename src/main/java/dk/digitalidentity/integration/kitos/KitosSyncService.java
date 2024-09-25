@@ -15,6 +15,7 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
+import dk.kitos.api.model.GDPRRegistrationsResponseDTO;
 import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -178,6 +179,14 @@ public class KitosSyncService {
         addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
         setAssetOwner(asset, itSystemUsageResponseDTO);
         setAssetManagers(asset, itSystemUsageResponseDTO);
+        final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
+        if (businessCritical != null) {
+            if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.YES && asset.getCriticality() != Criticality.CRITICAL) {
+                asset.setCriticality(Criticality.CRITICAL);
+            } else if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.NO && asset.getCriticality() != Criticality.NON_CRITICAL) {
+                asset.setCriticality(Criticality.NON_CRITICAL);
+            }
+        }
     }
 
 
@@ -330,7 +339,6 @@ public class KitosSyncService {
             .entity(supplier)
             .build());
     }
-
 
     private static void addKitosUsageUuid(final Asset asset, final String usageUuid) {
         asset.getProperties().stream()

@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -17,10 +18,6 @@ public class DataProtectionImpactDTO {
     private Long assetId;
     private boolean optOut;
     private List<DataProtectionImpactScreeningAnswerDTO> questions;
-    private String answerA;
-    private String answerB;
-    private String answerC;
-    private String answerD;
-    private String conclusion;
+    private Set<String> dpiaQuality;
     private String consequenceLink;
 }

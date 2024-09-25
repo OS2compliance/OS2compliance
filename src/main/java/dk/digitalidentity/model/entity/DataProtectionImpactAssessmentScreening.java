@@ -20,14 +20,17 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "dpia")
+@Table(name = "dpia_screening")
 @Getter
 @Setter
-public class DataProtectionImpactAssessment {
+public class DataProtectionImpactAssessmentScreening {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Long id;
+
+    @Column(name = "consequence_link")
+    private String consequenceLink;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
@@ -40,23 +43,4 @@ public class DataProtectionImpactAssessment {
     @EqualsAndHashCode.Exclude
     @OneToMany(orphanRemoval = true, mappedBy = "assessment", cascade = CascadeType.ALL)
     private List<DataProtectionImpactScreeningAnswer> dpiaScreeningAnswers = new ArrayList<>();
-
-    @Column(name = "answer_a")
-    private String answerA;
-
-    @Column(name = "answer_b")
-    private String answerB;
-
-    @Column(name = "answer_c")
-    private String answerC;
-
-    @Column(name = "answer_d")
-    private String answerD;
-
-    @Column
-    private String conclusion;
-
-    @Column(name = "consequence_link")
-    private String consequenceLink;
-
 }

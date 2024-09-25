@@ -1,0 +1,437 @@
+[
+  {
+    "sortKey": 0,
+    "identifier": "scope",
+    "header": "Resume og scope",
+    "canOptOut": false,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Resume",
+        "instructions": "Skriv et kort resume af konsekvensanalysen, fx til<br/>ledelsen, herunder vurderingerne, de væsentligste risici<br/>og håndteringen heraf."
+      },
+      {
+        "sortKey": 1,
+        "question": "Scope",
+        "instructions": "Beskriv afgrænsningen af, hvilken behandlingsaktivitet der er genstand for konsekvensanalysen. <br/>Det kan f.eks. være oplagt, hvis en behandlingsaktivitet skal iværksættes på eksisterende teknisk infrastruktur, at henvise til eksisterende risikovurderinger mv. Konsekvensanalysen omfatter i så fald alene den pågældende behandlingsaktivitet eller hvis en AI-løsning skal idriftsættes på eksisterende teknisk infrastruktur, at henvise til eksisterende risikovurderinger mv. Konsekvensanalysen omfatter i så fald alene den pågældende AI-løsning.]<br/>"
+      }
+    ]
+  },
+  {
+    "sortKey": 1,
+    "identifier": "description",
+    "header": "Systematisk beskrivelse af behandlingsaktiviteten ",
+    "explainer": "Ifølge databeskyttelsesreglerne skal en konsekvensanalyse indeholde en systematisk beskrivelse af de planlagte behandlingsaktiviteter. Det er forudsætningen for at kunne foretage en fyldestgørende vurdering af aktivitetens lovlighed samt identificere alle relevante risici.<br/>Skemaet nedenfor er et udgangspunkt for, hvilke dele af behandlingsaktiviteten der skal beskrives. Spørgsmålene skal tjene som en rettesnor og behøver ikke nødvendigvis alle blive besvaret konkret og fyldestgørende. <br/>Det væsentligste er, at der er tale om en fuldstændig og helhedsorienteret beskrivelse af behandlingsaktiviteten som gør det muligt at foretage den nødvendige vurdering af lovligheden og identificere risiciene samt de relevante mitigerende foranstaltninger<br/>",
+    "canOptOut": true,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Formålet med behandlingsaktiviteten",
+        "instructions": "Beskriv overordnet formålet med behandlingsaktiviteten, hvilke(n) forretningsproces(ser) behandlingen skal understøtte, hvad der ønskes opnået mv. Beskriv, hvilke forretningsproces(ser) og behandlingsaktiviteter der berøres af den nye behandlingsaktivitet og hvordan."
+      },
+      {
+        "sortKey": 1,
+        "question": "Baggrunden for at gennemføre konsekvensanalysen",
+        "instructions": "Beskriv baggrunden for og vurderingen af, at der skal gennemføres en konsekvensanalyse. <br/><br/>Der skal gennemføres en konsekvensanalyse, hvis behandlingsaktiviteten sandsynligvis vil indebære en høj risiko for fysiske personers rettigheder og frihedsrettigheder.<br/>"
+      },
+      {
+        "sortKey": 2,
+        "question": "Datastrømme",
+        "instructions": "Beskriv hvilke persondata der vil blive behandlet som led i den omhandlede behandlingsaktivitet: Hvilke type(r) af data behandles? Omfatter det særligt beskyttelsesværdige data som fx lokationsdata, økonomiske forhold, sociale forhold eller lignende? Omfatter det særlige kategorier af data eller data om strafbare forhold? Hvor stort er omfanget af data? Hvordan indsamles, bruges og opbevares data og hvor længe? Hvor indsamles data fra? Hvor stammer data fra? Hvilke formål blev data oprindeligt indsamlet til? Hvad er varigheden af behandlingen (isoleret, midlertidig, regelmæssig, vedvarende)?",
+        "answerTemplate": "<b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvem}</p><b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvor_mange}</p><b>Typer af personoplysninger:</b><p>{personoplysninger_typer}</p><b>Typer af personoplysninger fritekst:</b><p>{personoplysninger_typer_fritekst}</p>"
+      },
+      {
+        "sortKey": 3,
+        "question": "Formålsbeskrivelse",
+        "instructions": "Beskriv hvilke formål data skal bruges til. Hvad ønskes opnået? Hvad er den forventede effekt for de registrerede? Hvad er fordelene for jeres organisation? Hvad er fordelene for samfundet som helhed? Hvilke legitime formål forfølges med databehandlingen?"
+      },
+      {
+        "sortKey": 4,
+        "question": "Kategorier af registrerede",
+        "instructions": "Beskriv hvilke kategorier af registrerede data vedrører. Omfatter det børn, patienter, ældre eller andre sårbare grupper? Hvad er antallet af registrerede ved start og på lang sigt?",
+        "answerTemplate": "<b>Kategorier af registrerede:</b><p>{kategorier_af_registrerede}</p>"
+      },
+      {
+        "sortKey": 5,
+        "question": "Deling af data",
+        "instructions": "Beskriv om det forventes, at data skal deles med andre. Hvilke modtagere drejer det sig om? Hvordan deles data ned igennem eventuelle leverandørkæder?"
+      },
+      {
+        "sortKey": 6,
+        "question": "Konteksten for behandlingsaktiviteten",
+        "instructions": "Beskriv konteksten for den omhandlede behandlingsaktivitet. Hvordan vil databehandlingen påvirke de berørte personer? Hvad er forholdet til de berørte personer (f.eks. borgere, kunder, medarbejdere mv.)? Hvor meget kontrol vil de berørte personer have? Hvad er de berørte personers berettigede forventninger med hensyn til behandling af deres persondata? Er der særlige udtalte bekymringer, f.eks. blandt de berørte personer eller i offentligheden, som bør indregnes?"
+      },
+      {
+        "sortKey": 7,
+        "question": "Teknisk understøttelse",
+        "instructions": "skriv i relevant omfang den tekniske understøttelse af behandlingsaktiviteten, herunder f.eks. hardware, software, øvrige aktiver mv."
+      }
+    ]
+  },
+  {
+    "sortKey": 2,
+    "identifier": "description_ai",
+    "header": "Systematisk beskrivelse af aktiviteten ved AI",
+    "explainer": "Ifølge databeskyttelsesreglerne skal en konsekvensanalyse indeholde en systematisk beskrivelse af de planlagte behandlingsaktiviteter. Det er forudsætningen for at kunne foretage en fyldestgørende vurdering af aktivitetens lovlighed samt identificere alle relevante risici.<br/>Skemaet nedenfor er et udgangspunkt for, hvilke dele af behandlingsaktiviteten der skal beskrives. Spørgsmålene skal tjene som en rettesnor og behøver ikke nødvendigvis alle blive besvaret konkret og fyldestgørende. <br/>Det væsentligste er, at der er tale om en fuldstændig og helhedsorienteret beskrivelse af behandlingsaktiviteten som gør det muligt at foretage den nødvendige vurdering af lovligheden og identificere risiciene samt de relevante mitigerende foranstaltninger.<br/>",
+    "canOptOut": true,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Formålet med AI-løsningen",
+        "instructions": "Beskriv overordnet, hvad AI-løsningen skal bruges til, hvilke(n) forretningsproces(ser) løsningen skal understøtte, hvad der ønskes opnået mv. Beskriv, hvilke forretningsproces(ser) og behandlingsaktiviteter der berøres af brugen af AI-løsningen og hvordan."
+      },
+      {
+        "sortKey": 1,
+        "question": "Baggrunden for at gennemføre konsekvensanalysen",
+        "instructions": "Beskriv baggrunden for og vurderingen af, at der skal gennemføres en konsekvensanalyse. <br/><br/>Der skal gennemføres en konsekvensanalyse, hvis behandlingsaktiviteten sandsynligvis vil indebære en høj risiko for fysiske personers rettigheder og frihedsrettigheder. Det vil normalt være tilfældet ved udvikling og brug af AI-løsninger.<br/>"
+      },
+      {
+        "sortKey": 2,
+        "question": "Baggrunden for at udvikle eller bruge en AI-løsning som led i behandlingsaktiviteten",
+        "instructions": "Beskriv baggrunden for at udvikle eller implementere AI-løsningen til den pågældende aktivitet. Beskriv (i) typen af løsning, (ii) modelvalg, (iii) designvalg."
+      },
+      {
+        "sortKey": 3,
+        "question": "Datastrømme",
+        "instructions": "Beskriv hvilke persondata der vil blive behandlet som led i udvikling og drift af AI-løsningen: Hvilke type(r) af data behandles? Hvilke typer bruges til henholdsvis (i) udvikling, (ii) test og (iii) drift? Omfatter det særligt beskyttelsesværdige data som fx lokationsdata, økonomiske forhold, sociale forhold eller lignende? Omfatter det særlige kategorier af data eller data om strafbare forhold? Hvor stort er omfanget af data? Hvordan indsamles, bruges og opbevares data og hvor længe? Hvor indsamles data fra? Hvor stammer data fra? Hvilke formål blev data oprindeligt indsamlet til? Hvad er varigheden af behandlingen (isoleret, midlertidig, regelmæssig, vedvarende)?",
+        "answerTemplate": "<b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvem}</p><b>Hvem har adgang til personoplysningerne:</b><p>{personoplysninger_hvor_mange}</p><b>Typer af personoplysninger:</b><p>{personoplysninger_typer}</p><b>Typer af personoplysninger fritekst:</b><p>{personoplysninger_typer_fritekst}</p>"
+      },
+      {
+        "sortKey": 4,
+        "question": "Formålsbeskrivelse",
+        "instructions": "Beskriv hvilke formål data skal bruges til. Hvad ønskes opnået? Hvad er den forventede effekt for de registrerede? Hvad er fordelene for jeres organisation? Hvad er fordelene for samfundet som helhed? Hvilke legitime formål forfølges med databehandlingen?"
+      },
+      {
+        "sortKey": 5,
+        "question": "Kategorier af registrerede",
+        "instructions": "Beskriv hvilke kategorier af registrerede data vedrører. Omfatter det børn, patienter, ældre eller andre sårbare grupper? Hvad er antallet af registrerede ved start og på lang sigt?",
+        "answerTemplate": "<b>Kategorier af registrerede:</b><p>{kategorier_af_registrerede}</p>"
+      },
+      {
+        "sortKey": 6,
+        "question": "Deling af data",
+        "instructions": "Beskriv om det forventes, at data skal deles med andre. Hvilke modtagere drejer det sig om? Hvordan deles data ned igennem eventuelle leverandørkæder?"
+      },
+      {
+        "sortKey": 7,
+        "question": "Konteksten for brugen af AI-løsningen",
+        "instructions": "Beskriv konteksten for brugen af AI-løsningen. Hvordan vil databehandlingen påvirke de berørte personer? Hvad er forholdet til de berørte personer (f.eks. borgere, kunder, medarbejdere mv.)? Hvor meget kontrol vil de berørte personer have? Hvad er de berørte personers berettigede forventninger med hensyn til behandling af deres persondata? Er der særlige udtalte bekymringer, f.eks. blandt de berørte personer eller i offentligheden, som bør indregnes?"
+      },
+      {
+        "sortKey": 8,
+        "question": "Teknisk understøttelse",
+        "instructions": "Beskriv i relevant omfang den tekniske understøttelse af AI-løsningen, herunder f.eks hardware, software, øvrige aktiver mv."
+      }
+    ]
+  },
+  {
+    "sortKey": 3,
+    "identifier": "legal",
+    "header": "Vurdering af lovlighed",
+    "canOptOut": true,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Princippet om lovlighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, artikel 6, stk. 1, og præambelbetragtning nr. 39, 40 samt 58</u><br/>Beskriv vurderingen af, hvilket behandlingsgrundlag der muliggør behandling af personoplysninger. Hvis personoplysninger skal behandles til flere formål som led i den omhandlede behandlingsaktivitet, beskriv da behandlingsgrundlaget særskilt for hvert formål.<br/>"
+      },
+      {
+        "sortKey": 1,
+        "question": "Relevant undtagelse for behandling af særlige kategorier af personoplysninger",
+        "instructions": "<u>Artikel 9, stk. 2, og præambelbetragtning nr. 52-56</u><br/>Beskriv, hvis relevant, vurderingen af, hvilken undtagelse til det generelle forbud mod behandling af særlige kategorier af oplysninger der muliggør behandling heraf.<br/>"
+      },
+      {
+        "sortKey": 2,
+        "question": "Behandling af oplysninger om strafbare forhold",
+        "instructions": "<u>Databeskyttelseslovens § 8</u><br/>Beskriv, hvis relevant, vurderingen af, hvilket behandlingsgrundlag der muliggør behandling af oplysninger om strafbare forhold.<br/>"
+      },
+      {
+        "sortKey": 3,
+        "question": "Behandling af oplysninger om personnummer (CPR)",
+        "instructions": "<u>Databeskyttelseslovens § 11</u><br/>Beskriv, hvis relevant, vurderingen af, hvilket behandlingsgrundlag der muliggør behandling af oplysninger om personnummer.<br/>"
+      },
+      {
+        "sortKey": 4,
+        "question": "Princippet om formålsbegrænsning",
+        "instructions": "<u>Artikel 5, stk. 1, litra b, og præambelbetragtning nr. 39 og 50</u><br/>Beskriv vurderingen af, i hvilket omfang det nuværende formål med behandling af personoplysninger er sagligt og specifikt. Hvis relevant, beskriv i hvilket omfang brug af de påtænkte personoplysninger er foreneligt med det formål, som oplysningerne oprindeligt er indsamlet til.<br/>"
+      },
+      {
+        "sortKey": 5,
+        "question": "Proportionalitetsprincippet",
+        "instructions": "<u>Artikel 5, stk. 1, litra c, og præambelbetragtning nr. 39</u><br/>Beskriv i hvilket omfang behandlingen af personoplysninger er egnet, nødvendig og forholdsmæssig<br/>"
+      },
+      {
+        "sortKey": 6,
+        "question": "Princippet om rigtighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra d, og præambelbetragtning nr. 39</u><br/>Beskriv hvordan det sikres, at personoplysningerne er korrekte og om nødvendigt ajourførte såvel i begyndelsen som i løbet af behandlingsaktiviteten.<br/>"
+      },
+      {
+        "sortKey": 7,
+        "question": "Princippet om opbevaringsbegrænsning",
+        "instructions": "<u>Artikel 5, stk. 1, litra e, og præambelbetragtning nr. 39</u><br/>Beskriv vurderingen af, hvor længe det er nødvendigt at opbevare personoplysningerne, samt hvordan det sikres, at oplysningerne slettes efter udløbet af perioden.<br/>",
+        "answerTemplate": "<b>Hvor længe opbevares personoplysningerne:</b><p>{personoplysninger_hvor_længe}</p><b>Link til sletteprocedure:</b><p>{slettelink}</p>"
+      },
+      {
+        "sortKey": 8,
+        "question": "Princippet om integritet og fortrolighed samt behandlingssikkerhed",
+        "instructions": "<u>Artikel 5, stk. 1, litra f, og artikel 32-34 samt præambelbetragtning nr. 75, 76, 83 og 85-88</u><br/>Beskriv hvordan behandlingssikkerheden sikres, f.eks. ved gennemførte risikovurderinger og implementerede sikkerhedsforanstaltninger. Kan med fordel beskrives i bilag.<br/>"
+      },
+      {
+        "sortKey": 9,
+        "question": "Brud på persondatasikkerheden",
+        "instructions": "<u>Artikel 5, stk. 1, litra f, og artikel 33-34 samt præambelbetragtning nr. 75, 76, 83 og 85-88</u><br/>Beskriv, hvordan brud på persondatasikkerheden håndteres, og hvordan de registrerede eventuelt underrettes om brud, som sandsynligvis vil indebære en høj risiko for de pågældende.<br/>"
+      },
+      {
+        "sortKey": 10,
+        "question": "Oplysningspligt",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 12-14 samt præambelbetragtning nr. 60-62</u><br/>Beskriv hvordan oplysningspligten iagttages over for de registrerede.<br/>"
+      },
+      {
+        "sortKey": 11,
+        "question": "Indsigtsret",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 15 samt præambelbetragtning nr. 63-64</u><br/>Beskriv hvordan det sikres, at anmodninger om indsigt håndteres korrekt.<br/>"
+      },
+      {
+        "sortKey": 12,
+        "question": "Retten til berigtigelse",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 16 samt præambelbetragtning nr. 65</u><br/>Beskriv hvordan det sikres, at anmodninger om berigtigelse håndteres korrekt, samt hvordan underretning af eventuelle modtagere af ukorrekte oplysninger kan ske.<br/>"
+      },
+      {
+        "sortKey": 13,
+        "question": "Retten til sletning",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 17 samt præambelbetragtning nr. 65</u><br/>Beskriv hvordan det sikres, at anmodninger om sletning håndteres korrekt, samt hvordan underretning af eventuelle modtagere af oplysninger, der skal slettes, kan ske.<br/>"
+      },
+      {
+        "sortKey": 14,
+        "question": "Retten til dataportabilitet",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 20 samt præambelbetragtning nr. 68</u><br/>Beskriv, hvis relevant, hvordan det sikres, at anmodninger om dataportabilitet håndteres korrekt.<br/>"
+      },
+      {
+        "sortKey": 15,
+        "question": "Ret til at gøre indsigelse",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 21 samt præambelbetragtning nr. 69</u><br/>Beskriv, hvis relevant, hvordan det sikres, at de registrerede kan gøre indsigelse med hensyn til brug af vedkommendes data.<br/>"
+      },
+      {
+        "sortKey": 16,
+        "question": "Ret til ikke at være genstand for automatiske individuelle afgørelser",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 22 samt præambelbetragtning nr. 71</u><br/>Beskriv, hvis relevant, hvordan det sikres, at de registrerede har ret til menneskelig indgriben, kan fremkomme med sine synspunkter og bestride afgørelsen.<br/>"
+      },
+      {
+        "sortKey": 17,
+        "question": "Databehandlere",
+        "instructions": "<u>Artikel 28 samt præambelbetragtning nr. 81</u><br/>Beskriv, hvis relevant, hvilke databehandlere der benyttes som led den omhandlede behandlingsaktivitet, hvilken behandling der foretages af disse, samt hvilke fornødne garantier databehandlerne har givet for, at behandlingen sker i overensstemmelse med databeskyttelsesreglerne. Kan med fordel beskrives i bilag.<br/>"
+      },
+      {
+        "sortKey": 18,
+        "question": "Tredjelandsoverførsler",
+        "instructions": "<u>Artikel 44-49 samt præambelbetragtning nr. 101-115</u><br/>Beskriv, hvis relevant, hvilke tredjelande personoplysninger overføres til som led i den omhandlede behandlingsaktivitet, hvilket overførselsgrundlag der anvendes, samt i hvilket omfang overførselsgrundlaget er effektivt. Kan med fordel beskrives i bilag.<br/>"
+      }
+    ]
+  },
+  {
+    "sortKey": 4,
+    "identifier": "legal_ai",
+    "header": "Vurdering af lovlighed ved AI ",
+    "canOptOut": true,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Princippet om lovlighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, artikel 6, stk. 1, og præambelbetragtning nr. 39, 40 samt 58</u><br/>Beskriv vurderingen af, hvilket behandlingsgrundlag der muliggør behandling af personoplysninger til såvel udvikling som drift af AI-løsningen. Beskriv vurderingen seperat for udvikling og for drift af løsningen. <br/><br/>Hvis drift af AI-løsningen understøtter eller berører flere forretningsprocesser eller behandlingsaktiviteter, beskriv da behandlingsgrundlaget særskilt for de pågældende behandlingsaktiviteter.<br/>"
+      },
+      {
+        "sortKey": 1,
+        "question": "Relevant undtagelse for behandling af særlige kategorier af personoplysninger",
+        "instructions": "<u>Artikel 9, stk. 2, og præambelbetragtning nr. 52-56</u><br/>Beskriv, hvis relevant, vurderingen af, hvilken undtagelse til det generelle forbud mod behandling af særlige kategorier af oplysninger der muliggør behandling af sådanne kategorier til såvel udvikling som drift af AI-løsningen. Beskriv vurderingen seperat for udvikling og for drift af løsningen.<br/>"
+      },
+      {
+        "sortKey": 2,
+        "question": "Behandling af oplysninger om strafbare forhold",
+        "instructions": "<u>Databeskyttelseslovens § 8</u><br/>Beskriv, hvis relevant, vurderingen af, hvilket behandllingsgrundlag der muliggør behandling af oplysninger om strafbare forhold til såvel udvikling som drift af AI-løsningen. Beskriv vurderingen seperat for udvikling og for drift af løsningen.<br/>"
+      },
+      {
+        "sortKey": 3,
+        "question": "Behandling af oplysninger om personnummer (CPR)",
+        "instructions": "<u>Databeskyttelseslovens § 11</u><br/>Beskriv, hvis relevant, vurderingen af, hvilket behandllingsgrundlag der muliggør behandling af oplysninger om personnummer til såvel udvikling som drift af AI-løsningen. Beskriv vurderingen seperat for udvikling og for drift af løsningen.<br/>"
+      },
+      {
+        "sortKey": 4,
+        "question": "Princippet om rimelighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, og præambelbetragtning nr. 39, 40 samt 58</u><br/>Beskriv hvilke udfordringer eller problemstillinger den påtænkte brug af AI-løsningen skal adressere, og hvilke konkrete målsætninger brugen af løsningen har. Hvis der på dette tidlige stadie er klarhed over, hvilke problemstillinger AI-løsningen skal adressere og hvordan, er det lettere at vurdere, om løsningens output indebærer urimelige udfald for de registrerede."
+      },
+      {
+        "sortKey": 5,
+        "question": "Princippet om gennemsigtighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, og præambelbetragtning nr. 39, 58 samt 60</u><br/>Beskriv vurderingen af, i hvilket omfang valg af model og designvalg understøtter evnen til at fortolke og forklare AI-løsningens output<br/>"
+      },
+      {
+        "sortKey": 6,
+        "question": "Princippet om formålsbegrænsning",
+        "instructions": "<u>Artikel 5, stk. 1, litra b, og præambelbetragtning nr. 39 og 50</u><br/>Beskriv vurderingen af, i hvilket omfang formålet med behandling af personoplysninger ved udvikling og drift af AI-løsningen er sagligt og specifikt.<br/><br/>Beskriv i hvilket omfang brug af de påtænkte datasæt til træning og test er foreneligt med det formål, som data oprindeligt er indsamlet til.<br/>"
+      },
+      {
+        "sortKey": 7,
+        "question": "Proportionalitetsprincippet",
+        "instructions": "<u>Artikel 5, stk. 1, litra c, og præambelbetragtning nr. 39</u><br/>Beskriv i hvilket omfang behandling af persondata ved udvikling og drift af AI-løsningen er egnet, nødvendig og forholdsmæssig. <br/>- Beskriv afvejningen mellem det overordnede hensyn til de registrerede over for de hensyn, der taler for at udvikle og bruge AI-løsningen. <br/>- Beskriv hvordan AI-løsningen udvikles, trænes og drives ved brug af færrest muligt oplysninger, om om muligt uden persondata.<br/>- Beskriv hvilke privatlivsfremmende teknologier der er blevet overvejet for at minimere mængden af persondata til udvikling, f.eks. fødereret læring eller syntetiske data<br/>"
+      },
+      {
+        "sortKey": 8,
+        "question": "Princippet om rigtighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra d, og præambelbetragtning nr. 39</u><br/>Beskriv i hvilket omfang det er passende at bruge AI-løsningen i den pågældende sammenhæng i lyset af løsningens mulighed for og evne til at give korrekte og retvisende svar.<br/>"
+      },
+      {
+        "sortKey": 9,
+        "question": "Princippet om opbevaringsbegrænsning",
+        "instructions": "<u>Artikel 5, stk. 1, litra e, og præambelbetragtning nr. 39</u><br/>Beskriv vurderingen af, hvor længe det er nødvendigt at opbevare trænings- og testdatasæt, samt hvordan det sikres, at data slettes efter udløbet af perioden<br/>",
+        "answerTemplate": "<b>Hvor længe opbevares personoplysningerne:</b><p>{personoplysninger_hvor_længe}</p><b>Link til sletteprocedure:</b><p>{slettelink}</p>"
+      },
+      {
+        "sortKey": 10,
+        "question": "Princippet om lovlighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, og præambelbetragtning nr. 39, 40 samt 58</u><br/>Beskriv hvordan det sikres, at der i trænings- og testdata ikke indgår data, som er resultatet af brud på persondatasikkerheden eller i øvrigt er ulovligt tilvejebragt<br/>"
+      },
+      {
+        "sortKey": 11,
+        "question": "Princippet om rimelighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, og præambelbetragtning nr. 39, 40 samt 58</u><br/>Beskriv hvordan det sikres, at træningsdata er retvisende, repræsentativt, og at eventuel tidligere bias håndteres. <br/><br/>Beskriv hvordan det igennem model- og designvalg sikres, at AI-løsningen ikke genererer urimelige output eller resulterer i ulovlig forskelsbehandling.<br/>"
+      },
+      {
+        "sortKey": 12,
+        "question": "Princippet om gennemsigtighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, og præambelbetragtning nr. 39, 58 samt 60</u><br/>Beskriv hvordan det sikres gennem model- og designvalg samt implementering af foranstaltninger i øvrigt, at AI-løsningens output kan forklares.<br/>"
+      },
+      {
+        "sortKey": 13,
+        "question": "Proportionalitetsprincippet",
+        "instructions": "<u>Artikel 5, stk. 1, litra c, og præambelbetragtning nr. 39</u><br/>Beskriv hvordan det sikres, at mængden af trænings- og testdata er begrænset til det nødvendige, og at der i det enkelte datasæt ikke indgår datapunkter, som ikke er nødvendige til træning og test.<br/>"
+      },
+      {
+        "sortKey": 14,
+        "question": "Princippet om rigtighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra d, og præambelbetragtning nr. 39</u><br/>Beskriv hvordan det sikres, at trænings- og testdata er korrekte og retvisende.<br/>"
+      },
+      {
+        "sortKey": 15,
+        "question": "Princippet om rimelighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, og præambelbetragtning nr. 39, 58 samt 60</u><br/>Beskriv hvordan det sikres, at AI-løsningen i drift ikke genererer urimelige output, f.eks. ved løbende overvågning og test, og hvordan eventuel bias i output opdages og håndteres.<br/>"
+      },
+      {
+        "sortKey": 16,
+        "question": "Princippet om gennemsigtighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra a, og præambelbetragtning nr. 39, 58 samt 60</u><br/>Beskriv hvordan det sikres, at output kan forklares, f.eks. hvis output danner grundlag for en beslutning over for den registrerede.<br/>"
+      },
+      {
+        "sortKey": 17,
+        "question": "Proportionalitetsprincippet",
+        "instructions": "<u>Artikel 5, stk. 1, litra c, og præambelbetragtning nr. 39</u><br/>Beskriv hvordan det sikres, at input er begrænset til det nødvendige og relevante, og at der ikke indgår unødvendige data.<br/>"
+      },
+      {
+        "sortKey": 18,
+        "question": "Princippet om rigtighed",
+        "instructions": "<u>Artikel 5, stk. 1, litra d, og præambelbetragtning nr. 39</u><br/>Beskriv hvordan det sikres, at AI-løsningen fortsat genererer korrekte og retvisende output, f.eks. hvordan løbende modeldrift opdages og afhjælpes, hvordan statiske modeller overvåges og om nødvendigt gentrænes mv.<br/>"
+      },
+      {
+        "sortKey": 19,
+        "question": "Princippet om integritet og fortrolighed samt behandlingssikkerhed",
+        "instructions": "<u>Artikel 5, stk. 1, litra f, og artikel 32-34 samt præambelbetragtning nr. 75, 76, 83 og 85-88</u><br/>Beskriv hvordan behandlingssikkerheden sikres igennem hele løsningens livscyklus, f.eks. ved gennemførte risikovurderinger og implementerede sikkerhedsforanstaltninger. Kan med fordel beskrives i bilag.<br/>"
+      },
+      {
+        "sortKey": 20,
+        "question": "Brud på persondatasikkerheden",
+        "instructions": "<u>Artikel 5, stk. 1, litra f, og artikel 33-34 samt præambelbetragtning nr. 75, 76, 83 og 85-88</u><br/>Beskriv, hvordan brud på persondatasikkerheden håndteres, og hvordan de registrerede eventuelt underrettes om brud, som sandsynligvis vil indebære en høj risiko for de pågældende.<br/>"
+      },
+      {
+        "sortKey": 21,
+        "question": "Oplysningspligt",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 12-14 samt præambelbetragtning nr. 60-62</u><br/>Beskriv hvordan oplysningspligten iagttages over for de registrede både ved udvikling og i drift, herunder om der gives meningsfulde oplysninger om logikken i AI-løsningen og de forventede konsekvenser, hvis relevant.<br/>"
+      },
+      {
+        "sortKey": 22,
+        "question": "Indsigtsret",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 15 samt præambelbetragtning nr. 63-64</u><br/>Beskriv hvordan det sikres, at anmodninger om indsigt håndteres korrekt, herunder om der kan gives meningsfulde oplysninger om logikken i AI-løsningen og de forventede konsekvenser, hvis relevant.<br/>"
+      },
+      {
+        "sortKey": 23,
+        "question": "Retten til berigtigelse",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 16 samt præambelbetragtning nr. 65</u><br/>Beskriv hvordan det sikres, at anmodninger om berigtigelse håndteres korrekt, herunder om de registrerede kan få berigtiget eventuelle træningsdata eller få berigtiget løsningens output, samt hvordan underretning af eventuelle modtagere af ukorrekte oplysninger kan ske.<br/>"
+      },
+      {
+        "sortKey": 24,
+        "question": "Retten til sletning",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 17 samt præambelbetragtning nr. 65</u><br/>Beskriv hvordan det sikres, at anmodninger om sletning håndteres korrekt, herunder om de registrerede kan få slettet eventuelle oplysninger i træningsdata eller i output, samt hvordan underretning af eventuelle modtagere af oplysninger, der skal slettes, kan ske.<br/>"
+      },
+      {
+        "sortKey": 25,
+        "question": "Retten til dataportabilitet",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 20 samt præambelbetragtning nr. 68</u><br/>Beskriv, hvis det er relevant, hvordan det sikres, at anmodninger om dataportabilitet håndteres korrekt.<br/>"
+      },
+      {
+        "sortKey": 26,
+        "question": "Ret til at gøre indsigelse",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 21 samt præambelbetragtning nr. 69</u><br/>Beskriv, hvis det er relevant, hvordan det sikres, at de registrerede har ret til at gøre indsigelse med hensyn til brug af vedkommendes data til udvikling af løsningen, eller mod at oplysningerne bruges som input.<br/>"
+      },
+      {
+        "sortKey": 27,
+        "question": "Ret til ikke at være genstand for automatiske indviduelle afgørelser",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 22 samt præambelbetragtning nr. 71</u><br/>Beskriv, hvis det er relevant, hvordan det sikres, at de registrerede har ret til menneskelig indgriben med hensyn til AI-løsningens output, kan fremkomme med sine synspunkter og bestride afgørelsen.<br/>"
+      },
+      {
+        "sortKey": 28,
+        "question": "Databehandlere",
+        "instructions": "<u>Artikel 28 samt præambelbetragtning nr. 81</u><br/>Beskriv, hvis det er relevant, hvilke databehandlere der benyttes som led i udvikling og drift af AI-løsningen, hvilken behandling der foretages af disse, samt hvilke fornødne garantier databehandlerne har givet for, at behandlingen sker i overensstemmelse med databeskyttelsesreglerne. Kan med fordel beskrives i bilag.<br/>"
+      },
+      {
+        "sortKey": 29,
+        "question": "Tredjelandsoverførsler",
+        "instructions": "<u>Artikel 44-49 samt præambelbetragtning nr. 101-115</u><br/>Beskriv, hvis det er relevant, hvilke tredjelande personoplysninger overføres til som led i udvikling og drift af AI-løsningen, hvilket overførselsgrundlag der anvendes, samt I hvilket omfang overførselsgrundlaget er effektivt. Kan med fordel beskrives i bilag.<br/>"
+      }
+    ]
+  },
+  {
+    "sortKey": 5,
+    "identifier": "interest",
+    "header": "Interessentinddragelse",
+    "canOptOut": false,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Databeskyttelsesrådgiverens synspunkter",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 35, stk. 2</u><br/>Angiv databeskyttelsesrådgiverens synspunkter og bemærkninger til den gennemførte konsekvensanalyse.<br/>"
+      },
+      {
+        "sortKey": 1,
+        "question": "Registreredes (eller deres repræsentanters) synspunkter",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 35, stk. 9</u><br/>Hvis det er relevant, skal de registrerede eller deres repræsentanters synspunkter om den planlagte behandlingsaktivitet indhentes.<br/><br/>Hvis de registrerede eller deres repræsentanters synspunkter ikke indhentes, bør begrundelsen for dette fravalg dokumenteres.<br/>"
+      },
+      {
+        "sortKey": 2,
+        "question": "Høring af Datatilsynet",
+        "instructions": "<u>Databeskyttelsesforordningens artikel 36</u><br/>Hvis konsekvensanalysen viser, at behandlingen indebærer høj risiko – til trods for foranstaltninger for at nedbringe risikoen – skal Datatilsynet høres, inden behandlingsaktiviteten iværksættes.<br/><br/>Angiv, hvis relevant, at Datatilsynet er blevet hørt, hvornår, og hvilke eventuelle bemærkninger I har modtaget.<br/>"
+      }
+    ]
+  },
+  {
+    "sortKey": 6,
+    "identifier": "management",
+    "header": "Ledelsesgodkendelse",
+    "canOptOut": false,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Ledelsens synspunkter og godkendelse"
+      }
+    ]
+  },
+  {
+    "sortKey": 7,
+    "identifier": "responsible",
+    "header": "Ansvarlig for konsekvensanalyse",
+    "canOptOut": false,
+    "dpiaTemplateQuestions": [
+      {
+        "sortKey": 0,
+        "question": "Konsekvensanalysen ajourføres løbende af"
+      }
+    ]
+  }
+]

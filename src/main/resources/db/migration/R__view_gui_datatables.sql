@@ -307,7 +307,7 @@ SELECT
     a.name,
     a.last_sync,
     s.name as supplier,
-    GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',') AS assets 
+    GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',') AS assets
 FROM dbs_asset a
     LEFT JOIN dbs_supplier s on a.dbs_supplier_id = s.id
     LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))

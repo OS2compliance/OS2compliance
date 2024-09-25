@@ -21,9 +21,6 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
-                            <i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
-                        </button>
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
@@ -97,7 +94,7 @@
                 debounceTimeout: 1000
             },
             pagination: {
-                limit: 5,
+                limit: 25,
                 server: {
                     url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
                 }
@@ -175,17 +172,17 @@
                 }
             }
         }).render(tableDiv);
-        
+
         // set state on grid
         grid.on('ready', function() {
             // Initialize all Asset Choices.js
         	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(select => select.id).forEach(elementId => {
         	    var assetChoices = initAssetSelect(elementId, true);
-        	    
+
         	    assetChoices.passedElement.element.addEventListener('removeItem', handleAddRemoveEvent, false);
         	    assetChoices.passedElement.element.addEventListener('addItem', handleAddRemoveEvent, false);
         	});
-        	
+
             // only apply saved state on the first load
             if (!initialAssetLoadDone) {
 
