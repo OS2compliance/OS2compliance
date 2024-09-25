@@ -23,6 +23,8 @@ public class ReflectionHelper {
         final String typeName = field.getType().getName();
         if (typeName.equals("boolean")) {
             ReflectionUtils.invokeMethod(method, obj, Boolean.valueOf(value));
+        } else if (typeName.equals("java.lang.Long")) {
+            ReflectionUtils.invokeMethod(method, obj, Long.parseLong(value));
         } else if (typeName.equals(String.class.getName())) {
             ReflectionUtils.invokeMethod(method, obj, value);
         }

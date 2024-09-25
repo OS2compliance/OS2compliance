@@ -3,9 +3,8 @@ package dk.digitalidentity.model.entity;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.model.entity.enums.ThreatAssessmentRevisionInterval;
+import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
-import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -65,7 +64,7 @@ public class ThreatAssessment extends Relatable {
 
     @Column
     @Enumerated(EnumType.STRING)
-    private ThreatAssessmentRevisionInterval revisionInterval;
+    private RevisionInterval revisionInterval;
 
     @Column
     private boolean registered;

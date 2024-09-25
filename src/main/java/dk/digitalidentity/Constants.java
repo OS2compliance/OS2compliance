@@ -15,6 +15,7 @@ public interface Constants {
     String CVR_UPDATED_PROPERTY = "cvr_updated_at";
     String ASSOCIATED_DOCUMENT_PROPERTY = "linked_doc";
     String ASSOCIATED_THREAT_ASSESSMENT_PROPERTY = "linked_threat";
+    String ASSOCIATED_ASSET_DPIA_PROPERTY = "linked_dpia";
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";

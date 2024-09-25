@@ -46,6 +46,9 @@ public class DataProcessing {
     @OneToMany(mappedBy = "dataProcessing", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<DataProcessingCategoriesRegistered> registeredCategories = new ArrayList<>();
 
+    @Column
+    private String typesOfPersonalInformationFreetext;
+
     // Storage
 
     @Column(name = "storage_time_identifier")
