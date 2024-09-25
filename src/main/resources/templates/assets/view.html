@@ -1,16 +1,18 @@
 <!DOCTYPE html>
 <html lang="da">
 
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (textEditor = true)}"></head>
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/js/data-processing-component.js}" defer></script>
 <script th:src="@{/js/asset/details.js}" defer></script>
+<script th:src="@{/js/asset/dpia.js}" defer></script>
 
 <body class="jumping">
     <script th:src="@{/js/tabs.js}" defer></script>
 
     <link rel="stylesheet" th:href="@{/css/assets.css}" />
+    <link rel="stylesheet" th:href="@{/css/dpia_schema.css}" />
     <link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
     <script th:src="@{/js/risk/riskProfile.js}" defer></script>
 
@@ -490,7 +492,9 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal)}"></div>
-    <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
+    <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
+    <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
+    <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true)}"></div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -521,6 +525,7 @@
             responsibleChoicesEditSelect = initUserSelect("responsibleUsers");
             responsibleChoicesEditSelect.disable();
             editMode(false);
+            initDpia();
 
             addRelationFormLoaded();
             initTabs();

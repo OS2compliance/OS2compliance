@@ -122,12 +122,14 @@ public interface AssetMapper {
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpia", ignore = true),
+        @Mapping(target = "dpiaScreening", ignore = true),
         @Mapping(target = "managers", source = "responsibleUsers"),
         @Mapping(target = "deleted", ignore = true),
         @Mapping(target = "localizedEnums", ignore = true),
         @Mapping(target = "threatAssessmentOptOut", ignore = true),
         @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
-        @Mapping(target = "dpiaOptOut", ignore = true)
+        @Mapping(target = "dpiaOptOut", ignore = true),
+        @Mapping(target = "dpiaOptOutReason", ignore = true)
     })
     Asset fromEO(AssetCreateEO assetCreateEO);
 

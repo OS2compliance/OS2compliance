@@ -354,7 +354,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 dataProcessing.setDeletionProcedure(DeletionProcedure.YES);
                 dataProcessing.setDeletionProcedureLink("https://WeDeleteEverythinAllTheTime.nu");
                 dataProcessing.setAccessWhoIdentifiers(Set.of("dp-access-who-leaders", "dp-access-who-ext"));
-                dataProcessing.setAccessCountIdentifier("dp-access-count-5-10");
+                dataProcessing.setAccessCountIdentifier("dp-access-count-1-10");
                 dataProcessing.setStorageTimeIdentifier("dp-storage-duration-1mth");
                 dataProcessing.getRegisteredCategories().add(DataProcessingCategoriesRegistered.builder()
                     .personCategoriesRegisteredIdentifier("dp-categories-registered-vuln-children")

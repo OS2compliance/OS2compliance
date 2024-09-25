@@ -234,7 +234,12 @@ public class RiskController {
                 for (final Register register : registers) {
                     if (!addedIds.contains(register.getId())) {
                         final ConsequenceAssessment consequenceAssessment = register.getConsequenceAssessment();
-                        result.add(new RelatedRegisterDTO(register.getId(), register.getName(), consequenceAssessment.getConfidentialityRegistered(), consequenceAssessment.getIntegrityRegistered(), consequenceAssessment.getAvailabilityRegistered(), consequenceAssessment.getConfidentialityOrganisation(), consequenceAssessment.getIntegrityOrganisation(), consequenceAssessment.getAvailabilityOrganisation()));
+                        if (consequenceAssessment != null) {
+                            result.add(new RelatedRegisterDTO(register.getId(), register.getName(), consequenceAssessment.getConfidentialityRegistered(), consequenceAssessment.getIntegrityRegistered(), consequenceAssessment.getAvailabilityRegistered(), consequenceAssessment.getConfidentialityOrganisation(), consequenceAssessment.getIntegrityOrganisation(), consequenceAssessment.getAvailabilityOrganisation()));
+                        } else {
+                            result.add(new RelatedRegisterDTO(register.getId(), register.getName(), null, null, null, null, null, null));
+                        }
+
                         addedIds.add(register.getId());
                     }
                 }

@@ -72,6 +72,19 @@ public class EmailTemplateService {
                         "<p>Nye inaktive brugere:</p>" +
                         "<p>{brugere}</p>";
                     break;
+                case DPIA_REPORT:
+                    title = "DPIA: {objekt}";
+                    message = "<p>Kære {modtager}</p>" +
+                        "<p>{afsender} har sendt dig DPIA for aktivet med titlen {objekt}</p>" +
+                        "<p>Personen har skrevet denne besked til dig:</p><p>{besked}</p>";
+                    break;
+                case DPIA_REPORT_TO_SIGN:
+                    title = "DPIA: {objekt}";
+                    message = "<p>Kære {modtager}</p>" +
+                        "<p>{afsender} har sendt dig DPIA for aktivet med titlen {objekt}</p>" +
+                        "<p>Personen har skrevet denne besked til dig:</p><p>{besked}</p>" +
+                        "<p>Rapporten skal signeres. Det kan du gøre ved at følge dette link: {link}</p>";
+                    break;
             }
 
             template.setTitle(title);
