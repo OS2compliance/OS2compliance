@@ -1,21 +1,27 @@
 package dk.digitalidentity.integration.dbs;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
 import org.springframework.stereotype.Service;
 
+import dk.dbs.api.DocumentResourceApi;
 import dk.dbs.api.ItSystemsResourceApi;
 import dk.dbs.api.SupplierResourceApi;
+import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
+import dk.dbs.api.model.PageEODocument;
 import dk.dbs.api.model.PageEOItSystem;
 import dk.dbs.api.model.PageEOSupplier;
 import dk.dbs.api.model.Supplier;
+import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
 import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
 import dk.digitalidentity.model.entity.DBSAsset;
+import dk.digitalidentity.model.entity.DBSOversight;
 import dk.digitalidentity.model.entity.DBSSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,6 +34,8 @@ public class DBSService {
 	private final ItSystemsResourceApi itsystemResourceApi;
 	private final SupplierResourceApi supplierResourceApi;
 	private final DBSSupplierDao dbsSupplierDao;
+	private final DocumentResourceApi documentResourceApi;
+	private final DBSOversightDao dbsOversightDao;
 
 	public void sync(String cvr) {
 		List<Supplier> suppliers = getAllSuppliers();
@@ -154,6 +162,72 @@ public class DBSService {
 		}
 
 		return itSystems;
+	}
+
+	private List<Document> getAllDocuments(LocalDateTime createdAfter) {
+		int page = 0;
+		List<Document> documents = new ArrayList<>();
+
+		PageEODocument documentsPage = documentResourceApi.list5(100, page, "TILSYNSRAPPORTER", createdAfter);
+		
+		documents.addAll(documentsPage.getContent());
+
+		while (page < documentsPage.getTotalPages()) {
+			page += 1;
+			documentsPage = documentResourceApi.list5(100, page, "TILSYNSRAPPORTER", createdAfter);
+			documents.addAll(documentsPage.getContent());
+		}
+		return documents;
+	}
+
+
+	public void syncOversight(LocalDateTime createdAfter) {
+		List<Document> documents = getAllDocuments(createdAfter);
+		
+		//Remove documents without suppliers
+		documents.removeIf(d -> d.getPath().getSupplier() == null);
+		
+        List<DBSOversight> existingDBSOversights = dbsOversightDao.findAll();
+        
+        List<DBSOversight> toBeAdded = new ArrayList<>();
+        List<DBSOversight> toBeUpdated = new ArrayList<>();
+        for (Document document : documents) {
+            // Add if isn't locally stored
+            if (existingDBSOversights.stream().noneMatch(s -> Objects.equals(s.getDbsId(), document.getId()))) {
+                DBSOversight dbsOversight = new DBSOversight();
+                dbsOversight.setDbsId(document.getId());
+                dbsOversight.setName(document.getName());
+                dbsOversight.setCreated(document.getCreated());
+                dbsOversight.setLocked(document.getLocked());
+                dbsOversight.setSupplier(dbsSupplierDao.findByDbsId(document.getPath().getSupplier().getId()).orElseThrow(() -> new DBSSynchronizationException("Supplier for id " + document.getPath().getSupplier().getId() + " not found in OS2Compliance.")));
+                dbsOversight.setTaskCreated(false);
+
+                toBeAdded.add(dbsOversight);
+            } else {
+                //Update
+                DBSOversight existingDBSOversight = existingDBSOversights.stream().filter(existing -> Objects.equals(existing.getDbsId(), document.getId())).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
+                
+                boolean changes = false;
+                if (!Objects.equals(existingDBSOversight.getName(), document.getName())) {
+                    existingDBSOversight.setName(document.getName());
+                    changes  = true;
+                }
+                if (document.getLocked() != null && !Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
+                    existingDBSOversight.setLocked(document.getLocked());
+                    changes = true;
+                }
+                //TODO what other fields do we care about
+
+                if (changes) {
+                    toBeUpdated.add(existingDBSOversight);
+                }
+            }
+        }
+
+        log.debug("Adding {} oversights.", toBeAdded.size());
+        toBeAdded.forEach(dbsOversightDao::save);
+        log.debug("Updating {} oversights.", toBeUpdated.size());
+        toBeUpdated.forEach(dbsOversightDao::save);
 	}
 
 }

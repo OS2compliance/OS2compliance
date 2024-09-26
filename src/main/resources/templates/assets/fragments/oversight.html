@@ -17,6 +17,7 @@
                                 <th class="col-lg-2">Er der indgået en databehandleraftale</th>
                                 <th class="col-lg-2">Dato</th>
                                 <th class="col-lg-2">Link</th>
+                                <th class="col-lg-2">Responisble</th>
                                 <th class="col-lg-2">Valg af tilsynsmodel</th>
                                 <th class="col-lg-2">Hyppighed</th>
                                 <th class="col-lg-2">Næste tilsyn</th>
@@ -41,6 +42,11 @@
                                 <td>
                                     <a class="form-control-static editField" th:href="*{dataProcessingAgreementLink}" th:text="*{dataProcessingAgreementLink}" target="_blank" rel="noopener" ></a>
                                     <input class="form-control" th:field="*{dataProcessingAgreementLink}" hidden>
+                                </td>
+                                <td>
+                                    <select class="form-control form-select choices__input" data-trigger="" id="assetResponsible" th:field="${oversight}" hidden="" tabindex="-1" multiple="multiple">
+                                        <option th:each="user : *{managers}" th:value="${user.uuid}" th:text="'(' + ${user.userId} + ') ' + ${user.name}" selected></option>
+                                    </select>
                                 </td>
                                 <td>
                                     <select class="form-control form-select editField" th:field="*{supervisoryModel}" tabindex="-1" disabled>
