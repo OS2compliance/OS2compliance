@@ -186,4 +186,8 @@ public class Asset extends Relatable {
     @OneToMany(orphanRemoval = true, mappedBy = "asset", cascade = CascadeType.ALL)
     private List<AssetOversight> assetOversights = new ArrayList<>();
 
+    @ManyToOne
+    @JoinColumn(name = "oversight_responsible_uuid")
+    private User oversightResponsibleUser;
+
 }

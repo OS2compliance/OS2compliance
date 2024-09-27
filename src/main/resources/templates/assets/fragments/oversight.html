@@ -14,8 +14,8 @@
                     <table class="table table-striped">
                         <thead>
                             <tr>
-                                <th class="col-lg-2">Er der indgået en databehandleraftale</th>
-                                <th class="col-lg-2">Dato</th>
+                                <th class="col-lg-1">Er der indgået en databehandleraftale</th>
+                                <th class="col-lg-1">Dato</th>
                                 <th class="col-lg-2">Link</th>
                                 <th class="col-lg-2">Responisble</th>
                                 <th class="col-lg-2">Valg af tilsynsmodel</th>
@@ -44,9 +44,7 @@
                                     <input class="form-control" th:field="*{dataProcessingAgreementLink}" hidden>
                                 </td>
                                 <td>
-                                    <select class="form-control form-select choices__input" data-trigger="" id="assetResponsible" th:field="${oversight}" hidden="" tabindex="-1" multiple="multiple">
-                                        <option th:each="user : *{managers}" th:value="${user.uuid}" th:text="'(' + ${user.userId} + ') ' + ${user.name}" selected></option>
-                                    </select>
+                                    <select class="form-control form-select choices__input editField" th:field="*{oversightResponsibleUser}" data-trigger="" id="assetOversightUserSelect" hidden="" disabled></select>
                                 </td>
                                 <td>
                                     <select class="form-control form-select editField" th:field="*{supervisoryModel}" tabindex="-1" disabled>
@@ -92,6 +90,7 @@
         +]*/
         var oversightDialog;
         var oversightResponsibleUserChoices;
+        var assetOversightResponsibleUserChoices;
 
 
         document.addEventListener("DOMContentLoaded", function(event) {
@@ -127,6 +126,22 @@
             document.querySelector( "#nextInspectionDateBtn" ).addEventListener( "click", () => {
                 nextInspectionDatePicker.open();
             });
+            
+
+            //Init choices.js
+            const assetOversightResponsibleSelect = document.getElementById('assetOversightUserSelect');
+            assetOversightResponsibleUserChoices = initSelect(assetOversightResponsibleSelect);
+            updateUsers(assetOversightResponsibleUserChoices, "");
+            assetOversightResponsibleSelect.addEventListener("search",
+            function(event) {
+                console.log(event.detail.value);
+                updateUsers(assetOversightResponsibleUserChoices, event.detail.value);
+            },
+            false,
+            );
+//             oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
+//                 checkInputField(assetOversightResponsibleUserChoices);
+//             });
 
         });
 
@@ -140,6 +155,10 @@
                       if (elem.nextElementSibling) {
                          elem.nextElementSibling.hidden = false;
                       }
+                  }
+
+                  if (elem.id =='assetOversightUserSelect') {
+                      assetOversightResponsibleUserChoices.enable();
                   }
 
                   if (elem.classList.contains("datepicker")) {
@@ -159,6 +178,10 @@
                   if (elem.tagName == "A") {
                       elem.hidden = false;
                       elem.nextElementSibling.hidden = true;
+                  }
+
+                  if (elem.id =='assetOversightUserSelect') {
+                      assetOversightResponsibleUserChoices.disable();
                   }
 
                   if (elem.classList.contains("datepicker")) {
