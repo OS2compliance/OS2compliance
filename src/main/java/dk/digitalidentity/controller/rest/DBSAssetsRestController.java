@@ -28,9 +28,7 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -41,15 +39,14 @@ import lombok.extern.slf4j.Slf4j;
 @RequireUser
 @RequiredArgsConstructor
 public class DBSAssetsRestController {
-    private final AssetService assetService;
 	private final DBSAssetGridDao dbsAssetGridDao;
 	private final DBSAssetDao dbsAssetDao;
 	private final DBSAssetMapper mapper;
-    private final UserService userService;
     private final RelationService relationService;
 
 
 	@PostMapping("list")
+	@Transactional
 	public PageDTO<DBSAssetDTO> list(@RequestParam(name = "search", required = false) final String search,
                                   @RequestParam(name = "page", required = false) final Integer page,
                                   @RequestParam(name = "size", required = false) final Integer size,
@@ -65,7 +62,7 @@ public class DBSAssetsRestController {
 		final Pageable sortAndPage = PageRequest.of(page, size, sort);
 		Page<DBSAssetGrid> assets = null;
 		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name");
+			final List<String> searchableProperties = Arrays.asList("name", "supplier");
 			// search and page
 			assets = dbsAssetGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSAssetGrid.class);
 		} else {
