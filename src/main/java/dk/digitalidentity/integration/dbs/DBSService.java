@@ -250,15 +250,14 @@ public class DBSService {
     public void oversightResponsible() {
         LocalDate nowPlus14Days = LocalDate.now().plusDays(14);
         List<DBSOversight> oversights = dbsOversightDao.findByTaskCreatedFalse();
-        log.debug("Found {} oversights that need a task.", oversights.size());
+//        log.debug("Found {} oversights that need a task.", oversights.size());
         
         for (DBSOversight dbsOversight : oversights) {
-            log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
-            log.debug("{}",dbsOversight.getId());
+//            log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
             
             for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
                 List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
-                log.debug("Found {} related assets.", assetRelations.size());
+//                log.debug("Found {} related assets.", assetRelations.size());
                 
                 List<Asset> assets = assetRelations.stream()
                     .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
