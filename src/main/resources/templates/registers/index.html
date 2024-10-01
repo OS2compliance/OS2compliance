@@ -2,6 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <script th:src="@{/js/register/form.js}" defer></script>
+<script th:src="@{/js/grid-options.js}" defer></script>
 <body class="jumping">
     <link rel="stylesheet" th:href="@{/css/register.css}" />
 	<div id="root" class="root mn--max hd--expanded">
@@ -37,6 +38,13 @@
 						<div class="flex-fill">
 							<div class="card mb-3">
 								<div class="card-body">
+                                    <div class="btn-group">
+                                        <button id="confidentialityRegisteredBtn" type="button" class="btn dropdown-toggle btn-success" data-bs-toggle="dropdown" aria-expanded="false"
+                                                style="pointer-events: auto;" title="Kolonner">1</button>
+                                        <ul class="dropdown-menu" style="" id="gridOptions">
+                                            <!-- content added dynamically -->
+                                        </ul>
+                                    </div>
 									<div id="registersDatatable"></div>
 								</div>
 							</div>
@@ -65,6 +73,14 @@
 			var deleteUrl = [[@{/registers/}]];
 		+]*/
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+        let grid = null;
+
+        function debugPrint() {
+            console.log(grid);
+            console.log(grid.config.columns);
+            grid.config.columns[1].hidden = true;
+            grid.forceRender();
+        }
 
 		const defaultClassName = {
 			table: 'table table-striped',
@@ -83,7 +99,7 @@
             const savedSearchRegister = localStorage.getItem(registerGridKeySearch);
             let initialRegisterLoadDone = false;  // flag to ensure initial load only happens once
 
-			const grid = new gridjs.Grid({
+			grid = new gridjs.Grid({
 				className: defaultClassName,
 				 search: {
 				    keyword: savedSearchRegister,
@@ -261,7 +277,6 @@
                 if (!initialRegisterLoadDone) {
 
                     const searchInput = document.querySelector('#registersDatatable .gridjs-search-input');
-                    console.log(searchInput);
                     if (searchInput) {
                         searchInput.addEventListener('input', function() {
                             if (this.value === '') {
@@ -275,6 +290,8 @@
                     initialRegisterLoadDone = true;  // ensure this only runs once
                 }
             });
+            gridOptions.init(grid);
+            gridOptions.populateDropDown(document.getElementById("gridOptions"));
 		});
 
 		function deleteClicked(registerId, name) {
