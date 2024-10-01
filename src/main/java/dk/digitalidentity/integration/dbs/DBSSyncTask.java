@@ -50,6 +50,19 @@ public class DBSSyncTask {
 		log.info("Finished: DBS Oversight Task");
 	}
 
+	@Transactional
+//  @Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
+    @Scheduled(fixedRate = 1000000000L)
+    public void oversightResponsibleTask() {
+        if (taskDisabled()) {
+            return;
+        }
+        
+        log.info("Started: DBS Oversight Responsible Task");
+        dbsService.oversightResponsible();
+        log.info("Finished: DBS Oversight Responsible Task");
+    }
+
 	private boolean taskDisabled() {
 		if (!configuration.isSchedulingEnabled()) {
 			log.info("Scheduling disabled, not doing sync");

@@ -2,9 +2,13 @@ package dk.digitalidentity.integration.dbs;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
@@ -20,9 +24,19 @@ import dk.dbs.api.model.Supplier;
 import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
 import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DBSOversight;
 import dk.digitalidentity.model.entity.DBSSupplier;
+import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.TaskRepetition;
+import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.TaskService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -36,6 +50,9 @@ public class DBSService {
 	private final DBSSupplierDao dbsSupplierDao;
 	private final DocumentResourceApi documentResourceApi;
 	private final DBSOversightDao dbsOversightDao;
+	private final RelationService relationService;
+	private final AssetService assetService;
+	private final TaskService taskService;
 
 	public void sync(String cvr) {
 		List<Supplier> suppliers = getAllSuppliers();
@@ -229,5 +246,51 @@ public class DBSService {
         log.debug("Updating {} oversights.", toBeUpdated.size());
         toBeUpdated.forEach(dbsOversightDao::save);
 	}
+
+    public void oversightResponsible() {
+        LocalDate nowPlus14Days = LocalDate.now().plusDays(14);
+        List<DBSOversight> oversights = dbsOversightDao.findByTaskCreatedFalse();
+        log.debug("Found {} oversights that need a task.", oversights.size());
+        
+        for (DBSOversight dbsOversight : oversights) {
+            log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
+            log.debug("{}",dbsOversight.getId());
+            
+            for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
+                List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
+                log.debug("Found {} related assets.", assetRelations.size());
+                
+                List<Asset> assets = assetRelations.stream()
+                    .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
+                    .map(assetService::findById)
+                    .filter(Optional::isPresent)
+                    .map(x -> x.get())
+                    .toList();
+                
+                for (Asset asset : assets) {
+                    if (asset.getOversightResponsibleUser() == null) {
+                        log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponisble is null.", asset.getId(), dbsOversight.getId());
+                        continue;
+                    }
+                    
+                    // Create a new task
+                    Task task = new Task();
+                    task.setName(dbsOversight.getSupplier().getName() + " - DBS tilsyn");
+                    task.setNextDeadline(nowPlus14Days);
+                    task.setResponsibleUser(asset.getOversightResponsibleUser());
+                    task.setTaskType(TaskType.TASK);
+                    task.setRepetition(TaskRepetition.NONE);
+                    
+                    log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
+
+                    taskService.saveTask(task);
+                    relationService.addRelation(task, dbsAsset);
+
+                    dbsOversight.setTaskCreated(true);
+                    dbsOversightDao.save(dbsOversight);
+                }
+            }
+        }
+    }
 
 }
