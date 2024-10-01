@@ -38,9 +38,9 @@
 						<div class="flex-fill">
 							<div class="card mb-3">
 								<div class="card-body">
-                                    <div class="btn-group">
-                                        <button id="confidentialityRegisteredBtn" type="button" class="btn dropdown-toggle btn-success" data-bs-toggle="dropdown" aria-expanded="false"
-                                                style="pointer-events: auto;" title="Kolonner">1</button>
+                                    <div class="btn-group" style="position: absolute; top: 20px; z-index: 10">
+                                        <button id="confidentialityRegisteredBtn" type="button" class="btn dropdown-toggle btn-light" data-bs-toggle="dropdown" aria-expanded="false"
+                                                style="pointer-events: auto;" title="Kolonner"><i class="pli-gears fs-4"></i></button>
                                         <ul class="dropdown-menu" style="" id="gridOptions">
                                             <!-- content added dynamically -->
                                         </ul>
@@ -75,13 +75,6 @@
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         let grid = null;
 
-        function debugPrint() {
-            console.log(grid);
-            console.log(grid.config.columns);
-            grid.config.columns[1].hidden = true;
-            grid.forceRender();
-        }
-
 		const defaultClassName = {
 			table: 'table table-striped',
 			search: "form-control",
@@ -99,7 +92,7 @@
             const savedSearchRegister = localStorage.getItem(registerGridKeySearch);
             let initialRegisterLoadDone = false;  // flag to ensure initial load only happens once
 
-			grid = new gridjs.Grid({
+            grid = new gridjs.Grid({
 				className: defaultClassName,
 				 search: {
 				    keyword: savedSearchRegister,
@@ -290,8 +283,7 @@
                     initialRegisterLoadDone = true;  // ensure this only runs once
                 }
             });
-            gridOptions.init(grid);
-            gridOptions.populateDropDown(document.getElementById("gridOptions"));
+            gridOptions.init(grid, document.getElementById("gridOptions"));
 		});
 
 		function deleteClicked(registerId, name) {
