@@ -2,6 +2,10 @@
     z-index: 1060 !important;
 }
 
+.cursor-hand {
+    cursor: pointer;
+}
+
 .text-no-transform {
     text-transform: none !important;
 }
