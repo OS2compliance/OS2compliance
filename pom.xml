@@ -96,6 +96,10 @@
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -153,7 +157,7 @@
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
 			<artifactId>kitos-client</artifactId>
-			<version>1.0.4</version>
+			<version>release-1.0.6</version>
 		</dependency>
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>

@@ -16,8 +16,8 @@ import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
+import dk.kitos.api.model.SimpleLinkDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
-import dk.kitos.api.model.UpdateItSystemRequestDTO;
 import dk.kitos.api.model.UpdateItSystemUsageRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -150,8 +150,36 @@ public class KitosClientService {
         if (update.getGdpr() == null) {
             update.setGdpr(new GDPRWriteRequestDTO());
         }
+        final GDPRWriteRequestDTO gdpr = update.getGdpr();
+        if (isEmpty(gdpr.getDirectoryDocumentation())) {
+            gdpr.setDirectoryDocumentation(null);
+        }
+        if (isEmpty(gdpr.getTechnicalPrecautionsDocumentation())) {
+            gdpr.setTechnicalPrecautionsDocumentation(null);
+        }
+        if (isEmpty(gdpr.getUserSupervisionDocumentation())) {
+            gdpr.setUserSupervisionDocumentation(null);
+        }
+        if (isEmpty(gdpr.getRiskAssessmentDocumentation())) {
+            gdpr.setRiskAssessmentDocumentation(null);
+        }
+        if (isEmpty(gdpr.getDpiaDocumentation())) {
+            gdpr.setDpiaDocumentation(null);
+        }
+
+        // Only send
+        update.setArchiving(null);
+        update.setGeneral(null);
+        update.setLocalKleDeviations(null);
+        update.setOrganizationUsage(null);
+        update.setExternalReferences(null);
+        update.setRoles(null);
         update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
         itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
+    }
+
+    private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
+        return simpleLinkDTO != null && simpleLinkDTO.getUrl() == null && simpleLinkDTO.getName() == null;
     }
 
     public <T> List<T> deltaFetch(final String settingsKey,
