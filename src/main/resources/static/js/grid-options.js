@@ -85,7 +85,7 @@ function GridOptions() {
 
     this.iterateColumns = function(callback) {
         return this.grid.config.columns.forEach((column) => {
-            if (column.id !== "id" && column.id !== "handlinger" && column.id !== "titel") {
+            if (column.id !== "id" && column.id !== "handlinger" && column.id !== "titel" && column.id !== "navn" && column.id !== "kitos") {
                 callback(column);
             }
         });

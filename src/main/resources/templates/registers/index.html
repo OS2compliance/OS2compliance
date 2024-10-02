@@ -2,7 +2,6 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <script th:src="@{/js/register/form.js}" defer></script>
-<script th:src="@{/js/grid-options.js}" defer></script>
 <body class="jumping">
     <link rel="stylesheet" th:href="@{/css/register.css}" />
 	<div id="root" class="root mn--max hd--expanded">
@@ -38,13 +37,7 @@
 						<div class="flex-fill">
 							<div class="card mb-3">
 								<div class="card-body">
-                                    <div class="btn-group" style="position: absolute; top: 20px; z-index: 10">
-                                        <button id="confidentialityRegisteredBtn" type="button" class="btn dropdown-toggle btn-light" data-bs-toggle="dropdown" aria-expanded="false"
-                                                style="pointer-events: auto;" title="Kolonner"><i class="pli-gears fs-4"></i></button>
-                                        <ul class="dropdown-menu" style="" id="gridOptions">
-                                            <!-- content added dynamically -->
-                                        </ul>
-                                    </div>
+                                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
 									<div id="registersDatatable"></div>
 								</div>
 							</div>
@@ -60,7 +53,7 @@
 	<div class="modal fade" id="createRegisterDialog" tabindex="-1" aria-labelledby="registerLabel" aria-hidden="true"></div>
 	<div class="modal fade" id="editRegisterDialog" tabindex="-1" aria-labelledby="registerLabel" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 	<script th:inline="javascript">
 		/*<![CDATA[*/
