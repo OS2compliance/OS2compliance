@@ -38,6 +38,7 @@
 						<div class="flex-fill">
 							<div class="card mb-3">
 								<div class="card-body">
+                                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
 									<div id="suppliersDatatable"></div>
 								</div>
 							</div>
@@ -53,7 +54,7 @@
 	<div class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
 	<div class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 
 	<script th:inline="javascript">
@@ -252,6 +253,7 @@
                     initialSupplierLoadDone = true;  // ensure this only runs once
                 }
             });
+            gridOptions.init(grid, document.getElementById("gridOptions"));
 		});
 
 		/*]]>*/
