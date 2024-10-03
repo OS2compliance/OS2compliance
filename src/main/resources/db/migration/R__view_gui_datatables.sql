@@ -326,7 +326,8 @@ SELECT
     a.oversight_responsible_uuid,
     ao.creation_date as last_inspection,
     ao.status as last_inspection_status,
-    IF(tl.id IS null, t.created_at, null) AS outstanding_since
+    IF(tl.id IS null, t.created_at, null) AS outstanding_since,
+    concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ao.localized_enums, '')) as localized_enums
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
     LEFT JOIN assets_oversight ao on ao.asset_id = a.id and ao.id = (

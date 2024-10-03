@@ -35,6 +35,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                            	<div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="assetsDatatable"></div>
                             </div>
                         </div>
@@ -46,7 +47,7 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='dbs_oversight')}"></nav>
 </div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 <style>
     #assetsDatatable table {
@@ -111,7 +112,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'supplier', 'supervisoryModel', '', '', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
+                        const columnIds = ['id', 'name', 'supplier', 'supervisoryModel', 'dbsAssets', 'oversightResponsible', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -136,8 +137,14 @@
                     name: "DBS",
                     sort: false,
                     formatter: (cell, row) => {
-                        const dbsAssetId = row.cells[0]['data'];
-
+                        var html = '<ul>'
+                        
+                    	for (let i = 0; i < cell.length; i++) {
+                    		 html += '<li><a href="/dbs/assets">' + cell[i].name + '</a></li>'
+                    	}
+                        
+                        html += '</ul>'
+                        return gridjs.html(html);
                     }
                 },
                 {
@@ -151,15 +158,15 @@
                     width: "100px",
                     formatter: (cell, row) => {
                         let status = cell;
-                        if (cell === "GREEN") {
+                        if (cell === "Grøn") {
                             status = [
                                 '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
                             ]
-                        } else if (cell === "YELLOW") {
+                        } else if (cell === "Gul") {
                             status = [
                                 '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
                             ]
-                        } else if (cell === "RED") {
+                        } else if (cell === "Rød") {
                             status = [
                                 '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
                             ]
@@ -222,6 +229,7 @@
                 initialAssetLoadDone = true;  // ensure this only runs once
             }
         });
+        gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 
     /*]]>*/

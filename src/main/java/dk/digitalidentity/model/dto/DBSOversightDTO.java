@@ -21,13 +21,13 @@ public class DBSOversightDTO {
 	private Long id;
 	private String name;
 	private String supplier;
-	private ChoiceOfSupervisionModel supervisoryModel;
+	private String supervisoryModel;
 	
 	private List<DBSAssetDTO> dbsAssets;
 	private String oversightResponsible;
 	@JsonFormat(pattern = "dd/MM-yyyy")
 	private LocalDate lastInspection;
-	private AssetOversightStatus lastInspectionStatus;
+	private String lastInspectionStatus;
 	@JsonFormat(pattern = "dd/MM-yyyy")
 	private LocalDate outstandingSince;
 }

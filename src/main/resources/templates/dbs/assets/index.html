@@ -35,6 +35,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                            	<div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="assetsDatatable"></div>
                             </div>
                         </div>
@@ -46,7 +47,7 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='dbs_aktiver')}"></nav>
 </div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 <style>
     #assetsDatatable table {
@@ -211,6 +212,7 @@
                 initialAssetLoadDone = true;  // ensure this only runs once
             }
         });
+        gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 
     async function handleAddRemoveEvent(event) {

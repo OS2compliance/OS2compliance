@@ -13,14 +13,12 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.grid.DBSOversightGridDao;
 import dk.digitalidentity.mapping.DBSOversightMapper;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,7 +31,6 @@ import lombok.extern.slf4j.Slf4j;
 public class DBSOversightRestController {
 	private final DBSOversightGridDao dbsOversightGridDao;
 	private final DBSOversightMapper mapper;
-
 
 	@PostMapping("list")
 	@Transactional
@@ -52,7 +49,7 @@ public class DBSOversightRestController {
 		final Pageable sortAndPage = PageRequest.of(page, size, sort);
 		Page<DBSOversightGrid> assets = null;
 		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name", "supplier");
+			final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "dbsAssets.name", "oversightResponsible", "lastInspection", "lastInspectionStatus", "outstandingSince", "localizedEnums");
 			// search and page
 			assets = dbsOversightGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSOversightGrid.class);
 		} else {
@@ -64,8 +61,14 @@ public class DBSOversightRestController {
 	}
 
 	private boolean containsField(final String fieldName) {
-		return fieldName.equals("lastSync")
+		return fieldName.equals("name")
 				|| fieldName.equals("supplier")
-				|| fieldName.equals("name");
+				|| fieldName.equals("supervisoryModel")
+				|| fieldName.equals("dbsAssets.name")
+				|| fieldName.equals("oversightResponsible")
+				|| fieldName.equals("lastInspection")
+				|| fieldName.equals("lastInspectionStatus")
+				|| fieldName.equals("outstandingSince")
+				;
 	}
 }

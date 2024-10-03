@@ -20,11 +20,11 @@ public interface DBSOversightMapper {
                 .id(oversightGrid.getId())
                 .name(oversightGrid.getName())
                 .supplier(nullSafe(() -> oversightGrid.getSupplier()))
-                .supervisoryModel(oversightGrid.getSupervisoryModel())
+                .supervisoryModel(nullSafe(() -> oversightGrid.getSupervisoryModel().getMessage()))
                 .dbsAssets(nullSafe( () -> oversightGrid.getDbsAssets().stream().map(a -> DBSAssetDTO.builder().id(a.getId()).name(a.getName()).build()).toList()))
                 .oversightResponsible(nullSafe(()-> oversightGrid.getOversightResponsible().getName()))
                 .lastInspection(oversightGrid.getLastInspection())
-                .lastInspectionStatus(oversightGrid.getLastInspectionStatus())
+                .lastInspectionStatus(nullSafe(() -> oversightGrid.getLastInspectionStatus().getMessage()))
                 .outstandingSince(oversightGrid.getOutstandingSince())
                 .build();
     }
