@@ -30,13 +30,18 @@ public class DBSSyncTask {
 		}
 
 		log.info("Started: DBS Sync");
+		
+		if ("123456".equals(configuration.getMunicipal().getCvr())) {
+			log.debug("Don't expect sync to work with fake CVR.");
+		}
+		
 		dbsService.sync(configuration.getMunicipal().getCvr());
 		log.info("Finished: DBS Sync");
 	}
 
 	@Transactional
 //	@Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
-	@Scheduled(fixedRate = 1000000000L)
+	@Scheduled(fixedRate = 1000000000L, initialDelay = 1000)
 	public void oversightTask() {
 		if (taskDisabled()) {
 			return;
@@ -52,7 +57,7 @@ public class DBSSyncTask {
 
 	@Transactional
 //  @Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
-    @Scheduled(fixedRate = 1000000000L)
+    @Scheduled(fixedRate = 1000000000L, initialDelay = 5000)
     public void oversightResponsibleTask() {
         if (taskDisabled()) {
             return;

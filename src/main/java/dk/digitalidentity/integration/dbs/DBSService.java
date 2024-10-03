@@ -56,10 +56,13 @@ public class DBSService {
 
 	public void sync(String cvr) {
 		List<Supplier> suppliers = getAllSuppliers();
+		log.debug("Found {} suppliers in DBS", suppliers.size());
 		
 		List<ItSystem> itSystems = getAllItSystems();
+
 		//Filter only itSystems related to this cvr
 		itSystems = itSystems.stream().filter(i -> i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr))).toList();
+		log.debug("Found {} itSystems in DBS", itSystems.size());
 		
 		LocalDate lastSync = LocalDate.now();
 		
@@ -74,6 +77,7 @@ public class DBSService {
 		
 		List<DBSSupplier> toBeAdded = new ArrayList<>();
 		List<DBSSupplier> toBeUpdated = new ArrayList<>();
+		int totalAssets = 0;
 		for (Supplier supplier : suppliers) {
 			// Add if isn't locally stored
 			if (existingDBSSuppliers.stream().noneMatch(s -> Objects.equals(s.getDbsId(), supplier.getId()))) {
@@ -85,6 +89,7 @@ public class DBSService {
 				}
 				List<DBSAsset> assets = getAssetsForSupplier(supplier, dbsSupplier, itSystems, lastSync);
 				dbsSupplier.setAssets(assets);
+				totalAssets += assets.size();
 
 				toBeAdded.add(dbsSupplier);
 			} else {
@@ -117,11 +122,12 @@ public class DBSService {
 			}
 		}
 		
-		log.debug("Adding {} suppliers.", toBeAdded.size());
+		log.info("Adding {} suppliers.", toBeAdded.size());
 		toBeAdded.forEach(dbsSupplierDao::save);
-		log.debug("Updating {} suppliers.", toBeUpdated.size());
+		log.info("Updating {} suppliers.", toBeUpdated.size());
 		toBeUpdated.forEach(dbsSupplierDao::save);
-		log.debug("Removing {} suppliers.", toBeDeletedSuppliers.size());
+		log.info("Removing {} suppliers.", toBeDeletedSuppliers.size());
+		log.info("Adding {} assets.", totalAssets);
 		dbsSupplierDao.deleteAll(toBeDeletedSuppliers);
 	}
 

@@ -14,10 +14,10 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">DBS Aktiver</li>
+                                <li class="breadcrumb-item active" aria-current="page">DBS tilsyn</li>
                             </ol>
                         </nav>
-                        <h1 class="page-title mb-0 mt-2">DBS Aktiver</h1>
+                        <h1 class="page-title mb-0 mt-2">DBS tilsyn</h1>
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
@@ -44,7 +44,7 @@
         </div>
     </section>
     <header th:replace="~{fragments/header :: header}"></header>
-    <nav th:replace="~{fragments/navbar :: main (page='dbs_aktiver')}"></nav>
+    <nav th:replace="~{fragments/navbar :: main (page='dbs_oversight')}"></nav>
 </div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
@@ -63,8 +63,7 @@
     /*<![CDATA[*/
 
     /*[+
-        var gridDBSAssetsUrl = [[@{/rest/dbs/assets/list}]];
-        var gridDBSAssetsUpdateUrl = [[@{/rest/dbs/assets/update}]];
+        var gridDBSOversightUrl = [[@{/rest/dbs/oversight/list}]];
     +]*/
 
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -112,7 +111,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', '', 'lastSync', 'supplier' ];
+                        const columnIds = ['id', 'name', 'supplier', 'supervisoryModel', '', '', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -128,38 +127,58 @@
                     name: "Navn",
                 },
                 {
-                    name: "Assets",
+                    name: "Leverandør"
+                },
+                {
+                    name: "Tilsynform"
+                },
+                {
+                    name: "DBS",
                     sort: false,
                     formatter: (cell, row) => {
                         const dbsAssetId = row.cells[0]['data'];
 
-                        var options = '';
-                        for (let index = 0; index < cell.length; ++index) {
-                            const asset = cell[index];
-                            options += `<option value="${asset.id}" selected>${asset.name}</option>`;
-                        }
-
-                        return gridjs.html(
-                                `<select class="form-control form-select choices__input" data-assetid="${dbsAssetId}" name="assets" id="assetsSelect${dbsAssetId}" hidden="" tabindex="-1" multiple="multiple">` +
-                                options +
-                                `</select>`);
                     }
                 },
                 {
-                    name: "Sidst hentet"
+                    name: "Ansvarlig"
                 },
                 {
-                    name: "Supplier"
+                    name: "Sidst tilsyn"
+                },
+                {
+                    name: "Resultat",
+                    width: "100px",
+                    formatter: (cell, row) => {
+                        let status = cell;
+                        if (cell === "GREEN") {
+                            status = [
+                                '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
+                            ]
+                        } else if (cell === "YELLOW") {
+                            status = [
+                                '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
+                            ]
+                        } else if (cell === "RED") {
+                            status = [
+                                '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
+                            ]
+                        }
+                        return gridjs.html(status, 'div');
+                    }
+                },
+                {
+                    name: "Ubehandlet tilsyn"
                 }
             ],
             server:{
-                url: gridDBSAssetsUrl,
+                url: gridDBSOversightUrl,
                 method: 'POST',
                 headers: {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.name, asset.assets, asset.lastSync, asset.supplier ],
+                    [ asset.id, asset.name, asset.supplier, asset.supervisoryModel, asset.dbsAssets, asset.oversightResponsible, asset.lastInspection, asset.lastInspectionStatus, asset.outstandingSince ],
                 ),
                 total: data => data.totalCount
             },
@@ -186,14 +205,6 @@
             	document.getElementsByClassName("gridjs-pages")[0].children[1].click();
             }
             
-            // Initialize all Asset Choices.js
-        	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(select => select.id).forEach(elementId => {
-        	    var assetChoices = initAssetSelect(elementId, true);
-
-        	    assetChoices.passedElement.element.addEventListener('removeItem', handleAddRemoveEvent, false);
-        	    assetChoices.passedElement.element.addEventListener('addItem', handleAddRemoveEvent, false);
-        	});
-
             // only apply saved state on the first load
             if (!initialAssetLoadDone) {
 
@@ -212,23 +223,6 @@
             }
         });
     });
-
-    async function handleAddRemoveEvent(event) {
-        const response = await fetch(gridDBSAssetsUpdateUrl, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
-            body: JSON.stringify({
-                id: event.target.dataset.assetid,
-                assets: Array.from(event.target.selectedOptions).map(op => op.value)
-            }),
-        }).then(response => {
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-            toastService.info("Info", "Dine ændringer er blevet gemt")
-        }
-        ).catch(error => { toastService.error(error); console.log(error) });
-    }
 
     /*]]>*/
 </script>
