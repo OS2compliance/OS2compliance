@@ -185,7 +185,7 @@
             if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
             	document.getElementsByClassName("gridjs-pages")[0].children[1].click();
             }
-            
+
             // Initialize all Asset Choices.js
         	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(select => select.id).forEach(elementId => {
         	    var assetChoices = initAssetSelect(elementId, true);

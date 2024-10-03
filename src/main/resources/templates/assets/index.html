@@ -38,6 +38,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="assetsDatatable"></div>
                             </div>
                         </div>
@@ -50,7 +51,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
 </div>
 <div class="modal fade" id="formDialog" aria-labelledby="assetLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 <style>
 
@@ -275,6 +276,7 @@
                 initialAssetLoadDone = true;  // ensure this only runs once
             }
         });
+        gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 
     function deleteClicked(assetId, name) {

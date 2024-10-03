@@ -38,6 +38,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="risksDatatable"></div>
                             </div>
                         </div>
@@ -54,7 +55,7 @@
 <div id="copyAssessmentContainer"></div>
 <div id="editAssessmentContainer"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -248,6 +249,7 @@
                 initialRiskLoadDone = true;  // ensure this only runs once
             }
         });
+        gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 
     function deleteClicked(riskId, name) {
