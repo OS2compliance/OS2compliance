@@ -1,2 +1,2 @@
-ALTER TABLE assets_oversight ADD COLUMN localized_enums varchar(255);
-ALTER TABLE assets ADD COLUMN oversight_responsible_uuid varchar(36);
+ALTER TABLE assets_oversight ADD COLUMN localized_enums varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_danish_ci NULL;
+ALTER TABLE assets ADD COLUMN oversight_responsible_uuid varchar(36) CHARACTER SET utf8mb4 COLLATE utf8mb4_danish_ci NULL;

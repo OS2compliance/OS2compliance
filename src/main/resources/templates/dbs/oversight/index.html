@@ -122,16 +122,16 @@
             columns: [
                 {
                     name: "id",
-                    hidden: true
+                    hidden: true,
                 },
                 {
                     name: "Navn",
                 },
                 {
-                    name: "Leverandør"
+                    name: "Leverandør",
                 },
                 {
-                    name: "Tilsynform"
+                    name: "Tilsynform",
                 },
                 {
                     name: "DBS",
@@ -140,7 +140,7 @@
                         var html = '<ul>'
                         
                     	for (let i = 0; i < cell.length; i++) {
-                    		 html += '<li><a href="/dbs/assets">' + cell[i].name + '</a></li>'
+                    		 html += '<li>' + cell[i].name + '</li>'
                     	}
                         
                         html += '</ul>'

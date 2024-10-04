@@ -44,7 +44,7 @@ public class DBSOversightGrid {
     @Column
     @Convert(converter = DBSAssetListConverter.class)
     private List<DBSAsset> dbsAssets;
-    
+
     @ManyToOne
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsible;
@@ -59,4 +59,6 @@ public class DBSOversightGrid {
 	@Column
 	private LocalDate outstandingSince;
 
+	@Column
+	private String localizedEnums;
 }

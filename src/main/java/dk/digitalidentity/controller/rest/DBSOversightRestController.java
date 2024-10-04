@@ -47,24 +47,27 @@ public class DBSOversightRestController {
             sort = Sort.by(Sort.Direction.ASC, "name");
         }
 		final Pageable sortAndPage = PageRequest.of(page, size, sort);
-		Page<DBSOversightGrid> assets = null;
+		Page<DBSOversightGrid> oversights = null;
 		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "dbsAssets.name", "oversightResponsible", "lastInspection", "lastInspectionStatus", "outstandingSince", "localizedEnums");
+		    //Pre search
+		    Page<DBSOversightGrid> allOversights = dbsOversightGridDao.findAll(sortAndPage);
+		    List<Long> extra = allOversights.getContent().stream().filter(o -> o.getDbsAssets().stream().anyMatch(a -> a.getName() != null && a.getName().contains(search))).map(x -> x.getId()).toList();
+
+		    final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "oversightResponsible", "lastInspection", "lastInspectionStatus", "outstandingSince", "localizedEnums");
 			// search and page
-			assets = dbsOversightGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSOversightGrid.class);
+			oversights = dbsOversightGridDao.findAllCustomExtraIds(searchableProperties, search, extra, sortAndPage, DBSOversightGrid.class);
 		} else {
 			// Fetch paged and sorted
-			assets = dbsOversightGridDao.findAll(sortAndPage);
+			oversights = dbsOversightGridDao.findAll(sortAndPage);
 		}
 
-		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+		return new PageDTO<>(oversights.getTotalElements(), mapper.toDTO(oversights.getContent()));
 	}
 
 	private boolean containsField(final String fieldName) {
 		return fieldName.equals("name")
 				|| fieldName.equals("supplier")
 				|| fieldName.equals("supervisoryModel")
-				|| fieldName.equals("dbsAssets.name")
 				|| fieldName.equals("oversightResponsible")
 				|| fieldName.equals("lastInspection")
 				|| fieldName.equals("lastInspectionStatus")

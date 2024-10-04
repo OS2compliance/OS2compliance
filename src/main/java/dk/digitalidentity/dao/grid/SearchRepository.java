@@ -13,6 +13,10 @@ public interface SearchRepository {
                                    final List<Pair<String, Object>> extraAndFieldValue,
                                    final Pageable page, final Class<T> entityClass);
 
+    <T> Page<T> findAllCustomExtraIds(final List<String> searchableProperties, final String searchString,
+            final List<Long> extraIds,
+            final Pageable page, final Class<T> entityClass);
+
 	<T> Page<T> findAllCustom(final List<String> properties, final String search, final Pageable pageable, final Class<T> entityClass);
     <T> Page<T> findAllForResponsibleUser(final List<String> properties, final String search, final Pageable page, final Class<T> entityClass, final User user);
 
