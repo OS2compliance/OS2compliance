@@ -1,0 +1,45 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="supplierLabel" th:text="${formTitle}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/questionForm}" th:object="${field}" method="post">
+                <input id="id" th:field="*{id}" type="hidden">
+                <div class="row mt-4">
+                    <label for="question" class="col-sm-4 col-form-label">Spørgsmål</label>
+                    <div class="col-sm-8">
+                        <textarea class="form-control" style="width: 100%" id="question" th:field="*{question}" rows="4"></textarea>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-sm-4 col-form-label"><label for="incidentType">Svar type</label></div>
+                    <div class="col-sm-8">
+                        <select th:field="*{incidentType}" class="form-control m-b col-lg-8" id="incidentType">
+                            <option th:each="incidentType : ${T(dk.digitalidentity.model.entity.enums.IncidentType).values()}"
+                                    th:value="${incidentType}" th:text="${incidentType.value}"></option>
+                        </select>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-sm-4 col-form-label"><label for="definedList">Valg liste</label></div>
+                    <div class="col-sm-8">
+                        <input id="definedList" th:value="${#strings.setJoin(definedList, ',')}" class="form-control form-select choices" data-allow-new="true" name="definedList[]" multiple>
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-sm-4 col-form-label"><label for="overview">Vis på oversigt</label></div>
+                    <div class="col-sm-8">
+                        <input type="checkbox" th:field="*{indexColumn}" class="form-check-input" id="overview">
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+        </div>
+    </div>
+</div>

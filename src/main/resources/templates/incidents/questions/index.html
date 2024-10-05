@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
+<body class="jumping">
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Hændelses opsætning</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Hændelses opsætning</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createQuestionDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Nyt spørgsmål
+                        </button>
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <div class="modal fade" tabindex="-1" id="createQuestionDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editQuestionDialog" aria-hidden="true"></div>
+
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='incidentquestions')}"></nav>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+    var formUrl = [[@{/incidents/questionForm}]];
+    +]*/
+
+    function initEditDialog() {
+        let dialog = document.getElementById("createQuestionDialog");
+        let choices = dialog.querySelectorAll(".choices");
+
+        [...choices].forEach(c => {
+            new Choices(c, {
+                allowNew: true,
+                allowHTML: true,
+                delimiter: ',',
+                removeItemButton: true,
+                addItemText: (value) => {
+                    return `Tryk enter for at tilføje <b>"${value}"</b>`;
+                },
+            });
+        });
+    }
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        fetch(`${formUrl}`)
+            .then(response => response.text()
+                .then(data => {
+                    document.getElementById('createQuestionDialog').innerHTML = data;
+                    initEditDialog();
+                }))
+            .catch(error => toastService.error(error));
+    });
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>
