@@ -11,7 +11,7 @@ public enum IncidentType {
     USERS("Brguere"),
     ORGANIZATION("Enhed"),
     ORGANIZATIONS("Enheder"),
-    DEFINED_LIST("Valgliste");
+    CHOICE_LIST("Valgliste");
 
     private final String value;
 

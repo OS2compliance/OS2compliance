@@ -17,4 +17,12 @@ public class IncidentService {
     public Optional<IncidentField> findField(final long fieldId) {
         return incidentFieldDao.findById(fieldId);
     }
+
+    public IncidentField save(final IncidentField incidentField) {
+        return incidentFieldDao.save(incidentField);
+    }
+
+    public long nextIncidentFieldSortKey() {
+        return incidentFieldDao.selectMaxSortKey().map(i -> i+1).orElse(0L);
+    }
 }

@@ -2,6 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
+<script th:src="@{/js/incidents/incident-question-service.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -60,29 +61,13 @@
     var formUrl = [[@{/incidents/questionForm}]];
     +]*/
 
-    function initEditDialog() {
-        let dialog = document.getElementById("createQuestionDialog");
-        let choices = dialog.querySelectorAll(".choices");
-
-        [...choices].forEach(c => {
-            new Choices(c, {
-                allowNew: true,
-                allowHTML: true,
-                delimiter: ',',
-                removeItemButton: true,
-                addItemText: (value) => {
-                    return `Tryk enter for at tilføje <b>"${value}"</b>`;
-                },
-            });
-        });
-    }
 
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(`${formUrl}`)
             .then(response => response.text()
                 .then(data => {
                     document.getElementById('createQuestionDialog').innerHTML = data;
-                    initEditDialog();
+                    incidentQuestionService.initSelectList('createQuestionDialog');
                 }))
             .catch(error => toastService.error(error));
     });
