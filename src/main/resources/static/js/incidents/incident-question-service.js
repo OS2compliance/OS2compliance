@@ -65,7 +65,6 @@ function IncidentQuestionService() {
     }
 
     this.sortQuestionUp = (grid, id) => {
-        // let grid = document.getElementById(gridId);
         postData(`${restUrl}/${id}/up`)
             .then(response => grid.forceRender())
             .catch(error => toastService.error(error));
