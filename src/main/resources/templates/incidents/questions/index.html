@@ -89,7 +89,10 @@
                 },
                 {
                     id: "index",
-                    name: "Oversigt"
+                    name: "Oversigt",
+                    formatter: (cell, row) => {
+                        return cell ? 'Ja' : 'Nej';
+                    }
                 },
                 {
                     id: "question",
@@ -106,6 +109,7 @@
                     width: '130px',
                     formatter: (cell, row) => {
                         const id = row.cells[0]['data'];
+                        const question = row.cells[2]['data'];
                         let lastRow = incidentQuestionService.gridFindPreviousRow(incidentGrid, id);
                         let nextRow = incidentQuestionService.gridFindNextRow(incidentGrid, id);
                         const upStyle = (lastRow === null) ? 'visibility: hidden' : '';
@@ -116,7 +120,7 @@
                         return gridjs.html(upButton
                             + downButton
                             + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.editQuestion('editQuestionDialog', '${id}')"><i class="pli-pencil fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.deleteQuestion('${id}')"><i class="pli-trash fs-5"></i></button>`);
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.deleteQuestion(incidentGrid, '${id}', '${question}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],

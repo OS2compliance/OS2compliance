@@ -21,6 +21,8 @@ function IncidentQuestionService() {
                 },
             });
         });
+        let formId = dialog.querySelector('form').getAttribute('id');
+        initFormValidationForForm(formId);
     }
 
     this.formIncidentSelectionChanged = (selectElement) => {
@@ -84,8 +86,22 @@ function IncidentQuestionService() {
         });
     }
 
-    this.deleteQuestion = (id) => {
-        // TODO
+    this.deleteQuestion = (grid, id, question) => {
+        Swal.fire({
+            text: `Er du sikker på du vil slette spørgsmålet '${question}'?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#03a9f4',
+            cancelButtonColor: '#df5645',
+            confirmButtonText: 'Ja',
+            cancelButtonText: 'Nej'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteData(`${restUrl}/${id}`)
+                    .then(response => grid.forceRender())
+                    .catch(error => toastService.error(error));
+            }
+        });
     }
 
 }

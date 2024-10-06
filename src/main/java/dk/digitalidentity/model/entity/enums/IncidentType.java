@@ -8,7 +8,7 @@ public enum IncidentType {
     DATE_TIME("Dato/tid"),
     ASSET("Aktiv"),
     USER("Bruger"),
-    USERS("Brguere"),
+    USERS("Brugere"),
     ORGANIZATION("Enhed"),
     ORGANIZATIONS("Enheder"),
     CHOICE_LIST("Valgliste");
