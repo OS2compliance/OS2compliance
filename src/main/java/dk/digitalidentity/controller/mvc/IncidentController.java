@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.IncidentFieldDao;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.validation.Valid;
@@ -30,11 +31,13 @@ public class IncidentController {
         return "incidents/logs/index";
     }
 
+    @RequireAdminstrator
     @GetMapping("questions")
     public String incidentQuestions(final Model model) {
         return "incidents/questions/index";
     }
 
+    @RequireAdminstrator
     @GetMapping("questionForm")
     public String questionForm(final Model model, @RequestParam(name = "id", required = false) Long questionId) {
         if (questionId != null) {
@@ -49,6 +52,7 @@ public class IncidentController {
         return "incidents/questions/form";
     }
 
+    @RequireAdminstrator
     @PostMapping("questionForm")
     public String questionForm(@Valid @ModelAttribute final IncidentField form) {
         if (form.getId() != null) {

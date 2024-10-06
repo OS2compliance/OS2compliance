@@ -8,7 +8,7 @@ function IncidentQuestionService() {
     this.init = () => {
     }
 
-    this.initSelectList = (dialogId) => {
+    this.initFormSelectList = (dialogId) => {
         let dialog = document.getElementById(dialogId);
         let choices = dialog.querySelectorAll(".choices");
         [...choices].forEach(c => {
@@ -23,7 +23,7 @@ function IncidentQuestionService() {
         });
     }
 
-    this.selectionChanged = (selectElement) => {
+    this.formIncidentSelectionChanged = (selectElement) => {
         let value = selectElement.value;
         let form = selectElement.closest('form');
         let choiceListDiv = form.querySelector('.choiceListDiv');
@@ -32,6 +32,50 @@ function IncidentQuestionService() {
         } else {
             choiceListDiv.style.display = "none";
         }
+    }
+
+    this.gridFindPreviousRow = (grid, id) => {
+        let lastRow = null;
+        if (grid.data) {
+            for (let i = 0; i<grid.data.length; ++i) {
+                const row = grid.data[i];
+                if (row.id === id) {
+                    break;
+                }
+                lastRow = row;
+            }
+        }
+        return lastRow;
+    }
+
+    this.gridFindNextRow = (grid, id) => {
+        let lastRow = null;
+        if (grid.data) {
+            for (let i = grid.data.length-1; i>=0; --i) {
+                const row = grid.data[i];
+                if (row.id === id) {
+                    break;
+                }
+                lastRow = row;
+            }
+        }
+        return lastRow;
+    }
+
+    this.sortQuestionHigher = (id) => {
+        // TODO
+    }
+
+    this.sortQuestionLower = (id) => {
+        // TODO
+    }
+
+    this.editQuestion = (id) => {
+        // TODO
+    }
+
+    this.deleteQuestion = (id) => {
+        // TODO
     }
 
 }

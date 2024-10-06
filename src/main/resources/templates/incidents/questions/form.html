@@ -17,7 +17,7 @@
                 <div class="row mt-4">
                     <div class="col-sm-4 col-form-label"><label for="incidentType">Svar type</label></div>
                     <div class="col-sm-8">
-                        <select th:field="*{incidentType}" class="form-control m-b col-lg-8" id="incidentType" onchange="incidentQuestionService.selectionChanged(this)">
+                        <select th:field="*{incidentType}" class="form-control m-b col-lg-8" id="incidentType" onchange="incidentQuestionService.formIncidentSelectionChanged(this)">
                             <option th:each="incidentType : ${T(dk.digitalidentity.model.entity.enums.IncidentType).values()}"
                                     th:value="${incidentType}" th:text="${incidentType.value}"></option>
                         </select>
