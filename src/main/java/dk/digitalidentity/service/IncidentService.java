@@ -3,14 +3,17 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.IncidentDao;
 import dk.digitalidentity.dao.IncidentFieldDao;
 import dk.digitalidentity.model.entity.IncidentField;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.IterableUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class IncidentService {
     private final IncidentDao incidentDao;
@@ -29,6 +32,33 @@ public class IncidentService {
     }
 
     public List<IncidentField> getAllFields() {
-        return IterableUtils.toList(incidentFieldDao.findAll());
+        return IterableUtils.toList(incidentFieldDao.findAllByOrderBySortKeyAsc());
+    }
+
+    public void deleteField(final IncidentField incidentField) {
+        incidentFieldDao.delete(incidentField);
+    }
+
+    public void reorderField(final IncidentField field, boolean down) {
+        final List<IncidentField> allFields = incidentFieldDao.findAllByOrderBySortKeyAsc();
+        final List<IncidentField> allFieldsReversed = allFields.reversed();
+        findPreviousField(field, down ? allFieldsReversed : allFields)
+            .ifPresent(f -> {
+                // Swap sort keys
+                long originalSortKey = field.getSortKey();
+                field.setSortKey(f.getSortKey());
+                f.setSortKey(originalSortKey);
+            });
+    }
+
+    private static Optional<IncidentField> findPreviousField(final IncidentField field, final List<IncidentField> allFields) {
+        IncidentField lastField = null;
+        for (final IncidentField currentField : allFields) {
+            if (lastField != null && Objects.equals(currentField.getId(), field.getId())) {
+                return Optional.of(lastField);
+            }
+            lastField = currentField;
+        }
+        return Optional.empty();
     }
 }

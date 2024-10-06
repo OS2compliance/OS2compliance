@@ -62,6 +62,7 @@
     var restUrl = [[@{/rest/incidents/questions}]];
     +]*/
     let incidentGrid;
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(`${formUrl}`)
@@ -105,19 +106,17 @@
                     width: '130px',
                     formatter: (cell, row) => {
                         const id = row.cells[0]['data'];
-                        const inUse = row.cells[3]['data'];
                         let lastRow = incidentQuestionService.gridFindPreviousRow(incidentGrid, id);
                         let nextRow = incidentQuestionService.gridFindNextRow(incidentGrid, id);
                         const upStyle = (lastRow === null) ? 'visibility: hidden' : '';
                         const downStyle = (nextRow === null) ? 'visibility: hidden' : '';
-                        const deleteStyle = inUse ? 'visibility: hidden' : '';
-                        const upButton = `<button style="${upStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.sortQuestionHigher('${id}')"><i class="pli-up fs-5"></i></button>`;
-                        const downButton = `<button style="${downStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.sortQuestionLower('${id}')"><i class="pli-down fs-5"></i></button>`;
+                        const upButton = `<button style="${upStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.sortQuestionUp(incidentGrid, '${id}')"><i class="pli-up fs-5"></i></button>`;
+                        const downButton = `<button style="${downStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.sortQuestionDown(incidentGrid, '${id}')"><i class="pli-down fs-5"></i></button>`;
 
                         return gridjs.html(upButton
                             + downButton
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.editQuestion('${id}')"><i class="pli-pencil fs-5"></i></button>`
-                            + `<button style="${deleteStyle}" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.deleteQuestion('${id}')"><i class="pli-trash fs-5"></i></button>`);
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.editQuestion('editQuestionDialog', '${id}')"><i class="pli-pencil fs-5"></i></button>`
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentQuestionService.deleteQuestion('${id}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],

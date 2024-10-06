@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.IncidentFieldDao;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
@@ -43,7 +42,8 @@ public class IncidentController {
         if (questionId != null) {
             model.addAttribute("formTitle", "Rediger spørgsmål");
             model.addAttribute("formId", "editForm");
-            model.addAttribute("field", incidentService.findField(questionId));
+            model.addAttribute("field", incidentService.findField(questionId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
         } else {
             model.addAttribute("formTitle", "Nyt spørgsmål");
             model.addAttribute("formId", "createForm");

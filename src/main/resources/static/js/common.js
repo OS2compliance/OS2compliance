@@ -68,6 +68,10 @@ function checkInputField(my_choices, atleastOne = false) {
 }
 
 const defaultResponseHandler = function (response) {
+    if (response.redirected) {
+        window.location.href = response.url;
+        return;
+    }
     if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`);
     }
@@ -104,7 +108,6 @@ async function deleteData(url) {
     return jsonCall("DELETE", url, {});
 }
 
-
 function asIntOrDefault(value, def) {
     const parsed = parseInt(value);
     if (isNaN(parsed)) {
@@ -117,14 +120,18 @@ function asIntOrDefault(value, def) {
 function fetchHtml(url, targetId) {
     return fetch(url)
         .then(response => {
+            if (response.redirected) {
+                window.location.href = response.url;
+                return;
+            }
             if (!response.ok) {
                 throw new Error(`${response.status} ${response.statusText}`);
             }
-            response.text().then(data => {
+            return response.text().then(data => {
                 document.getElementById(targetId).innerHTML = data;
             });
         }
-    ).catch(error => { toastService.error(error); console.log(error) });
+    ).catch(defaultErrorHandler);
 }
 
 function javaFormatDate(date) {
@@ -159,4 +166,3 @@ function ensureElementHasClass(elem, className) {
         elem.classList.add(className)
     }
 }
-

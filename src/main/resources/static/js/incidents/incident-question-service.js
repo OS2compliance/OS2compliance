@@ -62,16 +62,26 @@ function IncidentQuestionService() {
         return lastRow;
     }
 
-    this.sortQuestionHigher = (id) => {
-        // TODO
+    this.sortQuestionUp = (grid, id) => {
+        // let grid = document.getElementById(gridId);
+        postData(`${restUrl}/${id}/up`)
+            .then(response => grid.forceRender())
+            .catch(error => toastService.error(error));
     }
 
-    this.sortQuestionLower = (id) => {
-        // TODO
+    this.sortQuestionDown = (grid, id) => {
+        postData(`${restUrl}/${id}/down`)
+            .then(response => grid.forceRender())
+            .catch(error => toastService.error(error));
     }
 
-    this.editQuestion = (id) => {
-        // TODO
+    this.editQuestion = (dialogId, id) => {
+        fetchHtml(`${formUrl}?id=${id}`, dialogId).then(() => {
+            let dialog = document.getElementById(dialogId);
+            incidentQuestionService.initFormSelectList(dialogId);
+            let editDialog = new bootstrap.Modal(dialog);
+            editDialog.show();
+        });
     }
 
     this.deleteQuestion = (id) => {
