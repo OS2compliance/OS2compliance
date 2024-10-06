@@ -85,6 +85,10 @@ input[type=number]{
     background-color: white !important;
 }
 /* Remove gray background from choices.js search input */
+.choices:not(.is-disabled) > .choices__inner {
+    background-color: white !important;
+}
+/* Remove gray background from choices.js search input */
 .choices.is-disabled .choices__input {
     background-color: #f3f5f9 !important;
 }
