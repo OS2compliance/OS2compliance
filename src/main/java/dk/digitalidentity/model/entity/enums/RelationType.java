@@ -17,7 +17,6 @@ public enum RelationType {
     PRECAUTION("Foranstaltning"),
     DBSASSET("DBSAsset"),
     DBSOVERSIGHT("DBSOversight"),
-    DBSASSET("DBSAsset"),
     INCIDENT("Hændelse")
     ;
 

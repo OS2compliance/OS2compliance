@@ -1,25 +1,18 @@
 package dk.digitalidentity.integration.dbs;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import org.springframework.stereotype.Service;
 
-import dk.dbs.api.DocumentResourceApi;
-import dk.dbs.api.ItSystemsResourceApi;
-import dk.dbs.api.SupplierResourceApi;
 import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
-import dk.dbs.api.model.PageEODocument;
-import dk.dbs.api.model.PageEOItSystem;
-import dk.dbs.api.model.PageEOSupplier;
 import dk.dbs.api.model.Supplier;
 import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
@@ -40,45 +33,40 @@ import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DBSService {
-
-	private final ItSystemsResourceApi itsystemResourceApi;
-	private final SupplierResourceApi supplierResourceApi;
 	private final DBSSupplierDao dbsSupplierDao;
-	private final DocumentResourceApi documentResourceApi;
 	private final DBSOversightDao dbsOversightDao;
 	private final RelationService relationService;
 	private final AssetService assetService;
 	private final TaskService taskService;
 
-	public void sync(String cvr) {
-		List<Supplier> suppliers = getAllSuppliers();
-		log.debug("Found {} suppliers in DBS", suppliers.size());
-		
-		List<ItSystem> itSystems = getAllItSystems();
-
+    @Transactional
+	public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
 		//Filter only itSystems related to this cvr
-		itSystems = itSystems.stream().filter(i -> i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr))).toList();
-		log.debug("Found {} itSystems in DBS", itSystems.size());
-		
-		LocalDate lastSync = LocalDate.now();
-		
-		List<DBSSupplier> existingDBSSuppliers = dbsSupplierDao.findAll();
-		List<DBSSupplier> toBeDeletedSuppliers = new ArrayList<>();
-		for (DBSSupplier dbsSupplier : existingDBSSuppliers) {
+        final List<ItSystem> relevantItSystems = allItSystems.stream()
+            .filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
+            .toList();
+        log.debug("Found {} relevant itSystems in DBS", relevantItSystems.size());
+		final LocalDate lastSync = LocalDate.now();
+
+		final List<DBSSupplier> existingDBSSuppliers = dbsSupplierDao.findAll();
+        final List<DBSSupplier> toBeDeletedSuppliers = new ArrayList<>();
+		for (final DBSSupplier dbsSupplier : existingDBSSuppliers) {
 			//Remove if no longer exists in DBS
-			if (suppliers.stream().noneMatch(s -> Objects.equals(s.getId(), dbsSupplier.getDbsId()))) {
+			if (allDbsSuppliers.stream().noneMatch(s -> Objects.equals(s.getId(), dbsSupplier.getDbsId()))) {
 				toBeDeletedSuppliers.add(dbsSupplier);
 			}
 		}
-		
-		List<DBSSupplier> toBeAdded = new ArrayList<>();
-		List<DBSSupplier> toBeUpdated = new ArrayList<>();
+
+        final List<DBSSupplier> toBeAdded = new ArrayList<>();
+        final List<DBSSupplier> toBeUpdated = new ArrayList<>();
 		int totalAssets = 0;
-		for (Supplier supplier : suppliers) {
+		for (final Supplier supplier : allDbsSuppliers) {
 			// Add if isn't locally stored
 			if (existingDBSSuppliers.stream().noneMatch(s -> Objects.equals(s.getDbsId(), supplier.getId()))) {
 				DBSSupplier dbsSupplier = new DBSSupplier();
@@ -87,7 +75,7 @@ public class DBSService {
 				if (supplier.getNextRevision() != null) {
 					dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
 				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, dbsSupplier, itSystems, lastSync);
+				List<DBSAsset> assets = getAssetsForSupplier(supplier, dbsSupplier, relevantItSystems, lastSync);
 				dbsSupplier.setAssets(assets);
 				totalAssets += assets.size();
 
@@ -95,7 +83,7 @@ public class DBSService {
 			} else {
 				//Update
 				DBSSupplier existingDBSSupplier = existingDBSSuppliers.stream().filter(existing -> Objects.equals(existing.getDbsId(), supplier.getId())).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
-				
+
 				boolean changes = false;
 				if (!Objects.equals(existingDBSSupplier.getName(), supplier.getName())) {
 					existingDBSSupplier.setName(supplier.getName());
@@ -105,8 +93,8 @@ public class DBSService {
 					existingDBSSupplier.setNextRevision(supplier.getNextRevision().getValue());
 					changes = true;
 				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, existingDBSSupplier, itSystems, lastSync);
-				
+				List<DBSAsset> assets = getAssetsForSupplier(supplier, existingDBSSupplier, relevantItSystems, lastSync);
+
 				// Remove if the DBS list doesn't contain it anymore
 				if (existingDBSSupplier.getAssets().removeIf(local -> assets.stream().noneMatch(x -> Objects.equals(x.getDbsId(), local.getDbsId())))) {
 					changes = true;
@@ -115,17 +103,17 @@ public class DBSService {
 				if (existingDBSSupplier.getAssets().addAll(assets.stream().filter(a -> existingDBSSupplier.getAssets().stream().noneMatch(x -> Objects.equals(x.getDbsId(), a.getDbsId()))).toList())) {
 					changes = true;
 				}
-				
+
 				if (changes) {
 					toBeUpdated.add(existingDBSSupplier);
 				}
 			}
 		}
-		
+
 		log.info("Adding {} suppliers.", toBeAdded.size());
-		toBeAdded.forEach(dbsSupplierDao::save);
+        dbsSupplierDao.saveAll(toBeAdded);
 		log.info("Updating {} suppliers.", toBeUpdated.size());
-		toBeUpdated.forEach(dbsSupplierDao::save);
+        dbsSupplierDao.saveAll(toBeUpdated);
 		log.info("Removing {} suppliers.", toBeDeletedSuppliers.size());
 		log.info("Adding {} assets.", totalAssets);
 		dbsSupplierDao.deleteAll(toBeDeletedSuppliers);
@@ -143,78 +131,20 @@ public class DBSService {
 				result.add(asset);
 			}
 		}
-		
+
 		return result;
 	}
 
-	private List<Supplier> getAllSuppliers() {
-		int page = 0;
-		
-		List<Supplier> suppliers = new ArrayList<>();
-		
-		PageEOSupplier supplierPage = supplierResourceApi.list1(100, page);
-		if (supplierPage == null || supplierPage.getContent() == null || supplierPage.getContent().isEmpty()) {
-			throw new DBSSynchronizationException("Could not fetch Suppliers from DBS");
-		}
-		suppliers.addAll(supplierPage.getContent());
-		while (page < supplierPage.getTotalPages()) {
-			page += 1;
-			supplierPage = supplierResourceApi.list1(100, page);
-			suppliers.addAll(supplierPage.getContent());
-		}
-		
-		return suppliers;
-	}
+    @Transactional
+	public void syncOversight(final List<Document> allDocuments) {
 
-	private List<ItSystem> getAllItSystems() {
-		int page = 0;
-
-		List<ItSystem> itSystems = new ArrayList<>();
-
-		PageEOItSystem itSystemsPage = itsystemResourceApi.list4(100, page);
-		if (itSystemsPage == null || itSystemsPage.getContent() == null || itSystemsPage.getContent().isEmpty()) {
-			throw new DBSSynchronizationException("Could not fetch ItSystems from DBS");
-		}
-
-		itSystems.addAll(itSystemsPage.getContent());
-
-		while (page < itSystemsPage.getTotalPages()) {
-			page += 1;
-			itSystemsPage = itsystemResourceApi.list4(100, page);
-			itSystems.addAll(itSystemsPage.getContent());
-		}
-
-		return itSystems;
-	}
-
-	private List<Document> getAllDocuments(LocalDateTime createdAfter) {
-		int page = 0;
-		List<Document> documents = new ArrayList<>();
-
-		PageEODocument documentsPage = documentResourceApi.list5(100, page, "TILSYNSRAPPORTER", createdAfter);
-		
-		documents.addAll(documentsPage.getContent());
-
-		while (page < documentsPage.getTotalPages()) {
-			page += 1;
-			documentsPage = documentResourceApi.list5(100, page, "TILSYNSRAPPORTER", createdAfter);
-			documents.addAll(documentsPage.getContent());
-		}
-		return documents;
-	}
-
-
-	public void syncOversight(LocalDateTime createdAfter) {
-		List<Document> documents = getAllDocuments(createdAfter);
-		
 		//Remove documents without suppliers
-		documents.removeIf(d -> d.getPath().getSupplier() == null);
-		
-        List<DBSOversight> existingDBSOversights = dbsOversightDao.findAll();
-        
-        List<DBSOversight> toBeAdded = new ArrayList<>();
-        List<DBSOversight> toBeUpdated = new ArrayList<>();
-        for (Document document : documents) {
+        allDocuments.removeIf(d -> d.getPath().getSupplier() == null);
+
+        final List<DBSOversight> existingDBSOversights = dbsOversightDao.findAll();
+        final List<DBSOversight> toBeAdded = new ArrayList<>();
+        final List<DBSOversight> toBeUpdated = new ArrayList<>();
+        for (final Document document : allDocuments) {
             // Add if isn't locally stored
             if (existingDBSOversights.stream().noneMatch(s -> Objects.equals(s.getDbsId(), document.getId()))) {
                 DBSOversight dbsOversight = new DBSOversight();
@@ -229,7 +159,7 @@ public class DBSService {
             } else {
                 //Update
                 DBSOversight existingDBSOversight = existingDBSOversights.stream().filter(existing -> Objects.equals(existing.getDbsId(), document.getId())).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
-                
+
                 boolean changes = false;
                 if (!Objects.equals(existingDBSOversight.getName(), document.getName())) {
                     existingDBSOversight.setName(document.getName());
@@ -239,7 +169,6 @@ public class DBSService {
                     existingDBSOversight.setLocked(document.getLocked());
                     changes = true;
                 }
-                //TODO what other fields do we care about
 
                 if (changes) {
                     toBeUpdated.add(existingDBSOversight);
@@ -248,36 +177,43 @@ public class DBSService {
         }
 
         log.debug("Adding {} oversights.", toBeAdded.size());
-        toBeAdded.forEach(dbsOversightDao::save);
+        dbsOversightDao.saveAll(toBeAdded);
         log.debug("Updating {} oversights.", toBeUpdated.size());
-        toBeUpdated.forEach(dbsOversightDao::save);
+        dbsOversightDao.saveAll(toBeUpdated);
 	}
 
+    public Optional<ZonedDateTime> findNewestUpdatedTime(final List<Document> allDocuments) {
+        return allDocuments.stream()
+            .max(Comparator.comparing(Document::getCreated))
+            .map(d -> d.getCreated().atZone(LOCAL_TZ_ID));
+    }
+
+    @Transactional
     public void oversightResponsible() {
         LocalDate nowPlus14Days = LocalDate.now().plusDays(14);
         List<DBSOversight> oversights = dbsOversightDao.findByTaskCreatedFalse();
-//        log.debug("Found {} oversights that need a task.", oversights.size());
-        
+        log.debug("Found {} oversights that need a task.", oversights.size());
+
         for (DBSOversight dbsOversight : oversights) {
-//            log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
-            
+            log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
+
             for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
                 List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
-//                log.debug("Found {} related assets.", assetRelations.size());
-                
+                log.debug("Found {} related assets.", assetRelations.size());
+
                 List<Asset> assets = assetRelations.stream()
                     .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
                     .map(assetService::findById)
                     .filter(Optional::isPresent)
-                    .map(x -> x.get())
+                    .map(Optional::get)
                     .toList();
-                
+
                 for (Asset asset : assets) {
                     if (asset.getOversightResponsibleUser() == null) {
-                        log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponisble is null.", asset.getId(), dbsOversight.getId());
+                        log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponsible is null.", asset.getId(), dbsOversight.getId());
                         continue;
                     }
-                    
+
                     // Create a new task
                     Task task = new Task();
                     task.setName(dbsOversight.getSupplier().getName() + " - DBS tilsyn");
@@ -285,11 +221,12 @@ public class DBSService {
                     task.setResponsibleUser(asset.getOversightResponsibleUser());
                     task.setTaskType(TaskType.TASK);
                     task.setRepetition(TaskRepetition.NONE);
-                    
+
                     log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
 
                     taskService.saveTask(task);
                     relationService.addRelation(task, dbsAsset);
+                    relationService.addRelation(task, asset);
 
                     dbsOversight.setTaskCreated(true);
                     dbsOversightDao.save(dbsOversight);

@@ -316,7 +316,7 @@ WHERE a.deleted = false
 GROUP BY a.id;
 
 CREATE OR REPLACE
-VIEW view_gridjs_dbs_overisghts AS
+VIEW view_gridjs_dbs_oversights AS
 SELECT
     a.id,
     a.name,

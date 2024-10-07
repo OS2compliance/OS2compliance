@@ -17,7 +17,7 @@
                                 <th class="col-lg-1">Er der indgået en databehandleraftale</th>
                                 <th class="col-lg-1">Dato</th>
                                 <th class="col-lg-2">Link</th>
-                                <th class="col-lg-2">Responisble</th>
+                                <th class="col-lg-2">Ansvarlig</th>
                                 <th class="col-lg-2">Valg af tilsynsmodel</th>
                                 <th class="col-lg-2">Hyppighed</th>
                                 <th class="col-lg-2">Næste tilsyn</th>
@@ -128,7 +128,7 @@
             document.querySelector( "#nextInspectionDateBtn" ).addEventListener( "click", () => {
                 nextInspectionDatePicker.open();
             });
-            
+
 
             //Init choices.js
             const assetOversightResponsibleSelect = document.getElementById('assetOversightUserSelect');
@@ -151,14 +151,14 @@
             if (enabled) {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                   elem.disabled = false;
-                  if (elem.tagName == "A") {
+                  if (elem.tagName === "A") {
                       elem.hidden = true;
                       if (elem.nextElementSibling) {
                          elem.nextElementSibling.hidden = false;
                       }
                   }
 
-                  if (elem.id =='assetOversightUserSelect') {
+                  if (elem.id === 'assetOversightUserSelect') {
                       assetOversightResponsibleUserChoices.enable();
                   }
 

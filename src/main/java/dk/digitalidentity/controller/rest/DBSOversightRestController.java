@@ -50,12 +50,11 @@ public class DBSOversightRestController {
 		Page<DBSOversightGrid> oversights = null;
 		if (StringUtils.isNotEmpty(search)) {
 		    //Pre search
-		    Page<DBSOversightGrid> allOversights = dbsOversightGridDao.findAll(sortAndPage);
-		    List<Long> extra = allOversights.getContent().stream().filter(o -> o.getDbsAssets().stream().anyMatch(a -> a.getName() != null && a.getName().contains(search))).map(x -> x.getId()).toList();
-
+//		    Page<DBSOversightGrid> allOversights = dbsOversightGridDao.findAll(sortAndPage);
+//		    List<Long> extra = allOversights.getContent().stream().filter(o -> o.getDbsAssets().stream().anyMatch(a -> a.getName() != null && a.getName().contains(search))).map(x -> x.getId()).toList();
 		    final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "oversightResponsible", "lastInspection", "lastInspectionStatus", "outstandingSince", "localizedEnums");
 			// search and page
-			oversights = dbsOversightGridDao.findAllCustomExtraIds(searchableProperties, search, extra, sortAndPage, DBSOversightGrid.class);
+			oversights = dbsOversightGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSOversightGrid.class);
 		} else {
 			// Fetch paged and sorted
 			oversights = dbsOversightGridDao.findAll(sortAndPage);

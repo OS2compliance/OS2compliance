@@ -33,7 +33,6 @@ public class SearchRepositoryImpl implements SearchRepository {
 
     public <T> Page<T> findAllCustomExtra(final List<String> searchableProperties, final String searchString,
                                           final List<Pair<String, Object>> extraAndFieldValue,
-                                          final List<Long> extraIds,
                                           final Pageable page, final Class<T> entityClass) {
         final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
         final CriteriaQuery<T> cq = cb.createQuery(entityClass);
@@ -79,21 +78,11 @@ public class SearchRepositoryImpl implements SearchRepository {
         }
         final Predicate or = cb.or(predicates.toArray(predicates.toArray(new Predicate[0])));
 
-        if (extraAndFieldValue != null) {
-            final Predicate[] andArr = extraAndFieldValue.stream()
-                .map(f -> cb.equal(root.get(f.getLeft()), f.getRight()))
-                .toArray(Predicate[]::new);
-            final Predicate and = cb.and(andArr);
-            cq.select(root).where(cb.and(and, or));
-        }
-        
-        if (extraIds != null) {
-            final Predicate[] orArr = extraIds.stream()
-                    .map(f -> cb.equal(root.get("id"), f))
-                    .toArray(Predicate[]::new);
-            final Predicate orx = cb.or(orArr);
-            cq.select(root).where(cb.or(orx, or));
-        }
+        final Predicate[] andArr = extraAndFieldValue.stream()
+            .map(f -> cb.equal(root.get(f.getLeft()), f.getRight()))
+            .toArray(Predicate[]::new);
+        final Predicate and = cb.and(andArr);
+        cq.select(root).where(cb.and(and, or));
 
         // Order By
         final List<Order> orderByList = new ArrayList<>();
@@ -118,7 +107,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 
     @Override
 	public <T> Page<T> findAllCustom(final List<String> properties, final String search, final Pageable page, final Class<T> entityClass) {
-        return findAllCustomExtra(properties, search, Collections.emptyList(), null, page, entityClass);
+        return findAllCustomExtra(properties, search, Collections.emptyList(), page, entityClass);
 	}
 
     @Override
@@ -132,20 +121,6 @@ public class SearchRepositoryImpl implements SearchRepository {
         } catch (final NoSuchMethodException e) {
             return findAllCustomExtra(properties, search, Collections.singletonList(Pair.of("responsibleUser", user)), page, entityClass);
         }
-    }
-
-    @Override
-    public <T> Page<T> findAllCustomExtra(List<String> searchableProperties,
-            String searchString, List<Pair<String, Object>> extraAndFieldValue,
-            Pageable page, Class<T> entityClass) {
-        return findAllCustomExtra(searchableProperties, searchString, extraAndFieldValue, null, page, entityClass);
-    }
-
-    @Override
-    public <T> Page<T> findAllCustomExtraIds(List<String> searchableProperties,
-            String searchString, List<Long> extraIds, Pageable page,
-            Class<T> entityClass) {
-        return findAllCustomExtra(searchableProperties, searchString, null, extraIds, page, entityClass);
     }
 
 }

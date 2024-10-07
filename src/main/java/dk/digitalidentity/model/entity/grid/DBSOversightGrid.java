@@ -23,7 +23,7 @@ import lombok.Getter;
 import lombok.Setter;
 
 @Entity
-@Table(name = "view_gridjs_dbs_overisghts")
+@Table(name = "view_gridjs_dbs_oversights")
 @Getter
 @Setter
 @Immutable
@@ -36,7 +36,7 @@ public class DBSOversightGrid {
 
     @Column
     private String supplier;
-    
+
     @Column
     @Enumerated(EnumType.STRING)
     private ChoiceOfSupervisionModel supervisoryModel;
@@ -55,7 +55,7 @@ public class DBSOversightGrid {
 	@Column
 	@Enumerated(EnumType.STRING)
 	private AssetOversightStatus lastInspectionStatus;
-	
+
 	@Column
 	private LocalDate outstandingSince;
 

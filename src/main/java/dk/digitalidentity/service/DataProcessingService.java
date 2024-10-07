@@ -103,8 +103,6 @@ public class DataProcessingService {
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
         task.setResponsibleUser(asset.getOversightResponsibleUser());
-        // TODO fix så vi ikke bare tager den første, tror jeg
-//        task.setResponsibleUser(asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty() ? asset.getResponsibleUsers().get(0) : userService.currentUser());
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
             .entity(task)

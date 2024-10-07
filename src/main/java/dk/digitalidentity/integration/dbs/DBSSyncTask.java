@@ -1,14 +1,18 @@
 package dk.digitalidentity.integration.dbs;
 
 import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
 
+import dk.dbs.api.model.Document;
+import dk.dbs.api.model.ItSystem;
+import dk.dbs.api.model.Supplier;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.service.SettingsService;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -17,11 +21,11 @@ import lombok.extern.slf4j.Slf4j;
 @EnableScheduling
 @RequiredArgsConstructor
 public class DBSSyncTask {
+    private final DBSClientService dbsClientService;
 	private final DBSService dbsService;
 	private final OS2complianceConfiguration configuration;
 	private final SettingsService settingsService;
 
-	@Transactional
 	@Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
 //	@Scheduled(fixedRate = 1000000000L)
 	public void syncTask() {
@@ -30,39 +34,43 @@ public class DBSSyncTask {
 		}
 
 		log.info("Started: DBS Sync");
-		
+
 		if ("123456".equals(configuration.getMunicipal().getCvr())) {
 			log.debug("Don't expect sync to work with fake CVR.");
 		}
-		
-		dbsService.sync(configuration.getMunicipal().getCvr());
+        final List<Supplier> allDbsSuppliers = dbsClientService.getAllSuppliers();
+        log.debug("Found {} suppliers in DBS", allDbsSuppliers.size());
+        final List<ItSystem> allDbsItSystems = dbsClientService.getAllItSystems();
+        log.debug("Found {} itSystems in DBS", allDbsItSystems.size());
+
+        dbsService.sync(allDbsSuppliers, allDbsItSystems, configuration.getMunicipal().getCvr());
 		log.info("Finished: DBS Sync");
 	}
 
-	@Transactional
 //	@Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
 	@Scheduled(fixedRate = 1000000000L, initialDelay = 1000)
 	public void oversightTask() {
 		if (taskDisabled()) {
 			return;
 		}
-		
-		ZonedDateTime lastTimestamp = settingsService.getZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, null);
 
-		log.info("Started: DBS Oversight Task");
-		dbsService.syncOversight(lastTimestamp != null ? lastTimestamp.toLocalDateTime() : null);
-		settingsService.setZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, ZonedDateTime.now());
+		final ZonedDateTime lastTimestamp = settingsService.getZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, null);
+        final List<Document> recentDocuments = dbsClientService.getAllDocuments(lastTimestamp != null ? lastTimestamp.toLocalDateTime() : null);
+
+        log.info("Started: DBS Oversight Task");
+        final Optional<ZonedDateTime> newestUpdatedTime = dbsService.findNewestUpdatedTime(recentDocuments);
+        dbsService.syncOversight(recentDocuments);
+        newestUpdatedTime.ifPresent(zonedDateTime -> settingsService.setZonedDateTime(DBSConstants.OVERSIGHT_LAST_TIMESTAMP, zonedDateTime));
 		log.info("Finished: DBS Oversight Task");
 	}
 
-	@Transactional
 //  @Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
     @Scheduled(fixedRate = 1000000000L, initialDelay = 5000)
     public void oversightResponsibleTask() {
         if (taskDisabled()) {
             return;
         }
-        
+
         log.info("Started: DBS Oversight Responsible Task");
         dbsService.oversightResponsible();
         log.info("Finished: DBS Oversight Responsible Task");
