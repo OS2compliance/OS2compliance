@@ -71,6 +71,19 @@
 								<i class="pli-check fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Opgavecenter</span>
 							</a>
 						</li>
+						<li class="nav-item has-sub">
+							<a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'incidentlogs' || page == 'incidentquestions'} ? 'active' : ''">
+								<i class="pli-exclamation fs-5 me-2"></i> <span class="nav-label ms-1">Hændelser</span>
+							</a>
+                            <ul class="mininav-content nav collapse">
+                                <li class="nav-item">
+                                    <a th:href="@{/incidents/logs}" class="nav-link" th:classappend="${page} == 'incidentlogs' ? 'active' : ''">Hændelseslog</a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
+                                    <a th:href="@{/incidents/questions}" class="nav-link" th:classappend="${page} == 'incidentquestions' ? 'active' : ''">Opsætning</a>
+                                </li>
+                            </ul>
+						</li>
 						<li class="nav-item">
 							<a th:href="@{/reports}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'rapporter' ? 'active' : ''">
 								<i class="pli-newspaper fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
