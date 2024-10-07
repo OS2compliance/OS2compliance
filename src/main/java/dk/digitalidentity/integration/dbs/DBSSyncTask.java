@@ -47,8 +47,8 @@ public class DBSSyncTask {
 		log.info("Finished: DBS Sync");
 	}
 
-//	@Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
-	@Scheduled(fixedRate = 1000000000L, initialDelay = 1000)
+	@Scheduled(cron = "${os2compliance.integrations.dbs.oversight.cron}")
+//	@Scheduled(fixedRate = 1000000000L, initialDelay = 1000)
 	public void oversightTask() {
 		if (taskDisabled()) {
 			return;
@@ -64,8 +64,8 @@ public class DBSSyncTask {
 		log.info("Finished: DBS Oversight Task");
 	}
 
-//  @Scheduled(cron = "${os2compliance.integrations.dbs.cron}")
-    @Scheduled(fixedRate = 1000000000L, initialDelay = 5000)
+  @Scheduled(cron = "${os2compliance.integrations.dbs.responsible.cron}")
+//    @Scheduled(fixedRate = 1000000000L, initialDelay = 5000)
     public void oversightResponsibleTask() {
         if (taskDisabled()) {
             return;
