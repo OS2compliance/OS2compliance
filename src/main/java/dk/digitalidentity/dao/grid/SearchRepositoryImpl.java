@@ -31,7 +31,6 @@ public class SearchRepositoryImpl implements SearchRepository {
 	@PersistenceContext
 	private EntityManager entityManager;
 
-    @Override
     public <T> Page<T> findAllCustomExtra(final List<String> searchableProperties, final String searchString,
                                           final List<Pair<String, Object>> extraAndFieldValue,
                                           final Pageable page, final Class<T> entityClass) {
