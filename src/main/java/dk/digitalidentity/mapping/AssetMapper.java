@@ -132,7 +132,8 @@ public interface AssetMapper {
         @Mapping(target = "threatAssessmentOptOut", ignore = true),
         @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
         @Mapping(target = "dpiaOptOut", ignore = true),
-        @Mapping(target = "dpiaOptOutReason", ignore = true)
+        @Mapping(target = "dpiaOptOutReason", ignore = true),
+        @Mapping(target = "oversightResponsibleUser", ignore = true)
     })
     Asset fromEO(AssetCreateEO assetCreateEO);
 
