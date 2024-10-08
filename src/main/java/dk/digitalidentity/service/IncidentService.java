@@ -2,7 +2,9 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.IncidentDao;
 import dk.digitalidentity.dao.IncidentFieldDao;
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.IterableUtils;
@@ -61,4 +63,23 @@ public class IncidentService {
         }
         return Optional.empty();
     }
+
+    /**
+     * Create a list of {@link IncidentFieldResponse} given the current configuration, the {@link IncidentFieldResponse}
+     * are not persisted.
+     */
+    public void addDefaultFieldResponses(final Incident incident) {
+        final List<IncidentField> fields = incidentFieldDao.findAllByOrderBySortKeyAsc();
+        fields.forEach(f -> {
+                final IncidentFieldResponse response = IncidentFieldResponse.builder()
+                    .incidentType(f.getIncidentType())
+                    .definedList(f.getDefinedList())
+                    .incident(incident)
+                    .question(f.getQuestion())
+                    .sortKey(f.getSortKey())
+                    .build();
+                incident.getResponses().add(response);
+            });
+    }
+
 }

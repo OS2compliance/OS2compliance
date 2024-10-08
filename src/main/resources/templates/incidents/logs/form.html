@@ -1,0 +1,21 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="supplierLabel" th:text="${formTitle}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/logForm}" th:object="${incident}" method="post">
+                <input id="id" th:field="*{id}" type="hidden">
+                <div th:each="response : ${incident.responses}">
+                    <div th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response})} : _"></div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="submit" th:form="${formId}" class="btn btn-primary">Opret</button>
+        </div>
+    </div>
+</div>

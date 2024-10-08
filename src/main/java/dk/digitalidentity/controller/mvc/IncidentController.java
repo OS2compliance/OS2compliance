@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
@@ -67,5 +68,23 @@ public class IncidentController {
             incidentService.save(form);
         }
         return "redirect:/incidents/questions";
+    }
+
+    @GetMapping("logForm")
+    public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long logId) {
+        if (logId != null) {
+            model.addAttribute("formTitle", "Rediger spørgsmål");
+            model.addAttribute("formId", "editForm");
+            // TODO
+//            model.addAttribute("field", incidentService.findField(questionId)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+        } else {
+            final Incident incident = new Incident();
+            incidentService.addDefaultFieldResponses(incident);
+            model.addAttribute("formTitle", "Nyt spørgsmål");
+            model.addAttribute("formId", "createForm");
+            model.addAttribute("incident", incident);
+        }
+        return "incidents/logs/form";
     }
 }

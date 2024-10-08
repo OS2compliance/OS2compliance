@@ -340,3 +340,8 @@ FROM assets a
     left join task_logs tl on tl.task_id = t.id 
 WHERE a.deleted = false
 GROUP BY a.id;
+
+# CREATE OR REPLACE
+# VIEW view_gridjs_incident_logs AS
+# SELECT
+

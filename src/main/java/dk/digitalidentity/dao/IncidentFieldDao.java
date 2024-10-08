@@ -14,4 +14,5 @@ public interface IncidentFieldDao extends CrudRepository<IncidentField, Long> {
 
     List<IncidentField> findAllByOrderBySortKeyAsc();
 
+    List<IncidentField> findAllByIndexColumnTrueOrderBySortKeyAsc();
 }

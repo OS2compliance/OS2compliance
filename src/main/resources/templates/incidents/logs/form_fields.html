@@ -1,0 +1,21 @@
+
+<div th:fragment="textField(response)" class="row mt-2" th:with="fieldId=${#ids.seq('text')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <textarea class="form-control" style="width: 100%" th:id="${fieldId}" name="responses[].answerText" rows="4"></textarea>
+    </div>
+    <input type="hidden" name="responses[].answerDate" value="">
+</div>
+
+<div th:fragment="dateField(response)" class="row mt-2" th:with="fieldId=${#ids.seq('date')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <div class="input-group">
+            <input th:id="${fieldId}" type="text" class="form-control dateTimePicker" name="responses[].answerDate">
+            <button th:id="${fieldId} + 'Btn'" class="btn btn-primary" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;">
+                <i class="pli-calendar-4 fs-5"></i>
+            </button>
+        </div>
+    </div>
+    <input type="hidden" name="responses[].answerText" value="">
+</div>

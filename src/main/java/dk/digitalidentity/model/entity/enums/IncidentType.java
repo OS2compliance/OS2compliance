@@ -5,7 +5,7 @@ import lombok.Getter;
 @Getter
 public enum IncidentType {
     TEXT("Tekst"),
-    DATE_TIME("Dato/tid"),
+    DATE("Dato"),
     ASSET("Aktiv"),
     USER("Bruger"),
     USERS("Brugere"),
