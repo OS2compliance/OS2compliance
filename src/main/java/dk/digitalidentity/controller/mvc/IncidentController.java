@@ -87,4 +87,10 @@ public class IncidentController {
         }
         return "incidents/logs/form";
     }
+
+    @PostMapping("log")
+    public String createIncident(@ModelAttribute final Incident incident) {
+        System.out.println(incident);
+        return "redirect:/incidents/logs";
+    }
 }

@@ -6,8 +6,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function IncidentService() {
     this.init = () => {
         let self = this;
-        fetchHtml(formUrl, "createIncidentDialog")
-            .then(() => self.initDatePickers("createIncidentDialog"))
+        let targetId = "createIncidentDialog";
+        fetchHtml(formUrl, targetId)
+            .then(() => {
+                self.initDatePickers(targetId);
+                self.initAssetChoices(targetId);
+            })
     }
 
     this.initDatePickers = (dialogId) => {
@@ -16,7 +20,15 @@ function IncidentService() {
         pickers.forEach(picker => {
             let id = picker.getAttribute('id');
             let buttonId = picker.parentElement.querySelector('button').getAttribute('id');
-            initDatepicker(`#${id}`, `#${buttonId}`);
+            initDatepicker(`#${buttonId}`, `#${id}` );
+        })
+    }
+
+    this.initAssetChoices = (dialogId) => {
+        let dialog = document.getElementById(dialogId);
+        let assetSelects = dialog.querySelectorAll('.assetSelect');
+        assetSelects.forEach(select => {
+            initAssetSelect(select.getAttribute('id'));
         })
     }
 }

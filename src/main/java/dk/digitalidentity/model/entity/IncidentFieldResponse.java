@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -57,6 +58,7 @@ public class IncidentFieldResponse {
     private String answerText;
 
     @Column
+    @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate answerDate;
 
     @Column

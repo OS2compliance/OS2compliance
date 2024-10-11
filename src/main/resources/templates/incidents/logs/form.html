@@ -5,11 +5,17 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/logForm}" th:object="${incident}" method="post">
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
                 <input id="id" th:field="*{id}" type="hidden">
-                <div th:each="response : ${incident.responses}">
-                    <div th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response})} : _"></div>
-                    <div th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response})} : _"></div>
+                <div th:each="response, idx : ${incident.responses}">
+                    <div th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'ASSET'} ? ~{incidents/logs/form_fields :: assetField(response = ${response}, idx = ${idx.index})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'USER'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'USERS'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'ORGANIZATION'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'ORGANIZATIONS'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
+                    <div th:replace="${response.incidentType.name() == 'CHOICE_LIST'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
                 </div>
             </form>
         </div>
