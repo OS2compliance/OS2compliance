@@ -31,7 +31,7 @@ function initRegisterSelect(registerSelectElement) {
     return registerChoices;
 }
 
-function initAssetSelect(assetSelectElement) {
+function initAssetSelectRisk(assetSelectElement) {
     const assetChoices = initSelect(assetSelectElement);
     updateTypeSelect(assetChoices, "", "ASSET");
     assetSelectElement.addEventListener("search",
@@ -144,7 +144,7 @@ function CopyRiskService() {
         }
         const assetSelect = this.getScopedElementById('copyAssetSelect');
         if (assetSelect !== null) {
-            this.assetChoicesSelect = initAssetSelect(assetSelect);
+            this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         }
         const presentSelect = this.getScopedElementById('copyPresentAtMeetingSelect');
         if (presentSelect !== null) {
@@ -195,7 +195,7 @@ function CreateRiskService() {
         const registerSelect = this.getScopedElementById('registerSelect');
         const assetSelect = this.getScopedElementById('assetSelect');
         this.registerChoicesSelect = initRegisterSelect(registerSelect);
-        this.assetChoicesSelect = initAssetSelect(assetSelect);
+        this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         this.userChoicesSelect = initUserSelect("userSelect");
         this.ouChoicesSelect = initOUSelect("ouSelect");
 
