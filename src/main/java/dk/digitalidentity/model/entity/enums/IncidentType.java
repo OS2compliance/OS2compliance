@@ -7,6 +7,7 @@ public enum IncidentType {
     TEXT("Tekst"),
     DATE("Dato"),
     ASSET("Aktiv"),
+    ASSETS("Aktiver"),
     USER("Bruger"),
     USERS("Brugere"),
     ORGANIZATION("Enhed"),

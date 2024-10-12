@@ -344,4 +344,7 @@ GROUP BY a.id;
 # CREATE OR REPLACE
 # VIEW view_gridjs_incident_logs AS
 # SELECT
+# FROM incidents i
+# WHERE i.deleted = false
+# GROUP BY i.id;
 

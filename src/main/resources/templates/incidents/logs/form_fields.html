@@ -24,3 +24,47 @@
         <select class="form-control form-select assetSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|"></select>
     </div>
 </div>
+
+<div th:fragment="assetsField(response, idx)" class="row mt-2" th:with="fieldId=${#ids.seq('assets')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select assetSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple></select>
+    </div>
+</div>
+
+<div th:fragment="userField(response, idx)" class="row mt-2" th:with="fieldId=${#ids.seq('user')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select userSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|"></select>
+    </div>
+</div>
+
+<div th:fragment="usersField(response, idx)" class="row mt-2" th:with="fieldId=${#ids.seq('users')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select userSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple></select>
+    </div>
+</div>
+
+<div th:fragment="organizationField(response, idx)" class="row mt-2" th:with="fieldId=${#ids.seq('organization')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select organizationSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|"></select>
+    </div>
+</div>
+
+<div th:fragment="organizationsField(response, idx)" class="row mt-2" th:with="fieldId=${#ids.seq('organizations')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select organizationSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple></select>
+    </div>
+</div>
+
+<div th:fragment="choiceListField(response, idx)" class="row mt-2" th:with="fieldId=${#ids.seq('choiceList')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select choiceList" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].choiceAnswers|">
+            <option th:each="choice : ${response.definedList}" th:value="${choice}" th:text="${choice}"></option>
+        </select>
+    </div>
+</div>
