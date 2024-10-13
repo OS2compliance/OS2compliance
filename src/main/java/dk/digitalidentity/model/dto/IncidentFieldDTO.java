@@ -15,7 +15,7 @@ public class IncidentFieldDTO {
     private Long id;
     private String incidentType;
     private String question;
-    private boolean indexColumn;
+    private String indexColumnName;
     private Set<String> definedList;
 
 }

@@ -61,7 +61,7 @@ public class IncidentController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             toUpdate.setQuestion(form.getQuestion());
             toUpdate.setIncidentType(form.getIncidentType());
-            toUpdate.setIndexColumn(form.isIndexColumn());
+            toUpdate.setIndexColumnName(form.getIndexColumnName());
             toUpdate.setDefinedList(form.getDefinedList());
         } else {
             form.setSortKey(incidentService.nextIncidentFieldSortKey());

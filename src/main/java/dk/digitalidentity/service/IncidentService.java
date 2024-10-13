@@ -8,6 +8,8 @@ import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.IterableUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -80,6 +82,10 @@ public class IncidentService {
                     .build();
                 incident.getResponses().add(response);
             });
+    }
+
+    public Page<Incident> listIncidents(final Pageable pageable) {
+        return incidentDao.findAll(pageable);
     }
 
 }

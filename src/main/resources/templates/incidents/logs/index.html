@@ -37,7 +37,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-
+                                <div id="incidentsTable"></div>
                             </div>
                         </div>
                     </div>
@@ -58,10 +58,79 @@
     /*<![CDATA[*/
     /*[+
     var formUrl = [[@{/incidents/logForm}]];
+    var restUrl = [[@{/rest/incidents/}]];
     +]*/
-
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     document.addEventListener("DOMContentLoaded", function(event) {
+        const defaultClassName = {
+            table: 'table table-striped',
+            search: "form-control",
+            header: "d-flex justify-content-end"
+        };
 
+        incidentService.fetchColumnName()
+            .then(c => {
+                // TODO Setup Grid here monday!!!
+            });
+
+        const updateUrl = (prev, query) => {
+            return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+        };
+
+        incidentGrid = new gridjs.Grid({
+            className: defaultClassName,
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: false,
+            columns: [
+                {
+                    id: "id",
+                    hidden: true
+                },
+                {
+                    id: "name",
+                    name: "Titel"
+                },
+                {
+                    id: "createdAt",
+                    name: "Oprettet"
+                },
+                {
+                    id: "updatedAt",
+                    name: "Opdateret"
+                },
+                {
+                    id: "actions",
+                    name: "Handlinger",
+                    sort: 0,
+                    width: '130px',
+                    formatter: (cell, row) => {
+                        const id = row.cells[0]['data'];
+                        return gridjs.html(
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="TODO EDIT"><i class="pli-pencil fs-5"></i></button>`
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="TODO DELETE"><i class="pli-trash fs-5"></i></button>`);
+                    }
+                }
+            ],
+            server:{
+                url: restUrl + 'list',
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => {
+                    console.log(data)
+                    incidentGrid.data = data;
+                    return data.content.map(field => [ field.id, field.name, field.createdAt, field.updatedAt ]);
+                },
+                total: data => data.totalCount
+            }
+        });
+        incidentGrid.render(document.getElementById("incidentsTable"));
     });
 
     /*]]>*/

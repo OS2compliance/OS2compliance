@@ -1,15 +1,40 @@
 const incidentQuestionService = new IncidentQuestionService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    incidentQuestionService.init();
-});
 
 function IncidentQuestionService() {
 
-    this.init = () => {
+    this.init = (dialogId) => {
+        let dialog = document.getElementById(dialogId);
+        this.initFormSelectList(dialog);
+        this.updateColumNameVisibility(dialogId);
+        let form = dialog.querySelector('form');
+        form.addEventListener('submit', (event) => {
+            this.submit(event, form);
+        })
     }
 
-    this.initFormSelectList = (dialogId) => {
+    this.toggleColumnVisibility = (element) => {
+        let closest = element.closest(".modal");
+        this.updateColumNameVisibility(closest.getAttribute("id"));
+    }
+
+    this.updateColumNameVisibility = (dialogId) => {
         let dialog = document.getElementById(dialogId);
+        let showColumn = dialog.querySelector(".indexColumn");
+        let columnSection = dialog.querySelector(".columnNameSection");
+        columnSection.style.display = showColumn.checked ? "inline-flex" : "none";
+    }
+
+    this.submit = (event, form) => {
+        event.preventDefault();
+        let showColumn = form.querySelector(".indexColumn");
+        if (!showColumn.checked) {
+            let columnNameInput = form.querySelector('.columnName');
+            columnNameInput.value = '';
+        }
+        form.submit();
+    }
+
+    this.initFormSelectList = (dialog) => {
         let choices = dialog.querySelectorAll(".choices");
         [...choices].forEach(c => {
             new Choices(c, {
@@ -76,10 +101,16 @@ function IncidentQuestionService() {
             .catch(error => toastService.error(error));
     }
 
+    this.createQuestion = (dialogId) => {
+        fetchHtml(`${formUrl}`, dialogId).then(() => {
+            this.init('createQuestionDialog');
+        });
+    }
+
     this.editQuestion = (dialogId, id) => {
         fetchHtml(`${formUrl}?id=${id}`, dialogId).then(() => {
             let dialog = document.getElementById(dialogId);
-            incidentQuestionService.initFormSelectList(dialogId);
+            this.init(dialogId);
             let editDialog = new bootstrap.Modal(dialog);
             editDialog.show();
         });

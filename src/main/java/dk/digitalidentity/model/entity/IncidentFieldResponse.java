@@ -65,9 +65,9 @@ public class IncidentFieldResponse {
     @Convert(converter = StringListNullSafeConverter.class)
     private Set<String> answerElementIds = new HashSet<>();
 
-    @Column
+    @Column(name="answer_choice_values")
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> choiceAnswers = new HashSet<>();
+    private Set<String> answerChoiceValues = new HashSet<>();
 
     @ManyToOne
     @JoinColumn(name = "incident_id")

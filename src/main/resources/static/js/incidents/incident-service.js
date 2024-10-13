@@ -16,6 +16,15 @@ function IncidentService() {
             })
     }
 
+    this.fetchColumnName =  () => {
+        return jsonCall('GET', restUrl + 'columns', null)
+            .then((response) => {
+                defaultResponseErrorHandler(response);
+                return response.json();
+            })
+            .catch(defaultErrorHandler)
+    }
+
     this.initDatePickers = (dialogId) => {
         let dialog = document.getElementById(dialogId);
         let pickers = dialog.querySelectorAll('.dateTimePicker');

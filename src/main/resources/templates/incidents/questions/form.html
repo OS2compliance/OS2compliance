@@ -30,10 +30,21 @@
                     </div>
                 </div>
                 <div class="row mt-4">
-                    <div class="col-sm-4 col-form-label"></div>
+                    <div class="col-sm-4 col-form-label">
+                        <input type="checkbox" th:checked="${field.indexColumnName != null && field.indexColumnName != ''}" onchange="incidentQuestionService.toggleColumnVisibility(this)" class="form-check-input indexColumn" id="indexColumn">
+                        <label for="indexColumn">Vis på oversigt</label>
+                    </div>
                     <div class="col-sm-8">
-                        <input type="checkbox" th:field="*{indexColumn}" class="form-check-input" id="overview">
-                        <label for="overview">Vis på oversigt</label>
+                    </div>
+                </div>
+                <div class="row mt-4 columnNameSection">
+                    <div class="col-sm-4 col-form-label">
+                        <label for="columnName">Kolonnenavn</label>
+                    </div>
+                    <div class="col-sm-8">
+                        <div class="col-sm-8">
+                            <input type="text" id="columnName" class="form-control columnName" th:field="*{indexColumnName}">
+                        </div>
                     </div>
                 </div>
             </form>

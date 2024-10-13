@@ -1,14 +1,23 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.mapping.IncidentMapper;
+import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
+import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -16,9 +25,13 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -33,7 +46,7 @@ public class IncidentRestController {
     @RequireAdminstrator
     @GetMapping("questions")
     public List<IncidentFieldDTO> list() {
-        return incidentMapper.toDtos(incidentService.getAllFields());
+        return incidentMapper.toFieldDTOs(incidentService.getAllFields());
     }
 
     @DeleteMapping("questions/{id}")
@@ -61,6 +74,41 @@ public class IncidentRestController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         incidentService.reorderField(fieldToReorder, true);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping("list")
+    public PageDTO<IncidentDTO> list(
+        @RequestParam(name = "search", required = false) final String search,
+        @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+        @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
+        @RequestParam(name = "order", required = false) final String order,
+        @RequestParam(name = "dir", required = false) final String dir) {
+        Sort sort = null;
+        if (StringUtils.isNotEmpty(order)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, order);
+        } else {
+            sort = Sort.by(Sort.Direction.DESC, "createdAt");
+        }
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
+        if (StringUtils.isNotEmpty(search)) {
+            // search and page
+            // TODO
+        }
+        final Page<Incident> incidents = incidentService.listIncidents(sortAndPage);
+
+        assert incidents != null;
+        return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
+    }
+
+    @GetMapping("columns")
+    public List<String> visibleColumns() {
+//        final List<String> result = new ArrayList<>()
+//        result.addAll(incidentService.getAllFields().stream()
+//            .filter(IncidentField::isIndexColumn)
+//            .map(f -> f.get())
+//            .toList());
+        return Collections.emptyList();
     }
 
 }
