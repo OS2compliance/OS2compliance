@@ -103,12 +103,10 @@ public class IncidentRestController {
 
     @GetMapping("columns")
     public List<String> visibleColumns() {
-//        final List<String> result = new ArrayList<>()
-//        result.addAll(incidentService.getAllFields().stream()
-//            .filter(IncidentField::isIndexColumn)
-//            .map(f -> f.get())
-//            .toList());
-        return Collections.emptyList();
+        return incidentService.getAllFields().stream()
+            .map(IncidentField::getIndexColumnName)
+            .filter(StringUtils::isNotEmpty)
+            .toList();
     }
 
 }

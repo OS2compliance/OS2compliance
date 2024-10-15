@@ -5,6 +5,10 @@ import dk.digitalidentity.dao.IncidentFieldDao;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
+import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.IncidentType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.IterableUtils;
@@ -13,8 +17,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 @Service
 @Transactional
@@ -22,6 +29,9 @@ import java.util.Optional;
 public class IncidentService {
     private final IncidentDao incidentDao;
     private final IncidentFieldDao incidentFieldDao;
+    private final RelatableService relatableService;
+    private final UserService userService;
+    private final OrganisationService organisationService;
 
     public Optional<IncidentField> findField(final long fieldId) {
         return incidentFieldDao.findById(fieldId);
@@ -74,6 +84,7 @@ public class IncidentService {
         final List<IncidentField> fields = incidentFieldDao.findAllByOrderBySortKeyAsc();
         fields.forEach(f -> {
                 final IncidentFieldResponse response = IncidentFieldResponse.builder()
+                    .indexColumnName(f.getIndexColumnName())
                     .incidentType(f.getIncidentType())
                     .definedList(f.getDefinedList())
                     .incident(incident)
@@ -86,6 +97,50 @@ public class IncidentService {
 
     public Page<Incident> listIncidents(final Pageable pageable) {
         return incidentDao.findAll(pageable);
+    }
+
+    public Incident save(final Incident incident) {
+        return incidentDao.save(incident);
+    }
+
+    public Optional<Incident> findById(final Long id) {
+        return incidentDao.findById(id);
+    }
+
+    public Map<String, OrganisationUnit> lookupResponseOrganisations(final Incident incident) {
+        return incident.getResponses().stream()
+            .filter(r -> r.getAnswerElementIds() != null &&
+                (r.getIncidentType() == IncidentType.ORGANIZATION || r.getIncidentType() == IncidentType.ORGANIZATIONS))
+            .flatMap(r -> r.getAnswerElementIds().stream())
+            .distinct()
+            .map(organisationService::get)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toMap(OrganisationUnit::getUuid, Function.identity()));
+    }
+
+    public Object lookupResponseUsers(final Incident incident) {
+        return incident.getResponses().stream()
+            .filter(r -> r.getAnswerElementIds() != null &&
+                (r.getIncidentType() == IncidentType.USER || r.getIncidentType() == IncidentType.USERS))
+            .flatMap(r -> r.getAnswerElementIds().stream())
+            .distinct()
+            .map(userService::findByUuid)
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toMap(User::getUuid, Function.identity()));
+    }
+
+    public Map<String, Relatable> lookupResponseEntities(final Incident incident) {
+        return incident.getResponses().stream()
+            .filter(r -> r.getAnswerElementIds() != null &&
+                (r.getIncidentType() == IncidentType.ASSET || r.getIncidentType() == IncidentType.ASSETS))
+            .flatMap(r -> r.getAnswerElementIds().stream())
+            .distinct()
+            .map(id -> relatableService.findById(Long.valueOf(id)))
+            .filter(Optional::isPresent)
+            .map(Optional::get)
+            .collect(Collectors.toMap(r -> "" + r.getId(), Function.identity()));
     }
 
 }

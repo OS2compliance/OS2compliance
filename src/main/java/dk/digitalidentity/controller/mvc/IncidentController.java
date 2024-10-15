@@ -5,6 +5,7 @@ import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
+import dk.digitalidentity.service.RelatableService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -71,17 +72,22 @@ public class IncidentController {
     }
 
     @GetMapping("logForm")
-    public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long logId) {
-        if (logId != null) {
-            model.addAttribute("formTitle", "Rediger spørgsmål");
+    public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long incidentId) {
+        if (incidentId != null) {
+            final Incident incident = incidentService.findById(incidentId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            model.addAttribute("formTitle", "Rediger hændelse");
             model.addAttribute("formId", "editForm");
-            // TODO
-//            model.addAttribute("field", incidentService.findField(questionId)
-//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)));
+            model.addAttribute("incident", incident);
+            // The incident responses only contains identifiers for the objects it points to, so we need to look up
+            // the object to be able to show the names in the edit dialog.
+            model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
+            model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
+            model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
         } else {
             final Incident incident = new Incident();
             incidentService.addDefaultFieldResponses(incident);
-            model.addAttribute("formTitle", "Nyt spørgsmål");
+            model.addAttribute("formTitle", "Ny hændelse");
             model.addAttribute("formId", "createForm");
             model.addAttribute("incident", incident);
         }
@@ -90,7 +96,9 @@ public class IncidentController {
 
     @PostMapping("log")
     public String createIncident(@ModelAttribute final Incident incident) {
-        System.out.println(incident);
+        incident.getResponses()
+                .forEach(r -> r.setIncident(incident));
+        incidentService.save(incident);
         return "redirect:/incidents/logs";
     }
 }

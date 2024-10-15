@@ -3,6 +3,7 @@
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/incidents/incident-service.js}" defer></script>
+<script th:src="@{/js/incidents/incident-grid-service.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -47,6 +48,7 @@
     </section>
 
     <div class="modal fade" tabindex="-1" id="createIncidentDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editIncidentDialog" aria-hidden="true"></div>
 
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='incidentlogs')}"></nav>
@@ -61,77 +63,6 @@
     var restUrl = [[@{/rest/incidents/}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    document.addEventListener("DOMContentLoaded", function(event) {
-        const defaultClassName = {
-            table: 'table table-striped',
-            search: "form-control",
-            header: "d-flex justify-content-end"
-        };
-
-        incidentService.fetchColumnName()
-            .then(c => {
-                // TODO Setup Grid here monday!!!
-            });
-
-        const updateUrl = (prev, query) => {
-            return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-        };
-
-        incidentGrid = new gridjs.Grid({
-            className: defaultClassName,
-            pagination: {
-                limit: 50,
-                server: {
-                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                }
-            },
-            sort: false,
-            columns: [
-                {
-                    id: "id",
-                    hidden: true
-                },
-                {
-                    id: "name",
-                    name: "Titel"
-                },
-                {
-                    id: "createdAt",
-                    name: "Oprettet"
-                },
-                {
-                    id: "updatedAt",
-                    name: "Opdateret"
-                },
-                {
-                    id: "actions",
-                    name: "Handlinger",
-                    sort: 0,
-                    width: '130px',
-                    formatter: (cell, row) => {
-                        const id = row.cells[0]['data'];
-                        return gridjs.html(
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="TODO EDIT"><i class="pli-pencil fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="TODO DELETE"><i class="pli-trash fs-5"></i></button>`);
-                    }
-                }
-            ],
-            server:{
-                url: restUrl + 'list',
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': token
-                },
-                then: data => {
-                    console.log(data)
-                    incidentGrid.data = data;
-                    return data.content.map(field => [ field.id, field.name, field.createdAt, field.updatedAt ]);
-                },
-                total: data => data.totalCount
-            }
-        });
-        incidentGrid.render(document.getElementById("incidentsTable"));
-    });
 
     /*]]>*/
 </script>

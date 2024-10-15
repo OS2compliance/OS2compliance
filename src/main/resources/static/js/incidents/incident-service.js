@@ -5,14 +5,27 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 function IncidentService() {
     this.init = () => {
+        this.fetchDialog(formUrl, "createIncidentDialog");
+    }
+
+    this.fetchDialog = (url, targetId) => {
         let self = this;
-        let targetId = "createIncidentDialog";
-        fetchHtml(formUrl, targetId)
+        return fetchHtml(url, targetId)
             .then(() => {
                 self.initDatePickers(targetId);
                 self.initAssetChoices(targetId);
                 self.initUserChoices(targetId);
                 self.initOrganizationChoices(targetId);
+            })
+    }
+
+    this.editIncident = (targetId, incidentId) => {
+        console.log(`Edit incident ${targetId} => ${incidentId}`)
+        this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
+            .then(() => {
+                let dialog = document.getElementById(targetId);
+                let editDialog = new bootstrap.Modal(dialog);
+                editDialog.show();
             })
     }
 
@@ -39,7 +52,7 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let assetSelects = dialog.querySelectorAll('.assetSelect');
         assetSelects.forEach(select => {
-            initAssetSelect(select.getAttribute('id'));
+            initAssetSelect(select.getAttribute('id'), false);
         })
     }
 
@@ -47,7 +60,7 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let assetSelects = dialog.querySelectorAll('.userSelect');
         assetSelects.forEach(select => {
-            initUserSelect(select.getAttribute('id'));
+            initUserSelect(select.getAttribute('id'), false);
         })
     }
 
@@ -55,7 +68,7 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let assetSelects = dialog.querySelectorAll('.organizationSelect');
         assetSelects.forEach(select => {
-            initOUSelect(select.getAttribute('id'));
+            initOUSelect(select.getAttribute('id'), false);
         })
     }
 }

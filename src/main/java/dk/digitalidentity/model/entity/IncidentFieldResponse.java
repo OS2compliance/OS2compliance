@@ -19,6 +19,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.validator.constraints.Length;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -46,6 +47,10 @@ public class IncidentFieldResponse {
     @Column
     @Enumerated(EnumType.STRING)
     private IncidentType incidentType;
+
+    @Column
+    @Length(max = 255)
+    private String indexColumnName;
 
     @Column
     private long sortKey;
