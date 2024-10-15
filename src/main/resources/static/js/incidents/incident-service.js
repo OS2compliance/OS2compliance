@@ -20,13 +20,31 @@ function IncidentService() {
     }
 
     this.editIncident = (targetId, incidentId) => {
-        console.log(`Edit incident ${targetId} => ${incidentId}`)
+        document.getElementById(targetId).innerText = '';
         this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
             .then(() => {
                 let dialog = document.getElementById(targetId);
                 let editDialog = new bootstrap.Modal(dialog);
                 editDialog.show();
             })
+    }
+
+    this.deleteIncident = (grid, targetId, name) => {
+        Swal.fire({
+            text: `Er du sikker på du vil slette hændelsen '${name}'?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#03a9f4',
+            cancelButtonColor: '#df5645',
+            confirmButtonText: 'Ja',
+            cancelButtonText: 'Nej'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                deleteData(`${restUrl}${targetId}`)
+                    .then(response => grid.forceRender())
+                    .catch(error => toastService.error(error));
+            }
+        });
     }
 
     this.fetchColumnName =  () => {

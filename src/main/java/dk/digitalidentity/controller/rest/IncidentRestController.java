@@ -76,6 +76,15 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @DeleteMapping("{id}")
+    @Transactional
+    public ResponseEntity<?> deleteIncident(@PathVariable final Long id) {
+        final Incident incidentToDelete = incidentService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        incidentService.delete(incidentToDelete);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
     @PostMapping("list")
     public PageDTO<IncidentDTO> list(
         @RequestParam(name = "search", required = false) final String search,

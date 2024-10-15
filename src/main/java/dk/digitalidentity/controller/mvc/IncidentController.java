@@ -5,7 +5,6 @@ import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
-import dk.digitalidentity.service.RelatableService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +27,13 @@ public class IncidentController {
     private final IncidentService incidentService;
 
     @GetMapping("logs")
-    public String incidentLog(final Model model) {
+    public String incidentLog() {
         return "incidents/logs/index";
     }
 
     @RequireAdminstrator
     @GetMapping("questions")
-    public String incidentQuestions(final Model model) {
+    public String incidentQuestions() {
         return "incidents/questions/index";
     }
 
@@ -95,10 +94,20 @@ public class IncidentController {
     }
 
     @PostMapping("log")
-    public String createIncident(@ModelAttribute final Incident incident) {
-        incident.getResponses()
+    public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
+        if (incident.getId() != null) {
+            final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            existingIncident.setName(incident.getName());
+            existingIncident.getResponses().clear();
+            existingIncident.getResponses().addAll(incident.getResponses());
+            existingIncident.getResponses()
+                .forEach(r -> r.setIncident(existingIncident));
+        } else {
+            incident.getResponses()
                 .forEach(r -> r.setIncident(incident));
-        incidentService.save(incident);
+            incidentService.save(incident);
+        }
         return "redirect:/incidents/logs";
     }
 }

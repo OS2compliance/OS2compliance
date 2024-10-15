@@ -21,7 +21,7 @@ function IncidentGridService() {
             header: "d-flex justify-content-end"
         };
         this.buildColumns(columnNames);
-        let incidentGrid = new gridjs.Grid({
+        this.incidentGrid = new gridjs.Grid({
             className: defaultClassName,
             pagination: {
                 limit: 50,
@@ -43,7 +43,7 @@ function IncidentGridService() {
                 total: data => data.totalCount
             }
         });
-        incidentGrid.render(document.getElementById("incidentsTable"));
+        this.incidentGrid.render(document.getElementById("incidentsTable"));
     }
 
     this.mapRow = (field) => {
@@ -86,12 +86,13 @@ function IncidentGridService() {
                 id: "actions",
                 name: "Handlinger",
                 sort: 0,
-                width: '130px',
+                width: '90px',
                 formatter: (cell, row) => {
                     const id = row.cells[0]['data'];
+                    const name = row.cells[1]['data'];
                     return gridjs.html(
                         `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentService.editIncident('editIncidentDialog', '${id}')"><i class="pli-pencil fs-5"></i></button>`
-                        + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick=""><i class="pli-trash fs-5"></i></button>`);
+                        + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentService.deleteIncident(incidentGridService.incidentGrid, '${id}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                 }
             });
     }

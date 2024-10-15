@@ -143,4 +143,7 @@ public class IncidentService {
             .collect(Collectors.toMap(r -> "" + r.getId(), Function.identity()));
     }
 
+    public void delete(final Incident incidentToDelete) {
+        incidentDao.delete(incidentToDelete);
+    }
 }
