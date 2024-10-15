@@ -11,8 +11,11 @@
             <th>Aktiv</th>
             <th>Ansvarlig</th>
             <th>Tilsynsform</th>
+            <th>Link (DBS)</th>
+            <th>Link (Intern dokumentation)</th>
             <th>Konklusion</th>
             <th>Resultat</th>
+            <th>Actions</th>
         </thead>
         <tbody>
             <tr th:each="oversight : ${oversights}">
@@ -20,11 +23,25 @@
                 <td th:text="${oversight.asset.name}"></td>
                 <td th:text="${oversight.responsibleUser.userId}"></td>
                 <td th:text="${oversight.supervisionModel.getMessage()}"></td>
+                <td>
+                    <a th:href="${oversight.dbsLink}" th:text="${oversight.dbsLink}"></a>
+                </td>
+                <td>
+                    <a th:href="${oversight.internalDocumentationLink}" th:text="${oversight.internalDocumentationLink}"></a>
+                </td>
                 <td th:text="${oversight.conclusion}"></td>
                 <td>
                     <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).RED == oversight.status}" class="d-block badge bg-danger" style="width: 60px">Rød</div>
                     <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).GREEN == oversight.status}" class="d-block badge bg-success" style="width: 60px">Grøn</div>
                     <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).YELLOW == oversight.status}" class="d-block badge bg-yellow" style="width: 60px">Gul</div>
+                </td>
+                <td>
+                    <button onclick="editOversight(this)" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit oversight">
+                        <i class="pli-pen-4 fs-6"></i>
+                    </button>
+                    <button onclick="deleteOversight(this)" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete oversight">
+                        <i class="pli-trash fs-6"></i>
+                    </button>
                 </td>
             </tr>
         </tbody>

@@ -87,7 +87,6 @@
         /*<![CDATA[*/
 
         /*[+
-            var _oversight_asset_id = [[${asset.id}]]
             var oversightUrl = [[@{/assets/oversight}]];
         +]*/
         var oversightDialog;
@@ -204,8 +203,29 @@
             initOversightModal().then(() => oversightDialog.show());
         }
 
-        function initOversightModal() {
-            return fetch(oversightUrl + "/" + _oversight_asset_id + "/asset")
+        function editOversight(elem) {
+            const oversightId = elem.dataset.oversightid;
+            initOversightModal(oversightId).then(() => oversightDialog.show());
+        }
+
+        function deleteOversight(elem) {
+            const oversightId = elem.dataset.oversightid;
+            fetch(oversightUrl+ '?' + new URLSearchParams({asset: [[${asset.id}]], id: oversightId}), { method: 'DELETE', headers: {
+                   'X-CSRF-TOKEN': token,
+            }, })
+            .then((res) => {
+                   window.location.reload();
+            });
+        }
+
+        function initOversightModal(id) {
+            let params = new URLSearchParams();
+
+            if (id) {
+                params.append('id', id);
+            }
+
+            return fetch(oversightUrl + "/" + [[${asset.id}]] + "/asset" + "?" + params)
             .then(response => response.text()
                 .then(data => {
                     document.getElementById('oversightDialog').innerHTML = data;
