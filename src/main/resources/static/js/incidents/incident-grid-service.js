@@ -29,7 +29,19 @@ function IncidentGridService() {
                     url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}`)
                 }
             },
-            sort: false,
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = this.columns.map(c => c.id);
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
+                    }
+                }
+            },
             columns: this.columns,
             server:{
                 url: restUrl + 'list',
@@ -74,7 +86,8 @@ function IncidentGridService() {
         columnNames.forEach(c => {
             this.columns.push({
                 id: c,
-                name: c
+                name: c,
+                sort: 0
             })
         });
         this.columns.push(
