@@ -210,7 +210,7 @@
 
         function deleteOversight(elem) {
             const oversightId = elem.dataset.oversightid;
-            fetch(oversightUrl+ '?' + new URLSearchParams({asset: [[${asset.id}]], id: oversightId}), { method: 'DELETE', headers: {
+            fetch(oversightUrl+ '?' + new URLSearchParams({entityId: [[${asset.id}]], type: 'asset', id: oversightId}), { method: 'DELETE', headers: {
                    'X-CSRF-TOKEN': token,
             }, })
             .then((res) => {

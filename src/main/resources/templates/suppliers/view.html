@@ -174,6 +174,8 @@
         var supplierId = [[${supplier.id}]]
     +]*/
 
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(formUrl)
             .then(response => response.text()
@@ -185,72 +187,93 @@
 
     function showOversightModal() {
             initOversightModal().then(() => oversightDialog.show());
+    }
+
+    function editOversight(elem) {
+        const oversightId = elem.dataset.oversightid;
+        initOversightModal(oversightId).then(() => oversightDialog.show());
+    }
+
+    function deleteOversight(elem) {
+        const oversightId = elem.dataset.oversightid;
+        fetch(oversightUrl+ '?' + new URLSearchParams({entityId: [[${supplier.id}]], type: 'supplier', id: oversightId}), { method: 'DELETE', headers: {
+               'X-CSRF-TOKEN': token,
+        }, })
+        .then((res) => {
+               window.location.reload();
+        });
+    }
+
+    function initOversightModal(id) {
+        let params = new URLSearchParams();
+
+        if (id) {
+            params.append('id', id);
         }
 
-        function initOversightModal() {
-            return fetch(oversightUrl + "/" + supplierId + "/supplier")
-            .then(response => response.text()
-                .then(data => {
-                    document.getElementById('oversightDialog').innerHTML = data;
+        return fetch(oversightUrl + "/" + supplierId + "/supplier"+ "?" + params)
+        .then(response => response.text()
+            .then(data => {
+                document.getElementById('oversightDialog').innerHTML = data;
 
-                    //Init modal
-                    oversightDialog = new bootstrap.Modal(document.getElementById('oversightDialog'), {
-                      keyboard: false
+                //Init modal
+                oversightDialog = new bootstrap.Modal(document.getElementById('oversightDialog'), {
+                  keyboard: false
+                });
+
+                //Init date pickers
+                const datepickerOversight = MCDatepicker.create({
+                    el: '#oversightDateId',
+                    bodyType: 'inline',
+                    autoClose: true,
+                    dateFormat: 'dd/mm-yyyy',
+                    selectedDate: new Date(),
+                    closeOnBlur: true,
+                    firstWeekday: 1,
+                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                    customClearBTN: "Ryd",
+                    customCancelBTN: "Annuller"
                     });
+                document.querySelector("#oversightDateBtn").addEventListener("click", () => {
+                datepickerOversight.open();
+                });
 
-                    //Init date pickers
-                    const datepickerOversight = MCDatepicker.create({
-                        el: '#oversightDateId',
-                        bodyType: 'inline',
-                        autoClose: true,
-                        dateFormat: 'dd/mm-yyyy',
-                        selectedDate: new Date(),
-                        closeOnBlur: true,
-                        firstWeekday: 1,
-                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                        customClearBTN: "Ryd",
-                        customCancelBTN: "Annuller"
-                        });
-                    document.querySelector("#oversightDateBtn").addEventListener("click", () => {
-                    datepickerOversight.open();
+                const inspectionDateOversightModal = MCDatepicker.create({
+                    el: '#oversightInspectionDateInput',
+                    bodyType: 'inline',
+                    autoClose: true,
+                    dateFormat: 'dd/mm-yyyy',
+                    selectedDate: new Date(),
+                    closeOnBlur: true,
+                    firstWeekday: 1,
+                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                    customClearBTN: "Ryd",
+                    customCancelBTN: "Annuller"
                     });
+                document.querySelector("#oversightInspectionDateBtn").addEventListener("click", () => {
+                    inspectionDateOversightModal.open();
+                });
 
-                    const inspectionDateOversightModal = MCDatepicker.create({
-                        el: '#oversightInspectionDateInput',
-                        bodyType: 'inline',
-                        autoClose: true,
-                        dateFormat: 'dd/mm-yyyy',
-                        selectedDate: new Date(),
-                        closeOnBlur: true,
-                        firstWeekday: 1,
-                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                        customClearBTN: "Ryd",
-                        customCancelBTN: "Annuller"
-                        });
-                    document.querySelector("#oversightInspectionDateBtn").addEventListener("click", () => {
-                        inspectionDateOversightModal.open();
-                    });
-
-                    //choices.js
-                    const oversightSelect = document.getElementById('oversightUserSelect');
-                    oversightResponsibleUserChoices = initSelect(oversightSelect);
-                    updateUsers(oversightResponsibleUserChoices, "");
-                    oversightSelect.addEventListener("search",
-                    function(event) {
-                        updateUsers(oversightResponsibleUserChoices, event.detail.value);
-                    },
-                    false,
-                    );
-                    oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
-                        checkInputField(oversightResponsibleUserChoices);
-                    });
+                //choices.js
+                const oversightSelect = document.getElementById('oversightUserSelect');
+                oversightResponsibleUserChoices = initSelect(oversightSelect);
+                updateUsers(oversightResponsibleUserChoices, "");
+                oversightSelect.addEventListener("search",
+                function(event) {
+                    updateUsers(oversightResponsibleUserChoices, event.detail.value);
+                },
+                false,
+                );
+                oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
+                    checkInputField(oversightResponsibleUserChoices);
+                });
 
 
-                }))
-            .catch(error => toastService.error(error))
-        }
+            }))
+        .catch(error => toastService.error(error))
+    }
 
     function addRelationFormLoaded() {
             initAssetRelationSelectPrivate();

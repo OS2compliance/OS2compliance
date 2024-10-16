@@ -11,6 +11,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 
@@ -61,6 +62,10 @@ public class AssetOversightService {
 //        setTaskRevisionInterval(document, task);
         final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, asset);
+    }
+
+    public Optional<AssetOversight> findById(Long id) {
+        return assetOversightDao.findById(id);
     }
 
 }
