@@ -20,6 +20,12 @@ function IncidentGridService() {
             search: "form-control",
             header: "d-flex justify-content-end"
         };
+        // load saved state assets
+        const incidentsGridKey = window.location.pathname;
+        const incidentsGridKeySearch = incidentsGridKey + '-incident-search'
+        const savedSearchIncidents = localStorage.getItem(incidentsGridKeySearch);
+        let initialIncidentLoadDone = false;  // flag to ensure initial load only happens once
+
         this.buildColumns(columnNames);
         this.incidentGrid = new gridjs.Grid({
             className: defaultClassName,
@@ -28,6 +34,13 @@ function IncidentGridService() {
                 server: {
                     url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}`)
                 }
+            },
+            search: {
+                keyword: savedSearchIncidents,
+                server: {
+                    url: (prev, keyword) => this.updateUrl(prev, `search=${keyword}`)
+                },
+                debounceTimeout: 1000
             },
             sort: {
                 enabled: true,
@@ -56,16 +69,41 @@ function IncidentGridService() {
             }
         });
         this.incidentGrid.render(document.getElementById("incidentsTable"));
+        // set state on grid
+        this.incidentGrid.on('ready', function() {
+            // only apply saved state on the first load
+            if (!initialIncidentLoadDone) {
+                const searchInput = document.querySelector('#incidentsTable .gridjs-search-input');
+                if (searchInput) {
+                    searchInput.addEventListener('input', function() {
+                        if (this.value === '') {
+                            localStorage.removeItem(incidentsGridKeySearch);
+                        } else {
+                            localStorage.setItem(incidentsGridKeySearch, this.value);
+                        }
+                    });
+                }
+
+                initialIncidentLoadDone = true;  // ensure this only runs once
+            }
+        });
     }
 
     this.mapRow = (field) => {
         let columnValues = [];
-        this.columns.forEach(c => {
+        let customColumns = this.columns.filter((c) =>
+            c.id !== 'id' && c.id !== 'name' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'actions');
+        customColumns.forEach(c => {
+            let added = false;
             field.responses.forEach(response => {
                 if (c.id === response.indexColumnName) {
                     columnValues.push(response.answerValue);
+                    added = true;
                 }
             });
+            if (!added) {
+                columnValues.push("");
+            }
         });
         return [field.id, field.name, field.createdAt, ...columnValues, field.updatedAt];
     }
@@ -77,7 +115,11 @@ function IncidentGridService() {
             },
             {
                 id: "name",
-                name: "Titel"
+                name: "Titel",
+                formatter: (cell, row) => {
+                    const url = viewUrl + row.cells[0]['data'];
+                    return gridjs.html(`<a href="${url}">${cell}</a>`);
+                }
             },
             {
                 id: "createdAt",

@@ -56,10 +56,11 @@ public abstract class IncidentMapper {
     public abstract List<IncidentDTO> toDTOs(final List<Incident> incidentDTOs);
 
     public IncidentFieldResponseDTO toDTOResponse(final IncidentFieldResponse response) {
+        final String indexColumnName = nullSafe(() -> response.getIncidentField().getIndexColumnName());
         return IncidentFieldResponseDTO.builder()
             .incidentType(response.getIncidentType())
             .answerValue(toAnswerValue(response))
-            .indexColumnName(response.getIndexColumnName())
+            .indexColumnName(indexColumnName)
             .question(response.getQuestion())
             .build();
     }

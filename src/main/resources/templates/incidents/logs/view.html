@@ -1,0 +1,51 @@
+
+
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head }"></head>
+
+<body class="jumping">
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/incidents/logs}">Hændelseslog</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${#strings.abbreviate(incident.name, 25)}"></li>
+                            </ol>
+                        </nav>
+                        <div class="row mt-4 mb-3">
+                            <div class="col-12">
+                                <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${incident.name}"></h1>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed rounded-0">
+            <div class="content__wrap">
+
+                TODO
+
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='incidentlogs')}"></nav>
+</div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
+
+</body>
+
+</html>

@@ -6,6 +6,7 @@ import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
@@ -100,11 +101,9 @@ public class IncidentRestController {
             sort = Sort.by(Sort.Direction.DESC, "createdAt");
         }
         final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        if (StringUtils.isNotEmpty(search)) {
-            // search and page
-            // TODO
-        }
-        final Page<Incident> incidents = incidentService.listIncidents(sortAndPage);
+        final Page<Incident> incidents = StringUtils.isNotEmpty(search)
+            ? incidentService.search(search, sortAndPage)
+            : incidentService.listIncidents(sortAndPage);
 
         assert incidents != null;
         return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));

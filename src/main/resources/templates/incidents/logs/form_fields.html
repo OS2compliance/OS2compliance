@@ -1,10 +1,10 @@
 
 
 <div th:fragment="mandatoryFields(response, idx)">
-    <input type="hidden" th:name="|responses[${idx}].incident_id|" th:value="${response.incident.id}">
+    <input type="hidden" th:name="|responses[${idx}].incident|" th:value="${response.incident.id}">
+    <input type="hidden" th:name="|responses[${idx}].incidentField|" th:value="${response.incidentField?.id}">
     <input type="hidden" th:name="|responses[${idx}].question|" th:value="${response.question}">
     <input type="hidden" th:name="|responses[${idx}].incidentType|" th:value="${response.incidentType}">
-    <input type="hidden" th:name="|responses[${idx}].indexColumnName|" th:value="${response.indexColumnName}">
     <input type="hidden" th:name="|responses[${idx}].sortKey|" th:value="${response.sortKey}">
     <input type="hidden" th:name="|responses[${idx}].definedList|" th:value="${#strings.listJoin(response.definedList, ',')}">
 </div>

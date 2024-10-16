@@ -84,7 +84,7 @@ public class IncidentService {
         final List<IncidentField> fields = incidentFieldDao.findAllByOrderBySortKeyAsc();
         fields.forEach(f -> {
                 final IncidentFieldResponse response = IncidentFieldResponse.builder()
-                    .indexColumnName(f.getIndexColumnName())
+                    .incidentField(f)
                     .incidentType(f.getIncidentType())
                     .definedList(f.getDefinedList())
                     .incident(incident)
@@ -97,6 +97,10 @@ public class IncidentService {
 
     public Page<Incident> listIncidents(final Pageable pageable) {
         return incidentDao.findAll(pageable);
+    }
+
+    public Page<Incident> search(final String search, final Pageable page) {
+        return incidentDao.searchAll(search, page);
     }
 
     public Incident save(final Incident incident) {

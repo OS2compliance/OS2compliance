@@ -8,6 +8,7 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -48,9 +49,9 @@ public class IncidentFieldResponse {
     @Enumerated(EnumType.STRING)
     private IncidentType incidentType;
 
-    @Column
-    @Length(max = 255)
-    private String indexColumnName;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "incident_field_id")
+    private IncidentField incidentField;
 
     @Column
     private long sortKey;
