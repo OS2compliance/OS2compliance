@@ -27,15 +27,6 @@ import org.springframework.web.server.ResponseStatusException;
 public class IncidentController {
     private final IncidentService incidentService;
 
-
-    @GetMapping("logs/{id}")
-    public String viewIncident(final Model model, @PathVariable final Long id) {
-        final Incident incident = incidentService.findById(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        model.addAttribute("incident", incident);
-        return "incidents/logs/view";
-    }
-
     @GetMapping("logs")
     public String incidentLog() {
         return "incidents/logs/index";
@@ -103,6 +94,22 @@ public class IncidentController {
         return "incidents/logs/form";
     }
 
+
+    @GetMapping("logs/{id}")
+    public String viewIncident(final Model model, @PathVariable final Long id) {
+        final Incident incident = incidentService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("incident", incident);
+        // The incident responses only contains identifiers for the objects it points to, so we need to look up
+        // the object to be able to show the names in the edit dialog.
+        model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
+        model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
+        model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
+        model.addAttribute("formId", "view");
+        return "incidents/logs/view";
+    }
+
+
     @PostMapping("log")
     public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
         if (incident.getId() != null) {
@@ -113,11 +120,12 @@ public class IncidentController {
             existingIncident.getResponses().addAll(incident.getResponses());
             existingIncident.getResponses()
                 .forEach(r -> r.setIncident(existingIncident));
+            return "redirect:/incidents/logs/" + incident.getId();
         } else {
             incident.getResponses()
                 .forEach(r -> r.setIncident(incident));
-            incidentService.save(incident);
+            final Incident saved = incidentService.save(incident);
+            return "redirect:/incidents/logs/" + saved.getId();
         }
-        return "redirect:/incidents/logs";
     }
 }

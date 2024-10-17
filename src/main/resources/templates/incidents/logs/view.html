@@ -3,6 +3,8 @@
 <!DOCTYPE html>
 <html lang="da">
 <head th:replace="~{fragments/header :: head }"></head>
+<script th:src="@{/js/incidents/incident-service.js}" defer></script>
+<script th:src="@{/js/incidents/incident-view-service.js}" defer></script>
 
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
@@ -13,7 +15,6 @@
                     <div class="me-auto">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
-                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
                                 <li class="breadcrumb-item"><a th:href="@{/incidents/logs}">Hændelseslog</a></li>
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${#strings.abbreviate(incident.name, 25)}"></li>
                             </ol>
@@ -25,6 +26,9 @@
                         </div>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createIncidentDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny hændelse
+                        </button>
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
@@ -35,16 +39,71 @@
 
         <div class="content__boxed rounded-0">
             <div class="content__wrap">
+                <div class="tab-base">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsIncident" type="button" role="tab" aria-controls="incident-tab" aria-selected="true">Hændelse</button>
+                        </li>
+                    </ul>
 
-                TODO
-
+                    <div class="tab-content">
+                        <div id="_dm-tabsIncident" class="tab-pane fade active show" role="tabpanel" aria-labelledby="incident-tab">
+                            <div class="card-header toolbar">
+                                <h5 class="toolbar-start m-0"></h5>
+                                <div class="toolbar-end">
+                                    <button id="editDescBtn" type="button" class="btn btn-secondary btn-xs" onclick="incidentViewService.setEditable('_dm-tabsIncident', true)">Rediger</button>
+                                    <button id="cancelBtn" type="button" onclick="incidentViewService.setEditable('_dm-tabsIncident', false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                                    <button id="saveBtn" th:form="${formId}" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                                </div>
+                            </div>
+                            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
+                                <input id="id" th:field="*{id}" type="hidden">
+                                <input th:field="*{name}" type="hidden">
+                                <div th:each="response, idx : ${incident.responses}">
+                                    <div th:replace="~{incidents/logs/form_fields :: mandatoryFields(response = ${response}, idx = ${idx.index})}"></div>
+                                    <div th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'ASSET'} ? ~{incidents/logs/form_fields :: assetField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'ASSETS'} ? ~{incidents/logs/form_fields :: assetsField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'USER'} ? ~{incidents/logs/form_fields :: userField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'USERS'} ? ~{incidents/logs/form_fields :: usersField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'ORGANIZATION'} ? ~{incidents/logs/form_fields :: organizationField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'ORGANIZATIONS'} ? ~{incidents/logs/form_fields :: organizationsField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                    <div th:replace="${response.incidentType.name() == 'CHOICE_LIST'} ? ~{incidents/logs/form_fields :: choiceListField(response = ${response}, idx = ${idx.index})} : _"></div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </section>
+    <div class="modal fade" tabindex="-1" id="createIncidentDialog" aria-hidden="true"></div>
+
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='incidentlogs')}"></nav>
 </div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+    var formUrl = [[@{/incidents/logForm}]];
+    var restUrl = [[@{/rest/incidents/}]];
+    var viewUrl = [[@{/incidents/logs/}]];
+    +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    document.addEventListener("DOMContentLoaded", function(event) {
+        const targetId = '_dm-tabsIncident';
+        incidentService.initDatePickers(targetId);
+        incidentService.initAssetChoices(targetId);
+        incidentService.initUserChoices(targetId);
+        incidentService.initOrganizationChoices(targetId);
+        incidentViewService.setEditable(targetId, false);
+    });
+
+    /*]]>*/
+</script>
 
 </body>
 

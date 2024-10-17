@@ -69,6 +69,7 @@ function IncidentGridService() {
             }
         });
         this.incidentGrid.render(document.getElementById("incidentsTable"));
+        gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
         // set state on grid
         this.incidentGrid.on('ready', function() {
             // only apply saved state on the first load
@@ -114,7 +115,7 @@ function IncidentGridService() {
                 hidden: true
             },
             {
-                id: "name",
+                id: "title",
                 name: "Titel",
                 formatter: (cell, row) => {
                     const url = viewUrl + row.cells[0]['data'];

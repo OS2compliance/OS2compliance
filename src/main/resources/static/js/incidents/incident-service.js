@@ -70,23 +70,23 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let assetSelects = dialog.querySelectorAll('.assetSelect');
         assetSelects.forEach(select => {
-            initAssetSelect(select.getAttribute('id'), false);
+            select.choices = initAssetSelect(select.getAttribute('id'), false);
         })
     }
 
     this.initUserChoices = (dialogId) => {
         let dialog = document.getElementById(dialogId);
-        let assetSelects = dialog.querySelectorAll('.userSelect');
-        assetSelects.forEach(select => {
-            initUserSelect(select.getAttribute('id'), false);
+        let userSelects = dialog.querySelectorAll('.userSelect');
+        userSelects.forEach(select => {
+            select.choices = initUserSelect(select.getAttribute('id'), false);
         })
     }
 
     this.initOrganizationChoices = (dialogId) => {
         let dialog = document.getElementById(dialogId);
-        let assetSelects = dialog.querySelectorAll('.organizationSelect');
-        assetSelects.forEach(select => {
-            initOUSelect(select.getAttribute('id'), false);
+        let ouSelects = dialog.querySelectorAll('.organizationSelect');
+        ouSelects.forEach(select => {
+            select.choices = initOUSelect(select.getAttribute('id'), false);
         })
     }
 }
