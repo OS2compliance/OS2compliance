@@ -38,6 +38,28 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                                <div class="row mt-1" style="height: 0">
+                                    <div class="col-lg-1 col-md-1 col-sm-2"></div>
+                                    <div class="col-lg-3 col-md-4 col-sm-4">
+                                        <div class="input-group">
+                                            <label for="filterFrom" class="col-form-label" style="width: 40px">Fra</label>
+                                            <input id="filterFrom" type="text" class="form-control" name="filterFrom">
+                                            <button id="filterFromBtn" class="btn btn-primary" type="button">
+                                                <i class="pli-calendar-4 fs-5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-4 col-sm-4">
+                                        <div class="input-group">
+                                            <label for="filterTo" class="col-form-label col-2" style="width: 40px">Til</label>
+                                            <input id="filterTo" type="text" class="form-control" name="filterTo">
+                                            <button id="filterToBtn" class="btn btn-primary" type="button">
+                                                <i class="pli-calendar-4 fs-5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-5 col-md-3 col-sm-2"></div>
+                                </div>
                                 <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="incidentsTable"></div>
                             </div>

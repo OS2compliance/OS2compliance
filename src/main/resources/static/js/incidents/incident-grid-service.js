@@ -3,31 +3,60 @@ document.addEventListener("DOMContentLoaded", function(event) {
     incidentGridService.init();
 });
 function IncidentGridService() {
+    this.filterFrom = '';
+    this.filterTo = '';
+
     this.init = () => {
         incidentService.fetchColumnName()
             .then(columnNames => {
                 this.initGrid(columnNames);
             });
+        let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom' );
+        let filterFrom = localStorage.getItem("incidentFilterFrom");
+        if (filterFrom != null) {
+            fromPicker.setFullDate(new Date(filterFrom));
+        }
+        fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
+
+        let toPicker = initDatepicker('#filterToBtn', '#filterTo' );
+        let filterTo = localStorage.getItem("incidentFilterTo");
+        if (filterTo != null) {
+            toPicker.setFullDate(new Date(filterTo));
+        }
+        toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
     }
 
     this.updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
 
+    this.setFilterFrom = (date, formattedDate) => {
+        if (formattedDate == null) {
+            formattedDate = '';
+        }
+        this.filterFrom = formattedDate;
+        this.incidentGrid.updateConfig(this.currentConfig).forceRender();
+        localStorage.setItem("incidentFilterFrom", date);
+    }
+
+    this.setFilterTo = (date, formattedDate) => {
+        if (formattedDate == null) {
+            formattedDate = '';
+        }
+        this.filterTo = formattedDate;
+        this.incidentGrid.updateConfig(this.currentConfig).forceRender();
+        localStorage.setItem("incidentFilterTo", date);
+    }
+
     this.initGrid = (columnNames) => {
+        let self = this;
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
             header: "d-flex justify-content-end"
         };
-        // load saved state assets
-        const incidentsGridKey = window.location.pathname;
-        const incidentsGridKeySearch = incidentsGridKey + '-incident-search'
-        const savedSearchIncidents = localStorage.getItem(incidentsGridKeySearch);
-        let initialIncidentLoadDone = false;  // flag to ensure initial load only happens once
-
         this.buildColumns(columnNames);
-        this.incidentGrid = new gridjs.Grid({
+        this.currentConfig = {
             className: defaultClassName,
             pagination: {
                 limit: 50,
@@ -36,9 +65,9 @@ function IncidentGridService() {
                 }
             },
             search: {
-                keyword: savedSearchIncidents,
+                keyword: searchService.getSavedSearch(),
                 server: {
-                    url: (prev, keyword) => this.updateUrl(prev, `search=${keyword}`)
+                    url: (prev, keyword) => this.updateUrl(prev, `search=${keyword}&fromDate=${this.filterFrom}&toDate=${this.filterTo}`)
                 },
                 debounceTimeout: 1000
             },
@@ -67,27 +96,12 @@ function IncidentGridService() {
                 },
                 total: data => data.totalCount
             }
-        });
+        };
+        this.incidentGrid = new gridjs.Grid(this.currentConfig);
         this.incidentGrid.render(document.getElementById("incidentsTable"));
+        searchService.initSearch(this.incidentGrid, this.currentConfig);
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
-        // set state on grid
-        this.incidentGrid.on('ready', function() {
-            // only apply saved state on the first load
-            if (!initialIncidentLoadDone) {
-                const searchInput = document.querySelector('#incidentsTable .gridjs-search-input');
-                if (searchInput) {
-                    searchInput.addEventListener('input', function() {
-                        if (this.value === '') {
-                            localStorage.removeItem(incidentsGridKeySearch);
-                        } else {
-                            localStorage.setItem(incidentsGridKeySearch, this.value);
-                        }
-                    });
-                }
 
-                initialIncidentLoadDone = true;  // ensure this only runs once
-            }
-        });
     }
 
     this.mapRow = (field) => {

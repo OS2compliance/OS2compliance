@@ -56,22 +56,24 @@
                                     <button id="saveBtn" th:form="${formId}" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                                 </div>
                             </div>
-                            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
-                                <input id="id" th:field="*{id}" type="hidden">
-                                <input th:field="*{name}" type="hidden">
-                                <div th:each="response, idx : ${incident.responses}">
-                                    <div th:replace="~{incidents/logs/form_fields :: mandatoryFields(response = ${response}, idx = ${idx.index})}"></div>
-                                    <div th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'ASSET'} ? ~{incidents/logs/form_fields :: assetField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'ASSETS'} ? ~{incidents/logs/form_fields :: assetsField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'USER'} ? ~{incidents/logs/form_fields :: userField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'USERS'} ? ~{incidents/logs/form_fields :: usersField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'ORGANIZATION'} ? ~{incidents/logs/form_fields :: organizationField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'ORGANIZATIONS'} ? ~{incidents/logs/form_fields :: organizationsField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                    <div th:replace="${response.incidentType.name() == 'CHOICE_LIST'} ? ~{incidents/logs/form_fields :: choiceListField(response = ${response}, idx = ${idx.index})} : _"></div>
-                                </div>
-                            </form>
+                            <div class="card-body">
+                                <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
+                                    <input id="id" th:field="*{id}" type="hidden">
+                                    <input th:field="*{name}" type="hidden">
+                                    <div th:each="response, idx : ${incident.responses}" class="row mt-3">
+                                        <th:block th:replace="~{incidents/logs/form_fields :: mandatoryFields(response = ${response}, idx = ${idx.index})}"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'ASSET'} ? ~{incidents/logs/form_fields :: assetField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'ASSETS'} ? ~{incidents/logs/form_fields :: assetsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'USER'} ? ~{incidents/logs/form_fields :: userField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'USERS'} ? ~{incidents/logs/form_fields :: usersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'ORGANIZATION'} ? ~{incidents/logs/form_fields :: organizationField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'ORGANIZATIONS'} ? ~{incidents/logs/form_fields :: organizationsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'CHOICE_LIST'} ? ~{incidents/logs/form_fields :: choiceListField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                    </div>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </div>

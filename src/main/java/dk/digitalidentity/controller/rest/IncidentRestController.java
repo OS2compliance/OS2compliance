@@ -19,6 +19,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,6 +31,9 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -92,7 +96,9 @@ public class IncidentRestController {
         @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
         @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
-        @RequestParam(name = "dir", required = false) final String dir) {
+        @RequestParam(name = "dir", required = false) final String dir,
+        @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
+        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam) {
         Sort sort = null;
         if (StringUtils.isNotEmpty(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
@@ -101,9 +107,11 @@ public class IncidentRestController {
             sort = Sort.by(Sort.Direction.DESC, "createdAt");
         }
         final Pageable sortAndPage = PageRequest.of(page, size, sort);
+        final LocalDateTime fromDate = fromDateParam != null ? fromDateParam.atStartOfDay() : LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+        final LocalDateTime toDate = toDateParam != null ? toDateParam.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0);
         final Page<Incident> incidents = StringUtils.isNotEmpty(search)
-            ? incidentService.search(search, sortAndPage)
-            : incidentService.listIncidents(sortAndPage);
+            ? incidentService.search(search, fromDate, toDate, sortAndPage)
+            : incidentService.listIncidents(fromDate, toDate, sortAndPage);
 
         assert incidents != null;
         return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));

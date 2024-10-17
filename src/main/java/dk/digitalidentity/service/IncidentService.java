@@ -16,6 +16,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -95,12 +96,12 @@ public class IncidentService {
             });
     }
 
-    public Page<Incident> listIncidents(final Pageable pageable) {
-        return incidentDao.findAll(pageable);
+    public Page<Incident> listIncidents(final LocalDateTime from, final LocalDateTime to, final Pageable pageable) {
+        return incidentDao.findAll(from, to, pageable);
     }
 
-    public Page<Incident> search(final String search, final Pageable page) {
-        return incidentDao.searchAll(search, page);
+    public Page<Incident> search(final String search, final LocalDateTime from, final LocalDateTime to, final Pageable page) {
+        return incidentDao.searchAll(search, from, to, page);
     }
 
     public Incident save(final Incident incident) {
