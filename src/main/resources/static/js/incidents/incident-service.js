@@ -22,6 +22,7 @@ function IncidentService() {
         this.initUserChoices(targetId);
         this.initOrganizationChoices(targetId);
         this.initSupplierChoices(targetId);
+        this.initCustomChoiceLists(targetId);
     }
 
     this.editIncident = (targetId, incidentId) => {
@@ -76,6 +77,14 @@ function IncidentService() {
         let assetSelects = dialog.querySelectorAll('.assetSelect');
         assetSelects.forEach(select => {
             select.choices = choiceService.initAssetSelect(select.getAttribute('id'), false);
+        })
+    }
+
+    this.initCustomChoiceLists = (dialogId) => {
+        let dialog = document.getElementById(dialogId);
+        let customSelect = dialog.querySelectorAll('.choiceList');
+        customSelect.forEach(select => {
+            select.choices = initSelect(select);
         })
     }
 
