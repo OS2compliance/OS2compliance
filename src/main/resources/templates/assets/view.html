@@ -322,7 +322,7 @@
                                                             <a th:text="${register.name}" th:href="@{/registers/{id}(id=${register.id})}"></a>
                                                         </td>
                                                         <td class="col-lg-2" title="Fjern Behandlingsaktivitet" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${register.id}, data-relationtype=${register.relationType}"></i>
+                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${register.id}, data-relationtype=${register.relationType}"></i>
                                                         </td>
                                                     </tr>
                                                     </tbody>
@@ -348,7 +348,7 @@
                                                     <tr th:each="precaution : ${precautions}">
                                                         <td class="col-lg-10" th:text="${precaution.name}"></td>
                                                         <td class="col-lg-2" title="Fjern foranstaltning" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${precaution.id}, data-relationtype=${precaution.relationType}"></i>
+                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${precaution.id}, data-relationtype=${precaution.relationType}"></i>
                                                         </td>
                                                     </tr>
                                                     </tbody>
@@ -376,7 +376,7 @@
                                                             <a th:text="${currentAsset.name}" th:href="@{/assets/{id}(id=${currentAsset.id})}"></a>
                                                         </td>
                                                         <td class="col-lg-2" title="Fjern relateret aktivitet" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${currentAsset.id}, data-relationtype=${currentAsset.relationType}"></i>
+                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${currentAsset.id}, data-relationtype=${currentAsset.relationType}"></i>
                                                         </td>
                                                     </tr>
                                                     </tbody>
@@ -401,7 +401,7 @@
                                                             <a th:text="${document.name}" th:href="@{/documents/{id}(id=${document.id})}"></a>
                                                         </td>
                                                         <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
+                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
                                                         </td>
                                                     </tr>
                                                     </tbody>
@@ -426,7 +426,7 @@
                                                             <a th:text="${task.name}" th:href="@{/tasks/{id}(id=${task.id})}"></a>
                                                         </td>
                                                         <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
-                                                            <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
+                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
                                                         </td>
                                                     </tr>
                                                     </tbody>
@@ -522,7 +522,7 @@
             suppliersChoicesEditSelect = initSuppliersSelect();
             suppliersChoicesEditSelect.disable();
             managersChoicesEditSelect.disable();
-            responsibleChoicesEditSelect = initUserSelect("responsibleUsers");
+            responsibleChoicesEditSelect = choiceService.initUserSelect("responsibleUsers", false);
             responsibleChoicesEditSelect.disable();
             editMode(false);
             initDpia();
@@ -563,16 +563,16 @@
         function initAssetRelationSelect() {
             const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
             let relationsChoice = initSelect(relationsSelect);
-            updateRelationsAssetsOnly(relationsChoice, "");
+            // choiceService.updateRelationsAssetsOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
-                    updateRelationsAssetsOnly(relationsChoice, event.detail.value);
+                    choiceService.updateRelationsAssetsOnly(relationsChoice, event.detail.value);
                 },
                 false,
             );
         relationsSelect.addEventListener("change",
             function(event) {
-                updateRelationsAssetsOnly(relationsChoice, "");
+                choiceService.updateRelationsAssetsOnly(relationsChoice, "");
             },
             false,
             );
@@ -589,16 +589,16 @@
         function initRegisterRelationSelectPrivate() {
             const relationsSelect = document.getElementById('RegisterRelationModalrelationsSelect')
             let relationsChoice = initSelect(relationsSelect);
-            updateRelationsRegistersOnly(relationsChoice, "");
+            // choiceService.updateRelationsRegistersOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
-                    updateRelationsRegistersOnly(relationsChoice, event.detail.value);
+                    choiceService.updateRelationsRegistersOnly(relationsChoice, event.detail.value);
                 },
                 false,
             );
             relationsSelect.addEventListener("change",
                 function(event) {
-                    updateRelationsRegistersOnly(relationsChoice, "");
+                    choiceService.updateRelationsRegistersOnly(relationsChoice, "");
                 },
                 false,
             );
@@ -607,16 +607,16 @@
          function initPrecautionRelationSelectPrivate() {
             const relationsSelect = document.getElementById('PrecautionRelationModalrelationsSelect')
             let relationsChoice = initSelect(relationsSelect);
-            updateRelationsPrecautionsOnly(relationsChoice, "");
+            // choiceService.updateRelationsPrecautionsOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
-                    updateRelationsPrecautionsOnly(relationsChoice, event.detail.value);
+                    choiceService.updateRelationsPrecautionsOnly(relationsChoice, event.detail.value);
                 },
                 false,
             );
             relationsSelect.addEventListener("change",
                 function(event) {
-                    updateRelationsPrecautionsOnly(relationsChoice, "");
+                    choiceService.updateRelationsPrecautionsOnly(relationsChoice, "");
                 },
                 false,
             );
@@ -625,16 +625,16 @@
         function initDocumentRelationSelectPrivate() {
             const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
             let relationsChoice = initSelect(relationsSelect);
-            updateRelationsDocumentsOnly(relationsChoice, "");
+            // choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
-                    updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
+                    choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
                 },
                 false,
             );
             relationsSelect.addEventListener("change",
                 function(event) {
-                    updateRelationsDocumentsOnly(relationsChoice, "");
+                    choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
                 },
                 false,
             );
@@ -643,16 +643,16 @@
         function initTaskRelationSelectPrivate() {
             const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
             let relationsChoice = initSelect(relationsSelect);
-            updateRelationsTasksOnly(relationsChoice, "");
+            // choiceService.updateRelationsTasksOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
-                    updateRelationsTasksOnly(relationsChoice, event.detail.value);
+                    choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
                 },
                 false,
             );
             relationsSelect.addEventListener("change",
             function(event) {
-                updateRelationsTasksOnly(relationsChoice, "");
+                choiceService.updateRelationsTasksOnly(relationsChoice, "");
             },
             false,
             );
@@ -779,7 +779,7 @@
         function initManagersSelect() {
             const userSelect = document.getElementById('managers');
             const userChoices = initSelect(userSelect);
-            updateUsers(userChoices, "");
+            // updateUsers(userChoices, "");
             userSelect.addEventListener("search",
                 function(event) {
                     updateUsers(userChoices, event.detail.value);
@@ -792,7 +792,7 @@
         function initSuppliersSelect() {
             let supplierSelect = document.getElementById('supplier');
             const supplierChoices = initSelect(supplierSelect);
-            updateSuppliers(supplierChoices, "");
+            // updateSuppliers(supplierChoices, "");
             supplierSelect.addEventListener("search",
                 function(event) {
                     updateSuppliers(supplierChoices, event.detail.value);

@@ -54,7 +54,7 @@ function IncidentQuestionService() {
         let value = selectElement.value;
         let form = selectElement.closest('form');
         let choiceListDiv = form.querySelector('.choiceListDiv');
-        if (value === "CHOICE_LIST") {
+        if (value === "CHOICE_LIST" || value === "CHOICE_LIST_MULTIPLE") {
             choiceListDiv.style.display = "inline-flex";
         } else {
             choiceListDiv.style.display = "none";

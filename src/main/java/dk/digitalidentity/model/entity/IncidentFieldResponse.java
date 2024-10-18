@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.IncidentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -20,12 +21,11 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-import org.hibernate.validator.constraints.Length;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashSet;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -58,7 +58,7 @@ public class IncidentFieldResponse {
 
     @Column
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> definedList;
+    private List<String> definedList;
 
     @Column
     private String answerText;
@@ -69,11 +69,11 @@ public class IncidentFieldResponse {
 
     @Column
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> answerElementIds = new HashSet<>();
+    private List<String> answerElementIds = new ArrayList<>();
 
     @Column(name="answer_choice_values")
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> answerChoiceValues = new HashSet<>();
+    private List<String> answerChoiceValues = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "incident_id")

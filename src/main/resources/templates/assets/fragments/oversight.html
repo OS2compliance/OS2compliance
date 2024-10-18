@@ -133,10 +133,10 @@
             //Init choices.js
             const assetOversightResponsibleSelect = document.getElementById('assetOversightUserSelect');
             assetOversightResponsibleUserChoices = initSelect(assetOversightResponsibleSelect);
-            updateUsers(assetOversightResponsibleUserChoices, "");
+            choiceService.updateUsers(assetOversightResponsibleUserChoices, "");
             assetOversightResponsibleSelect.addEventListener("search",
             function(event) {
-                updateUsers(assetOversightResponsibleUserChoices, event.detail.value);
+                choiceService.updateUsers(assetOversightResponsibleUserChoices, event.detail.value);
             },
             false,
             );
@@ -251,10 +251,10 @@
                     //choices.js
                     const oversightSelect = document.getElementById('oversightUserSelect');
                     oversightResponsibleUserChoices = initSelect(oversightSelect);
-                    updateUsers(oversightResponsibleUserChoices, "");
+                    choiceService.updateUsers(oversightResponsibleUserChoices, "");
                     oversightSelect.addEventListener("search",
                     function(event) {
-                        updateUsers(oversightResponsibleUserChoices, event.detail.value);
+                        choiceService.updateUsers(oversightResponsibleUserChoices, event.detail.value);
                     },
                     false,
                     );

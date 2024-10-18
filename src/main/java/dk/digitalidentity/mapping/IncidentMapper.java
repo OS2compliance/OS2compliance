@@ -18,6 +18,7 @@ import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -69,26 +70,30 @@ public abstract class IncidentMapper {
         return switch (response.getIncidentType()) {
             case TEXT -> response.getAnswerText();
             case DATE -> nullSafe(() -> response.getAnswerDate().format(DK_DATE_FORMATTER));
-            case ASSETS, ASSET -> getRelatableNames(response.getAnswerElementIds());
+            case ASSETS, ASSET, SUPPLIER, SUPPLIERS -> getRelatableNames(response.getAnswerElementIds());
             case ORGANIZATION, ORGANIZATIONS -> getOrgUnitNames(response.getAnswerElementIds());
             case USER, USERS -> getUserNames(response.getAnswerElementIds());
             case CHOICE_LIST -> nullSafe(() -> String.join(", ", response.getAnswerChoiceValues()));
+            case CHOICE_LIST_MULTIPLE -> null;
         };
     }
 
-    private String getUserNames(final Set<String> uuids) {
-        return userService.findAllByUuids(uuids).stream()
-            .map(User::getName)
+    private String getUserNames(final List<String> uuids) {
+        return uuids.stream().map(uuid -> userService.findByUuid(uuid))
+            .filter(Optional::isPresent)
+            .map(u -> u.get().getName())
             .collect(Collectors.joining(", "));
     }
 
-    private String getOrgUnitNames(final Set<String> uuids) {
-        return organisationService.findAllByUuids(uuids).stream()
-            .map(OrganisationUnit::getName)
+    private String getOrgUnitNames(final List<String> uuids) {
+        return uuids.stream()
+            .map(uuid -> organisationService.get(uuid))
+            .filter(Optional::isPresent)
+            .map(o -> o.get().getName())
             .collect(Collectors.joining(", "));
     }
 
-    private String getRelatableNames(final Set<String> ids) {
+    private String getRelatableNames(final List<String> ids) {
         return relatableService.findAllById(ids.stream().map(Long::valueOf).toList()).stream()
             .map(Relatable::getName)
             .collect(Collectors.joining(", "));

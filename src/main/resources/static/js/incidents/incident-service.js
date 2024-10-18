@@ -12,11 +12,16 @@ function IncidentService() {
         let self = this;
         return fetchHtml(url, targetId)
             .then(() => {
-                self.initDatePickers(targetId);
-                self.initAssetChoices(targetId);
-                self.initUserChoices(targetId);
-                self.initOrganizationChoices(targetId);
+                self.initChoicesAndDatePickers(targetId);
             })
+    }
+
+    this.initChoicesAndDatePickers = (targetId) => {
+        this.initDatePickers(targetId);
+        this.initAssetChoices(targetId);
+        this.initUserChoices(targetId);
+        this.initOrganizationChoices(targetId);
+        this.initSupplierChoices(targetId);
     }
 
     this.editIncident = (targetId, incidentId) => {
@@ -70,7 +75,15 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let assetSelects = dialog.querySelectorAll('.assetSelect');
         assetSelects.forEach(select => {
-            select.choices = initAssetSelect(select.getAttribute('id'), false);
+            select.choices = choiceService.initAssetSelect(select.getAttribute('id'), false);
+        })
+    }
+
+    this.initSupplierChoices = (dialogId) => {
+        let dialog = document.getElementById(dialogId);
+        let assetSelects = dialog.querySelectorAll('.supplierSelect');
+        assetSelects.forEach(select => {
+            select.choices = choiceService.initSupplierSelect(select.getAttribute('id'), false);
         })
     }
 
@@ -78,7 +91,7 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let userSelects = dialog.querySelectorAll('.userSelect');
         userSelects.forEach(select => {
-            select.choices = initUserSelect(select.getAttribute('id'), false);
+            select.choices = choiceService.initUserSelect(select.getAttribute('id'), false);
         })
     }
 
@@ -86,7 +99,7 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let ouSelects = dialog.querySelectorAll('.organizationSelect');
         ouSelects.forEach(select => {
-            select.choices = initOUSelect(select.getAttribute('id'), false);
+            select.choices = choiceService.initOUSelect(select.getAttribute('id'), false);
         })
     }
 }

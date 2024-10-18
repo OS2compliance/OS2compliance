@@ -68,9 +68,12 @@
                                         <th:block th:replace="${response.incidentType.name() == 'ASSETS'} ? ~{incidents/logs/form_fields :: assetsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'USER'} ? ~{incidents/logs/form_fields :: userField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'USERS'} ? ~{incidents/logs/form_fields :: usersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'SUPPLIER'} ? ~{incidents/logs/form_fields :: supplierField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'SUPPLIERS'} ? ~{incidents/logs/form_fields :: suppliersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'ORGANIZATION'} ? ~{incidents/logs/form_fields :: organizationField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'ORGANIZATIONS'} ? ~{incidents/logs/form_fields :: organizationsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'CHOICE_LIST'} ? ~{incidents/logs/form_fields :: choiceListField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'CHOICE_LIST_MULTIPLE'} ? ~{incidents/logs/form_fields :: choiceListMultipleField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                     </div>
                                 </form>
                             </div>
@@ -97,10 +100,7 @@
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     document.addEventListener("DOMContentLoaded", function(event) {
         const targetId = '_dm-tabsIncident';
-        incidentService.initDatePickers(targetId);
-        incidentService.initAssetChoices(targetId);
-        incidentService.initUserChoices(targetId);
-        incidentService.initOrganizationChoices(targetId);
+        incidentService.initChoicesAndDatePickers(targetId);
         incidentViewService.setEditable(targetId, false);
     });
 

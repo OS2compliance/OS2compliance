@@ -139,7 +139,8 @@ public class IncidentService {
     public Map<String, Relatable> lookupResponseEntities(final Incident incident) {
         return incident.getResponses().stream()
             .filter(r -> r.getAnswerElementIds() != null &&
-                (r.getIncidentType() == IncidentType.ASSET || r.getIncidentType() == IncidentType.ASSETS))
+                (r.getIncidentType() == IncidentType.ASSET || r.getIncidentType() == IncidentType.ASSETS ||
+                    r.getIncidentType() == IncidentType.SUPPLIER || r.getIncidentType() == IncidentType.SUPPLIERS))
             .flatMap(r -> r.getAnswerElementIds().stream())
             .distinct()
             .map(id -> relatableService.findById(Long.valueOf(id)))

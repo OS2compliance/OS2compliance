@@ -10,9 +10,12 @@ public enum IncidentType {
     ASSETS("Aktiver"),
     USER("Bruger"),
     USERS("Brugere"),
+    SUPPLIER("Leverandør"),
+    SUPPLIERS("Leverandører"),
     ORGANIZATION("Enhed"),
     ORGANIZATIONS("Enheder"),
-    CHOICE_LIST("Valgliste");
+    CHOICE_LIST("Valgliste"),
+    CHOICE_LIST_MULTIPLE("Valgliste (flere valg)");
 
     private final String value;
 

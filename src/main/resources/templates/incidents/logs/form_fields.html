@@ -47,6 +47,24 @@
     </div>
 </th:block>
 
+<th:block th:fragment="supplierField(response, idx)" th:with="fieldId=${formId} + ${#ids.seq('supplier')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select supplierSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|">
+            <option th:if="${response.answerElementIds != null}" th:each="supplierId : ${response.answerElementIds}" th:value="${supplierId}" th:text="${responseEntities.get(supplierId).name}" selected></option>
+        </select>
+    </div>
+</th:block>
+
+<th:block th:fragment="suppliersField(response, idx)" th:with="fieldId=${formId} + ${#ids.seq('suppliers')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select supplierSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple>
+            <option th:if="${response.answerElementIds != null}" th:each="supplierId : ${response.answerElementIds}" th:value="${supplierId}" th:text="${responseEntities.get(supplierId).name}" selected></option>
+        </select>
+    </div>
+</th:block>
+
 <th:block th:fragment="userField(response, idx)" th:with="fieldId=${formId} + ${#ids.seq('user')}">
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
@@ -87,6 +105,15 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select choiceList" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerChoiceValues|">
+            <option th:each="choice : ${response.definedList}" th:value="${choice}" th:text="${choice}" th:selected="${response.answerChoiceValues != null && #sets.contains(response.answerChoiceValues, choice)}"></option>
+        </select>
+    </div>
+</th:block>
+
+<th:block th:fragment="choiceListMultipleField(response, idx)" th:with="fieldId=${formId} + ${#ids.seq('choiceList')}">
+    <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
+    <div class="col-sm-8">
+        <select class="form-control form-select choiceList" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerChoiceValues|" multiple>
             <option th:each="choice : ${response.definedList}" th:value="${choice}" th:text="${choice}" th:selected="${response.answerChoiceValues != null && #sets.contains(response.answerChoiceValues, choice)}"></option>
         </select>
     </div>

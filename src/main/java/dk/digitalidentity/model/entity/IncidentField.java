@@ -16,7 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.validator.constraints.Length;
 
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "incident_fields")
@@ -46,6 +46,6 @@ public class IncidentField {
 
     @Column
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> definedList;
+    private List<String> definedList;
 
 }

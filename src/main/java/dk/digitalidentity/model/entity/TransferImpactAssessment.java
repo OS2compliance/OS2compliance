@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dk.digitalidentity.config.StringListConverter;
+import dk.digitalidentity.config.StringSetConverter;
 import dk.digitalidentity.model.entity.enums.AccessType;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.TiaAssessment;
@@ -49,11 +49,11 @@ public class TransferImpactAssessment {
     private String forwardInformationToOtherSuppliersDetail;
 
     @Column(name = "information_types")
-    @Convert(converter = StringListConverter.class)
+    @Convert(converter = StringSetConverter.class)
     private Set<String> informationTypes;
 
     @Column(name = "registered_categories")
-    @Convert(converter = StringListConverter.class)
+    @Convert(converter = StringSetConverter.class)
     private Set<String> registeredCategories;
 
     @Column

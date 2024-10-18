@@ -107,7 +107,7 @@ function IncidentGridService() {
     this.mapRow = (field) => {
         let columnValues = [];
         let customColumns = this.columns.filter((c) =>
-            c.id !== 'id' && c.id !== 'name' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'actions');
+            c.id !== 'id' && c.id !== 'title' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'actions');
         customColumns.forEach(c => {
             let added = false;
             field.responses.forEach(response => {

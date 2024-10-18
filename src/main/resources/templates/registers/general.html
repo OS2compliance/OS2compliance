@@ -119,7 +119,7 @@
                                         <button onclick="registerGeneralService.showEditRelationDialog(this)" class="btn btn-icon btn-outline-light btn-xs" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}">
                                             <i class="pli-pencil fs-5"></i>
                                         </button>
-                                        <button onclick="deleteRelation(this)" class="btn btn-icon btn-outline-light btn-xs" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}">
+                                        <button onclick="relationService.deleteRelation(this)" class="btn btn-icon btn-outline-light btn-xs" th:attr="data-relatableid=${register.id}, data-relationid=${relatedAsset.asset.id}, data-relationtype=${relatedAsset.asset.relationType}">
                                             <i class="pli-trash fs-5"></i>
                                         </button>
                                     </td>
@@ -152,7 +152,7 @@
                                         <a th:text="${document.name} + ' - ' + ${document.nextRevision}" th:href="@{/documents/{id}(id=${document.id})}"></a>
                                     </td>
                                     <td class="col-lg-2" title="Fjern relation">
-                                        <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
+                                        <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${document.id}, data-relationtype=${document.relationType}"></i>
                                     </td>
                                 </tr>
                             </tbody>
@@ -179,7 +179,7 @@
                                     <a th:text="${task.nextDeadline} + ' ' + ${task.name} + ' (' + ${task.responsibleUser.name} + ')'" th:href="@{/tasks/{id}(id=${task.id})}"></a>
                                 </td>
                                 <td class="col-lg-2" title="Fjern relation">
-                                    <i class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
+                                    <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${register.id}, data-relationid=${task.id}, data-relationtype=${task.relationType}"></i>
                                 </td>
                             </tr>
                             </tbody>

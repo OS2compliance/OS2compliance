@@ -47,7 +47,7 @@
                     </td>
                     <td th:text="${relation.relationType.getMessage()}" class="col-lg-2" />
                     <td class="col-lg-1">
-                        <i th:if="${!customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="deleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
+                        <i th:if="${!customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
                         <i th:if="${customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
                     </td>
                 </tr>
