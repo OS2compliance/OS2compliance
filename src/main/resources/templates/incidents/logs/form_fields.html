@@ -105,6 +105,7 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select choiceList" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerChoiceValues|">
+            <option selected value></option>
             <option th:each="choice : ${response.definedList}" th:value="${choice}" th:text="${choice}" th:selected="${response.answerChoiceValues != null && #sets.contains(response.answerChoiceValues, choice)}"></option>
         </select>
     </div>

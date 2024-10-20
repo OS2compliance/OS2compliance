@@ -84,7 +84,22 @@ function IncidentService() {
         let dialog = document.getElementById(dialogId);
         let customSelect = dialog.querySelectorAll('.choiceList');
         customSelect.forEach(select => {
-            select.choices = initSelect(select);
+            let choices = new Choices(select, {
+                searchChoices: false,
+                removeItemButton: true,
+                allowHTML: true,
+                shouldSort: false,
+                searchPlaceholderValue: 'Søg...',
+                itemSelectText: 'Vælg',
+                duplicateItemsAllowed: false,
+            });
+            select.addEventListener("change",
+                function(event) {
+                    choices.hideDropdown();
+                },
+                false,
+            );
+            select.choices = choices;
         })
     }
 
