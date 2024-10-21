@@ -17,10 +17,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -31,6 +34,7 @@ public class IncidentService {
     private final IncidentDao incidentDao;
     private final IncidentFieldDao incidentFieldDao;
     private final RelatableService relatableService;
+    private final RelationService relationService;
     private final UserService userService;
     private final OrganisationService organisationService;
 
@@ -84,16 +88,48 @@ public class IncidentService {
     public void addDefaultFieldResponses(final Incident incident) {
         final List<IncidentField> fields = incidentFieldDao.findAllByOrderBySortKeyAsc();
         fields.forEach(f -> {
-                final IncidentFieldResponse response = IncidentFieldResponse.builder()
-                    .incidentField(f)
-                    .incidentType(f.getIncidentType())
-                    .definedList(f.getDefinedList())
-                    .incident(incident)
-                    .question(f.getQuestion())
-                    .sortKey(f.getSortKey())
-                    .build();
-                incident.getResponses().add(response);
-            });
+            final IncidentFieldResponse response = fieldToResponse(incident, f);
+            incident.getResponses().add(response);
+        });
+    }
+
+    /**
+     * When the field setup changes, we can be nice and look through the old incidents, and add new fields as well
+     * as update custom value sets.
+     */
+    @Transactional
+    public void updateResponseFields(final Long incidentId) {
+        final List<IncidentField> currentFields = getAllFields();
+        incidentDao.findById(incidentId).ifPresent(incident -> {
+            List<Long> incidentFieldIds = incident.getResponses().stream()
+                .filter(r -> r.getIncidentField() != null)
+                .map(r -> r.getIncidentField().getId())
+                .toList();
+            // Update custom value sets in old incidents (only add options!)
+            currentFields.stream()
+                .filter(field -> incidentFieldIds.contains(field.getId()) &&
+                    (field.getIncidentType() == IncidentType.CHOICE_LIST || field.getIncidentType() == IncidentType.CHOICE_LIST_MULTIPLE))
+                .forEach(field -> {
+                    // Compare choice lists content
+                    incident.getResponses().stream().filter(r -> r.getIncidentField() != null)
+                        .filter(r -> r.getIncidentField().getId().equals(field.getId()))
+                        .findFirst()
+                        .ifPresent(response -> {
+                            // Add new choices
+                            final List<String> copy = new ArrayList<>(field.getDefinedList());
+                            if (!response.getDefinedList().isEmpty()) {
+                                copy.removeAll(response.getDefinedList());
+                            }
+                            final List<String> newChoices = new ArrayList<>(copy);
+                            newChoices.addAll(response.getDefinedList());
+                            response.setDefinedList(newChoices);
+                        });
+                });
+            // Add new fields to old incidents
+            currentFields.stream()
+                .filter(field -> !incidentFieldIds.contains(field.getId()))
+                .forEach(field -> incident.getResponses().add(fieldToResponse(incident, field)));
+        });
     }
 
     public Page<Incident> listIncidents(final LocalDateTime from, final LocalDateTime to, final Pageable pageable) {
@@ -106,6 +142,21 @@ public class IncidentService {
 
     public Incident save(final Incident incident) {
         return incidentDao.save(incident);
+    }
+
+    /**
+     * Make sure the {@link Incident} have all the required relations.
+     */
+    public void ensureRelations(final Incident incident) {
+        final Set<Long> wantedRelationIds = new HashSet<>();
+        incident.getResponses().stream()
+            .filter(r ->  r.getIncidentType() == IncidentType.ASSET ||
+                r.getIncidentType() == IncidentType.ASSETS ||
+                r.getIncidentType() == IncidentType.SUPPLIER ||
+                r.getIncidentType() == IncidentType.SUPPLIERS)
+            .forEach(r -> wantedRelationIds.addAll(
+                r.getAnswerElementIds().stream().map(Long::valueOf).collect(Collectors.toSet())));
+        relationService.setRelationsAbsolute(incident, wantedRelationIds);
     }
 
     public Optional<Incident> findById(final Long id) {
@@ -150,6 +201,18 @@ public class IncidentService {
     }
 
     public void delete(final Incident incidentToDelete) {
+        relationService.deleteRelatedTo(incidentToDelete.getId());
         incidentDao.delete(incidentToDelete);
+    }
+
+    private static IncidentFieldResponse fieldToResponse(final Incident incident, final  IncidentField f) {
+        return IncidentFieldResponse.builder()
+            .incidentField(f)
+            .incidentType(f.getIncidentType())
+            .definedList(f.getDefinedList())
+            .incident(incident)
+            .question(f.getQuestion())
+            .sortKey(f.getSortKey())
+            .build();
     }
 }

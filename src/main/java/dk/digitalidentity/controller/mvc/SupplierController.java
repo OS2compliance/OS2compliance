@@ -70,6 +70,7 @@ public class SupplierController {
         final List<Relatable> assetRelated = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
         final List<Relatable> documents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
         final List<Relatable> tasks = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
+        final List<Relatable> incidents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.INCIDENT).toList();
 
         final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
@@ -81,6 +82,7 @@ public class SupplierController {
         model.addAttribute("documents", documents);
         model.addAttribute("assetsDirect", assetsDirect);
         model.addAttribute("assetsRelated", assetRelated);
+        model.addAttribute("incidents", incidents);
 		model.addAttribute("contacts", contacts);
 		return "suppliers/view";
 	}

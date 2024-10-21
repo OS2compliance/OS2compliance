@@ -434,6 +434,32 @@
                                             </div>
                                         </div>
                                     </div>
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div class="card shadow-none h-100 border-2">
+                                            <div class="card-header toolbar">
+                                                <h5 class="toolbar-start m-0">Hændelser</h5>
+                                                <div class="toolbar-end">
+                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
+                                                </div>
+                                            </div>
+                                            <div class="card-body">
+                                                <table class="col-lg-12">
+                                                    <tbody>
+                                                    <tr th:each="incident : ${relatedIncidents}">
+                                                        <td class="col-lg-10">
+                                                            <a th:text="${incident.name}" th:href="@{/incidents/logs/{id}(id=${incident.id})}"></a>
+                                                        </td>
+                                                        <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
+                                                            <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${asset.id}, data-relationid=${incident.id}, data-relationtype=${incident.relationType}"></i>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                 </div>
                             </div> <!-- Assets tab end -->
@@ -492,6 +518,8 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal)}"></div>
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
     <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true)}"></div>
@@ -584,6 +612,7 @@
             initTaskRelationSelectPrivate();
             initRegisterRelationSelectPrivate();
             initPrecautionRelationSelectPrivate();
+            initIncidentRelationSelectPrivate();
         }
 
         function initRegisterRelationSelectPrivate() {
@@ -655,6 +684,21 @@
                 choiceService.updateRelationsTasksOnly(relationsChoice, "");
             },
             false,
+            );
+        }
+
+        function initIncidentRelationSelectPrivate() {
+            const relationsSelect = document.getElementById('IncidentRelationModalrelationsSelect');
+            let relationsChoice = initSelect(relationsSelect);
+            relationsSelect.addEventListener("search", (event) => {
+                    choiceService.updateRelationsIncidentsOnly(relationsChoice, event.detail.value);
+                },
+                false,
+            );
+            relationsSelect.addEventListener("change", (event) => {
+                    choiceService.updateRelationsIncidentsOnly(relationsChoice, "");
+                },
+                false,
             );
         }
 

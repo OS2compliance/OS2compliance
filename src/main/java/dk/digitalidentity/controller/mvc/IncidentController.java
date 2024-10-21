@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.event.IncidentFieldsUpdatedEvent;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
@@ -8,6 +9,7 @@ import dk.digitalidentity.service.IncidentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -26,6 +28,7 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class IncidentController {
     private final IncidentService incidentService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @GetMapping("logs")
     public String incidentLog() {
@@ -68,6 +71,7 @@ public class IncidentController {
             form.setSortKey(incidentService.nextIncidentFieldSortKey());
             incidentService.save(form);
         }
+        eventPublisher.publishEvent(new IncidentFieldsUpdatedEvent());
         return "redirect:/incidents/questions";
     }
 
@@ -112,6 +116,7 @@ public class IncidentController {
 
     @PostMapping("log")
     public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
+        // TODO Add relations
         if (incident.getId() != null) {
             final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -120,11 +125,13 @@ public class IncidentController {
             existingIncident.getResponses().addAll(incident.getResponses());
             existingIncident.getResponses()
                 .forEach(r -> r.setIncident(existingIncident));
+            incidentService.ensureRelations(incident);
             return "redirect:/incidents/logs/" + incident.getId();
         } else {
             incident.getResponses()
                 .forEach(r -> r.setIncident(incident));
             final Incident saved = incidentService.save(incident);
+            incidentService.ensureRelations(saved);
             return "redirect:/incidents/logs/" + saved.getId();
         }
     }

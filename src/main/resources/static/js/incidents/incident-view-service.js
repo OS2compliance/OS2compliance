@@ -25,6 +25,47 @@ function IncidentViewService() {
                 editable ? choice.enable() : choice.disable();
             }
         });
+        this.makeLinks(dialogId, !editable);
+    }
+
+    this.makeLink = (divElem, targetType, linkActive) => {
+        let dataValue = divElem.dataset.value;
+        if (linkActive) {
+            let clickHandler = () => {
+                if ("SUPPLIER" === targetType) {
+                    location.href = `/suppliers/${dataValue}`;
+                }
+                if ("ASSET" === targetType) {
+                    location.href = `/assets/${dataValue}`;
+                }
+            };
+            divElem.style.cursor = 'pointer';
+            divElem.handler = clickHandler;
+            divElem.addEventListener('click', clickHandler);
+        } else {
+            divElem.removeEventListener('click', divElem.handler);
+            divElem.style.cursor = 'not-allowed';
+        }
+    }
+
+    this.makeLinks = (dialogId, linksActive) => {
+        let dialog = document.getElementById(dialogId);
+        let possibleLinks = dialog.querySelectorAll(".choices__item");
+        possibleLinks.forEach(optionDiv => {
+            let dataValue = optionDiv.dataset.value;
+            let formControl = optionDiv.closest(".form-control");
+            if (formControl !== null) {
+                let select = formControl.querySelector("select");
+                if (dataValue !== null && select !== null) {
+                    for (let option of select.options) {
+                        let targetType = option.dataset.type;
+                        if (targetType !== undefined && option.value === dataValue) {
+                            this.makeLink(optionDiv, targetType, linksActive);
+                        }
+                    }
+                }
+            }
+        })
     }
 
 }

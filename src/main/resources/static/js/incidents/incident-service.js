@@ -92,6 +92,9 @@ function IncidentService() {
                 searchPlaceholderValue: 'Søg...',
                 itemSelectText: 'Vælg',
                 duplicateItemsAllowed: false,
+                classNames: {
+                    containerInner: 'form-control'
+                }
             });
             select.addEventListener("change",
                 function(event) {

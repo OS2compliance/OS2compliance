@@ -169,6 +169,7 @@ public class AssetsController {
 		final List<Relatable> registers = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.REGISTER).toList();
 		final List<Relatable> documents = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
 		final List<Relatable> precautions = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.PRECAUTION).toList();
+		final List<Relatable> relatedIncidents = allRelatedTo.stream().filter(r -> r.getRelationType() == RelationType.INCIDENT).toList();
 		final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
             .map(ThreatAssessment.class::cast)
@@ -243,6 +244,7 @@ public class AssetsController {
 
 		model.addAttribute("asset", asset);
 		model.addAttribute("relatedAssets", relatedAssets);
+		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
 		model.addAttribute("documents", documents);
 		model.addAttribute("precautions", precautions);

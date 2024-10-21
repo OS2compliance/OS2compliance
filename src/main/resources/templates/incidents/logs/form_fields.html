@@ -33,7 +33,7 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select assetSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|">
-            <option th:if="${response.answerElementIds != null}" th:each="assetId : ${response.answerElementIds}" th:value="${assetId}" th:text="${responseEntities.get(assetId).name}" selected></option>
+            <option data-type="ASSET" th:if="${response.answerElementIds != null}" th:each="assetId : ${response.answerElementIds}" th:value="${assetId}" th:text="${responseEntities.get(assetId).name}" selected></option>
         </select>
     </div>
 </th:block>
@@ -42,7 +42,7 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select assetSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple>
-            <option th:if="${response.answerElementIds != null}" th:each="assetId : ${response.answerElementIds}" th:value="${assetId}" th:text="${responseEntities.get(assetId).name}" selected></option>
+            <option data-type="ASSET" th:if="${response.answerElementIds != null}" th:each="assetId : ${response.answerElementIds}" th:value="${assetId}" th:text="${responseEntities.get(assetId).name}" selected></option>
         </select>
     </div>
 </th:block>
@@ -51,7 +51,7 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select supplierSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|">
-            <option th:if="${response.answerElementIds != null}" th:each="supplierId : ${response.answerElementIds}" th:value="${supplierId}" th:text="${responseEntities.get(supplierId).name}" selected></option>
+            <option data-type="SUPPLIER" th:if="${response.answerElementIds != null}" th:each="supplierId : ${response.answerElementIds}" th:value="${supplierId}" th:text="${responseEntities.get(supplierId).name}" selected></option>
         </select>
     </div>
 </th:block>
@@ -60,7 +60,8 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select supplierSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple>
-            <option th:if="${response.answerElementIds != null}" th:each="supplierId : ${response.answerElementIds}" th:value="${supplierId}" th:text="${responseEntities.get(supplierId).name}" selected></option>
+            <option th:if="${response.answerElementIds != null}" th:each="supplierId : ${response.answerElementIds}"
+                    data-type="SUPPLIER" th:value="${supplierId}" th:text="${responseEntities.get(supplierId).name}" selected></option>
         </select>
     </div>
 </th:block>
@@ -96,7 +97,8 @@
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
         <select class="form-control form-select organizationSelect" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerElementIds|" multiple>
-            <option th:if="${response.answerElementIds != null}" th:each="ouUuid : ${response.answerElementIds}" th:value="${ouUuid}" th:text="${responseOrganisations.get(ouUuid).name}" selected></option>
+            <option th:if="${response.answerElementIds != null}" th:each="ouUuid : ${response.answerElementIds}"
+                    th:value="${ouUuid}" th:text="${responseOrganisations.get(ouUuid).name}" selected></option>
         </select>
     </div>
 </th:block>

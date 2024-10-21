@@ -191,8 +191,8 @@ function ChoiceService() {
         return supplierChoices;
     }
 
-    this.updateRelationsForDocument = (choices, search) => {
-        fetch( `/rest/relatable/autocomplete?types=TASK,SUPPLIER,ASSET,REGISTER,STANDARD_SECTION&search=${search}`)
+    this.updateRelationsFor = (choices, url) => {
+        fetch( url)
             .then(response => response.json()
                 .then(data => {
                     choices.setChoices(data.content.map(reg => {
@@ -203,90 +203,38 @@ function ChoiceService() {
                     }), 'id', 'name', true);
                 }))
             .catch(error => toastService.error(error));
+    }
+
+    this.updateRelationsForDocument = (choices, search) => {
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=TASK,SUPPLIER,ASSET,REGISTER,STANDARD_SECTION&search=${search}`);
     }
 
     this.updateRelationsAssetsOnly = (choices, search) => {
-        fetch( `/rest/relatable/autocomplete?types=ASSET&search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(reg => {
-                        return {
-                            id: reg.id,
-                            name: truncateString(reg.typeMessage + ": " + reg.name, 60)
-                        }
-                    }), 'id', 'name', true);
-                }))
-            .catch(error => toastService.error(error));
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=ASSET&search=${search}`);
     }
 
     this.updateRelationsTasksOnly = (choices, search) => {
-        fetch( `/rest/relatable/autocomplete?types=TASK&search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(reg => {
-                        return {
-                            id: reg.id,
-                            name: truncateString(reg.typeMessage + ": " + reg.name, 60)
-                        }
-                    }), 'id', 'name', true);
-                }))
-            .catch(error => toastService.error(error));
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=TASK&search=${search}`);
+    }
+
+    this.updateRelationsIncidentsOnly = (choices, search) => {
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=INCIDENT&search=${search}`);
     }
 
     this.updateRelationsDocumentsOnly = (choices, search) => {
-        fetch( `/rest/relatable/autocomplete?types=DOCUMENT&search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(reg => {
-                        return {
-                            id: reg.id,
-                            name: truncateString(reg.typeMessage + ": " + reg.name, 60)
-                        }
-                    }), 'id', 'name', true);
-                }))
-            .catch(error => toastService.error(error));
+        this.updateAssets(choices, `/rest/relatable/autocomplete?types=DOCUMENT&search=${search}`);
     }
 
 
     this.updateRelationsRegistersOnly = (choices, search) => {
-        fetch( `/rest/relatable/autocomplete?types=REGISTER&search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(reg => {
-                        return {
-                            id: reg.id,
-                            name: truncateString(reg.typeMessage + ": " + reg.name, 60)
-                        }
-                    }), 'id', 'name', true);
-                }))
-            .catch(error => toastService.error(error));
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=REGISTER&search=${search}`);
     }
 
     this.updateRelationsForStandardSection = (choices, search) => {
-        fetch( `/rest/relatable/autocomplete?types=TASK,DOCUMENT,STANDARD_SECTION&search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(reg => {
-                        return {
-                            id: reg.id,
-                            name: truncateString(reg.typeMessage + ": " + reg.name, 60)
-                        }
-                    }), 'id', 'name', true);
-                }))
-            .catch(error => toastService.error(error));
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=TASK,DOCUMENT,STANDARD_SECTION&search=${search}`);
     }
 
     this.updateRelationsPrecautionsOnly = (choices, search) => {
-        fetch( `/rest/relatable/autocomplete?types=PRECAUTION&search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(reg => {
-                        return {
-                            id: reg.id,
-                            name: truncateString(reg.typeMessage + ": " + reg.name, 60)
-                        }
-                    }), 'id', 'name', true);
-                }))
-            .catch(error => toastService.error(error));
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=PRECAUTION&search=${search}`);
     }
 }
