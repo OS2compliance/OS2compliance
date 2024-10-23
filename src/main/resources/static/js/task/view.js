@@ -14,7 +14,7 @@ function ViewTaskService() {
         this.loadViewAndEditForm();
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
-        addTagsFormLoaded();
+        choiceService.initTagSelect("tagsSelect");
         initFormValidationForForm('editForm');
         initFormValidationForForm('completeTaskForm');
         initDatepicker("#deadlineBtn", "#deadline");
@@ -48,8 +48,8 @@ function ViewTaskService() {
 
     this.loadViewAndEditForm = function() {
         const self = this;
-        this.userChoicesEditSelect = initUserSelect('userSelect');
-        this.ouChoicesEditSelect = initOUSelect('ouSelect');
+        this.userChoicesEditSelect = choiceService.initUserSelect('userSelect');
+        this.ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
 
         this.userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.userChoicesEditSelect);
@@ -87,16 +87,16 @@ function ViewTaskService() {
             return;
         }
         const relationsChoice = initSelect(relationsSelect);
-        updateDocumentRelations(relationsChoice, "");
+        choiceService.updateDocumentRelations(relationsChoice, "");
         relationsSelect.addEventListener("search",
             function(event) {
-                updateDocumentRelations(relationsChoice, event.detail.value);
+                choiceService.updateDocumentRelations(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
             function() {
-                updateDocumentRelations(relationsChoice, "");
+                choiceService.updateDocumentRelations(relationsChoice, "");
             },
             false,
         );

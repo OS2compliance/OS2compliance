@@ -14,8 +14,9 @@ import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.validator.constraints.Length;
 
-import java.util.Set;
+import java.util.List;
 
 @Entity
 @Table(name = "incident_fields")
@@ -40,10 +41,11 @@ public class IncidentField {
     private long sortKey;
 
     @Column
-    private boolean indexColumn;
+    @Length(max = 255)
+    private String indexColumnName;
 
     @Column
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> definedList;
+    private List<String> definedList;
 
 }

@@ -26,9 +26,9 @@ function EditTaskService() {
     this.onLoaded = function(taskId, copy = false) {
         let self = this;
         initDatepicker("#taskEditFormTaskDeadlineBtn", "#taskEditFormTaskDeadline");
-        this.editTaskOuChoicesSelect = initOUSelect('taskEditFormTaskOuSelect');
+        this.editTaskOuChoicesSelect = choiceService.initOUSelect('taskEditFormTaskOuSelect');
 
-        this.editTaskUserChoicesEditSelect = initUserSelect('taskEditFormTaskUserSelect');
+        this.editTaskUserChoicesEditSelect = choiceService.initUserSelect('taskEditFormTaskUserSelect');
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
             var userUuid = self.editTaskUserChoicesEditSelect.passedElement.element.value;
             fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
@@ -87,12 +87,12 @@ function CopyTaskService() {
 
         let responsibleSelect = this.getScopedElementById('copyTaskUserSelect');
         if(responsibleSelect !== null) {
-            initUserSelect('copyTaskUserSelect');
+            choiceService.initUserSelect('copyTaskUserSelect');
         }
 
        let copyTaskOuSelect = this.getScopedElementById('copyTaskOuSelect');
        if(copyTaskOuSelect !== null) {
-           initOUSelect('copyTaskOuSelect');
+           choiceService.initOUSelect('copyTaskOuSelect');
        }
 
        let copyTaskRelationSelect = this.getScopedElementById('copyTaskRelationsSelect');
@@ -102,7 +102,7 @@ function CopyTaskService() {
 
        let tagCopySelect = this.getScopedElementById('copyTaskTagsSelect');
        if(tagCopySelect !== null) {
-            initTagSelect('copyTaskTagsSelect');
+           choiceService.initTagSelect('copyTaskTagsSelect');
        }
 
         initFormValidationForForm("copyTaskModalForm");
@@ -114,16 +114,16 @@ function CopyTaskService() {
     this.initCopyTaskRelationSelect = function() {
         const relationsSelect = document.getElementById('copyTaskRelationsSelect');
         const relationsChoice = initSelect(relationsSelect);
-        updateRelations(relationsChoice, "");
+        choiceService.updateRelations(relationsChoice, "");
         relationsSelect.addEventListener("search",
             function(event) {
-                updateRelations(relationsChoice, event.detail.value);
+                choiceService.updateRelations(relationsChoice, event.detail.value);
             },
            false
         );
         relationsSelect.addEventListener("change",
             function() {
-                updateRelations(relationsChoice, "");
+                choiceService.updateRelations(relationsChoice, "");
             },
             false
        );

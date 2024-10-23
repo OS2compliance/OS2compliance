@@ -65,13 +65,7 @@
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
     document.addEventListener("DOMContentLoaded", function(event) {
-        fetch(`${formUrl}`)
-            .then(response => response.text()
-                .then(data => {
-                    document.getElementById('createQuestionDialog').innerHTML = data;
-                    incidentQuestionService.initFormSelectList('createQuestionDialog');
-                }))
-            .catch(error => toastService.error(error));
+        incidentQuestionService.createQuestion("createQuestionDialog");
 
         const defaultClassName = {
             table: 'table table-striped',
@@ -89,10 +83,7 @@
                 },
                 {
                     id: "index",
-                    name: "Oversigt",
-                    formatter: (cell, row) => {
-                        return cell ? 'Ja' : 'Nej';
-                    }
+                    name: "Oversigts navn"
                 },
                 {
                     id: "question",
@@ -132,7 +123,7 @@
                 },
                 then: data => {
                     incidentGrid.data = data;
-                    return data.map(field => [ field.id, field.indexColumn, field.question, field.incidentType ]);
+                    return data.map(field => [ field.id, field.indexColumnName, field.question, field.incidentType ]);
                 },
                 total: data => data.totalCount
             }

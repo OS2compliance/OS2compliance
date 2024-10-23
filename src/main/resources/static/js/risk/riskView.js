@@ -530,7 +530,7 @@ function pageLoaded() {
     // init send to select
     let responsibleSelect = document.getElementById('sendReportTo');
     if(responsibleSelect !== null) {
-        initUserSelect('sendReportTo');
+        choiceService.initUserSelect('sendReportTo');
     }
 
     // checkbox listener

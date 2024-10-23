@@ -1,6 +1,6 @@
 package dk.digitalidentity.model.entity;
 
-import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.config.StringSetNullSafeConverter;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -47,7 +47,7 @@ public class User {
     private Boolean active;
 
     @Column
-    @Convert(converter = StringListNullSafeConverter.class)
+    @Convert(converter = StringSetNullSafeConverter.class)
     private Set<String> roles;
 
     @ToString.Exclude

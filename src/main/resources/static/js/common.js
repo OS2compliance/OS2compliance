@@ -74,14 +74,17 @@ function sessionExpiredHandler() {
     }, 3000);
 }
 
-const defaultResponseHandler = function (response) {
+function defaultResponseErrorHandler(response) {
     if (response.status === 403) {
         sessionExpiredHandler();
-        return;
     }
     if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`);
     }
+}
+
+const defaultResponseHandler = function (response) {
+    defaultResponseErrorHandler(response);
     toastService.info("Info", "Dine ændringer er blevet gemt");
 }
 
@@ -99,7 +102,7 @@ async function jsonCall(method, url, data = {}) {
             "Content-Type": "application/json"
         },
         referrerPolicy: "no-referrer",
-        body: JSON.stringify(data),
+        body: data != null ? JSON.stringify(data) : null,
     });
 }
 

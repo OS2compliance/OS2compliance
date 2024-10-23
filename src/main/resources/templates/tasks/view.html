@@ -4,6 +4,7 @@
 <body class="jumping">
 
 <script th:src="@{/js/task/view.js}" defer></script>
+<script th:src="@{/js/tag-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -20,7 +21,7 @@
                         </nav>
                         <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>
                         <p class="lead"></p>
-                    </div>                    
+                    </div>
                     <div class="align-self-center d-inline-flex">
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave

@@ -1,6 +1,6 @@
 package dk.digitalidentity.model.entity;
 
-import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
@@ -106,7 +106,7 @@ public class Register extends Relatable {
     private RegisterStatus status;
 
     @Column
-    @Convert(converter = StringListNullSafeConverter.class)
+    @Convert(converter = StringSetNullSafeConverter.class)
     private Set<String> gdprChoices = new HashSet<>();
 
     @OneToOne(mappedBy = "register")

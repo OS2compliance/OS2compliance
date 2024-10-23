@@ -53,7 +53,7 @@
     #assetsDatatable table {
         overflow: visible;
     }
-    
+
     .gridjs-container .gridjs-wrapper {
         overflow: visible;
     }
@@ -189,7 +189,7 @@
 
             // Initialize all Asset Choices.js
         	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(select => select.id).forEach(elementId => {
-        	    var assetChoices = initAssetSelect(elementId, true);
+        	    var assetChoices = choiceService.initAssetSelect(elementId, true);
 
         	    assetChoices.passedElement.element.addEventListener('removeItem', handleAddRemoveEvent, false);
         	    assetChoices.passedElement.element.addEventListener('addItem', handleAddRemoveEvent, false);

@@ -8,7 +8,7 @@ function formReset() {
 
 function loadViewAndEditForm() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
-    userChoicesEditSelect = initUserSelect("userSelect");
+    userChoicesEditSelect = choiceService.initUserSelect("userSelect");
 
     userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(userChoicesEditSelect);
@@ -40,5 +40,5 @@ function editMode(enabled) {
 }
 
 function addRelationFormLoaded() {
-    initDocumentRelationSelect();
+    choiceService.initDocumentRelationSelect();
 }
