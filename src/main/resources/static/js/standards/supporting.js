@@ -35,7 +35,7 @@ function supportingStandartsViewLoaded() {
 
     const userSelects = document.querySelectorAll('.responsibleUserSelect');
     userSelects.forEach(select => {
-        var choiceSelect = initUserSelect(select.id, false);
+        var choiceSelect = choiceService.initUserSelect(select.id, false);
         choiceSelect.passedElement.element.addEventListener('addItem', function() {
             var selectElement = choiceSelect.passedElement.element;
             var selectedIndex = selectElement.selectedIndex;
@@ -224,16 +224,16 @@ var relationsChoice;
 function addRelationFormLoaded() {
     const relationsSelect = document.getElementById('relationsSelect');
     relationsChoice = initSelect(relationsSelect);
-    updateRelationsForStandardSection(relationsChoice, "");
+    choiceService.updateRelationsForStandardSection(relationsChoice, "");
     relationsSelect.addEventListener("search",
         function(event) {
-            updateRelationsForStandardSection(relationsChoice, event.detail.value);
+            choiceService.updateRelationsForStandardSection(relationsChoice, event.detail.value);
         },
         false,
     );
     relationsSelect.addEventListener("change",
         function(event) {
-            updateRelationsForStandardSection(relationsChoice, "");
+            choiceService.updateRelationsForStandardSection(relationsChoice, "");
         },
         false,
     );

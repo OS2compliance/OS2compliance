@@ -25,7 +25,7 @@ function CreateRegisterService() {
     }
 
     this.onLoaded = function() {
-        initUserSelect('createFormUserSelect', false);
+        choiceService.initUserSelect('createFormUserSelect', false);
         initOUSelect('createFormOuSelect', false);
     }
 
@@ -49,7 +49,7 @@ function EditRegisterService() {
     }
 
     this.onLoaded = function() {
-        initUserSelect('editFormUserSelect', false);
+        choiceService.initUserSelect('editFormUserSelect', false);
         initOUSelect('editFormOuSelect', false);
     }
 }

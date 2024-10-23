@@ -5,17 +5,16 @@ import jakarta.persistence.Converter;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.List;
 
 /**
  * Converts a CSV list into a Set of Strings. Null values are treated as empty list
  */
 @Converter
-public class StringListNullSafeConverter implements AttributeConverter<Set<String>, String> {
+public class StringListNullSafeConverter implements AttributeConverter<List<String>, String> {
 
 	@Override
-	public String convertToDatabaseColumn(final Set<String> list) {
+	public String convertToDatabaseColumn(final List<String> list) {
 		if (list == null) {
 			return "";
 		}
@@ -23,10 +22,10 @@ public class StringListNullSafeConverter implements AttributeConverter<Set<Strin
 	}
 
 	@Override
-	public Set<String> convertToEntityAttribute(final String joined) {
+	public List<String> convertToEntityAttribute(final String joined) {
 		if (joined == null || joined.isEmpty()) {
-			return Collections.emptySet();
+			return Collections.emptyList();
 		}
-		return new HashSet<>(Arrays.asList(joined.split(",")));
+		return Arrays.asList(joined.split(","));
 	}
 }

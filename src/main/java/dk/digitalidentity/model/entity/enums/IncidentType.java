@@ -5,13 +5,17 @@ import lombok.Getter;
 @Getter
 public enum IncidentType {
     TEXT("Tekst"),
-    DATE_TIME("Dato/tid"),
+    DATE("Dato"),
     ASSET("Aktiv"),
+    ASSETS("Aktiver"),
     USER("Bruger"),
     USERS("Brugere"),
+    SUPPLIER("Leverandør"),
+    SUPPLIERS("Leverandører"),
     ORGANIZATION("Enhed"),
     ORGANIZATIONS("Enheder"),
-    CHOICE_LIST("Valgliste");
+    CHOICE_LIST("Valgliste"),
+    CHOICE_LIST_MULTIPLE("Valgliste (flere svar)");
 
     private final String value;
 

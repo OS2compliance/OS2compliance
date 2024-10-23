@@ -75,6 +75,19 @@
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
 
+
+    function createDocumentFormLoaded() {
+        initDatepicker("#nextRevisionBtn", "#nextRevision");
+        userChoicesEditSelect = choiceService.initUserSelect('userSelect');
+        choiceService.initDocumentRelationSelect();
+        choiceService.initTagSelect('createDocumentTagsSelect');
+
+        userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
+            checkInputField(userChoicesEditSelect);
+        });
+        initFormValidationForForm("createDocumentModal", () => validateChoices(userChoicesEditSelect));
+    }
+
     document.addEventListener("DOMContentLoaded", function(event) {
         createDocumentFormLoaded();
 
