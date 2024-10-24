@@ -4,6 +4,7 @@ import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.RiskScaleType;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,50 +12,60 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import static dk.digitalidentity.Constants.SCALE_COLOR_GREEN;
+import static dk.digitalidentity.Constants.SCALE_COLOR_LIGHT_GREEN;
+import static dk.digitalidentity.Constants.SCALE_COLOR_ORANGE;
+import static dk.digitalidentity.Constants.SCALE_COLOR_RED;
+import static dk.digitalidentity.Constants.SCALE_COLOR_STD_GREEN;
+import static dk.digitalidentity.Constants.SCALE_COLOR_STD_RED;
+import static dk.digitalidentity.Constants.SCALE_COLOR_STD_YELLOW;
+import static dk.digitalidentity.Constants.SCALE_COLOR_YELLOW;
+
 @Transactional
 @Service
+@RequiredArgsConstructor
 public class ScaleService {
-	@Autowired
-	SettingsService settingsService;
+	private final SettingsService settingsService;
     private static final List<ScaleSetting> SCALE_SETTINGS = List.of(
         ScaleSetting.builder()
             .type(RiskScaleType.SCALE_1_4)
             .colorsMatrix(
                 new HashMap<>() {{
-                    put("1,1", "#87AD27");
-                    put("1,2", "#87AD27");
-                    put("1,3", "#87AD27");
-                    put("1,4", "#FFDE07");
-                    put("2,1", "#87AD27");
-                    put("2,2", "#87AD27");
-                    put("2,3", "#FFDE07");
-                    put("2,4", "#FFDE07");
-                    put("3,1", "#87AD27");
-                    put("3,2", "#FFDE07");
-                    put("3,3", "#FFDE07");
-                    put("3,4", "#DF5645");
-                    put("4,1", "#FFDE07");
-                    put("4,2", "#FFDE07");
-                    put("4,3", "#DF5645");
-                    put("4,4", "#DF5645");
+                    put("1,1", SCALE_COLOR_STD_GREEN);
+                    put("1,2", SCALE_COLOR_STD_GREEN);
+                    put("1,3", SCALE_COLOR_STD_GREEN);
+                    put("1,4", SCALE_COLOR_STD_YELLOW);
+                    put("2,1", SCALE_COLOR_STD_GREEN);
+                    put("2,2", SCALE_COLOR_STD_GREEN);
+                    put("2,3", SCALE_COLOR_STD_YELLOW);
+                    put("2,4", SCALE_COLOR_STD_YELLOW);
+                    put("3,1", SCALE_COLOR_STD_GREEN);
+                    put("3,2", SCALE_COLOR_STD_YELLOW);
+                    put("3,3", SCALE_COLOR_STD_YELLOW);
+                    put("3,4", SCALE_COLOR_STD_RED);
+                    put("4,1", SCALE_COLOR_STD_YELLOW);
+                    put("4,2", SCALE_COLOR_STD_YELLOW);
+                    put("4,3", SCALE_COLOR_STD_RED);
+                    put("4,4", SCALE_COLOR_STD_RED);
                 }}
             )
             .assessmentLookup(
-                r -> {
-                    if (r == null) {
+                (p, c) -> {
+                    if (c == null || p == null) {
                         return null;
                     }
-                    if (r <= 4) {
-                        return RiskAssessment.GREEN;
-                    } else if (r <= 11) {
-                        return RiskAssessment.YELLOW;
-                    } else {
-                        return RiskAssessment.RED;
-                    }
+                    final String lookup = "" + c + p;
+                    return switch (lookup) {
+                        case "11", "12", "13", "21", "22", "31" -> RiskAssessment.GREEN;
+                        case "14", "23", "24", "32", "33", "41", "42" -> RiskAssessment.YELLOW;
+                        case "34", "43", "44" -> RiskAssessment.RED;
+                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                    };
                 }
             )
             .riskScore(List.of(
@@ -75,45 +86,44 @@ public class ScaleService {
                 "3 = Meget alvorlig",
                 "4 = Graverende/ødelæggende"
             ))
+            .consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
             .build(),
         ScaleSetting.builder()
             .type(RiskScaleType.SCALE_1_4_KL)
             .colorsMatrix(
                     new HashMap<>() {{
-                        put("1,1", "#1DB255");
-                        put("1,2", "#1DB255");
-                        put("1,3", "#1DB255");
-                        put("1,4", "#93D259");
-                        put("2,1", "#1DB255");
-                        put("2,2", "#93D259");
-                        put("2,3", "#93D259");
-                        put("2,4", "#FDFF3C");
-                        put("3,1", "#1DB255");
-                        put("3,2", "#93D259");
-                        put("3,3", "#FDFF3C");
-                        put("3,4", "#FCC231");
-                        put("4,1", "#93D259");
-                        put("4,2", "#FDFF3C");
-                        put("4,3", "#FCC231");
-                        put("4,4", "#FA0020");
+                        put("1,1", SCALE_COLOR_GREEN);
+                        put("1,2", SCALE_COLOR_GREEN);
+                        put("1,3", SCALE_COLOR_GREEN);
+                        put("1,4", SCALE_COLOR_LIGHT_GREEN);
+                        put("2,1", SCALE_COLOR_GREEN);
+                        put("2,2", SCALE_COLOR_LIGHT_GREEN);
+                        put("2,3", SCALE_COLOR_LIGHT_GREEN);
+                        put("2,4", SCALE_COLOR_YELLOW);
+                        put("3,1", SCALE_COLOR_GREEN);
+                        put("3,2", SCALE_COLOR_LIGHT_GREEN);
+                        put("3,3", SCALE_COLOR_YELLOW);
+                        put("3,4", SCALE_COLOR_ORANGE);
+                        put("4,1", SCALE_COLOR_LIGHT_GREEN);
+                        put("4,2", SCALE_COLOR_YELLOW);
+                        put("4,3", SCALE_COLOR_ORANGE);
+                        put("4,4", SCALE_COLOR_RED);
                     }}
             )
             .assessmentLookup(
-                r -> {
-                    if (r == null) {
+                (p, c) -> {
+                    if (c == null || p == null) {
                         return null;
                     }
-                    if (r <= 3) {
-                        return RiskAssessment.GREEN;
-                    } else if (r <= 6) {
-                        return RiskAssessment.LIGHT_GREEN;
-                    } else if (r <= 11) {
-                        return RiskAssessment.YELLOW;
-                    } else if (r <= 14) {
-                        return RiskAssessment.ORANGE;
-                    } else {
-                        return RiskAssessment.RED;
-                    }
+                    final String lookup = "" + c + p;
+                    return switch (lookup) {
+                        case "11", "12", "13", "21", "31" -> RiskAssessment.GREEN;
+                        case "14", "22", "23", "32", "41" -> RiskAssessment.LIGHT_GREEN;
+                        case "24", "33", "42" -> RiskAssessment.YELLOW;
+                        case "34", "43" -> RiskAssessment.ORANGE;
+                        case "44" -> RiskAssessment.RED;
+                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                    };
                 }
             )
             .riskScore(List.of(
@@ -136,43 +146,43 @@ public class ScaleService {
                 "3 = Høj",
                 "4 = Meget høj"
             ))
+            .consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
             .build(),
         ScaleSetting.builder()
             .type(RiskScaleType.SCALE_1_4_HERNING)
             .colorsMatrix(
                     new HashMap<>() {{
-                        put("1,1", "#1DB255");
-                        put("1,2", "#1DB255");
-                        put("1,3", "#FDFF3C");
-                        put("1,4", "#FDFF3C");
-                        put("2,1", "#1DB255");
-                        put("2,2", "#FDFF3C");
-                        put("2,3", "#FDFF3C");
-                        put("2,4", "#FCC231");
-                        put("3,1", "#FDFF3C");
-                        put("3,2", "#FDFF3C");
-                        put("3,3", "#FCC231");
-                        put("3,4", "#FA0020");
-                        put("4,1", "#FDFF3C");
-                        put("4,2", "#FCC231");
-                        put("4,3", "#FA0020");
-                        put("4,4", "#FA0020");
+                        put("1,1", SCALE_COLOR_GREEN);
+                        put("1,2", SCALE_COLOR_GREEN);
+                        put("1,3", SCALE_COLOR_YELLOW);
+                        put("1,4", SCALE_COLOR_YELLOW);
+                        put("2,1", SCALE_COLOR_GREEN);
+                        put("2,2", SCALE_COLOR_YELLOW);
+                        put("2,3", SCALE_COLOR_YELLOW);
+                        put("2,4", SCALE_COLOR_ORANGE);
+                        put("3,1", SCALE_COLOR_YELLOW);
+                        put("3,2", SCALE_COLOR_YELLOW);
+                        put("3,3", SCALE_COLOR_ORANGE);
+                        put("3,4", SCALE_COLOR_RED);
+                        put("4,1", SCALE_COLOR_YELLOW);
+                        put("4,2", SCALE_COLOR_ORANGE);
+                        put("4,3", SCALE_COLOR_RED);
+                        put("4,4", SCALE_COLOR_RED);
                     }}
             )
             .assessmentLookup(
-                r -> {
-                    if (r == null) {
+                (p, c) -> {
+                    if (c == null || p == null) {
                         return null;
                     }
-                    if (r <= 2) {
-                        return RiskAssessment.GREEN;
-                    } else if (r <= 7) {
-                        return RiskAssessment.YELLOW;
-                    } else if (r <= 11) {
-                        return RiskAssessment.ORANGE;
-                    } else {
-                        return RiskAssessment.RED;
-                    }
+                    final String lookup = "" + c + p;
+                    return switch (lookup) {
+                        case "11", "12", "21" -> RiskAssessment.GREEN;
+                        case "13", "14", "22", "23", "31", "32", "41" -> RiskAssessment.YELLOW;
+                        case "24", "33", "42" -> RiskAssessment.ORANGE;
+                        case "34", "43", "44" -> RiskAssessment.RED;
+                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                    };
                 }
             )
             .riskScore(List.of(
@@ -194,6 +204,67 @@ public class ScaleService {
                 "3 = Høj (Alvorlig, kritisk)",
                 "4 = Meget høj (Graverende, meget kritisk)"
             ))
+            .consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
+            .build(),
+
+        ScaleSetting.builder()
+            .type(RiskScaleType.SCALE_1_4_DATATILSYNET)
+            .colorsMatrix(
+                new HashMap<>() {{
+                    // consequence, probability
+                    put("1,1", SCALE_COLOR_LIGHT_GREEN);
+                    put("1,2", SCALE_COLOR_LIGHT_GREEN);
+                    put("1,3", SCALE_COLOR_YELLOW);
+                    put("1,4", SCALE_COLOR_ORANGE);
+                    put("2,1", SCALE_COLOR_LIGHT_GREEN);
+                    put("2,2", SCALE_COLOR_YELLOW);
+                    put("2,3", SCALE_COLOR_ORANGE);
+                    put("2,4", SCALE_COLOR_ORANGE);
+                    put("3,1", SCALE_COLOR_YELLOW);
+                    put("3,2", SCALE_COLOR_ORANGE);
+                    put("3,3", SCALE_COLOR_ORANGE);
+                    put("3,4", SCALE_COLOR_RED);
+                    put("4,1", SCALE_COLOR_ORANGE);
+                    put("4,2", SCALE_COLOR_RED);
+                    put("4,3", SCALE_COLOR_RED);
+                    put("4,4", SCALE_COLOR_RED);
+                }}
+            )
+            .assessmentLookup(
+                (p, c) -> {
+                    if (c == null || p == null) {
+                        return null;
+                    }
+                    final String lookup = "" + c + p;
+                    return switch (lookup) {
+                        case "11", "12", "21" -> RiskAssessment.GREEN;
+                        case "13", "22", "31" -> RiskAssessment.YELLOW;
+                        case "14", "41", "23", "24", "32", "33" -> RiskAssessment.ORANGE;
+                        case "34", "42", "43", "44" -> RiskAssessment.RED;
+                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                    };
+                }
+            )
+            .riskScore(List.of(
+                "Risikoscore = sandsynlighed * konsekvens",
+                "1-2 = Lav (grøn)",
+                "3-7 = Under middel (gul)",
+                "8-11 = Over middel (orange)",
+                "12-16 = Høj (rød)"
+            ))
+            .probabilityScore(List.of(
+                "1 = Lav (Usandsynligt)",
+                "2 = Medium (Mindre sandsynligt)",
+                "3 = Høj (Sandsynligt)",
+                "4 = Meget høj (Forventet)"
+            ))
+            .consequenceNumber(List.of(
+                "1 = Lav (Ubetydelig, uvæsentlig)",
+                "2 = Medium (Mindre alvorlig, generende)",
+                "3 = Høj (Alvorlig, kritisk)",
+                "4 = Meget høj (Graverende, meget kritisk)"
+            ))
+            .consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
             .build()
     );
     @Builder
@@ -203,9 +274,9 @@ public class ScaleService {
         List<String> riskScore;
         List<String> probabilityScore;
         List<String> consequenceNumber;
+        Map<Integer, String> consequenceScale;
         Map<String, String> colorsMatrix;
-        Function<Integer, RiskAssessment> assessmentLookup;
-        Function<RiskAssessment, String> assessmentColorLookup;
+        BiFunction<Integer, Integer, RiskAssessment> assessmentLookup;
     }
 
     public Map<Integer, String> getConsequenceNumberDescriptions() {
@@ -219,12 +290,12 @@ public class ScaleService {
         return getCurrentScaleType(getScaleTypeString());
     }
 
-	public Map<Integer, String> getScale() {
-		return getScaleType().getValue();
+	public Map<Integer, String> getConsequenceScale() {
+        return scaleSettingsForType(getScaleType()).consequenceScale;
 	}
 
-    public RiskAssessment getRiskAssessmentForRisk(final int score) {
-        return scaleSettingsForType(getScaleType()).assessmentLookup.apply(score);
+    public RiskAssessment getRiskAssessmentForRisk(final int probability, final int consequence) {
+        return scaleSettingsForType(getScaleType()).assessmentLookup.apply(probability, consequence);
     }
 
     public Map<String, String> getScaleRiskScoreColorMap() {

@@ -21,6 +21,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -120,12 +121,14 @@ public class RegisterAssetAssessmentService {
         final long millis = System.currentTimeMillis();
         final List<RelationDTO<Register, Relatable>> relatedAssets = relationService.findRelations(register, RelationType.ASSET);
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = assetSupplierMappingList(relatedAssets);
-        final int score = assetSupplierMappingList.stream()
+
+        final Pair<Integer, Integer> weightedRisk = assetSupplierMappingList.stream()
             .map(a -> threatAssessmentService.calculateRiskForRegistersRelatedAssets(a.getValue().getAsset(), a.getKey()))
             .filter(Optional::isPresent)
             .map(Optional::get)
-            .mapToInt(r -> r.getWeightedRiskScore().intValue())
-            .max().orElse(0);
+            .map(r -> Pair.of(r.getProbability(), r.getWeightedConsequence().intValue()))
+            .max(Comparator.comparing(p -> p.getLeft() * p.getRight()))
+            .orElse(Pair.of(0, 0));
         final Property property = register.getProperties().stream()
             .filter(p -> p.getKey().equals(ASSET_ASSESSMENT_PROPERTY))
             .findFirst().orElseGet(() -> Property.builder()
@@ -133,8 +136,8 @@ public class RegisterAssetAssessmentService {
                 .entity(register)
                 .build());
         register.getProperties().remove(property);
-        if (score >= 1) {
-            property.setValue(scaleService.getRiskAssessmentForRisk(score).name());
+        if (weightedRisk.getLeft() >= 1 && weightedRisk.getRight() >= 1) {
+            property.setValue(scaleService.getRiskAssessmentForRisk(weightedRisk.getLeft(), weightedRisk.getRight()).name());
             register.getProperties().add(property);
         }
         log.debug("updateAssetAssessment done, took {}ms", System.currentTimeMillis() - millis);

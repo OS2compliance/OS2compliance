@@ -276,7 +276,7 @@ public class AssetsController {
         if (threatExists) {
             final ThreatAssessment newestThreatAssessment = threatAssessments.get(0);
             model.addAttribute("risk", newestThreatAssessment);
-            model.addAttribute("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
+            model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(newestThreatAssessment));
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
