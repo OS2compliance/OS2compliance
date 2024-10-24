@@ -122,6 +122,7 @@ public class ScaleService {
                         case "24", "33", "42" -> RiskAssessment.YELLOW;
                         case "34", "43" -> RiskAssessment.ORANGE;
                         case "44" -> RiskAssessment.RED;
+                        case "00" -> null;
                         default -> throw new IllegalStateException("Unexpected value: " + lookup);
                     };
                 }
@@ -181,6 +182,7 @@ public class ScaleService {
                         case "13", "14", "22", "23", "31", "32", "41" -> RiskAssessment.YELLOW;
                         case "24", "33", "42" -> RiskAssessment.ORANGE;
                         case "34", "43", "44" -> RiskAssessment.RED;
+                        case "00" -> null;
                         default -> throw new IllegalStateException("Unexpected value: " + lookup);
                     };
                 }
@@ -241,6 +243,7 @@ public class ScaleService {
                         case "13", "22", "31" -> RiskAssessment.YELLOW;
                         case "14", "41", "23", "24", "32", "33" -> RiskAssessment.ORANGE;
                         case "34", "42", "43", "44" -> RiskAssessment.RED;
+                        case "00" -> null;
                         default -> throw new IllegalStateException("Unexpected value: " + lookup);
                     };
                 }
