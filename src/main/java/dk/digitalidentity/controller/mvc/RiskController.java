@@ -196,7 +196,7 @@ public class RiskController {
         model.addAttribute("threats", threatAssessmentService.buildThreatList(threatAssessment));
         model.addAttribute("elementName", findElementName(threatAssessment));
         model.addAttribute("customThreat", new CustomThreat());
-        model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
+        model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
         model.addAttribute("probabilityExplainer", scaleService.getScaleProbabilityNumberExplainer());
         model.addAttribute("consequenceExplainer", scaleService.getScaleConsequenceNumberExplainer());
@@ -254,7 +254,7 @@ public class RiskController {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("risk", threatAssessment);
         model.addAttribute("elementName", findElementName(threatAssessment));
-        model.addAttribute("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
+        model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
         model.addAttribute("riskProfiles", threatAssessmentService.buildRiskProfileDTOs(threatAssessment));
         model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
