@@ -195,16 +195,16 @@ public class ScaleService {
                 "12-16 = Høj (rød)"
             ))
             .probabilityScore(List.of(
-                "1 = Lav (Usandsynligt)",
-                "2 = Medium (Mindre sandsynligt)",
-                "3 = Høj (Sandsynligt)",
-                "4 = Meget høj (Forventet)"
+                "1 = Usandsynligt",
+                "2 = Mindre sandsynligt",
+                "3 = Sandsynligt",
+                "4 = Forventet"
             ))
             .consequenceNumber(List.of(
-                "1 = Lav (Ubetydelig, uvæsentlig)",
-                "2 = Medium (Mindre alvorlig, generende)",
-                "3 = Høj (Alvorlig, kritisk)",
-                "4 = Meget høj (Graverende, meget kritisk)"
+                "1 = Ubetydelig",
+                "2 = Mindre alvorlig",
+                "3 = Meget alvorlig",
+                "4 = Ødelæggende"
             ))
             .consequenceScale(Map.of(1, "GRØN", 2, "GUL", 3, "ORANGE", 4, "RØD"))
             .build(),
