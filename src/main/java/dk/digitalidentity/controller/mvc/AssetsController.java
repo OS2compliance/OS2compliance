@@ -85,6 +85,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import com.google.common.base.Strings;
+
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -99,6 +101,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static dk.digitalidentity.util.LinkHelper.linkify;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
@@ -407,7 +411,7 @@ public class AssetsController {
     }
 
 	@GetMapping("subsupplier")
-	public String subsupplierForm(final Model model, @RequestParam(name = "id", required = false) final Long id,  @RequestParam(name = "asset", required = true) final Long assetId) {
+	public String subsupplierForm(final Model model, @RequestParam(name = "id", required = false) final Long id, @RequestParam(name = "asset", required = true) final Long assetId) {
 		final ChoiceList acceptanceBasisChoices = choiceService.findChoiceList("dp-supplier-accept-list")
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 						"Could not find AcceptanceBasis Choices"));
@@ -466,24 +470,13 @@ public class AssetsController {
 		return "redirect:/assets/" + asset.getId();
 	}
 
-	@Transactional
-	@DeleteMapping("subsupplier")
-	public String subSupplierDelete(@RequestParam(name = "id") final Long id, @RequestParam(name = "asset") final Long assetId) {
-		final Asset asset = assetService.get(assetId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		final AssetSupplierMapping subsupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), id)).findAny()
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		asset.getSuppliers().remove(subsupplier);
-		return "/assets/" + asset.getId();
-	}
-
 
     @Transactional
     @PostMapping("oversight")
     public String oversightSettings(@Valid @ModelAttribute final DataProcessingOversightDTO body) {
         final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-        asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
+        asset.setDataProcessingAgreementLink(linkify(Strings.emptyToNull(body.getDataProcessingAgreementLink())));
         asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setSupervisoryModel(body.getSupervisoryModel());
         asset.setNextInspection(body.getNextInspection());
@@ -499,66 +492,109 @@ public class AssetsController {
     }
 
 
-    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect){
+    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect){
     }
     @Transactional
-    @PostMapping("oversight/create")
-    public String createOversight(@Valid @ModelAttribute final AssetOversightDTO dto) {
+    @PostMapping("oversight/edit")
+    public String oversightCreateOrEdit(@Valid @ModelAttribute final AssetOversightDTO dto) {
         final Asset asset = assetService.get(dto.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final AssetOversight oversight = new AssetOversight();
-        oversight.setAsset(asset);
-        oversight.setConclusion(dto.conclusion);
-        if (Objects.isNull(dto.creationDate)) {
-            oversight.setCreationDate(LocalDate.now());
-        } else {
-            oversight.setCreationDate(dto.creationDate);
-        }
-        oversight.setResponsibleUser(dto.responsibleUser);
-        oversight.setStatus(dto.status);
-        oversight.setSupervisionModel(dto.supervisionModel);
+        final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
 
-        if (dto.newInspectionDate == null) {
-            asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, oversight.getCreationDate()));
+        if (oversight.isPresent()) {
+            oversight.get().setCreationDate(dto.creationDate);
+            oversight.get().setResponsibleUser(dto.responsibleUser);
+            oversight.get().setSupervisionModel(dto.supervisionModel);
+            oversight.get().setConclusion(dto.conclusion);
+            oversight.get().setStatus(dto.status);
+            oversight.get().setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
+            oversight.get().setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
+
+            if (dto.newInspectionDate == null) {
+                asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, oversight.get().getCreationDate()));
+            } else {
+                asset.setNextInspectionDate(dto.newInspectionDate);
+            }
+            oversight.get().setNewInspectionDate(asset.getNextInspectionDate());
         } else {
-            asset.setNextInspectionDate(dto.newInspectionDate);
+            //Create
+            AssetOversight newOversight = new AssetOversight();
+            newOversight.setAsset(asset);
+            newOversight.setConclusion(dto.conclusion);
+            if (Objects.isNull(dto.creationDate)) {
+                newOversight.setCreationDate(LocalDate.now());
+            } else {
+                newOversight.setCreationDate(dto.creationDate);
+            }
+            newOversight.setResponsibleUser(dto.responsibleUser);
+            newOversight.setStatus(dto.status);
+            newOversight.setSupervisionModel(dto.supervisionModel);
+            newOversight.setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
+            newOversight.setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
+
+            if (dto.newInspectionDate == null) {
+                asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, newOversight.getCreationDate()));
+            } else {
+                asset.setNextInspectionDate(dto.newInspectionDate);
+            }
+            newOversight.setNewInspectionDate(asset.getNextInspectionDate());
+            final AssetOversight attachedOversight = assetOversightService.create(newOversight);
+            assetOversightService.createAssociatedCheck(attachedOversight);
+            asset.getAssetOversights().add(attachedOversight);
         }
-        oversight.setNewInspectionDate(asset.getNextInspectionDate());
-        final AssetOversight attachedOversight = assetOversightService.create(oversight);
-        assetOversightService.createAssociatedCheck(attachedOversight);
-        asset.getAssetOversights().add(attachedOversight);
+
         return dto.redirect.equals("assets") ? "redirect:/assets/" + asset.getId() : "redirect:/suppliers/" + asset.getSupplier().getId();
     }
 
-    @GetMapping("oversight/{id}/{type}")
-    public String oversightForm(final Model model, final  @PathVariable("id") Long id, @PathVariable("type") final String type) {
-        if(Objects.isNull(id)){
+    @GetMapping("oversight/{entityId}/{type}")
+    public String oversightForm(final Model model, final @PathVariable("entityId") Long entityId, @PathVariable("type") final String type, @RequestParam(name = "id", required = false) final Long id) {
+        if(Objects.isNull(entityId)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id blev ikke sendt med");
         }
+
         if(type.equals("asset")) {
-            final Asset asset = assetService.get(id).orElseThrow(() ->
+            final Asset asset = assetService.get(entityId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for aktiviteten findes ikke")
             );
 
-            model.addAttribute("assetId", asset.getId());
-            model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
-            model.addAttribute("inspectionType", asset.getNextInspection());
+            if (id == null) {
+                model.addAttribute("assetId", asset.getId());
+                model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
+                model.addAttribute("inspectionType", asset.getNextInspection());
+            } else {
+                final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), id)).findAny().orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for oversight findes ikke")
+                );
+                model.addAttribute("assetId", asset.getId());
+                model.addAttribute("oversight", new AssetOversightDTO(assetOversight.getId(), entityId, assetOversight.getResponsibleUser(), assetOversight.getSupervisionModel(), assetOversight.getConclusion(), assetOversight.getDbsLink(), assetOversight.getInternalDocumentationLink(), assetOversight.getStatus(), assetOversight.getCreationDate(), assetOversight.getNewInspectionDate(), "assets"));
+                model.addAttribute("inspectionType", asset.getNextInspection());
+            }
 
             return "assets/fragments/oversightModal";
         }
         if(type.equals("supplier")) {
-            final Supplier supplier = supplierService.get(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Det angivne id findes ikke"));
+            final Supplier supplier = supplierService.get(entityId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Det angivne id findes ikke"));
 
-            model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
-            model.addAttribute("supplier", supplier);
-            model.addAttribute("inspectionType", null);
-            model.addAttribute("assetId", null);
-            model.addAttribute("supplierAssets", supplier.getAssets());
+            if (id == null) {
+                model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
+                model.addAttribute("supplier", supplier);
+                model.addAttribute("inspectionType", null);
+                model.addAttribute("assetId", null);
+                model.addAttribute("supplierAssets", supplier.getAssets());
+            } else {
+                final AssetOversight assetOversight = assetOversightService.findById(id).orElseThrow(() ->
+                    new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for oversight findes ikke")
+                );
+                model.addAttribute("oversight", new AssetOversightDTO(assetOversight.getId(), entityId, assetOversight.getResponsibleUser(), assetOversight.getSupervisionModel(), assetOversight.getConclusion(), assetOversight.getDbsLink(), assetOversight.getInternalDocumentationLink(), assetOversight.getStatus(), assetOversight.getCreationDate(), assetOversight.getNewInspectionDate(), "suppliers"));
+                model.addAttribute("supplier", supplier);
+                model.addAttribute("inspectionType", null);
+                model.addAttribute("assetId", assetOversight.getAsset().getId());
+                model.addAttribute("supplierAssets", supplier.getAssets());
+            }
             return "assets/fragments/oversightModal";
         }
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "typen fandtes ikke: understøttede er 'asset' og 'supplier'");
     }
-
 
     @Transactional
     @PostMapping("tia")

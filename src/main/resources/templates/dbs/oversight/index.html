@@ -53,7 +53,7 @@
     #assetsDatatable table {
         overflow: visible;
     }
-    
+
     .gridjs-container .gridjs-wrapper {
         overflow: visible;
     }
@@ -83,17 +83,11 @@
 
         var tableDiv = document.getElementById("assetsDatatable");
 
-        // load saved state assets
-        const assetGridKey = window.location.pathname;
-        const assetGridKeySearch = assetGridKey + '-asset-search'
-        const savedSearchAsset = localStorage.getItem(assetGridKeySearch);
-        let initialAssetLoadDone = false;  // flag to ensure initial load only happens once
-
-        const grid = new gridjs.Grid({
+        let gridConfig = {
             className: defaultClassName,
             search: {
                 enabled: true,
-                keyword: savedSearchAsset,
+                keyword: searchService.getSavedSearch(),
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -138,11 +132,11 @@
                     sort: false,
                     formatter: (cell, row) => {
                         var html = '<ul>'
-                        
-                    	for (let i = 0; i < cell.length; i++) {
-                    		 html += '<li>' + cell[i].name + '</li>'
-                    	}
-                        
+
+                        for (let i = 0; i < cell.length; i++) {
+                            html += '<li>' + cell[i].name + '</li>'
+                        }
+
                         html += '</ul>'
                         return gridjs.html(html);
                     }
@@ -204,31 +198,16 @@
                     'page': (page) => `Side ${page}`
                 }
             }
-        }).render(tableDiv);
+        };
+        const grid = new gridjs.Grid(gridConfig).render(tableDiv);
 
         // set state on grid
         grid.on('ready', function() {
             if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
             	document.getElementsByClassName("gridjs-pages")[0].children[1].click();
             }
-            
-            // only apply saved state on the first load
-            if (!initialAssetLoadDone) {
-
-                const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
-                if (searchInput) {
-                    searchInput.addEventListener('input', function() {
-                        if (this.value === '') {
-                            localStorage.removeItem(assetGridKeySearch);
-                        } else {
-                            localStorage.setItem(assetGridKeySearch, this.value);
-                        }
-                    });
-                }
-
-                initialAssetLoadDone = true;  // ensure this only runs once
-            }
         });
+        searchService.initSearch(grid, gridConfig);
         gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 

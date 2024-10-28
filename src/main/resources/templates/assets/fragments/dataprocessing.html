@@ -28,8 +28,8 @@
                                 <th class="col-lg-2">Ydelse</th>
                                 <th class="col-lg-2">Land</th>
                                 <th class="col-lg-2">Tredjelandsoverførsel</th>
-                                <th class="col-lg-3">Acceptgrundlag</th>
-                                <th class="col-lg-1">Options</th>
+                                <th class="col-lg-2">Acceptgrundlag</th>
+                                <th class="col-lg-2">Handlinger</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -79,6 +79,7 @@
 
         /*[+
             var subsupplierUrl = [[@{/assets/subsupplier}]];
+            var assetsRestUrl = [[@{/rest/assets}]];
         +]*/
         var subsupplierDialog;
         var supplierChoices;
@@ -215,10 +216,7 @@
 
         function deleteSubsupplier(elem) {
         	const subsupplierId = elem.dataset.subsupplierid;
-        	fetch(subsupplierUrl+ '?' + new URLSearchParams({asset: [[${asset.id}]], id: subsupplierId}), { method: 'DELETE', headers: {
-        		   'X-CSRF-TOKEN': token,
-            }, })
-        	.then((res) => {
+            deleteData(`${assetsRestUrl}/[[${asset.id}]]/subsupplier/${subsupplierId}`).then(() => {
         		   window.location.reload();
         	});
         }

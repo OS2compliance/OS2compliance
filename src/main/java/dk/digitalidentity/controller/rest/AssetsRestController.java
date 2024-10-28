@@ -4,7 +4,10 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.List;
 
+import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.entity.AssetOversight;
+import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAReport;
 import dk.digitalidentity.model.entity.DPIAResponseSection;
@@ -39,7 +42,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -49,7 +51,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
@@ -68,6 +69,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.UUID;
 
 @Slf4j
@@ -89,10 +91,10 @@ public class AssetsRestController {
     private final EmailTemplateService emailTemplateService;
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
-    private final AssetDao assetDao;
+    private final AssetOversightDao assetOversightDao;
 
 
-	@PostMapping("list")
+    @PostMapping("list")
 	public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
                                   @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
                                   @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
@@ -203,6 +205,27 @@ public class AssetsRestController {
         final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         question.setDeleted(true);
         dpiaTemplateQuestionService.save(question);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Transactional
+    @DeleteMapping("oversight/{oversightId}")
+    public ResponseEntity<?> deleteOversight(@PathVariable("oversightId") Long oversightId) {
+        final AssetOversight assetOversight = assetService.getOversight(oversightId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        assetOversightDao.delete(assetOversight);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    @Transactional
+    @DeleteMapping("{assetId}/subsupplier/{subSupplierId}")
+    public ResponseEntity<?> subSupplierDelete(@PathVariable("subSupplierId") final Long subSupplierId,
+                                               @PathVariable("assetId") final Long assetId) {
+        final Asset asset = assetService.get(assetId)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final AssetSupplierMapping subSupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), subSupplierId)).findAny()
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        asset.getSuppliers().remove(subSupplier);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 

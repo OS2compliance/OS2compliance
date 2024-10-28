@@ -1,18 +1,18 @@
 <div class="modal-dialog">
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title">Nyt Tilsyn</h5>
+            <h5 class="modal-title" th:text="${oversight.id} == 0 ? 'Nyt Tilsyn' : 'Rediger Tilsyn'"></h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body" style="min-height: 200px;">
-            <form id="createOversightForm" class="row g-3" action="#" th:action="@{/assets/oversight/create}"
+            <form id="createEditOversightForm" class="row g-3" action="#" th:action="@{/assets/oversight/edit}"
                 th:object="${oversight}" method="post">
                 <input id="id" name="id" th:field="*{id}" type="hidden">
                 <input id="redirectUrl" name="redirectUrl" type="hidden" th:field="*{redirect}">
                 <input th:unless="${assetId == null}" id="assetId" name="assetId" th:value="${assetId}" type="hidden">
                 <div th:if="${assetId == null}" class="row mt-3">
 
-                        <label class="col-sm-4 col-form-label">Aktiv</label>
+                        <label class="col-sm-4 col-form-label" for="assetId">Aktiv</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select" name="assetSelect" id="assetId" th:field="*{assetId}">
                                 <option th:each="supAsset : ${supplierAssets}" th:value="${supAsset.id}" th:text="${supAsset.name}"></option>
@@ -22,7 +22,7 @@
                 </div>
                 <div class="row mt-3">
                     <div class="input-group col-sm-8">
-                        <label for="oversightDateLabel" class="col-sm-4 col-form-label">Dato</label>
+                        <label for="oversightDateId" class="col-sm-4 col-form-label">Dato</label>
                         <input id="oversightDateId" type="text" class="form-control editField datepicker" th:field="*{creationDate}">
                         <button id="oversightDateBtn"  class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;">
                             <i class="pli-calendar-4 fs-5"></i>
@@ -30,9 +30,9 @@
                     </div>
                 </div>
 
-                <div th:hidden="${ inspectionType != T(dk.digitalidentity.model.entity.enums.NextInspection).DATE}" class="row mt-3">
+                <div th:hidden="${inspectionType != T(dk.digitalidentity.model.entity.enums.NextInspection).DATE}" class="row mt-3">
                     <div  class="input-group col-sm-8">
-                        <label for="oversightDateLabel" class="col-sm-4 col-form-label">Næste tilsyn</label>
+                        <label for="oversightInspectionDateInput" class="col-sm-4 col-form-label">Næste tilsyn</label>
                         <input id="oversightInspectionDateInput" type="text" class="form-control editField datepicker" th:field="*{newInspectionDate}">
                         <button id="oversightInspectionDateBtn"  class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;">
                             <i class="pli-calendar-4 fs-5"></i>
@@ -44,16 +44,18 @@
                     <label for="oversightUserSelect" class="col-sm-4 col-form-label">Ansvarlig</label>
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" th:field="*{responsibleUser}"
-                            data-trigger="" id="oversightUserSelect" hidden="" required></select>
+                            data-trigger="" id="oversightUserSelect" hidden="" required>
+                            <option th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}" selected></option>
+                        </select>
                         <div class="invalid-feedback">Ansvarlig bruger påkrævet</div>
                     </div>
                 </div>
 
                 <div class="row mt-3">
-                    <label class="col-sm-4 col-form-label">Tilsynsform</label>
+                    <label for="oversightSupervisionModelSelect" class="col-sm-4 col-form-label">Tilsynsform</label>
                     <div class="col-sm-8">
                         <select class="form-control form-select" data-trigger="" name="supervisionModel"
-                            id="supervisionModelSelect" th:field="*{supervisionModel}">
+                            id="oversightSupervisionModelSelect" th:field="*{supervisionModel}">
                             <option
                                 th:each="supervision : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}"
                                 th:value="${supervision}" th:text="${supervision.getMessage()}">
@@ -63,14 +65,28 @@
                 </div>
 
                 <div class="row mt-3">
-                    <label class="col-sm-4 col-form-label">Konklusion</label>
+                    <label for="oversightDbsLink" class="col-sm-4 col-form-label">Link (DBS)</label>
                     <div class="col-sm-8">
-                        <textarea class="form-control" th:field="*{conclusion}"></textarea>
+                        <input type="text" class="form-control" id="oversightDbsLink" th:field="*{dbsLink}" />
                     </div>
                 </div>
 
                 <div class="row mt-3">
-                    <label class="col-sm-4 col-form-label">Resultat</label>
+                    <label for="oversightInternalDoc" class="col-sm-4 col-form-label">Link(Intern dokumentation)</label>
+                    <div class="col-sm-8">
+                        <input type="text" class="form-control" th:field="*{internalDocumentationLink}" id="oversightInternalDoc" />
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <label for="oversightConclusion" class="col-sm-4 col-form-label">Konklusion</label>
+                    <div class="col-sm-8">
+                        <textarea class="form-control" th:field="*{conclusion}" id="oversightConclusion"></textarea>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <label for="oversightStatusSelect" class="col-sm-4 col-form-label">Resultat</label>
                     <div class="col-sm-8">
                         <select class="form-control form-select" data-trigger="" name="oversightStatusSelect"
                             id="oversightStatusSelect" th:field="*{status}">
@@ -89,7 +105,7 @@
 
         <div class="modal-footer">
             <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuller</button>
-            <button type="submit" form="createOversightForm" class="btn btn-secondary">Opret</button>
+            <button type="submit" form="createEditOversightForm" class="btn btn-secondary" th:text="${oversight.id} == 0 ? 'Opret' : 'Gem'"></button>
         </div>
     </div>
 </div>

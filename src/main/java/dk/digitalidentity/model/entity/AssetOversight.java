@@ -35,6 +35,10 @@ public class AssetOversight {
     @Column
     private String conclusion;
     @Column
+    private String dbsLink;
+    @Column
+    private String internalDocumentationLink;
+    @Column
     @Enumerated(EnumType.STRING)
     private AssetOversightStatus status;
     @ManyToOne
