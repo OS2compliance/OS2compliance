@@ -4,6 +4,7 @@
 <body class="jumping">
 <script type="text/javascript" th:src="@{/js/supplier/checkCvr.js}"></script>
 <script type="text/javascript" th:src="@{/js/supplier/formReset.js}"></script>
+<script th:src="@{/js/oversight/oversight-service.js}" defer></script>
 <link th:href="@{/css/suppliers.css}" rel="stylesheet">
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -193,6 +194,7 @@
     /*<![CDATA[*/
     /*[+
         var oversightUrl = [[@{/assets/oversight}]];
+        var oversightRestUrl = [[@{/rest/assets/oversight}]];
         var formUrl = [[@{/contacts/form(sourceRelationId=${supplier.id}, sourceRelationType=SUPPLIER)}]];
         var supplierId = [[${supplier.id}]]
     +]*/
@@ -207,96 +209,6 @@
 
             addRelationFormLoaded();
     });
-
-    function showOversightModal() {
-            initOversightModal().then(() => oversightDialog.show());
-    }
-
-    function editOversight(elem) {
-        const oversightId = elem.dataset.oversightid;
-        initOversightModal(oversightId).then(() => oversightDialog.show());
-    }
-
-    function deleteOversight(elem) {
-        const oversightId = elem.dataset.oversightid;
-        fetch(oversightUrl+ '?' + new URLSearchParams({entityId: [[${supplier.id}]], type: 'supplier', id: oversightId}), { method: 'DELETE', headers: {
-               'X-CSRF-TOKEN': token,
-        }, })
-        .then((res) => {
-               window.location.reload();
-        });
-    }
-
-    function initOversightModal(id) {
-        let params = new URLSearchParams();
-
-        if (id) {
-            params.append('id', id);
-        }
-
-        return fetch(oversightUrl + "/" + supplierId + "/supplier"+ "?" + params)
-        .then(response => response.text()
-            .then(data => {
-                document.getElementById('oversightDialog').innerHTML = data;
-
-                //Init modal
-                oversightDialog = new bootstrap.Modal(document.getElementById('oversightDialog'), {
-                  keyboard: false
-                });
-
-                //Init date pickers
-                const datepickerOversight = MCDatepicker.create({
-                    el: '#oversightDateId',
-                    bodyType: 'inline',
-                    autoClose: true,
-                    dateFormat: 'dd/mm-yyyy',
-                    selectedDate: new Date(),
-                    closeOnBlur: true,
-                    firstWeekday: 1,
-                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                    customClearBTN: "Ryd",
-                    customCancelBTN: "Annuller"
-                    });
-                document.querySelector("#oversightDateBtn").addEventListener("click", () => {
-                datepickerOversight.open();
-                });
-
-                const inspectionDateOversightModal = MCDatepicker.create({
-                    el: '#oversightInspectionDateInput',
-                    bodyType: 'inline',
-                    autoClose: true,
-                    dateFormat: 'dd/mm-yyyy',
-                    selectedDate: new Date(),
-                    closeOnBlur: true,
-                    firstWeekday: 1,
-                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                    customClearBTN: "Ryd",
-                    customCancelBTN: "Annuller"
-                    });
-                document.querySelector("#oversightInspectionDateBtn").addEventListener("click", () => {
-                    inspectionDateOversightModal.open();
-                });
-
-                    //choices.js
-                    const oversightSelect = document.getElementById('oversightUserSelect');
-                    oversightResponsibleUserChoices = initSelect(oversightSelect);
-                    choiceService.updateUsers(oversightResponsibleUserChoices, "");
-                    oversightSelect.addEventListener("search",
-                    function(event) {
-                        choiceService.updateUsers(oversightResponsibleUserChoices, event.detail.value);
-                    },
-                    false,
-                    );
-                    oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
-                        checkInputField(oversightResponsibleUserChoices);
-                    });
-
-
-            }))
-        .catch(error => toastService.error(error))
-    }
 
     function addRelationFormLoaded() {
             initAssetRelationSelectPrivate();

@@ -85,16 +85,10 @@
             header: "d-flex justify-content-end"
         };
 
-        // load saved state risks
-        const riskGridKey = window.location.pathname;
-        const riskGridKeySearch = riskGridKey + '-risk-search'
-        const savedSearchRisk = localStorage.getItem(riskGridKeySearch);
-        let initialRiskLoadDone = false;  // flag to ensure initial load only happens once
-
-        const grid = new gridjs.Grid({
+        let gridConfig = {
             className: defaultClassName,
             search: {
-                keyword: savedSearchRisk,
+                keyword: searchService.getSavedSearch(),
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -195,9 +189,9 @@
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
-                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],
@@ -227,28 +221,9 @@
                     'page': (page) => `Side ${page}`
                 }
             }
-        }).render( document.getElementById( "risksDatatable" ));
-
-        // set state on grid
-        grid.on('ready', function() {
-
-            // only apply saved state on the first load
-            if (!initialRiskLoadDone) {
-
-                const searchInput = document.querySelector('#risksDatatable .gridjs-search-input');
-                if (searchInput) {
-                    searchInput.addEventListener('input', function() {
-                        if (this.value === '') {
-                            localStorage.removeItem(riskGridKeySearch);
-                        } else {
-                            localStorage.setItem(riskGridKeySearch, this.value);
-                        }
-                    });
-                }
-
-                initialRiskLoadDone = true;  // ensure this only runs once
-            }
-        });
+        };
+        const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
+        searchService.initSearch(grid, gridConfig);
         gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 

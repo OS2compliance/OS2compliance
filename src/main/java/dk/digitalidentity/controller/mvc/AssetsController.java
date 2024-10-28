@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetMeasuresDao;
-import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
 import dk.digitalidentity.event.AssetUpdatedEvent;
@@ -70,7 +69,6 @@ import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.data.repository.ListCrudRepository;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -129,7 +127,6 @@ public class AssetsController {
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
-	private final AssetOversightDao assetOversightDao;
 
 
 	@GetMapping
@@ -473,16 +470,6 @@ public class AssetsController {
 		return "redirect:/assets/" + asset.getId();
 	}
 
-	@Transactional
-	@DeleteMapping("subsupplier")
-	public String subSupplierDelete(@RequestParam(name = "id") final Long id, @RequestParam(name = "asset") final Long assetId) {
-		final Asset asset = assetService.get(assetId)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		final AssetSupplierMapping subsupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), id)).findAny()
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		asset.getSuppliers().remove(subsupplier);
-		return "/assets/" + asset.getId();
-	}
 
     @Transactional
     @PostMapping("oversight")
@@ -512,9 +499,8 @@ public class AssetsController {
     public String oversightCreateOrEdit(@Valid @ModelAttribute final AssetOversightDTO dto) {
         final Asset asset = assetService.get(dto.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
-        
+
         if (oversight.isPresent()) {
-            //TODO some of those fields are probably not editable.
             oversight.get().setCreationDate(dto.creationDate);
             oversight.get().setResponsibleUser(dto.responsibleUser);
             oversight.get().setSupervisionModel(dto.supervisionModel);
@@ -522,7 +508,7 @@ public class AssetsController {
             oversight.get().setStatus(dto.status);
             oversight.get().setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
             oversight.get().setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
-            
+
             if (dto.newInspectionDate == null) {
                 asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, oversight.get().getCreationDate()));
             } else {
@@ -544,7 +530,7 @@ public class AssetsController {
             newOversight.setSupervisionModel(dto.supervisionModel);
             newOversight.setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
             newOversight.setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
-    
+
             if (dto.newInspectionDate == null) {
                 asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, newOversight.getCreationDate()));
             } else {
@@ -555,7 +541,7 @@ public class AssetsController {
             assetOversightService.createAssociatedCheck(attachedOversight);
             asset.getAssetOversights().add(attachedOversight);
         }
-        
+
         return dto.redirect.equals("assets") ? "redirect:/assets/" + asset.getId() : "redirect:/suppliers/" + asset.getSupplier().getId();
     }
 
@@ -564,12 +550,12 @@ public class AssetsController {
         if(Objects.isNull(entityId)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id blev ikke sendt med");
         }
-        
+
         if(type.equals("asset")) {
             final Asset asset = assetService.get(entityId).orElseThrow(() ->
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for aktiviteten findes ikke")
             );
-            
+
             if (id == null) {
                 model.addAttribute("assetId", asset.getId());
                 model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
@@ -609,30 +595,6 @@ public class AssetsController {
 
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "typen fandtes ikke: understøttede er 'asset' og 'supplier'");
     }
-
-	@Transactional
-	@DeleteMapping("oversight")
-	public String oversightDelete(@RequestParam(name = "id") final Long id, @RequestParam(required = true, name = "type") final String type, @RequestParam(name = "entityId") final Long entityId) {
-		if ("asset".equals(type)) {
-			final Asset asset = assetService.get(entityId)
-					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(ao -> Objects.equals(ao.getId(), id)).findAny()
-					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			asset.getAssetOversights().remove(assetOversight);
-			return "/assets/" + asset.getId();
-		} else if ("supplier".equals(type)){
-			final Supplier supplier = supplierService.get(entityId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
-					.filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier)).collect(Collectors.toList());
-			final AssetOversight assetOversight = assetOversights.stream().filter(ao -> Objects.equals(ao.getId(), id)).findAny()
-					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			assetOversight.getAsset().getAssetOversights().remove(assetOversight);
-			return "/suppliers/" + supplier.getId();
-		}
-
-		throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "typen fandtes ikke: understøttede er 'asset' og 'supplier'");
-	}
-
 
     @Transactional
     @PostMapping("tia")

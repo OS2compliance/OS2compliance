@@ -1,21 +1,23 @@
 <div th:fragment="oversightTable(oversights)" id="oversightTable" aria-labelledby="oversight-table">
 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-    <button type="button" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="showOversightModal()">
+    <button type="button" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="oversightService.showOversightModal()">
         <i class="ti-plus fs-4"></i>
         <span class="vr"></span>
         Nyt tilsyn
     </button>
     <table class="table table-striped">
         <thead>
-            <th>Dato</th>
-            <th>Aktiv</th>
-            <th>Ansvarlig</th>
-            <th>Tilsynsform</th>
-            <th>Link (DBS)</th>
-            <th>Link (Intern dokumentation)</th>
-            <th>Konklusion</th>
-            <th>Resultat</th>
-            <th>Actions</th>
+            <tr>
+                <th>Dato</th>
+                <th>Aktiv</th>
+                <th>Ansvarlig</th>
+                <th>Tilsynsform</th>
+                <th>Link (DBS)</th>
+                <th>Link (Intern dokumentation)</th>
+                <th>Konklusion</th>
+                <th>Resultat</th>
+                <th>Handlinger</th>
+            </tr>
         </thead>
         <tbody>
             <tr th:each="oversight : ${oversights}">
@@ -36,10 +38,10 @@
                     <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).YELLOW == oversight.status}" class="d-block badge bg-yellow" style="width: 60px">Gul</div>
                 </td>
                 <td>
-                    <button onclick="editOversight(this)" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit oversight">
+                    <button onclick="oversightService.editOversight(this)" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit oversight">
                         <i class="pli-pen-4 fs-6"></i>
                     </button>
-                    <button onclick="deleteOversight(this)" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete oversight">
+                    <button onclick="oversightService.deleteOversight(this)" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete oversight">
                         <i class="pli-trash fs-6"></i>
                     </button>
                 </td>
@@ -50,7 +52,4 @@
 </div>
 </div>
 
-<script th:inline="javascript">
-
-</script>
 </div>

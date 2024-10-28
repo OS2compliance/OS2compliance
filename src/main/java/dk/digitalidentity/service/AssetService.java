@@ -2,8 +2,10 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetDao;
+import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -44,7 +46,6 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -58,11 +59,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import org.htmlcleaner.CleanerProperties;
-import org.htmlcleaner.TagNode;
-import org.htmlcleaner.HtmlCleaner;
-import org.htmlcleaner.BrowserCompactXmlSerializer;
-
 import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 
 @Slf4j
@@ -70,6 +66,7 @@ import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 @RequiredArgsConstructor
 public class AssetService {
     private final AssetDao assetDao;
+    private final AssetOversightDao assetOversightDao;
     private final RelationService relationService;
     private final DataProcessingDao dataProcessingDao;
     private final TaskService taskService;
@@ -77,6 +74,10 @@ public class AssetService {
     private final TemplateEngine templateEngine;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final ChoiceService choiceService;
+
+    public Optional<AssetOversight> getOversight(final Long oversightId) {
+        return assetOversightDao.findById(oversightId);
+    }
 
     public Optional<Asset> get(final Long id) {
         return assetDao.findByIdAndDeletedFalse(id);

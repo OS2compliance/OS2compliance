@@ -26,7 +26,6 @@ function activateTabContent(e) {
     const anchorReference = e.target;
     const activePaneID = anchorReference.getAttribute("data-bs-target");
     const activePane = document.querySelector(activePaneID);
-    console.log(activePane);
     activePane.classList.add("active");
     activePane.classList.add("show");
 }
