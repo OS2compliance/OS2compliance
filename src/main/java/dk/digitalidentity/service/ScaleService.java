@@ -5,7 +5,6 @@ import dk.digitalidentity.model.entity.enums.RiskScaleType;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -155,13 +154,13 @@ public class ScaleService {
                     new HashMap<>() {{
                         put("1,1", SCALE_COLOR_GREEN);
                         put("1,2", SCALE_COLOR_GREEN);
-                        put("1,3", SCALE_COLOR_YELLOW);
+                        put("1,3", SCALE_COLOR_LIGHT_GREEN);
                         put("1,4", SCALE_COLOR_YELLOW);
                         put("2,1", SCALE_COLOR_GREEN);
-                        put("2,2", SCALE_COLOR_YELLOW);
+                        put("2,2", SCALE_COLOR_LIGHT_GREEN);
                         put("2,3", SCALE_COLOR_YELLOW);
                         put("2,4", SCALE_COLOR_ORANGE);
-                        put("3,1", SCALE_COLOR_YELLOW);
+                        put("3,1", SCALE_COLOR_LIGHT_GREEN);
                         put("3,2", SCALE_COLOR_YELLOW);
                         put("3,3", SCALE_COLOR_ORANGE);
                         put("3,4", SCALE_COLOR_RED);
@@ -179,7 +178,8 @@ public class ScaleService {
                     final String lookup = "" + c + p;
                     return switch (lookup) {
                         case "11", "12", "21" -> RiskAssessment.GREEN;
-                        case "13", "14", "22", "23", "31", "32", "41" -> RiskAssessment.YELLOW;
+                        case "13", "31", "22" -> RiskAssessment.LIGHT_GREEN;
+                        case "14", "23", "32", "41" -> RiskAssessment.YELLOW;
                         case "24", "33", "42" -> RiskAssessment.ORANGE;
                         case "34", "43", "44" -> RiskAssessment.RED;
                         case "00" -> null;
