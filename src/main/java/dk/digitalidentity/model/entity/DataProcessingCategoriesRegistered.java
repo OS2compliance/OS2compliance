@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.InformationPassedOn;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -50,7 +50,7 @@ public class DataProcessingCategoriesRegistered {
     private DataProcessing dataProcessing;
 
     @Column(name = "person_cat_info_identifiers")
-    @Convert(converter = StringListNullSafeConverter.class)
+    @Convert(converter = StringSetNullSafeConverter.class)
     @Builder.Default
     private Set<String> personCategoriesInformationIdentifiers = new HashSet<>();
 
@@ -59,7 +59,7 @@ public class DataProcessingCategoriesRegistered {
     private InformationPassedOn informationPassedOn;
 
     @Column(name = "information_receivers")
-    @Convert(converter = StringListNullSafeConverter.class)
+    @Convert(converter = StringSetNullSafeConverter.class)
     @Builder.Default
     private Set<String> informationReceivers = new HashSet<>();
 

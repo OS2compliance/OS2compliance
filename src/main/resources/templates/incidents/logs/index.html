@@ -2,6 +2,8 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
+<script th:src="@{/js/incidents/incident-service.js}" defer></script>
+<script th:src="@{/js/incidents/incident-grid-service.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -19,6 +21,9 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createIncidentDialog">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny hændelse
+                        </button>
                         <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
@@ -33,7 +38,30 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-
+                                <div class="row mt-1" style="height: 0">
+                                    <div class="col-lg-1 col-md-1 col-sm-2"></div>
+                                    <div class="col-lg-3 col-md-4 col-sm-4">
+                                        <div class="input-group">
+                                            <label for="filterFrom" class="col-form-label" style="width: 40px">Fra</label>
+                                            <input id="filterFrom" type="text" class="form-control" name="filterFrom">
+                                            <button id="filterFromBtn" class="btn btn-primary" type="button">
+                                                <i class="pli-calendar-4 fs-5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-3 col-md-4 col-sm-4">
+                                        <div class="input-group">
+                                            <label for="filterTo" class="col-form-label col-2" style="width: 40px">Til</label>
+                                            <input id="filterTo" type="text" class="form-control" name="filterTo">
+                                            <button id="filterToBtn" class="btn btn-primary" type="button">
+                                                <i class="pli-calendar-4 fs-5"></i>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-5 col-md-3 col-sm-2"></div>
+                                </div>
+                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                <div id="incidentsTable"></div>
                             </div>
                         </div>
                     </div>
@@ -41,6 +69,10 @@
             </div>
         </div>
     </section>
+
+    <div class="modal fade" tabindex="-1" id="createIncidentDialog" aria-hidden="true"></div>
+    <div class="modal fade" tabindex="-1" id="editIncidentDialog" aria-hidden="true"></div>
+
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='incidentlogs')}"></nav>
 </div>
@@ -50,8 +82,11 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-
+    var formUrl = [[@{/incidents/logForm}]];
+    var restUrl = [[@{/rest/incidents/}]];
+    var viewUrl = [[@{/incidents/logs/}]];
     +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
     /*]]>*/
 </script>

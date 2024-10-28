@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -45,7 +45,7 @@ public class DPIA {
     private Asset asset;
 
     @Column(name = "dpia_checked_choice_list_identifiers")
-    @Convert(converter = StringListNullSafeConverter.class)
+    @Convert(converter = StringSetNullSafeConverter.class)
     private Set<String> checks = new HashSet<>();
 
     @Column(name = "dpia_checked_threat_assessments_ids")

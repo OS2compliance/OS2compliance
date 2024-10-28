@@ -92,6 +92,10 @@ input[type=number]{
 .choices.is-disabled .choices__input {
     background-color: #f3f5f9 !important;
 }
+/* Remove gray background from choices.js search input */
+.choices.is-disabled .form-control {
+    background-color: #f3f5f9 !important;
+}
 
 select[aria-readonly="true"] {
     pointer-events: none;

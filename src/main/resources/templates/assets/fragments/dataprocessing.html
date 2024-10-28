@@ -143,10 +143,10 @@
                     //Init choices.js
                     const supplierSelect = document.getElementById('supplierSelect');
                     supplierChoices = initSelect(supplierSelect);
-                    updateSuppliers(supplierChoices, "");
+                    choiceService.updateSuppliers(supplierChoices, "");
                     supplierSelect.addEventListener("search",
                         function(event) {
-                            updateSuppliers(supplierChoices, event.detail.value);
+                            choiceService.updateSuppliers(supplierChoices, event.detail.value);
                         },
                         false,
                     );
@@ -202,19 +202,6 @@
                 document.getElementById('editDataProcessingBtn').hidden = false;
                 document.getElementById('cancelDataProcessingBtn').hidden = true;
             }
-        }
-
-        function updateSuppliers(choices, search) {
-            fetch( `/rest/suppliers/autocomplete?search=${search}`)
-                .then(response => response.json()
-                    .then(data => {
-                        choices.setChoices(data.content.map(e => {
-                            return {
-                                value: e.id,
-                                label: `${e.name}`}
-                        }), 'value', 'label', true);
-                    }))
-                .catch(error => toastService.error(error));
         }
 
         function newSubsupplier() {

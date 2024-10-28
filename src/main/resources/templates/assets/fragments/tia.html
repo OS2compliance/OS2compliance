@@ -215,7 +215,7 @@
             let registeredCategoriesChoice = initSelect(registeredCategoriesSelect);
             registeredCategoriesChoice.setChoices(values, 'identifier', 'caption', true);
             for (const option of document.querySelectorAll('#tia\\.registeredCategories option')) {
-                if (chosenCategories.includes(option.value)) {
+                if (chosenCategories !== null && chosenCategories.includes(option.value)) {
                     option.setAttribute('selected', 'selected');
                 }
             }
@@ -227,7 +227,7 @@
             let informationTypeChoice = initSelect(informationTypeSelect);
             informationTypeChoice.setChoices(values, 'identifier', 'caption', true);
             for (const option of document.querySelectorAll('#tia\\.informationTypes option')) {
-                if (chosenInformationTypes.includes(option.value)) {
+                if (chosenInformationTypes !== null && chosenInformationTypes.includes(option.value)) {
                     option.setAttribute('selected', 'selected');
                 }
             }

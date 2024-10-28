@@ -1,5 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.event.IncidentFieldsUpdatedEvent;
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
@@ -7,11 +9,13 @@ import dk.digitalidentity.service.IncidentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -24,15 +28,16 @@ import org.springframework.web.server.ResponseStatusException;
 @RequiredArgsConstructor
 public class IncidentController {
     private final IncidentService incidentService;
+    private final ApplicationEventPublisher eventPublisher;
 
     @GetMapping("logs")
-    public String incidentLog(final Model model) {
+    public String incidentLog() {
         return "incidents/logs/index";
     }
 
     @RequireAdminstrator
     @GetMapping("questions")
-    public String incidentQuestions(final Model model) {
+    public String incidentQuestions() {
         return "incidents/questions/index";
     }
 
@@ -60,12 +65,74 @@ public class IncidentController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             toUpdate.setQuestion(form.getQuestion());
             toUpdate.setIncidentType(form.getIncidentType());
-            toUpdate.setIndexColumn(form.isIndexColumn());
+            toUpdate.setIndexColumnName(form.getIndexColumnName());
             toUpdate.setDefinedList(form.getDefinedList());
         } else {
             form.setSortKey(incidentService.nextIncidentFieldSortKey());
             incidentService.save(form);
         }
+        eventPublisher.publishEvent(new IncidentFieldsUpdatedEvent());
         return "redirect:/incidents/questions";
+    }
+
+    @GetMapping("logForm")
+    public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long incidentId) {
+        if (incidentId != null) {
+            final Incident incident = incidentService.findById(incidentId).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            model.addAttribute("formTitle", "Rediger hændelse");
+            model.addAttribute("formId", "editForm");
+            model.addAttribute("incident", incident);
+            // The incident responses only contains identifiers for the objects it points to, so we need to look up
+            // the object to be able to show the names in the edit dialog.
+            model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
+            model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
+            model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
+        } else {
+            final Incident incident = new Incident();
+            incidentService.addDefaultFieldResponses(incident);
+            model.addAttribute("formTitle", "Ny hændelse");
+            model.addAttribute("formId", "createForm");
+            model.addAttribute("incident", incident);
+        }
+        return "incidents/logs/form";
+    }
+
+
+    @GetMapping("logs/{id}")
+    public String viewIncident(final Model model, @PathVariable final Long id) {
+        final Incident incident = incidentService.findById(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("incident", incident);
+        // The incident responses only contains identifiers for the objects it points to, so we need to look up
+        // the object to be able to show the names in the edit dialog.
+        model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
+        model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
+        model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
+        model.addAttribute("formId", "view");
+        return "incidents/logs/view";
+    }
+
+
+    @PostMapping("log")
+    public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
+        // TODO Add relations
+        if (incident.getId() != null) {
+            final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            existingIncident.setName(incident.getName());
+            existingIncident.getResponses().clear();
+            existingIncident.getResponses().addAll(incident.getResponses());
+            existingIncident.getResponses()
+                .forEach(r -> r.setIncident(existingIncident));
+            incidentService.ensureRelations(incident);
+            return "redirect:/incidents/logs/" + incident.getId();
+        } else {
+            incident.getResponses()
+                .forEach(r -> r.setIncident(incident));
+            final Incident saved = incidentService.save(incident);
+            incidentService.ensureRelations(saved);
+            return "redirect:/incidents/logs/" + saved.getId();
+        }
     }
 }

@@ -1,6 +1,6 @@
 package dk.digitalidentity.model.entity;
 
-import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -32,7 +32,7 @@ public class DataProcessing {
     private Long id;
 
     @Column(name = "access_who_identifiers")
-    @Convert(converter = StringListNullSafeConverter.class)
+    @Convert(converter = StringSetNullSafeConverter.class)
     private Set<String> accessWhoIdentifiers = new HashSet<>();
 
     @Column(name = "access_count_identifier")

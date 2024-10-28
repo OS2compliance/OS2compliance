@@ -30,7 +30,7 @@
                         <div th:utext="${task.statusBadgeHtml}"></div>
                     </td>
                     <td class="col-lg-1" th:unless="${hideRemove}">
-                        <i class="pli-cross fs-5 me-2 disableIfReadonly" onclick="deleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${task.id}" data-relationtype="TASK"></i>
+                        <i class="pli-cross fs-5 me-2 disableIfReadonly" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${task.id}" data-relationtype="TASK"></i>
                     </td>
                 </tr>
                 </tbody>

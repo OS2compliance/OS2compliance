@@ -8,23 +8,31 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.format.annotation.DateTimeFormat;
 
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
+import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "incident_field_responses")
 @Getter
 @Setter
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class IncidentFieldResponse {
 
     @Id
@@ -39,22 +47,31 @@ public class IncidentFieldResponse {
     @Enumerated(EnumType.STRING)
     private IncidentType incidentType;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "incident_field_id")
+    private IncidentField incidentField;
+
     @Column
     private long sortKey;
 
     @Column
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> definedList;
+    private List<String> definedList;
 
     @Column
     private String answerText;
 
     @Column
-    private LocalDateTime answerDateTime;
+    @DateTimeFormat(pattern = "dd/MM-yyyy")
+    private LocalDate answerDate;
 
     @Column
     @Convert(converter = StringListNullSafeConverter.class)
-    private Set<String> answerElementIds = new HashSet<>();
+    private List<String> answerElementIds = new ArrayList<>();
+
+    @Column(name="answer_choice_values")
+    @Convert(converter = StringListNullSafeConverter.class)
+    private List<String> answerChoiceValues = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "incident_id")

@@ -16,8 +16,10 @@ import java.time.LocalDate;
 public class RegisterAssetRiskDTO {
     private ThreatAssessment threatAssessment;
     private LocalDate date;
+    private Integer consequence;
+    private Integer probability;
     private Double riskScore;
     private Integer weightedPct;
+    private Double weightedConsequence;
     private RiskAssessment weightedAssessment;
-    private Double weightedRiskScore;
 }

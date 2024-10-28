@@ -28,7 +28,7 @@ public class AssetListConverter implements AttributeConverter<List<Asset>, Strin
 	private final Supplier<AssetDao> assetDao;
 
 	public AssetListConverter(ObjectProvider<AssetDao> assetDao) {
-		this.assetDao = SingletonSupplier.of(() -> assetDao.getObject());
+		this.assetDao = SingletonSupplier.of(assetDao::getObject);
 	}
 
 	@Override

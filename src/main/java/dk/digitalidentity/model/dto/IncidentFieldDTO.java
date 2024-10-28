@@ -5,7 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
+import java.util.List;
 
 @Data
 @Builder
@@ -15,7 +15,7 @@ public class IncidentFieldDTO {
     private Long id;
     private String incidentType;
     private String question;
-    private boolean indexColumn;
-    private Set<String> definedList;
+    private String indexColumnName;
+    private List<String> definedList;
 
 }
