@@ -33,7 +33,7 @@
                     </td>
                     <td th:unless="${threatAssessment.assessment == null}">
                         <div class="d-inline-flex">
-                            <div th:text="|(${assetThreatAssessment.weightedPct}%) ${#numbers.formatDecimal(assetThreatAssessment.weightedRiskScore,1,1)}|" class="me-2" style="width: 65px"></div>
+                            <div th:text="|(${assetThreatAssessment.weightedPct}%) ${#numbers.formatDecimal(assetThreatAssessment.weightedConsequence,1,1)}|" class="me-2" style="width: 65px"></div>
                             <div th:if="${assetThreatAssessment.weightedAssessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).GREEN}" style="width: 100px" class="d-block badge bg-green" th:text="${assetThreatAssessment.weightedAssessment.message}"></div>
                             <div th:if="${assetThreatAssessment.weightedAssessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).LIGHT_GREEN}" style="width: 100px" class="d-block badge bg-green-300" th:text="${assetThreatAssessment.weightedAssessment.message}"></div>
                             <div th:if="${assetThreatAssessment.weightedAssessment == T(dk.digitalidentity.model.entity.enums.RiskAssessment).YELLOW}" style="width: 100px" class="d-block badge bg-yellow" th:text="${assetThreatAssessment.weightedAssessment.message}"></div>

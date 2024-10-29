@@ -21,5 +21,6 @@ public class RegisterAssetRiskDTO {
     private Double riskScore;
     private Integer weightedPct;
     private Double weightedConsequence;
+    private Double weightedRiskScore;
     private RiskAssessment weightedAssessment;
 }
