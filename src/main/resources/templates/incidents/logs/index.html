@@ -58,9 +58,14 @@
                                             </button>
                                         </div>
                                     </div>
-                                    <div class="col-lg-5 col-md-3 col-sm-2"></div>
+                                    <div class="col-lg-2 col-md-2 col-sm-2">
+                                        <button class="btn btn-success" type="button" onclick="incidentGridService.generateReport()" style="z-index: 2; position: relative">Print rapport</button>
+                                    </div>
+                                    <div class="col-lg-3 col-md-1"></div>
                                 </div>
-                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                <div th:replace="~{fragments/gridOptions :: dropdown}">
+
+                                </div>
                                 <div id="incidentsTable"></div>
                             </div>
                         </div>
