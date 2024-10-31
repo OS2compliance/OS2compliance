@@ -7,23 +7,31 @@ function IncidentGridService() {
     this.filterTo = '';
 
     this.init = () => {
-        incidentService.fetchColumnName()
-            .then(columnNames => {
-                this.initGrid(columnNames);
-            });
+        var rerender = false;
         let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom' );
         let filterFrom = localStorage.getItem("incidentFilterFrom");
-        if (filterFrom != null) {
+        if (filterFrom != null && filterFrom !== "null") {
             fromPicker.setFullDate(new Date(filterFrom));
+            this.filterFrom = fromPicker.getFormatedDate();
+            rerender = true;
         }
         fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
 
         let toPicker = initDatepicker('#filterToBtn', '#filterTo' );
         let filterTo = localStorage.getItem("incidentFilterTo");
-        if (filterTo != null) {
+        if (filterTo != null && filterTo !== "null") {
             toPicker.setFullDate(new Date(filterTo));
+            this.filterTo = toPicker.getFormatedDate();
+            rerender = true;
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
+        incidentService.fetchColumnName()
+            .then(columnNames => {
+                this.initGrid(columnNames);
+                if (rerender) {
+                    this.incidentGrid.forceRender();
+                }
+            });
     }
 
     this.generateReport = () => {
@@ -77,7 +85,7 @@ function IncidentGridService() {
             pagination: {
                 limit: 50,
                 server: {
-                    url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}`)
+                    url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}&fromDate=${this.filterFrom}&toDate=${this.filterTo}`)
                 }
             },
             search: {

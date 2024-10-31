@@ -90,7 +90,7 @@ public class ReportController {
                             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy")  final LocalDate from,
                             @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy")  final LocalDate to) {
         final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000,1, 1, 0, 0, 0);
-        final LocalDateTime toDT = to != null ? to.atStartOfDay() : LocalDateTime.of(3000,1, 1, 0, 0, 0);
+        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000,1, 1, 0, 0, 0);
         final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
         model.addAttribute("incidents", incidentMapper.toDTOs(allIncidents.getContent()));
         model.addAttribute("from", from);
