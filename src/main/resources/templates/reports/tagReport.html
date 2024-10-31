@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}" />
+<head th:replace="~{fragments/header :: head}"></head>
 <body class="jumping">
 <div class="card m-2" th:each="taskAndLogs: ${tasksAndLogs}">
     <h1 class="card-header bg-light" th:text="${taskAndLogs.left.name}"></h1>

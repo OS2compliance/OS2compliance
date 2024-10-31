@@ -26,6 +26,22 @@ function IncidentGridService() {
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
     }
 
+    this.generateReport = () => {
+        fetch(`/reports/incidents?from=${this.filterFrom}&to=${this.filterTo}`)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`${response.status} ${response.statusText}`);
+                }
+                response.text()
+                    .then(data => {
+                        var win = window.open("", "Print Rapport", "height=600,width=800");
+                        win.document.write(data);
+                        win.print();
+                    });
+            })
+            .catch(error => toastService.error(error));
+    }
+
     this.updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };

@@ -3,7 +3,9 @@ package dk.digitalidentity.controller.mvc;
 import com.lowagie.text.DocumentException;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
@@ -15,6 +17,7 @@ import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -23,6 +26,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -70,6 +75,8 @@ public class ReportController {
     private final TaskService taskService;
     private final ThreatAssessmentService threatAssessmentService;
     private final AssetService assetService;
+    private final IncidentService incidentService;
+    private final IncidentMapper incidentMapper;
 
     @GetMapping
     public String reportList(final Model model) {
@@ -77,6 +84,18 @@ public class ReportController {
         return "reports/index";
     }
 
+    @GetMapping("incidents")
+    public String tagReport(final Model model,
+                            @RequestParam(value = "from", required = false) final LocalDate from,
+                            @RequestParam(value = "to", required = false) final LocalDate to) {
+        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000,1, 1, 0, 0, 0);
+        final LocalDateTime toDT = to != null ? to.atStartOfDay() : LocalDateTime.of(3000,1, 1, 0, 0, 0);
+        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        model.addAttribute("incidents", incidentMapper.toDTOs(allIncidents.getContent()));
+        model.addAttribute("from", from);
+        model.addAttribute("to", to);
+        return "reports/incidentReport";
+    }
 
     @GetMapping("tags")
     public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId,

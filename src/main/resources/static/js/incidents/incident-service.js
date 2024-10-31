@@ -35,10 +35,6 @@ function IncidentService() {
             })
     }
 
-    this.generateReport = () => {
-        //
-    }
-
     this.deleteIncident = (grid, targetId, name) => {
         Swal.fire({
             text: `Er du sikker på du vil slette hændelsen '${name}'?`,
