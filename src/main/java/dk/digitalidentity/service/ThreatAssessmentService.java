@@ -253,7 +253,7 @@ public class ThreatAssessmentService {
                 registerAssetRiskDTO.setRiskScore(riskProbability * riskConsequence);
                 registerAssetRiskDTO.setWeightedPct(riskScale);
                 registerAssetRiskDTO.setWeightedConsequence(riskConsequence * weight);
-                registerAssetRiskDTO.setWeightedConsequence((riskConsequence * weight) * riskProbability);
+                registerAssetRiskDTO.setWeightedRiskScore((riskConsequence * weight) * riskProbability);
                 final RiskAssessment weightedAssessment =
                     scaleService.getRiskAssessmentForRisk((int)Math.ceil(riskProbability), (int)Math.ceil(riskConsequence * weight));
                 registerAssetRiskDTO.setWeightedAssessment(weightedAssessment);
