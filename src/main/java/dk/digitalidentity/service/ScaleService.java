@@ -63,7 +63,7 @@ public class ScaleService {
                         case "11", "12", "13", "21", "22", "31" -> RiskAssessment.GREEN;
                         case "14", "23", "24", "32", "33", "41", "42" -> RiskAssessment.YELLOW;
                         case "34", "43", "44" -> RiskAssessment.RED;
-                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                        default -> null;
                     };
                 }
             )
@@ -122,7 +122,7 @@ public class ScaleService {
                         case "34", "43" -> RiskAssessment.ORANGE;
                         case "44" -> RiskAssessment.RED;
                         case "00" -> null;
-                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                        default -> null;
                     };
                 }
             )
@@ -182,15 +182,15 @@ public class ScaleService {
                         case "14", "23", "32", "41" -> RiskAssessment.YELLOW;
                         case "24", "33", "42" -> RiskAssessment.ORANGE;
                         case "34", "43", "44" -> RiskAssessment.RED;
-                        case "00" -> null;
-                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                        default -> null;
                     };
                 }
             )
             .riskScore(List.of(
                 "Risikoscore = sandsynlighed * konsekvens",
                 "1-2 = Lav (grøn)",
-                "3-7 = Under middel (gul)",
+                "3-4 = Under middel (lysegrøn)",
+                "4-7 = Middel (gul)",
                 "8-11 = Over middel (orange)",
                 "12-16 = Høj (rød)"
             ))
@@ -243,8 +243,7 @@ public class ScaleService {
                         case "13", "22", "31" -> RiskAssessment.YELLOW;
                         case "14", "41", "23", "24", "32", "33" -> RiskAssessment.ORANGE;
                         case "34", "42", "43", "44" -> RiskAssessment.RED;
-                        case "00" -> null;
-                        default -> throw new IllegalStateException("Unexpected value: " + lookup);
+                        default -> null;
                     };
                 }
             )

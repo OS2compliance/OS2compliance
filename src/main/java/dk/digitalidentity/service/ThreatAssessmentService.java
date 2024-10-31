@@ -29,6 +29,7 @@ import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
@@ -242,9 +243,10 @@ public class ThreatAssessmentService {
             .max(Comparator.comparing(ThreatAssessment::getCreatedAt))
             .map(threatAssessment -> {
                 final List<RiskProfileDTO> riskProfileDTOs = buildRiskProfileDTOs(threatAssessment);
-                final double riskProbability = findHighestRiskProbability(riskProfileDTOs);
-                final double riskConsequence = findHighestRiskConsequence(riskProfileDTOs);
-                final double weight = riskScale / 100.0;
+                final Pair<Integer, Integer> highestRiskScore = findHighestRiskScore(riskProfileDTOs);
+                final double riskProbability = highestRiskScore.getLeft();
+                final double riskConsequence = highestRiskScore.getRight();
+                final double weight = (riskScale != null && riskScale > 0) ? riskScale / 100.0 : 0;
                 final RegisterAssetRiskDTO registerAssetRiskDTO = new RegisterAssetRiskDTO();
                 registerAssetRiskDTO.setThreatAssessment(threatAssessment);
                 registerAssetRiskDTO.setProbability((int)Math.ceil(riskProbability));
@@ -262,27 +264,14 @@ public class ThreatAssessmentService {
     }
 
     /**
-     * Find the highest risk probability score based on a list of RiskProfileDTO objects.
+     * Find the highest risk score based on a list of RiskProfileDTO objects.
      * @param riskProfileDTOs The list of RiskProfileDTO objects containing the risk profile information.
      */
-    private Double findHighestRiskProbability(final List<RiskProfileDTO> riskProfileDTOs) {
+    private Pair<Integer, Integer> findHighestRiskScore(final List<RiskProfileDTO> riskProfileDTOs) {
         return riskProfileDTOs.stream()
-            .mapToDouble(RiskProfileDTO::getProbability)
-            .filter(i -> i > 0)
-            .max()
-            .orElse(0);
-    }
-
-    /**
-     * Find the highest risk consequence based on a list of RiskProfileDTO objects.
-     * @param riskProfileDTOs The list of RiskProfileDTO objects containing the risk profile information.
-     */
-    private Double findHighestRiskConsequence(final List<RiskProfileDTO> riskProfileDTOs) {
-        return riskProfileDTOs.stream()
-            .mapToDouble(RiskProfileDTO::getConsequence)
-            .filter(i -> i > 0)
-            .max()
-            .orElse(0);
+            .max(Comparator.comparing(r -> r.getConsequence() * r.getProbability()))
+            .map(r -> Pair.of(r.getProbability(), r.getConsequence()))
+            .orElse(Pair.of(0, 0));
     }
 
     public RiskDTO calculateRiskFromRegisters(final List<Long> assetIds) {
