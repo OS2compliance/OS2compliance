@@ -74,6 +74,7 @@ public class RegisterRestController {
         @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
+        //if(authentication.getAuthorities().stream().noneMatch(r -> r.toString().equals("ROLE_forandre")) && authentication.getDetails()..uuid.equals())
         Sort sort = null;
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
