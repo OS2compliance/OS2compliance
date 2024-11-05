@@ -5,5 +5,6 @@ public interface Roles {
     String API_ACCESS = "API_ACCESS";
 
     String ADMINISTRATOR = "ROLE_administrator";
+    String SUPERUSER = "Role_forandre";
     String USER = "ROLE_adgang";
 }

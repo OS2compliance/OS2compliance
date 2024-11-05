@@ -6,6 +6,7 @@ import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 @Slf4j
 @RestController
 @RequestMapping("rest/suppliers")
-@RequireUser
+@RequireSuperuserOrSelf
 @RequiredArgsConstructor
 public class SupplierRestController {
 	private final SupplierGridDao supplierGridDao;
@@ -80,6 +81,7 @@ public class SupplierRestController {
 		return new SuppliersPageWrapper(suppliers.getTotalElements(), supplierDTOs);
 	}
 
+    @RequireUser
     @GetMapping("autocomplete")
     public PageDTO<SupplierDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());

@@ -18,6 +18,7 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.PrecautionService;
@@ -167,6 +168,7 @@ public class RelatableRestController {
     record AddRelationDTO(long relatableId, List<Long> relations) {}
     record AddedRelationDTO(long id, String title, RelationType type, String typeForUrl, String typeMessage, String standardIdentifier) {}
 
+    @RequireSuperuserOrSelf
     @PostMapping("relations/add")
     public ResponseEntity<?> addRelation(@Valid @RequestBody final AddRelationDTO dto) {
         final Relatable relateTo = relatableDao.findById(dto.relatableId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

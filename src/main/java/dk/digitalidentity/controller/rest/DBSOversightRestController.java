@@ -18,7 +18,7 @@ import dk.digitalidentity.mapping.DBSOversightMapper;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +26,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/oversight")
-@RequireUser
+@RequireSuperuserOrSelf
 @RequiredArgsConstructor
 public class DBSOversightRestController {
 	private final DBSOversightGridDao dbsOversightGridDao;

@@ -20,6 +20,7 @@ import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -58,7 +59,6 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.util.ReflectionHelper;
@@ -75,7 +75,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("rest/assets")
-@RequireUser
+@RequireSuperuserOrSelf
 @RequiredArgsConstructor
 public class AssetsRestController {
     private final AssetService assetService;

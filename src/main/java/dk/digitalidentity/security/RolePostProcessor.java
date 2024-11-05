@@ -44,9 +44,14 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
         for(final var a : tokenUser.getAuthorities()) {
             if (configuration.getAuthorityAdministrator().equals(a.getAuthority())) {
                 authorities.add(new SamlGrantedAuthority(Roles.ADMINISTRATOR));
+                authorities.add(new SamlGrantedAuthority(Roles.SUPERUSER));
                 authorities.add(new SamlGrantedAuthority(Roles.USER));
             }
-            if (configuration.getAuthorityUser().equals(a.getAuthority())) {
+            else if (configuration.getAuthoritySuperuser().equals(a.getAuthority())){
+                authorities.add(new SamlGrantedAuthority(Roles.SUPERUSER));
+                authorities.add(new SamlGrantedAuthority(Roles.USER));
+            }
+            else if (configuration.getAuthorityUser().equals(a.getAuthority())) {
                 authorities.add(new SamlGrantedAuthority(Roles.USER));
             }
         }
@@ -54,6 +59,7 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
         // Add roles coming directly from the database.
         user.getRoles().forEach(r -> authorities.add(new SamlGrantedAuthority(r)));
         tokenUser.setAuthorities(authorities);
+        System.out.println("tokenUser.getAttributes() = " + tokenUser.getAttributes());
     }
 
     private User extractUser(final String principal) {

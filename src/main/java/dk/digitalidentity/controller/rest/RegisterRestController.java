@@ -6,7 +6,8 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -29,7 +31,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/registers")
-@RequireUser
+@RequireSuperuserOrSelf
 @RequiredArgsConstructor
 public class RegisterRestController {
     private final RegisterGridDao registerGridDao;

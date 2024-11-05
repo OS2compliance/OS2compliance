@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
@@ -87,7 +88,8 @@ public class SupplierController {
 		return "suppliers/view";
 	}
 
-	@DeleteMapping("{id}")
+    @RequireSuperuserOrSelf
+    @DeleteMapping("{id}")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
 	public void supplierDelete(@PathVariable final Long id) {
@@ -116,6 +118,7 @@ public class SupplierController {
 		return "suppliers/form";
 	}
 
+    @RequireSuperuserOrSelf
 	@Transactional
 	@PostMapping("form")
 	public String formPost(@ModelAttribute final Supplier supplier) {
@@ -142,6 +145,7 @@ public class SupplierController {
 		return "redirect:/suppliers";
 	}
 
+    @RequireSuperuserOrSelf
 	@Transactional
 	@PostMapping(value = "edit", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public String descriptionPost(@RequestParam("id") final String id, @RequestParam("description") final String description,

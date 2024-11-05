@@ -6,7 +6,7 @@ import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +29,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/documents")
-@RequireUser
+@RequireSuperuserOrSelf
 @RequiredArgsConstructor
 public class DocumentRestController {
     private final DocumentGridDao documentGridDao;

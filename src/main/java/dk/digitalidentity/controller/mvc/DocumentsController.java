@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelationService;
@@ -45,6 +46,7 @@ public class DocumentsController {
     }
 
     @Transactional
+    @RequireSuperuserOrSelf
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Document document,
             @RequestParam(name = "relations", required = false) final Set<Long> relations) {
@@ -65,6 +67,7 @@ public class DocumentsController {
         return "documents/view";
     }
 
+    @RequireSuperuserOrSelf
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -79,6 +82,7 @@ public class DocumentsController {
         documentService.deleteById(id);
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Document document) {

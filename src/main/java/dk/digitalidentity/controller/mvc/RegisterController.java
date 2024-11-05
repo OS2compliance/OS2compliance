@@ -21,6 +21,7 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -102,6 +103,7 @@ public class RegisterController {
         return "registers/form";
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
@@ -109,6 +111,7 @@ public class RegisterController {
         return "redirect:/registers/" + saved.getId();
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("{id}/assessment")
     public String updateAssessment(@PathVariable final Long id,
@@ -147,6 +150,7 @@ public class RegisterController {
         return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
+    @RequireSuperuserOrSelf
     @PostMapping("{id}/update")
     public String update(@PathVariable final Long id,
                          @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
@@ -206,6 +210,7 @@ public class RegisterController {
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("{id}/purpose")
     public String purpose(@PathVariable final Long id,
@@ -238,6 +243,7 @@ public class RegisterController {
         return "redirect:/registers/" + id + "?section=purpose";
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("{id}/dataprocessing")
     public String dataProcessing(@PathVariable final Long id, @Valid @ModelAttribute final DataProcessingDTO body) {
@@ -295,6 +301,7 @@ public class RegisterController {
         return "registers/view";
     }
 
+    @RequireSuperuserOrSelf
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional

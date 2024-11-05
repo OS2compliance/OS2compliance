@@ -16,6 +16,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.DocumentService;
@@ -101,6 +102,7 @@ public class TasksController {
         return "tasks/form";
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
@@ -168,6 +170,7 @@ public class TasksController {
         }
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
@@ -259,6 +262,7 @@ public class TasksController {
         return "tasks/viewTimeline";
     }
 
+    @RequireSuperuserOrSelf
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -269,6 +273,7 @@ public class TasksController {
     }
 
     @SuppressWarnings("ClassEscapesDefinedScope")
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
@@ -321,6 +326,7 @@ public class TasksController {
         return "tasks/copyForm";
     }
 
+    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("{id}/copy")
     public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,

@@ -6,6 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -27,7 +28,6 @@ import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -36,7 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/assets")
-@RequireUser
+@RequireSuperuserOrSelf
 @RequiredArgsConstructor
 public class DBSAssetsRestController {
 	private final DBSAssetGridDao dbsAssetGridDao;
@@ -84,7 +84,7 @@ public class DBSAssetsRestController {
         Set<Long> assets = body.assets.stream().distinct().filter(Objects::nonNull).collect(Collectors.toSet());
 
         relationService.setRelationsAbsolute(dbsAsset, assets);
-        
+
         dbsAssetDao.save(dbsAsset);
 
         return ResponseEntity.ok().build();

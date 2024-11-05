@@ -26,6 +26,7 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
@@ -94,6 +95,7 @@ public class RiskController {
     }
 
     @Transactional
+    @RequireSuperuserOrSelf
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
@@ -138,6 +140,7 @@ public class RiskController {
     }
 
     @Transactional
+    @RequireSuperuserOrSelf
     @PostMapping("{id}/edit")
     public String performEdit(@PathVariable("id") final long id,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
@@ -162,6 +165,7 @@ public class RiskController {
     }
 
     @Transactional
+    @RequireSuperuserOrSelf
     @PostMapping("{id}/copy")
     public String performCopy(@PathVariable("id") final long sourceId,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
@@ -271,6 +275,7 @@ public class RiskController {
     }
 
     @PostMapping("{id}/revision")
+    @RequireSuperuserOrSelf
     @Transactional
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -281,6 +286,7 @@ public class RiskController {
     }
 
     @DeleteMapping("{id}")
+    @RequireSuperuserOrSelf
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void riskDelete(@PathVariable final Long id) {
@@ -294,6 +300,7 @@ public class RiskController {
     }
 
     @Transactional
+    @RequireSuperuserOrSelf
     @PostMapping("{id}/customthreats/create")
     public String formCreateCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreat customThreat) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

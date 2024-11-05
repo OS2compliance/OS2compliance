@@ -28,6 +28,7 @@ import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
+import dk.digitalidentity.security.RequireSuperuserOrSelf;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
@@ -84,7 +85,7 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 @Slf4j
 @RestController
 @RequestMapping("rest/risks")
-@RequireUser
+@RequireSuperuserOrSelf
 @RequiredArgsConstructor
 public class RiskRestController {
     private final ApplicationEventPublisher eventPublisher;
@@ -101,6 +102,7 @@ public class RiskRestController {
     private final S3DocumentService s3DocumentService;
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
+
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -130,6 +132,7 @@ public class RiskRestController {
 
     record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}
+    @RequireUser
     @GetMapping("register")
     public ResponsibleUsersWithElementNameDTO getRegisterResponsibleUserAndName(@RequestParam final long registerId) {
         final Register register = registerService.findById(registerId)
@@ -143,6 +146,7 @@ public class RiskRestController {
     }
 
     record RiskUIDTO(String elementName, int rf, int of, int ri, int oi, int rt, int ot, ResponsibleUsersWithElementNameDTO users) {}
+    @RequireUser
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetService.findAllById(assetIds);
