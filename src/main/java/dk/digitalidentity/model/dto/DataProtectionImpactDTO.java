@@ -20,4 +20,5 @@ public class DataProtectionImpactDTO {
     private List<DataProtectionImpactScreeningAnswerDTO> questions;
     private Set<String> dpiaQuality;
     private String consequenceLink;
+    private String comment;
 }
