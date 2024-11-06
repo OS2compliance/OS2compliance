@@ -6,7 +6,7 @@ import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,7 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 @Slf4j
 @RestController
 @RequestMapping("rest/suppliers")
-@RequireSuperuserOrSelf
+@RequireUser
 @RequiredArgsConstructor
 public class SupplierRestController {
 	private final SupplierGridDao supplierGridDao;
@@ -41,7 +41,8 @@ public class SupplierRestController {
 	record SuppliersPageWrapper(long count, List<SupplierGridDTO> suppliers) {}
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}
 
-	@PostMapping("list")
+	@RequireSuperuser
+    @PostMapping("list")
 	public SuppliersPageWrapper list(
 			@RequestParam(name = "search", required = false) final String search,
 			@RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
@@ -81,7 +82,6 @@ public class SupplierRestController {
 		return new SuppliersPageWrapper(suppliers.getTotalElements(), supplierDTOs);
 	}
 
-    @RequireUser
     @GetMapping("autocomplete")
     public PageDTO<SupplierDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());

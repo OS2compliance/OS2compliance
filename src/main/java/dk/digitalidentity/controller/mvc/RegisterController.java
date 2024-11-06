@@ -21,8 +21,9 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
@@ -39,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -103,7 +106,7 @@ public class RegisterController {
         return "registers/form";
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
@@ -111,15 +114,19 @@ public class RegisterController {
         return "redirect:/registers/" + saved.getId();
     }
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("{id}/assessment")
     public String updateAssessment(@PathVariable final Long id,
                                    @ModelAttribute @Valid final ConsequenceAssessment assessment,
                                    @RequestParam(required = false) final String section) {
         final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (existingOptional.isPresent()) {
             final ConsequenceAssessment existing = existingOptional.get();
+            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && existing.getRegister().getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
             existing.setAssessment(assessment.getAssessment());
             existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
             existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
@@ -142,6 +149,9 @@ public class RegisterController {
             assessment.setId(null);
             final Register register = registerService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
             assessment.setRegister(register);
             register.setConsequenceAssessment(assessment);
             consequenceAssessmentDao.save(assessment);
@@ -150,7 +160,6 @@ public class RegisterController {
         return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
-    @RequireSuperuserOrSelf
     @PostMapping("{id}/update")
     public String update(@PathVariable final Long id,
                          @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
@@ -167,6 +176,10 @@ public class RegisterController {
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (name != null) {
             register.setName(name);
         }
@@ -210,7 +223,6 @@ public class RegisterController {
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("{id}/purpose")
     public String purpose(@PathVariable final Long id,
@@ -222,6 +234,10 @@ public class RegisterController {
                           @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (purpose != null) {
             register.setPurpose(purpose);
         }
@@ -243,12 +259,16 @@ public class RegisterController {
         return "redirect:/registers/" + id + "?section=purpose";
     }
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("{id}/dataprocessing")
     public String dataProcessing(@PathVariable final Long id, @Valid @ModelAttribute final DataProcessingDTO body) {
         final Register register = registerService.findById(body.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         dataProcessingService.update(register.getDataProcessing(), body);
         return "redirect:/registers/" + id + "?section=dataprocessing";
     }
@@ -301,7 +321,7 @@ public class RegisterController {
         return "registers/view";
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional

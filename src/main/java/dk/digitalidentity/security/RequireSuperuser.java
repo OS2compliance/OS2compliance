@@ -6,6 +6,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_forandre') or (hasRole('ROLE_adgang') and #id == principal.uuid)")
-public @interface RequireSuperuserOrSelf {
+@PreAuthorize("hasRole('ROLE_forandre')")
+public @interface RequireSuperuser {
 }

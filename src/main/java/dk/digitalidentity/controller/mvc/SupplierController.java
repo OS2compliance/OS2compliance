@@ -11,8 +11,9 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SupplierService;
@@ -21,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -88,7 +91,7 @@ public class SupplierController {
 		return "suppliers/view";
 	}
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @DeleteMapping("{id}")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
@@ -118,13 +121,16 @@ public class SupplierController {
 		return "suppliers/form";
 	}
 
-    @RequireSuperuserOrSelf
 	@Transactional
 	@PostMapping("form")
 	public String formPost(@ModelAttribute final Supplier supplier) {
 		if (supplier.getId() != null) {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !existingSupplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
             existingSupplier.setName(supplier.getName());
 			existingSupplier.setStatus(supplier.getStatus());
 			existingSupplier.setCvr(supplier.getCvr());
@@ -145,7 +151,6 @@ public class SupplierController {
 		return "redirect:/suppliers";
 	}
 
-    @RequireSuperuserOrSelf
 	@Transactional
 	@PostMapping(value = "edit", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public String descriptionPost(@RequestParam("id") final String id, @RequestParam("description") final String description,
@@ -157,6 +162,10 @@ public class SupplierController {
                                                                        @RequestParam("cvr") final String cvr) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !supplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 		supplier.setDescription(description);
         supplier.setStatus(status);
         supplier.setCvr(cvr);

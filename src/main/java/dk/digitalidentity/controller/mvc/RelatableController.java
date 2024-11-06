@@ -10,7 +10,7 @@ import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelatableService;
@@ -57,7 +57,7 @@ public class RelatableController {
             properties = new HashMap<>();
         }
     }
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
 	@Transactional
 	@PostMapping("relations/add")
 	public String addRelations(@ModelAttribute final AddRelationDTO dto) {
@@ -91,7 +91,7 @@ public class RelatableController {
             properties = new HashMap<>();
         }
     }
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @Transactional
     @PostMapping("{id}/relations/{relatedId}/{relatedType}/update")
     public String updateRelation(@ModelAttribute final UpdateRelationDTO dto,
@@ -103,7 +103,7 @@ public class RelatableController {
         return getReturnPath(id, relatedTo);
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @DeleteMapping("{id}/relations/{relatedId}/{relatedType}/remove")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
@@ -115,7 +115,7 @@ public class RelatableController {
 	}
 
     record AddTagsDTO(long id, List<Long> tags) {}
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @Transactional
     @PostMapping("tags/add")
     public String addTags(@ModelAttribute final AddTagsDTO dto) {
@@ -158,7 +158,7 @@ public class RelatableController {
         return getReturnPath(dto.id(), relateTo);
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @DeleteMapping("{id}/tags/{tagId}/remove")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional

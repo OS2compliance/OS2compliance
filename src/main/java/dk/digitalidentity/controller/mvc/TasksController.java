@@ -16,8 +16,9 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
@@ -34,6 +35,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -102,7 +105,7 @@ public class TasksController {
         return "tasks/form";
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
@@ -170,12 +173,15 @@ public class TasksController {
         }
     }
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
         final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !existingTask.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
         }
@@ -262,7 +268,7 @@ public class TasksController {
         return "tasks/viewTimeline";
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -273,11 +279,14 @@ public class TasksController {
     }
 
     @SuppressWarnings("ClassEscapesDefinedScope")
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !task.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
         }
@@ -326,7 +335,7 @@ public class TasksController {
         return "tasks/copyForm";
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @Transactional
     @PostMapping("{id}/copy")
     public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,

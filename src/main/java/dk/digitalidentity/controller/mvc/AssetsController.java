@@ -48,8 +48,9 @@ import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -72,6 +73,8 @@ import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -150,7 +153,7 @@ public class AssetsController {
 		return "assets/form";
 	}
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
 	@Transactional
 	@PostMapping("form")
 	public String formCreate(@ModelAttribute final Asset asset) {
@@ -291,7 +294,7 @@ public class AssetsController {
 		return "assets/view";
 	}
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -306,11 +309,14 @@ public class AssetsController {
         assetService.deleteById(asset);
     }
 
-    @RequireSuperuserOrSelf
 	@Transactional
 	@PostMapping("dataprocessing")
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         dataProcessingService.update(asset.getDataProcessing(), body);
         final List<DataProcessingCategoriesRegistered> registeredCategories = asset.getDataProcessing().getRegisteredCategories();
         if (asset.getTia().getRegisteredCategories() == null && registeredCategories != null) {
@@ -326,11 +332,14 @@ public class AssetsController {
 		return "redirect:/assets/" + body.getId();
 	}
 
-	@RequireSuperuserOrSelf
     @Transactional
     @PostMapping("measures")
     public String measures(@ModelAttribute final SaveMeasuresDTO measuresForm) {
         final Asset asset = assetService.get(measuresForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         for (final SaveMeasureDTO answer : measuresForm.getMeasures()) {
             AssetMeasure existing = assetMeasuresDao.findByAssetAndMeasureIdentifier(asset, answer.getIdentifier()).orElse(null);
             if (existing == null) {
@@ -346,11 +355,14 @@ public class AssetsController {
         return "redirect:/assets/" + measuresForm.getAssetId();
     }
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("dpia")
     public String dpia(@ModelAttribute final DataProtectionImpactDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
         final DataProtectionImpactAssessmentScreening dpiaScreening = asset.getDpiaScreening();
         for (final DataProtectionImpactScreeningAnswerDTO question : dpiaForm.getQuestions()) {
@@ -380,12 +392,15 @@ public class AssetsController {
     }
 
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Asset asset) {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 
         existingAsset.getManagers().clear();
         existingAsset.getManagers().addAll(asset.getManagers());
@@ -449,12 +464,15 @@ public class AssetsController {
 
 	record AssetSupplierDTO(long id, long assetId, long supplier, String service, ThirdCountryTransfer thirdCountryTransfer, String acceptanceBasis) {}
 
-	@RequireSuperuserOrSelf
     @Transactional
 	@PostMapping("subsupplier")
 	public String subsupplierCreateOrEdit(@Valid @ModelAttribute final AssetSupplierDTO body) {
 		final Asset asset = assetService.get(body.assetId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 		final Optional<AssetSupplierMapping> subSupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), body.id)).findAny();
 		final Supplier supplier = supplierService.get(body.supplier).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -478,11 +496,14 @@ public class AssetsController {
 	}
 
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("oversight")
     public String oversightSettings(@Valid @ModelAttribute final DataProcessingOversightDTO body) {
         final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
         asset.setDataProcessingAgreementLink(linkify(Strings.emptyToNull(body.getDataProcessingAgreementLink())));
         asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
@@ -502,11 +523,14 @@ public class AssetsController {
 
     record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect){
     }
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("oversight/edit")
     public String oversightCreateOrEdit(@Valid @ModelAttribute final AssetOversightDTO dto) {
         final Asset asset = assetService.get(dto.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
 
         if (oversight.isPresent()) {
@@ -605,12 +629,15 @@ public class AssetsController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "typen fandtes ikke: understøttede er 'asset' og 'supplier'");
     }
 
-    @RequireSuperuserOrSelf
     @Transactional
     @PostMapping("tia")
     public String tia(@ModelAttribute final Asset asset) {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 
         existingAsset.getTia().setForwardInformationToOtherSuppliers(asset.getTia().getForwardInformationToOtherSuppliers());
         existingAsset.getTia().setForwardInformationToOtherSuppliersDetail(asset.getTia().getForwardInformationToOtherSuppliersDetail());
@@ -639,7 +666,6 @@ public class AssetsController {
     }
 
     record TemplateSectionDTO(long id, Long sortKey, String identifier, String heading, String explainer, boolean canOptOut, boolean hasOptedOut, List<DPIATemplateQuestion> dpiaTemplateQuestions, long minQuestionSortKey, long maxQuestionSortKey) {}
-    @RequireUser
     @GetMapping("dpia/schema/fragment")
     @Transactional
     public String editRelation(final Model model) {
@@ -689,7 +715,7 @@ public class AssetsController {
         return "dpia/fragments/questionForm";
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @PostMapping("dpia/schema/question/form")
     public String formPost(@ModelAttribute final DPIATemplateQuestionForm dpiaTemplateQuestionForm) throws IOException {
         DPIATemplateSection section = dpiaTemplateSectionService.findById(dpiaTemplateQuestionForm.sectionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
@@ -737,11 +763,14 @@ public class AssetsController {
     }
 
 
-    @RequireSuperuserOrSelf
     @PostMapping("{id}/revision")
     @Transactional
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long id) {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (asset.getDpia() == null) {
             DPIA dpia = new DPIA();
             dpia.setAsset(asset);

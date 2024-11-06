@@ -20,7 +20,9 @@ import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -41,6 +43,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -75,7 +79,7 @@ import java.util.UUID;
 @Slf4j
 @RestController
 @RequestMapping("rest/assets")
-@RequireSuperuserOrSelf
+@RequireUser
 @RequiredArgsConstructor
 public class AssetsRestController {
     private final AssetService assetService;
@@ -94,6 +98,7 @@ public class AssetsRestController {
     private final AssetOversightDao assetOversightDao;
 
 
+    @RequireSuperuser
     @PostMapping("list")
 	public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
                                   @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
@@ -129,6 +134,10 @@ public class AssetsRestController {
                                 @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && authentication.getPrincipal() != uuid)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
@@ -154,6 +163,10 @@ public class AssetsRestController {
                                         @RequestParam(value = "value", required = false) final String value) {
         canSetFieldGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
         assetService.save(asset);
     }
@@ -163,11 +176,16 @@ public class AssetsRestController {
         @RequestParam(value = "value", required = false) final String value) {
         canSetFieldDPIAScreeningGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, asset.getDpiaScreening(), fieldName, value);
         assetService.save(asset);
     }
 
     record DPIASetFieldDTO(long id, String fieldName, String value) {}
+    @RequireSuperuser
     @PutMapping("dpia/schema/section/setfield")
     public void setDPIASectionField( @RequestBody final DPIASetFieldDTO dto) {
         canSetDPIASectionFieldGuard(dto.fieldName);
@@ -176,30 +194,35 @@ public class AssetsRestController {
         dpiaTemplateSectionService.save(dpiaTemplateSection);
     }
 
+    @RequireSuperuser
     @PostMapping("dpia/schema/section/{id}/up")
     public ResponseEntity<?> reorderUp(@PathVariable("id") final long id) {
         reorderSections(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @RequireSuperuser
     @PostMapping("dpia/schema/section/{id}/down")
     public ResponseEntity<?> reorderDown(@PathVariable("id") final long id) {
         reorderSections(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @RequireSuperuser
     @PostMapping("dpia/schema/question/{id}/up")
     public ResponseEntity<?> reorderQuestionUp(@PathVariable("id") final long id) {
         reorderQuestions(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @RequireSuperuser
     @PostMapping("dpia/schema/question/{id}/down")
     public ResponseEntity<?> reorderQuestionDown(@PathVariable("id") final long id) {
         reorderQuestions(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @RequireSuperuser
     @DeleteMapping("dpia/schema/question/{id}/delete")
     public ResponseEntity<?> deleteQuestion(@PathVariable("id") final long id) {
         final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -213,10 +236,15 @@ public class AssetsRestController {
     public ResponseEntity<?> deleteOversight(@PathVariable("oversightId") Long oversightId) {
         final AssetOversight assetOversight = assetService.getOversight(oversightId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && assetOversight.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         assetOversightDao.delete(assetOversight);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+    @RequireSuperuser
     @Transactional
     @DeleteMapping("{assetId}/subsupplier/{subSupplierId}")
     public ResponseEntity<?> subSupplierDelete(@PathVariable("subSupplierId") final Long subSupplierId,
@@ -232,6 +260,10 @@ public class AssetsRestController {
     @PutMapping("{assetId}/dpia/response/setfield")
     public void setDPIAResponseField( @RequestBody final DPIASetFieldDTO dto, @PathVariable final long assetId) throws IOException {
         final Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (asset.getDpia() == null) {
             DPIA dpia = new DPIA();
             dpia.setAsset(asset);
@@ -289,6 +321,10 @@ public class AssetsRestController {
     @PutMapping("{assetId}/dpia/setfield")
     public void setDPIASectionField( @RequestBody final DPIASetFieldDTO dto, @PathVariable long assetId) {
         Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (dto.fieldName.equals("conclusion")) {
             asset.getDpia().setConclusion(dto.value);
         } else if (dto.fieldName.equals("checkedThreatAssessmentIds")) {
@@ -302,6 +338,10 @@ public class AssetsRestController {
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReport(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
         if (responsibleUser.getEmail() == null || responsibleUser.getEmail().isBlank()) {
             return new ResponseEntity<>("Den valgte bruger har ikke nogen email tilknyttet, og rapporten kan derfor ikke sendes.", HttpStatus.BAD_REQUEST);

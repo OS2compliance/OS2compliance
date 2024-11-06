@@ -3,7 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.security.RequireAdminstrator;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.KitosService;
 import dk.digitalidentity.service.SettingsService;
@@ -46,7 +46,7 @@ public class SettingsController {
 		return "fragments/settings";
 	}
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @Transactional
 	@PostMapping("update")
 	public String update(@ModelAttribute final SettingsDTO settings){

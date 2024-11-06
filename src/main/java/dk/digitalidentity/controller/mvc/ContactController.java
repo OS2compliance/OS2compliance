@@ -3,7 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
@@ -43,7 +43,7 @@ public class ContactController {
         return "contacts/form";
     }
 
-    @RequireSuperuserOrSelf
+    @RequireSuperuser
     @Transactional
     @PostMapping("form")
     public String formPost(@ModelAttribute final Contact contact,

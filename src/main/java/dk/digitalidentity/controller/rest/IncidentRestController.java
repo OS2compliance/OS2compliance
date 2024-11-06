@@ -7,7 +7,7 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.transaction.Transactional;
@@ -38,7 +38,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/incidents")
-@RequireSuperuserOrSelf
+@RequireSuperuser
 @RequiredArgsConstructor
 public class IncidentRestController {
     private final IncidentService incidentService;

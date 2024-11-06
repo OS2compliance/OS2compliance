@@ -6,7 +6,8 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.security.RequireSuperuserOrSelf;
+import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -18,6 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -31,13 +33,14 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/registers")
-@RequireSuperuserOrSelf
+@RequireUser
 @RequiredArgsConstructor
 public class RegisterRestController {
     private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
 
+    @RequireSuperuser
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
             @RequestParam(name = "search", required = false) final String search,
@@ -74,7 +77,10 @@ public class RegisterRestController {
         @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
-        //if(authentication.getAuthorities().stream().noneMatch(r -> r.toString().equals("ROLE_forandre")) && authentication.getDetails()..uuid.equals())
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && authentication.getPrincipal() != uuid)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         Sort sort = null;
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
