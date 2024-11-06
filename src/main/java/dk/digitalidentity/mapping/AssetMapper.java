@@ -1,5 +1,22 @@
 package dk.digitalidentity.mapping;
 
+import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
+import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
+import static dk.digitalidentity.util.NullSafe.nullSafe;
+
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import org.apache.commons.lang3.BooleanUtils;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.Mappings;
+import org.mapstruct.ReportingPolicy;
+import org.springframework.data.domain.Page;
+
 import dk.digitalidentity.model.api.AssetCreateEO;
 import dk.digitalidentity.model.api.AssetEO;
 import dk.digitalidentity.model.api.PageEO;
@@ -8,27 +25,13 @@ import dk.digitalidentity.model.api.SupplierShallowEO;
 import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import org.apache.commons.lang3.BooleanUtils;
-import org.mapstruct.Mapper;
-import org.mapstruct.Mapping;
-import org.mapstruct.Mappings;
-import org.mapstruct.ReportingPolicy;
-import org.springframework.data.domain.Page;
-
-import java.time.LocalDateTime;
-import java.time.OffsetDateTime;
-import java.util.List;
-import java.util.Set;
-
-import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
-import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
-import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 
 @SuppressWarnings("Convert2MethodRef")
@@ -122,12 +125,15 @@ public interface AssetMapper {
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpia", ignore = true),
+        @Mapping(target = "dpiaScreening", ignore = true),
         @Mapping(target = "managers", source = "responsibleUsers"),
         @Mapping(target = "deleted", ignore = true),
         @Mapping(target = "localizedEnums", ignore = true),
         @Mapping(target = "threatAssessmentOptOut", ignore = true),
         @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
-        @Mapping(target = "dpiaOptOut", ignore = true)
+        @Mapping(target = "dpiaOptOut", ignore = true),
+        @Mapping(target = "dpiaOptOutReason", ignore = true),
+        @Mapping(target = "oversightResponsibleUser", ignore = true)
     })
     Asset fromEO(AssetCreateEO assetCreateEO);
 

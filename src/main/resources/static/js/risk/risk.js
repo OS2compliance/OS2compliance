@@ -31,7 +31,7 @@ function initRegisterSelect(registerSelectElement) {
     return registerChoices;
 }
 
-function initAssetSelect(assetSelectElement) {
+function initAssetSelectRisk(assetSelectElement) {
     const assetChoices = initSelect(assetSelectElement);
     updateTypeSelect(assetChoices, "", "ASSET");
     assetSelectElement.addEventListener("search",
@@ -94,11 +94,11 @@ function EditRiskService() {
 
         const presentSelect = this.getScopedElementById('editPresentAtMeetingSelect');
         if (presentSelect !== null) {
-            this.presentSelect = initUserSelect('editPresentAtMeetingSelect');
+            this.presentSelect = choiceService.initUserSelect('editPresentAtMeetingSelect');
         }
 
-        this.userChoicesSelect = initUserSelect("editUserSelect");
-        this.ouChoicesSelect = initOUSelect("editOuSelect");
+        this.userChoicesSelect = choiceService.initUserSelect("editUserSelect");
+        this.ouChoicesSelect = choiceService.initOUSelect("editOuSelect");
         initFormValidationForForm("editRiskModalForm",
             () => this.validate());
 
@@ -144,15 +144,15 @@ function CopyRiskService() {
         }
         const assetSelect = this.getScopedElementById('copyAssetSelect');
         if (assetSelect !== null) {
-            this.assetChoicesSelect = initAssetSelect(assetSelect);
+            this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         }
         const presentSelect = this.getScopedElementById('copyPresentAtMeetingSelect');
         if (presentSelect !== null) {
-            this.presentSelect = initUserSelect('copyPresentAtMeetingSelect');
+            this.presentSelect = choiceService.initUserSelect('copyPresentAtMeetingSelect');
         }
 
-        this.userChoicesSelect = initUserSelect("copyUserSelect");
-        this.ouChoicesSelect = initOUSelect("copyOuSelect");
+        this.userChoicesSelect = choiceService.initUserSelect("copyUserSelect");
+        this.ouChoicesSelect = choiceService.initOUSelect("copyOuSelect");
         initFormValidationForForm("copyRiskModalForm",
             () => this.validate());
 
@@ -195,9 +195,9 @@ function CreateRiskService() {
         const registerSelect = this.getScopedElementById('registerSelect');
         const assetSelect = this.getScopedElementById('assetSelect');
         this.registerChoicesSelect = initRegisterSelect(registerSelect);
-        this.assetChoicesSelect = initAssetSelect(assetSelect);
-        this.userChoicesSelect = initUserSelect("userSelect");
-        this.ouChoicesSelect = initOUSelect("ouSelect");
+        this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        this.userChoicesSelect = choiceService.initUserSelect("userSelect");
+        this.ouChoicesSelect = choiceService.initOUSelect("ouSelect");
 
         this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
              const userUuid = self.userChoicesSelect.passedElement.element.value;
@@ -225,7 +225,7 @@ function CreateRiskService() {
 
         const presentSelect = this.getScopedElementById('presentAtMeetingSelect');
         if (presentSelect !== null) {
-            this.presentSelect = initUserSelect('presentAtMeetingSelect');
+            this.presentSelect = choiceService.initUserSelect('presentAtMeetingSelect');
         }
 
         initFormValidationForForm("createRiskModal",

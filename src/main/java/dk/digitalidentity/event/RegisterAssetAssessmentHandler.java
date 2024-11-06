@@ -32,7 +32,6 @@ public class RegisterAssetAssessmentHandler {
     @EventListener
     public void handleRelationUpdatedEvent(final RelationUpdatedEvent event) {
         handleRelationEvent(event.getRelationId());
-
     }
 
     private void handleRelationEvent(final Long relationId) {

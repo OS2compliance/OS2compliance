@@ -18,9 +18,9 @@ function RegisterGeneralService() {
     this.generalFormLoaded = function () {
         const form = document.getElementById('editDescId');
 
-        departmentChoices = initOUSelect('departmentSelect', false);
-        ouChoices = initOUSelect('ouSelect', false);
-        userChoices = initUserSelect('userSelect', false);
+        departmentChoices = choiceService.initOUSelect('departmentSelect', false);
+        ouChoices = choiceService.initOUSelect('ouSelect', false);
+        userChoices = choiceService.initUserSelect('userSelect', false);
 
         form.addEventListener('reset', (ev) => {
             ouChoices.destroy();
@@ -35,16 +35,16 @@ function RegisterGeneralService() {
     this.initAssetRelationSelect = function() {
         const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
-        updateRelationsAssetsOnly(relationsChoice, "");
+        choiceService.updateRelationsAssetsOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
             function(event) {
-                updateRelationsAssetsOnly(relationsChoice, event.detail.value);
+                choiceService.updateRelationsAssetsOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
             function(event) {
-                updateRelationsAssetsOnly(relationsChoice, "");
+                choiceService.updateRelationsAssetsOnly(relationsChoice, "");
             },
             false,
         );
@@ -54,16 +54,16 @@ function RegisterGeneralService() {
     this.initDocumentRelationSelectPrivate = function() {
         const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
-        updateRelationsDocumentsOnly(relationsChoice, "");
+        choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
             function(event) {
-                updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
+                choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
             function(event) {
-                updateRelationsDocumentsOnly(relationsChoice, "");
+                choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
             },
             false,
         );
@@ -72,16 +72,16 @@ function RegisterGeneralService() {
     this.initTaskRelationSelectPrivate = function() {
         const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
-        updateRelationsTasksOnly(relationsChoice, "");
+        choiceService.updateRelationsTasksOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
             function(event) {
-                updateRelationsTasksOnly(relationsChoice, event.detail.value);
+                choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
             function(event) {
-                updateRelationsTasksOnly(relationsChoice, "");
+                choiceService.updateRelationsTasksOnly(relationsChoice, "");
             },
             false,
         );

@@ -1,6 +1,7 @@
 package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
+import dk.digitalidentity.integration.kitos.mapper.KitosMapper;
 import dk.digitalidentity.service.SettingsService;
 import dk.kitos.api.ApiV2DeltaFeedApi;
 import dk.kitos.api.ApiV2ItContractApi;
@@ -8,13 +9,16 @@ import dk.kitos.api.ApiV2ItSystemApi;
 import dk.kitos.api.ApiV2ItSystemUsageApi;
 import dk.kitos.api.ApiV2ItSystemUsageRoleTypeApi;
 import dk.kitos.api.ApiV2OrganizationApi;
+import dk.kitos.api.model.GDPRWriteRequestDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
 import dk.kitos.api.model.ItSystemUsageResponseDTO;
 import dk.kitos.api.model.OrganizationResponseDTO;
 import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
+import dk.kitos.api.model.SimpleLinkDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
+import dk.kitos.api.model.UpdateItSystemUsageRequestDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
@@ -50,6 +54,7 @@ public class KitosClientService {
     private final ApiV2ItContractApi contractApi;
     private final ApiV2DeltaFeedApi deltaFeedApi;
     private final SettingsService settingsService;
+    private final KitosMapper kitosMapper;
 
     public UUID lookupMunicipalUuid(final String cvr) {
         final List<OrganizationResponseDTO> organizations = organizationApi.getManyOrganizationV2GetOrganizations(null, null, cvr, null, null, null, 0, 1);
@@ -134,6 +139,47 @@ public class KitosClientService {
                 null, pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItSystemUsageResponseDTO::getLastModified
         );
+    }
+
+    /**
+     * Update business criticality for an it-system usage
+     */
+    public void updateBusinessCritical(final String itSystemUuid, boolean critical) {
+        final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
+        final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+        if (update.getGdpr() == null) {
+            update.setGdpr(new GDPRWriteRequestDTO());
+        }
+        final GDPRWriteRequestDTO gdpr = update.getGdpr();
+        if (isEmpty(gdpr.getDirectoryDocumentation())) {
+            gdpr.setDirectoryDocumentation(null);
+        }
+        if (isEmpty(gdpr.getTechnicalPrecautionsDocumentation())) {
+            gdpr.setTechnicalPrecautionsDocumentation(null);
+        }
+        if (isEmpty(gdpr.getUserSupervisionDocumentation())) {
+            gdpr.setUserSupervisionDocumentation(null);
+        }
+        if (isEmpty(gdpr.getRiskAssessmentDocumentation())) {
+            gdpr.setRiskAssessmentDocumentation(null);
+        }
+        if (isEmpty(gdpr.getDpiaDocumentation())) {
+            gdpr.setDpiaDocumentation(null);
+        }
+
+        // Only send
+        update.setArchiving(null);
+        update.setGeneral(null);
+        update.setLocalKleDeviations(null);
+        update.setOrganizationUsage(null);
+        update.setExternalReferences(null);
+        update.setRoles(null);
+        update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
+        itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
+    }
+
+    private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
+        return simpleLinkDTO != null && simpleLinkDTO.getUrl() == null && simpleLinkDTO.getName() == null;
     }
 
     public <T> List<T> deltaFetch(final String settingsKey,

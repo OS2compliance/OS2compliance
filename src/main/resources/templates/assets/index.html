@@ -38,6 +38,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="assetsDatatable"></div>
                             </div>
                         </div>
@@ -50,7 +51,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
 </div>
 <div class="modal fade" id="formDialog" aria-labelledby="assetLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 <style>
 
@@ -89,16 +90,10 @@
                 }))
             .catch(error => toastService.error(error))
 
-        // load saved state assets
-        const assetGridKey = window.location.pathname;
-        const assetGridKeySearch = assetGridKey + '-asset-search'
-        const savedSearchAsset = localStorage.getItem(assetGridKeySearch);
-        let initialAssetLoadDone = false;  // flag to ensure initial load only happens once
-
-        const grid = new gridjs.Grid({
+        let assetGridConfig = {
             className: defaultClassName,
             search: {
-                keyword: savedSearchAsset,
+                keyword: searchService.getSavedSearch(),
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -223,7 +218,7 @@
                         const assetId = row.cells[0]['data'];
                         const name = row.cells[2]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],
@@ -253,28 +248,10 @@
                     'page': (page) => `Side ${page}`
                 }
             }
-        }).render( document.getElementById( "assetsDatatable" ));
-
-        // set state on grid
-        grid.on('ready', function() {
-
-            // only apply saved state on the first load
-            if (!initialAssetLoadDone) {
-
-                const searchInput = document.querySelector('#assetsDatatable .gridjs-search-input');
-                if (searchInput) {
-                    searchInput.addEventListener('input', function() {
-                        if (this.value === '') {
-                            localStorage.removeItem(assetGridKeySearch);
-                        } else {
-                            localStorage.setItem(assetGridKeySearch, this.value);
-                        }
-                    });
-                }
-
-                initialAssetLoadDone = true;  // ensure this only runs once
-            }
-        });
+        };
+        const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
+        searchService.initSearch(grid, assetGridConfig);
+        gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 
     function deleteClicked(assetId, name) {

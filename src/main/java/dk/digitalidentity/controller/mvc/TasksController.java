@@ -29,6 +29,7 @@ import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
@@ -44,7 +45,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
-import org.thymeleaf.util.StringUtils;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -203,7 +203,7 @@ public class TasksController {
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
     record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
     @GetMapping("{id}")
-    public String form(final Model model, @PathVariable final long id) {
+    public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -271,7 +271,7 @@ public class TasksController {
     @SuppressWarnings("ClassEscapesDefinedScope")
     @Transactional
     @PostMapping("complete")
-    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto) {
+    public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
@@ -305,6 +305,9 @@ public class TasksController {
                 new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det valgte dokument kunne ikke findes.")));
         }
         taskService.completeTask(task, taskLog);
+        if ("dashboard".equals(referral)) {
+            return "redirect:/dashboard";
+        }
         return "redirect:/tasks";
     }
 

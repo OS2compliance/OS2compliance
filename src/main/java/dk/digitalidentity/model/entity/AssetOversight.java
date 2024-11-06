@@ -35,6 +35,10 @@ public class AssetOversight {
     @Column
     private String conclusion;
     @Column
+    private String dbsLink;
+    @Column
+    private String internalDocumentationLink;
+    @Column
     @Enumerated(EnumType.STRING)
     private AssetOversightStatus status;
     @ManyToOne
@@ -45,4 +49,6 @@ public class AssetOversight {
     private LocalDate creationDate;
     @Column(name = "next_inspection_deadline")
     private LocalDate newInspectionDate;
+    @Column(name = "localized_enums")
+    private String localizedEnums;
 }

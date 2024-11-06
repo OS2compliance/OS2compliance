@@ -288,7 +288,7 @@ public class RegisterController {
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
             .collect(Collectors.toList()));
         model.addAttribute("assetThreatAssessments", assetThreatAssessments);
-        model.addAttribute("scale", new TreeMap<>(scaleService.getScale()));
+        model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
 

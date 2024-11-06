@@ -23,17 +23,20 @@
 
 	<script th:src="@{/js/common.js}" defer></script>
 	<script th:src="@{/js/form-validation.js}" defer></script>
-	<script th:src="@{/js/shared-elements.js}" defer></script>
+	<script th:src="@{/js/choice-service.js}" defer></script>
+	<script th:src="@{/js/relation-service.js}" defer></script>
 
 	<script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}" defer></script>
 	<script th:src="@{/webjars/nifty/3.0.1/vendors/bootstrap/bootstrap.min.js}" defer></script>
 	<script th:src="@{/webjars/nifty/3.0.1/js/nifty.js}" defer></script>
     <script th:src="@{/webjars/nifty/3.0.1/vendors/popperjs/popper.min.js}"></script>
 
-    <script th:if="${gridjs == true}" th:src="@{/webjars/nifty/3.0.1/vendors/gridjs/gridjs.umd.min.js}" defer></script>
+    <script th:if="${gridjs == true}" th:src="@{/js/search-service.js}" defer></script>
+    <script th:if="${gridjs == true}" th:src="@{/vendor/gridjs/gridjs.umd.js}" defer></script>
+    <script th:if="${gridoptions == true}" th:src="@{/js/grid-options.js}" defer></script>
 
     <script nomodule th:src="@{/webjars/nifty/3.0.1/vendors/ionicons/ionicons.js}"></script>
-	<script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
+	<script th:src="@{/vendor/mc-datepicker/mc-calendar.min.js}" defer></script>
 	<script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
 	<script th:if="${sweetalerts == true}" th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.js}" defer></script>

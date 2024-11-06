@@ -10,3 +10,4 @@ test-result-*.docx
 .env
 
 target/
+.factorypath

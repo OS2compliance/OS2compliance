@@ -53,6 +53,7 @@ public class DataProcessingService {
         dataProcessing.setDeletionProcedure(body.getDeletionProcedure());
         dataProcessing.setDeletionProcedureLink(body.getDeletionProcedureLink());
         dataProcessing.setElaboration(body.getElaboration());
+        dataProcessing.setTypesOfPersonalInformationFreetext(body.getTypesOfPersonalInformationFreetext());
 
         if (body.getPersonCategoriesRegistered() != null) {
             dataProcessing.getRegisteredCategories().clear();
@@ -88,6 +89,7 @@ public class DataProcessingService {
 
     private void updateAssociatedOversightCheck(final Asset asset, final Task task) {
         setTaskRevisionInterval(asset, task);
+        task.setResponsibleUser(asset.getOversightResponsibleUser());
     }
 
     private void createAssociatedOversightCheck(final Asset asset) {
@@ -100,8 +102,7 @@ public class DataProcessingService {
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
-        // TODO fix så vi ikke bare tager den første, tror jeg
-        task.setResponsibleUser(asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty() ? asset.getResponsibleUsers().get(0) : userService.currentUser());
+        task.setResponsibleUser(asset.getOversightResponsibleUser());
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
             .entity(task)

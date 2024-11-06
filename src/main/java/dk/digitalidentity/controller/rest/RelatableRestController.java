@@ -66,8 +66,11 @@ public class RelatableRestController {
     private final PrecautionService precautionService;
 
     @GetMapping("autocomplete")
-    public PageDTO<RelatableDTO> autocomplete(@RequestParam(value = "types", required = false) final List<RelationType> types, @RequestParam("search") final String search) {
-        final Pageable page = PageRequest.of(0, 25, Sort.by("createdAt").descending());
+    public PageDTO<RelatableDTO> autocomplete(@RequestParam(value = "types", required = false) final List<RelationType> types,
+                                              @RequestParam(value = "search") final String search,
+                                              @RequestParam(value = "sort", defaultValue = "createdAt") final String orderBy,
+                                              @RequestParam(value = "dir", defaultValue = "DESC") final String direction) {
+        final Pageable page = PageRequest.of(0, 25, Sort.by(Sort.Direction.fromString(direction), orderBy));
 
         if (types == null || types.isEmpty()) {
             if (StringUtils.length(search) == 0) {
@@ -90,7 +93,6 @@ public class RelatableRestController {
     @GetMapping("tags/autocomplete")
     public PageDTO<Tag> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("value").descending());
-
         if (StringUtils.length(search) == 0) {
             final Page<Tag> all = tagDao.findAll(page);
             return new PageDTO<>(all.getTotalElements(), all.getContent());

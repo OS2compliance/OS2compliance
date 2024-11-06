@@ -29,6 +29,7 @@ import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
@@ -242,32 +243,35 @@ public class ThreatAssessmentService {
             .max(Comparator.comparing(ThreatAssessment::getCreatedAt))
             .map(threatAssessment -> {
                 final List<RiskProfileDTO> riskProfileDTOs = buildRiskProfileDTOs(threatAssessment);
-                final Double riskScore = calculateRiskScore(riskProfileDTOs);
-                final double weight = riskScale / 100.0;
+                final Pair<Integer, Integer> highestRiskScore = findHighestRiskScore(riskProfileDTOs);
+                final double riskProbability = highestRiskScore.getLeft();
+                final double riskConsequence = highestRiskScore.getRight();
+                final double weight = (riskScale != null && riskScale > 0) ? riskScale / 100.0 : 0;
                 final RegisterAssetRiskDTO registerAssetRiskDTO = new RegisterAssetRiskDTO();
                 registerAssetRiskDTO.setThreatAssessment(threatAssessment);
+                registerAssetRiskDTO.setProbability((int)Math.ceil(riskProbability));
+                registerAssetRiskDTO.setConsequence((int)Math.ceil(riskConsequence));
                 registerAssetRiskDTO.setDate(registerAssetRiskDTO.getDate());
-                registerAssetRiskDTO.setRiskScore(riskScore);
+                registerAssetRiskDTO.setRiskScore(riskProbability * riskConsequence);
                 registerAssetRiskDTO.setWeightedPct(riskScale);
-                registerAssetRiskDTO.setWeightedRiskScore(riskScore * weight);
+                registerAssetRiskDTO.setWeightedConsequence(riskConsequence * weight);
+                registerAssetRiskDTO.setWeightedRiskScore((riskConsequence * weight) * riskProbability);
                 final RiskAssessment weightedAssessment =
-                    scaleService.getRiskAssessmentForRisk((int) Math.ceil(riskScore * weight));
+                    scaleService.getRiskAssessmentForRisk((int)Math.ceil(riskProbability), (int)Math.ceil(riskConsequence * weight));
                 registerAssetRiskDTO.setWeightedAssessment(weightedAssessment);
                 return registerAssetRiskDTO;
             });
     }
 
     /**
-     * Calculates the risk score based on a list of RiskProfileDTO objects.
+     * Find the highest risk score based on a list of RiskProfileDTO objects.
      * @param riskProfileDTOs The list of RiskProfileDTO objects containing the risk profile information.
-     * @return The calculated risk score.
      */
-    private Double calculateRiskScore(final List<RiskProfileDTO> riskProfileDTOs) {
+    private Pair<Integer, Integer> findHighestRiskScore(final List<RiskProfileDTO> riskProfileDTOs) {
         return riskProfileDTOs.stream()
-            .mapToDouble(r -> r.getProbability() * r.getConsequence())
-            .filter(i -> i > 0)
-            .max()
-            .orElse(0);
+            .max(Comparator.comparing(r -> r.getConsequence() * r.getProbability()))
+            .map(r -> Pair.of(r.getProbability(), r.getConsequence()))
+            .orElse(Pair.of(0, 0));
     }
 
     public RiskDTO calculateRiskFromRegisters(final List<Long> assetIds) {
@@ -418,7 +422,7 @@ public class ThreatAssessmentService {
 
         if (highestRiskNotAcceptedRiskScore != -1) {
             final RiskAssessment assessment =
-                scaleService.getRiskAssessmentForRisk(globalHighestConsequence * globalHighestprobability);
+                scaleService.getRiskAssessmentForRisk(globalHighestprobability, globalHighestConsequence);
             savedThreatAssessment.setAssessment(assessment);
         } else {
             savedThreatAssessment.setAssessment(null);
@@ -516,7 +520,7 @@ public class ThreatAssessmentService {
         context.setVariable("criticality", getCriticality(riskAsset, riskRegister));
 
         // risk profile
-        context.setVariable("reversedScale", scaleService.getScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
+        context.setVariable("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
         List<RiskProfileDTO> riskProfiles = buildRiskProfileDTOs(threatAssessment);
         context.setVariable("riskProfiles", riskProfiles);
         final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();

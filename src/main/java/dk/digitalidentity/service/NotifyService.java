@@ -11,7 +11,6 @@ import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
-import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -44,6 +43,7 @@ public class NotifyService {
             log.warn("Task '{}' already notified", task.getName());
             return;
         }
+        task.setHasNotifiedResponsible(true);
 
         EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
         if (template.isEnabled()) {

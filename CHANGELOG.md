@@ -7,6 +7,19 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.0.0] - 2024-10-31
+
+### Fixed
+- (https://github.com/OS2compliance/OS2compliance/issues/187) Notifikations mail loop
+
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-68)  (Standarder) Når man klikker gem, så ryger man til toppen - det vil være skønt (og tidsbesparende) hvis man bliver udfor den man netop har redigeret
+- (https://os2web.atlassian.net/browse/COMPLY-80)  Modul hvor brugerne kan registrere sikkerhedsbrud
+- (https://os2web.atlassian.net/browse/COMPLY-122) Mulighed for at vælge hvilke kolonner man vil have vist på forsiderne
+- (https://os2web.atlassian.net/browse/COMPLY-143) Integration med DBS
+- (https://os2web.atlassian.net/browse/COMPLY-200) 7) Ny DPIA skabelon (Syddjurs)
+
+
 ## [1.2.0] - 2024-09-10
 
 ### Fixed
@@ -48,6 +61,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-99)  Overblik over ansvarlige der er stoppet og mulighed for at massetildele ejerskab til en anden
 - (https://os2web.atlassian.net/browse/COMPLY-130) Mulighed for tilretning af mailtekster
 - (https://os2web.atlassian.net/browse/COMPLY-139) (Alle/forsider) Når man klikker tilbage, så skal man komme tilbage til den søgning og sortering man var ved
+
 
 ## [1.1.0] - 2024-03-15
 

@@ -16,12 +16,15 @@ import com.itextpdf.signatures.PdfSigner;
 import com.itextpdf.signatures.PrivateKeySignature;
 import com.lowagie.text.DocumentException;
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.model.entity.DPIAReport;
 import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.DPIAReportService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -63,11 +66,14 @@ public class SigningController {
     private final S3Service s3Service;
     private final UserService userService;
     private final OS2complianceConfiguration configuration;
+    private final DPIAReportService dpiaReportService;
+    private DPIAReport dpiaReport;
 
     @GetMapping("view/{S3DocumentId}")
     public String viewDocumentToSign(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
+        final DPIAReport dpiaReport = dpiaReportService.findByS3Document(s3Document);
 
         boolean canSign = false;
         if (threatAssessment != null) {
@@ -76,6 +82,10 @@ public class SigningController {
                 if (Objects.equals(approverUuid, SecurityUtil.getLoggedInUserUuid())) {
                     canSign = true;
                 }
+            }
+        } else if (dpiaReport != null) {
+            if (!dpiaReport.getDpiaReportApprovalStatus().equals(DPIAReportReportApprovalStatus.SIGNED) && Objects.equals(dpiaReport.getReportApproverUuid(), SecurityUtil.getLoggedInUserUuid())) {
+                canSign = true;
             }
         }
 
@@ -89,6 +99,7 @@ public class SigningController {
     public String previewDocumentToSign(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
+        final DPIAReport dpiaReport = dpiaReportService.findByS3Document(s3Document);
 
         if (threatAssessment != null) {
             if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
@@ -97,6 +108,14 @@ public class SigningController {
 
             String approverUuid = threatAssessment.getThreatAssessmentReportApprover() != null ? threatAssessment.getThreatAssessmentReportApprover().getUuid() : null;
             if (!Objects.equals(approverUuid, SecurityUtil.getLoggedInUserUuid())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+        } else if (dpiaReport != null) {
+            if (!dpiaReport.getDpiaReportApprovalStatus().equals(DPIAReportReportApprovalStatus.WAITING)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+
+            if (!Objects.equals(dpiaReport.getReportApproverUuid(), SecurityUtil.getLoggedInUserUuid())) {
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
             }
         }
@@ -110,6 +129,7 @@ public class SigningController {
     public String signDocument(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) throws IOException, GeneralSecurityException {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
+        dpiaReport = dpiaReportService.findByS3Document(s3Document);
 
         if (threatAssessment != null) {
             if (!threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.WAITING)) {
@@ -125,6 +145,17 @@ public class SigningController {
             threatAssessmentService.save(threatAssessment);
 
             model.addAttribute("threatAssessmentId", threatAssessment.getId());
+        } else if (dpiaReport != null) {
+            if (!dpiaReport.getDpiaReportApprovalStatus().equals(DPIAReportReportApprovalStatus.WAITING)) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+
+            if (!Objects.equals(dpiaReport.getReportApproverUuid(), SecurityUtil.getLoggedInUserUuid())) {
+                throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+            }
+
+            dpiaReport.setDpiaReportApprovalStatus(DPIAReportReportApprovalStatus.SIGNED);
+            dpiaReportService.save(dpiaReport);
         }
 
         byte[] signedPDF = signPdf(s3Document);

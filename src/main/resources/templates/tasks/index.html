@@ -35,6 +35,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
+                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="tasksDatatable"></div>
                             </div>
                         </div>
@@ -49,7 +50,7 @@
 
 <div id="copyTaskContainer"></div>
 <div class="modal fade" id="editTaskDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -82,16 +83,10 @@
 
     document.addEventListener("DOMContentLoaded", function() {
 
-        // load saved state tasks
-        const taskGridKey = window.location.pathname;
-        const taskGridKeySearch = taskGridKey + '-task-search'
-        const savedSearchTask = localStorage.getItem(taskGridKeySearch);
-        let initialTaskLoadDone = false;  // flag to ensure initial load only happens once
-
-        const grid = new gridjs.Grid({
+        let gridConfig = {
             className: defaultClassName,
             search: {
-                keyword: savedSearchTask,
+                keyword: searchService.getSavedSearch(),
                 server: {
                     url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
@@ -265,28 +260,10 @@
                     'page': (page) => `Side ${page}`
                 }
             }
-        }).render( document.getElementById( "tasksDatatable" ));
-
-        // set state on grid
-        grid.on('ready', function() {
-
-            // only apply saved state on the first load
-            if (!initialTaskLoadDone) {
-
-                const searchInput = document.querySelector('#tasksDatatable .gridjs-search-input');
-                if (searchInput) {
-                    searchInput.addEventListener('input', function() {
-                        if (this.value === '') {
-                            localStorage.removeItem(taskGridKeySearch);
-                        } else {
-                            localStorage.setItem(taskGridKeySearch, this.value);
-                        }
-                    });
-                }
-
-                initialTaskLoadDone = true;  // ensure this only runs once
-            }
-        });
+        };
+        const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "tasksDatatable" ));
+        searchService.initSearch(grid, gridConfig);
+        gridOptions.init(grid, document.getElementById("gridOptions"));
     });
 
 

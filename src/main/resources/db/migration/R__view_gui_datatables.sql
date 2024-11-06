@@ -299,3 +299,44 @@ FROM (
 ) AS combined_ids
 GROUP BY uuid, name, user_id, email, active
 HAVING responsible_relatable_ids IS NOT NULL AND responsible_relatable_ids <> '';
+
+CREATE OR REPLACE
+VIEW view_gridjs_dbs_assets AS
+SELECT
+    a.id,
+    a.name,
+    a.last_sync,
+    s.name as supplier,
+    GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',') AS assets
+FROM dbs_asset a
+    LEFT JOIN dbs_supplier s on a.dbs_supplier_id = s.id
+    LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
+    LEFT JOIN assets a2 on r.relation_a_id = a2.id OR r.relation_b_id = a2.id
+WHERE a.deleted = false
+GROUP BY a.id;
+
+CREATE OR REPLACE
+VIEW view_gridjs_dbs_oversights AS
+SELECT
+    a.id,
+    a.name,
+    s.name as supplier,
+    a.supervisory_model,
+    GROUP_CONCAT(da.id ORDER BY da.id SEPARATOR ',') AS dbs_assets,
+    a.oversight_responsible_uuid,
+    ao.creation_date as last_inspection,
+    ao.status as last_inspection_status,
+    IF(tl.id IS null, t.created_at, null) AS outstanding_since,
+    concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ao.localized_enums, '')) as localized_enums
+FROM assets a
+    LEFT JOIN suppliers s on s.id = a.supplier_id
+    LEFT JOIN assets_oversight ao on ao.asset_id = a.id and ao.id = (
+    	select ao2.id from assets_oversight ao2 join assets a2 on ao2.asset_id = a2.id order by ao2.creation_date desc limit 1
+    )
+    LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
+    LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id
+    LEFT JOIN relations r1 on ((r1.relation_a_id = da.id OR r1.relation_b_id = da.id) AND (r1.relation_a_type = 'TASK' OR r1.relation_b_type = 'TASK'))
+    left join tasks t on r1.relation_a_id = t.id or r1.relation_b_id = t.id
+    left join task_logs tl on tl.task_id = t.id 
+WHERE a.deleted = false
+GROUP BY a.id;

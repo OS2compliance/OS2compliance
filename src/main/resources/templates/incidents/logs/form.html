@@ -1,0 +1,38 @@
+<div class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="supplierLabel" th:text="${formTitle}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
+                <input id="id" th:field="*{id}" type="hidden">
+                <div class="row mt-2" >
+                    <label for="title" class="col-sm-4 col-form-label">Titel</label>
+                    <div class="col-sm-8">
+                        <input class="form-control" th:field="*{name}" style="width: 100%" id="title" type="text" required>
+                    </div>
+                </div>
+                <div th:each="response, idx : ${incident.responses}" class="row mt-3">
+                    <th:block th:replace="~{incidents/logs/form_fields :: mandatoryFields(response = ${response}, idx = ${idx.index})}"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'ASSET'} ? ~{incidents/logs/form_fields :: assetField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'ASSETS'} ? ~{incidents/logs/form_fields :: assetsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'USER'} ? ~{incidents/logs/form_fields :: userField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'USERS'} ? ~{incidents/logs/form_fields :: usersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'ORGANIZATION'} ? ~{incidents/logs/form_fields :: organizationField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'ORGANIZATIONS'} ? ~{incidents/logs/form_fields :: organizationsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'SUPPLIER'} ? ~{incidents/logs/form_fields :: supplierField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'SUPPLIERS'} ? ~{incidents/logs/form_fields :: suppliersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'CHOICE_LIST'} ? ~{incidents/logs/form_fields :: choiceListField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'CHOICE_LIST_MULTIPLE'} ? ~{incidents/logs/form_fields :: choiceListMultipleField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+        </div>
+    </div>
+</div>

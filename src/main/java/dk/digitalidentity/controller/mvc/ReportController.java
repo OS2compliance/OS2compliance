@@ -1,7 +1,11 @@
 package dk.digitalidentity.controller.mvc;
 
+import com.lowagie.text.DocumentException;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.mapping.IncidentMapper;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
@@ -12,6 +16,8 @@ import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -20,6 +26,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -32,16 +41,20 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.ModelAndView;
 import org.springframework.web.servlet.View;
+import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBody;
 
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipOutputStream;
 
 import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
@@ -62,6 +75,9 @@ public class ReportController {
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
     private final TaskService taskService;
     private final ThreatAssessmentService threatAssessmentService;
+    private final AssetService assetService;
+    private final IncidentService incidentService;
+    private final IncidentMapper incidentMapper;
 
     @GetMapping
     public String reportList(final Model model) {
@@ -69,6 +85,18 @@ public class ReportController {
         return "reports/index";
     }
 
+    @GetMapping("incidents")
+    public String tagReport(final Model model,
+                            @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy")  final LocalDate from,
+                            @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy")  final LocalDate to) {
+        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000,1, 1, 0, 0, 0);
+        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000,1, 1, 0, 0, 0);
+        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        model.addAttribute("incidents", incidentMapper.toDTOs(allIncidents.getContent()));
+        model.addAttribute("from", from);
+        model.addAttribute("to", to);
+        return "reports/incidentReport";
+    }
 
     @GetMapping("tags")
     public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId,
@@ -156,6 +184,59 @@ public class ReportController {
                     Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), true, riskId);
             }
         }
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("dpia")
+    public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "assetId") final Long assetId,
+        @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
+        final HttpServletResponse response) throws IOException {
+        Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        if (type.equals("PDF")) {
+            byte[] byteData = assetService.getDPIAPdf(asset);
+            response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + asset.getName() + ".pdf");
+            response.setContentType("application/pdf");
+            response.getOutputStream().write(byteData);
+            response.flushBuffer();
+        } else if (type.equals("ZIP")) {
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + asset.getName() + ".zip\"")
+                .body(out -> {
+                        var zipOutputStream = new ZipOutputStream(out);
+
+                        // add dpia pdf
+                        try {
+                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + asset.getName() + ".pdf");
+                            zipOutputStream.putNextEntry(dpiaFile);
+                            zipOutputStream.write(assetService.getDPIAPdf(asset));
+                        } catch (DocumentException e) {
+                            log.warn("Could not generate pdf for dpia for asset with id " + asset.getId() + ". Exeption: "
+                                + e.getMessage());
+                        }
+
+                        // Add pdfs for selected threatAssessment
+                        if (asset.getDpia().getCheckedThreatAssessmentIds() != null) {
+                            List<String> selectedIds = Arrays.asList(asset.getDpia().getCheckedThreatAssessmentIds().split(","));
+                            for (String threatAssessmentIdAsString : selectedIds) {
+                                long threatAssessmentId = Long.parseLong(threatAssessmentIdAsString);
+                                ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
+                                if (threatAssessment != null) {
+                                    try {
+                                        ZipEntry file = new ZipEntry("risikovurdering " + threatAssessment.getName() + ".pdf");
+                                        zipOutputStream.putNextEntry(file);
+                                        zipOutputStream.write(threatAssessmentService.getThreatAssessmentPdf(threatAssessment));
+                                    } catch (DocumentException e) {
+                                        log.warn("Could not generate pdf for threat assessment with id " + threatAssessmentId + ". Exeption: "
+                                            + e.getMessage());
+                                    }
+                                }
+                            }
+                        }
+
+                        zipOutputStream.close();
+                    }
+                );
+        }
+
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 

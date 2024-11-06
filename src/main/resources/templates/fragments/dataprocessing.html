@@ -17,7 +17,6 @@
                 <tr>
                     <td>Hvem har adgang til personoplysningerne</td>
                     <td>
-
                         <div class="form-check" th:each="choice: ${dbChoices.accessWhoIdentifiers.values}">
                             <input th:id="${choice.identifier + dataProcessing.id}" name="accessWhoIdentifiers" th:value="${choice.identifier}"
                                    th:checked="${#sets.contains(dataProcessing.accessWhoIdentifiers, choice.identifier)}"
@@ -57,7 +56,14 @@
                                 <p>Kategorier af registrerede</p>
                             </div>
                             <div class="col-sm-6 col-lg-8">
-                                <p>Typer af registrerede</p>
+                                <p>Typer af personoplysninger</p>
+                            </div>
+                        </div>
+                        <div class="row mb-2">
+                            <div class="col-sm-6 col-lg-4">
+                            </div>
+                            <div class="col-sm-6 col-lg-8">
+                                <textarea rows=5 class="editField form-control" th:field="${dataProcessing.typesOfPersonalInformationFreetext}" disabled></textarea>
                             </div>
                         </div>
                         <div class="categoriesTarget"></div>

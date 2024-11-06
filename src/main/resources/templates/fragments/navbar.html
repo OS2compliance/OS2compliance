@@ -22,15 +22,24 @@
 							</a>
 						</li>
                         <li class="nav-item has-sub">
-                            <a href="#"  class="nav-link mininav-toggle collapsed" th:classappend="${page == 'aktiver' || page == 'precautions' ? 'active' : ''}">
+                            <a href="#"  class="nav-link mininav-toggle collapsed" th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
                                 <i class="pli-crane fs-5 me-2"></i> <span class="nav-label ms-1">Aktiver</span>
                             </a>
                             <ul class="mininav-content nav collapse">
                                 <li class="nav-item">
                                     <a th:href="@{/assets}" class="nav-link" th:classappend="${page} == 'aktiver' ? 'active' : ''">Aktiver</a>
                                 </li>
+                                <li class="nav-item">
+                                    <a th:href="@{/dbs/assets}" class="nav-link" th:classappend="${page} == 'dbs_aktiver' ? 'active' : ''">DBS Aktiver</a>
+                                </li>
+                                <li class="nav-item">
+                                    <a th:href="@{/dbs/oversight}" class="nav-link" th:classappend="${page} == 'dbs_oversight' ? 'active' : ''">DBS tilsyn</a>
+                                </li>
                                 <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
                                     <a th:href="@{/precautions}" class="nav-link" th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
+                                    <a th:href="@{/assets/dpia/schema}" class="nav-link" th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyse</a>
                                 </li>
                             </ul>
                         </li>
@@ -61,6 +70,19 @@
 							<a th:href="@{/tasks}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'opgavecenter' ? 'active' : ''">
 								<i class="pli-check fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Opgavecenter</span>
 							</a>
+						</li>
+						<li class="nav-item has-sub">
+							<a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'incidentlogs' || page == 'incidentquestions'} ? 'active' : ''">
+								<i class="pli-exclamation fs-5 me-2"></i> <span class="nav-label ms-1">Hændelser</span>
+							</a>
+                            <ul class="mininav-content nav collapse">
+                                <li class="nav-item">
+                                    <a th:href="@{/incidents/logs}" class="nav-link" th:classappend="${page} == 'incidentlogs' ? 'active' : ''">Hændelseslog</a>
+                                </li>
+                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
+                                    <a th:href="@{/incidents/questions}" class="nav-link" th:classappend="${page} == 'incidentquestions' ? 'active' : ''">Opsætning</a>
+                                </li>
+                            </ul>
 						</li>
 						<li class="nav-item">
 							<a th:href="@{/reports}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'rapporter' ? 'active' : ''">

@@ -35,11 +35,11 @@ function pageLoaded() {
 
     transferFromSelect = document.getElementById('transferFrom');
     if(transferFromSelect !== null) {
-        transferFromChoice = initUserSelect('transferFrom');
+        transferFromChoice = choiceService.initUserSelect('transferFrom');
     }
     transferToSelect = document.getElementById('transferTo');
     if(transferToSelect !== null) {
-        transferToChoice = initUserSelect('transferTo');
+        transferToChoice = choiceService.initUserSelect('transferTo');
     }
 
     transferResponsibilityModal = document.getElementById('transferResponsibilityModal');

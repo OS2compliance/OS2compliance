@@ -39,8 +39,8 @@ public class RegisterRestController {
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
             @RequestParam(name = "search", required = false) final String search,
-            @RequestParam(name = "page", required = false) final Integer page,
-            @RequestParam(name = "size", required = false) final Integer size,
+            @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+            @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
             @RequestParam(name = "order", required = false) final String order,
             @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
@@ -68,8 +68,8 @@ public class RegisterRestController {
     public PageDTO<RegisterDTO> list(
         @PathVariable(name = "id", required = true) final String uuid,
         @RequestParam(name = "search", required = false) final String search,
-        @RequestParam(name = "page", required = false) final Integer page,
-        @RequestParam(name = "size", required = false) final Integer size,
+        @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+        @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
