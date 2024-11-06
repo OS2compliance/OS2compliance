@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            color: #000000 !important;
+        }
+
+        @page {
+            size: A4;
+            margin-top: 10%;
+            margin-bottom: 10%;
+            margin-left: 11%;
+            margin-right: 5%;
+            @top-center { content: element(header); }
+        }
+
+        div.box {
+            width:100%;
+            margin: 10px !important;
+            padding: 10px !important;
+            border: 1px solid black;
+            display: inline-block;
+            font-size: 9px;
+        }
+
+        tr, th, td {
+            border: 1px solid black;
+        }
+
+        .col-4 {
+            flex: 0 0 auto;
+            width: 34%;
+        }
+
+        .col-8 {
+            flex: 0 0 auto;
+            width: 66%;
+        }
+
+        .riskProfileTable {
+            font-size: 12px;
+            text-align: left;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        img {
+            display: block;
+            margin: auto;
+            object-fit: contain;
+        }
+
+        .beforeTableSection, .afterTableSection {
+            width: 47%;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .threatAndTasksTables {
+            font-size: 9px;
+            word-wrap: break-word;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .threatAndTasksTables td, .threatAndTasksTables th {
+            overflow-wrap: break-word;
+            max-width: 100px;
+            white-space: normal;
+        }
+
+        .riskScoreField {
+            width: 65px !important;
+            height: 65px !important;
+        }
+
+        tr {
+            page-break-inside:avoid
+        }
+
+    </style>
+</head>
+<body>
+
+<h1 th:text="'Konsekvensanalyse vedr. ' + ${asset.name}" style="text-align: center;"></h1>
+<div th:each="section : ${dpiaSections}">
+    <h2 th:text="${section.heading}"></h2>
+    <p th:utext="${section.explainer}"></p>
+    <table class="table">
+        <thead>
+        <tr>
+            <th class="col-4">Spørgsmål</th>
+            <th class="col-6">Besvarelse</th>
+        </tr>
+        </thead>
+        <tbody>
+        <th:block th:if="${section.sectionIdentifier == 'scope'}">
+            <tr>
+                <td>Systemets navn</td>
+                <td th:text="${asset.name}"></td>
+            </tr>
+            <tr>
+                <td>Systemejer</td>
+                <td th:text="${responsibleUserNames}"></td>
+            </tr>
+            <tr>
+                <td>Systemtype</td>
+                <td th:text="${asset.assetType.getMessage()}"></td>
+            </tr>
+            <tr>
+                <td>Leverandør</td>
+                <td th:text="${supplierName}"></td>
+            </tr>
+            <tr>
+                <td>Systemansvarlig</td>
+                <td th:text="${managerNames}"></td>
+            </tr>
+        </th:block>
+        <tr th:each="question : ${section.questions}">
+            <td th:text="${question.question}"></td>
+            <td>
+                <div th:if="${question.templateAnswer != null} AND ${question.templateAnswer != ''}" th:utext="${question.templateAnswer}"></div>
+                <div th:utext="${question.response}" style="max-width: 100%"></div>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div>
+    <h2>Risikovurderinger</h2>
+    <p>Denne sektion indeholder en liste af valgte risikovurderinger af aktivet, der skal medtages i det samlede materiale</p>
+    <table class="table">
+        <thead>
+        <tr>
+            <th class="col-lg-8">Risikovurdering</th>
+            <th class="col-lg-2">Dato</th>
+            <th class="col-lg-1">Signeret?</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="threatAssessment : ${dpiaThreatAssesments}">
+            <td th:text="${threatAssessment.threatAssessmentName}"></td>
+            <td th:text="${threatAssessment.date}"></td>
+            <td th:text="${threatAssessment.signed} ? 'Ja' : 'Nej'"></td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+<div>
+    <h2>Konklusion</h2>
+    <div th:utext="${conclusion}" style="max-width: 100%"></div>
+</div>
+
+</body>
+</html>

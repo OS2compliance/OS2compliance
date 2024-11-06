@@ -10,11 +10,21 @@ import static java.time.temporal.ChronoField.YEAR;
 
 public interface Constants {
 
+    String SCALE_COLOR_STD_GREEN = "#87AD27";
+    String SCALE_COLOR_STD_YELLOW = "#FFDE07";
+    String SCALE_COLOR_STD_RED = "#DF5645";
+    String SCALE_COLOR_LIGHT_GREEN = "#93D259";
+    String SCALE_COLOR_GREEN = "#1DB255";
+    String SCALE_COLOR_YELLOW = "#FDFF3C";
+    String SCALE_COLOR_ORANGE = "#FCC231";
+    String SCALE_COLOR_RED = "#FA0020";
+
     String ASSET_ASSESSMENT_PROPERTY = "asset_assessment";
     String NEEDS_CVR_UPDATE_PROPERTY = "cvr_update";
     String CVR_UPDATED_PROPERTY = "cvr_updated_at";
     String ASSOCIATED_DOCUMENT_PROPERTY = "linked_doc";
     String ASSOCIATED_THREAT_ASSESSMENT_PROPERTY = "linked_threat";
+    String ASSOCIATED_ASSET_DPIA_PROPERTY = "linked_dpia";
     String ASSOCIATED_INSPECTION_PROPERTY = "linked_asset";
     ZoneId LOCAL_TZ_ID = ZoneId.of("Europe/Copenhagen");
     String SYSTEM_USERID = "System";

@@ -40,8 +40,8 @@ public class TaskRestController {
     @PostMapping("list")
     public PageDTO<TaskDTO> list(
             @RequestParam(name = "search", required = false) final String search,
-            @RequestParam(name = "page", required = false) final Integer page,
-            @RequestParam(name = "size", required = false) final Integer size,
+            @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+            @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
             @RequestParam(name = "order", required = false) final String order,
             @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
@@ -69,8 +69,8 @@ public class TaskRestController {
     public PageDTO<TaskDTO> list(
         @PathVariable(name = "id") final String userUuid,
         @RequestParam(name = "search", required = false) final String search,
-        @RequestParam(name = "page", required = false) final Integer page,
-        @RequestParam(name = "size", required = false) final Integer size,
+        @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+        @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;

@@ -18,9 +18,9 @@ function CreateTaskService() {
         let self = this;
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
-         this.createTaskOuChoicesEditSelect = initOUSelect('taskCreateFormTaskOuSelect');
+         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
 
-        this.createTaskUserChoicesEditSelect = initUserSelect('taskCreateFormTaskUserSelect');
+        this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
              var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
              fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
@@ -45,7 +45,7 @@ function CreateTaskService() {
                     this.taskModalDialog.innerHTML = data;
                     this.loaded();
                     this.initTaskRelationSelect();
-                    initTagSelect('taskCreateFormTagsSelect');
+                    choiceService.initTagSelect('taskCreateFormTagsSelect');
                     // create task modal - explainer and riskId
                     // if elem != null it means that the method is called from the risk view page
                     if (elem != null) {
@@ -72,16 +72,16 @@ function CreateTaskService() {
     this.initTaskRelationSelect = function() {
         const relationsSelect = document.getElementById('taskCreateFormRelationsSelect');
         const relationsChoice = initSelect(relationsSelect);
-        updateRelations(relationsChoice, "");
+        choiceService.updateRelations(relationsChoice, "");
         relationsSelect.addEventListener("search",
             function(event) {
-                updateRelations(relationsChoice, event.detail.value);
+                choiceService.updateRelations(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
             function(event) {
-                updateRelations(relationsChoice, "");
+                choiceService.updateRelations(relationsChoice, "");
             },
             false,
         );

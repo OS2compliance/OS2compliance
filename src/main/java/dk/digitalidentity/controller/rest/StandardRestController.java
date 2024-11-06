@@ -7,18 +7,26 @@ import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.RelationService;
+import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -28,6 +36,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class StandardRestController {
     private final StandardSectionDao standardSectionDao;
     private final UserDao userDao;
+    private final RelationService relationService;
 
     record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
@@ -45,6 +54,26 @@ public class StandardRestController {
         }
 
         standardSectionDao.save(standardSection);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+    record StandardSectionRecord(Long id, String description, Long[] documents, Long[] relations, StandardSectionStatus status){}
+
+    @Transactional
+    @PostMapping(value = "save", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<?> save(@RequestBody StandardSectionRecord record) {
+        final StandardSection section = standardSectionDao.findById(record.id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final HashSet<Long> combinedRelations = new HashSet<>();
+        if (record.documents != null) {
+            combinedRelations.addAll(List.of(record.documents));
+        }
+        if (record.relations != null) {
+            combinedRelations.addAll(List.of(record.relations));
+        }
+        relationService.setRelationsAbsolute(section, combinedRelations);
+        section.setStatus(record.status);
+        section.setDescription(record.description);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

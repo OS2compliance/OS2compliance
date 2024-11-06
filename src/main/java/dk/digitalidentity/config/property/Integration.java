@@ -15,4 +15,7 @@ public class Integration {
 
     @NestedConfigurationProperty
     private Kitos kitos = new Kitos();
+
+    @NestedConfigurationProperty
+    private DBS dbs = new DBS();
 }

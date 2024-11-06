@@ -5,21 +5,8 @@ let userChoices;
 function formReset() {
     const form = document.querySelector('form');
     form.reset();
-    updateUsers(userChoices, "");
-    updateSuppliers(supplierChoices, "");
-}
-
-function updateSuppliers(choices, search) {
-    fetch( `/rest/suppliers/autocomplete?search=${search}`)
-        .then(response => response.json()
-            .then(data => {
-                choices.setChoices(data.content.map(e => {
-                    return {
-                        value: e.id,
-                        label: `${e.name}`}
-                }), 'value', 'label', true);
-            }))
-        .catch(error => toastService.error(error));
+    choiceService.updateUsers(userChoices, "");
+    choiceService.updateSuppliers(supplierChoices, "");
 }
 
 function formLoaded() {
@@ -31,10 +18,10 @@ function formLoaded() {
 function initUserChoices() {
     const userSelect = document.getElementById('userSelect');
     userChoices = initSelect(userSelect);
-    updateUsers(userChoices, "");
+    choiceService.updateUsers(userChoices, "");
     userSelect.addEventListener("search",
         function(event) {
-            updateUsers(userChoices, event.detail.value);
+            choiceService.updateUsers(userChoices, event.detail.value);
         },
         false,
     );
@@ -46,10 +33,10 @@ function initUserChoices() {
 function initSuppliersChoices() {
     const supplierSelect = document.getElementById('supplierSelect');
     supplierChoices = initSelect(supplierSelect);
-    updateSuppliers(supplierChoices, "");
+    choiceService.updateSuppliers(supplierChoices, "");
     supplierSelect.addEventListener("search",
         function(event) {
-            updateSuppliers(supplierChoices, event.detail.value);
+            choiceService.updateSuppliers(supplierChoices, event.detail.value);
         },
         false,
     );
@@ -61,10 +48,10 @@ function initSuppliersChoices() {
 function initResponsibleUsersOversightChoices() {
     const userSelect = document.getElementById('responsibleUserOversightSelect');
     userChoices = initSelect(userSelect);
-    updateUsers(userChoices, "");
+    choiceService.updateUsers(userChoices, "");
     userSelect.addEventListener("search",
         function(event) {
-            updateUsers(userChoices, event.detail.value);
+            choiceService.updateUsers(userChoices, event.detail.value);
         },
         false,
     );

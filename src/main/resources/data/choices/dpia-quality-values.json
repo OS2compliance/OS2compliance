@@ -1,0 +1,66 @@
+[
+  {
+    "identifier": "dpia-described",
+    "caption": "Behandlingsaktivitet, samt hvorfor det er nødvendigt at gennemføre en konsekvensanalyse, er beskrevet"
+  },
+  {
+    "identifier": "dpia-well-structured",
+    "caption": "Dokumentet er struktureret logisk og systematisk"
+  },
+  {
+    "identifier": "dpia-clear-language",
+    "caption": "Konsekvensanalysen er skrevet i klart og tilgængeligt sprog, og eventuelle tekniske termer og forkortelser, der er blevet brugt, er beskrevet"
+  },
+  {
+    "identifier": "dpia-roles-and-flows",
+    "caption": "Rollefordelingen mellem de involverede aktører er klart beskrevet. Det samme er datastrømme og den tekniske understøttelse af løsningen, herunder ved brug af diagrammer og bilag om nødvendigt"
+  },
+  {
+    "identifier": "dpia-data-flows",
+    "caption": "Datastrømmene mellem systemer, personer, organisationer og eventuelt lande er klart og tydeligt beskrevet"
+  },
+  {
+    "identifier": "dpia-compliance",
+    "caption": "Det er klart beskrevet, hvordan overholdelse af databeskyttelsesreglerne sikres"
+  },
+  {
+    "identifier": "dpia-rights-observation",
+    "caption": "Det er klart beskrevet, hvordan de registreredes rettigheder kan iagttages"
+  },
+  {
+    "identifier": "dpia-risk-assessment",
+    "caption": "Alle relevante risici for de registreredes rettigheder og frihedsrettigheder er identificeret. Risicienes sandsynlighed og alvor er vurderet, og alle relevante mitigerende foranstaltninger er beskrevet"
+  },
+  {
+    "identifier": "dpia-risk-mitigation",
+    "caption": "Det er klart beskrevet, hvordan de påtænkte foranstaltninger konkret mitigerer de identificerede risici"
+  },
+  {
+    "identifier": "dpia-stakeholder-engagement",
+    "caption": "Den eventuelle interessentinddragelse er beskrevet"
+  },
+  {
+    "identifier": "dpia-code-compliance",
+    "caption": "Overholdelse af eventuelle godkendte adfærdskodekser er inddraget"
+  },
+  {
+    "identifier": "dpia-attachments",
+    "caption": "Relevante bilag, f.eks. privatlivspolitikker, dokumentation vedrørende databehandlere, dokumentation vedrørende behandlingssikkerhed mv., er vedlagt"
+  },
+  {
+    "identifier": "dpia-dpa-consultation",
+    "caption": "Høring af Datatilsynet, hvis der har vist sig at være høje risici som ikke kunne mitigeres, er foretaget"
+  },
+  {
+    "identifier": "dpia-mitigation-plan",
+    "caption": "Der er lagt en plan for, hvornår og hvordan de relevante mitigerende foranstaltninger implementeres"
+  },
+  {
+    "identifier": "dpia-management-approval",
+    "caption": "Konsekvensanalysen er blevet forelagt ledelsen, og ledelsen har godkendt analysen"
+  },
+  {
+    "identifier": "dpia-review-schedule",
+    "caption": "En passende periode for at genbesøge, og om nødvendigt ajourføre analysen, er fastlagt"
+  }
+]

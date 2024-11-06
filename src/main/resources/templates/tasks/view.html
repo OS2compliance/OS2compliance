@@ -4,6 +4,7 @@
 <body class="jumping">
 
 <script th:src="@{/js/task/view.js}" defer></script>
+<script th:src="@{/js/tag-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -57,7 +58,6 @@
                                         <input class="form-control " id="taskType" th:value="*{taskType.getMessage()}" readonly>
                                     </div>
                                 </div>
-
                                 <div class="row mb-3">
                                     <label for="userSelect" class="col-sm-2 col-form-label">Ansvarlig</label>
                                     <div class="col-sm-10">
@@ -195,7 +195,9 @@
     <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}"></nav>
 </div>
 
-<div th:replace="~{tasks/completeTask :: completeTask}"></div>
+<th:block th:with="myFancyReferral=${param.referral}">
+<div th:replace="~{tasks/completeTask :: completeTask (referral=${myFancyReferral})}"></div>
+</th:block>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${task.id})}"></div>
 <div th:replace="~{fragments/addTags :: addTags(relatableId=${task.id})}"></div>
 

@@ -62,6 +62,7 @@ function AssetDetailsService() {
 
 function AssetDpiaService() {
     this.dpiaViewElem = null;
+    this.dpiaOptOutViewElem = null;
     this.tabBadgeElem = null;
     this.screeningBadgeElem = null;
     this.recommendationElem = null;
@@ -76,6 +77,7 @@ function AssetDpiaService() {
 
     this.init = function() {
         this.dpiaViewElem = document.getElementById('dpiaView');
+        this.dpiaOptOutViewElem = document.getElementById('dpiaOptOutTextView');
         this.tabBadgeElem = document.getElementById("dpiaBadge");
         this.screeningBadgeElem = document.getElementById("dpiaBadge2");
         this.recommendationElem = document.getElementById("recommendation");
@@ -109,6 +111,7 @@ function AssetDpiaService() {
 
     this.setDpiaVisibility = function (visible) {
         this.dpiaViewElem.style.display = visible ? 'block' : 'none';
+        this.dpiaOptOutViewElem.style.display = visible ? 'none' : 'block';
     }
 
     this.updateDpiaBadges = function () {
@@ -141,6 +144,37 @@ function AssetDpiaService() {
         assetDetailsService.setField('dpiaOptOut', optOutBoolean);
         this.updateDpiaBadges();
         this.setDpiaVisibility(!optOut);
+    }
+
+    this.updateDpiaOptOutReason = function(elem) {
+        assetDetailsService.setField('dpiaOptOutReason', elem.value);
+    }
+
+    this.editConsequenceLink = function() {
+        document.getElementById('consequenceLinkSaveBtn').style.display = 'block';
+        document.getElementById('consequenceLinkInput').style.display = 'block';
+        document.getElementById('consequenceLinkEditBtn').style.display = 'none';
+        document.getElementById('consequenceLink').style.display = 'none';
+    }
+
+    this.saveConsequenceLink = function() {
+        let linkInput = document.getElementById('consequenceLinkInput');
+        let linkTag = document.getElementById('consequenceLink');
+
+        linkTag.text = linkInput.value;
+
+        document.getElementById('consequenceLinkSaveBtn').style.display = 'none';
+        linkInput.style.display = 'none';
+        document.getElementById('consequenceLinkEditBtn').style.display = 'inline-block';
+        linkTag.style.display = 'inline-block';
+
+        this.setFieldScreening("consequenceLink", linkInput.value)
+    }
+
+    this.setFieldScreening = function (fieldName, value) {
+        putData(`/rest/assets/${assetId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
+            .then(defaultResponseHandler)
+            .catch(defaultErrorHandler)
     }
 
     this.handleAnswerChange = function () {
@@ -186,6 +220,19 @@ function AssetDpiaService() {
                 element.parentElement.nextElementSibling.innerHTML = '<div class="d-block mx-auto badge bg-warning">Gul</div>';
             }
         }
+    }
+
+    this.setRevisionInterval = function(assetId) {
+        fetch( `/assets/${assetId}/revision`)
+            .then(response => response.text()
+                .then(data => {
+                    let dialog = document.getElementById('revisionIntervalDialog');
+                    dialog.innerHTML = data;
+                    revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
+                    revisionDialog.show();
+                    initDatepicker("#nextRevisionBtn", "#nextRevision");
+                }))
+            .catch(error => toastService.error(error));
     }
 
 }

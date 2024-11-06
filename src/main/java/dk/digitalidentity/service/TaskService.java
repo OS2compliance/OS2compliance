@@ -3,6 +3,7 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -28,6 +29,7 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
@@ -149,6 +151,18 @@ public class TaskService {
         final List<Relatable> tasks = relationService.findAllRelatedTo(threatAssessment).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
         for (final Relatable taskAsRelatable : tasks) {
             final Task task = (Task) taskAsRelatable;
+            if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+                continue;
+            }
+            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUser().getName(), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
+        }
+        return relatedTasks;
+    }
+
+    public List<TaskDTO> buildDPIARelatedTasks(final Asset asset, final boolean onlyNotCompleted) {
+        final List<TaskDTO> relatedTasks = new ArrayList<>();
+        final List<Task> tasks = findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + asset.getId());
+        for (final Task task : tasks) {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;
             }

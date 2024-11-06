@@ -21,7 +21,7 @@
                     <label for="revisionInterval" class="col-lg-4 col-form-label">Revideringsfrekvens</label>
                     <div class="col-lg-8">
                         <select class="form-control form-select" th:field="*{revisionInterval}" id="revisionInterval" required>
-                            <option th:each="revisionInterval : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentRevisionInterval).values()}"
+                            <option th:each="revisionInterval : ${T(dk.digitalidentity.model.entity.enums.RevisionInterval).values()}"
                                     th:value="${revisionInterval}" th:text="${revisionInterval.message}"></option>
                         </select>
                         <div class="invalid-feedback">Der skal vælges en revideringsfrekvens</div>

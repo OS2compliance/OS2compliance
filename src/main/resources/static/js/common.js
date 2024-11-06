@@ -67,10 +67,24 @@ function checkInputField(my_choices, atleastOne = false) {
     }
 }
 
-const defaultResponseHandler = function (response) {
+function sessionExpiredHandler() {
+    toastService.error("Din session er udløbet, genindlæser");
+    setTimeout(function () {
+        location.reload();
+    }, 3000);
+}
+
+function defaultResponseErrorHandler(response) {
+    if (response.status === 403) {
+        sessionExpiredHandler();
+    }
     if (!response.ok) {
         throw new Error(`${response.status} ${response.statusText}`);
     }
+}
+
+const defaultResponseHandler = function (response) {
+    defaultResponseErrorHandler(response);
     toastService.info("Info", "Dine ændringer er blevet gemt");
 }
 
@@ -88,7 +102,7 @@ async function jsonCall(method, url, data = {}) {
             "Content-Type": "application/json"
         },
         referrerPolicy: "no-referrer",
-        body: JSON.stringify(data),
+        body: data != null ? JSON.stringify(data) : null,
     });
 }
 
@@ -98,6 +112,10 @@ async function postData(url, data = {}) {
 
 async function putData(url = "", data = {}) {
     return jsonCall("PUT", url, data);
+}
+
+async function deleteData(url) {
+    return jsonCall("DELETE", url, {});
 }
 
 function asIntOrDefault(value, def) {
@@ -112,14 +130,18 @@ function asIntOrDefault(value, def) {
 function fetchHtml(url, targetId) {
     return fetch(url)
         .then(response => {
+            if (response.status === 403) {
+                sessionExpiredHandler();
+                return;
+            }
             if (!response.ok) {
                 throw new Error(`${response.status} ${response.statusText}`);
             }
-            response.text().then(data => {
+            return response.text().then(data => {
                 document.getElementById(targetId).innerHTML = data;
             });
         }
-    ).catch(error => { toastService.error(error); console.log(error) });
+    ).catch(defaultErrorHandler);
 }
 
 function javaFormatDate(date) {
@@ -154,4 +176,3 @@ function ensureElementHasClass(elem, className) {
         elem.classList.add(className)
     }
 }
-

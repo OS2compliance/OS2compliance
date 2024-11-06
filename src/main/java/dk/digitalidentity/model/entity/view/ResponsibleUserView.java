@@ -1,6 +1,6 @@
 package dk.digitalidentity.model.entity.view;
 
-import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.config.StringSetNullSafeConverter;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -33,7 +33,7 @@ public class ResponsibleUserView {
     @Column
     private boolean active;
 
-    @Convert(converter = StringListNullSafeConverter.class)
+    @Convert(converter = StringSetNullSafeConverter.class)
     @Column
     private Set<String> responsibleRelatableIds;
 }

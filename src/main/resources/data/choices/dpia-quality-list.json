@@ -1,0 +1,23 @@
+{
+  "identifier": "dpia-quality-checklist",
+  "name": "Tjekliste til kvalitetssikring",
+  "multiSelect": true,
+  "valueIdentifiers": [
+    "dpia-described",
+    "dpia-well-structured",
+    "dpia-clear-language",
+    "dpia-roles-and-flows",
+    "dpia-data-flows",
+    "dpia-compliance",
+    "dpia-rights-observation",
+    "dpia-risk-assessment",
+    "dpia-risk-mitigation",
+    "dpia-stakeholder-engagement",
+    "dpia-code-compliance",
+    "dpia-attachments",
+    "dpia-dpa-consultation",
+    "dpia-mitigation-plan",
+    "dpia-management-approval",
+    "dpia-review-schedule"
+  ]
+}

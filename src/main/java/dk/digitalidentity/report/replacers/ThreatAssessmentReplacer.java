@@ -437,7 +437,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
          | | 1| 2| 3| 4|
         */
         // Insert the first row which should be 5 or 11 merged cells (depending on settings)
-        final int gridSize = scaleService.getScale().size() + 1;
+        final int gridSize = scaleService.getConsequenceScale().size() + 1;
         // There is a BUG somewhere in POI.
         // The table starts with a row in its internal list, but is not in the xml, this cause issues
         // It turns out removing and re adding the row clears the problem.

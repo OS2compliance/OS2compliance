@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
@@ -98,7 +97,6 @@ public class RiskRestController {
     private final RiskMapper mapper;
     private final UserService userService;
     private final PrecautionService precautionService;
-    private final OS2complianceConfiguration configuration;
     private final S3Service s3Service;
     private final S3DocumentService s3DocumentService;
     private final Environment environment;
@@ -107,8 +105,8 @@ public class RiskRestController {
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
             @RequestParam(name = "search", required = false) final String search,
-            @RequestParam(name = "page", required = false) final Integer page,
-            @RequestParam(name = "size", required = false) final Integer size,
+            @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+            @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
             @RequestParam(name = "order", required = false) final String order,
             @RequestParam(name = "dir", required = false) final String dir
     ) {

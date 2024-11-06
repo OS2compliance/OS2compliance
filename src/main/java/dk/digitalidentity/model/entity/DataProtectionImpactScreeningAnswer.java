@@ -32,7 +32,7 @@ public class DataProtectionImpactScreeningAnswer {
     @ManyToOne
     @JoinColumn(name = "assessment_id")
     @JsonIgnore
-    private DataProtectionImpactAssessment assessment;
+    private DataProtectionImpactAssessmentScreening assessment;
 
     // Choice answers from the DPIA screening
     @OneToOne

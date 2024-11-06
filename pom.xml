@@ -18,7 +18,7 @@
         <!-- automatically run annotation processors within the incremental compilation -->
         <m2e.apt.activation>jdt_apt</m2e.apt.activation>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<java.version>17</java.version>
+		<java.version>21</java.version>
 	</properties>
 
     <dependencyManagement>
@@ -96,6 +96,10 @@
 			<groupId>com.mysql</groupId>
 			<artifactId>mysql-connector-j</artifactId>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.httpcomponents.client5</groupId>
+            <artifactId>httpclient5</artifactId>
+        </dependency>
 		<dependency>
 			<groupId>org.projectlombok</groupId>
 			<artifactId>lombok</artifactId>
@@ -153,6 +157,11 @@
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
 			<artifactId>kitos-client</artifactId>
+			<version>release-1.0.6</version>
+		</dependency>
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>dbs-client</artifactId>
 			<version>1.0.4</version>
 		</dependency>
 		<dependency>
@@ -215,6 +224,11 @@
             <artifactId>bcprov-jdk15on</artifactId>
             <version>1.70</version>
         </dependency>
+        <dependency>
+            <groupId>net.sourceforge.htmlcleaner</groupId>
+            <artifactId>htmlcleaner</artifactId>
+            <version>2.29</version>
+        </dependency>
     </dependencies>
 
 	<build>
@@ -251,6 +265,9 @@
 							<BP_NATIVE_IMAGE>true</BP_NATIVE_IMAGE>
 						</env>
 					</image>
+                    <profiles>
+                        <profile>dev</profile>
+                    </profiles>
 				</configuration>
 			</plugin>
 
