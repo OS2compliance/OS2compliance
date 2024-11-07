@@ -25,4 +25,8 @@ public class TagService {
         tagDao.delete(tag);
     }
 
+    public Tag create (Tag tag) {
+        return tagDao.save(tag);
+    }
+
 }

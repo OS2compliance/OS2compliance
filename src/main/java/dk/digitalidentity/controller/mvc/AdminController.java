@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 public class AdminController {
     private final ResponsibleUserViewService responsibleUserViewService;
     private final EmailTemplateService emailTemplateService;
-    private final TagService tagService;
+
 
     @GetMapping("inactive")
     public String inactiveResponsibleList(Model model) {
@@ -52,9 +52,5 @@ public class AdminController {
         return "admin/mailtemplates";
     }
 
-    @GetMapping("tags")
-    public String tagAdmin(final Model model){
-        model.addAttribute("tags",tagService.findAll());
-        return "admin/tags_view";
-    }
+
 }
