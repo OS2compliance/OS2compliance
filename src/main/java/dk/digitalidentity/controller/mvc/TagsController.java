@@ -25,6 +25,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class TagsController {
     private final TagService tagService;
 
+    /**
+     * Main endpoint for Tags view
+     * @param model
+     * @return
+     */
     @GetMapping()
     public String tagAdmin(final Model model){
         model.addAttribute("tag", new Tag());
@@ -32,6 +37,11 @@ public class TagsController {
         return "tags/tags_view";
     }
 
+    /**
+     * Creates a new tag and redirects to the main tag page
+     * @param tag
+     * @return redirect to main tags view
+     */
     @Transactional
     @PostMapping("create")
     public String createTag(@ModelAttribute final Tag tag) {

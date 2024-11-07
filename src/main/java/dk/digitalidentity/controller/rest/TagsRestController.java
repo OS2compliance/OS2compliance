@@ -20,6 +20,11 @@ import org.springframework.web.server.ResponseStatusException;
 public class TagsRestController {
     private final TagService tagService;
 
+    /**
+     * Deletes the Tag with the given ID, if it exists
+     * @param tagId
+     * @return
+     */
     @Transactional
     @DeleteMapping(value = "{tagId}")
     public ResponseEntity<?> delete(@PathVariable("tagId") final Long tagId) {
