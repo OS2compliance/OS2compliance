@@ -179,7 +179,7 @@ public class TasksController {
         final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !existingTask.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !existingTask.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (calculateCompleted(task)) {
@@ -284,7 +284,7 @@ public class TasksController {
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !task.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !task.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (calculateCompleted(task)) {

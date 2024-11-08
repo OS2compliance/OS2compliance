@@ -40,7 +40,6 @@ public class RegisterRestController {
     private final RegisterMapper mapper;
     private final UserService userService;
 
-    @RequireSuperuser
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
             @RequestParam(name = "search", required = false) final String search,
@@ -78,7 +77,7 @@ public class RegisterRestController {
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && authentication.getPrincipal() != uuid)) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !authentication.getPrincipal().equals(uuid)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         Sort sort = null;

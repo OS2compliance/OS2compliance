@@ -124,7 +124,7 @@ public class RegisterController {
 
         if (existingOptional.isPresent()) {
             final ConsequenceAssessment existing = existingOptional.get();
-            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && existing.getRegister().getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && existing.getRegister().getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
             existing.setAssessment(assessment.getAssessment());
@@ -177,7 +177,7 @@ public class RegisterController {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (name != null) {
@@ -235,7 +235,7 @@ public class RegisterController {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (purpose != null) {
@@ -266,7 +266,7 @@ public class RegisterController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         dataProcessingService.update(register.getDataProcessing(), body);

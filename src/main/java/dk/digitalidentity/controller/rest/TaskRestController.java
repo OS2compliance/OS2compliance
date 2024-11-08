@@ -79,7 +79,7 @@ public class TaskRestController {
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && authentication.getPrincipal() != userUuid)) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !authentication.getPrincipal().equals(userUuid)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         Sort sort = null;

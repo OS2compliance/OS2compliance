@@ -54,7 +54,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("rest/relatable")
-@RequireSuperuser
+@RequireUser
 @RequiredArgsConstructor
 public class RelatableRestController {
     private final RelatableDao relatableDao;

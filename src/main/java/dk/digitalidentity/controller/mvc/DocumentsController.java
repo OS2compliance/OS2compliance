@@ -92,7 +92,7 @@ public class DocumentsController {
         final Document excistingDocument = documentService.get(document.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !excistingDocument.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !excistingDocument.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {

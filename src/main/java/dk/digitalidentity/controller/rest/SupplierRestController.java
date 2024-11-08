@@ -41,7 +41,7 @@ public class SupplierRestController {
 	record SuppliersPageWrapper(long count, List<SupplierGridDTO> suppliers) {}
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}
 
-	@RequireSuperuser
+    @RequireSuperuser
     @PostMapping("list")
 	public SuppliersPageWrapper list(
 			@RequestParam(name = "search", required = false) final String search,

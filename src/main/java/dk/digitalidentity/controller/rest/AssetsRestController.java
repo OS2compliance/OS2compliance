@@ -98,7 +98,6 @@ public class AssetsRestController {
     private final AssetOversightDao assetOversightDao;
 
 
-    @RequireSuperuser
     @PostMapping("list")
 	public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
                                   @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
@@ -125,6 +124,7 @@ public class AssetsRestController {
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
 	}
+
     @PostMapping("list/{id}")
     public PageDTO<AssetDTO> list(@PathVariable(name = "id", required = true) final String uuid,
                                 @RequestParam(name = "search", required = false) final String search,
@@ -135,7 +135,7 @@ public class AssetsRestController {
         Sort sort = null;
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && authentication.getPrincipal() != uuid)) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !authentication.getPrincipal().equals(uuid)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
@@ -164,7 +164,7 @@ public class AssetsRestController {
         canSetFieldGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
@@ -177,7 +177,7 @@ public class AssetsRestController {
         canSetFieldDPIAScreeningGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, asset.getDpiaScreening(), fieldName, value);
@@ -261,7 +261,7 @@ public class AssetsRestController {
     public void setDPIAResponseField( @RequestBody final DPIASetFieldDTO dto, @PathVariable final long assetId) throws IOException {
         final Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (asset.getDpia() == null) {
@@ -322,7 +322,7 @@ public class AssetsRestController {
     public void setDPIASectionField( @RequestBody final DPIASetFieldDTO dto, @PathVariable long assetId) {
         Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (dto.fieldName.equals("conclusion")) {
@@ -339,7 +339,7 @@ public class AssetsRestController {
     public ResponseEntity<?> mailReport(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
