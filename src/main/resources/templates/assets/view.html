@@ -33,7 +33,7 @@
                             <p class="lead"></p>
                         </div>
                         <div class="align-self-center d-inline-flex">
-                            <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                                 <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                             </button>
                         </div>
@@ -73,9 +73,9 @@
                                 <form id="editForm" action="#" th:action="@{/assets/edit}" th:object="${asset}" method="post" class="needs-validation was-validated">
                                     <!-- buttons row -->
                                     <div class="row mb-3 gap-1">
-                                        <button id="saveEditAssetBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                        <button id="cancelBtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="editMode(false);" hidden>Annuller</button>
-                                        <button id="editAssetBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                        <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="editMode(false);" hidden>Annuller</button>
+                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
                                     </div>
                                     <div class="row mb-3">
                                         <!-- Column 1 -->
@@ -311,7 +311,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Behandlingsaktivitet</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#RegisterRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -339,7 +339,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Foranstaltninger</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#PrecautionRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -365,7 +365,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Relaterede aktiver</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -391,7 +391,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Dokumenter</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -416,7 +416,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Opgaver</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -442,7 +442,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Hændelser</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">

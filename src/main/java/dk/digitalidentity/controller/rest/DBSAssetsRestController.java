@@ -7,6 +7,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireUser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -44,8 +45,8 @@ public class DBSAssetsRestController {
 	private final DBSAssetMapper mapper;
     private final RelationService relationService;
 
-
-	@PostMapping("list")
+    @RequireUser
+    @PostMapping("list")
 	@Transactional
 	public PageDTO<DBSAssetDTO> list(@RequestParam(name = "search", required = false) final String search,
                                   @RequestParam(name = "page", required = false) final Integer page,

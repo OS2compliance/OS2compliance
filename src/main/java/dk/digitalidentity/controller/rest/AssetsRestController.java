@@ -122,7 +122,8 @@ public class AssetsRestController {
 			assets = assetGridDao.findAll(sortAndPage);
 		}
 
-		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
 	}
 
     @PostMapping("list/{id}")
@@ -155,7 +156,7 @@ public class AssetsRestController {
             assets = assetGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage);
         }
 
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
     }
 
     @PutMapping("{id}/setfield")

@@ -250,7 +250,10 @@ public class AssetsController {
         final List<AssetOversight> oversights = new ArrayList<>(
             assetOversightService.findByAssetOrderByCreationDateDesc(asset));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
 		model.addAttribute("asset", asset);
+        model.addAttribute("changeableAsset", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || asset.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(authentication.getPrincipal()))));
 		model.addAttribute("relatedAssets", relatedAssets);
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);

@@ -32,9 +32,9 @@
                 </div>
                 <div id="dpiaView">
                     <div class="row mb-3 gap-1">
-                        <button id="editDPIABtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDPIAEditState(true)">Rediger</button>
-                        <button id="cancelDPIABtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDPIAEditState(false)" hidden>Annuller</button>
-                        <button id="saveDPIABtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                        <button id="editDPIABtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDPIAEditState(true)">Rediger</button>
+                        <button id="cancelDPIABtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDPIAEditState(false)" hidden>Annuller</button>
+                        <button id="saveDPIABtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
                     </div>
                     <input name="assetId" th:value="${asset.id}" hidden>
                     <div class="accordion" id="_dm-dpiaAccordion">
@@ -189,7 +189,7 @@
 
                     <div class="d-flex mt-2">
                         <div class="d-flex flex-fill align-items-start mb-3 p-1">
-                            <button type="button" class="btn btn-success" th:onclick="|assetDpiaService.setRevisionInterval(${asset.id})|">
+                            <button type="button" th:if="${changeableAsset}" class="btn btn-success" th:onclick="|assetDpiaService.setRevisionInterval(${asset.id})|">
                                 <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
                             </button>
                         </div>

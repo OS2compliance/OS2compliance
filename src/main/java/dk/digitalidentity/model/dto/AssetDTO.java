@@ -22,4 +22,5 @@ public class AssetDTO {
     private String kitos;
     private boolean hasThirdCountryTransfer;
     private int registers;
+    private boolean changeable;
 }

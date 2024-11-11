@@ -6,9 +6,9 @@
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
                 <div class="row mb-3 gap-1">
-                    <button id="editTIABtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setTIAEditState(true)">Rediger TIA</button>
-                    <button id="cancelTIABtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setTIAEditState(false)" hidden>Annuller</button>
-                    <button id="saveTIABtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right"  hidden>Gem</button>
+                    <button id="editTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setTIAEditState(true)">Rediger TIA</button>
+                    <button id="cancelTIABtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setTIAEditState(false)" hidden>Annuller</button>
+                    <button id="saveTIABtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right"  hidden>Gem</button>
                 </div>
                 <input th:field="${asset.id}" hidden>
 
