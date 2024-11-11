@@ -41,7 +41,6 @@ public class TaskRestController {
     private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
 
-    @RequireSuperuser
     @PostMapping("list")
     public PageDTO<TaskDTO> list(
             @RequestParam(name = "search", required = false) final String search,

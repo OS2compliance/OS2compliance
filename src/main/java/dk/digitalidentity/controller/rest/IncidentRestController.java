@@ -86,6 +86,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @RequireUser
     @PostMapping("list")
     public PageDTO<IncidentDTO> list(
         @RequestParam(name = "search", required = false) final String search,

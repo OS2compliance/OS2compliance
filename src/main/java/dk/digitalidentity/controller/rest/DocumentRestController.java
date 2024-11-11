@@ -40,7 +40,6 @@ public class DocumentRestController {
     private final DocumentMapper mapper;
     private final UserService userService;
 
-    @RequireSuperuser
     @PostMapping("list")
     public PageDTO<DocumentDTO> list(
             @RequestParam(name = "search", required = false) final String search,

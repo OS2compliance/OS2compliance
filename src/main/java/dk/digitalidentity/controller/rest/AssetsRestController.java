@@ -97,14 +97,13 @@ public class AssetsRestController {
     private final ApplicationEventPublisher eventPublisher;
     private final AssetOversightDao assetOversightDao;
 
-
     @PostMapping("list")
 	public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
                                   @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
                                   @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
                                   @RequestParam(name = "order", required = false) final String order,
                                   @RequestParam(name = "dir", required = false) final String dir) {
-		Sort sort = null;
+        Sort sort = null;
 		if (StringUtils.isNotEmpty(order) && containsField(order)) {
 			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
 			sort = Sort.by(direction, order);

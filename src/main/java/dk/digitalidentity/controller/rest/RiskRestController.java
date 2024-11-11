@@ -106,8 +106,6 @@ public class RiskRestController {
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
 
-
-    @RequireSuperuser
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
             @RequestParam(name = "search", required = false) final String search,
