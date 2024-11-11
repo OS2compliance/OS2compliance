@@ -9,6 +9,8 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Index;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -39,6 +41,11 @@ public class User {
 
     @Column
     private String name;
+
+    @Column
+    @NotNull
+    @Size(max = 255)
+    private String password;
 
     @Column
     private String email;
