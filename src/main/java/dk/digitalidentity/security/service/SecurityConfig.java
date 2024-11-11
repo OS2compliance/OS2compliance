@@ -1,28 +1,44 @@
 package dk.digitalidentity.security.service;
 
+import dk.digitalidentity.security.Roles;
+import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
+import org.springframework.security.core.userdetails.User;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
+    @Primary
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain formSecurityFilterChain(HttpSecurity http) throws Exception {
         http
             .authorizeHttpRequests((requests) -> requests
+                .requestMatchers(
+                    "/webjars/**",
+                    "/css/**",
+                    "/js/**",
+                    "/img/**",
+                    "/vendor/**",
+                    "/favicon.ico"
+                ).permitAll()
                 .anyRequest().authenticated()
             )
             .formLogin((form) -> form
-                .loginPage("/login")
-                .permitAll()
+                .loginPage("/login").permitAll()
             )
             .logout(LogoutConfigurer::permitAll);
 
@@ -33,4 +49,19 @@ public class SecurityConfig {
     public BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
+    @Primary
+    @Bean
+    public UserDetailsService formUserDetailsService() {
+        UserDetails user =
+            User.withDefaultPasswordEncoder()
+                .username("user")
+                .password("password")
+                .roles(Roles.USER.substring(5))
+                .build();
+
+        return new InMemoryUserDetailsManager(user);
+    }
+
+
 }
