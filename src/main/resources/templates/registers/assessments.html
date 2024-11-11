@@ -7,9 +7,9 @@
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
-                    <button id="editAssessmentBtn" type="button" class="btn btn-secondary btn-xs" onclick="registerAssessmentService.setAssessmentEditState(true)">Rediger</button>
-                    <button id="cancelAssessmentBtn" type="button" onclick="registerAssessmentService.setAssessmentEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
-                    <button id="saveAssessmentBtn" form="editAssessmentId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                    <button id="editAssessmentBtn" th:if="${changeableRegister}" type="button" class="btn btn-secondary btn-xs" onclick="registerAssessmentService.setAssessmentEditState(true)">Rediger</button>
+                    <button id="cancelAssessmentBtn" th:if="${changeableRegister}" type="button" onclick="registerAssessmentService.setAssessmentEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="saveAssessmentBtn" th:if="${changeableRegister}" form="editAssessmentId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                 </div>
             </div>
             <div class="table-responsive" style="overflow: visible">
