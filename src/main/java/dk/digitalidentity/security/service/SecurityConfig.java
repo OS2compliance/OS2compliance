@@ -50,18 +50,30 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
+//    @Primary
+//    @Bean
+//    public UserDetailsService formUserDetailsService() {
+//        UserDetails user =
+//            User.withDefaultPasswordEncoder()
+//                .username("user")
+//                .password("password")
+//                .roles(Roles.USER.substring(5))
+//                .build();
+//
+//        return new InMemoryUserDetailsManager(user);
+//    }
+
     @Primary
     @Bean
     public UserDetailsService formUserDetailsService() {
-        UserDetails user =
-            User.withDefaultPasswordEncoder()
-                .username("user")
-                .password("password")
-                .roles(Roles.USER.substring(5))
-                .build();
-
-        return new InMemoryUserDetailsManager(user);
+        return new FormUserDetailService();
     }
 
-
+    @Bean
+    public DaoAuthenticationProvider authenticationProvider () {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
+        authProvider.setPasswordEncoder(passwordEncoder());
+        authProvider.setUserDetailsService(formUserDetailsService());
+        return authProvider;
+    }
 }

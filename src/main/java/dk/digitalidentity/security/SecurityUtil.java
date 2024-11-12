@@ -2,8 +2,10 @@ package dk.digitalidentity.security;
 
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.TokenUser;
+import dk.digitalidentity.security.service.formUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -17,15 +19,15 @@ public class SecurityUtil {
     public static boolean isLoggedIn() {
         return SecurityContextHolder.getContext().getAuthentication() != null
                 && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
-                && SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser;
+                && (SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser || SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof formUserDetails);
     }
 
 	public static String getLoggedInUserUuid() {
 		if (!isLoggedIn()) {
 			return null;
 		}
-		final TokenUser tokenUser = (TokenUser) SecurityContextHolder.getContext().getAuthentication().getDetails();
-		return tokenUser.getUsername();
+		final UserDetails userDetails = (UserDetails) SecurityContextHolder.getContext().getAuthentication().getDetails();
+		return userDetails.getUsername();
 	}
 
     public static void loginSystemUser(final List<SamlGrantedAuthority> authorities, final String username) {
