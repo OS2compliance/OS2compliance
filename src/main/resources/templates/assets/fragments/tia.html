@@ -185,6 +185,7 @@
         /*<![CDATA[*/
 
         /*[+
+        var changeableAsset = [[${changeableAsset}]]
         +]*/
         let bsCollapse;
         let tiaChoiceElements =[];
@@ -256,9 +257,11 @@
 
                 tiaChoiceElements.forEach((e) => e.enable());
 
-                document.getElementById('saveTIABtn').hidden = false;
-                document.getElementById('editTIABtn').hidden = true;
-                document.getElementById('cancelTIABtn').hidden = false;
+                if(changeableAsset) {
+                    document.getElementById('saveTIABtn').hidden = false;
+                    document.getElementById('editTIABtn').hidden = true;
+                    document.getElementById('cancelTIABtn').hidden = false;
+                }
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                   elem.disabled = true;
@@ -277,9 +280,11 @@
 
                 tiaChoiceElements.forEach((e) => e.disable());
 
-                document.getElementById('saveTIABtn').hidden = true;
-                document.getElementById('editTIABtn').hidden = false;
-                document.getElementById('cancelTIABtn').hidden = true;
+                if(changeableAsset) {
+                    document.getElementById('saveTIABtn').hidden = true;
+                    document.getElementById('editTIABtn').hidden = false;
+                    document.getElementById('cancelTIABtn').hidden = true;
+                }
 
                 const form = document.getElementById("tiaForm");
                 form.reset();

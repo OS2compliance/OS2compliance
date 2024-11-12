@@ -129,7 +129,8 @@ public class RiskRestController {
             risks = riskGridDao.findAll(sortAndPage);
         }
         assert risks != null;
-        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent()));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
     }
 
     record ResponsibleUserDTO(String uuid, String name, String userId) {}

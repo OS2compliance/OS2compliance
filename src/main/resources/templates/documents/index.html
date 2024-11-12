@@ -61,6 +61,7 @@
         var gridDocumentsUrl = [[@{/rest/documents/list}]];
         var viewUrl = [[@{/documents/}]];
         var deleteUrl = [[@{/documents/}]];
+        var isSuperuser = [[${isSuperuser}]]
     +]*/
 
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -164,10 +165,12 @@
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        const documentId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${documentId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                        if(isSuperuser) {
+                            const documentId = row.cells[0]['data'];
+                            const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                            return gridjs.html(
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${documentId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                        }
                     }
                 }
             ],

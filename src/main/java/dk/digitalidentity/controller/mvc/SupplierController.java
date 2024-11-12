@@ -80,7 +80,10 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .collect(Collectors.toList());
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("oversights", assetOversights);
+        model.addAttribute("changeableSupplier", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || supplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal())));
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);

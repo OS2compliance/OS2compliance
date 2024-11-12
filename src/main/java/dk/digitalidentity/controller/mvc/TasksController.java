@@ -216,7 +216,10 @@ public class TasksController {
         final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("task", task);
+        model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || authentication.getPrincipal().equals(task.getResponsibleUser().getUuid())));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
 

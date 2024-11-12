@@ -11,7 +11,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import dk.digitalidentity.security.Roles;
 import org.apache.commons.lang3.BooleanUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -34,7 +33,6 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import org.springframework.security.core.Authentication;
 
 
 @SuppressWarnings("Convert2MethodRef")
@@ -70,13 +68,9 @@ public interface AssetMapper {
     //provides a mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
     default AssetDTO toDTO(final AssetGrid assetGrid, boolean superuser, String principalUuid) {
         AssetDTO assetDTO = toDTO(assetGrid);
-        System.out.println("superuser = " + superuser);
-        System.out.println("principalUuid = " + principalUuid);
-        System.out.println("assetGrid.getResponsibleUserUuids() = " + assetGrid.getResponsibleUserUuids());
         if(superuser || principalUuid.equals(assetGrid.getResponsibleUserUuids())) {
             assetDTO.setChangeable(true);
         }
-        System.out.println("assetDTO.isChangeable() = " + assetDTO.isChangeable());
         return assetDTO;
     }
 

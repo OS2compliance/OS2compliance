@@ -45,7 +45,9 @@ public class DocumentsController {
 
     @GetMapping
     public String documentsList(final Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", new Document());
+        model.addAttribute("isSuperuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "documents/index";
     }
 

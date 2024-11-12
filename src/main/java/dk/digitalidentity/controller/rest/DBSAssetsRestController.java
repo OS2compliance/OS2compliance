@@ -37,7 +37,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/assets")
-@RequireSuperuser
+@RequireUser
 @RequiredArgsConstructor
 public class DBSAssetsRestController {
 	private final DBSAssetGridDao dbsAssetGridDao;
@@ -45,7 +45,6 @@ public class DBSAssetsRestController {
 	private final DBSAssetMapper mapper;
     private final RelationService relationService;
 
-    @RequireUser
     @PostMapping("list")
 	@Transactional
 	public PageDTO<DBSAssetDTO> list(@RequestParam(name = "search", required = false) final String search,
@@ -76,6 +75,7 @@ public class DBSAssetsRestController {
 
     record UpdateDBSAssetDTO(long id, List<Long> assets) {}
 
+    @RequireSuperuser
     @PostMapping("update")
     @Transactional
     public ResponseEntity<?> update(@RequestBody UpdateDBSAssetDTO body) {

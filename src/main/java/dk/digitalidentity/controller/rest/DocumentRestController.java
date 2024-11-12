@@ -65,7 +65,8 @@ public class DocumentRestController {
             documents = documentGridDao.findAll(sortAndPage);
         }
         assert documents != null;
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
     }
 
     @PostMapping("list/{id}")

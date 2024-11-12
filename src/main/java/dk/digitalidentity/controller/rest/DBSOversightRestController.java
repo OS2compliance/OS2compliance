@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.rest;
 import java.util.Arrays;
 import java.util.List;
 
+import dk.digitalidentity.security.RequireUser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -26,7 +27,7 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/oversight")
-@RequireSuperuser
+@RequireUser
 @RequiredArgsConstructor
 public class DBSOversightRestController {
 	private final DBSOversightGridDao dbsOversightGridDao;
