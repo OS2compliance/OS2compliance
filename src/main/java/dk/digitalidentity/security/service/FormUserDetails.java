@@ -1,23 +1,24 @@
 package dk.digitalidentity.security.service;
 
 import dk.digitalidentity.model.entity.User;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class formUserDetails implements UserDetails {
+@Getter
+@Setter
+@Builder
+public class FormUserDetails implements UserDetails {
 
     private User user;
-
-    public formUserDetails(User user) {
-        this.user = user;
-    }
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
@@ -38,6 +39,8 @@ public class formUserDetails implements UserDetails {
     public String getUsername() {
         return user.getUserId();
     }
+
+    public String getUserUUID () {return user.getUuid(); }
 
     @Override
     public boolean isAccountNonExpired() {

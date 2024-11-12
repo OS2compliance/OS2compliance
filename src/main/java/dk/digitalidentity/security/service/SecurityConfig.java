@@ -10,6 +10,7 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.annotation.web.configurers.LogoutConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -26,21 +27,21 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain formSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-            .authorizeHttpRequests((requests) -> requests
-                .requestMatchers(
-                    "/webjars/**",
-                    "/css/**",
-                    "/js/**",
-                    "/img/**",
-                    "/vendor/**",
-                    "/favicon.ico"
-                ).permitAll()
-                .anyRequest().authenticated()
-            )
-            .formLogin((form) -> form
-                .loginPage("/login").permitAll()
-            )
-            .logout(LogoutConfigurer::permitAll);
+                .authorizeHttpRequests((requests) -> requests
+                        .requestMatchers(
+                                "/webjars/**",
+                                "/css/**",
+                                "/js/**",
+                                "/img/**",
+                                "/vendor/**",
+                                "/favicon.ico"
+                        ).permitAll()
+                        .anyRequest().authenticated()
+                )
+                .formLogin((form) -> form
+                        .loginPage("/login").permitAll()
+                )
+                .logout(LogoutConfigurer::permitAll);
 
         return http.build();
     }
@@ -50,18 +51,6 @@ public class SecurityConfig {
         return new BCryptPasswordEncoder();
     }
 
-//    @Primary
-//    @Bean
-//    public UserDetailsService formUserDetailsService() {
-//        UserDetails user =
-//            User.withDefaultPasswordEncoder()
-//                .username("user")
-//                .password("password")
-//                .roles(Roles.USER.substring(5))
-//                .build();
-//
-//        return new InMemoryUserDetailsManager(user);
-//    }
 
     @Primary
     @Bean
@@ -70,7 +59,7 @@ public class SecurityConfig {
     }
 
     @Bean
-    public DaoAuthenticationProvider authenticationProvider () {
+    public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
         authProvider.setPasswordEncoder(passwordEncoder());
         authProvider.setUserDetailsService(formUserDetailsService());
