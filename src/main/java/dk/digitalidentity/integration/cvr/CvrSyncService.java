@@ -45,7 +45,7 @@ public class CvrSyncService {
     public void updateFromCvr(final String cvr, final CvrSearchResultDTO cvrSearchResultDTO) {
         supplierDao.findByCvr(cvr)
             .ifPresentOrElse(supplier -> {
-                if (supplier.getName() != null && !supplier.getName().isEmpty()) {
+                if (cvrSearchResultDTO.getName() != null && !cvrSearchResultDTO.getName().isEmpty()) {
                     supplier.setName(cvrSearchResultDTO.getName());
                     supplier.setCity(cvrSearchResultDTO.getCity());
                     supplier.setEmail(cvrSearchResultDTO.getEmail());
