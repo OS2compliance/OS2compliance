@@ -45,6 +45,13 @@ public class CvrSyncService {
     public void updateFromCvr(final String cvr, final CvrSearchResultDTO cvrSearchResultDTO) {
         supplierDao.findByCvr(cvr)
             .ifPresentOrElse(supplier -> {
+                supplier.getProperties().removeIf(p -> p.getKey().equals(NEEDS_CVR_UPDATE_PROPERTY));
+                supplier.getProperties().removeIf(p -> p.getKey().equals(CVR_UPDATED_PROPERTY));
+                supplier.getProperties().add(Property.builder()
+                    .entity(supplier)
+                    .key(CVR_UPDATED_PROPERTY)
+                    .value(LocalDate.now().toString())
+                    .build());
                 if (cvrSearchResultDTO.getName() != null && !cvrSearchResultDTO.getName().isEmpty()) {
                     supplier.setName(cvrSearchResultDTO.getName());
                     supplier.setCity(cvrSearchResultDTO.getCity());
@@ -53,13 +60,6 @@ public class CvrSyncService {
                     supplier.setPhone(cvrSearchResultDTO.getPhone());
                     supplier.setZip(cvrSearchResultDTO.getZipCode());
                     supplier.setCountry(cvrSearchResultDTO.getCountry());
-                    supplier.getProperties().removeIf(p -> p.getKey().equals(NEEDS_CVR_UPDATE_PROPERTY));
-                    supplier.getProperties().removeIf(p -> p.getKey().equals(CVR_UPDATED_PROPERTY));
-                    supplier.getProperties().add(Property.builder()
-                        .entity(supplier)
-                        .key(CVR_UPDATED_PROPERTY)
-                        .value(LocalDate.now().toString())
-                        .build());
                 } else {
                     log.error("Supplier with cvr {} did not have a name?!", cvr);
                 }
