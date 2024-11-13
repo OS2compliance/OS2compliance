@@ -62,6 +62,9 @@ public class DPIA {
     @Enumerated(EnumType.STRING)
     private RevisionInterval revisionInterval;
 
+    @Column
+    private String comment;
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
