@@ -90,7 +90,7 @@
 							</a>
 						</li>
                         <li class="nav-item has-sub" sec:authorize="hasRole('ROLE_administrator')">
-                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' ? 'active' : ''}">
+                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' ? 'active' : ''}">
                                 <i class="pli-stamp fs-5 me-2"></i> <span class="nav-label ms-1">Administrativt</span>
                             </a>
                             <ul class="mininav-content nav collapse">
