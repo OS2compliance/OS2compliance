@@ -27,21 +27,23 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain formSecurityFilterChain(HttpSecurity http) throws Exception {
         http
-                .authorizeHttpRequests((requests) -> requests
-                        .requestMatchers(
-                                "/webjars/**",
-                                "/css/**",
-                                "/js/**",
-                                "/img/**",
-                                "/vendor/**",
-                                "/favicon.ico"
-                        ).permitAll()
-                        .anyRequest().authenticated()
-                )
-                .formLogin((form) -> form
-                        .loginPage("/login").permitAll()
-                )
-                .logout(LogoutConfigurer::permitAll);
+            .authorizeHttpRequests((requests) -> requests
+                .requestMatchers(
+                    "/webjars/**",
+                    "/css/**",
+                    "/js/**",
+                    "/img/**",
+                    "/vendor/**",
+                    "/favicon.ico",
+                    "/logout"
+                ).permitAll()
+                .anyRequest().authenticated()
+            )
+            .formLogin((form) -> form
+                .defaultSuccessUrl("/dashboard")
+                .loginPage("/login").permitAll()
+            )
+            .logout(Customizer.withDefaults());
 
         return http.build();
     }

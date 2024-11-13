@@ -4,615 +4,630 @@
 <head th:replace="~{fragments/header :: head (gridjs = true)}"></head>
 
 <body class="jumping">
-	<div id="root" class="root mn--max hd--expanded">
-		<section id="content" class="content">
-			<div class="content__header content__boxed overlapping">
-				<div class="content__wrap">
-					<div class="d-md-flex">
-						<div class="me-auto">
-							<nav aria-label="breadcrumb">
-								<ol class="breadcrumb mb-0">
-									<li class="breadcrumb-item active"><a href="./dashboard">Hjem</a></li>
-								</ol>
-							</nav>
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item active"><a href="./dashboard">Hjem</a></li>
+                            </ol>
+                        </nav>
 
-							<h1 class="page-title mb-0 mt-2" th:text="'Hej ' + ${user?.name}"></h1>
-							<p class="lead">Velkommen til OS2Compliance</p>
-						</div>
-					</div>
-				</div>
-			</div>
-			<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="content__boxed">
-				<div class="content__wrap">
+                        <h1 class="page-title mb-0 mt-2" th:text="'Hej ' + ${user?.name}"></h1>
+                        <p class="lead">Velkommen til OS2Compliance</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="content__boxed">
+            <div class="content__wrap">
 
-					<div class="tab-base">
-						<ul class="nav nav-tabs" role="tablist">
-							<li class="nav-item" role="presentation">
-								<button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsTask"
-									type="button" role="tab" aria-controls="task" aria-selected="true">Mine
-									Opgaver</button>
-							</li>
-							<li class="nav-item" role="presentation">
-								<button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsAssets"
-									type="button" role="tab" aria-controls="assets" aria-selected="false">Mine
-									Aktiver</button>
-							</li>
-							<li class="nav-item" role="presentation">
-								<button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsRegisters"
-									type="button" role="tab" aria-controls="registers" aria-selected="false">Mine
-									Fortegnelser</button>
-							</li>
-							<li class="nav-item" role="presentation">
-								<button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsDocuments"
-									type="button" role="tab" aria-controls="documents" aria-selected="false">Mine
-									Dokumenter</button>
-							</li>
-						</ul>
-						<div class="tab-content">
-							<div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel"
-								aria-labelledby="task-tab">
-								<div id="tasksDatatable"></div>
-							</div>
-							<div id="_dm-tabsAssets" class="tab-pane fade" role="tabpanel" aria-labelledby="assets-tab">
-								<div id="assetsDatatable"></div>
-							</div>
-							<div id="_dm-tabsRegisters" class="tab-pane fade" role="tabpanel"
-								aria-labelledby="registers-tab">
-								<div id="registersDatatable"></div>
-							</div>
-							<div id="_dm-tabsDocuments" class="tab-pane fade" role="tabpanel"
-								aria-labelledby="documents-tab">
-								<div id="documentsDatatable"></div>
-							</div>
-						</div>
-					</div>
-				</div>
-				<div sec:authorize="isAuthenticated()" class="d-grid mt-5">
-					<a th:href="@{/saml/logout}" class="btn btn-primary btn-lg" type="submit">Log out</a>
-				</div>
-				<div sec:authorize="isAnonymous()" class="d-grid mt-5">
-					<a th:href="@{/saml/login}" class="btn btn-primary btn-lg" type="submit">Log in</a>
-				</div>
-			</div>
+                <div class="tab-base">
+                    <ul class="nav nav-tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsTask"
+                                    type="button" role="tab" aria-controls="task" aria-selected="true">Mine
+                                Opgaver
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsAssets"
+                                    type="button" role="tab" aria-controls="assets" aria-selected="false">Mine
+                                Aktiver
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsRegisters"
+                                    type="button" role="tab" aria-controls="registers" aria-selected="false">Mine
+                                Fortegnelser
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsDocuments"
+                                    type="button" role="tab" aria-controls="documents" aria-selected="false">Mine
+                                Dokumenter
+                            </button>
+                        </li>
+                    </ul>
+                    <div class="tab-content">
+                        <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel"
+                             aria-labelledby="task-tab">
+                            <div id="tasksDatatable"></div>
+                        </div>
+                        <div id="_dm-tabsAssets" class="tab-pane fade" role="tabpanel" aria-labelledby="assets-tab">
+                            <div id="assetsDatatable"></div>
+                        </div>
+                        <div id="_dm-tabsRegisters" class="tab-pane fade" role="tabpanel"
+                             aria-labelledby="registers-tab">
+                            <div id="registersDatatable"></div>
+                        </div>
+                        <div id="_dm-tabsDocuments" class="tab-pane fade" role="tabpanel"
+                             aria-labelledby="documents-tab">
+                            <div id="documentsDatatable"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!--                TODO - Switch href between form and saml versions-->
+            <!--				<div sec:authorize="isAuthenticated()" class="d-grid mt-5">-->
+            <!--					<a th:href="@{/saml/logout}" class="btn btn-primary btn-lg" type="submit">Log out</a>-->
+            <!--				</div>-->
+            <!--				<div sec:authorize="isAnonymous()" class="d-grid mt-5">-->
+            <!--					<a th:href="@{/saml/login}" class="btn btn-primary btn-lg" type="submit">Log in</a>-->
+            <!--				</div>-->
+
+            <form role="form" th:action="@{/logout}" method="POST">
+                <div sec:authorize="isAuthenticated()" class="d-grid mt-5">
+                        <input class="btn btn-primary btn-lg" type="submit" value="Log out"/>
+                </div>
+            </form>
+            <div sec:authorize="isAnonymous()" class="d-grid mt-5">
+                <a th:href="@{/login}" class="btn btn-primary btn-lg" type="submit">Log in</a>
+            </div>
+        </div>
 
 
-		</section>
-		<header th:replace="~{fragments/header :: header}"></header>
-		<nav th:replace="~{fragments/navbar :: main (page='hjem')}"></nav>
-	</div>
-	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true)}"></div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='hjem')}"></nav>
+</div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true)}"></div>
 
-	<script th:inline="javascript">
-		/*<![CDATA[*/
-		/*[+
-			var userId = [[${T(dk.digitalidentity.security.SecurityUtil).getLoggedInUserUuid}]];
-			var gridTasksUrl = [[@{/rest/tasks/list}]];
-			var gridAssetsUrl = [[@{/rest/assets/list}]];
-			var gridRegistersUrl = [[@{/rest/registers/list}]];
-			var gridDocumentsUrl = [[@{/rest/documents/list}]];
-			var tasksViewUrl = [[@{/tasks/}]];
-			var registersViewUrl = [[@{/registers/}]];
-			var assetsViewUrl = [[@{/assets/}]];
-			var documentsViewUrl = [[@{/documents/}]];
-		+]*/
-		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        var userId = [[${T(dk.digitalidentity.security.SecurityUtil).getLoggedInUserUuid}]];
+        var gridTasksUrl = [[@{/rest/tasks/list}]];
+        var gridAssetsUrl = [[@{/rest/assets/list}]];
+        var gridRegistersUrl = [[@{/rest/registers/list}]];
+        var gridDocumentsUrl = [[@{/rest/documents/list}]];
+        var tasksViewUrl = [[@{/tasks/}]];
+        var registersViewUrl = [[@{/registers/}]];
+        var assetsViewUrl = [[@{/assets/}]];
+        var documentsViewUrl = [[@{/documents/}]];
+    +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-		const defaultClassName = {
-			table: 'table table-striped',
-			search: "form-control",
-			header: "d-flex justify-content-end"
-		};
 
-		const updateUrl = (prev, query) => {
-			return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-		};
 
-		document.addEventListener("DOMContentLoaded", function (event) {
-			const today = new Date();
-            let gridConfigTasks = {
-                className: defaultClassName,
-                search: {
-                    keyword: searchService.getSavedSearch('tasks'),
-                    server: {
-                        url: (prev, keyword) =>  updateUrl(prev, `search=${keyword}`)
-                    },
-                    debounceTimeout: 1000
+    const defaultClassName = {
+        table: 'table table-striped',
+        search: "form-control",
+        header: "d-flex justify-content-end"
+    };
+
+    const updateUrl = (prev, query) => {
+        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
+    };
+
+    document.addEventListener("DOMContentLoaded", function (event) {
+        const today = new Date();
+        let gridConfigTasks = {
+            className: defaultClassName,
+            search: {
+                keyword: searchService.getSavedSearch('tasks'),
+                server: {
+                    url: (prev, keyword) =>  updateUrl(prev, `search=${keyword}`)
                 },
-                pagination: {
-                    limit: 50,
-                    server: {
-                        url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                debounceTimeout: 1000
+            },
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = ['id', 'name', 'taskType', 'responsibleUser.name', 'responsibleOU.name', 'nextDeadline', 'taskRepetition', 'completed', 'tags'];
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
+                    }
+                }
+            },
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
+                },
+                {
+                    name: "Opgavenavn",
+                    formatter: (cell, row) => {
+                        const url = tasksViewUrl + row.cells[0]['data'] + "?referral=dashboard";
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
                     }
                 },
-                sort: {
-                    enabled: true,
-                    multiColumn: false,
-                    server: {
-                        url: (prev, columns) => {
-                            if (!columns.length) return prev;
-                            const columnIds = ['id', 'name', 'taskType', 'responsibleUser.name', 'responsibleOU.name', 'nextDeadline', 'taskRepetition', 'completed', 'tags'];
-                            const col = columns[0]; // multiColumn false
-                            const order = columnIds[col.index];
-                            return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
+                {
+                    name: "Opgave type"
+                },
+                {
+                    name: "Ansvarlig",
+                    hidden: true
+                },
+                {
+                    name: "Afdeling"
+                },
+                {
+                    name: "Deadline",
+                    formatter: (cell, row) => {
+                        var completed = row.cells[7]['data'];
+                        var type = row.cells[2]['data'];
+                        if (completed && type == "Opgave") {
+                            return gridjs.html(`<span>${cell}</span>`);
+                        }
+
+                        var dateString = cell.replace(" ", "/");
+                        dateString = dateString.replace("-", "/");
+                        var dateSplit = dateString.split("/");
+                        var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                        if (cellDate < today) {
+                            return gridjs.html(`<span style="color: red;">${cell}</span>`);
+                        } else {
+                            return gridjs.html(`<span>${cell}</span>`);
                         }
                     }
                 },
-                columns: [
-                    {
-                        name: "id",
-                        hidden: true
-                    },
-                    {
-                        name: "Opgavenavn",
-                        formatter: (cell, row) => {
-                            const url = tasksViewUrl + row.cells[0]['data'] + "?referral=dashboard";
-                            return gridjs.html(`<a href="${url}">${cell}</a>`);
-                        }
-                    },
-                    {
-                        name: "Opgave type"
-                    },
-                    {
-                        name: "Ansvarlig",
-                        hidden: true
-                    },
-                    {
-                        name: "Afdeling"
-                    },
-                    {
-                        name: "Deadline",
-                        formatter: (cell, row) => {
-                            var completed = row.cells[7]['data'];
-                            var type = row.cells[2]['data'];
-                            if (completed && type == "Opgave") {
-                                return gridjs.html(`<span>${cell}</span>`);
-                            }
+                {
+                    name: "Gentages"
+                },
+                {
+                    name: "Status",
+                    formatter: (cell, row) => {
+                        var status = "";
+                        var type = row.cells[2]['data'];
 
-                            var dateString = cell.replace(" ", "/");
+                        // if completed and task type opgave
+                        if (cell && type == "Opgave") {
+                            status = [
+                                '<div class="d-block badge bg-success">Udført</div>'
+                            ]
+                        } else {
+                            var deadline = row.cells[5]['data'];
+                            var dateString = deadline.replace(" ", "/");
                             dateString = dateString.replace("-", "/");
                             var dateSplit = dateString.split("/");
-                            var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
-                            if (cellDate < today) {
-                                return gridjs.html(`<span style="color: red;">${cell}</span>`);
-                            } else {
-                                return gridjs.html(`<span>${cell}</span>`);
-                            }
-                        }
-                    },
-                    {
-                        name: "Gentages"
-                    },
-                    {
-                        name: "Status",
-                        formatter: (cell, row) => {
-                            var status = "";
-                            var type = row.cells[2]['data'];
+                            var deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
 
-                            // if completed and task type opgave
-                            if (cell && type == "Opgave") {
+                            if (deadlineAsDate < today) {
                                 status = [
-                                    '<div class="d-block badge bg-success">Udført</div>'
+                                    '<div class="d-block badge bg-danger">Overskredet</div>'
                                 ]
                             } else {
-                                var deadline = row.cells[5]['data'];
-                                var dateString = deadline.replace(" ", "/");
-                                dateString = dateString.replace("-", "/");
-                                var dateSplit = dateString.split("/");
-                                var deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
-
-                                if (deadlineAsDate < today) {
-                                    status = [
-                                        '<div class="d-block badge bg-danger">Overskredet</div>'
-                                    ]
-                                } else {
-                                    status = [
-                                        '<div class="d-block badge bg-warning">Ikke udført</div>'
-                                    ]
-                                }
+                                status = [
+                                    '<div class="d-block badge bg-warning">Ikke udført</div>'
+                                ]
                             }
+                        }
 
-                            return gridjs.html(''.concat(...status), 'div')
-                        },
+                        return gridjs.html(''.concat(...status), 'div')
                     },
-                    {
-                        name: "Tags",
-                        formatter: (cell, row) => {
-                            var result = '<ul>';
-                            if (cell != null && cell.trim() !== '') {
-                                var tags = cell.split(',');
-                                for (var i =0; i< tags.length; i++) {
-                                    result += '<li>'+tags[i]+'</li>';
-                                }
-                            }
-
-                            result += '</ul>';
-                            return gridjs.html(''.concat(...result), 'div')
-                        },
-                    }
-                ],
-                server: {
-                    url: gridTasksUrl + "/" + userId,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token
-                    },
-                    then: data => data.content.map(task =>
-                        [task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
-                    ),
-                    total: data => data.totalCount
                 },
-                language: {
-                    'search': {
-                        'placeholder': 'Søg'
+                {
+                    name: "Tags",
+                    formatter: (cell, row) => {
+                        var result = '<ul>';
+                        if (cell != null && cell.trim() !== '') {
+                            var tags = cell.split(',');
+                            for (var i =0; i< tags.length; i++) {
+                                result += '<li>'+tags[i]+'</li>';
+                            }
+                        }
+
+                        result += '</ul>';
+                        return gridjs.html(''.concat(...result), 'div')
                     },
-                    'pagination': {
-                        'previous': 'Forrige',
-                        'next': 'Næste',
-                        'showing': 'Viser',
-                        'results': 'Opgaver',
-                        'of': 'af',
-                        'to': 'til',
-                        'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                        'page': (page) => `Side ${page}`
+                }
+            ],
+            server: {
+                url: gridTasksUrl + "/" + userId,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(task =>
+                    [task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
+                ),
+                total: data => data.totalCount
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Opgaver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        };
+        const gridTasks = new gridjs.Grid(gridConfigTasks).render(document.getElementById("tasksDatatable"));
+        searchService.initSearch(gridTasks, gridConfigTasks, 'tasks');
+
+        let gridConfigAssets = {
+            className: defaultClassName,
+            search: {
+                keyword: searchService.getSavedSearch('assets'),
+                server: {
+                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
+                },
+                debounceTimeout: 1000
+            },
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = ['id', 'name', 'supplier', 'assetType', 'responsibleUser', 'updatedAt', 'assessmentOrder', 'assetStatusOrder'];
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
                     }
                 }
-            };
-            const gridTasks = new gridjs.Grid(gridConfigTasks).render(document.getElementById("tasksDatatable"));
-            searchService.initSearch(gridTasks, gridConfigTasks, 'tasks');
+            },
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
+                },
+                {
+                    name: "Navn",
+                    formatter: (cell, row) => {
+                        const url = assetsViewUrl + row.cells[0]['data'];
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    }
+                },
+                {
+                    name: "Leverandør"
+                },
+                {
+                    name: "Type"
+                },
+                {
+                    name: "Systemejer",
+                    hidden: true
+                },
+                {
+                    name: "Opdateret"
+                },
+                {
+                    name: "Risikovurdering"
+                },
+                {
+                    name: "Status",
+                    formatter: (cell, row) => {
+                        var status = cell;
+                        if (cell === "Ikke startet") {
+                            status = [
+                                '<div class="d-block badge bg-warning">' + cell + '</div>'
+                            ]
+                        } else if (cell === "I gang") {
+                            status = [
+                                '<div class="d-block badge bg-info">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Klar") {
+                            status = [
+                                '<div class="d-block badge bg-success">' + cell + '</div>'
+                            ]
+                        }
+                        return gridjs.html(''.concat(...status), 'div')
+                    },
+                }
+            ],
+            server: {
+                url: gridAssetsUrl + "/" + userId,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(asset =>
+                    [asset.id, asset.name, asset.supplier, asset.assetType, asset.responsibleUser, asset.updatedAt, asset.criticality, asset.assetStatus]
+                ),
+                total: data => data.totalCount
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Opgaver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        };
+        const gridAssets = new gridjs.Grid(gridConfigAssets).render(document.getElementById("assetsDatatable"));
+        searchService.initSearch(gridAssets, gridConfigAssets, 'assets');
 
-            let gridConfigAssets = {
-                className: defaultClassName,
-                search: {
-                    keyword: searchService.getSavedSearch('assets'),
-                    server: {
-                        url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                    },
-                    debounceTimeout: 1000
-                },
-                pagination: {
-                    limit: 50,
-                    server: {
-                        url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                    }
-                },
-                sort: {
-                    enabled: true,
-                    multiColumn: false,
-                    server: {
-                        url: (prev, columns) => {
-                            if (!columns.length) return prev;
-                            const columnIds = ['id', 'name', 'supplier', 'assetType', 'responsibleUser', 'updatedAt', 'assessmentOrder', 'assetStatusOrder'];
-                            const col = columns[0]; // multiColumn false
-                            const order = columnIds[col.index];
-                            return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
-                        }
-                    }
-                },
-                columns: [
-                    {
-                        name: "id",
-                        hidden: true
-                    },
-                    {
-                        name: "Navn",
-                        formatter: (cell, row) => {
-                            const url = assetsViewUrl + row.cells[0]['data'];
-                            return gridjs.html(`<a href="${url}">${cell}</a>`);
-                        }
-                    },
-                    {
-                        name: "Leverandør"
-                    },
-                    {
-                        name: "Type"
-                    },
-                    {
-                        name: "Systemejer",
-                        hidden: true
-                    },
-                    {
-                        name: "Opdateret"
-                    },
-                    {
-                        name: "Risikovurdering"
-                    },
-                    {
-                        name: "Status",
-                        formatter: (cell, row) => {
-                            var status = cell;
-                            if (cell === "Ikke startet") {
-                                status = [
-                                    '<div class="d-block badge bg-warning">' + cell + '</div>'
-                                ]
-                            } else if (cell === "I gang") {
-                                status = [
-                                    '<div class="d-block badge bg-info">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Klar") {
-                                status = [
-                                    '<div class="d-block badge bg-success">' + cell + '</div>'
-                                ]
-                            }
-                            return gridjs.html(''.concat(...status), 'div')
-                        },
-                    }
-                ],
+        let gridConfigRegisters = {
+            className: defaultClassName,
+            search: {
+                keyword: searchService.getSavedSearch('registers'),
                 server: {
-                    url: gridAssetsUrl + "/" + userId,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token
-                    },
-                    then: data => data.content.map(asset =>
-                        [asset.id, asset.name, asset.supplier, asset.assetType, asset.responsibleUser, asset.updatedAt, asset.criticality, asset.assetStatus]
-                    ),
-                    total: data => data.totalCount
+                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
-                language: {
-                    'search': {
-                        'placeholder': 'Søg'
-                    },
-                    'pagination': {
-                        'previous': 'Forrige',
-                        'next': 'Næste',
-                        'showing': 'Viser',
-                        'results': 'Opgaver',
-                        'of': 'af',
-                        'to': 'til',
-                        'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                        'page': (page) => `Side ${page}`
+                debounceTimeout: 1000
+            },
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = ['id', 'name', 'responsibleUser', 'responsibleOUNames', 'updatedAt', 'consequenceOrder', 'statusOrder'];
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
                     }
                 }
-            };
-            const gridAssets = new gridjs.Grid(gridConfigAssets).render(document.getElementById("assetsDatatable"));
-            searchService.initSearch(gridAssets, gridConfigAssets, 'assets');
+            },
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
+                },
+                {
+                    name: "Titel",
+                    formatter: (cell, row) => {
+                        const url = registersViewUrl + row.cells[0]['data'];
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    },
+                    width: '40%'
+                },
+                {
+                    name: "Ansvarlig afdeling",
+                },
+                {
+                    name: "Kontakt person",
+                    hidden: true
+                },
+                {
+                    name: "Senest redigeret",
+                },
+                {
+                    name: "Konsekvens vurdering",
+                    width: "100px",
+                    formatter: (cell, row) => {
+                        var assessment = cell;
+                        if (cell === "Grøn") {
+                            assessment = [
+                                '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Gul") {
+                            assessment = [
+                                '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Rød") {
+                            assessment = [
+                                '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
+                            ]
+                        }
+                        return gridjs.html(''.concat(...assessment), 'div')
+                    }
+                },
+                {
+                    name: "Status",
+                    width: "80px",
+                    formatter: (cell, row) => {
+                        var status = cell;
+                        if (cell === "Klar") {
+                            status = [
+                                '<div class="d-block badge bg-success" style="width: 60px">' + cell + '</div>'
+                            ]
+                        } else if (cell === "I gang") {
+                            status = [
+                                '<div class="d-block badge bg-info" style="width: 60px">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Ikke started") {
+                            status = [
+                                '<div class="d-block badge bg-danger" style="width: 60px">' + cell + '</div>'
+                            ]
+                        }
+                        return gridjs.html(''.concat(...status), 'div')
+                    },
+                }
+            ],
+            server: {
+                url: gridRegistersUrl + "/" + userId,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(register =>
+                    [register.id, register.name, register.responsibleOU, register.responsibleUser, register.updatedAt, register.consequence, register.status]
+                ),
+                total: data => data.count
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Fortegnelser',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        };
+        const gridRegisters = new gridjs.Grid(gridConfigRegisters).render(document.getElementById("registersDatatable"));
+        searchService.initSearch(gridRegisters, gridConfigRegisters, 'registers');
 
-            let gridConfigRegisters = {
-                className: defaultClassName,
-                search: {
-                    keyword: searchService.getSavedSearch('registers'),
-                    server: {
-                        url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                    },
-                    debounceTimeout: 1000
-                },
-                pagination: {
-                    limit: 50,
-                    server: {
-                        url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                    }
-                },
-                sort: {
-                    enabled: true,
-                    multiColumn: false,
-                    server: {
-                        url: (prev, columns) => {
-                            if (!columns.length) return prev;
-                            const columnIds = ['id', 'name', 'responsibleUser', 'responsibleOUNames', 'updatedAt', 'consequenceOrder', 'statusOrder'];
-                            const col = columns[0]; // multiColumn false
-                            const order = columnIds[col.index];
-                            return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
-                        }
-                    }
-                },
-                columns: [
-                    {
-                        name: "id",
-                        hidden: true
-                    },
-                    {
-                        name: "Titel",
-                        formatter: (cell, row) => {
-                            const url = registersViewUrl + row.cells[0]['data'];
-                            return gridjs.html(`<a href="${url}">${cell}</a>`);
-                        },
-                        width: '40%'
-                    },
-                    {
-                        name: "Ansvarlig afdeling",
-                    },
-                    {
-                        name: "Kontakt person",
-                        hidden: true
-                    },
-                    {
-                        name: "Senest redigeret",
-                    },
-                    {
-                        name: "Konsekvens vurdering",
-                        width: "100px",
-                        formatter: (cell, row) => {
-                            var assessment = cell;
-                            if (cell === "Grøn") {
-                                assessment = [
-                                    '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Gul") {
-                                assessment = [
-                                    '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Rød") {
-                                assessment = [
-                                    '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
-                                ]
-                            }
-                            return gridjs.html(''.concat(...assessment), 'div')
-                        }
-                    },
-                    {
-                        name: "Status",
-                        width: "80px",
-                        formatter: (cell, row) => {
-                            var status = cell;
-                            if (cell === "Klar") {
-                                status = [
-                                    '<div class="d-block badge bg-success" style="width: 60px">' + cell + '</div>'
-                                ]
-                            } else if (cell === "I gang") {
-                                status = [
-                                    '<div class="d-block badge bg-info" style="width: 60px">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Ikke started") {
-                                status = [
-                                    '<div class="d-block badge bg-danger" style="width: 60px">' + cell + '</div>'
-                                ]
-                            }
-                            return gridjs.html(''.concat(...status), 'div')
-                        },
-                    }
-                ],
+        let gridConfigDocuments = {
+            className: defaultClassName,
+            search: {
+                keyword: searchService.getSavedSearch('documents'),
                 server: {
-                    url: gridRegistersUrl + "/" + userId,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token
-                    },
-                    then: data => data.content.map(register =>
-                        [register.id, register.name, register.responsibleOU, register.responsibleUser, register.updatedAt, register.consequence, register.status]
-                    ),
-                    total: data => data.count
+                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
                 },
-                language: {
-                    'search': {
-                        'placeholder': 'Søg'
-                    },
-                    'pagination': {
-                        'previous': 'Forrige',
-                        'next': 'Næste',
-                        'showing': 'Viser',
-                        'results': 'Fortegnelser',
-                        'of': 'af',
-                        'to': 'til',
-                        'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                        'page': (page) => `Side ${page}`
+                debounceTimeout: 1000
+            },
+            pagination: {
+                limit: 50,
+                server: {
+                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                }
+            },
+            sort: {
+                enabled: true,
+                multiColumn: false,
+                server: {
+                    url: (prev, columns) => {
+                        if (!columns.length) return prev;
+                        const columnIds = ['id', 'name', 'documentType', '', 'nextRevision', 'statusOrder', 'tags'];
+                        const col = columns[0]; // multiColumn false
+                        const order = columnIds[col.index];
+                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
                     }
                 }
-            };
-            const gridRegisters = new gridjs.Grid(gridConfigRegisters).render(document.getElementById("registersDatatable"));
-            searchService.initSearch(gridRegisters, gridConfigRegisters, 'registers');
-
-            let gridConfigDocuments = {
-                className: defaultClassName,
-                search: {
-                    keyword: searchService.getSavedSearch('documents'),
-                    server: {
-                        url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                    },
-                    debounceTimeout: 1000
+            },
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
                 },
-                pagination: {
-                    limit: 50,
-                    server: {
-                        url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
+                {
+                    name: "Titel",
+                    formatter: (cell, row) => {
+                        const url = documentsViewUrl + row.cells[0]['data'];
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
                     }
                 },
-                sort: {
-                    enabled: true,
-                    multiColumn: false,
-                    server: {
-                        url: (prev, columns) => {
-                            if (!columns.length) return prev;
-                            const columnIds = ['id', 'name', 'documentType', '', 'nextRevision', 'statusOrder', 'tags'];
-                            const col = columns[0]; // multiColumn false
-                            const order = columnIds[col.index];
-                            return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
+                {
+                    name: "Dokumentype"
+                },
+                {
+                    name: "Ansvarlig",
+                    hidden: true
+                },
+                {
+                    name: "Næste revidering"
+                },
+                {
+                    name: "Status",
+                    formatter: (cell, row) => {
+                        var status = cell;
+                        if (cell === "Ikke startet") {
+                            status = [
+                                '<div class="d-block badge bg-warning">' + cell + '</div>'
+                            ]
+                        } else if (cell === "I gang") {
+                            status = [
+                                '<div class="d-block badge bg-info">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Klar") {
+                            status = [
+                                '<div class="d-block badge bg-success">' + cell + '</div>'
+                            ]
                         }
-                    }
-                },
-                columns: [
-                    {
-                        name: "id",
-                        hidden: true
+
+                        return gridjs.html(''.concat(...status), 'div')
                     },
-                    {
-                        name: "Titel",
-                        formatter: (cell, row) => {
-                            const url = documentsViewUrl + row.cells[0]['data'];
-                            return gridjs.html(`<a href="${url}">${cell}</a>`);
+                },
+                {
+                    name: "Tags",
+                    formatter: (cell, row) => {
+                        var result = '<ul>';
+                        if (cell != null && cell.trim() !== '') {
+                            var tags = cell.split(',');
+                            for (var i =0; i< tags.length; i++) {
+                                result += '<li>'+tags[i]+'</li>';
+                            }
                         }
-                    },
-                    {
-                        name: "Dokumentype"
-                    },
-                    {
-                        name: "Ansvarlig",
-                        hidden: true
-                    },
-                    {
-                        name: "Næste revidering"
-                    },
-                    {
-                        name: "Status",
-                        formatter: (cell, row) => {
-                            var status = cell;
-                            if (cell === "Ikke startet") {
-                                status = [
-                                    '<div class="d-block badge bg-warning">' + cell + '</div>'
-                                ]
-                            } else if (cell === "I gang") {
-                                status = [
-                                    '<div class="d-block badge bg-info">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Klar") {
-                                status = [
-                                    '<div class="d-block badge bg-success">' + cell + '</div>'
-                                ]
-                            }
 
-                            return gridjs.html(''.concat(...status), 'div')
-                        },
+                        result += '</ul>';
+                        return gridjs.html(''.concat(...result), 'div')
                     },
-                    {
-                        name: "Tags",
-                        formatter: (cell, row) => {
-                            var result = '<ul>';
-                            if (cell != null && cell.trim() !== '') {
-                                var tags = cell.split(',');
-                                for (var i =0; i< tags.length; i++) {
-                                    result += '<li>'+tags[i]+'</li>';
-                                }
-                            }
-
-                            result += '</ul>';
-                            return gridjs.html(''.concat(...result), 'div')
-                        },
-                    }
-                ],
-                server: {
-                    url: gridDocumentsUrl + "/" + userId,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token
-                    },
-                    then: data => data.content.map(document =>
-                        [document.id, document.name, document.documentType, document.responsibleUserId, document.nextRevision, document.status, document.tags]
-                    ),
-                    total: data => data.totalCount
-                },
-                language: {
-                    'search': {
-                        'placeholder': 'Søg'
-                    },
-                    'pagination': {
-                        'previous': 'Forrige',
-                        'next': 'Næste',
-                        'showing': 'Viser',
-                        'results': 'Opgaver',
-                        'of': 'af',
-                        'to': 'til',
-                        'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                        'page': (page) => `Side ${page}`
-                    }
                 }
-            };
-            const gridDocuments = new gridjs.Grid(gridConfigDocuments).render(document.getElementById("documentsDatatable"));
-            searchService.initSearch(gridDocuments, gridConfigDocuments, 'documents');
+            ],
+            server: {
+                url: gridDocumentsUrl + "/" + userId,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(document =>
+                    [document.id, document.name, document.documentType, document.responsibleUserId, document.nextRevision, document.status, document.tags]
+                ),
+                total: data => data.totalCount
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Opgaver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        };
+        const gridDocuments = new gridjs.Grid(gridConfigDocuments).render(document.getElementById("documentsDatatable"));
+        searchService.initSearch(gridDocuments, gridConfigDocuments, 'documents');
 
-		});
-		/*]]>*/
-	</script>
+    });
 
-
+    /*]]>*/
+</script>
 
 
 </body>
