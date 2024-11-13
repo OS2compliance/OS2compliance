@@ -35,7 +35,7 @@ public class SecurityConfig {
                     "/img/**",
                     "/vendor/**",
                     "/favicon.ico",
-                    "/logout"
+                    "/login"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
@@ -43,7 +43,9 @@ public class SecurityConfig {
                 .defaultSuccessUrl("/dashboard")
                 .loginPage("/login").permitAll()
             )
-            .logout(Customizer.withDefaults());
+            .logout(logout -> logout
+                .logoutSuccessUrl("/login?logout")
+                .permitAll());
 
         return http.build();
     }
