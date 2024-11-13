@@ -51,8 +51,8 @@
                         <div id="_dm-tabsGenerelt" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
                             <form id="editForm" action="#" th:action="@{/documents/edit}" th:object="${document}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
-                                    <button id="saveEditBtn" th:if="${document.changeable}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button id="editBtn" th:if="${document.changeable}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger</button>
+                                    <button id="saveEditBtn" th:if="${changeableDocument}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                                    <button id="editBtn" th:if="${changeableDocument}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">

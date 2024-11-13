@@ -92,8 +92,10 @@ public class RiskController {
 
     @GetMapping
     public String riskList(final Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("risk", new ThreatAssessment());
         model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "risks/index";
     }
 

@@ -79,7 +79,9 @@ public class TasksController {
 
 
     @GetMapping
-    public String tasksList() {
+    public String tasksList(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "tasks/index";
     }
 
@@ -219,7 +221,7 @@ public class TasksController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("task", task);
-        model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || authentication.getPrincipal().equals(task.getResponsibleUser().getUuid())));
+        model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (task.getResponsibleUser() != null && authentication.getPrincipal().equals(task.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
 

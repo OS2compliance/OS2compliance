@@ -98,7 +98,7 @@ public class DocumentRestController {
             documents = documentGridDao.findAllByResponsibleUser(user, sortAndPage);
         }
         assert documents != null;
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
     }
 
     private boolean containsField(final String fieldName) {

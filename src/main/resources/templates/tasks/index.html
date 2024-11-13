@@ -59,6 +59,7 @@
         var viewUrl = [[@{/tasks/}]];
         var deleteUrl = [[@{/tasks/}]];
         var baseUrl = [[@{/tasks/}]];
+        var superuser = [[${superuser}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     let today = new Date();
@@ -226,9 +227,13 @@
                     formatter: (cell, row) => {
                         const taskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyTaskService.showCopyDialog('${taskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                        if(superuser) {
+                            return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`
+                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyTaskService.showCopyDialog('${taskId}')"><i class="pli-data-copy fs-5"></i></button>`
+                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                        } else if(row.cells[10]['data']) {
+                            return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`)
+                        }
                     }
                 }
             ],
@@ -241,7 +246,7 @@
                 then: data => data.content.map(task =>
                     [ task.id, task.name, task.taskType,
                         task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
-                        task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed ]
+                        task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed, task.changeable ]
                 ),
                 total: data => data.totalCount
             },

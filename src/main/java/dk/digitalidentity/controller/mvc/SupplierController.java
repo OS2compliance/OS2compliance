@@ -56,8 +56,10 @@ public class SupplierController {
     private final TaskService taskService;
 
 	@GetMapping
-	public String suppliersList() {
-		return "suppliers/index";
+	public String suppliersList(Model model) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+        return "suppliers/index";
 	}
 
 	@GetMapping("{id}")
@@ -83,7 +85,7 @@ public class SupplierController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("oversights", assetOversights);
-        model.addAttribute("changeableSupplier", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || supplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal())));
+        model.addAttribute("changeableSupplier", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (supplier.getResponsibleUser() != null && supplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal()))));
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);

@@ -83,7 +83,9 @@ public class RegisterController {
     private final UserService userService;
 
     @GetMapping
-    public String registerList() {
+    public String registerList(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "registers/index";
     }
 

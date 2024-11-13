@@ -64,6 +64,7 @@
 			var formUrl = [[@{/registers/form}]];
 			var restUrl = [[@{/rest/registers}]];
 			var deleteUrl = [[@{/registers/}]];
+			var superuser = [[${superuser}]];
 		+]*/
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         let grid = null;
@@ -216,9 +217,11 @@
                         formatter: (cell, row) => {
                             const registerId = row.cells[0]['data'];
                             const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                            return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRegisterService.show('${registerId}')"><i class="pli-pencil fs-5"></i></button>`
-                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            if(superuser) {
+                                return gridjs.html(
+                                    `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRegisterService.show('${registerId}')"><i class="pli-pencil fs-5"></i></button>`
+                                    + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            }
                         }
                     }
                 ],

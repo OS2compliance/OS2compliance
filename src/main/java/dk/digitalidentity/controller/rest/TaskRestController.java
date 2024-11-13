@@ -65,8 +65,9 @@ public class TaskRestController {
             // Fetch paged and sorted
             tasks = taskGridDao.findAll(sortAndPage);
         }
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assert tasks != null;
-        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
+        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
     }
 
     @PostMapping("list/{id}")

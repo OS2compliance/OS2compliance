@@ -66,6 +66,7 @@
 			var deleteUrl = [[@{/suppliers/}]];
 			var viewUrl = [[@{/suppliers/}]];
 			var restUrl = [[@{/rest/suppliers}]];
+			var superuser = [[${superuser}]];
 		+]*/
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -193,9 +194,11 @@
                         formatter: (cell, row) => {
                             const supplierId = row.cells[0]['data'];
                             const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                            if(superuser) {
                             return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editClicked('${supplierId}')"><i class="pli-pen-5 fs-5"></i></button>` +
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${supplierId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            }
                         }
                     }
                 ],

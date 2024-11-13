@@ -68,7 +68,9 @@ public class DocumentsController {
         final Document document = documentService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
+        model.addAttribute("changeableDocument", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (document.getResponsibleUser() != null && authentication.getPrincipal().equals(document.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }
