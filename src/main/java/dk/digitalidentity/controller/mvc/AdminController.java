@@ -1,11 +1,14 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.model.dto.EmailTemplateDTO;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.EmailTemplate;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.ResponsibleUserViewService;
+import dk.digitalidentity.service.TagService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +25,7 @@ import java.util.stream.Collectors;
 public class AdminController {
     private final ResponsibleUserViewService responsibleUserViewService;
     private final EmailTemplateService emailTemplateService;
+
 
     @GetMapping("inactive")
     public String inactiveResponsibleList(Model model) {
@@ -47,4 +51,6 @@ public class AdminController {
 
         return "admin/mailtemplates";
     }
+
+
 }

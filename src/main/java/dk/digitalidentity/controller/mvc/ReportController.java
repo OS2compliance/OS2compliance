@@ -46,12 +46,7 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -87,10 +82,10 @@ public class ReportController {
 
     @GetMapping("incidents")
     public String tagReport(final Model model,
-                            @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy")  final LocalDate from,
-                            @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy")  final LocalDate to) {
-        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000,1, 1, 0, 0, 0);
-        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000,1, 1, 0, 0, 0);
+                            @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
+                            @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
+        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
         final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
         model.addAttribute("incidents", incidentMapper.toDTOs(allIncidents.getContent()));
         model.addAttribute("from", from);
@@ -99,16 +94,24 @@ public class ReportController {
     }
 
     @GetMapping("tags")
-    public String tagReport(final Model model, @RequestParam(name = "tag") final Long tagId,
+    public String tagReport(final Model model,
+                            @RequestParam(name = "tags") final List<Long> tagIds,
                             @RequestParam(value = "from", required = false) final LocalDate from,
                             @RequestParam(value = "to", required = false) final LocalDate to) {
-        final List<Task> attributeValue = taskService.allTasksWithTag(tagId);
-        final List<Pair<Task, List<TaskLog>>> tasksAndLogs = attributeValue.stream()
+
+        //Retrieves tasks and logs for each tag in query
+        Set<Pair<Task, List<TaskLog>>> combinedTasksAndLogs = new HashSet<>();
+        for (Long tagId : tagIds) {
+            final List<Task> attributeValue = taskService.allTasksWithTag(tagId);
+            final List<Pair<Task, List<TaskLog>>> tasksAndLogs = attributeValue.stream()
                 .map(t -> Pair.of(t, t.getLogs().stream()
                     .sorted(Comparator.comparing(TaskLog::getCreatedAt))
                     .toList()))
                 .toList();
-        model.addAttribute("tasksAndLogs", tasksAndLogs);
+            combinedTasksAndLogs.addAll(tasksAndLogs);
+        }
+
+        model.addAttribute("tasksAndLogs", combinedTasksAndLogs);
         model.addAttribute("from", from != null ? from : LocalDate.MIN);
         model.addAttribute("to", to != null ? to : LocalDate.MAX);
         return "reports/tagReport";
@@ -189,8 +192,8 @@ public class ReportController {
 
     @GetMapping("dpia")
     public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "assetId") final Long assetId,
-        @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
-        final HttpServletResponse response) throws IOException {
+                                                                          @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
+                                                                          final HttpServletResponse response) throws IOException {
         Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(asset);
@@ -241,7 +244,7 @@ public class ReportController {
     }
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
-        final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {
+                                  final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {
         try {
             final long start = System.currentTimeMillis();
             if (toPDF) {

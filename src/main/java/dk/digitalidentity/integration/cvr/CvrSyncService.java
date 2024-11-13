@@ -45,20 +45,24 @@ public class CvrSyncService {
     public void updateFromCvr(final String cvr, final CvrSearchResultDTO cvrSearchResultDTO) {
         supplierDao.findByCvr(cvr)
             .ifPresentOrElse(supplier -> {
-                supplier.setName(cvrSearchResultDTO.getName());
-                supplier.setCity(cvrSearchResultDTO.getCity());
-                supplier.setEmail(cvrSearchResultDTO.getEmail());
-                supplier.setAddress(cvrSearchResultDTO.getAddress());
-                supplier.setPhone(cvrSearchResultDTO.getPhone());
-                supplier.setZip(cvrSearchResultDTO.getZipCode());
-                supplier.setCountry(cvrSearchResultDTO.getCountry());
                 supplier.getProperties().removeIf(p -> p.getKey().equals(NEEDS_CVR_UPDATE_PROPERTY));
                 supplier.getProperties().removeIf(p -> p.getKey().equals(CVR_UPDATED_PROPERTY));
                 supplier.getProperties().add(Property.builder()
-                        .entity(supplier)
-                        .key(CVR_UPDATED_PROPERTY)
-                        .value(LocalDate.now().toString())
+                    .entity(supplier)
+                    .key(CVR_UPDATED_PROPERTY)
+                    .value(LocalDate.now().toString())
                     .build());
+                if (cvrSearchResultDTO.getName() != null && !cvrSearchResultDTO.getName().isEmpty()) {
+                    supplier.setName(cvrSearchResultDTO.getName());
+                    supplier.setCity(cvrSearchResultDTO.getCity());
+                    supplier.setEmail(cvrSearchResultDTO.getEmail());
+                    supplier.setAddress(cvrSearchResultDTO.getAddress());
+                    supplier.setPhone(cvrSearchResultDTO.getPhone());
+                    supplier.setZip(cvrSearchResultDTO.getZipCode());
+                    supplier.setCountry(cvrSearchResultDTO.getCountry());
+                } else {
+                    log.error("Supplier with cvr {} did not have a name?!", cvr);
+                }
             },
             () -> log.warn("Supplier not found for cvr {}, this should not happen", cvr));
     }

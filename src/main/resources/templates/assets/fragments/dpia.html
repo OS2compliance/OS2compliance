@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="DA">
+<html lang="DA" xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="dpia(asset)" id="dpiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="dpia-tab">
     <form id="dpiaForm" action="#" th:action="@{/assets/dpia}" th:object="${dpiaForm}" method="post" class="needs-validation" novalidate>
@@ -39,6 +39,18 @@
                     <input name="assetId" th:value="${asset.id}" hidden>
                     <div class="accordion" id="_dm-dpiaAccordion">
                         <div class="accordion-item">
+                            <div class="accordion-header" id="commentAccordionHeading">
+                                <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#commentAccordionItem" aria-expanded="false" aria-controls="commentAccordionItem">
+                                    Kommentar
+                                </button>
+                            </div>
+                            <div id="commentAccordionItem" class="accordion-collapse collapse" aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
+                                <div class="accordion-body">
+                                    <textarea id="dpiaCommentArea" th:field="*{comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3" disabled></textarea>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="accordion-item mt-1">
                             <div class="accordion-header" id="_dm-screeningHeading">
                                 <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-screeningCollapse" aria-expanded="false" aria-controls="_dm-screeningCollapse">
                                     <span id="dpiaBadge2" class="badge">&nbsp</span>&nbsp Screening af om der bør udarbejdes en konsekvensanalyse

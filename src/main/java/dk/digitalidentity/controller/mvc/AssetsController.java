@@ -238,6 +238,7 @@ public class AssetsController {
             .questions(assetDPIADTOs)
             .consequenceLink(asset.getDpiaScreening().getConsequenceLink())
             .dpiaQuality(asset.getDpia() == null ? new HashSet<>() : asset.getDpia().getChecks())
+            .comment(asset.getDpia() == null ? "" : asset.getDpia().getComment())
             .build();
 
         if (asset.getDpia() == null) {
@@ -383,6 +384,7 @@ public class AssetsController {
         }
         dpiaScreening.setConsequenceLink(dpiaForm.getConsequenceLink());
 
+
         if (asset.getDpia() == null) {
             DPIA dpia = new DPIA();
             dpia.setAsset(asset);
@@ -390,6 +392,7 @@ public class AssetsController {
         }
 
         asset.getDpia().setChecks(dpiaForm.getDpiaQuality());
+        asset.getDpia().setComment(dpiaForm.getComment());
 
         return "redirect:/assets/" + dpiaForm.getAssetId();
     }
