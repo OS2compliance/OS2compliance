@@ -13,5 +13,6 @@ public class UserWithRoleDTO {
     private String uuid;
     private String userId;
     private String name;
-    private String accessRole;
+    private RoleOptionDTO accessRole;
 }
+

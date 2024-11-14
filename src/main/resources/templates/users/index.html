@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/users/userAdministration.js}" defer></script>
@@ -76,6 +76,14 @@
                             <input id="brugerNavn" th:field="*{userId}" type="text" class="form-control" required>
                         </div>
                     </div>
+                    <div class="row mt-4">
+                        <label for="roleSelector" class="col-sm-4 col-form-label">Rolle</label>
+                        <div class="col-sm-8">
+                            <select id="roleSelector" class="form-control form-select" th:field="*{accessRole}">
+                                <option th:each="option : ${roleOptions}" th:value="${option.value}" th:text="${option.display}"></option>
+                            </select>
+                        </div>
+                    </div>
 
                 </div>
                 <div class="modal-footer">
@@ -124,6 +132,10 @@
                 {
                     id: "name",
                     name: "Navn"
+                },
+                 {
+                    data: (row) => row.accessRole.display,
+                    name: "Rolle"
                 },
                 {
                     id: "actions",
