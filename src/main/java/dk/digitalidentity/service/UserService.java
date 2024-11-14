@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.SecurityUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -77,6 +78,7 @@ public class UserService {
 
     /**
      * Persists a user to the database
+     *
      * @param user
      * @return the created User. Never null.
      * @throws IllegalArgumentException in case the given user is null
@@ -84,5 +86,14 @@ public class UserService {
     @Transactional
     public User create(final User user) throws IllegalArgumentException {
         return userDao.save(user);
+    }
+
+    /**
+     * Deletes a user from persistence
+     * @param user
+     */
+    @Transactional
+    public void delete(User user) {
+        userDao.delete(user);
     }
 }

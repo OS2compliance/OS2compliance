@@ -13,7 +13,7 @@ function UserService () {
             cancelButtonText: 'Nej'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`${restUrl}/${id}`,
+                fetch(`${restUrl}/delete/${id}`,
                     {method: "DELETE", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
                     .then(response => location.reload())
                     .catch(error => toastService.error(error));

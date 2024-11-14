@@ -1,14 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -36,6 +29,7 @@ public class User implements Serializable {
 
     @Id
     @Column
+    @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
     @Column

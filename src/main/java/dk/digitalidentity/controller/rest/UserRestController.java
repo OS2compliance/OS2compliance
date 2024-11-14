@@ -7,6 +7,7 @@ import dk.digitalidentity.model.dto.UserDTO;
 import dk.digitalidentity.model.dto.UserWithRoleDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,8 +17,14 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+import java.util.HashSet;
+import java.util.Set;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -41,24 +48,15 @@ public class UserRestController {
 
     }
 
-    @Transactional
-    @PostMapping("create")
-    public ResponseEntity<?> createUser(@ModelAttribute User user) {
-        System.out.println("user = " + user);
-        try {
-            userService.create(user);
-            return new ResponseEntity<>(HttpStatus.OK);
-        } catch (IllegalArgumentException argEx) {
-            return new ResponseEntity<>("Given User is null or otherwise invalid", HttpStatus.BAD_REQUEST);
-        }
-    }
+
 
     @Transactional
-    @DeleteMapping("delete")
-    public ResponseEntity<?> deleteUser(@ModelAttribute User user) {
-        //TODO delete user
-        System.out.println("user = " + user);
-        return new ResponseEntity<>(HttpStatus.OK);
+    @DeleteMapping("delete/{userID}")
+    public ResponseEntity<?> deleteUser(@PathVariable("userID") final String userID) {
+        User user = userService.findByUuid(userID)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        userService.delete(user);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
 }
