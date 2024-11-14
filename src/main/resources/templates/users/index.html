@@ -21,8 +21,8 @@
                     </div>
                     <div class="align-self-center d-inline-flex">
                         <button type="button" class="btn btn-info btn-lg hstack gap-2"
-                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
-                                data-bs-target="#addUserModal">
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="users.openEditModal(null, 'create')">
+
                             <i class="ti-plus"></i> <span class="vr"></span> Ny Bruger
                         </button>
                         <button type="button" onclick="createTaskService.show()"
@@ -54,46 +54,7 @@
 </div>
 
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title">Ny Bruger</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/users/create}" th:object="${user}"
-                  method="post">
-                <div class="modal-body">
-                    <input id="identifier" th:field="*{uuid}" type="hidden">
-                    <div class="row mt-4">
-                        <label for="navn" class="col-sm-4 col-form-label">Navn</label>
-                        <div class="col-sm-8">
-                            <input id="navn" th:field="*{name}" type="text" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="row mt-4">
-                        <label for="brugerNavn" class="col-sm-4 col-form-label">Brugernavn</label>
-                        <div class="col-sm-8">
-                            <input id="brugerNavn" th:field="*{userId}" type="text" class="form-control" required>
-                        </div>
-                    </div>
-                    <div class="row mt-4">
-                        <label for="roleSelector" class="col-sm-4 col-form-label">Rolle</label>
-                        <div class="col-sm-8">
-                            <select id="roleSelector" class="form-control form-select" th:field="*{accessRole}">
-                                <option th:each="option : ${roleOptions}" th:value="${option.value}" th:text="${option.display}"></option>
-                            </select>
-                        </div>
-                    </div>
-
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
-                    <button type="submit" class="btn btn-primary" th:form="${formId}">Tilføj</button>
-                </div>
-            </form>
-
-        </div>
-    </div>
+    <div th:replace="~{users/fragments/edit.html :: userEditModal (user=${user}, roleOptions=${roleOptions})}"></div>
 </div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
@@ -102,6 +63,7 @@
     /*<![CDATA[*/
     /*[+
         const data = [[${allUsers}]];
+        const roleOptions = [[${roleOptions}]]
         const viewUrl = [[@{/admin/users}]];
         const restUrl = [[@{/rest/users}]];
     +]*/
@@ -133,9 +95,23 @@
                     id: "name",
                     name: "Navn"
                 },
+                {
+                    id: "email",
+                    name: "Email"
+                },
                  {
-                    data: (row) => row.accessRole.display,
-                    name: "Rolle"
+                    id: "accessRole",
+                    name: "Rolle",
+                    formatter: (cell, row) => {
+                        return roleOptions.find(roleOption => roleOption.value === cell).display;
+                    }
+                },
+                {
+                    id: "active",
+                    name: "Aktiv",
+                    formatter: (cell, row) => {
+                        return cell === true ? "Ja" : "Nej";
+                    }
                 },
                 {
                     id: "actions",
@@ -145,8 +121,9 @@
                     formatter: (cell, row) => {
                         const id = row.cells[0]['data'];
                         const userId = row.cells[1]['data'];
+                        const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
                         const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
-                        return gridjs.html(deleteButton);
+                        return gridjs.html(deleteButton + editButton);
                     }
                 }
             ],

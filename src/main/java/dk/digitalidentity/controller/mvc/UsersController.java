@@ -7,13 +7,12 @@ import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -25,13 +24,14 @@ import java.util.stream.Collectors;
 public class UsersController {
     final private UserService userService;
 
+    final private Map<String, RoleOptionDTO> roleOptions = Map.of(
+        "user", new RoleOptionDTO("user", "Bruger"),
+        "admin", new RoleOptionDTO("admin", "Administrator")
+    );
 
     @GetMapping("all")
     public String allUsers(Model model) {
         //model for role options
-        Map<String, RoleOptionDTO> roleOptions = new HashMap();
-        roleOptions.put("user", new RoleOptionDTO("user", "Bruger"));
-        roleOptions.put("admin", new RoleOptionDTO("admin", "Administrator"));
         model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
 
         //Model for list of users
@@ -39,7 +39,9 @@ public class UsersController {
             .uuid(user.getUuid())
             .userId(user.getUserId())
             .name(user.getName())
-            .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? roleOptions.get("admin") : roleOptions.get("user"))
+            .email(user.getEmail())
+            .active(user.getActive())
+            .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? "admin" : "user")
             .build()
         ).collect(Collectors.toSet()));
 
@@ -49,11 +51,42 @@ public class UsersController {
         return "users/index";
     }
 
+    @GetMapping("create")
+    public String createUser(Model model) {
+        //model for role options
+        model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
+
+        //model for user being edited
+        model.addAttribute("user", UserWithRoleDTO.builder().build());
+
+        return "users/fragments/edit";
+    }
+
+    @GetMapping("edit/{id}")
+    public String editUser(Model model, @PathVariable("id") final String id) {
+        //model for role options
+        model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
+
+        //model for user being edited
+        User user = userService.findByUuid(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+
+        model.addAttribute("user", UserWithRoleDTO.builder()
+            .uuid(user.getUuid())
+            .userId(user.getUserId())
+            .name(user.getName())
+            .email(user.getEmail())
+            .active(user.getActive())
+            .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? "admin" : "user")
+            .build());
+
+        return "users/fragments/edit";
+    }
+
     @Transactional
     @PostMapping("create")
     public String createUser(@ModelAttribute UserWithRoleDTO user) {
-        System.out.println("user = " + user);
-
         User fullUser = User.builder()
             .userId(user.getUserId())
             .name(user.getName())
@@ -62,9 +95,9 @@ public class UsersController {
             .build();
         Set<String> roles = new HashSet<>();
         roles.add(Roles.USER);
-//            if (user.getAccessRole().equals("admin")) {
-        roles.add(Roles.ADMINISTRATOR);
-//            }
+        if (user.getAccessRole().equals("admin")) {
+            roles.add(Roles.ADMINISTRATOR);
+        }
         fullUser.setRoles(roles);
         userService.create(fullUser);
         return "redirect:/admin/users/all";

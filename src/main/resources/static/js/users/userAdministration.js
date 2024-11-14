@@ -20,4 +20,18 @@ function UserService () {
             }
         });
     }
+
+    this.openEditModal = function(id, action) {
+        const url = id ? `${viewUrl}/${action}/${id}` : `${viewUrl}/${action}`
+        fetch(url)
+            .then(response => response.text()
+                .then(data => {
+                    let dialog = document.getElementById('addUserModal');
+                    dialog.innerHTML = data;
+                    editDialog = new bootstrap.Modal(document.getElementById('addUserModal'));
+                    editDialog.show();
+                }))
+            .catch(error => toastService.error(error));
+    }
+
 }
