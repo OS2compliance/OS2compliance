@@ -2,7 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
-<script th:src="@{/js/tags/tags.js}" defer></script>
+<script th:src="@{/js/users/userAdministration.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -13,17 +13,17 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
-                                <li class="breadcrumb-item active" aria-current="page">Tags</li>
+                                <li class="breadcrumb-item active" aria-current="page">Brugeradministration</li>
                             </ol>
                         </nav>
-                        <h1 class="page-title mb-0 mt-2">Tags</h1>
+                        <h1 class="page-title mb-0 mt-2">Brugeradministration</h1>
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
                         <button type="button" class="btn btn-info btn-lg hstack gap-2"
                                 style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
-                                data-bs-target="#addTagModal">
-                            <i class="ti-plus"></i> <span class="vr"></span> Nyt Tag
+                                data-bs-target="#addUserModal">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny Bruger
                         </button>
                         <button type="button" onclick="createTaskService.show()"
                                 class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -40,7 +40,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div id="tagsDatatable"></div>
+                                <div id="userDatatable"></div>
                             </div>
                         </div>
                     </div>
@@ -50,24 +50,30 @@
     </section>
 
     <header th:replace="~{fragments/header :: header}"></header>
-    <nav th:replace="~{fragments/navbar :: main (page='tags')}"></nav>
+    <nav th:replace="~{fragments/navbar :: main (page='userAdministration')}"></nav>
 </div>
 
-<div class="modal fade" id="addTagModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+<div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Nyt Tag</h5>
+                <h5 class="modal-title">Ny Bruger</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/tags/create}" th:object="${tag}"
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/users/create}" th:object="${user}"
                   method="post">
                 <div class="modal-body">
-                    <input id="identifier" th:field="*{id}" type="hidden">
+                    <input id="identifier" th:field="*{uuid}" type="hidden">
                     <div class="row mt-4">
                         <label for="navn" class="col-sm-4 col-form-label">Navn</label>
                         <div class="col-sm-8">
-                            <input id="navn" th:field="*{value}" type="text" class="form-control" required>
+                            <input id="navn" th:field="*{name}" type="text" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="brugerNavn" class="col-sm-4 col-form-label">Brugernavn</label>
+                        <div class="col-sm-8">
+                            <input id="brugerNavn" th:field="*{userId}" type="text" class="form-control" required>
                         </div>
                     </div>
 
@@ -87,9 +93,9 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        const data = [[${tags}]];
-        const viewUrl = [[@{/admin/tags}]];
-        const restUrl = [[@{/rest/tags}]];
+        const data = [[${allUsers}]];
+        const viewUrl = [[@{/admin/users}]];
+        const restUrl = [[@{/rest/users}]];
     +]*/
 
     document.addEventListener("DOMContentLoaded", function(event) {
@@ -107,13 +113,17 @@
             },
             columns: [
                 {
-                    id: "id",
+                    id: "uuid",
                     name: "Id",
                     hidden: true
                 },
                 {
-                    id: "value",
-                    name: "Tag"
+                    id: "userId",
+                    name: "Bruger"
+                },
+                {
+                    id: "name",
+                    name: "Navn"
                 },
                 {
                     id: "actions",
@@ -122,8 +132,8 @@
                     width: '90px',
                     formatter: (cell, row) => {
                         const id = row.cells[0]['data'];
-                        const tag = row.cells[1]['data'];
-                        const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="tags.deleteTag('${id}', '${tag}')"><i class="pli-trash fs-5"></i></button>`;
+                        const userId = row.cells[1]['data'];
+                        const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
                         return gridjs.html(deleteButton);
                     }
                 }
@@ -137,14 +147,14 @@
                     'previous': 'Forrige',
                     'next': 'Næste',
                     'showing': 'Viser',
-                    'results': 'Tags',
+                    'results': 'Brugere',
                     'of': 'af',
                     'to': 'til',
                     'navigate': (page, pages) => `Side ${page} af ${pages}`,
                     'page': (page) => `Side ${page}`
                 }
             }
-        }).render(document.getElementById("tagsDatatable"));
+        }).render(document.getElementById("userDatatable"));
     });
 
 /*]]>*/

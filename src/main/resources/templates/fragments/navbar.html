@@ -1,124 +1,154 @@
 <!DOCTYPE html>
 <html>
 <body>
-	<nav th:fragment="main" id="mainnav-container" class="mainnav">
-		<div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner">
-			<div class="mainnav__top-content scrollable-content pb-2">
-				<div class="mainnav__category py-3">
-					<ul class="mainnav__menu nav flex-column">
-						<li class="nav-item">
-							<a href="/dashboard" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'hjem' ? 'active' : ''">
-								<i class="pli-home fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Dashboard</span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a th:href="@{/standards}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'standarder' ? 'active' : ''">
-								<i class="pli-globe fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Standarder</span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a th:href="@{/registers}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'fortegnelse' ? 'active' : ''">
-								<i class="pli-address-book-2 fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Fortegnelse</span>
-							</a>
-						</li>
-                        <li class="nav-item has-sub">
-                            <a href="#"  class="nav-link mininav-toggle collapsed" th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
-                                <i class="pli-crane fs-5 me-2"></i> <span class="nav-label ms-1">Aktiver</span>
-                            </a>
-                            <ul class="mininav-content nav collapse">
-                                <li class="nav-item">
-                                    <a th:href="@{/assets}" class="nav-link" th:classappend="${page} == 'aktiver' ? 'active' : ''">Aktiver</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a th:href="@{/dbs/assets}" class="nav-link" th:classappend="${page} == 'dbs_aktiver' ? 'active' : ''">DBS Aktiver</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a th:href="@{/dbs/oversight}" class="nav-link" th:classappend="${page} == 'dbs_oversight' ? 'active' : ''">DBS tilsyn</a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
-                                    <a th:href="@{/precautions}" class="nav-link" th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
-                                    <a th:href="@{/assets/dpia/schema}" class="nav-link" th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyse</a>
-                                </li>
-                            </ul>
-                        </li>
-						<li class="nav-item">
-							<a th:href="@{/suppliers}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'leverandører' ? 'active' : ''">
-								<i class="pli-office fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Leverandører</span>
-							</a>
-						</li>
-						<li class="nav-item has-sub">
-                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'risikovurderinger' || page == 'catalogs' ? 'active' : ''}">
-                                <i class="pli-flashlight fs-5 me-2"></i> <span class="nav-label ms-1">Risikostyring</span>
-                            </a>
-                            <ul class="mininav-content nav collapse">
-                                <li class="nav-item">
-                                    <a th:href="@{/risks}" class="nav-link" th:classappend="${page} == 'risikovurderinger' ? 'active' : ''">Risikovurderinger</a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
-                                    <a th:href="@{/catalogs}" class="nav-link" th:classappend="${page} == 'catalogs' ? 'active' : ''">Trusselskataloger</a>
-                                </li>
-                            </ul>
-						</li>
-						<li class="nav-item">
-							<a th:href="@{/documents}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'dokumenter' ? 'active' : ''">
-								<i class="pli-files fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Dokumenter</span>
-							</a>
-						</li>
-						<li class="nav-item">
-							<a th:href="@{/tasks}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'opgavecenter' ? 'active' : ''">
-								<i class="pli-check fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Opgavecenter</span>
-							</a>
-						</li>
-						<li class="nav-item has-sub">
-							<a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'incidentlogs' || page == 'incidentquestions'} ? 'active' : ''">
-								<i class="pli-exclamation fs-5 me-2"></i> <span class="nav-label ms-1">Hændelser</span>
-							</a>
-                            <ul class="mininav-content nav collapse">
-                                <li class="nav-item">
-                                    <a th:href="@{/incidents/logs}" class="nav-link" th:classappend="${page} == 'incidentlogs' ? 'active' : ''">Hændelseslog</a>
-                                </li>
-                                <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')" >
-                                    <a th:href="@{/incidents/questions}" class="nav-link" th:classappend="${page} == 'incidentquestions' ? 'active' : ''">Opsætning</a>
-                                </li>
-                            </ul>
-						</li>
-						<li class="nav-item">
-							<a th:href="@{/reports}" class="nav-link mininav-toggle collapsed" th:classappend="${page} == 'rapporter' ? 'active' : ''">
-								<i class="pli-newspaper fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
-							</a>
-						</li>
-                        <li class="nav-item has-sub" sec:authorize="hasRole('ROLE_administrator')">
-                            <a href="#" class="mininav-toggle nav-link collapsed" th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' ? 'active' : ''}">
-                                <i class="pli-stamp fs-5 me-2"></i> <span class="nav-label ms-1">Administrativt</span>
-                            </a>
-                            <ul class="mininav-content nav collapse">
-                                <li class="nav-item">
-                                    <a th:href="@{/admin/inactive}" class="nav-link" th:classappend="${page} == 'inactiveUsers' ? 'active' : ''">Inaktive ansvarlige</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a th:href="@{/admin/mailtemplates}" class="nav-link" th:classappend="${page} == 'mailtemplates' ? 'active' : ''">Mailskabeloner</a>
-                                </li>
-                                <li class="nav-item">
-                                    <a th:href="@{/admin/tags}" class="nav-link" th:classappend="${page} == 'tags' ? 'active' : ''">Tags</a>
-                                </li>
-                            </ul>
-                        </li>
-					</ul>
-				</div>
+<nav th:fragment="main" id="mainnav-container" class="mainnav">
+    <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner">
+        <div class="mainnav__top-content scrollable-content pb-2">
+            <div class="mainnav__category py-3">
+                <ul class="mainnav__menu nav flex-column">
+                    <li class="nav-item">
+                        <a href="/dashboard" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page} == 'hjem' ? 'active' : ''">
+                            <i class="pli-home fs-5 me-2"></i> <span
+                            class="nav-label mininav-content ms-1">Dashboard</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/standards}" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page} == 'standarder' ? 'active' : ''">
+                            <i class="pli-globe fs-5 me-2"></i> <span
+                            class="nav-label mininav-content ms-1">Standarder</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/registers}" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page} == 'fortegnelse' ? 'active' : ''">
+                            <i class="pli-address-book-2 fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Fortegnelse</span>
+                        </a>
+                    </li>
+                    <li class="nav-item has-sub">
+                        <a href="#" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
+                            <i class="pli-crane fs-5 me-2"></i> <span class="nav-label ms-1">Aktiver</span>
+                        </a>
+                        <ul class="mininav-content nav collapse">
+                            <li class="nav-item">
+                                <a th:href="@{/assets}" class="nav-link"
+                                   th:classappend="${page} == 'aktiver' ? 'active' : ''">Aktiver</a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/dbs/assets}" class="nav-link"
+                                   th:classappend="${page} == 'dbs_aktiver' ? 'active' : ''">DBS Aktiver</a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/dbs/oversight}" class="nav-link"
+                                   th:classappend="${page} == 'dbs_oversight' ? 'active' : ''">DBS tilsyn</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                                <a th:href="@{/precautions}" class="nav-link"
+                                   th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                                <a th:href="@{/assets/dpia/schema}" class="nav-link"
+                                   th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyse</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/suppliers}" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page} == 'leverandører' ? 'active' : ''">
+                            <i class="pli-office fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Leverandører</span>
+                        </a>
+                    </li>
+                    <li class="nav-item has-sub">
+                        <a href="#" class="mininav-toggle nav-link collapsed"
+                           th:classappend="${page == 'risikovurderinger' || page == 'catalogs' ? 'active' : ''}">
+                            <i class="pli-flashlight fs-5 me-2"></i> <span class="nav-label ms-1">Risikostyring</span>
+                        </a>
+                        <ul class="mininav-content nav collapse">
+                            <li class="nav-item">
+                                <a th:href="@{/risks}" class="nav-link"
+                                   th:classappend="${page} == 'risikovurderinger' ? 'active' : ''">Risikovurderinger</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                                <a th:href="@{/catalogs}" class="nav-link"
+                                   th:classappend="${page} == 'catalogs' ? 'active' : ''">Trusselskataloger</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/documents}" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page} == 'dokumenter' ? 'active' : ''">
+                            <i class="pli-files fs-5 me-2"></i> <span
+                            class="nav-label mininav-content ms-1">Dokumenter</span>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/tasks}" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page} == 'opgavecenter' ? 'active' : ''">
+                            <i class="pli-check fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Opgavecenter</span>
+                        </a>
+                    </li>
+                    <li class="nav-item has-sub">
+                        <a href="#" class="mininav-toggle nav-link collapsed"
+                           th:classappend="${page == 'incidentlogs' || page == 'incidentquestions'} ? 'active' : ''">
+                            <i class="pli-exclamation fs-5 me-2"></i> <span class="nav-label ms-1">Hændelser</span>
+                        </a>
+                        <ul class="mininav-content nav collapse">
+                            <li class="nav-item">
+                                <a th:href="@{/incidents/logs}" class="nav-link"
+                                   th:classappend="${page} == 'incidentlogs' ? 'active' : ''">Hændelseslog</a>
+                            </li>
+                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                                <a th:href="@{/incidents/questions}" class="nav-link"
+                                   th:classappend="${page} == 'incidentquestions' ? 'active' : ''">Opsætning</a>
+                            </li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a th:href="@{/reports}" class="nav-link mininav-toggle collapsed"
+                           th:classappend="${page} == 'rapporter' ? 'active' : ''">
+                            <i class="pli-newspaper fs-5 me-2"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
+                        </a>
+                    </li>
+                    <li class="nav-item has-sub" sec:authorize="hasRole('ROLE_administrator')">
+                        <a href="#" class="mininav-toggle nav-link collapsed"
+                           th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' || page == 'userAdministration' ? 'active' : ''}">
+                            <i class="pli-stamp fs-5 me-2"></i> <span class="nav-label ms-1">Administrativt</span>
+                        </a>
+                        <ul class="mininav-content nav collapse">
+                            <li class="nav-item">
+                                <a th:href="@{/admin/inactive}" class="nav-link"
+                                   th:classappend="${page} == 'inactiveUsers' ? 'active' : ''">Inaktive ansvarlige</a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/admin/mailtemplates}" class="nav-link"
+                                   th:classappend="${page} == 'mailtemplates' ? 'active' : ''">Mailskabeloner</a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/admin/tags}" class="nav-link"
+                                   th:classappend="${page} == 'tags' ? 'active' : ''">Tags</a>
+                            </li>
+                            <li class="nav-item">
+                                <a th:href="@{/admin/users/all}" class="nav-link"
+                                   th:classappend="${page} == 'userAdministration' ? 'active' : ''">Brugeradministration</a>
+                            </li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
 
-				<div class="mainnav__bottom-content border-top">
-					<ul id="mainnav" class="mainnav__menu nav flex-column">
-						<li class="nav-item has-sub"><a href="/saml/logout" class="nav-link"
-							aria-expanded="false"> <i class="pli-unlock fs-5 me-2"></i> <span
-								class="nav-label ms-1">Log ud</span>
-						</a></li>
-					</ul>
-				</div>
+            <div class="mainnav__bottom-content border-top">
+                <ul id="mainnav" class="mainnav__menu nav flex-column">
+                    <li class="nav-item has-sub"><a href="/saml/logout" class="nav-link"
+                                                    aria-expanded="false"> <i class="pli-unlock fs-5 me-2"></i> <span
+                        class="nav-label ms-1">Log ud</span>
+                    </a></li>
+                </ul>
+            </div>
 
-			</div>
-		</div>
-	</nav>
+        </div>
+    </div>
+</nav>
 </body>
 </html>
