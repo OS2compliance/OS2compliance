@@ -8,9 +8,9 @@
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
-                    <button id="editBtn" type="button" class="btn btn-secondary btn-xs" onclick="registerGeneralService.setGenereltEditState(true)">Rediger</button>
-                    <button id="cancelBtn" type="button" onclick="registerGeneralService.setGenereltEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
-                    <button id="saveBtn" form="editDescId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                    <button id="editBtn" th:if="${changeableRegister}" type="button" class="btn btn-secondary btn-xs" onclick="registerGeneralService.setGenereltEditState(true)">Rediger</button>
+                    <button id="cancelBtn" th:if="${changeableRegister}" type="button" onclick="registerGeneralService.setGenereltEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="saveBtn" th:if="${changeableRegister}" form="editDescId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                 </div>
             </div>
             <div class="card-body pt-0">
@@ -84,7 +84,7 @@
             <div class="card-header toolbar">
                 <h5 class="toolbar-start m-0">Aktiver</h5>
                 <div class="toolbar-end">
-                    <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
+                    <button type="button" th:if="${changeableRegister}" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
                 </div>
             </div>
 
@@ -140,7 +140,7 @@
                 <div class="card-header toolbar">
                     <h5 class="toolbar-start m-0">Dokumenter</h5>
                     <div class="toolbar-end">
-                        <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                        <button type="button" th:if="${changeableRegister}" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
                     </div>
                 </div>
                 <div class="card-body">
@@ -167,7 +167,7 @@
                 <div class="card-header toolbar">
                     <h5 class="toolbar-start m-0">Opgaver</h5>
                     <div class="toolbar-end">
-                        <button type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                        <button type="button" th:if="${changeableRegister}" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${register.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
                     </div>
                 </div>
                 <div class="card-body">

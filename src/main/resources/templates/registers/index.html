@@ -20,10 +20,10 @@
 							<p class="lead"></p>
 						</div>
 						<div class="align-self-center d-inline-flex">
-							<button type="button" onclick="createRegisterService.show()" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
+							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createRegisterService.show()" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
 								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny behandlingsaktivitet
 							</button>
-							<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 							</button>
 						</div>
@@ -64,6 +64,7 @@
 			var formUrl = [[@{/registers/form}]];
 			var restUrl = [[@{/rest/registers}]];
 			var deleteUrl = [[@{/registers/}]];
+			var superuser = [[${superuser}]];
 		+]*/
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         let grid = null;
@@ -216,9 +217,11 @@
                         formatter: (cell, row) => {
                             const registerId = row.cells[0]['data'];
                             const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                            return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRegisterService.show('${registerId}')"><i class="pli-pencil fs-5"></i></button>`
-                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            if(superuser) {
+                                return gridjs.html(
+                                    `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRegisterService.show('${registerId}')"><i class="pli-pencil fs-5"></i></button>`
+                                    + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            }
                         }
                     }
                 ],

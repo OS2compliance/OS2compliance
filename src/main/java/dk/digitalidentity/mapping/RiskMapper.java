@@ -1,11 +1,14 @@
 package dk.digitalidentity.mapping;
 
 
+import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -25,8 +28,28 @@ public interface RiskMapper {
                 .tasks(riskGrid.getTasks())
                 .name(riskGrid.getName())
                 .threatAssessmentReportApprovalStatus(riskGrid.getThreatAssessmentReportApprovalStatus().getMessage())
+                .changeable(false)
                 .build();
     }
 
-    List<RiskDTO> toDTO(List<RiskGrid> riskGrids);
+    default RiskDTO toDTO(final RiskGrid riskGrid, boolean superuser, String principalUuid) {
+        RiskDTO riskDTO = toDTO(riskGrid);
+        if(superuser || principalUuid.equals(riskGrid.getResponsibleUser().getUuid())) {
+            riskDTO.setChangeable(true);
+        }
+        return riskDTO;
+    }
+
+    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid) {
+        List<RiskDTO> riskDTOS = new ArrayList<>();
+        riskGrid.forEach(a -> riskDTOS.add(toDTO(a)));
+        return riskDTOS;
+    }
+
+    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
+    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid, boolean superuser, String principalUuid) {
+        List<RiskDTO> riskDTOS = new ArrayList<>();
+        riskGrid.forEach(a -> riskDTOS.add(toDTO(a, superuser, principalUuid)));
+        return riskDTOS;
+    }
 }

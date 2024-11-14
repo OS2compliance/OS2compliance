@@ -23,7 +23,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -47,9 +47,9 @@
                         <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
                             <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
-                                    <button th:unless="${completed}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button th:unless="${completed}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
-                                    <button th:unless="${completed}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">

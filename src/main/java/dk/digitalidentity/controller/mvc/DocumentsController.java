@@ -2,8 +2,11 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
@@ -11,6 +14,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -40,11 +45,14 @@ public class DocumentsController {
 
     @GetMapping
     public String documentsList(final Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", new Document());
+        model.addAttribute("isSuperuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "documents/index";
     }
 
     @Transactional
+    @RequireSuperuser
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Document document,
             @RequestParam(name = "relations", required = false) final Set<Long> relations) {
@@ -60,11 +68,14 @@ public class DocumentsController {
         final Document document = documentService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
+        model.addAttribute("changeableDocument", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (document.getResponsibleUser() != null && authentication.getPrincipal().equals(document.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }
 
+    @RequireSuperuser
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -84,6 +95,10 @@ public class DocumentsController {
     public String formEdit(@ModelAttribute final Document document) {
         final Document excistingDocument = documentService.get(document.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !excistingDocument.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {
 //            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en gyldig revideringsdato");
 //        }

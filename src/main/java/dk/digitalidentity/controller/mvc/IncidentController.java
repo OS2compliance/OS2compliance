@@ -5,12 +5,15 @@ import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,7 +34,9 @@ public class IncidentController {
     private final ApplicationEventPublisher eventPublisher;
 
     @GetMapping("logs")
-    public String incidentLog() {
+    public String incidentLog(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "incidents/logs/index";
     }
 
@@ -77,6 +82,8 @@ public class IncidentController {
 
     @GetMapping("logForm")
     public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long incidentId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         if (incidentId != null) {
             final Incident incident = incidentService.findById(incidentId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -103,9 +110,11 @@ public class IncidentController {
     public String viewIncident(final Model model, @PathVariable final Long id) {
         final Incident incident = incidentService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("incident", incident);
         // The incident responses only contains identifiers for the objects it points to, so we need to look up
         // the object to be able to show the names in the edit dialog.
+        model.addAttribute("changeableIncident", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (incident.getCreator() != null && authentication.getPrincipal().equals(incident.getCreator().getUuid()))));
         model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
         model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
         model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));

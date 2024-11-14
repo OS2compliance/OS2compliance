@@ -11,7 +11,9 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SupplierService;
@@ -20,6 +22,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -52,8 +56,10 @@ public class SupplierController {
     private final TaskService taskService;
 
 	@GetMapping
-	public String suppliersList() {
-		return "suppliers/index";
+	public String suppliersList(Model model) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+        return "suppliers/index";
 	}
 
 	@GetMapping("{id}")
@@ -76,7 +82,10 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .collect(Collectors.toList());
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("oversights", assetOversights);
+        model.addAttribute("changeableSupplier", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (supplier.getResponsibleUser() != null && supplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal()))));
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);
@@ -87,7 +96,8 @@ public class SupplierController {
 		return "suppliers/view";
 	}
 
-	@DeleteMapping("{id}")
+    @RequireSuperuser
+    @DeleteMapping("{id}")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
 	public void supplierDelete(@PathVariable final Long id) {
@@ -122,6 +132,10 @@ public class SupplierController {
 		if (supplier.getId() != null) {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !existingSupplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
             existingSupplier.setName(supplier.getName());
 			existingSupplier.setStatus(supplier.getStatus());
 			existingSupplier.setCvr(supplier.getCvr());
@@ -153,6 +167,10 @@ public class SupplierController {
                                                                        @RequestParam("cvr") final String cvr) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !supplier.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 		supplier.setDescription(description);
         supplier.setStatus(status);
         supplier.setCvr(cvr);

@@ -21,7 +21,9 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
@@ -38,6 +40,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
 import org.hibernate.validator.constraints.UUID;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -79,7 +83,9 @@ public class RegisterController {
     private final UserService userService;
 
     @GetMapping
-    public String registerList() {
+    public String registerList(Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "registers/index";
     }
 
@@ -102,6 +108,7 @@ public class RegisterController {
         return "registers/form";
     }
 
+    @RequireSuperuser
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
@@ -115,8 +122,13 @@ public class RegisterController {
                                    @ModelAttribute @Valid final ConsequenceAssessment assessment,
                                    @RequestParam(required = false) final String section) {
         final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (existingOptional.isPresent()) {
             final ConsequenceAssessment existing = existingOptional.get();
+            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && existing.getRegister().getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
             existing.setAssessment(assessment.getAssessment());
             existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
             existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
@@ -139,6 +151,9 @@ public class RegisterController {
             assessment.setId(null);
             final Register register = registerService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString()))) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
             assessment.setRegister(register);
             register.setConsequenceAssessment(assessment);
             consequenceAssessmentDao.save(assessment);
@@ -163,6 +178,10 @@ public class RegisterController {
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (name != null) {
             register.setName(name);
         }
@@ -217,6 +236,10 @@ public class RegisterController {
                           @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         if (purpose != null) {
             register.setPurpose(purpose);
         }
@@ -243,6 +266,11 @@ public class RegisterController {
     public String dataProcessing(@PathVariable final Long id, @Valid @ModelAttribute final DataProcessingDTO body) {
         final Register register = registerService.findById(body.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         dataProcessingService.update(register.getDataProcessing(), body);
         return "redirect:/registers/" + id + "?section=dataprocessing";
     }
@@ -269,7 +297,10 @@ public class RegisterController {
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
         final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("section", section);
+        model.addAttribute("changeableRegister", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(authentication.getPrincipal()))));
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
         model.addAttribute("register", register);
@@ -295,6 +326,7 @@ public class RegisterController {
         return "registers/view";
     }
 
+    @RequireSuperuser
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
