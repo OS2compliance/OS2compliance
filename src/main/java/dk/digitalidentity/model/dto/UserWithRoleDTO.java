@@ -16,5 +16,6 @@ public class UserWithRoleDTO {
     private String email;
     private Boolean active;
     private String accessRole;
+    private String password;
 }
 

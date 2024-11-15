@@ -8,6 +8,7 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -34,7 +35,7 @@ public class UsersController {
         //model for role options
         model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
 
-        //Model for list of users
+        //Model for list of users - do not set password for DTO!
         model.addAttribute("allUsers", userService.getAll().stream().map(user -> UserWithRoleDTO.builder()
             .uuid(user.getUuid())
             .userId(user.getUserId())
@@ -73,7 +74,7 @@ public class UsersController {
         //model for role options
         model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
 
-        //model for user being edited
+        //model for user being edited - do not set Password for DTO!
         User user = userService.findByUuidIncludingInactive(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -96,11 +97,13 @@ public class UsersController {
     @Transactional
     @PostMapping("create")
     public String createUser(@ModelAttribute UserWithRoleDTO user) {
+        String encryptedPassword = new BCryptPasswordEncoder().encode(user.getPassword());
+
         User fullUser = User.builder()
             .userId(user.getUserId())
             .name(user.getName())
-            .active(true)
-            .password("Test1234")
+            .active(user.getActive())
+            .password(encryptedPassword)
             .build();
         Set<String> roles = new HashSet<>();
         roles.add(Roles.USER);
@@ -149,6 +152,12 @@ public class UsersController {
         Boolean existingctiveStatus = dbUser.getActive();
         if (updatedActiveStatus != null && !updatedActiveStatus.equals(existingctiveStatus)) {
             dbUser.setActive(updatedActiveStatus);
+        }
+
+        String updatedPassword = user.getPassword();
+        if (updatedPassword != null && !updatedPassword.isEmpty()) {
+            String encryptedPassword = new BCryptPasswordEncoder().encode(user.getPassword());
+            dbUser.setPassword(encryptedPassword);
         }
 
         //save user to database
