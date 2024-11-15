@@ -37,14 +37,18 @@ public class UsersController {
 
         //Model for list of users - do not set password for DTO!
         model.addAttribute("allUsers", userService.getAll().stream().map(user -> UserWithRoleDTO.builder()
-            .uuid(user.getUuid())
-            .userId(user.getUserId())
-            .name(user.getName())
-            .email(user.getEmail())
-            .active(user.getActive())
-            .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? "admin" : "user")
-            .build()
-        ).collect(Collectors.toSet()));
+                .uuid(user.getUuid())
+                .userId(user.getUserId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .active(user.getActive())
+                .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? "admin" : "user")
+                .build()
+            )
+            .sorted(Comparator.comparing(UserWithRoleDTO::getActive)
+                .reversed()
+                .thenComparing(Comparator.comparing(UserWithRoleDTO::getUserId)))
+            .collect(Collectors.toList()));
 
         //model for creating new users
         model.addAttribute("user", UserWithRoleDTO.builder().build());
@@ -103,6 +107,7 @@ public class UsersController {
             .userId(user.getUserId())
             .name(user.getName())
             .active(user.getActive())
+            .email(user.getEmail())
             .password(encryptedPassword)
             .build();
         Set<String> roles = new HashSet<>();

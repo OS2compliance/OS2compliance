@@ -110,7 +110,7 @@
                     id: "active",
                     name: "Aktiv",
                     formatter: (cell, row) => {
-                        return cell === true ? "Ja" : "Nej";
+                        return gridjs.html(cell === true ? '<div class="d-block badge bg-success">Ja</div>' : '<div class="d-block badge bg-danger">Nej</div>');
                     }
                 },
                 {
@@ -123,7 +123,7 @@
                         const userId = row.cells[1]['data'];
                         const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
                         const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
-                        return gridjs.html(deleteButton + editButton);
+                        return gridjs.html(editButton + deleteButton);
                     }
                 }
             ],
