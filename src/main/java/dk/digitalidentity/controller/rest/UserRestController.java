@@ -53,7 +53,7 @@ public class UserRestController {
     @Transactional
     @DeleteMapping("delete/{userID}")
     public ResponseEntity<?> deleteUser(@PathVariable("userID") final String userID) {
-        User user = userService.findByUuid(userID)
+        User user = userService.findByUuidIncludingInactive(userID)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         userService.delete(user);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);

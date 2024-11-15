@@ -74,7 +74,7 @@ public class UsersController {
         model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
 
         //model for user being edited
-        User user = userService.findByUuid(id)
+        User user = userService.findByUuidIncludingInactive(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 
@@ -116,7 +116,7 @@ public class UsersController {
     @PostMapping("edit")
     public String editUser(@ModelAttribute UserWithRoleDTO user) {
         //find user to update
-        User dbUser = userService.findByUuid(user.getUuid())
+        User dbUser = userService.findByUuidIncludingInactive(user.getUuid())
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         //Update values for the user
@@ -125,13 +125,31 @@ public class UsersController {
         if (user.getAccessRole().equals("admin")) {
             roles.add(Roles.ADMINISTRATOR);
         }
-
-        dbUser.setName(user.getName());
-        dbUser.setEmail(user.getEmail());
-        dbUser.setUserId(user.getUserId());
-        dbUser.setActive(user.getActive());
         dbUser.setRoles(roles);
 
+        String updatedName = user.getName();
+        String existingName = dbUser.getName();
+        if (updatedName != null && !updatedName.equals(existingName) && !updatedName.isEmpty()) {
+            dbUser.setName(updatedName);
+        }
+
+        String updatedUserId = user.getUserId();
+        String existingUserId = dbUser.getUserId();
+        if (updatedUserId != null && !updatedUserId.equals(existingUserId) && !updatedUserId.isEmpty()) {
+            dbUser.setUserId(updatedUserId);
+        }
+
+        String updatedEmail = user.getEmail();
+        String existingEmail = dbUser.getEmail();
+        if (updatedEmail != null && !updatedEmail.equals(existingEmail) && !updatedEmail.isEmpty()) {
+            dbUser.setEmail(updatedEmail);
+        }
+
+        Boolean updatedActiveStatus = user.getActive();
+        Boolean existingctiveStatus = dbUser.getActive();
+        if (updatedActiveStatus != null && !updatedActiveStatus.equals(existingctiveStatus)) {
+            dbUser.setActive(updatedActiveStatus);
+        }
 
         //save user to database
         userService.save(dbUser);
