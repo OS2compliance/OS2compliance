@@ -1,11 +1,11 @@
 
-    <div th:fragment="userEditModal (user, roleOptions)" class="modal-dialog modal-lg">
+    <div th:fragment="userEditModal (user, action, roleOptions)" class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title">Ny Bruger</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/users/create}" th:object="${user}"
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/users/{path}(path=${action})}" th:object="${user}"
                   method="post">
                 <div class="modal-body">
                     <input id="identifier" th:field="*{uuid}" type="hidden">

@@ -48,6 +48,9 @@ public class UsersController {
         //model for creating new users
         model.addAttribute("user", UserWithRoleDTO.builder().build());
 
+        //Action specified to set the posting endpoint of the fragment
+        model.addAttribute("action", "create");
+
         return "users/index";
     }
 
@@ -58,6 +61,9 @@ public class UsersController {
 
         //model for user being edited
         model.addAttribute("user", UserWithRoleDTO.builder().build());
+
+        //Action specified to set the posting endpoint of the fragment
+        model.addAttribute("action", "create");
 
         return "users/fragments/edit";
     }
@@ -81,6 +87,9 @@ public class UsersController {
             .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? "admin" : "user")
             .build());
 
+        //Action specified to set the posting endpoint of the fragment
+        model.addAttribute("action", "edit");
+
         return "users/fragments/edit";
     }
 
@@ -99,8 +108,34 @@ public class UsersController {
             roles.add(Roles.ADMINISTRATOR);
         }
         fullUser.setRoles(roles);
-        userService.create(fullUser);
+        userService.save(fullUser);
         return "redirect:/admin/users/all";
+    }
 
+    @Transactional
+    @PostMapping("edit")
+    public String editUser(@ModelAttribute UserWithRoleDTO user) {
+        //find user to update
+        User dbUser = userService.findByUuid(user.getUuid())
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+        //Update values for the user
+        Set<String> roles = new HashSet<>();
+        roles.add(Roles.USER);
+        if (user.getAccessRole().equals("admin")) {
+            roles.add(Roles.ADMINISTRATOR);
+        }
+
+        dbUser.setName(user.getName());
+        dbUser.setEmail(user.getEmail());
+        dbUser.setUserId(user.getUserId());
+        dbUser.setActive(user.getActive());
+        dbUser.setRoles(roles);
+
+
+        //save user to database
+        userService.save(dbUser);
+
+        return "redirect:/admin/users/all";
     }
 }

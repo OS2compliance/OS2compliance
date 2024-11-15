@@ -54,7 +54,7 @@
 </div>
 
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
-    <div th:replace="~{users/fragments/edit.html :: userEditModal (user=${user}, roleOptions=${roleOptions})}"></div>
+    <div th:replace="~{users/fragments/edit.html :: userEditModal (user=${user}, action=${action}, roleOptions=${roleOptions})}"></div>
 </div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
