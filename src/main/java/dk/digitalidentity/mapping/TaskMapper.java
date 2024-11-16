@@ -28,7 +28,7 @@ public interface TaskMapper {
                 .taskRepetition(nullSafe(() -> taskGrid.getTaskRepetition().getMessage()))
                 .taskRepetitionOrder(taskGrid.getTaskRepetitionOrder())
                 .taskType(nullSafe(() -> taskGrid.getTaskType().getMessage()))
-                .taskResult(nullSafe(() -> taskGrid.getTaskResult()))
+                .taskResult(nullSafe(() -> taskGrid.getTaskResult().getValue()))
                 .taskResultOrder(taskGrid.getTaskResultOrder())
                 .completed(nullSafe(taskGrid::isCompleted))
                 .tags(nullSafe(() -> taskGrid.getTags()))

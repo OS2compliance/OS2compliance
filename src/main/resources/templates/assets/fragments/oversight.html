@@ -50,12 +50,14 @@
                                 </td>
                                 <td>
                                     <select class="form-control form-select editField" th:field="*{supervisoryModel}" tabindex="-1" disabled>
+                                        <option value=""></option>
                                         <option th:each="model : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}" th:value="${model.name}" th:text="${model.message}"></option>
                                     </select>
                                 </td>
                                 <td>
                                     <div>
                                         <select id="nextInspectionSelectId" class="form-control form-select editField" th:field="*{nextInspection}" tabindex="-1" disabled  onchange="nextInspectionSelect()">
+                                            <option value=""></option>
                                             <option th:each="inspection : ${T(dk.digitalidentity.model.entity.enums.NextInspection).values()}" th:value="${inspection.name}" th:text="${inspection.message}"></option>
                                         </select>
                                     </div>

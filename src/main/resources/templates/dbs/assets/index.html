@@ -137,7 +137,8 @@
                             `<select class="form-control form-select choices__input" data-assetid="${dbsAssetId}" name="assets" id="assetsSelect${dbsAssetId}" hidden="" tabindex="-1" multiple="multiple">` +
                             options +
                             `</select>`);
-                    }
+                    },
+                    width: '300px'
                 },
                 {
                     name: "Sidst hentet"
@@ -183,7 +184,7 @@
 
             // Initialize all Asset Choices.js
         	Array.from(document.querySelectorAll("[id^='assetsSelect']")).map(select => select.id).forEach(elementId => {
-        	    var assetChoices = choiceService.initAssetSelect(elementId, true);
+        	    let assetChoices = choiceService.initAssetSelect(elementId, true);
 
         	    assetChoices.passedElement.element.addEventListener('removeItem', handleAddRemoveEvent, false);
         	    assetChoices.passedElement.element.addEventListener('addItem', handleAddRemoveEvent, false);
@@ -201,13 +202,8 @@
                 id: event.target.dataset.assetid,
                 assets: Array.from(event.target.selectedOptions).map(op => op.value)
             }),
-        }).then(response => {
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
-            toastService.info("Info", "Dine ændringer er blevet gemt")
-        }
-        ).catch(error => { toastService.error(error); console.log(error) });
+        }).then(defaultResponseHandler)
+          .catch(defaultErrorHandler);
     }
 
     /*]]>*/

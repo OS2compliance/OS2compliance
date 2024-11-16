@@ -321,6 +321,7 @@ SELECT
     a.id,
     a.name,
     s.name as supplier,
+    s.id as supplier_id,
     a.supervisory_model,
     GROUP_CONCAT(da.id ORDER BY da.id SEPARATOR ',') AS dbs_assets,
     a.oversight_responsible_uuid,

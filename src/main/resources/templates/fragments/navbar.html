@@ -29,7 +29,7 @@
                                 <li class="nav-item">
                                     <a th:href="@{/assets}" class="nav-link" th:classappend="${page} == 'aktiver' ? 'active' : ''">Aktiver</a>
                                 </li>
-                                <li class="nav-item">
+                                <li class="nav-item" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')">
                                     <a th:href="@{/dbs/assets}" class="nav-link" th:classappend="${page} == 'dbs_aktiver' ? 'active' : ''">DBS Aktiver</a>
                                 </li>
                                 <li class="nav-item">

@@ -53,7 +53,7 @@ public class AssetEO {
         SWORN_STATEMENT, INDEPENDENT_AUDIT, SOC_STATEMENT, DSD, DBS
     }
     public enum NextInspection {
-        DATE, MONTH, QUARTER, HALF_YEAR, YEAR, EVERY_2_YEARS, EVERY_3_YEARS
+        DATE, MONTH, QUARTER, HALF_YEAR, YEAR, EVERY_2_YEARS, EVERY_3_YEARS, DBS
     }
     public enum AssetStatus {
         READY, ON_GOING, NOT_STARTED

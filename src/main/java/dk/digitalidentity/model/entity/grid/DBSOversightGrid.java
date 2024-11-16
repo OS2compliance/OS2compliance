@@ -38,6 +38,9 @@ public class DBSOversightGrid {
     private String supplier;
 
     @Column
+    private Long supplierId;
+
+    @Column
     @Enumerated(EnumType.STRING)
     private ChoiceOfSupervisionModel supervisoryModel;
 

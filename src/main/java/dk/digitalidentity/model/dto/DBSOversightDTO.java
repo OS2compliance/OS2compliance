@@ -21,8 +21,9 @@ public class DBSOversightDTO {
 	private Long id;
 	private String name;
 	private String supplier;
+	private Long supplierId;
 	private String supervisoryModel;
-	
+
 	private List<DBSAssetDTO> dbsAssets;
 	private String oversightResponsible;
 	@JsonFormat(pattern = "dd/MM-yyyy")

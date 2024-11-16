@@ -162,6 +162,7 @@ public class AssetService {
             return null;
         }
         return switch (asset.getNextInspection()) {
+            case DBS -> date;
             case DATE -> //should never actually hit this case as we check prior.
                 date;
             case MONTH -> date.plusMonths(1);

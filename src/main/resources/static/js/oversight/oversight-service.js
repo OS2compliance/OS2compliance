@@ -44,21 +44,26 @@ function OversightService() {
                     datepickerOversight.open();
                 });
 
-                const inspectionDateOversightModal = MCDatepicker.create({
-                    el: '#oversightInspectionDateInput',
-                    autoClose: true,
-                    dateFormat: 'dd/mm-yyyy',
-                    selectedDate: new Date(),
-                    closeOnBlur: true,
-                    firstWeekday: 1,
-                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                    customClearBTN: "Ryd",
-                    customCancelBTN: "Annuller"
-                });
-                document.querySelector("#oversightInspectionDateBtn").addEventListener("click", () => {
-                    inspectionDateOversightModal.open();
-                });
+
+                let oversightInspectionBtn = document.querySelector("#oversightInspectionDateBtn");
+                console.log(oversightInspectionBtn)
+                if (oversightInspectionBtn !== null) {
+                    const inspectionDateOversightModal = MCDatepicker.create({
+                        el: '#oversightInspectionDateInput',
+                        autoClose: true,
+                        dateFormat: 'dd/mm-yyyy',
+                        selectedDate: new Date(),
+                        closeOnBlur: true,
+                        firstWeekday: 1,
+                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                        customClearBTN: "Ryd",
+                        customCancelBTN: "Annuller"
+                    });
+                    oversightInspectionBtn.addEventListener("click", () => {
+                        inspectionDateOversightModal.open();
+                    });
+                }
 
                 //choices.js
                 const oversightSelect = document.getElementById('oversightUserSelect');

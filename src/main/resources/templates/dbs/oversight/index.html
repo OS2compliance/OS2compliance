@@ -65,6 +65,8 @@
 
     /*[+
         var gridDBSOversightUrl = [[@{/rest/dbs/oversight/list}]];
+        var assetsUrl = [[@{/assets/}]]
+        var suppliersUrl = [[@{/suppliers/}]]
     +]*/
 
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -106,7 +108,7 @@
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'supplier', 'supervisoryModel', 'dbsAssets', 'oversightResponsible', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
+                        const columnIds = ['id', 'supplierId', 'name', 'supplier', 'supervisoryModel', 'dbsAssets', 'oversightResponsible', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -119,10 +121,24 @@
                     hidden: true,
                 },
                 {
+                    name: "suplierId",
+                    hidden: true,
+                },
+                {
                     name: "Navn",
+                    formatter: (cell, row) => {
+                        let assetId = row.cells[0].data;
+                        let html = `<a href="${assetsUrl}${assetId}">${cell}</a>`
+                        return gridjs.html(html);
+                    }
                 },
                 {
                     name: "Leverandør",
+                    formatter: (cell, row) => {
+                        let supplierId = row.cells[1].data;
+                        let html = `<a href="${suppliersUrl}${supplierId}">${cell}</a>`
+                        return gridjs.html(html);
+                    }
                 },
                 {
                     name: "Tilsynform",
@@ -179,7 +195,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.name, asset.supplier, asset.supervisoryModel, asset.dbsAssets, asset.oversightResponsible, asset.lastInspection, asset.lastInspectionStatus, asset.outstandingSince ],
+                    [ asset.id, asset.supplierId, asset.name, asset.supplier, asset.supervisoryModel, asset.dbsAssets, asset.oversightResponsible, asset.lastInspection, asset.lastInspectionStatus, asset.outstandingSince ],
                 ),
                 total: data => data.totalCount
             },

@@ -43,6 +43,7 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
+import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -522,10 +523,9 @@ public class AssetsController {
         }
         asset.setOversightResponsibleUser(body.getOversightResponsibleUser());
 
-        dataProcessingService.createOrUpdateAssociatedOversightCheck(asset);
+        assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
         return "redirect:/assets/" + asset.getId();
     }
-
 
     record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect){
     }
@@ -585,7 +585,8 @@ public class AssetsController {
     }
 
     @GetMapping("oversight/{entityId}/{type}")
-    public String oversightForm(final Model model, final @PathVariable("entityId") Long entityId, @PathVariable("type") final String type, @RequestParam(name = "id", required = false) final Long id) {
+    public String oversightForm(final Model model, final @PathVariable("entityId") Long entityId, @PathVariable("type") final String type,
+                                @RequestParam(name = "id", required = false) final Long id) {
         if(Objects.isNull(entityId)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id blev ikke sendt med");
         }
@@ -597,7 +598,7 @@ public class AssetsController {
 
             if (id == null) {
                 model.addAttribute("assetId", asset.getId());
-                model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
+                model.addAttribute("oversight", new AssetOversightDTO(0, 0, asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
                 model.addAttribute("inspectionType", asset.getNextInspection());
             } else {
                 final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), id)).findAny().orElseThrow(() ->
