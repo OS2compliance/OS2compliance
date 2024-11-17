@@ -44,6 +44,10 @@ public class AssetOversightService {
         return assetOversightDao.save(oversight);
     }
 
+    public void delete(AssetOversight assetOversight) {
+        assetOversightDao.delete(assetOversight);
+    }
+
     public void setAssetsToDbsOversight(final List<Asset> assets) {
         assets.forEach(asset -> {
             asset.setNextInspection(NextInspection.DBS);
@@ -158,6 +162,5 @@ public class AssetOversightService {
             case null -> task.setRepetition(TaskRepetition.NONE);
         }
     }
-
 
 }

@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.rest;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import dk.digitalidentity.dao.AssetOversightDao;
@@ -17,12 +18,15 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
+import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -95,7 +99,7 @@ public class AssetsRestController {
     private final EmailTemplateService emailTemplateService;
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
-    private final AssetOversightDao assetOversightDao;
+    private final AssetOversightService assetOversightService;
 
     @PostMapping("list")
 	public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
@@ -180,8 +184,22 @@ public class AssetsRestController {
         if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, asset.getDpiaScreening(), fieldName, value);
         assetService.save(asset);
+    }
+
+
+    @PutMapping("{id}/oversightresponsible")
+    public void setOversightResponsible(@PathVariable("id") final Long id, @RequestParam("userUuid") final String userUuid) {
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        asset.setOversightResponsibleUser(user);
+        if (asset.getSupervisoryModel() != ChoiceOfSupervisionModel.DBS) {
+            assetOversightService.setAssetsToDbsOversight(Collections.singletonList(asset));
+        } else {
+            assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
+        }
     }
 
     record DPIASetFieldDTO(long id, String fieldName, String value) {}
@@ -240,7 +258,7 @@ public class AssetsRestController {
         if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && assetOversight.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        assetOversightDao.delete(assetOversight);
+        assetOversightService.delete(assetOversight);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
