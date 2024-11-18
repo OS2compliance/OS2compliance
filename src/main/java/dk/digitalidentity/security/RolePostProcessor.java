@@ -44,9 +44,14 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
         for(final var a : tokenUser.getAuthorities()) {
             if (configuration.getAuthorityAdministrator().equals(a.getAuthority())) {
                 authorities.add(new SamlGrantedAuthority(Roles.ADMINISTRATOR));
+                authorities.add(new SamlGrantedAuthority(Roles.SUPERUSER));
                 authorities.add(new SamlGrantedAuthority(Roles.USER));
             }
-            if (configuration.getAuthorityUser().equals(a.getAuthority())) {
+            else if (configuration.getAuthoritySuperuser().equals(a.getAuthority())){
+                authorities.add(new SamlGrantedAuthority(Roles.SUPERUSER));
+                authorities.add(new SamlGrantedAuthority(Roles.USER));
+            }
+            else if (configuration.getAuthorityUser().equals(a.getAuthority())) {
                 authorities.add(new SamlGrantedAuthority(Roles.USER));
             }
         }

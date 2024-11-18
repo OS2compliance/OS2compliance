@@ -21,10 +21,10 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-						<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+						<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
 							<i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
 						</button>
-						<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+						<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 							<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 						</button>
                     </div>
@@ -215,10 +215,12 @@
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        const assetId = row.cells[0]['data'];
-                        const name = row.cells[2]['data'].replaceAll("'", "\\'");
-                        return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                        if(row.cells[11]['data']) {
+                            const assetId = row.cells[0]['data'];
+                            const name = row.cells[2]['data'].replaceAll("'", "\\'");
+                            return gridjs.html(
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                        }
                     }
                 }
             ],
@@ -229,7 +231,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus ],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.changeable ],
                 ),
                 total: data => data.totalCount
             },

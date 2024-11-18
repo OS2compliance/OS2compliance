@@ -6,6 +6,7 @@ import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +41,7 @@ public class SupplierRestController {
 	record SuppliersPageWrapper(long count, List<SupplierGridDTO> suppliers) {}
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}
 
-	@PostMapping("list")
+    @PostMapping("list")
 	public SuppliersPageWrapper list(
 			@RequestParam(name = "search", required = false) final String search,
 			@RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,

@@ -5,9 +5,11 @@ import dk.digitalidentity.model.api.DocumentEO;
 import dk.digitalidentity.model.api.PageEO;
 import dk.digitalidentity.model.api.UserEO;
 import dk.digitalidentity.model.api.UserWriteEO;
+import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -15,6 +17,7 @@ import org.mapstruct.Mappings;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -34,10 +37,30 @@ public interface DocumentMapper {
                 .status(nullSafe(() -> documentGrid.getStatus().getMessage()))
                 .statusOrder(documentGrid.getStatusOrder())
                 .tags(nullSafe(() -> documentGrid.getTags()))
+                .changeable(false)
                 .build();
     }
 
-    List<DocumentDTO> toDTO(List<DocumentGrid> documentGrids);
+    default DocumentDTO toDTO(final DocumentGrid documentGrid, boolean superuser, String principalUuid) {
+        DocumentDTO documentDTO = toDTO(documentGrid);
+        if(superuser || principalUuid.equals(documentGrid.getResponsibleUser().getUuid())) {
+            documentDTO.setChangeable(true);
+        }
+        return documentDTO;
+    }
+
+    default List<DocumentDTO> toDTO(List<DocumentGrid> documentGrid) {
+        List<DocumentDTO> documentDTOS = new ArrayList<>();
+        documentGrid.forEach(a -> documentDTOS.add(toDTO(a)));
+        return documentDTOS;
+    }
+
+    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
+    default List<DocumentDTO> toDTO(List<DocumentGrid> documentGrid, boolean superuser, String principalUuid) {
+        List<DocumentDTO> documentDTOS = new ArrayList<>();
+        documentGrid.forEach(a -> documentDTOS.add(toDTO(a, superuser, principalUuid)));
+        return documentDTOS;
+    }
 
     UserEO toEO(User user);
 

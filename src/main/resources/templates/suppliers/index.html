@@ -21,10 +21,10 @@
 							<p class="lead"></p>
 						</div>
 						<div class="align-self-center d-inline-flex">
-							<button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
+							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
 								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny leverandør
 							</button>
-							<button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 							</button>
 						</div>
@@ -66,6 +66,7 @@
 			var deleteUrl = [[@{/suppliers/}]];
 			var viewUrl = [[@{/suppliers/}]];
 			var restUrl = [[@{/rest/suppliers}]];
+			var superuser = [[${superuser}]];
 		+]*/
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -193,9 +194,11 @@
                         formatter: (cell, row) => {
                             const supplierId = row.cells[0]['data'];
                             const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                            if(superuser) {
                             return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editClicked('${supplierId}')"><i class="pli-pen-5 fs-5"></i></button>` +
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${supplierId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            }
                         }
                     }
                 ],

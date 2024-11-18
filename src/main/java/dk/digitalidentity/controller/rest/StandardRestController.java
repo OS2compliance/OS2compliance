@@ -6,7 +6,9 @@ import dk.digitalidentity.model.dto.enums.SetFieldStandardType;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -16,17 +18,17 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @RestController
@@ -42,6 +44,10 @@ public class StandardRestController {
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
     public ResponseEntity<HttpStatus> setField(@PathVariable final String templateIdentifier, @PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final StandardSection standardSection = standardSectionDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && standardSection.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 
         switch (dto.setFieldType()) {
             case RESPONSIBLE -> handleResponsibleUser(standardSection, dto.value());
@@ -64,6 +70,10 @@ public class StandardRestController {
     public ResponseEntity<?> save(@RequestBody StandardSectionRecord record) {
         final StandardSection section = standardSectionDao.findById(record.id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && section.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         final HashSet<Long> combinedRelations = new HashSet<>();
         if (record.documents != null) {
             combinedRelations.addAll(List.of(record.documents));

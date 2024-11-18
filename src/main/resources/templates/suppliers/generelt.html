@@ -6,9 +6,9 @@
         <div class="card-header toolbar">
             <h5 class="toolbar-start m-0">Stamdata</h5>
             <div class="toolbar-end">
-                <button id="editDescBtn" type="button" class="btn btn-secondary btn-xs" onclick="setEditState(true)">Rediger</button>
-                <button id="cancelBtn" type="button" onclick="setEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
-                <button id="saveBtn" form="editDataForm" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                <button th:if="${changeableSupplier}" id="editDescBtn" type="button" class="btn btn-secondary btn-xs" onclick="setEditState(true)">Rediger</button>
+                <button th:if="${changeableSupplier}" id="cancelBtn" type="button" onclick="setEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                <button th:if="${changeableSupplier}" id="saveBtn" form="editDataForm" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
             </div>
         </div>
         <div class="card-body">

@@ -26,7 +26,9 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.EmailTemplateService;
@@ -44,6 +46,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -88,12 +92,15 @@ public class RiskController {
 
     @GetMapping
     public String riskList(final Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("risk", new ThreatAssessment());
         model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
         return "risks/index";
     }
 
     @Transactional
+    @RequireSuperuser
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
@@ -143,6 +150,10 @@ public class RiskController {
                               @Valid @ModelAttribute final ThreatAssessment assessment,
                               @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !editedAssessment.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         editedAssessment.setName(assessment.getName());
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
@@ -162,6 +173,7 @@ public class RiskController {
     }
 
     @Transactional
+    @RequireSuperuser
     @PostMapping("{id}/copy")
     public String performCopy(@PathVariable("id") final long sourceId,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
@@ -274,6 +286,10 @@ public class RiskController {
     @Transactional
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
         threatAssessment.setRevisionInterval(assessment.getRevisionInterval());
         threatAssessment.setNextRevision(assessment.getNextRevision());
         threatAssessmentService.createOrUpdateAssociatedCheck(threatAssessment);
@@ -281,6 +297,7 @@ public class RiskController {
     }
 
     @DeleteMapping("{id}")
+    @RequireSuperuser
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void riskDelete(@PathVariable final Long id) {
@@ -294,6 +311,7 @@ public class RiskController {
     }
 
     @Transactional
+    @RequireSuperuser
     @PostMapping("{id}/customthreats/create")
     public String formCreateCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreat customThreat) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

@@ -23,4 +23,5 @@ public class TaskDTO {
     private TaskResult taskResult;
     private Integer taskResultOrder;
     private String tags;
+    private boolean changeable;
 }

@@ -17,7 +17,7 @@
 
                 <div class="row mb-3"><!--TABLE 2 -->
                     <div class="col-sm-2">
-                        <button type="button" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="newSubsupplier()">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="newSubsupplier()">
                             <i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj leverandør
                         </button>
                     </div>
@@ -46,10 +46,10 @@
                                         th:text="${choice.caption + ' ' + (choice.description ?: '')}"></div>
                                 </td>
                                 <td>
-                                    <button onclick="editSubsupplier(this)" th:attr="data-subsupplierid=${sub.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit subsupplier">
+                                    <button onclick="editSubsupplier(this)" th:if="${changeableAsset}" th:attr="data-subsupplierid=${sub.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit subsupplier">
                                         <i class="pli-pen-4 fs-6"></i>
                                     </button>
-                                    <button onclick="deleteSubsupplier(this)" th:attr="data-subsupplierid=${sub.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete subsupplier">
+                                    <button onclick="deleteSubsupplier(this)" th:if="${changeableAsset}" th:attr="data-subsupplierid=${sub.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete subsupplier">
                                         <i class="pli-trash fs-6"></i>
                                     </button>
                                 </td>
@@ -60,9 +60,9 @@
                 </div>
 
                 <div class="row mb-3 gap-1">
-                    <button id="editDataProcessingBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataprocessingEditState(true)">Rediger databehandlingsindstillinger</button>
-                    <button id="cancelDataProcessingBtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
-                    <button id="saveDataProcessingBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                    <button id="editDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataprocessingEditState(true)">Rediger databehandlingsindstillinger</button>
+                    <button id="cancelDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
+                    <button id="saveDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
                 </div>
 
 

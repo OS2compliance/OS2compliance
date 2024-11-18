@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.rest;
 import java.util.Arrays;
 import java.util.List;
 
+import dk.digitalidentity.security.RequireUser;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -18,7 +19,7 @@ import dk.digitalidentity.mapping.DBSOversightMapper;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.RequireSuperuser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

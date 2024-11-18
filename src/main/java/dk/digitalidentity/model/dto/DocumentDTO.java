@@ -19,4 +19,5 @@ public class DocumentDTO {
     private String status;
     private Integer statusOrder;
     private String tags;
+    private boolean changeable;
 }

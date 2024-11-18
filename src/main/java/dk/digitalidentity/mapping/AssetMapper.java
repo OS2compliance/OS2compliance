@@ -6,6 +6,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -47,23 +48,45 @@ public interface AssetMapper {
 
     default AssetDTO toDTO(final AssetGrid assetGrid) {
         return AssetDTO.builder()
-                .id(assetGrid.getId())
-                .name(assetGrid.getName())
-                .supplier(nullSafe(() -> assetGrid.getSupplier()))
-                .assetType(nullSafe(() -> assetGrid.getAssetType().getMessage()))
-                .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
-                .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
-                .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
-                .assessmentOrder(assetGrid.getAssessmentOrder())
-                .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
+            .id(assetGrid.getId())
+            .name(assetGrid.getName())
+            .supplier(nullSafe(() -> assetGrid.getSupplier()))
+            .assetType(nullSafe(() -> assetGrid.getAssetType().getMessage()))
+            .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
+            .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
+            .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
+            .assessmentOrder(assetGrid.getAssessmentOrder())
+            .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
 
-                .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
-                .registers(nullSafe(() -> assetGrid.getRegisters()))
-                .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
-                .build();
+            .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
+            .registers(nullSafe(() -> assetGrid.getRegisters()))
+            .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
+            .changeable(false)
+            .build();
     }
 
-    List<AssetDTO> toDTO(List<AssetGrid> assetGrids);
+    //provides a mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
+    default AssetDTO toDTO(final AssetGrid assetGrid, boolean superuser, String principalUuid) {
+        AssetDTO assetDTO = toDTO(assetGrid);
+        if(superuser || principalUuid.equals(assetGrid.getResponsibleUserUuids())) {
+            assetDTO.setChangeable(true);
+        }
+        return assetDTO;
+    }
+
+    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids) {
+        List<AssetDTO> assetDTOS = new ArrayList<>();
+        assetGrids.forEach(a -> assetDTOS.add(toDTO(a)));
+        return assetDTOS;
+    }
+
+    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
+    //List<AssetDTO> toDTO(List<AssetGrid> assetGrids, boolean superuser, String principalUuid);
+    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids, boolean superuser, String principalUuid) {
+        List<AssetDTO> assetDTOS = new ArrayList<>();
+        assetGrids.forEach(a -> assetDTOS.add(toDTO(a, superuser, principalUuid)));
+        return assetDTOS;
+    }
 
     default SupplierShallowEO toShallowEO(final AssetSupplierMapping mapping) {
         return SupplierShallowEO.builder()

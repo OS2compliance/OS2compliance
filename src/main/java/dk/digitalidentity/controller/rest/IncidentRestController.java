@@ -6,9 +6,8 @@ import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.transaction.Transactional;
@@ -22,6 +21,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,15 +34,12 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("rest/incidents")
-@RequireUser
+@RequireSuperuser
 @RequiredArgsConstructor
 public class IncidentRestController {
     private final IncidentService incidentService;
@@ -90,6 +87,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @RequireUser
     @PostMapping("list")
     public PageDTO<IncidentDTO> list(
         @RequestParam(name = "search", required = false) final String search,
@@ -117,6 +115,7 @@ public class IncidentRestController {
         return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
     }
 
+    @RequireUser
     @GetMapping("columns")
     public List<String> visibleColumns() {
         return incidentService.getAllFields().stream()
