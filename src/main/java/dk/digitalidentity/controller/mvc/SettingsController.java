@@ -23,7 +23,6 @@ import java.util.Objects;
 @Slf4j
 @Controller
 @RequestMapping("settings")
-@RequireUser
 @RequireAdminstrator
 @RequiredArgsConstructor
 public class SettingsController {
