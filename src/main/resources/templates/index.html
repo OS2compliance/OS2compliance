@@ -10,9 +10,10 @@
     <br><br>
 
     <!--    TODO - Change depending on saml or form login-->
-    <!--    <a th:href="@{/saml/login}" class="login-button" type="Button">Log in</a>-->
+    <a th:if="${#arrays.contains(@environment.getActiveProfiles(),'samllogin')}" th:href="@{/saml/login}"
+       class="login-button" type="Button">Log in</a>
 
-    <div class="content__wrap">
+    <div th:if="${#arrays.contains(@environment.getActiveProfiles(),'locallogin')}" class="content__wrap">
         <div class="d-md-flex justify-content-center">
             <div class="ibox">
                 <div class="ibox-content">
@@ -51,8 +52,6 @@
             </div>
         </div>
     </div>
-
-    <!--    <a th:href="@{/login}" class="login-button" type="Button">Log in</a>-->
 </div>
 </body>
 </html>
