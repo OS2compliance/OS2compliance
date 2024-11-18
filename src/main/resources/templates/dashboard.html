@@ -71,9 +71,9 @@
                     </div>
                 </div>
             </div>
-            <!--                TODO - Switch href between form and saml versions-->
+            <!--            SAML login-->
             <form th:if="${#arrays.contains(@environment.getActiveProfiles(),'samllogin')}" role="form"
-                  th:action="@{/logout}" method="POST">
+                  th:action="@{logout}" method="POST">
                 <div sec:authorize="isAuthenticated()" class="d-grid mt-5">
                     <input class="btn btn-primary btn-lg" type="submit" value="Log out"/>
                 </div>
@@ -83,6 +83,7 @@
                 <a th:href="@{/dashboard}" class="btn btn-primary btn-lg" type="submit">Log in</a>
             </div>
 
+            <!--            Local login-->
             <form th:if="${#arrays.contains(@environment.getActiveProfiles(),'locallogin')}" role="form"
                   th:action="@{/logout}" method="POST">
                 <div sec:authorize="isAuthenticated()" class="d-grid mt-5">

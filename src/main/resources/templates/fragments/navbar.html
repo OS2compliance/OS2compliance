@@ -141,13 +141,6 @@
             <div class="mainnav__bottom-content border-top">
                 <ul id="mainnav" class="mainnav__menu nav flex-column">
                     <li class="nav-item has-sub">
-<!--                        <a th:if="${#arrays.contains(@environment.getActiveProfiles(),'samllogin')}"-->
-<!--                           th:href="@{/saml/logout}" class="nav-link" aria-expanded="false">-->
-<!--                            <i class="pli-unlock fs-5 me-2"></i>-->
-<!--                            <span class="nav-label ms-1">Log ud</span>-->
-<!--                        </a>-->
-
-                        <a  th:href="@{/logout}">logout</a>
                         <span
                               class="nav-link pe-auto" onclick="document.getElementById('logoutform').submit()"
                               style="cursor:pointer">
