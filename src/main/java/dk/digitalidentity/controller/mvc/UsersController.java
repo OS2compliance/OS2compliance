@@ -7,6 +7,7 @@ import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Profile;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -30,6 +31,7 @@ public class UsersController {
         "admin", new RoleOptionDTO("admin", "Administrator")
     );
 
+    @Profile("locallogin")
     @GetMapping("all")
     public String allUsers(Model model) {
         //model for role options
@@ -59,6 +61,7 @@ public class UsersController {
         return "users/index";
     }
 
+    @Profile("locallogin")
     @GetMapping("create")
     public String createUser(Model model) {
         //model for role options
@@ -73,6 +76,7 @@ public class UsersController {
         return "users/fragments/edit";
     }
 
+    @Profile("locallogin")
     @GetMapping("edit/{id}")
     public String editUser(Model model, @PathVariable("id") final String id) {
         //model for role options
@@ -98,6 +102,7 @@ public class UsersController {
         return "users/fragments/edit";
     }
 
+    @Profile("locallogin")
     @Transactional
     @PostMapping("create")
     public String createUser(@ModelAttribute UserWithRoleDTO user) {
@@ -120,6 +125,7 @@ public class UsersController {
         return "redirect:/admin/users/all";
     }
 
+    @Profile("locallogin")
     @Transactional
     @PostMapping("edit")
     public String editUser(@ModelAttribute UserWithRoleDTO user) {
