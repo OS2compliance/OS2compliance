@@ -8,10 +8,10 @@
         <img class="logo" src="/img/OS2compliance_logo.svg" alt="Your Logo">
     </div>
     <br><br>
-
-    <!--    TODO - Change depending on saml or form login-->
-    <a th:if="${#arrays.contains(@environment.getActiveProfiles(),'samllogin')}" th:href="@{/saml/login}"
-       class="login-button" type="Button">Log in</a>
+    <div class="container">
+        <a th:if="${#arrays.contains(@environment.getActiveProfiles(),'samllogin')}" th:href="@{/dashboard}"
+           class="login-button" type="Button">Log in</a>
+    </div>
 
     <div th:if="${#arrays.contains(@environment.getActiveProfiles(),'locallogin')}" class="content__wrap">
         <div class="d-md-flex justify-content-center">

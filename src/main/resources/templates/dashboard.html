@@ -72,19 +72,25 @@
                 </div>
             </div>
             <!--                TODO - Switch href between form and saml versions-->
-            <!--				<div sec:authorize="isAuthenticated()" class="d-grid mt-5">-->
-            <!--					<a th:href="@{/saml/logout}" class="btn btn-primary btn-lg" type="submit">Log out</a>-->
-            <!--				</div>-->
-            <!--				<div sec:authorize="isAnonymous()" class="d-grid mt-5">-->
-            <!--					<a th:href="@{/saml/login}" class="btn btn-primary btn-lg" type="submit">Log in</a>-->
-            <!--				</div>-->
-
-            <form role="form" th:action="@{/logout}" method="POST">
+            <form th:if="${#arrays.contains(@environment.getActiveProfiles(),'samllogin')}" role="form"
+                  th:action="@{/logout}" method="POST">
                 <div sec:authorize="isAuthenticated()" class="d-grid mt-5">
-                        <input class="btn btn-primary btn-lg" type="submit" value="Log out"/>
+                    <input class="btn btn-primary btn-lg" type="submit" value="Log out"/>
                 </div>
             </form>
-            <div sec:authorize="isAnonymous()" class="d-grid mt-5">
+            <div th:if="${#arrays.contains(@environment.getActiveProfiles(),'samllogin')}" sec:authorize="isAnonymous()"
+                 class="d-grid mt-5">
+                <a th:href="@{/dashboard}" class="btn btn-primary btn-lg" type="submit">Log in</a>
+            </div>
+
+            <form th:if="${#arrays.contains(@environment.getActiveProfiles(),'locallogin')}" role="form"
+                  th:action="@{/logout}" method="POST">
+                <div sec:authorize="isAuthenticated()" class="d-grid mt-5">
+                    <input class="btn btn-primary btn-lg" type="submit" value="Log out"/>
+                </div>
+            </form>
+            <div th:if="${#arrays.contains(@environment.getActiveProfiles(),'locallogin')}"
+                 sec:authorize="isAnonymous()" class="d-grid mt-5">
                 <a th:href="@{/login}" class="btn btn-primary btn-lg" type="submit">Log in</a>
             </div>
         </div>
