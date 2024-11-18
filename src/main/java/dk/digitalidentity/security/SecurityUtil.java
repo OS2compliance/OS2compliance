@@ -4,12 +4,10 @@ import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.TokenUser;
 import dk.digitalidentity.security.service.FormUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
-import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,7 +21,8 @@ public class SecurityUtil {
         boolean hasDetails = SecurityContextHolder.getContext().getAuthentication().getDetails() != null;
         boolean tokenUser = SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser;
         boolean formUser = SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof FormUserDetails;
-        return exists && hasDetails && (tokenUser || formUser);
+        return exists && hasDetails
+            && (tokenUser || formUser);
     }
 
     public static String getLoggedInUserUuid() {
