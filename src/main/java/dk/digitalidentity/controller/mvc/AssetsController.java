@@ -43,7 +43,6 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
-import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -527,7 +526,7 @@ public class AssetsController {
         return "redirect:/assets/" + asset.getId();
     }
 
-    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect){
+    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
     }
     @Transactional
     @PostMapping("oversight/edit")
@@ -581,7 +580,9 @@ public class AssetsController {
             asset.getAssetOversights().add(attachedOversight);
         }
 
-        return dto.redirect.equals("assets") ? "redirect:/assets/" + asset.getId() : "redirect:/suppliers/" + asset.getSupplier().getId();
+        return dto.redirect.equals("assets")
+            ? "redirect:/assets/" + asset.getId()
+            : "redirect:/suppliers/" + asset.getSupplier().getId();
     }
 
     @GetMapping("oversight/{entityId}/{type}")

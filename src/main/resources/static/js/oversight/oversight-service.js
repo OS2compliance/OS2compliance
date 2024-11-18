@@ -12,11 +12,14 @@ function OversightService() {
         this.initOversightModal().then(() => oversightDialog.show());
     }
 
-    this.initOversightModal = (oversightId) => {
+    this.initOversightModal = (oversightId, entityType, entityId) => {
+        if (entityType === undefined) {
+            let isAsset = window.location.href.indexOf('assets') > 0;
+            entityType = isAsset ? 'asset' : 'supplier';
+            entityId = isAsset ? assetId : supplierId;
+        }
+
         let params = new URLSearchParams();
-        let isAsset = window.location.href.indexOf('assets') > 0;
-        const entityType = isAsset ? 'asset' : 'supplier';
-        const entityId = isAsset ? assetId : supplierId;
         if (oversightId) {
             params.append('id', oversightId);
         }
@@ -46,7 +49,6 @@ function OversightService() {
 
 
                 let oversightInspectionBtn = document.querySelector("#oversightInspectionDateBtn");
-                console.log(oversightInspectionBtn)
                 if (oversightInspectionBtn !== null) {
                     const inspectionDateOversightModal = MCDatepicker.create({
                         el: '#oversightInspectionDateInput',
@@ -79,7 +81,7 @@ function OversightService() {
                     checkInputField(oversightResponsibleUserChoices);
                 });
             })
-            .catch(error => toastService.error(error))
+            .catch(defaultErrorHandler)
     }
 
     this.editOversight = (elem) => {

@@ -222,6 +222,7 @@ public class TasksController {
 
         model.addAttribute("task", task);
         model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (task.getResponsibleUser() != null && authentication.getPrincipal().equals(task.getResponsibleUser().getUuid()))));
+        model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
 
