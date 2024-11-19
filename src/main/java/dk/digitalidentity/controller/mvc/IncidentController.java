@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -114,7 +115,7 @@ public class IncidentController {
         model.addAttribute("incident", incident);
         // The incident responses only contains identifiers for the objects it points to, so we need to look up
         // the object to be able to show the names in the edit dialog.
-        model.addAttribute("changeableIncident", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (incident.getCreator() != null && authentication.getPrincipal().equals(incident.getCreator().getUuid()))));
+        model.addAttribute("changeableIncident", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (incident.getCreator() != null && SecurityUtil.getPrincipalUuid().equals(incident.getCreator().getUuid()))));
         model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
         model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
         model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
