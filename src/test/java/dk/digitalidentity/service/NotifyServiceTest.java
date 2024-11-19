@@ -7,7 +7,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
+import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
@@ -34,7 +34,7 @@ import static org.mockito.Mockito.doReturn;
 @SpringBootTest
 @ActiveProfiles("test")
 @ContextConfiguration(classes = {NotifyService.class, EmailTemplateService.class})
-@EnableConfigurationProperties(value = DISAML_Configuration.class)
+@EnableConfigurationProperties(value = SamlModuleConfiguration.class)
 @RecordApplicationEvents
 public class NotifyServiceTest {
     @Autowired

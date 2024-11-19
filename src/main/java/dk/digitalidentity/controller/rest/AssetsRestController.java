@@ -23,6 +23,7 @@ import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -68,6 +69,7 @@ import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.util.ReflectionHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
@@ -83,8 +85,8 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class AssetsRestController {
     private final AssetService assetService;
-	private final AssetGridDao assetGridDao;
-	private final AssetMapper mapper;
+    private final AssetGridDao assetGridDao;
+    private final AssetMapper mapper;
     private final UserService userService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
@@ -98,44 +100,44 @@ public class AssetsRestController {
     private final AssetOversightDao assetOversightDao;
 
     @PostMapping("list")
-	public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
+    public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
                                   @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
                                   @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
                                   @RequestParam(name = "order", required = false) final String order,
                                   @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
-		if (StringUtils.isNotEmpty(order) && containsField(order)) {
-			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-			sort = Sort.by(direction, order);
-		} else {
+        if (StringUtils.isNotEmpty(order) && containsField(order)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, order);
+        } else {
             sort = Sort.by(Sort.Direction.ASC, "name");
         }
-		final Pageable sortAndPage = PageRequest.of(page, size, sort);
-		Page<AssetGrid> assets = null;
-		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
-			// search and page
-			assets = assetGridDao.findAllCustom(searchableProperties, search, sortAndPage, AssetGrid.class);
-		} else {
-			// Fetch paged and sorted
-			assets = assetGridDao.findAll(sortAndPage);
-		}
+        final Pageable sortAndPage = PageRequest.of(page, size, sort);
+        Page<AssetGrid> assets = null;
+        if (StringUtils.isNotEmpty(search)) {
+            final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
+            // search and page
+            assets = assetGridDao.findAllCustom(searchableProperties, search, sortAndPage, AssetGrid.class);
+        } else {
+            // Fetch paged and sorted
+            assets = assetGridDao.findAll(sortAndPage);
+        }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
-	}
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+    }
 
     @PostMapping("list/{id}")
     public PageDTO<AssetDTO> list(@PathVariable(name = "id", required = true) final String uuid,
-                                @RequestParam(name = "search", required = false) final String search,
-                                @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-                                @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-                                @RequestParam(name = "order", required = false) final String order,
-                                @RequestParam(name = "dir", required = false) final String dir) {
+                                  @RequestParam(name = "search", required = false) final String search,
+                                  @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
+                                  @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
+                                  @RequestParam(name = "order", required = false) final String order,
+                                  @RequestParam(name = "dir", required = false) final String dir) {
         Sort sort = null;
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !authentication.getPrincipal().equals(uuid)) {
+        if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
@@ -155,16 +157,16 @@ public class AssetsRestController {
             assets = assetGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage);
         }
 
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
 
     @PutMapping("{id}/setfield")
     public void setAssetField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
-                                        @RequestParam(value = "value", required = false) final String value) {
+                              @RequestParam(value = "value", required = false) final String value) {
         canSetFieldGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
@@ -173,21 +175,23 @@ public class AssetsRestController {
 
     @PutMapping("{id}/dpiascreening/setfield")
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
-        @RequestParam(value = "value", required = false) final String value) {
+                                      @RequestParam(value = "value", required = false) final String value) {
         canSetFieldDPIAScreeningGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, asset.getDpiaScreening(), fieldName, value);
         assetService.save(asset);
     }
 
-    record DPIASetFieldDTO(long id, String fieldName, String value) {}
+    record DPIASetFieldDTO(long id, String fieldName, String value) {
+    }
+
     @RequireSuperuser
     @PutMapping("dpia/schema/section/setfield")
-    public void setDPIASectionField( @RequestBody final DPIASetFieldDTO dto) {
+    public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto) {
         canSetDPIASectionFieldGuard(dto.fieldName);
         final DPIATemplateSection dpiaTemplateSection = dpiaTemplateSectionService.findById(dto.id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ReflectionHelper.callSetterWithParam(DPIATemplateSection.class, dpiaTemplateSection, dto.fieldName, dto.value);
@@ -237,7 +241,7 @@ public class AssetsRestController {
         final AssetOversight assetOversight = assetService.getOversight(oversightId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && assetOversight.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString()))) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && assetOversight.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         assetOversightDao.delete(assetOversight);
@@ -258,10 +262,10 @@ public class AssetsRestController {
     }
 
     @PutMapping("{assetId}/dpia/response/setfield")
-    public void setDPIAResponseField( @RequestBody final DPIASetFieldDTO dto, @PathVariable final long assetId) throws IOException {
+    public void setDPIAResponseField(@RequestBody final DPIASetFieldDTO dto, @PathVariable final long assetId) throws IOException {
         final Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (asset.getDpia() == null) {
@@ -319,10 +323,10 @@ public class AssetsRestController {
     }
 
     @PutMapping("{assetId}/dpia/setfield")
-    public void setDPIASectionField( @RequestBody final DPIASetFieldDTO dto, @PathVariable long assetId) {
+    public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto, @PathVariable long assetId) {
         Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (dto.fieldName.equals("conclusion")) {
@@ -333,13 +337,15 @@ public class AssetsRestController {
         assetService.save(asset);
     }
 
-    record MailReportDTO(String message, String sendTo, boolean sign) {}
+    record MailReportDTO(String message, String sendTo, boolean sign) {
+    }
+
     @Transactional
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReport(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
@@ -490,19 +496,19 @@ public class AssetsRestController {
         }
     }
 
-	private boolean containsField(final String fieldName) {
-		return fieldName.equals("assessmentOrder")
-				|| fieldName.equals("supplier")
-				|| fieldName.equals("risk")
-				|| fieldName.equals("name")
-				|| fieldName.equals("assetType")
-				|| fieldName.equals("responsibleUserNames")
-				|| fieldName.equals("registers")
-				|| fieldName.equals("updatedAt")
-				|| fieldName.equals("criticality")
-				|| fieldName.equals("assetStatusOrder")
-                || fieldName.equals("hasThirdCountryTransfer");
-	}
+    private boolean containsField(final String fieldName) {
+        return fieldName.equals("assessmentOrder")
+            || fieldName.equals("supplier")
+            || fieldName.equals("risk")
+            || fieldName.equals("name")
+            || fieldName.equals("assetType")
+            || fieldName.equals("responsibleUserNames")
+            || fieldName.equals("registers")
+            || fieldName.equals("updatedAt")
+            || fieldName.equals("criticality")
+            || fieldName.equals("assetStatusOrder")
+            || fieldName.equals("hasThirdCountryTransfer");
+    }
 
     /**
      * editor does not generate valid XHTML. At least the <br/> and <img/> tags are not closed,

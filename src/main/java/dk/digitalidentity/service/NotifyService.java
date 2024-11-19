@@ -7,7 +7,8 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
-import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
+import dk.digitalidentity.samlmodule.config.SamlConfiguration;
+import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,7 +25,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class NotifyService {
-    private final DISAML_Configuration diSamlConfiguration;
+    private final SamlModuleConfiguration diSamlConfiguration;
     private final TaskService taskService;
     private final ApplicationEventPublisher eventPublisher;
     private final ResponsibleUserViewService responsibleUserViewService;

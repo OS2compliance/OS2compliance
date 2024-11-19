@@ -1,5 +1,6 @@
 package dk.digitalidentity.config;
 
+import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.data.domain.AuditorAware;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -13,6 +14,6 @@ public class SpringSecurityAuditorAware implements AuditorAware<String> {
         if (authentication == null || !authentication.isAuthenticated()) {
             return Optional.of("ukendt");
         }
-        return Optional.of((String)authentication.getPrincipal());
+        return Optional.of(SecurityUtil.getPrincipalUuid());
     }
 }

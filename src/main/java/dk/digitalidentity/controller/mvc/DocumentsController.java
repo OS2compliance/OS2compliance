@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
@@ -70,7 +71,7 @@ public class DocumentsController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
-        model.addAttribute("changeableDocument", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (document.getResponsibleUser() != null && authentication.getPrincipal().equals(document.getResponsibleUser().getUuid()))));
+        model.addAttribute("changeableDocument", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (document.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }
@@ -96,7 +97,7 @@ public class DocumentsController {
         final Document excistingDocument = documentService.get(document.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !excistingDocument.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !excistingDocument.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {

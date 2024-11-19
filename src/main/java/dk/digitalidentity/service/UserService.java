@@ -7,6 +7,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
@@ -35,11 +36,22 @@ public class UserService {
         return userDao.findById(uuid);
     }
 
+    public List<User> getAll() {
+        return userDao.findAll();
+    }
+
     public Optional<User> findByUuid(final String uuid) {
-        if(StringUtils.isEmpty(uuid)) {
+        if (StringUtils.isEmpty(uuid)) {
             return Optional.empty();
         }
         return userDao.findByUuidAndActiveIsTrue(uuid);
+    }
+
+    public Optional<User> findByUuidIncludingInactive(final String uuid) {
+        if (StringUtils.isEmpty(uuid)) {
+            return Optional.empty();
+        }
+        return userDao.findById(uuid);
     }
 
     public Optional<User> findByUserId(final String userId) {
@@ -67,5 +79,26 @@ public class UserService {
 
     public Page<User> getPaged(final int pageSize, final int page) {
         return userDao.findAll(Pageable.ofSize(pageSize).withPage(page));
+    }
+
+    /**
+     * Persists a user to the database, updating or creating as required
+     *
+     * @param user
+     * @return the created or updated User. Never null.
+     * @throws IllegalArgumentException in case the given user is null
+     */
+    @Transactional
+    public User save(final User user) throws IllegalArgumentException {
+        return userDao.save(user);
+    }
+
+    /**
+     * Deletes a user from persistence
+     * @param user
+     */
+    @Transactional
+    public void delete(User user) {
+        userDao.delete(user);
     }
 }
