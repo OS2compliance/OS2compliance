@@ -267,6 +267,7 @@
 					</image>
                     <profiles>
                         <profile>dev</profile>
+                        <profile>locallogin</profile>
                     </profiles>
 				</configuration>
 			</plugin>

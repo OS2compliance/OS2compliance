@@ -1,8 +1,2 @@
 ALTER TABLE users
 ADD COLUMN password VARCHAR(255) NULL;
-
-UPDATE users
-SET password = "$2a$12$9dp0pkNeQI662z25Z4X6G.CA7CnlJCC4EyErnpSRZvfnxENsVL6hK";
-
-ALTER TABLE users
-MODIFY password VARCHAR(255) NOT NULL;
