@@ -31,6 +31,7 @@ import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.PrecautionService;
@@ -130,7 +131,7 @@ public class RiskRestController {
         }
         assert risks != null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), authentication.getPrincipal().toString()));
+        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
 
     record ResponsibleUserDTO(String uuid, String name, String userId) {}
@@ -165,7 +166,7 @@ public class RiskRestController {
         ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         ThreatAssessment finalThreatAssessment = threatAssessment;
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !finalThreatAssessment.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !finalThreatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
@@ -255,7 +256,7 @@ public class RiskRestController {
     public ResponseEntity<HttpStatus> setField(@PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -296,7 +297,7 @@ public class RiskRestController {
     public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 

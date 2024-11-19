@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -76,8 +77,7 @@ public class RegisterRestController {
         @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !authentication.getPrincipal().equals(uuid)) {
+        if(!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         Sort sort = null;

@@ -4,6 +4,7 @@ import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.TokenUser;
 import dk.digitalidentity.security.service.FormUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
@@ -74,4 +75,27 @@ public class SecurityUtil {
         }
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.ADMINISTRATOR));
     }
+
+    /**
+     * Checks if the currently authenticated principal either has the super user role, or matches the uuid provided
+     * @param uuid
+     * @return
+     */
+    public static boolean isSuperUser (String uuid) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER));
+    }
+
+    public static String getPrincipalUuid () {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof String) {
+            return (String) principal ;
+        }else if (principal instanceof FormUserDetails) {
+            return ((FormUserDetails) principal).getUserUUID();
+        } else {
+            throw new UsernameNotFoundException("instance of principal is of unknown type, when checking for super or own user");
+        }
+    }
+
 }

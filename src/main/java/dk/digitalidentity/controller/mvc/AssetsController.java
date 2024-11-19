@@ -51,6 +51,7 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatu
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -254,7 +255,7 @@ public class AssetsController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		model.addAttribute("asset", asset);
-        model.addAttribute("changeableAsset", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || asset.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(authentication.getPrincipal()))));
+        model.addAttribute("changeableAsset", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || asset.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))));
 		model.addAttribute("relatedAssets", relatedAssets);
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
@@ -318,7 +319,7 @@ public class AssetsController {
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         dataProcessingService.update(asset.getDataProcessing(), body);
@@ -341,7 +342,7 @@ public class AssetsController {
     public String measures(@ModelAttribute final SaveMeasuresDTO measuresForm) {
         final Asset asset = assetService.get(measuresForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         for (final SaveMeasureDTO answer : measuresForm.getMeasures()) {
@@ -364,7 +365,7 @@ public class AssetsController {
     public String dpia(@ModelAttribute final DataProtectionImpactDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
@@ -404,7 +405,7 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -476,7 +477,7 @@ public class AssetsController {
 		final Asset asset = assetService.get(body.assetId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		final Optional<AssetSupplierMapping> subSupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), body.id)).findAny();
@@ -507,7 +508,7 @@ public class AssetsController {
     public String oversightSettings(@Valid @ModelAttribute final DataProcessingOversightDTO body) {
         final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
@@ -534,7 +535,7 @@ public class AssetsController {
     public String oversightCreateOrEdit(@Valid @ModelAttribute final AssetOversightDTO dto) {
         final Asset asset = assetService.get(dto.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
@@ -641,7 +642,7 @@ public class AssetsController {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -774,7 +775,7 @@ public class AssetsController {
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long id) {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(authentication.getPrincipal().toString())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (asset.getDpia() == null) {
