@@ -2,8 +2,11 @@ package dk.digitalidentity.security;
 
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.samlmodule.model.TokenUser;
+import dk.digitalidentity.security.service.FormUserDetails;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -15,18 +18,26 @@ import static dk.digitalidentity.Constants.SYSTEM_USERID;
 public class SecurityUtil {
 
     public static boolean isLoggedIn() {
-        return SecurityContextHolder.getContext().getAuthentication() != null
-                && SecurityContextHolder.getContext().getAuthentication().getDetails() != null
-                && SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser;
+        boolean exists = SecurityContextHolder.getContext().getAuthentication() != null;
+        boolean hasDetails = SecurityContextHolder.getContext().getAuthentication().getDetails() != null;
+        boolean tokenUser = SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser;
+        boolean formUser = SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof FormUserDetails;
+        return exists && hasDetails
+            && (tokenUser || formUser);
     }
 
-	public static String getLoggedInUserUuid() {
-		if (!isLoggedIn()) {
-			return null;
-		}
-		final TokenUser tokenUser = (TokenUser) SecurityContextHolder.getContext().getAuthentication().getDetails();
-		return tokenUser.getUsername();
-	}
+    public static String getLoggedInUserUuid() {
+        if (!isLoggedIn()) {
+            return null;
+        }
+        if (SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser tokenUser) {
+            return tokenUser.getUsername();
+        } else if (SecurityContextHolder.getContext().getAuthentication().getPrincipal() instanceof FormUserDetails formUserDetails) {
+            return formUserDetails.getUserUUID();
+        } else {
+            throw new UsernameNotFoundException("Could not parse type of security details");
+        }
+    }
 
     public static void loginSystemUser(final List<SamlGrantedAuthority> authorities, final String username) {
         final TokenUser tokenUser = TokenUser.builder()
@@ -45,10 +56,10 @@ public class SecurityUtil {
     }
 
     public static boolean isUser() {
-        if(!isLoggedIn()) {
+        if (!isLoggedIn()) {
             return false;
         }
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch( a -> a.getAuthority().equals(Roles.USER));
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.USER));
     }
 
     public static boolean isSuperUser() {
@@ -59,9 +70,32 @@ public class SecurityUtil {
     }
 
     public static boolean isAdministrator() {
-        if(!isLoggedIn()) {
+        if (!isLoggedIn()) {
             return false;
         }
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch( a -> a.getAuthority().equals(Roles.ADMINISTRATOR));
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.ADMINISTRATOR));
     }
+
+    /**
+     * Checks if the currently authenticated principal either has the super user role, or matches the uuid provided
+     * @param uuid
+     * @return
+     */
+    public static boolean isSuperUser (String uuid) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER));
+    }
+
+    public static String getPrincipalUuid () {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Object principal = authentication.getPrincipal();
+        if (principal instanceof String) {
+            return (String) principal ;
+        }else if (principal instanceof FormUserDetails) {
+            return ((FormUserDetails) principal).getUserUUID();
+        } else {
+            throw new UsernameNotFoundException("instance of principal is of unknown type, when checking for super or own user");
+        }
+    }
+
 }

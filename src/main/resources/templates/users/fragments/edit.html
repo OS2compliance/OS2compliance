@@ -1,0 +1,65 @@
+
+    <div th:fragment="userEditModal (user, action, roleOptions)" class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" th:text="${action.equals('create')} ? 'Ny Bruger' : 'Rediger Bruger'"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/users/{path}(path=${action})}" th:object="${user}"
+                  method="post">
+                <div class="modal-body">
+                    <input id="identifier" th:field="*{uuid}" type="hidden">
+                    <div class="row mt-4">
+                        <label for="navn" class="col-sm-4 col-form-label">Navn</label>
+                        <div class="col-sm-8">
+                            <input id="navn" th:field="*{name}" type="text" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="email" class="col-sm-4 col-form-label">Email</label>
+                        <div class="col-sm-8">
+                            <input id="email" th:field="*{email}" type="email" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="brugerNavn" class="col-sm-4 col-form-label">Login Navn</label>
+                        <div class="col-sm-8">
+                            <input id="brugerNavn" th:field="*{userId}" type="text" class="form-control" required>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <label for="password" class="col-sm-4 col-form-label" th:text="${action.equals('create')} ? 'Password' : 'Nyt Password'"></label>
+                        <div class="col-sm-8">
+                            <input th:if="${action.equals('create')}" id="password" th:field="*{password}" type="password" class="form-control" required>
+                            <input th:unless="${action.equals('create')}" id="password" th:field="*{password}" type="password" class="form-control">
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <label for="roleSelector" class="col-sm-4 col-form-label">Rolle</label>
+                        <div class="col-sm-8">
+                            <select id="roleSelector" class="form-control form-select" th:field="*{accessRole}">
+                                <option th:each="option : ${roleOptions}" th:value="${option.value}" th:text="${option.display}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="activeStatus" class="col-sm-4 col-form-label">Aktiv</label>
+                        <div class="col-sm-8">
+                            <select id="activeStatus" class="form-control form-select" th:field="*{active}">
+                                <option th:value="true" th:text="Ja"></option>
+                                <option th:value="false" th:text="Nej"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                    <button type="submit" class="btn btn-primary" th:form="${formId}">Tilføj</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
