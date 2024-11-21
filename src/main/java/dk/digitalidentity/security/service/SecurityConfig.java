@@ -32,6 +32,7 @@ public class SecurityConfig {
                 .requestMatchers(
                     "/webjars/**",
                     "/css/**",
+                    "/manage/**",
                     "/js/**",
                     "/img/**",
                     "/vendor/**",
