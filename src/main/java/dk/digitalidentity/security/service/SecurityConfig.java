@@ -31,6 +31,7 @@ public class SecurityConfig {
             .authorizeHttpRequests((requests) -> requests
                 .requestMatchers(
                     "/webjars/**",
+                    "/manage/**",
                     "/css/**",
                     "/js/**",
                     "/img/**",
