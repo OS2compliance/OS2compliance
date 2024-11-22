@@ -69,7 +69,6 @@ public class DBSOversightRestController {
 				|| fieldName.equals("oversightResponsible")
 				|| fieldName.equals("lastInspection")
 				|| fieldName.equals("lastInspectionStatus")
-				|| fieldName.equals("outstandingSince")
 				;
 	}
 }

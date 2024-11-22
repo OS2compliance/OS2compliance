@@ -26,7 +26,8 @@ public interface DBSOversightMapper {
                 .oversightResponsible(nullSafe(()-> "(" + oversightGrid.getOversightResponsible().getUserId() + ") " + oversightGrid.getOversightResponsible().getName()))
                 .lastInspection(oversightGrid.getLastInspection())
                 .lastInspectionStatus(nullSafe(() -> oversightGrid.getLastInspectionStatus().getMessage()))
-                .outstandingSince(oversightGrid.getOutstandingSince())
+                .outstandingSince(nullSafe(() -> oversightGrid.getOutstandingTask().getCreatedAt().toLocalDate()))
+                .outstandingId(nullSafe(() -> oversightGrid.getOutstandingTask().getId()))
                 .build();
     }
 

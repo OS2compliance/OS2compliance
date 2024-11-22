@@ -55,6 +55,10 @@ function DBSOversightService() {
                     hidden: true,
                 },
                 {
+                    name: "outstandingTaskId",
+                    hidden: true,
+                },
+                {
                     name: "Navn",
                     formatter: (cell, row) => {
                         let assetId = row.cells[0].data;
@@ -125,7 +129,15 @@ function DBSOversightService() {
                     }
                 },
                 {
-                    name: "Ubehandlet tilsyn"
+                    name: "Ubehandlet tilsyn",
+                    formatter: (cell, row) => {
+                        let taskId = row.cells[2].data;
+                        if (taskId == null) {
+                            return "";
+                        }
+                        let html = `<a href="${tasksUrl}${taskId}">${cell}</a>`
+                        return gridjs.html(html);
+                    }
                 }
             ],
             server:{
@@ -135,7 +147,7 @@ function DBSOversightService() {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.supplierId, asset.name, asset.supplier, asset.supervisoryModel, asset.dbsAssets, asset.oversightResponsible, asset.lastInspection, asset.lastInspectionStatus, asset.outstandingSince ],
+                    [ asset.id, asset.supplierId, asset.outstandingId, asset.name, asset.supplier, asset.supervisoryModel, asset.dbsAssets, asset.oversightResponsible, asset.lastInspection, asset.lastInspectionStatus, asset.outstandingSince ],
                 ),
                 total: data => data.totalCount
             },

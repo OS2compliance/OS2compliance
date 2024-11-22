@@ -31,4 +31,5 @@ public class DBSOversightDTO {
 	private String lastInspectionStatus;
 	@JsonFormat(pattern = "dd/MM-yyyy")
 	private LocalDate outstandingSince;
+    private Long outstandingId;
 }
