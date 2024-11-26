@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
+import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Service
@@ -42,6 +43,7 @@ public class TaskService {
     private final TaskLogDao taskLogDao;
 	private final SettingsService settingsService;
     private final RelationService relationService;
+    private final RelatableService relatableService;
 
     public List<Task> findAll() {
         return taskDao.findAll();
@@ -84,6 +86,21 @@ public class TaskService {
 
     public List<Task> findAllTasksWithDeadlineAfter(final LocalDate date) {
         return taskDao.findByNextDeadlineAfterOrderByNextDeadlineAsc(date);
+    }
+
+    /**
+     * If this task has an associated inspection asset it, find it
+     */
+    public Optional<Relatable> findOversightAsset(final Task task) {
+        final Long assetId = task.getProperties().stream()
+            .filter(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()))
+            .map(p -> Long.parseLong(p.getValue()))
+            .findFirst().orElse(null);
+        if (assetId == null) {
+            return Optional.empty();
+        }
+        return Optional.of(relatableService.findById(assetId)
+            .orElseThrow(() -> new RuntimeException("Asset not found")));
     }
 
     public Task copyTask(final Task oldTask) {

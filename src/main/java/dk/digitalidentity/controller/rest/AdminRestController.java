@@ -13,8 +13,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
-import dk.digitalidentity.security.RequireAdminstrator;
-import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
@@ -40,16 +39,13 @@ import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.ByteArrayOutputStream;
-import java.io.IOException;
-import java.nio.charset.Charset;
 import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
 @RequestMapping("rest/admin")
-@RequireAdminstrator
+@RequireAdministrator
 @RequiredArgsConstructor
 public class AdminRestController {
     private final UserService userService;

@@ -6,8 +6,10 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetOversightService;
+import dk.digitalidentity.service.AssetService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -43,6 +45,8 @@ public class DBSAssetsRestController {
 	private final DBSAssetGridDao dbsAssetGridDao;
 	private final DBSAssetDao dbsAssetDao;
 	private final DBSAssetMapper mapper;
+    private final AssetService assetService;
+    private final AssetOversightService assetOversightService;
     private final RelationService relationService;
 
     @PostMapping("list")
@@ -75,16 +79,16 @@ public class DBSAssetsRestController {
 
     record UpdateDBSAssetDTO(long id, List<Long> assets) {}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("update")
     @Transactional
     public ResponseEntity<?> update(@RequestBody UpdateDBSAssetDTO body) {
 
         DBSAsset dbsAsset = dbsAssetDao.findById(body.id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
         Set<Long> assets = body.assets.stream().distinct().filter(Objects::nonNull).collect(Collectors.toSet());
 
         relationService.setRelationsAbsolute(dbsAsset, assets);
+        assetOversightService.setAssetsToDbsOversight(assetService.findAllById(assets));
 
         dbsAssetDao.save(dbsAsset);
 

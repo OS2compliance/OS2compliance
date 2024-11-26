@@ -6,7 +6,6 @@ import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
-import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

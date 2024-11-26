@@ -321,12 +321,13 @@ SELECT
     a.id,
     a.name,
     s.name as supplier,
+    s.id as supplier_id,
     a.supervisory_model,
     GROUP_CONCAT(da.id ORDER BY da.id SEPARATOR ',') AS dbs_assets,
     a.oversight_responsible_uuid,
     ao.creation_date as last_inspection,
     ao.status as last_inspection_status,
-    IF(tl.id IS null, t.created_at, null) AS outstanding_since,
+    IF(tl.id is null, t.id, null) AS outstanding_task_id,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ao.localized_enums, '')) as localized_enums
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id

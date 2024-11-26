@@ -19,7 +19,6 @@ import dk.digitalidentity.mapping.DBSOversightMapper;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
-import dk.digitalidentity.security.RequireSuperuser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,11 +49,7 @@ public class DBSOversightRestController {
 		final Pageable sortAndPage = PageRequest.of(page, size, sort);
 		Page<DBSOversightGrid> oversights = null;
 		if (StringUtils.isNotEmpty(search)) {
-		    //Pre search
-//		    Page<DBSOversightGrid> allOversights = dbsOversightGridDao.findAll(sortAndPage);
-//		    List<Long> extra = allOversights.getContent().stream().filter(o -> o.getDbsAssets().stream().anyMatch(a -> a.getName() != null && a.getName().contains(search))).map(x -> x.getId()).toList();
 		    final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "oversightResponsible", "lastInspection", "lastInspectionStatus", "outstandingSince", "localizedEnums");
-			// search and page
 			oversights = dbsOversightGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSOversightGrid.class);
 		} else {
 			// Fetch paged and sorted
@@ -71,7 +66,6 @@ public class DBSOversightRestController {
 				|| fieldName.equals("oversightResponsible")
 				|| fieldName.equals("lastInspection")
 				|| fieldName.equals("lastInspectionStatus")
-				|| fieldName.equals("outstandingSince")
 				;
 	}
 }

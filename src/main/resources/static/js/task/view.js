@@ -20,6 +20,14 @@ function ViewTaskService() {
         initDatepicker("#deadlineBtn", "#deadline");
     }
 
+    // In case this task is an oversight, a special oversight dialog can be shown
+    this.showOversightDialog = (source) => {
+        const assetId = source.dataset.assetId;
+        const url = `/assets/oversight/${assetId}/asset`;
+        oversightService.initOversightModal(null, 'asset', assetId)
+            .then(() => {oversightDialog.show()});
+    }
+
     this.setEditMode = function(enabled) {
         if (enabled) {
             document.querySelectorAll('.editField').forEach(elem => {
@@ -114,6 +122,6 @@ function ViewTaskService() {
                         }
                     }), 'id', 'name', true);
                 }))
-            .catch(error => toastService.error(error));
+            .catch(defaultErrorHandler);
     }
 }

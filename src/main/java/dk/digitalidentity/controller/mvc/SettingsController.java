@@ -2,9 +2,8 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.dto.SettingsDTO;
-import dk.digitalidentity.security.RequireAdminstrator;
-import dk.digitalidentity.security.RequireSuperuser;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.service.KitosService;
 import dk.digitalidentity.service.SettingsService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -24,7 +23,7 @@ import java.util.Objects;
 @Slf4j
 @Controller
 @RequestMapping("settings")
-@RequireAdminstrator
+@RequireAdministrator
 @RequiredArgsConstructor
 public class SettingsController {
 	private final SettingsService settingsService;
@@ -45,7 +44,7 @@ public class SettingsController {
 		return "fragments/settings";
 	}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @Transactional
 	@PostMapping("update")
 	public String update(@ModelAttribute final SettingsDTO settings){

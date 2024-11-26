@@ -21,8 +21,9 @@ public class DBSOversightDTO {
 	private Long id;
 	private String name;
 	private String supplier;
+	private Long supplierId;
 	private String supervisoryModel;
-	
+
 	private List<DBSAssetDTO> dbsAssets;
 	private String oversightResponsible;
 	@JsonFormat(pattern = "dd/MM-yyyy")
@@ -30,4 +31,5 @@ public class DBSOversightDTO {
 	private String lastInspectionStatus;
 	@JsonFormat(pattern = "dd/MM-yyyy")
 	private LocalDate outstandingSince;
+    private Long outstandingId;
 }

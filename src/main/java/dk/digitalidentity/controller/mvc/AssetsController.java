@@ -48,7 +48,7 @@ import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -154,7 +154,7 @@ public class AssetsController {
 		return "assets/form";
 	}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
 	@Transactional
 	@PostMapping("form")
 	public String formCreate(@ModelAttribute final Asset asset) {
@@ -299,7 +299,7 @@ public class AssetsController {
 		return "assets/view";
 	}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -516,19 +516,18 @@ public class AssetsController {
         asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setSupervisoryModel(body.getSupervisoryModel());
         asset.setNextInspection(body.getNextInspection());
-        if (body.getNextInspectionDate() == null) {
+        if (body.getNextInspectionDate() == null || body.getSupervisoryModel() == ChoiceOfSupervisionModel.DBS) {
             asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, LocalDate.now()));
         } else {
             asset.setNextInspectionDate(body.getNextInspectionDate());
         }
         asset.setOversightResponsibleUser(body.getOversightResponsibleUser());
 
-        dataProcessingService.createOrUpdateAssociatedOversightCheck(asset);
+        assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
         return "redirect:/assets/" + asset.getId();
     }
 
-
-    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect){
+    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
     }
     @Transactional
     @PostMapping("oversight/edit")
@@ -582,11 +581,14 @@ public class AssetsController {
             asset.getAssetOversights().add(attachedOversight);
         }
 
-        return dto.redirect.equals("assets") ? "redirect:/assets/" + asset.getId() : "redirect:/suppliers/" + asset.getSupplier().getId();
+        return dto.redirect.equals("assets")
+            ? "redirect:/assets/" + asset.getId()
+            : "redirect:/suppliers/" + asset.getSupplier().getId();
     }
 
     @GetMapping("oversight/{entityId}/{type}")
-    public String oversightForm(final Model model, final @PathVariable("entityId") Long entityId, @PathVariable("type") final String type, @RequestParam(name = "id", required = false) final Long id) {
+    public String oversightForm(final Model model, final @PathVariable("entityId") Long entityId, @PathVariable("type") final String type,
+                                @RequestParam(name = "id", required = false) final Long id) {
         if(Objects.isNull(entityId)){
                 throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Id blev ikke sendt med");
         }
@@ -598,7 +600,7 @@ public class AssetsController {
 
             if (id == null) {
                 model.addAttribute("assetId", asset.getId());
-                model.addAttribute("oversight", new AssetOversightDTO(0, 0, new User(), ChoiceOfSupervisionModel.SWORN_STATEMENT, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
+                model.addAttribute("oversight", new AssetOversightDTO(0, 0, asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
                 model.addAttribute("inspectionType", asset.getNextInspection());
             } else {
                 final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), id)).findAny().orElseThrow(() ->
@@ -722,7 +724,7 @@ public class AssetsController {
         return "dpia/fragments/questionForm";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/question/form")
     public String formPost(@ModelAttribute final DPIATemplateQuestionForm dpiaTemplateQuestionForm) throws IOException {
         DPIATemplateSection section = dpiaTemplateSectionService.findById(dpiaTemplateQuestionForm.sectionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
