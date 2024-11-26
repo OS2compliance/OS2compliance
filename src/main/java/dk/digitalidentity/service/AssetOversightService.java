@@ -50,7 +50,7 @@ public class AssetOversightService {
     public void setAssetsToDbsOversight(final List<Asset> assets) {
         assets.forEach(asset -> {
             asset.setNextInspection(NextInspection.DBS);
-            asset.setNextInspectionDate(LocalDate.of(2999, 1, 1));
+            asset.setNextInspectionDate(null);
             asset.setSupervisoryModel(ChoiceOfSupervisionModel.DBS);
             if (asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
                 asset.setOversightResponsibleUser(asset.getResponsibleUsers().get(0));

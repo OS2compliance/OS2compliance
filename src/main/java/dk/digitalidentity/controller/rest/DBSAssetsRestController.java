@@ -6,7 +6,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
@@ -79,7 +79,7 @@ public class DBSAssetsRestController {
 
     record UpdateDBSAssetDTO(long id, List<Long> assets) {}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("update")
     @Transactional
     public ResponseEntity<?> update(@RequestBody UpdateDBSAssetDTO body) {

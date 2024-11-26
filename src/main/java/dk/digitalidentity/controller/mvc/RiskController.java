@@ -26,7 +26,7 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -101,7 +101,7 @@ public class RiskController {
     }
 
     @Transactional
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
@@ -174,7 +174,7 @@ public class RiskController {
     }
 
     @Transactional
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("{id}/copy")
     public String performCopy(@PathVariable("id") final long sourceId,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
@@ -298,7 +298,7 @@ public class RiskController {
     }
 
     @DeleteMapping("{id}")
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void riskDelete(@PathVariable final Long id) {
@@ -312,7 +312,7 @@ public class RiskController {
     }
 
     @Transactional
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("{id}/customthreats/create")
     public String formCreateCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreat customThreat) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

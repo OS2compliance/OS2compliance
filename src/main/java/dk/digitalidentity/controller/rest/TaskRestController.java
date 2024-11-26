@@ -6,7 +6,6 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
-import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;

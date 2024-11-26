@@ -1,8 +1,7 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.model.entity.ThreatCatalog;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.service.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,7 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RestController
-@RequireAdminstrator
+@RequireAdministrator
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/tags", consumes = "application/json", produces = "application/json")
 public class TagsRestController {

@@ -2,9 +2,8 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -53,7 +52,7 @@ public class DocumentsController {
     }
 
     @Transactional
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Document document,
             @RequestParam(name = "relations", required = false) final Set<Long> relations) {
@@ -76,7 +75,7 @@ public class DocumentsController {
         return "documents/view";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional

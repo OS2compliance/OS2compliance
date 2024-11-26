@@ -7,7 +7,7 @@ import dk.digitalidentity.model.dto.ChoiceListDTO;
 import dk.digitalidentity.model.dto.ChoiceValueDTO;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequireSuperuser
+@RequireSuperuserOrAdministrator
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/choice-lists", consumes = "application/json", produces = "application/json")
 public class ChoiceListRestController {

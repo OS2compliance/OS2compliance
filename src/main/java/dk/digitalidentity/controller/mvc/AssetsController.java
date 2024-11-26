@@ -48,7 +48,7 @@ import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -154,7 +154,7 @@ public class AssetsController {
 		return "assets/form";
 	}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
 	@Transactional
 	@PostMapping("form")
 	public String formCreate(@ModelAttribute final Asset asset) {
@@ -299,7 +299,7 @@ public class AssetsController {
 		return "assets/view";
 	}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -516,7 +516,7 @@ public class AssetsController {
         asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setSupervisoryModel(body.getSupervisoryModel());
         asset.setNextInspection(body.getNextInspection());
-        if (body.getNextInspectionDate() == null) {
+        if (body.getNextInspectionDate() == null || body.getSupervisoryModel() == ChoiceOfSupervisionModel.DBS) {
             asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, LocalDate.now()));
         } else {
             asset.setNextInspectionDate(body.getNextInspectionDate());
@@ -724,7 +724,7 @@ public class AssetsController {
         return "dpia/fragments/questionForm";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/question/form")
     public String formPost(@ModelAttribute final DPIATemplateQuestionForm dpiaTemplateQuestionForm) throws IOException {
         DPIATemplateSection section = dpiaTemplateSectionService.findById(dpiaTemplateQuestionForm.sectionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));

@@ -21,7 +21,7 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -109,7 +109,7 @@ public class RegisterController {
         return "registers/form";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
@@ -327,7 +327,7 @@ public class RegisterController {
         return "registers/view";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional

@@ -5,7 +5,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -22,8 +21,7 @@ import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
-import dk.digitalidentity.model.entity.enums.NextInspection;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -205,7 +203,7 @@ public class AssetsRestController {
     }
 
     record DPIASetFieldDTO(long id, String fieldName, String value) {}
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PutMapping("dpia/schema/section/setfield")
     public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto) {
         canSetDPIASectionFieldGuard(dto.fieldName);
@@ -214,35 +212,35 @@ public class AssetsRestController {
         dpiaTemplateSectionService.save(dpiaTemplateSection);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/section/{id}/up")
     public ResponseEntity<?> reorderUp(@PathVariable("id") final long id) {
         reorderSections(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/section/{id}/down")
     public ResponseEntity<?> reorderDown(@PathVariable("id") final long id) {
         reorderSections(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/question/{id}/up")
     public ResponseEntity<?> reorderQuestionUp(@PathVariable("id") final long id) {
         reorderQuestions(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/question/{id}/down")
     public ResponseEntity<?> reorderQuestionDown(@PathVariable("id") final long id) {
         reorderQuestions(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("dpia/schema/question/{id}/delete")
     public ResponseEntity<?> deleteQuestion(@PathVariable("id") final long id) {
         final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -264,7 +262,7 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @Transactional
     @DeleteMapping("{assetId}/subsupplier/{subSupplierId}")
     public ResponseEntity<?> subSupplierDelete(@PathVariable("subSupplierId") final Long subSupplierId,

@@ -190,8 +190,9 @@ public class DBSService {
 
     @Transactional
     public void oversightResponsible() {
-        LocalDate nowPlus14Days = LocalDate.now().plusDays(14);
-        List<DBSOversight> oversights = dbsOversightDao.findByTaskCreatedFalse();
+        final LocalDate now = LocalDate.now();
+        final LocalDate nowPlus14Days = now.plusDays(14);
+        final List<DBSOversight> oversights = dbsOversightDao.findByTaskCreatedFalse();
         log.debug("Found {} oversights that need a task.", oversights.size());
 
         for (DBSOversight dbsOversight : oversights) {
@@ -214,25 +215,45 @@ public class DBSService {
                         continue;
                     }
 
-                    // Create a new task
-                    Task task = new Task();
-                    task.setName(dbsOversight.getSupplier().getName() + " - DBS tilsyn");
-                    task.setNextDeadline(nowPlus14Days);
-                    task.setResponsibleUser(asset.getOversightResponsibleUser());
-                    task.setTaskType(TaskType.TASK);
-                    task.setRepetition(TaskRepetition.NONE);
+                    // Check if there is an open task already
+                    relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
+                        .map(r -> taskService.findById(r.getId()))
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
+                        .filter(t -> t.getTaskType() == TaskType.TASK
+                            && t.getNextDeadline().isAfter(now)
+                            && t.getName().contains("- DBS tilsyn"))
+                        .findFirst().ifPresentOrElse((task) -> {
+                            // Task already exist add our file to the existing task
+                            task.setDescription(task.getDescription() + dbsLink(dbsOversight));
+                        },
+                            () -> {
+                                // Create a new task
+                                Task task = new Task();
+                                task.setName(dbsOversight.getSupplier().getName() + " - DBS tilsyn");
+                                task.setNextDeadline(nowPlus14Days);
+                                task.setResponsibleUser(asset.getOversightResponsibleUser());
+                                task.setTaskType(TaskType.TASK);
+                                task.setRepetition(TaskRepetition.NONE);
+                                task.setDescription("Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
+                                    + "Filer kan findes i DBS portalen her:\n"
+                                    + dbsLink(dbsOversight)
+                                );
+                                log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
+                                taskService.saveTask(task);
+                                relationService.addRelation(task, dbsAsset);
+                                relationService.addRelation(task, asset);
 
-                    log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
-
-                    taskService.saveTask(task);
-                    relationService.addRelation(task, dbsAsset);
-                    relationService.addRelation(task, asset);
-
+                            });
                     dbsOversight.setTaskCreated(true);
                     dbsOversightDao.save(dbsOversight);
                 }
             }
         }
+    }
+
+    private static String dbsLink(final DBSOversight dbsOversight) {
+        return "<a href=\"https://www.dbstilsyn.dk/document/751/download\">" + dbsOversight.getName() + "</a>\n";
     }
 
 }

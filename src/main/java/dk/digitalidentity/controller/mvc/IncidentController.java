@@ -3,7 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.event.IncidentFieldsUpdatedEvent;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -41,13 +41,13 @@ public class IncidentController {
         return "incidents/logs/index";
     }
 
-    @RequireAdminstrator
+    @RequireAdministrator
     @GetMapping("questions")
     public String incidentQuestions() {
         return "incidents/questions/index";
     }
 
-    @RequireAdminstrator
+    @RequireAdministrator
     @GetMapping("questionForm")
     public String questionForm(final Model model, @RequestParam(name = "id", required = false) Long questionId) {
         if (questionId != null) {
@@ -63,7 +63,7 @@ public class IncidentController {
         return "incidents/questions/form";
     }
 
-    @RequireAdminstrator
+    @RequireAdministrator
     @PostMapping("questionForm")
     public String questionForm(@Valid @ModelAttribute final IncidentField form) {
         if (form.getId() != null) {
