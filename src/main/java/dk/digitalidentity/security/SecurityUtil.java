@@ -7,6 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticatedPrincipal;
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
@@ -93,6 +94,8 @@ public class SecurityUtil {
             return (String) principal ;
         }else if (principal instanceof FormUserDetails) {
             return ((FormUserDetails) principal).getUserUUID();
+        } else if (principal instanceof Saml2AuthenticatedPrincipal) {
+            return ((Saml2AuthenticatedPrincipal) principal).getName();
         } else {
             throw new UsernameNotFoundException("instance of principal is of unknown type, when checking for super or own user");
         }
