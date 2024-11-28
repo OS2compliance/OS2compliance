@@ -1,6 +1,7 @@
 package dk.digitalidentity.bootstrap;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.Constants;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.dao.ApiClientDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.dao.DocumentDao;
@@ -45,6 +46,7 @@ import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
@@ -75,7 +77,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 	@Autowired
 	private SupplierDao supplierDao;
 	@Autowired
-	private OS2complianceConfiguration config;
+	private GRComplianceConfiguration config;
 	@Autowired
 	private TaskDao taskDao;
 	@Autowired
@@ -163,12 +165,12 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				ishoj = organisationUnitDao.save(ishoj);
 
 				User user1 = new User();
-				user1.setUuid(UUID.randomUUID().toString());
 				user1.setActive(true);
 				user1.setUserId("user1");
 				user1.setName("Test User 1");
 				user1.setEmail("user1@digital-identity.dk");
                 user1.setPassword(new BCryptPasswordEncoder().encode("Test1234"));
+                user1.setRoles(Set.of(Roles.ADMINISTRATOR, Roles.SUPERUSER, Roles.USER));
 				user1.setPositions(Set.of(
 						Position.builder()
 								.name("Tester")

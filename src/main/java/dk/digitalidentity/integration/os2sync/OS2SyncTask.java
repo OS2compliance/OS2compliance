@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.os2sync;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.config.property.OS2Sync;
 import dk.digitalidentity.integration.os2sync.api.HierarchyResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -15,13 +15,13 @@ import java.util.Optional;
 @Component
 public class OS2SyncTask {
     @Autowired
-    private OS2complianceConfiguration configuration;
+    private GRComplianceConfiguration configuration;
     @Autowired
     private OS2SyncClient syncClient;
     @Autowired
     private OS2SyncService syncService;
 
-    @Scheduled(cron = "${os2compliance.integrations.os2Sync.cron}")
+    @Scheduled(cron = "${grcompliance.integrations.os2Sync.cron}")
     public void sync() {
         final OS2Sync syncConfig = configuration.getIntegrations().getOs2Sync();
         if (!configuration.isSchedulingEnabled()) {

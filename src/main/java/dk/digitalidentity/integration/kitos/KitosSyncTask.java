@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.kitos;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.service.SettingsService;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -26,13 +26,13 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_ST
 @Component
 @RequiredArgsConstructor
 public class KitosSyncTask {
-    private final OS2complianceConfiguration configuration;
+    private final GRComplianceConfiguration configuration;
     private final KitosClientService kitosClientService;
     private final KitosSyncService kitosService;
     private final SettingsService settingsService;
 
     // TODO Remove this! this is temporary to circumvent kitos bug that never marks entities as updated
-    @Scheduled(cron = "${os2compliance.integrations.kitos.fullsync.cron}")
+    @Scheduled(cron = "${grcompliance.integrations.kitos.fullsync.cron}")
     @Transactional
     public void fullSync() {
         if (taskDisabled()) {
@@ -42,7 +42,7 @@ public class KitosSyncTask {
         settingsService.setZonedDateTime(IT_SYSTEM_USAGE_OFFSET_SETTING_KEY, KITOS_DELTA_START_FROM);
     }
 
-    @Scheduled(cron = "${os2compliance.integrations.kitos.cron}")
+    @Scheduled(cron = "${grcompliance.integrations.kitos.cron}")
 //    @Scheduled(initialDelay = 1000, fixedRate = 100000000)
     public void sync() {
         if (taskDisabled()) {
@@ -74,7 +74,7 @@ public class KitosSyncTask {
         log.info("Finished Kitos synchronisation");
     }
 
-    @Scheduled(cron = "${os2compliance.integrations.kitos.deletion.cron}")
+    @Scheduled(cron = "${grcompliance.integrations.kitos.deletion.cron}")
     public void syncDeletions() {
         if (taskDisabled()) {
             return;

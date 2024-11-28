@@ -90,8 +90,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import com.google.common.base.Strings;
-
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -512,7 +510,7 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-        asset.setDataProcessingAgreementLink(linkify(Strings.emptyToNull(body.getDataProcessingAgreementLink())));
+        asset.setDataProcessingAgreementLink(linkify(body.getDataProcessingAgreementLink()));
         asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setSupervisoryModel(body.getSupervisoryModel());
         asset.setNextInspection(body.getNextInspection());
@@ -546,8 +544,8 @@ public class AssetsController {
             oversight.get().setSupervisionModel(dto.supervisionModel);
             oversight.get().setConclusion(dto.conclusion);
             oversight.get().setStatus(dto.status);
-            oversight.get().setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
-            oversight.get().setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
+            oversight.get().setDbsLink(linkify(dto.dbsLink));
+            oversight.get().setInternalDocumentationLink(linkify(dto.internalDocumentationLink));
 
             if (dto.newInspectionDate == null) {
                 asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, oversight.get().getCreationDate()));
@@ -568,8 +566,8 @@ public class AssetsController {
             newOversight.setResponsibleUser(dto.responsibleUser);
             newOversight.setStatus(dto.status);
             newOversight.setSupervisionModel(dto.supervisionModel);
-            newOversight.setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
-            newOversight.setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
+            newOversight.setDbsLink(linkify(dto.dbsLink));
+            newOversight.setInternalDocumentationLink(linkify(dto.internalDocumentationLink));
 
             if (dto.newInspectionDate == null) {
                 asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, newOversight.getCreationDate()));

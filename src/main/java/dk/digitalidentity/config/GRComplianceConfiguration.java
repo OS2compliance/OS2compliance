@@ -17,14 +17,15 @@ import org.springframework.stereotype.Component;
 @Setter
 @EnableScheduling
 @EnableAsync
-@ConfigurationProperties(prefix = "os2compliance")
-public class OS2complianceConfiguration {
+@ConfigurationProperties(prefix = "grcompliance")
+public class GRComplianceConfiguration {
 	private boolean developmentMode = false;
     private boolean schedulingEnabled = true;
     private boolean seedData = true;
     private String authorityUser;
     private String authoritySuperuser;
     private String authorityAdministrator;
+    private String baseUrl;
     @NestedConfigurationProperty
     private Municipal municipal = new Municipal();
 	@NestedConfigurationProperty

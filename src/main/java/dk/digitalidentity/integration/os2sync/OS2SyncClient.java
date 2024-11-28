@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.os2sync;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.config.property.OS2Sync;
 import dk.digitalidentity.integration.os2sync.api.HierarchyResponse;
 import dk.digitalidentity.integration.os2sync.exception.OS2SyncFailedException;
@@ -20,7 +20,7 @@ import java.util.Optional;
 @Slf4j
 public class OS2SyncClient {
     @Autowired
-    private OS2complianceConfiguration configuration;
+    private GRComplianceConfiguration configuration;
     @Autowired
     private RestTemplateBuilder restTemplateBuilder;
 

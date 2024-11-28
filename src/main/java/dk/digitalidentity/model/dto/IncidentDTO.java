@@ -20,3 +20,4 @@ public class IncidentDTO {
     private String updatedAt;
     private List<IncidentFieldResponseDTO> responses = new ArrayList<>();
 }
+

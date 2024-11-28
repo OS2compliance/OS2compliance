@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.kitos;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
 import dk.digitalidentity.integration.kitos.mapper.KitosMapperImpl;
 import dk.digitalidentity.service.SettingsService;
@@ -40,7 +40,7 @@ import static org.mockito.Mockito.doReturn;
  * Unit tests for {@link KitosClientService}
  */
 @SpringBootTest
-@ContextConfiguration(classes = {OS2complianceConfiguration.class, KitosClientService.class, KitosMapperImpl.class})
+@ContextConfiguration(classes = {GRComplianceConfiguration.class, KitosClientService.class, KitosMapperImpl.class})
 @ActiveProfiles("test")
 public class KitosClientServiceTest {
     @MockBean

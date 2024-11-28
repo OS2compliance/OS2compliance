@@ -1,6 +1,6 @@
 package dk.digitalidentity.event;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.integration.kitos.KitosClientService;
 import dk.digitalidentity.model.api.AssetEO;
 import dk.digitalidentity.model.api.PropertyEO;
@@ -19,7 +19,7 @@ import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_USAGE_UU
 @RequiredArgsConstructor
 public class AssetEventHandler {
     private final KitosClientService clientService;
-    private final OS2complianceConfiguration configuration;
+    private final GRComplianceConfiguration configuration;
 
     @Async
     @EventListener

@@ -1,6 +1,6 @@
 package dk.digitalidentity.bootstrap;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
@@ -51,7 +51,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final StandardTemplateImporter templateImporter;
     private final TagDao tagDao;
     private final RegisterImporter registerImporter;
-    private final OS2complianceConfiguration config;
+    private final GRComplianceConfiguration config;
     private final SettingsService settingsService;
     private final StandardTemplateSectionDao standardTemplateSectionDao;
     private final CatalogService catalogService;

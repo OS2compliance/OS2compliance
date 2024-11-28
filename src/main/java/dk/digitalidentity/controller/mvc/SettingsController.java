@@ -1,10 +1,9 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireSuperuser;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.KitosService;
 import dk.digitalidentity.service.SettingsService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +29,7 @@ public class SettingsController {
 	private final SettingsService settingsService;
     private final HttpServletRequest httpServletRequest;
     private final KitosService kitosService;
-    private final OS2complianceConfiguration configuration;
+    private final GRComplianceConfiguration configuration;
 
 	@Transactional
 	@GetMapping("form")

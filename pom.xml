@@ -3,14 +3,14 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>dk.digitalidentity</groupId>
-	<artifactId>os2compliance</artifactId>
+	<artifactId>grcompliance</artifactId>
 	<version>1.0.0</version>
-	<name>os2compliance</name>
+	<name>GRCompliance</name>
 
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
-		<version>3.1.12</version>
+		<version>3.4.0</version>
 		<relativePath/>
 	</parent>
 
@@ -26,7 +26,7 @@
             <dependency>
                 <groupId>io.awspring.cloud</groupId>
                 <artifactId>spring-cloud-aws-dependencies</artifactId>
-                <version>3.0.1</version>
+                <version>3.2.1</version>
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
@@ -148,11 +148,6 @@
 			<groupId>org.testcontainers</groupId>
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>dk.digitalidentity</groupId>
-			<artifactId>saml-module</artifactId>
-			<version>4.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
