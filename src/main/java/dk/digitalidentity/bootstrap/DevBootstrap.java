@@ -403,7 +403,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				assessment.setInherit(false);
 				assessment.setResponsibleOu(hjelmOu);
 				assessment.setResponsibleUser(user1);
-				assessment.setThreatCatalog(threatCatalogDao.findById("a").orElseThrow());
+				assessment.setThreatCatalog(threatCatalogDao.findById("it_lille").orElseThrow());
 				assessment = threatAssessmentDao.save(assessment);
 
 				final Relation riskAsset = new Relation();
