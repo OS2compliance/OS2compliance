@@ -19,6 +19,8 @@ public interface UserDao extends JpaRepository<User, String>  {
 
     List<User> findAllByUuidInAndActiveTrue(final Collection<String> uuids);
 
+    Optional<User> findByPasswordResetToken(final String token);
+
     @Modifying
     @Query("update User u set u.active = false where u.uuid in (:uuids)")
     int deactivateUsers(@Param("uuids") final Set<String> uuids);

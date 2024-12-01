@@ -107,20 +107,21 @@ public class UsersController {
     @Transactional
     @PostMapping("create")
     public String createUser(@ModelAttribute UserWithRoleDTO user) {
-        String encryptedPassword = new BCryptPasswordEncoder().encode(user.getPassword());
-
-        User fullUser = User.builder()
+        final User fullUser = User.builder()
             .userId(user.getUserId())
             .name(user.getName())
             .active(user.getActive())
             .email(user.getEmail())
-            .password(encryptedPassword)
+            .password(UUID.randomUUID().toString()) // This will never work, as the password should be encoded, but setting a UUID will ensure the user cannot login before the user have reset password
             .build();
         Set<String> roles = new HashSet<>();
         roles.add(Roles.USER);
         if (user.getAccessRole().equals("admin")) {
             roles.add(Roles.SUPERUSER);
             roles.add(Roles.ADMINISTRATOR);
+        }
+        if (user.getAccessRole().equals("superuser")) {
+            roles.add(Roles.SUPERUSER);
         }
         fullUser.setRoles(roles);
         userService.save(fullUser);
@@ -169,12 +170,6 @@ public class UsersController {
         Boolean existingctiveStatus = dbUser.getActive();
         if (updatedActiveStatus != null && !updatedActiveStatus.equals(existingctiveStatus)) {
             dbUser.setActive(updatedActiveStatus);
-        }
-
-        String updatedPassword = user.getPassword();
-        if (updatedPassword != null && !updatedPassword.isEmpty()) {
-            String encryptedPassword = new BCryptPasswordEncoder().encode(user.getPassword());
-            dbUser.setPassword(encryptedPassword);
         }
 
         //save user to database

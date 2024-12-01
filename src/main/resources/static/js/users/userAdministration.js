@@ -34,4 +34,23 @@ function UserService () {
             .catch(error => toastService.error(error));
     }
 
+    this.resetUser = (id) => {
+        Swal.fire({
+            text: `Er du sikker på du vil resette brugerens password?`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#03a9f4',
+            cancelButtonColor: '#df5645',
+            confirmButtonText: 'Ja',
+            cancelButtonText: 'Nej'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch(`${restUrl}/reset/${id}`,
+                    {method: "POST", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                    .then(response => toastService.info("Reset password link sendt til brugeren"))
+                    .catch(error => toastService.error(error));
+            }
+        });
+    }
+
 }

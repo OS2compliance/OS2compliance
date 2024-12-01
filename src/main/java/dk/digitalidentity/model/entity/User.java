@@ -13,6 +13,7 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -39,7 +40,6 @@ public class User implements Serializable {
     private String name;
 
     @Column
-    @NotNull
     @Size(max = 255)
     private String password;
 
@@ -66,5 +66,10 @@ public class User implements Serializable {
         cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
         mappedBy = "user")
     private Set<UserProperty> properties = new HashSet<>();
+
+    @Column
+    private LocalDateTime passwordResetRequestDate;
+    @Column
+    private String passwordResetToken;
 
 }
