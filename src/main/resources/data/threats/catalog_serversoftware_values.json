@@ -1,0 +1,106 @@
+[
+  {
+    "identifier": "server_software01",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "1) Systemdrift",
+    "description": "Opdatering af systemet, eller opdatering af udstyr systemet er afhængig af, fejler eller mangler",
+    "rights": true
+  },
+  {
+    "identifier": "server_software02",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "1) Systemdrift",
+    "description": "Klienter/servere kører ikke seneste opdatering for antivirus-systemet.",
+    "rights": true
+  },
+  {
+    "identifier": "server_software03",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "2) Systemfejl og fejlkonfigurationer",
+    "description": "Fejl i hardware eller operativsystem der understøtter forretningssystemet, herunder indbyggede/ukendte fejl og konfigurationsfejl.",
+    "rights": true
+  },
+  {
+    "identifier": "server_software04",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb af typen Ransomware - hvor systemet/data låses/krypteres og kun frigives mod løsepenge",
+    "rights": true
+  },
+  {
+    "identifier": "server_software05",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb, hvor det bliver muligt at opsnappe eller ændre data mellem to parter (Man-in-the-middle angreb)",
+    "rights": true
+  },
+  {
+    "identifier": "server_software06",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "3) Cybertrusler",
+    "description": "Infektion af server, klienter eller mobile enheder med malware og vira",
+    "rights": true
+  },
+  {
+    "identifier": "server_software07",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb, af typen brute-force hvor hackeren systematisk vha. software med stort antal logon-forsøg forsøger at gætte en brugers password",
+    "rights": true
+  },
+  {
+    "identifier": "server_software08",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb med henblik på aflytning",
+    "rights": true
+  },
+  {
+    "identifier": "server_software09",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Logning er ikke sat korrekt op, hvorfor brud på fortrolighed ikke opdages og ikke kan dokumenteres",
+    "rights": true
+  },
+  {
+    "identifier": "server_software10",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Backup bliver ikke løbende kontrolleret",
+    "rights": true
+  },
+  {
+    "identifier": "server_software11",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Brugere får adgang til oplysninger de ikke har et arbejdsbetinget behov for, fx svigt af adgangs eller rettighedsstyring",
+    "rights": true
+  },
+  {
+    "identifier": "server_software12",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Backup er fejlbehæftet og system eller data kan ikke genskabes",
+    "rights": true
+  },
+  {
+    "identifier": "server_software13",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "server_software",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Eksterne får adgang til oplysninger de ikke har ret til at se, fx udstilling af fortrolige data på internettet",
+    "rights": true
+  }
+]

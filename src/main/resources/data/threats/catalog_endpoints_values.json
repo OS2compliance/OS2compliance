@@ -1,0 +1,162 @@
+[
+  {
+    "identifier": "endpoints01",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "1) Systemdrift",
+    "description": "Klienter/servere kører ikke seneste opdatering for antivirus-systemet.",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints02",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "1) Systemdrift",
+    "description": "Data genskabes på udstyr, der genbruges i anden sammenhæng (fx ved udfasning eller overdragelse af mobilt udstyr eller PC)",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints03",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "1) Systemdrift",
+    "description": "Systemet fejler som følge af forældet udstyr (servere, diske, etc. er ude af support)",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints04",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "1) Systemdrift",
+    "description": "Opdatering af systemet, eller opdatering af udstyr systemet er afhængig af, fejler eller mangler",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints05",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "2) Systemfejl og fejlkonfigurationer",
+    "description": "Fejl i hardware eller operativsystem der understøtter forretningssystemet, herunder indbyggede/ukendte fejl og konfigurationsfejl.",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints06",
+    "sortKey": 7,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb, hvor det bliver muligt at opsnappe eller ændre data mellem to parter (Man-in-the-middle angreb)",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints07",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "3) Cybertrusler",
+    "description": "Infektion af server, klienter eller mobile enheder med malware og vira",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints08",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "3) Cybertrusler",
+    "description": "Identitetstyveri hvor hacker får adgang til brugernavn og password",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints09",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb med henblik på aflytning",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints10",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb af typen Ransomware - hvor systemet/data låses/krypteres og kun frigives mod løsepenge",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints11",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "3) Cybertrusler",
+    "description": "Tilsendelse af e-mail (phishing) eller sms (smishing), hvor afsender forsøger at få udleveret personlige oplysninger, som fx betalingskortoplysninger, via e-mail, en falsk hjemmeside eller andet. E-mail-spoofing bruges til at narre brugere til at tro, at en meddelelse kommer fra en person eller enhed, de kan stole på.",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints12",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "3) Cybertrusler",
+    "description": "Hackerangreb, af typen brute-force hvor hackeren systematisk vha. software med stort antal logon-forsøg forsøger at gætte en brugers password",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints13",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Brugere får adgang til oplysninger de ikke har et arbejdsbetinget behov for, fx svigt af adgangs eller rettighedsstyring",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints14",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Backup bliver ikke løbende kontrolleret",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints15",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "For mange medarbejdere har administratorrettigheder til klienter",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints16",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "4) Fejlede sikkerhedsforanstaltninger",
+    "description": "Backup er fejlbehæftet og system eller data kan ikke genskabes",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints17",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "5) Fysiske trusler",
+    "description": "Fremmede tiltvinger sig fysisk adgang til aktivet/systemet/enheden med henblik på tyveri, fx indbrud",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints18",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "5) Fysiske trusler",
+    "description": "Fremmede tiltvinger sig fysisk adgang til aktivet/systemet/enheden med henblik på hacking",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints19",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "5) Fysiske trusler",
+    "description": "Fysisk skade på udstyr som følge af støv, korrosion (rust, ætsning) eller frost, køle eller skader som følge af overophedning",
+    "rights": true
+  },
+  {
+    "identifier": "endpoints20",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "endpoints",
+    "threatType": "5) Fysiske trusler",
+    "description": "Medarbejder mister enheden, f.eks. under transport.",
+    "rights": true
+  }
+]

@@ -64,10 +64,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
-
 @Order(200)
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Slf4j
@@ -388,10 +384,6 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				os2Compliance.setProductLink("https://os2compliance.dk");
 				os2Compliance.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 os2Compliance.setDataProcessing(dataProcessing);
-                os2Compliance.getProperties().add(Property.builder().key(KITOS_UUID_PROPERTY_KEY)
-                    .value("megaNiceUUID")
-                    .entity(os2Compliance)
-                    .build());
 
 				os2Compliance = assetService.create(os2Compliance);
 
@@ -494,9 +486,6 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 settingsService.createSetting("TestSettingIntWithStringVal", "400");
                 //risk scale
                 settingsService.createSetting("scale","" , "risk", true);
-                //KITOS roles
-                settingsService.createSetting(KITOS_OWNER_ROLE_SETTING_KEY,"","kitos", true);
-                settingsService.createSetting(KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "", "kitos", true);
 
                 ///////////////////////////////////
                 // api clients

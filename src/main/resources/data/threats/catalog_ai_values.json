@@ -1,0 +1,98 @@
+[
+  {
+    "identifier": "ai01",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Systemet bruges til profilering, hvilket krænker de registreredes rettigheder",
+    "rights": true
+  },
+  {
+    "identifier": "ai02",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Behandlingen er i strid med GDPR, da hjemmelsgrundlaget er utilstrækkeligt",
+    "rights": true
+  },
+  {
+    "identifier": "ai03",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "NIBIS krænker de registreredes rettigheder ved at behandle personoplysninger i systemet (herunder oplysningspligten)",
+    "rights": true
+  },
+  {
+    "identifier": "ai04",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Personoplysninger overføres til usikre tredjelande",
+    "rights": true
+  },
+  {
+    "identifier": "ai05",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Personoplysninger eller fortrolige forretningsoplysninger bliver tilgængelige for uvedkommende",
+    "rights": true
+  },
+  {
+    "identifier": "ai06",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "NIBIS bryder utilsigtet ophavsretten",
+    "rights": true
+  },
+  {
+    "identifier": "ai07",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "2) Leverandørtrusler",
+    "description": "Manglende kendskab til løsningsarkitektur og dataflow vanskeliggør efterlevelsen af vores dataansvar",
+    "rights": true
+  },
+  {
+    "identifier": "ai08",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "2) Leverandørtrusler",
+    "description": "Leverandøren bruger data til egne formål eller sælger data til tredje part.",
+    "rights": true
+  },
+  {
+    "identifier": "ai09",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "3) Fejlede sikringsforanstaltninger",
+    "description": "NIBIS videreformidler et forkert budskab eller træffer forkerte beslutninger på baggrund af misinformation fra systemet.",
+    "rights": true
+  },
+  {
+    "identifier": "ai10",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "3) Fejlede sikringsforanstaltninger",
+    "description": "NIBIS videreformidler et forkert budskab eller træffer forkerte beslutninger på baggrund af bias i systemet.",
+    "rights": true
+  },
+  {
+    "identifier": "ai11",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "3) Fejlede sikringsforanstaltninger",
+    "description": "API anvendes til automatiserede beslutninger/handlinger, der er forkerte",
+    "rights": true
+  },
+  {
+    "identifier": "ai12",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "ai",
+    "threatType": "3) Fejlede sikringsforanstaltninger",
+    "description": "NIBIS videreformidler et forkert budskab eller træffer forkerte beslutninger på baggrund af forkert information eller vrøvl fra systemet.",
+    "rights": true
+  }
+]

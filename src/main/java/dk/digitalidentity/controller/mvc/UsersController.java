@@ -28,6 +28,7 @@ public class UsersController {
 
     final private Map<String, RoleOptionDTO> roleOptions = Map.of(
         "user", new RoleOptionDTO("user", "Bruger"),
+        "superuser", new RoleOptionDTO("superuser", "Superbruger"),
         "admin", new RoleOptionDTO("admin", "Administrator")
     );
 
@@ -44,12 +45,12 @@ public class UsersController {
                 .name(user.getName())
                 .email(user.getEmail())
                 .active(user.getActive())
-                .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? "admin" : "user")
+                .accessRole(getAccessRole(user))
                 .build()
             )
             .sorted(Comparator.comparing(UserWithRoleDTO::getActive)
                 .reversed()
-                .thenComparing(Comparator.comparing(UserWithRoleDTO::getUserId)))
+                .thenComparing(UserWithRoleDTO::getUserId))
             .collect(Collectors.toList()));
 
         //model for creating new users
@@ -65,7 +66,7 @@ public class UsersController {
     @GetMapping("create")
     public String createUser(Model model) {
         //model for role options
-        model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
+        model.addAttribute("roleOptions", new ArrayList<>(roleOptions.values()));
 
         //model for user being edited
         model.addAttribute("user", UserWithRoleDTO.builder().build());
@@ -80,7 +81,7 @@ public class UsersController {
     @GetMapping("edit/{id}")
     public String editUser(Model model, @PathVariable("id") final String id) {
         //model for role options
-        model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
+        model.addAttribute("roleOptions", new ArrayList<>(roleOptions.values()));
 
         //model for user being edited - do not set Password for DTO!
         User user = userService.findByUuidIncludingInactive(id)
@@ -93,7 +94,7 @@ public class UsersController {
             .name(user.getName())
             .email(user.getEmail())
             .active(user.getActive())
-            .accessRole(user.getRoles().contains(Roles.ADMINISTRATOR) ? "admin" : "user")
+            .accessRole(getAccessRole(user))
             .build());
 
         //Action specified to set the posting endpoint of the fragment
@@ -118,6 +119,7 @@ public class UsersController {
         Set<String> roles = new HashSet<>();
         roles.add(Roles.USER);
         if (user.getAccessRole().equals("admin")) {
+            roles.add(Roles.SUPERUSER);
             roles.add(Roles.ADMINISTRATOR);
         }
         fullUser.setRoles(roles);
@@ -136,7 +138,11 @@ public class UsersController {
         //Update values for the user
         Set<String> roles = new HashSet<>();
         roles.add(Roles.USER);
+        if (user.getAccessRole().equals("superuser")) {
+            roles.add(Roles.SUPERUSER);
+        }
         if (user.getAccessRole().equals("admin")) {
+            roles.add(Roles.SUPERUSER);
             roles.add(Roles.ADMINISTRATOR);
         }
         dbUser.setRoles(roles);
@@ -175,5 +181,12 @@ public class UsersController {
         userService.save(dbUser);
 
         return "redirect:/admin/users/all";
+    }
+
+
+    private static String getAccessRole(User user) {
+        return user.getRoles().contains(Roles.ADMINISTRATOR)
+            ? "admin"
+            : (user.getRoles().contains(Roles.SUPERUSER) ? "superuser" : "user");
     }
 }

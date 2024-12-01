@@ -151,11 +151,6 @@
 		</dependency>
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
-			<artifactId>kitos-client</artifactId>
-			<version>release-1.0.6</version>
-		</dependency>
-		<dependency>
-			<groupId>dk.digitalidentity</groupId>
 			<artifactId>dbs-client</artifactId>
 			<version>1.0.4</version>
 		</dependency>

@@ -4,8 +4,6 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
-import dk.digitalidentity.event.AssetUpdatedEvent;
-import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
@@ -263,7 +261,7 @@ public class AssetsController {
 		model.addAttribute("dataProcessing", asset.getDataProcessing());
 		model.addAttribute("dpChoices", dataProcessingService.getChoices());
 		model.addAttribute("acceptanceBasisChoices", acceptListIdentifiers);
-        model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY)));
+        model.addAttribute("isKitos", false);
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
@@ -428,10 +426,6 @@ public class AssetsController {
         existingAsset.setArchive(asset.isArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
-
-        eventPublisher.publishEvent(AssetUpdatedEvent.builder()
-                .asset(assetMapper.toEO(existingAsset))
-            .build());
 
         return "redirect:/assets/" + existingAsset.getId();
     }

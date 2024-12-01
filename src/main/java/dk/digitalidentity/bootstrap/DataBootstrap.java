@@ -15,6 +15,7 @@ import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -87,6 +88,34 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(17, this::seedV17);
         incrementAndPerformIfVersion(18, this::seedV18);
         incrementAndPerformIfVersion(19, this::seedV19);
+        incrementAndPerformIfVersion(20, this::seedV20);
+    }
+
+    @SneakyThrows
+    private void seedV20() {
+
+        threatCatalogImporter.importCatalog("./data/threats/catalog_datacenter.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_datacenter_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_it_stor.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_it_stor_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_it_lille_rpa.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_it_lille_rpa_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_ai.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_ai_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_behandlingsaktiviteter.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_behandlingsaktiviteter_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_endpoints.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_endpoints_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_enheder.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_enheder_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_iot.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_iot_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_it_lille.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_it_lille_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_netvaerk.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_netvaerk_values.json");
+        threatCatalogImporter.importCatalog("./data/threats/catalog_serversoftware.json");
+        threatCatalogImporter.importThreats("./data/threats/catalog_serversoftware_values.json");
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -264,10 +293,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             choiceImporter.importList("./data/choices/data-processing-supplier-accept-list.json");
 
             threatCatalogImporter.importCatalog("./data/threats/catalog_none.json");
-            threatCatalogImporter.importCatalog("./data/threats/catalog_a.json");
-            threatCatalogImporter.importThreats("./data/threats/catalog_a_values.json");
-            threatCatalogImporter.importCatalog("./data/threats/catalog_b.json");
-            threatCatalogImporter.importThreats("./data/threats/catalog_b_values.json");
+            threatCatalogImporter.importCatalog("./data/threats/catalog_datacenter.json");
+            threatCatalogImporter.importThreats("./data/threats/catalog_datacenter_values.json");
+            threatCatalogImporter.importCatalog("./data/threats/catalog_it_stor.json");
+            threatCatalogImporter.importThreats("./data/threats/catalog_it_stor_values.json");
+            threatCatalogImporter.importCatalog("./data/threats/catalog_it_lille_rpa.json");
+            threatCatalogImporter.importThreats("./data/threats/catalog_it_lille_rpa_values.json");
+
             templateImporter.importStandardTemplate("./data/standards/iso27001.json");
             templateImporter.importStandardSections("./data/standards/iso27001_sections.json");
             templateImporter.importStandardTemplate("./data/standards/iso27002.json");
