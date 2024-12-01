@@ -28,6 +28,9 @@ public class SecurityConfig {
                     "/vendor/**",
                     "/favicon.ico",
                     "/login",
+                    "/forgotten",
+                    "/forgotten_sent",
+                    "/reset/*",
                     "/error"
                 ).permitAll()
                 .anyRequest().authenticated()

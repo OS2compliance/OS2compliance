@@ -19,7 +19,7 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 )
 @OpenAPIDefinition(
     info = @Info(
-        title = "OS2compliance API",
+        title = "GRcompliance API",
         version = "1.0",
         license = @License(name = "Mozilla Public License Version 2.0", url = "https://www.mozilla.org/en-US/MPL/2.0/"),
         contact = @Contact(url = "https://www.digital-identity.dk/", name = "Digital Identity ApS", email = "kontakt@digital-identity.dk")

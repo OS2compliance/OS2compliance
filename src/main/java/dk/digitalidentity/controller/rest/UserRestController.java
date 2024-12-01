@@ -48,14 +48,21 @@ public class UserRestController {
 
     }
 
-
-
     @Transactional
-    @DeleteMapping("delete/{userID}")
-    public ResponseEntity<?> deleteUser(@PathVariable("userID") final String userID) {
-        User user = userService.findByUuidIncludingInactive(userID)
+    @DeleteMapping("delete/{userUuid}")
+    public ResponseEntity<?> deleteUser(@PathVariable("userUuid") final String userUuid) {
+        User user = userService.findByUuidIncludingInactive(userUuid)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         userService.delete(user);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @Transactional
+    @PostMapping("reset/{userUuid}")
+    public ResponseEntity<?> resetPasswordUser(@PathVariable("userUuid") final String userID) {
+        final User user = userService.findByUuid(userID)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        userService.sendForgottenPasswordMail(user);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

@@ -117,13 +117,14 @@
                     id: "actions",
                     name: "Handlinger",
                     sort: 0,
-                    width: '90px',
+                    width: '100px',
                     formatter: (cell, row) => {
                         const id = row.cells[0]['data'];
                         const userId = row.cells[1]['data'];
-                        const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
-                        const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
-                        return gridjs.html(editButton + deleteButton);
+                        const resetButton = `<button type="button" title="Reset brugerens password" class="btn btn-icon btn-outline-light btn-xs me-1"  onclick="users.resetUser('${id}')"><i class="pli-security-remove fs-5"></i></button>`;
+                        const editButton = `<button type="button" title="Rediger" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
+                        const deleteButton = `<button type="button" title="Slet" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
+                        return gridjs.html(resetButton + editButton + deleteButton);
                     }
                 }
             ],
