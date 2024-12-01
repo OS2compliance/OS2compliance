@@ -1,0 +1,12 @@
+090e51bb-1de0-4117-a806-fab8eeef128a,a3349277-0b49-476b-9f26-6b512078fec3,1) Medarbejder-relaterede trusler,"Systemet bruges til profilering, hvilket krænker de registreredes rettigheder",false,3
+4d8619fb-d7c3-48ee-a15d-e9bf520b6728,a3349277-0b49-476b-9f26-6b512078fec3,1) Medarbejder-relaterede trusler,"Behandlingen er i strid med GDPR, da hjemmelsgrundlaget er utilstrækkeligt",false,5
+62c30672-a01c-4eda-9311-642e9f85a557,a3349277-0b49-476b-9f26-6b512078fec3,1) Medarbejder-relaterede trusler,NIBIS krænker de registreredes rettigheder ved at behandle personoplysninger i systemet (herunder oplysningspligten),false,4
+7217ac0a-d813-4f60-8613-fb72e3a78cef,a3349277-0b49-476b-9f26-6b512078fec3,1) Medarbejder-relaterede trusler,Personoplysninger overføres til usikre tredjelande,false,1
+9f2623ee-1418-4528-937f-787beb993a75,a3349277-0b49-476b-9f26-6b512078fec3,1) Medarbejder-relaterede trusler,Personoplysninger eller fortrolige forretningsoplysninger bliver tilgængelige for uvedkommende,false,6
+eb42dc7c-5169-44e1-8b2d-27d35ced4f9b,a3349277-0b49-476b-9f26-6b512078fec3,1) Medarbejder-relaterede trusler,NIBIS bryder utilsigtet ophavsretten,false,2
+a8fb89e2-003c-4109-a147-809d9f9d55b7,a3349277-0b49-476b-9f26-6b512078fec3,2) Leverandørtrusler,Manglende kendskab til løsningsarkitektur og dataflow vanskeliggør efterlevelsen af vores dataansvar,false,2
+f1665934-ea77-4029-91a7-dd56e8249dc5,a3349277-0b49-476b-9f26-6b512078fec3,2) Leverandørtrusler,Leverandøren bruger data til egne formål eller sælger data til tredje part.,false,1
+10ee6064-af9d-49ec-b8a3-72d4851e7b52,a3349277-0b49-476b-9f26-6b512078fec3,3) Fejlede sikringsforanstaltninger,NIBIS videreformidler et forkert budskab eller træffer forkerte beslutninger på baggrund af misinformation fra systemet.,false,1
+194c1fe3-9cc5-4acc-9fed-4b177ae9d92a,a3349277-0b49-476b-9f26-6b512078fec3,3) Fejlede sikringsforanstaltninger,NIBIS videreformidler et forkert budskab eller træffer forkerte beslutninger på baggrund af bias i systemet.,false,2
+36a3c6b7-5bef-40a3-8044-2a59cce340e1,a3349277-0b49-476b-9f26-6b512078fec3,3) Fejlede sikringsforanstaltninger,"API anvendes til automatiserede beslutninger/handlinger, der er forkerte",false,4
+852bc9e2-6ff7-4bb7-b390-0e9920dc9f35,a3349277-0b49-476b-9f26-6b512078fec3,3) Fejlede sikringsforanstaltninger,NIBIS videreformidler et forkert budskab eller træffer forkerte beslutninger på baggrund af forkert information eller vrøvl fra systemet.,false,3

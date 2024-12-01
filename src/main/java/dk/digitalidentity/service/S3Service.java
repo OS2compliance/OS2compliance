@@ -1,6 +1,6 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.EnableCaching;
@@ -25,7 +25,7 @@ import java.io.IOException;
 @RequiredArgsConstructor
 public class S3Service {
 	private final S3Client s3Client;
-    private final OS2complianceConfiguration config;
+    private final GRComplianceConfiguration config;
 
 	public String upload(String filename, byte[] file) {
 		String key = config.getS3().getFolderName() + "/" + filename;

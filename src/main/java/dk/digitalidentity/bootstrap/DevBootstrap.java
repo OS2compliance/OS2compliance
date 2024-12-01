@@ -1,6 +1,7 @@
 package dk.digitalidentity.bootstrap;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.Constants;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.dao.ApiClientDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.dao.DocumentDao;
@@ -45,6 +46,7 @@ import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
@@ -62,10 +64,6 @@ import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
-
 @Order(200)
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 @Slf4j
@@ -75,7 +73,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 	@Autowired
 	private SupplierDao supplierDao;
 	@Autowired
-	private OS2complianceConfiguration config;
+	private GRComplianceConfiguration config;
 	@Autowired
 	private TaskDao taskDao;
 	@Autowired
@@ -163,12 +161,12 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				ishoj = organisationUnitDao.save(ishoj);
 
 				User user1 = new User();
-				user1.setUuid(UUID.randomUUID().toString());
 				user1.setActive(true);
 				user1.setUserId("user1");
 				user1.setName("Test User 1");
 				user1.setEmail("user1@digital-identity.dk");
                 user1.setPassword(new BCryptPasswordEncoder().encode("Test1234"));
+                user1.setRoles(Set.of(Roles.ADMINISTRATOR, Roles.SUPERUSER, Roles.USER));
 				user1.setPositions(Set.of(
 						Position.builder()
 								.name("Tester")
@@ -386,10 +384,6 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				os2Compliance.setProductLink("https://os2compliance.dk");
 				os2Compliance.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 os2Compliance.setDataProcessing(dataProcessing);
-                os2Compliance.getProperties().add(Property.builder().key(KITOS_UUID_PROPERTY_KEY)
-                    .value("megaNiceUUID")
-                    .entity(os2Compliance)
-                    .build());
 
 				os2Compliance = assetService.create(os2Compliance);
 
@@ -492,9 +486,6 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 settingsService.createSetting("TestSettingIntWithStringVal", "400");
                 //risk scale
                 settingsService.createSetting("scale","" , "risk", true);
-                //KITOS roles
-                settingsService.createSetting(KITOS_OWNER_ROLE_SETTING_KEY,"","kitos", true);
-                settingsService.createSetting(KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "", "kitos", true);
 
                 ///////////////////////////////////
                 // api clients

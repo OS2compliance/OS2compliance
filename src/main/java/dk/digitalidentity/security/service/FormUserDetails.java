@@ -26,7 +26,6 @@ public class FormUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         Set<String> roles = user.getRoles();
         if (roles == null) {
-
             return new HashSet<SimpleGrantedAuthority>();
         }
         return roles.stream().map(role -> new SimpleGrantedAuthority(role)).collect(Collectors.toSet());

@@ -1,6 +1,6 @@
 package dk.digitalidentity.report;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
@@ -55,11 +55,11 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.boot.test.mock.mockito.SpyBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.TestPropertySource;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.util.ResourceUtils;
 import org.thymeleaf.TemplateEngine;
 
@@ -91,35 +91,35 @@ import static org.mockito.Mockito.doReturn;
 @ContextConfiguration(classes = {DocxService.class, DocsReportGeneratorComponent.class,
     CommonPropertiesReplacer.class, Article30Replacer.class, ISO27001Replacer.class, ISO27002Replacer.class, DocsReportGeneratorComponent.class,
     ThreatAssessmentReplacer.class, ScaleService.class, ThreatAssessmentService.class, TemplateEngine.class})
-@EnableConfigurationProperties(value = OS2complianceConfiguration.class)
+@EnableConfigurationProperties(value = GRComplianceConfiguration.class)
 @TestPropertySource("/application-test.properties")
 @ActiveProfiles("test")
 public class DocxServiceTest {
     @Autowired
     private DocxService documentService;
-    @MockBean
+    @MockitoBean
     private RegisterService registerServiceMock;
-    @MockBean
+    @MockitoBean
     private ChoiceService choiceServiceMock;
-    @MockBean
+    @MockitoBean
     private StandardTemplateDao standardTemplateDaoMock;
-    @MockBean
+    @MockitoBean
     private AssetService assetServiceMock;
-    @MockBean
+    @MockitoBean
     private RelationService relationServiceMock;
-    @MockBean
+    @MockitoBean
     private RelationDao relationDaoMock;
-    @MockBean
+    @MockitoBean
     private RegisterDao registerDaoMock;
-    @MockBean
+    @MockitoBean
     private ThreatAssessmentDao threatAssessmentDaoMock;
-    @MockBean
+    @MockitoBean
     private TaskService taskServiceMock;
-    @SpyBean
+    @MockitoSpyBean
     private ThreatAssessmentService threatAssessmentServiceMock;
-    @MockBean
+    @MockitoBean
     private SettingsService settingsServiceMock;
-    @MockBean
+    @MockitoBean
     private UserService userService;
 
     @BeforeEach

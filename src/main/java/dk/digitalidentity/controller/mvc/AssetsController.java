@@ -4,8 +4,6 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
-import dk.digitalidentity.event.AssetUpdatedEvent;
-import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
@@ -89,8 +87,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
-
-import com.google.common.base.Strings;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -265,7 +261,7 @@ public class AssetsController {
 		model.addAttribute("dataProcessing", asset.getDataProcessing());
 		model.addAttribute("dpChoices", dataProcessingService.getChoices());
 		model.addAttribute("acceptanceBasisChoices", acceptListIdentifiers);
-        model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY)));
+        model.addAttribute("isKitos", false);
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
@@ -431,10 +427,6 @@ public class AssetsController {
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
-        eventPublisher.publishEvent(AssetUpdatedEvent.builder()
-                .asset(assetMapper.toEO(existingAsset))
-            .build());
-
         return "redirect:/assets/" + existingAsset.getId();
     }
 
@@ -512,7 +504,7 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-        asset.setDataProcessingAgreementLink(linkify(Strings.emptyToNull(body.getDataProcessingAgreementLink())));
+        asset.setDataProcessingAgreementLink(linkify(body.getDataProcessingAgreementLink()));
         asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setSupervisoryModel(body.getSupervisoryModel());
         asset.setNextInspection(body.getNextInspection());
@@ -546,8 +538,8 @@ public class AssetsController {
             oversight.get().setSupervisionModel(dto.supervisionModel);
             oversight.get().setConclusion(dto.conclusion);
             oversight.get().setStatus(dto.status);
-            oversight.get().setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
-            oversight.get().setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
+            oversight.get().setDbsLink(linkify(dto.dbsLink));
+            oversight.get().setInternalDocumentationLink(linkify(dto.internalDocumentationLink));
 
             if (dto.newInspectionDate == null) {
                 asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, oversight.get().getCreationDate()));
@@ -568,8 +560,8 @@ public class AssetsController {
             newOversight.setResponsibleUser(dto.responsibleUser);
             newOversight.setStatus(dto.status);
             newOversight.setSupervisionModel(dto.supervisionModel);
-            newOversight.setDbsLink(linkify(Strings.emptyToNull(dto.dbsLink)));
-            newOversight.setInternalDocumentationLink(linkify(Strings.emptyToNull(dto.internalDocumentationLink)));
+            newOversight.setDbsLink(linkify(dto.dbsLink));
+            newOversight.setInternalDocumentationLink(linkify(dto.internalDocumentationLink));
 
             if (dto.newInspectionDate == null) {
                 asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, newOversight.getCreationDate()));

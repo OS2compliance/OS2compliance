@@ -1,0 +1,146 @@
+[
+  {
+    "identifier": "enheder01",
+    "sortKey": 13,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejder glemmer/mister enheden (PC/Mobiltelefon) i f.eks. under transport, ved tyveri eller lignende",
+    "rights": true
+  },
+  {
+    "identifier": "enheder02",
+    "sortKey": 10,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Utilsigtet sletning af personoplysninger af uautoriseret eller ondsindet medarbejder pga. manglende kontrol (indhentelse af straffeattest, kontroller mv.)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder03",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere anvender private tjenester (privat mail, Dropbox, etc.) til at opbevare og arbejde med data på",
+    "rights": true
+  },
+  {
+    "identifier": "enheder04",
+    "sortKey": 8,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere bryder fortroligheden (videregive oplysninger, manglende clean desk, ikke låst skærm ved fravær, gemmer fortrolige informationer på fil-drev, hvor sikkerhedsniveauet er lavere end i selve systemet/applikationen, hvorved informationerne bliver kompromitteret)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder05",
+    "sortKey": 12,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Nuværende eller tidligere medarbejder videregiver eller udnytter fortrolige eller følsomme data – brud på tavshedspligt",
+    "rights": true
+  },
+  {
+    "identifier": "enheder06",
+    "sortKey": 7,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere foranlediges til at udlevere fortrolige oplysninger via social engineering, afpresning etc.",
+    "rights": true
+  },
+  {
+    "identifier": "enheder07",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere flytter fortrolige data via USB-sticks, hvorved data kompromitteres, f.eks. ved tab eller manglende sletning efter endt brug",
+    "rights": true
+  },
+  {
+    "identifier": "enheder08",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere gemmer fortrolige informationer på fil-drev, hvor sikkerhedsniveauet er lavere end i selve systemet/applikationen, hvorved informationerne bliver kompromitteret, da de kommer til andres kendskab",
+    "rights": true
+  },
+  {
+    "identifier": "enheder09",
+    "sortKey": 9,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Videregivelse af fortrolige eller følsomme personoplysninger til forkert modtager - Brud på fortrolighed",
+    "rights": true
+  },
+  {
+    "identifier": "enheder10",
+    "sortKey": 11,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Fejlhåndtering af persondata fx pga. mangelfulde procedurer eller awareness",
+    "rights": true
+  },
+  {
+    "identifier": "enheder11",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere deler fortrolige data eller personoplysninger med kollegaer via mail, hvilket kompromitter sikkerheden, f.eks. ved at data sendes til den forkerte, eller ved at mails placeres i fællespostkasser",
+    "rights": true
+  },
+  {
+    "identifier": "enheder12",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere deler fortrolige data eller personoplysninger med eksterne interessenter via almindelig mail (ikke-sikker mail uden brug af passende kryptering)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder13",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "1) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere afslører utilsigtet fortrolige oplysninger under arbejde i det offentlige rum (fx ved at arbejde på en måde, så andre kan kigge over skulderen, eller tale højt, så andre kan høre med)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder14",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "2) Fysiske trusler",
+    "description": "Hærværk på udstyr eller medier (ødelæggelse)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder15",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "2) Fysiske trusler",
+    "description": "Forsyningssvigt (el, vand, strøm, internet, køl, telekommunikation, etc.)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder16",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "2) Fysiske trusler",
+    "description": "Fremmede tiltvinger sig fysisk adgang til lokalerne (hærværk eller tyveri)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder17",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "2) Fysiske trusler",
+    "description": "Brand (kontorlokaler, naboejendom, serverrum)",
+    "rights": true
+  },
+  {
+    "identifier": "enheder18",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "enheder",
+    "threatType": "2) Fysiske trusler",
+    "description": "Fremmede bryder fysisk ind i lokalet med henblik på hærværk eller tyveri",
+    "rights": true
+  }
+]
