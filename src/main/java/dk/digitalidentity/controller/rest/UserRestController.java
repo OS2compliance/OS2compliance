@@ -6,6 +6,7 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.UserDTO;
 import dk.digitalidentity.model.dto.UserWithRoleDTO;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.UserService;
@@ -50,6 +51,7 @@ public class UserRestController {
 
     @Transactional
     @DeleteMapping("delete/{userUuid}")
+    @RequireAdminstrator
     public ResponseEntity<?> deleteUser(@PathVariable("userUuid") final String userUuid) {
         User user = userService.findByUuidIncludingInactive(userUuid)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -59,6 +61,7 @@ public class UserRestController {
 
     @Transactional
     @PostMapping("reset/{userUuid}")
+    @RequireAdminstrator
     public ResponseEntity<?> resetPasswordUser(@PathVariable("userUuid") final String userID) {
         final User user = userService.findByUuid(userID)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
