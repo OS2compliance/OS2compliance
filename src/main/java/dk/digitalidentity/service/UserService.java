@@ -47,6 +47,7 @@ public class UserService {
     public void setPassword(final User user, final String password) {
         final String encryptedPassword = new BCryptPasswordEncoder().encode(password);
         user.setPassword(encryptedPassword);
+        user.setPasswordResetToken(null);
     }
 
     public boolean isValidPassword(final String password) {
