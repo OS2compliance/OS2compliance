@@ -35,7 +35,7 @@ public class UserService {
             .message("Vi har modtaget en anmodning om at nulstille dit password. Hvis det var dig, kan du nulstille dit password ved at klikke på nedenstående link:<br>" +
                 "<a href=\"" + configuration.getBaseUrl() + "/reset/" + user.getPasswordResetToken() + "\">[Nulstil dit password]</a><br>" +
                 "Dette link er gyldigt i 1 time og udløber derefter automatisk. Hvis du ikke har anmodet om nulstilling af dit password, kan du ignorere denne e-mail.<br>" +
-                "Hvis du har spørgsmål eller har brug for hjælp, er du velkommen til at kontakte vores supportteam på [support-e-mail/telefonnummer].<br>" +
+                "Hvis du har spørgsmål eller har brug for hjælp, er du velkommen til at kontakte vores supportteam på support@nibis.dk<br>" +
                 "Venlig hilsen<br>" +
                 "GRCompliance")
             .subject("Anmodning om nulstilling af password")
