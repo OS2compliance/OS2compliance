@@ -95,7 +95,8 @@ public class SecurityUtil {
         }else if (principal instanceof FormUserDetails) {
             return ((FormUserDetails) principal).getUserUUID();
         } else if (principal instanceof Saml2AuthenticatedPrincipal) {
-            return ((Saml2AuthenticatedPrincipal) principal).getName();
+            return NameIdParser.parseNameId(((Saml2AuthenticatedPrincipal) principal).getName())
+                .orElseThrow(() -> new UsernameNotFoundException("Could not parse principal"));
         } else {
             throw new UsernameNotFoundException("instance of principal is of unknown type, when checking for super or own user");
         }
