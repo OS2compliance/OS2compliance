@@ -57,6 +57,8 @@ public interface AssetMapper {
             .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
             .assessmentOrder(assetGrid.getAssessmentOrder())
             .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
+            .assetCategory(nullSafe(() -> assetGrid.getAssetCategory().getMessage()))
+            .assetCategoryOrder(nullSafe(() -> assetGrid.getAssetCategoryOrder()))
 
             .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
             .registers(nullSafe(() -> assetGrid.getRegisters()))
@@ -156,7 +158,8 @@ public interface AssetMapper {
         @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
         @Mapping(target = "dpiaOptOut", ignore = true),
         @Mapping(target = "dpiaOptOutReason", ignore = true),
-        @Mapping(target = "oversightResponsibleUser", ignore = true)
+        @Mapping(target = "oversightResponsibleUser", ignore = true),
+        @Mapping(target = "assetCategory", ignore = true)
     })
     Asset fromEO(AssetCreateEO assetCreateEO);
 

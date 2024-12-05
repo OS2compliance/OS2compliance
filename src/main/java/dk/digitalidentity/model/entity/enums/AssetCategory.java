@@ -6,7 +6,7 @@ import lombok.Getter;
 public enum AssetCategory {
     GREEN("Grøn"),
     YELLOW("Gul"),
-    RED("Red");
+    RED("Rød");
 
     private final String message;
 
