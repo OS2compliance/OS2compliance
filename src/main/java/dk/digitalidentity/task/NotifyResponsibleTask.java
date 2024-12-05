@@ -24,5 +24,7 @@ public class NotifyResponsibleTask {
         }
 		taskService.findTasksThatNeedsNotification()
             .forEach(taskId -> notifyService.notifyTask(taskId.getId()));
+
+
 	}
 }
