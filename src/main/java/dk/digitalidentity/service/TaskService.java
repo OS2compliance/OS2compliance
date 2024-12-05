@@ -263,4 +263,13 @@ public class TaskService {
         };
     }
 
+    /**
+     * Gets all TaskLogs belonging to the given tasks
+     * @param taskList
+     * @return
+     */
+    public List<TaskLog> getLogsForTasks (final List<Task> taskList) {
+        return taskLogDao.findByTask_IdIn(taskList.stream().map(Relatable::getId).toList());
+    }
+
 }
