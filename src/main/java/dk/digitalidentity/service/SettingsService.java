@@ -66,6 +66,10 @@ public class SettingsService {
         return settingDao.findByAssociationAndEditableTrue(association);
     }
 
+    public List<Setting> getByAssociation (final String association) {
+        return  settingDao.findByAssociation(association);
+    }
+
     //association should probably be an enum
     public Setting createSetting(final String key, final String value, final String association, final boolean editable){
         if(!settingDao.existsBySettingKey(key)) {

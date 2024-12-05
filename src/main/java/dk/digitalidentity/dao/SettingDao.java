@@ -11,4 +11,5 @@ public interface SettingDao extends JpaRepository<Setting, Long> {
     List<Setting> findByEditableTrue();
     List<Setting> findByAssociationAndEditableTrue(final String association);
 	boolean existsBySettingKey(String key);
+    List<Setting> findByAssociation(final String association);
 }

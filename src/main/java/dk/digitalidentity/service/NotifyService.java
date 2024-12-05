@@ -7,7 +7,6 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
-import dk.digitalidentity.samlmodule.config.SamlConfiguration;
 import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -40,10 +39,7 @@ public class NotifyService {
             // Do not notify task already done
             return;
         }
-        if (task.getHasNotifiedResponsible() != null && task.getHasNotifiedResponsible()) {
-            log.warn("Task '{}' already notified", task.getName());
-            return;
-        }
+
         task.setHasNotifiedResponsible(true);
 
         EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
