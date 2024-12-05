@@ -116,6 +116,11 @@ SELECT
           WHEN a.asset_status = 'ON_GOING' THEN 2
           WHEN a.asset_status = 'READY' THEN 3
         END) as asset_status_order,
+    a.asset_category,
+    (CASE WHEN a.asset_category = 'GREEN' THEN 1
+          WHEN a.asset_category = 'YELLOW' THEN 2
+          WHEN a.asset_category = 'RED' THEN 3
+        END) as asset_category_order,
     ta.assessment,
     (CASE WHEN ta.assessment = 'GREEN' THEN 1
           WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
