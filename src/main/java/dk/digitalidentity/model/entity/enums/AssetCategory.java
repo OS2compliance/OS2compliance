@@ -1,5 +1,8 @@
 package dk.digitalidentity.model.entity.enums;
 
+import lombok.Getter;
+
+@Getter
 public enum AssetCategory {
     GREEN("Grøn"),
     YELLOW("Gul"),
