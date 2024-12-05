@@ -60,9 +60,6 @@ public class Task extends Relatable {
     @Column
     private Boolean notifyResponsible = true;
 
-    @Column(name = "responsible_notified")
-    private Boolean hasNotifiedResponsible;
-
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
@@ -102,13 +99,9 @@ public class Task extends Relatable {
 
     public void setNotifyResponsible(final boolean bool) {
         notifyResponsible = bool;
-        hasNotifiedResponsible = false;
     }
 
     public void setNextDeadline(final LocalDate date){
-        if (notifyResponsible != null && notifyResponsible) {
-            hasNotifiedResponsible = false;
-        }
         nextDeadline = date;
     }
 }

@@ -40,7 +40,6 @@ public class NotifyService {
             return;
         }
 
-        task.setHasNotifiedResponsible(true);
 
         EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
         if (template.isEnabled()) {
