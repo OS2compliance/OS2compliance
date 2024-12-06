@@ -66,6 +66,9 @@
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${asset.tia?.assessment != null}" id="tiaBadge" class="badge" th:classappend="${asset.tia?.assessment?.name() == 'RED'} ? 'bg-red' : (${asset.tia?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspTIA</button>
                             </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#roleTab" type="button" role="tab" aria-controls="historik" aria-selected="false">Roller</button>
+                            </li>
                         </ul>
 
                         <div class="tab-content">
@@ -503,6 +506,9 @@
                             <div id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab" th:replace="~{assets/fragments/tia :: tia(${asset}, ${dpChoices})}">
                                 Transfer impact assessment
                             </div><!--  Transfer impact assessment tab end -->
+                            <div id="roleTab" class="tab-pane fade" role="tabpanel" aria-labelledby="role-tab" th:replace="~{assets/roles/view :: roles(${asset})}">
+                            </div>
+
                         </div>
                     </div>
                 </div>

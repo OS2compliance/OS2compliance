@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.mvc;
+package dk.digitalidentity.controller.mvc.Assets;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetMeasuresDao;
