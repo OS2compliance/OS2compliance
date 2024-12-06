@@ -220,6 +220,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
                         category = '<div class="d-block badge bg-danger">' + cell + '</div>'
                     } else if (cell === "Grøn") {
                         category = '<div class="d-block badge bg-success">' + cell + '</div>'
+                    } else {
+                    category = ''
                     }
                     return gridjs.html(category, 'div');
                 },

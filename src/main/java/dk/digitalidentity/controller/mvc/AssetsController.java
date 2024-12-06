@@ -429,6 +429,7 @@ public class AssetsController {
         existingAsset.setTerminationNotice(asset.getTerminationNotice());
         existingAsset.setArchive(asset.isArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
+        existingAsset.setAssetCategory(asset.getAssetCategory());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
         eventPublisher.publishEvent(AssetUpdatedEvent.builder()
