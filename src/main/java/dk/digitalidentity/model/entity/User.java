@@ -15,6 +15,7 @@ import lombok.ToString;
 import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -29,7 +30,6 @@ public class User implements Serializable {
 
     @Id
     @Column
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
     @Column
@@ -65,5 +65,12 @@ public class User implements Serializable {
         cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
         mappedBy = "user")
     private Set<UserProperty> properties = new HashSet<>();
+
+    @PrePersist
+    public void onCreate() {
+        if (uuid == null) {
+            this.uuid = UUID.randomUUID().toString();
+        }
+    }
 
 }
