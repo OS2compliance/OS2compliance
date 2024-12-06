@@ -193,6 +193,6 @@ public class Asset extends Relatable {
     private User oversightResponsibleUser;
 
     @OneToMany(mappedBy="asset")
-    private Set<AssetRole> assetRoles = new HashSet<>();
+    private Set<Role> roles = new HashSet<>();
 
 }

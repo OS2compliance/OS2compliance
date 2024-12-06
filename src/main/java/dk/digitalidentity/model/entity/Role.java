@@ -26,6 +26,15 @@ public class Role {
     @Column
     private String name;
 
-    @OneToMany(mappedBy="role")
-    private Set<AssetRole> assetRoles = new HashSet<>();
+    @ManyToOne
+    @JoinColumn(name="asset_id")
+    private Asset asset;
+
+    @ManyToMany
+    @JoinTable(
+        name = "user_role",
+        joinColumns = { @JoinColumn(name = "user_uuid") },
+        inverseJoinColumns = { @JoinColumn(name = "role_id") }
+    )
+    private Set<User> users = new HashSet<>();
 }

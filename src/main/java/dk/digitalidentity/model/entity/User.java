@@ -73,6 +73,6 @@ public class User implements Serializable {
     private String passwordResetToken;
 
     @ManyToMany(mappedBy = "users")
-    private Set<AssetRole> assetRoles = new HashSet<>();
+    private Set<Role> assetRoles = new HashSet<>();
 
 }
