@@ -32,7 +32,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "assets")
@@ -189,5 +191,8 @@ public class Asset extends Relatable {
     @ManyToOne
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsibleUser;
+
+    @OneToMany(mappedBy="asset")
+    private Set<AssetRole> assetRoles = new HashSet<>();
 
 }
