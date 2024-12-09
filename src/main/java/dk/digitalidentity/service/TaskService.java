@@ -78,10 +78,24 @@ public class TaskService {
         return taskDao.findByTag(tagId);
     }
 
+    /**
+     * Finds all tasks ith the given deadline, which has notification enabled
+     * @param deadline a deadline
+     * @return A list of tasks
+     */
     @Transactional
-    public List<Task> findTasksThatNeedsNotification() {
-        final LocalDate date = closeToDeadline();
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(date);
+    public List<Task> getTasksWithDeadLineAt(LocalDate deadline) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadline(deadline);
+    }
+
+    /**
+     * Find all tasks with a deadline contained in the list of deadlines, which has notification enabled
+     * @param deadlines A list of deadlines
+     * @return A list of tasks
+     */
+    @Transactional
+    public List<Task> getTasksWithDeadLineIn(List<LocalDate> deadlines) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineIn(deadlines);
     }
 
     public List<Task> findAllTasksWithDeadlineAfter(final LocalDate date) {
@@ -222,9 +236,6 @@ public class TaskService {
         }
     }
 
-    private LocalDate closeToDeadline() {
-        return LocalDate.now().plusDays(settingsService.getInt("notify.days",10));
-    }
 
     @Transactional
     public void deleteAll(final List<Task> tasks) {
@@ -261,6 +272,15 @@ public class TaskService {
             case EVERY_THIRD_YEAR -> deadline.plusYears(3);
             default -> deadline;
         };
+    }
+
+    /**
+     * Gets all TaskLogs belonging to the given tasks
+     * @param taskList
+     * @return
+     */
+    public List<TaskLog> getLogsForTasks (final List<Task> taskList) {
+        return taskLogDao.findByTaskIdIn(taskList.stream().map(Relatable::getId).toList());
     }
 
 }

@@ -36,6 +36,7 @@ public interface Constants {
     String ARTICLE_30_REPORT_TEMPLATE_DOC = "reports/article30/main.docx";
 
     String RISK_SCALE_PROPERTY_NAME = "riskScale";
+    String LAST_NOTIFY_RUN_DAY_SETTING = "lastNotifyRunDay";
 
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
