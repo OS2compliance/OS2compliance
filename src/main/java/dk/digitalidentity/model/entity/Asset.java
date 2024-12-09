@@ -1,13 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.AssetType;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
-import dk.digitalidentity.model.entity.enums.Criticality;
-import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
-import dk.digitalidentity.model.entity.enums.NextInspection;
-import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.*;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -86,6 +80,10 @@ public class Asset extends Relatable {
     @Column
     @Enumerated(EnumType.STRING)
     private AssetStatus assetStatus;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private AssetCategory assetCategory;
 
     @Column
     @Enumerated(EnumType.STRING)
