@@ -1,6 +1,7 @@
 package dk.digitalidentity.integration.dbs;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -192,7 +193,9 @@ public class DBSService {
     public void oversightResponsible() {
         final LocalDate now = LocalDate.now();
         final LocalDate nowPlus14Days = now.plusDays(14);
-        final List<DBSOversight> oversights = dbsOversightDao.findByTaskCreatedFalse();
+        // Only look back 10 days so we do not create task for everything the first time we activate DBS integration
+        final List<DBSOversight> oversights = dbsOversightDao
+            .findByCreatedGreaterThanAndTaskCreatedFalse(LocalDateTime.now().minusDays(10));
         log.debug("Found {} oversights that need a task.", oversights.size());
 
         for (DBSOversight dbsOversight : oversights) {
@@ -217,7 +220,7 @@ public class DBSService {
 
                     // Check if there is an open task already
                     relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
-                        .map(r -> taskService.findById(r.getId()))
+                        .map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
                         .filter(Optional::isPresent)
                         .map(Optional::get)
                         .filter(t -> t.getTaskType() == TaskType.TASK
@@ -253,7 +256,8 @@ public class DBSService {
     }
 
     private static String dbsLink(final DBSOversight dbsOversight) {
-        return "<a href=\"https://www.dbstilsyn.dk/document/751/download\">" + dbsOversight.getName() + "</a>\n";
+//        return "<a href=\"https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\">" + dbsOversight.getName() + "</a>\n";
+        return "https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\n";
     }
 
 }
