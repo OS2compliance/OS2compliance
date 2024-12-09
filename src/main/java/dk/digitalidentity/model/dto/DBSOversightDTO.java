@@ -5,9 +5,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import dk.digitalidentity.model.entity.DBSAsset;
-import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
