@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.dto;
 
 public record RoleDTO(
-    long id,
-    String name
+    Long id,
+    String name,
+    Long assetId
 ) {}

@@ -510,7 +510,7 @@
                             <div id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab" th:replace="~{assets/fragments/tia :: tia(${asset}, ${dpChoices})}">
                                 Transfer impact assessment
                             </div><!--  Transfer impact assessment tab end -->
-                            <div id="roleTab" class="tab-pane fade" role="tabpanel" aria-labelledby="role-tab" th:replace="~{assets/roles/view :: roles}">
+                            <div id="roleTab" class="tab-pane fade" role="tabpanel" aria-labelledby="role-tab" th:replace="~{assets/roles/view :: roles(assetId=${asset.id})}">
                             </div>
 
                         </div>
@@ -524,6 +524,7 @@
 
     <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
     <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
+    <div id="editRoleModalContainer"></div>
 
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>

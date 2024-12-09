@@ -17,7 +17,8 @@ public interface RoleMapper {
     default List<RoleDTO> toDTO(final List<Role> roles) {
         return roles.stream().map(role -> new RoleDTO(
             role.getId(),
-            role.getName()
+            role.getName(),
+            role.getAsset().getId()
         )).toList();
     }
 }

@@ -9,9 +9,11 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RoleDTO;
 import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,12 +22,11 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -40,6 +41,8 @@ public class RolesRestController {
 
     private final RoleDao roleDao;
     private final RoleMapper mapper;
+    private final RoleService roleService;
+    private final AssetService assetService;
 
     @PostMapping()
     public PageDTO<RoleDTO> list(@RequestParam(name = "search", required = false) final String search,
@@ -70,5 +73,35 @@ public class RolesRestController {
 
     private boolean containsField(final String fieldName) {
         return fieldName.equals("name");
+    }
+
+    @RequireSuperuser
+    @PostMapping("create")
+    public ResponseEntity<?> createRole(@RequestBody final RoleDTO roleDTO) {
+        Role role = new Role();
+        if (roleDTO.id() != null) {
+            role = roleService.getRole(roleDTO.id())
+                .orElseThrow();
+        } else {
+            role.setAsset(assetService.findById(roleDTO.assetId())
+                .orElseThrow());
+        }
+
+        boolean updated = false;
+
+        String updatedName = roleDTO.name();
+        if (updatedName != null
+            && !updatedName.isEmpty()
+            && !updatedName.equals(role.getName())
+        ) {
+            role.setName(roleDTO.name());
+            updated = true;
+        }
+
+        if (updated) {
+            roleService.save(role);
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 }

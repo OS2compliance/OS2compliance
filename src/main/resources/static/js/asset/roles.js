@@ -13,6 +13,31 @@ const updateUrl = (prev, query) => {
 
 document.addEventListener("DOMContentLoaded", function(event) {
 
+    let gridConfig = initRoleGrid()
+
+    initAddRoleButton()
+});
+
+function deleteClicked(roleId, name) {
+    Swal.fire({
+      text: `Er du sikker på du vil slette "${name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#03a9f4',
+      cancelButtonColor: '#df5645',
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${deleteRoleUrl}${roleId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+      }
+    })
+}
+
+function initRoleGrid() {
     let gridConfig = {
         className: defaultClassName,
         search: {
@@ -48,9 +73,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
             },
             {
                 name: "Navn"
-            },
-            {
-                name: "Antal Brugere",
             },
             {
                 id: 'handlinger',
@@ -97,23 +119,43 @@ document.addEventListener("DOMContentLoaded", function(event) {
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "roleDatatable" ));
     searchService.initSearch(grid, gridConfig);
     gridOptions.init(grid, document.getElementById("gridOptions"));
-});
 
-function deleteClicked(roleId, name) {
-    Swal.fire({
-      text: `Er du sikker på du vil slette "${name}"?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#03a9f4',
-      cancelButtonColor: '#df5645',
-      confirmButtonText: 'Ja',
-      cancelButtonText: 'Nej'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${deleteRoleUrl}${roleId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                .then(() => {
-                    window.location.reload();
-                });
-      }
+    return gridConfig
+}
+
+function initAddRoleButton() {
+    const addRoleButton = document.getElementById('addRoleButton')
+    addRoleButton.addEventListener('click', (event)=> {
+        const targetId = 'editRoleModalContainer'
+        const url = viewUrl + 'create/' + assetId
+
+        //Fetch fragment from server
+        fetchHtml(url, targetId)
+            .then( ()=> {
+                    //show modal
+                    const modalContent = document.getElementById('editRoleModal')
+                    const form = modalContent.querySelector('#editRoleModalForm')
+                    form.addEventListener('submit', (event)=> onRoleFormSubmit(event, form))
+
+                    const modal = new bootstrap.Modal(modalContent);
+                    modal.show();
+            })
     })
+
+}
+
+async function onRoleFormSubmit(event, form) {
+    event.preventDefault();
+    const assetId = form.getAttribute('data-assetId')
+    const formData = new FormData(form)
+
+    const data = {
+        id : null,
+        name : formData.get('name'),
+        assetId : assetId
+    }
+
+    await postData(roleUrl+'/create', data)
+
+    location.reload()
 }
