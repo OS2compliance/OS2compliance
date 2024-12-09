@@ -20,6 +20,6 @@ public interface TaskLogDao extends JpaRepository<TaskLog, Long> {
      * @param ids
      * @return
      */
-    List<TaskLog> findByTask_IdIn(Collection<Long> ids);
+    List<TaskLog> findByTaskIdIn(Collection<Long> ids);
 
 }

@@ -280,7 +280,7 @@ public class TaskService {
      * @return
      */
     public List<TaskLog> getLogsForTasks (final List<Task> taskList) {
-        return taskLogDao.findByTask_IdIn(taskList.stream().map(Relatable::getId).toList());
+        return taskLogDao.findByTaskIdIn(taskList.stream().map(Relatable::getId).toList());
     }
 
 }

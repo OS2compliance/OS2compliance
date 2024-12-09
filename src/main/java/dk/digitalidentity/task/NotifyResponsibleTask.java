@@ -12,8 +12,12 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.List;
+
+import static dk.digitalidentity.Constants.LAST_NOTIFY_RUN_DAY_SETTING;
 
 
 @Component
@@ -30,6 +34,13 @@ public class NotifyResponsibleTask {
     public void notifyResponsibleUsersAboutDeadline() {
         if (!configuration.isSchedulingEnabled()) {
             return;
+        }
+        final ZonedDateTime lastRun = settingsService.getZonedDateTime(LAST_NOTIFY_RUN_DAY_SETTING, LocalDate.ofEpochDay(0).atStartOfDay(ZoneId.systemDefault()));
+        if (lastRun.toLocalDate().isEqual(LocalDate.now())) {
+            // Guard against running multiple times a day
+            return;
+        } else {
+            settingsService.setZonedDateTime(LAST_NOTIFY_RUN_DAY_SETTING, ZonedDateTime.now());
         }
 
         //Get notification settings
