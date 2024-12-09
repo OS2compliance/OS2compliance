@@ -9,7 +9,10 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
+import dk.digitalidentity.dao.DBSAssetDao;
 import org.springframework.stereotype.Service;
 
 import dk.dbs.api.model.Document;
@@ -40,6 +43,7 @@ import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 @Service
 @RequiredArgsConstructor
 public class DBSService {
+    private final DBSAssetDao dbsAssetDao;
 	private final DBSSupplierDao dbsSupplierDao;
 	private final DBSOversightDao dbsOversightDao;
 	private final RelationService relationService;
@@ -53,88 +57,90 @@ public class DBSService {
             .filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
             .toList();
         log.debug("Found {} relevant itSystems in DBS", relevantItSystems.size());
-		final LocalDate lastSync = LocalDate.now();
 
-		final List<DBSSupplier> existingDBSSuppliers = dbsSupplierDao.findAll();
-        final List<DBSSupplier> toBeDeletedSuppliers = new ArrayList<>();
-		for (final DBSSupplier dbsSupplier : existingDBSSuppliers) {
-			//Remove if no longer exists in DBS
-			if (allDbsSuppliers.stream().noneMatch(s -> Objects.equals(s.getId(), dbsSupplier.getDbsId()))) {
-				toBeDeletedSuppliers.add(dbsSupplier);
-			}
-		}
+        // First synchronize all suppliers
+        synchronizeAllSuppliers(allDbsSuppliers);
+        // Now synchronize all it-systems(assets)
+        synchronizeAllItSystems(relevantItSystems);
 
-        final List<DBSSupplier> toBeAdded = new ArrayList<>();
-        final List<DBSSupplier> toBeUpdated = new ArrayList<>();
-		int totalAssets = 0;
-		for (final Supplier supplier : allDbsSuppliers) {
-			// Add if isn't locally stored
-			if (existingDBSSuppliers.stream().noneMatch(s -> Objects.equals(s.getDbsId(), supplier.getId()))) {
-				DBSSupplier dbsSupplier = new DBSSupplier();
-				dbsSupplier.setDbsId(supplier.getId());
-				dbsSupplier.setName(supplier.getName());
-				if (supplier.getNextRevision() != null) {
-					dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
-				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, dbsSupplier, relevantItSystems, lastSync);
-				dbsSupplier.setAssets(assets);
-				totalAssets += assets.size();
+    }
 
-				toBeAdded.add(dbsSupplier);
-			} else {
-				//Update
-				DBSSupplier existingDBSSupplier = existingDBSSuppliers.stream().filter(existing -> Objects.equals(existing.getDbsId(), supplier.getId())).findAny().orElseThrow(() -> new DBSSynchronizationException("Something went wrong."));
+    @SuppressWarnings("MappingBeforeCount")
+    private void synchronizeAllItSystems(List<ItSystem> allItSystems) {
+        final LocalDate lastSync = LocalDate.now();
+        // Create new it-systems
+        final List<String> existingAssetIds = dbsAssetDao.findAllDbsIds();
+        final long created = allItSystems.stream()
+            .filter(itSystem -> !existingAssetIds.contains(itSystem.getUuid()))
+            .peek(itSystem -> {
+                DBSAsset asset = new DBSAsset();
+                asset.setDbsId(itSystem.getUuid());
+                asset.setName(itSystem.getName());
+                asset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
+                    .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
+                asset.setLastSync(lastSync);
+                dbsAssetDao.save(asset);
+            })
+            .count();
 
-				boolean changes = false;
-				if (!Objects.equals(existingDBSSupplier.getName(), supplier.getName())) {
-					existingDBSSupplier.setName(supplier.getName());
-					changes  = true;
-				}
-				if (supplier.getNextRevision() != null && !Objects.equals(existingDBSSupplier.getNextRevision(), supplier.getNextRevision().getValue())) {
-					existingDBSSupplier.setNextRevision(supplier.getNextRevision().getValue());
-					changes = true;
-				}
-				List<DBSAsset> assets = getAssetsForSupplier(supplier, existingDBSSupplier, relevantItSystems, lastSync);
+        // Update existing
+        final long updated = allItSystems.stream()
+            .filter(itSystem -> existingAssetIds.contains(itSystem.getUuid()))
+            .peek(itSystem -> {
+                dbsAssetDao.findByDbsId(itSystem.getUuid())
+                    .ifPresent(dbsAsset -> {
+                        dbsAsset.setName(itSystem.getName());
+                        dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
+                            .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
+                        dbsAsset.setLastSync(lastSync);
+                    });
+            })
+            .count();
 
-				// Remove if the DBS list doesn't contain it anymore
-				if (existingDBSSupplier.getAssets().removeIf(local -> assets.stream().noneMatch(x -> Objects.equals(x.getDbsId(), local.getDbsId())))) {
-					changes = true;
-				}
-				// Add ItSystems(converted to DBSAssets) that are not already in the database
-				if (existingDBSSupplier.getAssets().addAll(assets.stream().filter(a -> existingDBSSupplier.getAssets().stream().noneMatch(x -> Objects.equals(x.getDbsId(), a.getDbsId()))).toList())) {
-					changes = true;
-				}
+        // Delete removed
+        final Set<String> allActiveItSystemIds = allItSystems.stream().map(ItSystem::getUuid).collect(Collectors.toSet());
+        final long deleted = existingAssetIds.stream()
+            .filter(id -> !allActiveItSystemIds.contains(id))
+            .peek(dbsAssetDao::deleteByDbsId)
+            .count();
+        log.info("Created {}, updated {} and deleted {} DBS assets", created, updated, deleted);
+    }
 
-				if (changes) {
-					toBeUpdated.add(existingDBSSupplier);
-				}
-			}
-		}
+    @SuppressWarnings("MappingBeforeCount")
+    private void synchronizeAllSuppliers(List<Supplier> allDbsSuppliers) {
+        final List<Long> existingDbsSupplierIds = dbsSupplierDao.findAllDbsIds();
 
-		log.info("Adding {} suppliers.", toBeAdded.size());
-        dbsSupplierDao.saveAll(toBeAdded);
-		log.info("Updating {} suppliers.", toBeUpdated.size());
-        dbsSupplierDao.saveAll(toBeUpdated);
-		log.info("Removing {} suppliers.", toBeDeletedSuppliers.size());
-		log.info("Adding {} assets.", totalAssets);
-		dbsSupplierDao.deleteAll(toBeDeletedSuppliers);
-	}
+        // Create new suppliers
+        final long created = allDbsSuppliers.stream().filter(supplier -> !existingDbsSupplierIds.contains(supplier.getId()))
+            .peek(supplier -> {
+                final DBSSupplier dbsSupplier = new DBSSupplier();
+                dbsSupplier.setDbsId(supplier.getId());
+                dbsSupplier.setName(supplier.getName());
+                if (supplier.getNextRevision() != null) {
+                    dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
+                }
+                dbsSupplierDao.save(dbsSupplier);
+            })
+            .count();
 
-	private List<DBSAsset> getAssetsForSupplier(Supplier supplier, DBSSupplier dbsSupplier, List<ItSystem> itSystems, LocalDate lastSync) {
-		List<DBSAsset> result = new ArrayList<>();
-		for (ItSystem itSystem : itSystems) {
-			if (Objects.equals(itSystem.getSupplier().getId(), supplier.getId())) {
-				DBSAsset asset = new DBSAsset();
-				asset.setDbsId(itSystem.getUuid());
-				asset.setName(itSystem.getName());
-				asset.setSupplier(dbsSupplier);
-				asset.setLastSync(lastSync);
-				result.add(asset);
-			}
-		}
+        // Update existing
+        final long updated = allDbsSuppliers.stream().filter(dbsSupplier -> existingDbsSupplierIds.contains(dbsSupplier.getId()))
+            .peek(supplier -> dbsSupplierDao.findByDbsId(supplier.getId()).ifPresent(dbsSupplier -> {
+                dbsSupplier.setName(supplier.getName());
+                if (supplier.getNextRevision() != null) {
+                    dbsSupplier.setNextRevision(supplier.getNextRevision().getValue());
+                }
+            }))
+            .count();
 
-		return result;
-	}
+        // Delete removed
+        final Set<Long> allActiveSupplierIds = allDbsSuppliers.stream().map(Supplier::getId).collect(Collectors.toSet());
+        final long deleted = existingDbsSupplierIds.stream()
+            .filter(id -> !allActiveSupplierIds.contains(id))
+            .peek(dbsSupplierDao::deleteByDbsId)
+            .count();
+        log.info("Created {}, updated {} and deleted {} DBS suppliers", created, updated, deleted);
+    }
 
     @Transactional
 	public void syncOversight(final List<Document> allDocuments) {
@@ -146,6 +152,9 @@ public class DBSService {
         final List<DBSOversight> toBeAdded = new ArrayList<>();
         final List<DBSOversight> toBeUpdated = new ArrayList<>();
         for (final Document document : allDocuments) {
+            if (document.getLocked()) {
+                continue;
+            }
             // Add if isn't locally stored
             if (existingDBSOversights.stream().noneMatch(s -> Objects.equals(s.getDbsId(), document.getId()))) {
                 DBSOversight dbsOversight = new DBSOversight();
