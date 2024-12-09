@@ -62,7 +62,7 @@ public class IncidentFieldResponse {
     private String answerText;
 
     @Column
-    @DateTimeFormat(pattern = "dd/MM-yyyy")
+    @DateTimeFormat(pattern = "d/M-yyyy")
     private LocalDate answerDate;
 
     @Column
