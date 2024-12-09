@@ -10,9 +10,9 @@ import java.time.LocalDate;
 import java.util.List;
 
 public interface TaskDao extends JpaRepository<Task, Long> {
-	List<Task> findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(LocalDate date);
-    List<Task> findByResponsibleUserAndNextDeadlineBefore(User user, LocalDate date);
-    List<Task> findByNextDeadlineBefore(LocalDate date);
+
+    List<Task> findByNotifyResponsibleTrueAndNextDeadline(final LocalDate date);
+    List<Task> findByNotifyResponsibleTrueAndNextDeadlineIn(final List<LocalDate> dates);
 
     List<Task> findByNextDeadlineAfterOrderByNextDeadlineAsc(final LocalDate date);
 
