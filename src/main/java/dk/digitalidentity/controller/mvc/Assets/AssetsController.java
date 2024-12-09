@@ -50,17 +50,7 @@ import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.AssetOversightService;
-import dk.digitalidentity.service.AssetService;
-import dk.digitalidentity.service.ChoiceService;
-import dk.digitalidentity.service.DPIATemplateQuestionService;
-import dk.digitalidentity.service.DPIATemplateSectionService;
-import dk.digitalidentity.service.DataProcessingService;
-import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.ScaleService;
-import dk.digitalidentity.service.SupplierService;
-import dk.digitalidentity.service.TaskService;
-import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.*;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -128,6 +118,7 @@ public class AssetsController {
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
+
 
 	@GetMapping
 	public String assetsList() {
@@ -277,6 +268,7 @@ public class AssetsController {
 		model.addAttribute("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
 		model.addAttribute("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
         model.addAttribute("defaultSendReportTo", asset.getResponsibleUsers().stream().filter(u -> StringUtils.hasLength(u.getEmail())).findFirst().orElse(null));
+
 
         // threat assessments
         model.addAttribute("threatAssessments", threatAssessments);

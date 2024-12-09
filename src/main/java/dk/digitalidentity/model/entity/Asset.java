@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -192,6 +193,7 @@ public class Asset extends Relatable {
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsibleUser;
 
+    @JsonIgnore
     @OneToMany(mappedBy="asset")
     private Set<Role> roles = new HashSet<>();
 

@@ -7,8 +7,54 @@
     <title>Title</title>
 </head>
 <body>
-    <div th:fragment="roles(asset)" id="roleTab" class="tab-pane fade" role="tabpanel" aria-labelledby="role-tab">
-        TEST ROLES
+<div th:fragment="roles" id="roleTab" class="tab-pane fade" role="tabpanel" aria-labelledby="role-tab">
+
+    <div class="accordion" id="roleAccordion">
+        <div class="accordion-item">
+            <div class="accordion-header" id="roleAccordion_rolesHeading">
+                <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#roleAccordion_rolesContent" aria-expanded="true"
+                        aria-controls="roleAccordion_roles" th:text="Roller">
+                </button>
+            </div>
+            <div id="roleAccordion_rolesContent" class="accordion-collapse collapse show"
+                 aria-labelledby="roleAccordion_rolesHeading" data-bs-parent="#roleAccordion">
+                <div class="accordion-body">
+                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                    <div id="roleDatatable"></div>
+                </div>
+            </div>
+        </div>
+        <div class="accordion-item">
+            <div class="accordion-header" id="roleAccordion_usersHeading">
+                <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse"
+                        data-bs-target="#roleAccordion_usersContent" aria-expanded="false"
+                        aria-controls="roleAccordion_users" th:text="Brugere">
+                </button>
+            </div>
+            <div id="roleAccordion_usersContent" class="accordion-collapse collapse"
+                 aria-labelledby="roleAccordion_usersHeading" data-bs-parent="#roleAccordion">
+                <div class="accordion-body">
+                    Users go here
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        /*[+
+            var roleUrl = [[@{/rest/asset/roles}]];
+            var viewUrl = [[@{/asset/roles/}]];
+            var deleteRoleUrl = [[@{/assets/role/}]];
+            var isSuperuser = [[${isSuperuser}]]
+        +]*/
+
+        /*]]>*/
+    </script>
+</div>
+
+
 </body>
 </html>

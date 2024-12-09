@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.rest;
+package dk.digitalidentity.controller.rest.Assets;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;

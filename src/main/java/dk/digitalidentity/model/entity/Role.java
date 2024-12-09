@@ -1,5 +1,8 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,6 +33,7 @@ public class Role {
     @JoinColumn(name="asset_id")
     private Asset asset;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
         name = "user_role",
