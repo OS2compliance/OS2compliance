@@ -140,6 +140,9 @@ public class ReportController {
         final Map<String, Object> model = new HashMap<>();
         model.put("taskMap", taskMap);
 
+        final List<TaskLog> taskLogs =  taskService.getLogsForTasks(taskMap.keySet().stream().toList());
+        model.put("taskLogs", taskLogs);
+
         return new ModelAndView(new YearWheelView(), model);
     }
 
