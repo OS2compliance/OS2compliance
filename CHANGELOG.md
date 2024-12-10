@@ -7,6 +7,12 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- (Ad-hoc) Mulighed for at vælge flere E-mail påmindelser
+- (Ad-hoc) De enkelte kontroller medtages i årshjulet
+- (Ad-hoc) Nyt kategoriseringsfelt på aktiver
+
+
 ## [2.0.0] - 2024-10-31
 
 ### Fixed
