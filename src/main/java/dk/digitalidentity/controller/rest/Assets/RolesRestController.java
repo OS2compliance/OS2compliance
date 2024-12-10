@@ -104,4 +104,14 @@ public class RolesRestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+    @RequireSuperuser
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<?> deleteRole(@PathVariable Long id) {
+        if (id != null) {
+            roleService.delete(id);
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }

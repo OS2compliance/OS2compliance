@@ -55,8 +55,8 @@
         /*[+
             var roleUrl = [[@{/rest/asset/roles}]];
             var viewUrl = [[@{/asset/roles/}]];
-            var deleteRoleUrl = [[@{/assets/role/}]];
-            var isSuperuser = [[${isSuperuser}]]
+            var deleteRoleUrl = [[@{/rest/asset/roles/delete/}]];
+            var isSuperuser = [[${#authorization.expression('hasAuthority(''ROLE_forandre'')')}]]
         +]*/
 
         /*]]>*/
