@@ -20,7 +20,6 @@ import java.util.Set;
 @Table(name = "role")
 @Getter
 @Setter
-@ToString
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -29,12 +28,12 @@ public class Role {
     @Column
     private String name;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name="asset_id")
     private Asset asset;
 
     @JsonIgnore
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(
         name = "user_role",
         joinColumns = { @JoinColumn(name = "user_uuid") },

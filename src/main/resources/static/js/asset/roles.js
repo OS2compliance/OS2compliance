@@ -39,7 +39,7 @@ function initRoleGrid() {
             server: {
                 url: (prev, columns) => {
                     if (!columns.length) return prev;
-                    const columnIds = ['id', 'name', 'usercount'];
+                    const columnIds = ['id', 'name', 'users'];
                     const col = columns[0]; // multiColumn false
                     const order = columnIds[col.index];
                     return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
@@ -53,6 +53,18 @@ function initRoleGrid() {
             },
             {
                 name: "Navn"
+            },
+            {
+                name: "Brugere",
+                formatter: (cell, row) => {
+                console.log(cell)
+                const templateFunction = (userName) => `<span class="badge bg-light rounded-pill">${userName}</span>`
+                let htmlArray = []
+                for (const user of cell) {
+                    htmlArray.push(templateFunction(user))
+                }
+                    return gridjs.html( htmlArray.toString() );
+                }
             },
             {
                 id: 'handlinger',
@@ -78,7 +90,10 @@ function initRoleGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(roleDTO =>
-                [ roleDTO.id, roleDTO.name ]
+                [ roleDTO.id,
+                roleDTO.name,
+                roleDTO.userNames
+                ]
             ),
             total: data => data.totalCount
         },

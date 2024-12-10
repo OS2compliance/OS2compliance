@@ -14,6 +14,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 @Slf4j
 @Controller
 @RequireUser
@@ -26,7 +29,7 @@ public class RoleController {
     @RequireSuperuser
     @GetMapping("create/{assetId}")
     public String createRole(final Model model, @PathVariable Long assetId) {
-        model.addAttribute("role", new RoleDTO(null, "", assetId));
+        model.addAttribute("role", new RoleDTO(null, "", assetId, new ArrayList<>()));
         return "assets/roles/editRoleModal";
     }
 

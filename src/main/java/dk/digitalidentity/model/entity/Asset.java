@@ -10,18 +10,7 @@ import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -194,7 +183,7 @@ public class Asset extends Relatable {
     private User oversightResponsibleUser;
 
     @JsonIgnore
-    @OneToMany(mappedBy="asset")
+    @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
     private Set<Role> roles = new HashSet<>();
 
 }

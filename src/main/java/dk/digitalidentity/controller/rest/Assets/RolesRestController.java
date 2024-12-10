@@ -8,6 +8,7 @@ import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RoleDTO;
 import dk.digitalidentity.model.entity.Role;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
@@ -31,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -50,6 +52,7 @@ public class RolesRestController {
                                  @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
                                  @RequestParam(name = "order", required = false) final String order,
                                  @RequestParam(name = "dir", required = false) final String dir) {
+
         Sort sort = null;
         if (StringUtils.isNotEmpty(order) && containsField(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);

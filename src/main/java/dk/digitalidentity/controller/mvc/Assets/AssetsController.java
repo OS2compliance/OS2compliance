@@ -13,27 +13,7 @@ import dk.digitalidentity.model.dto.SaveMeasureDTO;
 import dk.digitalidentity.model.dto.SaveMeasuresDTO;
 import dk.digitalidentity.model.dto.ViewMeasureDTO;
 import dk.digitalidentity.model.dto.ViewMeasuresDTO;
-import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.AssetMeasure;
-import dk.digitalidentity.model.entity.AssetOversight;
-import dk.digitalidentity.model.entity.AssetSupplierMapping;
-import dk.digitalidentity.model.entity.ChoiceDPIA;
-import dk.digitalidentity.model.entity.ChoiceList;
-import dk.digitalidentity.model.entity.ChoiceMeasure;
-import dk.digitalidentity.model.entity.DPIA;
-import dk.digitalidentity.model.entity.DPIAReport;
-import dk.digitalidentity.model.entity.DPIAResponseSection;
-import dk.digitalidentity.model.entity.DPIAResponseSectionAnswer;
-import dk.digitalidentity.model.entity.DPIATemplateQuestion;
-import dk.digitalidentity.model.entity.DPIATemplateSection;
-import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
-import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
-import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Supplier;
-import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.*;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -82,15 +62,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
@@ -283,6 +255,15 @@ public class AssetsController {
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
+
+        //Roles
+        Map<User, Set<Role>> userRoles = asset.getRoles()
+            .stream()
+            .map(Role::getUsers)
+            .flatMap(Set::stream)
+            .collect(Collectors.toMap(user -> user, User::getAssetRoles));
+
+        model.addAttribute("userRoles", userRoles);
 
 		return "assets/view";
 	}
