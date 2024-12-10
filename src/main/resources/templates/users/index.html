@@ -67,85 +67,86 @@
         const viewUrl = [[@{/admin/users}]];
         const restUrl = [[@{/rest/users}]];
     +]*/
+document.addEventListener("DOMContentLoaded", function(event) {
+    const defaultClassName = {
+        table: 'table table-striped',
+        search: "form-control",
+        header: "d-flex justify-content-end"
+    };
 
-    document.addEventListener("DOMContentLoaded", function(event) {
-        const defaultClassName = {
-            table: 'table table-striped',
-            search: "form-control",
-            header: "d-flex justify-content-end"
-        };
-
-        new gridjs.Grid({
-            className: defaultClassName,
-            sort: {
-                enabled: true,
-                multiColumn: false
+    new gridjs.Grid({
+        className: defaultClassName,
+        sort: {
+            enabled: true,
+            multiColumn: false
+        },
+        columns: [
+            {
+                id: "uuid",
+                name: "Id",
+                hidden: true
             },
-            columns: [
-                {
-                    id: "uuid",
-                    name: "Id",
-                    hidden: true
-                },
-                {
-                    id: "userId",
-                    name: "Bruger"
-                },
-                {
-                    id: "name",
-                    name: "Navn"
-                },
-                {
-                    id: "email",
-                    name: "Email"
-                },
-                 {
-                    id: "accessRole",
-                    name: "Rolle",
-                    formatter: (cell, row) => {
-                        return roleOptions.find(roleOption => roleOption.value === cell).display;
-                    }
-                },
-                {
-                    id: "active",
-                    name: "Aktiv",
-                    formatter: (cell, row) => {
-                        return gridjs.html(cell === true ? '<div class="d-block badge bg-success">Ja</div>' : '<div class="d-block badge bg-danger">Nej</div>');
-                    }
-                },
-                {
-                    id: "actions",
-                    name: "Handlinger",
-                    sort: 0,
-                    width: '100px',
-                    formatter: (cell, row) => {
-                        const id = row.cells[0]['data'];
-                        const userId = row.cells[1]['data'];
-                        const resetButton = `<button type="button" title="Reset brugerens password" class="btn btn-icon btn-outline-light btn-xs me-1"  onclick="users.resetUser('${id}')"><i class="pli-security-remove fs-5"></i></button>`;
-                        const editButton = `<button type="button" title="Rediger" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
-                        const deleteButton = `<button type="button" title="Slet" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
-                        return gridjs.html(resetButton + editButton + deleteButton);
-                    }
+            {
+                id: "userId",
+                name: "Bruger"
+            },
+            {
+                id: "name",
+                name: "Navn"
+            },
+            {
+                id: "email",
+                name: "Email"
+            },
+             {
+                id: "accessRole",
+                name: "Rolle",
+                formatter: (cell, row) => {
+                    return roleOptions.find(roleOption => roleOption.value === cell).display;
                 }
-            ],
-            data: data,
-            language: {
-                'search': {
-                    'placeholder': 'Søg'
-                },
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'results': 'Brugere',
-                    'of': 'af',
-                    'to': 'til',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'page': (page) => `Side ${page}`
+            },
+            {
+                id: "active",
+                name: "Aktiv",
+                formatter: (cell, row) => {
+                    return gridjs.html(cell === true ? '<div class="d-block badge bg-success">Ja</div>' : '<div class="d-block badge bg-danger">Nej</div>');
+                }
+            },
+            {
+                id: "actions",
+                name: "Handlinger",
+                sort: 0,
+                width: '100px',
+                formatter: (cell, row) => {
+                    const id = row.cells[0]['data'];
+                    const userId = row.cells[1]['data'];
+                    console.log(row.cells[4])
+                    const resetButton = row.cells[4].data === 'noaccess' ? '' : `<button type="button" title="Reset brugerens password" class="btn btn-icon btn-outline-light btn-xs me-1"  onclick="users.resetUser('${id}')"><i class="pli-security-remove fs-5"></i></button>`;
+                    const editButton = `<button type="button" title="Rediger" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
+                    const deleteButton = `<button type="button" title="Slet" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
+                    return gridjs.html(`<div class='d-flex gap-1 justify-content-end'>${resetButton}${editButton}${deleteButton}</div>`);
                 }
             }
-        }).render(document.getElementById("userDatatable"));
-    });
+        ],
+        data: data,
+        language: {
+            'search': {
+                'placeholder': 'Søg'
+            },
+            'pagination': {
+                'previous': 'Forrige',
+                'next': 'Næste',
+                'showing': 'Viser',
+                'results': 'Brugere',
+                'of': 'af',
+                'to': 'til',
+                'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                'page': (page) => `Side ${page}`
+            }
+        }
+    }).render(document.getElementById("userDatatable"));
+});
+
 
 /*]]>*/
 </script>

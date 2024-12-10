@@ -27,6 +27,7 @@ public class UsersController {
     final private UserService userService;
 
     final private Map<String, RoleOptionDTO> roleOptions = Map.of(
+        "noaccess", new RoleOptionDTO("noaccess", "Ingen Adgang"),
         "user", new RoleOptionDTO("user", "Bruger"),
         "superuser", new RoleOptionDTO("superuser", "Superbruger"),
         "admin", new RoleOptionDTO("admin", "Administrator")
@@ -115,13 +116,17 @@ public class UsersController {
             .password(UUID.randomUUID().toString()) // This will never work, as the password should be encoded, but setting a UUID will ensure the user cannot login before the user have reset password
             .build();
         Set<String> roles = new HashSet<>();
-        roles.add(Roles.USER);
+        if (user.getAccessRole().equals("user")) {
+            roles.add(Roles.USER);
+        }
         if (user.getAccessRole().equals("admin")) {
-            roles.add(Roles.SUPERUSER);
             roles.add(Roles.ADMINISTRATOR);
+            roles.add(Roles.USER);
         }
         if (user.getAccessRole().equals("superuser")) {
             roles.add(Roles.SUPERUSER);
+            roles.add(Roles.ADMINISTRATOR);
+            roles.add(Roles.USER);
         }
         fullUser.setRoles(roles);
         userService.save(fullUser);
@@ -138,13 +143,17 @@ public class UsersController {
 
         //Update values for the user
         Set<String> roles = new HashSet<>();
-        roles.add(Roles.USER);
-        if (user.getAccessRole().equals("superuser")) {
-            roles.add(Roles.SUPERUSER);
+        if (user.getAccessRole().equals("user")) {
+            roles.add(Roles.USER);
         }
         if (user.getAccessRole().equals("admin")) {
+            roles.add(Roles.ADMINISTRATOR);
+            roles.add(Roles.USER);
+        }
+        if (user.getAccessRole().equals("superuser")) {
             roles.add(Roles.SUPERUSER);
             roles.add(Roles.ADMINISTRATOR);
+            roles.add(Roles.USER);
         }
         dbUser.setRoles(roles);
 
@@ -180,8 +189,14 @@ public class UsersController {
 
 
     private static String getAccessRole(User user) {
-        return user.getRoles().contains(Roles.ADMINISTRATOR)
-            ? "admin"
-            : (user.getRoles().contains(Roles.SUPERUSER) ? "superuser" : "user");
+        if (user.getRoles().contains(Roles.SUPERUSER)) {
+            return "superuser";
+        } else if(user.getRoles().contains(Roles.ADMINISTRATOR)){
+            return "admin";
+        }else if (user.getRoles().contains(Roles.USER)) {
+            return "user";
+        } else {
+            return "noaccess";
+        }
     }
 }
