@@ -76,7 +76,7 @@ public class RolesRestController {
     }
 
     @RequireSuperuser
-    @PostMapping("create")
+    @PostMapping("edit")
     public ResponseEntity<?> createRole(@RequestBody final RoleDTO roleDTO) {
         Role role = new Role();
         if (roleDTO.id() != null) {
@@ -104,6 +104,8 @@ public class RolesRestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+
 
     @RequireSuperuser
     @DeleteMapping("delete/{id}")

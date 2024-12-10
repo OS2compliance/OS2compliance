@@ -1,8 +1,11 @@
 package dk.digitalidentity.controller.mvc.Assets;
 
+import dk.digitalidentity.mapping.RoleMapper;
 import dk.digitalidentity.model.dto.RoleDTO;
+import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -17,11 +20,25 @@ import org.springframework.web.bind.annotation.*;
 @RequestMapping("asset/roles")
 @RequiredArgsConstructor
 public class RoleController {
+    private final RoleService roleService;
+    private final RoleMapper mapper;
 
+    @RequireSuperuser
     @GetMapping("create/{assetId}")
-    public String createRole (final Model model, @PathVariable Long assetId) {
-         model.addAttribute("role", new RoleDTO(null, "", assetId));
-         return "assets/roles/editRoleModal";
+    public String createRole(final Model model, @PathVariable Long assetId) {
+        model.addAttribute("role", new RoleDTO(null, "", assetId));
+        return "assets/roles/editRoleModal";
+    }
+
+    @RequireSuperuser
+    @GetMapping("edit/{roleId}")
+    public String editRole(final Model model, @PathVariable Long roleId) {
+        Role role = roleService.getRole(roleId)
+            .orElseThrow();
+
+
+        model.addAttribute("role", mapper.toDTO(role));
+        return "assets/roles/editRoleModal";
     }
 
 }

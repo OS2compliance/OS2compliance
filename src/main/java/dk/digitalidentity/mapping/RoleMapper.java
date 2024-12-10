@@ -6,6 +6,7 @@ import dk.digitalidentity.model.dto.RoleDTO;
 import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
@@ -21,4 +22,8 @@ public interface RoleMapper {
             role.getAsset().getId()
         )).toList();
     }
+
+
+    @Mapping(target = "assetId", expression = "java(role.getAsset().getId())")
+    RoleDTO toDTO(final Role role);
 }

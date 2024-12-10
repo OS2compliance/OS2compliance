@@ -1,5 +1,4 @@
 
-//let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 const defaultClassName = {
     table: 'table table-striped',
     search: "form-control",
@@ -17,25 +16,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     initAddRoleButton()
 });
-
-function deleteClicked(roleId, name) {
-    Swal.fire({
-      text: `Er du sikker på du vil slette "${name}"?`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#03a9f4',
-      cancelButtonColor: '#df5645',
-      confirmButtonText: 'Ja',
-      cancelButtonText: 'Nej'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${deleteRoleUrl}${roleId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                .then(() => {
-                    window.location.reload();
-                });
-      }
-    })
-}
 
 function initRoleGrid() {
     let gridConfig = {
@@ -84,7 +64,9 @@ function initRoleGrid() {
                         const roleId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${roleId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${roleId}', '${name}')"><i class="pli-trash fs-5"></i></button>
+                            <button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editClicked('${roleId}')"><i class="pli-pencil fs-5"></i></button>`
+                            );
                     }
                 }
             }
@@ -135,7 +117,7 @@ function initAddRoleButton() {
                     //show modal
                     const modalContent = document.getElementById('editRoleModal')
                     const form = modalContent.querySelector('#editRoleModalForm')
-                    form.addEventListener('submit', (event)=> onRoleFormSubmit(event, form))
+                    form.addEventListener('submit', (event)=> onRoleFormSubmit(event, form, null))
 
                     const modal = new bootstrap.Modal(modalContent);
                     modal.show();
@@ -144,18 +126,54 @@ function initAddRoleButton() {
 
 }
 
-async function onRoleFormSubmit(event, form) {
+function deleteClicked(roleId, name) {
+    Swal.fire({
+      text: `Er du sikker på du vil slette "${name}"?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#03a9f4',
+      cancelButtonColor: '#df5645',
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${deleteRoleUrl}${roleId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+      }
+    })
+}
+
+async function onRoleFormSubmit(event, form, roleId) {
     event.preventDefault();
     const assetId = form.getAttribute('data-assetId')
     const formData = new FormData(form)
 
     const data = {
-        id : null,
+        id : roleId,
         name : formData.get('name'),
         assetId : assetId
     }
 
-    await postData(roleUrl+'/create', data)
+    await postData(roleUrl+'/edit', data)
 
     location.reload()
+}
+
+async function editClicked(roleId) {
+    const targetId = 'editRoleModalContainer'
+    const url = viewUrl + 'edit/' + roleId
+
+    //Fetch fragment from server
+    fetchHtml(url, targetId)
+        .then( ()=> {
+            //show modal
+            const modalContent = document.getElementById('editRoleModal')
+            const form = modalContent.querySelector('#editRoleModalForm')
+            form.addEventListener('submit', (event)=> onRoleFormSubmit(event, form, roleId))
+
+            const modal = new bootstrap.Modal(modalContent);
+            modal.show();
+        })
 }
