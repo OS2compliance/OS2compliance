@@ -162,7 +162,8 @@ public class DBSService {
                 dbsOversight.setName(document.getName());
                 dbsOversight.setCreated(document.getCreated());
                 dbsOversight.setLocked(document.getLocked());
-                dbsOversight.setSupplier(dbsSupplierDao.findByDbsId(document.getPath().getSupplier().getId()).orElseThrow(() -> new DBSSynchronizationException("Supplier for id " + document.getPath().getSupplier().getId() + " not found in OS2Compliance.")));
+                dbsOversight.setSupplier(dbsSupplierDao.findByDbsId(document.getPath().getSupplier().getId())
+                    .orElseThrow(() -> new DBSSynchronizationException("Supplier for id " + document.getPath().getSupplier().getId() + " not found in OS2Compliance.")));
                 dbsOversight.setTaskCreated(false);
 
                 toBeAdded.add(dbsOversight);

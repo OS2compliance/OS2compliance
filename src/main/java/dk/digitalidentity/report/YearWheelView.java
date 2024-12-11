@@ -20,19 +20,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static dk.digitalidentity.report.XlsUtil.createCell;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @SuppressWarnings("Convert2MethodRef")
 public class YearWheelView extends AbstractXlsView {
-
+    private CellStyle style;
     @Override
     protected void buildExcelDocument(final Map<String, Object> model, final Workbook workbook, final HttpServletRequest request, final HttpServletResponse response) throws Exception {
         final Sheet sheet = workbook.createSheet("Årshjul " + LocalDate.now().getYear() + "+");
         createMainHeader(workbook, sheet);
 
-        final CellStyle style = workbook.createCellStyle();
+        style = workbook.createCellStyle();
         style.setWrapText(true);
 
         final CellStyle dateStyle = workbook.createCellStyle();
@@ -40,7 +41,6 @@ public class YearWheelView extends AbstractXlsView {
 
         //noinspection unchecked
         final Map<Task, List<Relatable>> taskMap = (Map<Task, List<Relatable>>) model.get("taskMap");
-
         final List<TaskLog> taskLogs = (List<TaskLog>) model.get("taskLogs");
 
         int rowCount = 1;
@@ -51,42 +51,25 @@ public class YearWheelView extends AbstractXlsView {
                 .filter(e -> e.getRelationType() == RelationType.ASSET)
                 .map(e -> e.getName())
                 .collect(Collectors.joining(","));
-            createCell(row, 0, task.getName(), style);
-            createCell(row, 1, task.getTaskType().getMessage(), style);
-            createCell(row, 2, nullSafe(() -> task.getResponsibleUser().getUserId(), ""), style);
-            createCell(row, 3, nullSafe(() -> task.getResponsibleUser().getName(), ""), style);
-            createCell(row, 4, nullSafe(() -> task.getResponsibleOu().getName(), ""), style);
+            createTaskColumns(row, task, relatedAssets);
             createCell(row, 5, nullSafe(() -> task.getNextDeadline()), dateStyle);
-            createCell(row, 6, nullSafe(() -> task.getRepetition().getMessage()), style);
-            createCell(row, 7, nullSafe(() -> task.getTags().stream().map(Tag::getValue)
-                .collect(Collectors.joining(",")), ""), style);
-            createCell(row, 8, relatedAssets, style);
-            createCell(row, 9, nullSafe(() -> task.getDescription(), ""), style);
-
             if (task.getTaskType() == TaskType.TASK) {
                 Optional<TaskLog> taskLog = taskLogs.stream().filter(log -> log.getTask() == task).findFirst();
                 createCell(row, 10, taskLog.isPresent() ? "Udført" : "", style);
+                createCell(row, 11, taskLog.map(tl -> tl.getComment()).orElse(""), style);
+                createCell(row, 12, taskLog.map(tl -> tl.getCompleted()).orElse(null), dateStyle);
             } else if (task.getTaskType() == TaskType.CHECK) {
                 List<TaskLog> checkTaskLogs = taskLogs.stream()
                     .filter(log -> log.getTask() == task).toList();
 
                 for (TaskLog taskLog : checkTaskLogs) {
                     final Row logRow = sheet.createRow(rowCount++);
-                    createCell(logRow, 0, task.getName(), style);
-                    createCell(logRow, 1, task.getTaskType().getMessage(), style);
-                    createCell(logRow, 2, nullSafe(() -> task.getResponsibleUser().getUserId(), ""), style);
-                    createCell(logRow, 3, nullSafe(() -> task.getResponsibleUser().getName(), ""), style);
-                    createCell(logRow, 4, nullSafe(() -> task.getResponsibleOu().getName(), ""), style);
+                    createTaskColumns(logRow, task, relatedAssets);
                     createCell(logRow, 5, nullSafe(() -> taskLog.getDeadline()), dateStyle);
-                    createCell(logRow, 6, nullSafe(() -> task.getRepetition().getMessage()), style);
-                    createCell(logRow, 7, nullSafe(() -> task.getTags().stream().map(Tag::getValue)
-                        .collect(Collectors.joining(",")), ""), style);
-                    createCell(logRow, 8, relatedAssets, style);
-                    createCell(logRow, 9, nullSafe(() -> taskLog.getComment(), ""), style);
                     createCell(logRow, 10, taskLog.getLocalizedEnums() , style);
+                    createCell(logRow, 11, nullSafe(() -> taskLog.getComment(), ""), style);
+                    createCell(logRow, 12, nullSafe(() -> taskLog.getCompleted(),  null), dateStyle);
                 }
-
-
             }
         }
         sheet.autoSizeColumn(0);
@@ -96,11 +79,20 @@ public class YearWheelView extends AbstractXlsView {
         sheet.autoSizeColumn(4);
         // Date fields needs a little extra as excel shows it as danish format which takes up a bit more space
         sheet.setColumnWidth(5, 11 * 256);
-        sheet.autoSizeColumn(6);
-        sheet.autoSizeColumn(7);
-        sheet.autoSizeColumn(8);
-        sheet.autoSizeColumn(9);
-        sheet.autoSizeColumn(10);
+        IntStream.range(6, 13).forEach(i -> sheet.autoSizeColumn(i));
+    }
+
+    private void createTaskColumns(final Row row, final Task task, final String relatedAssets) {
+        createCell(row, 0, task.getName(), style);
+        createCell(row, 1, task.getTaskType().getMessage(), style);
+        createCell(row, 2, nullSafe(() -> task.getResponsibleUser().getUserId(), ""), style);
+        createCell(row, 3, nullSafe(() -> task.getResponsibleUser().getName(), ""), style);
+        createCell(row, 4, nullSafe(() -> task.getResponsibleOu().getName(), ""), style);
+        createCell(row, 6, nullSafe(() -> task.getRepetition().getMessage()), style);
+        createCell(row, 7, nullSafe(() -> task.getTags().stream().map(Tag::getValue)
+            .collect(Collectors.joining(",")), ""), style);
+        createCell(row, 8, relatedAssets, style);
+        createCell(row, 9, nullSafe(() -> task.getDescription(), ""), style);
     }
 
     private void createMainHeader(final Workbook workbook, final Sheet sheet) {
@@ -121,5 +113,7 @@ public class YearWheelView extends AbstractXlsView {
         createCell(header, 8, "Aktiv", headerStyle);
         createCell(header, 9, "Beskrivelse", headerStyle);
         createCell(header, 10, "Resultat", headerStyle);
+        createCell(header, 11, "Kommentar til udførsel", headerStyle);
+        createCell(header, 12, "Udført", headerStyle);
     }
 }
