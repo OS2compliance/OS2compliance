@@ -53,4 +53,137 @@ function UserService () {
         });
     }
 
+
+    this.openAddAssetModal = async (userUuid)=> {
+        const addAssetUrl = `${viewUrl}/${userUuid}/asset/add`;
+        const modalId = 'addAssetModal'
+        await fetchHtml(addAssetUrl, modalId)
+
+        const modalcontainer = document.getElementById(modalId)
+
+        choiceService.initAssetSelect('assetSelector')
+
+        const addAssetForm = modalcontainer.querySelector('#addAssetForm')
+        addAssetForm.addEventListener('submit', (event)=>this.submitAssets(event, addAssetForm, userUuid))
+
+        const modal = new bootstrap.Modal(modalcontainer);
+        modal.show();
+    }
+
+    this.submitAssets = async(event, form, uuid) => {
+        event.preventDefault()
+
+        //Submit assets
+        const formData = new FormData(form)
+        const data = formData.getAll('assets')
+        const url = `${restUrl}/${uuid}/asset/add`;
+        await postData(url, data)
+
+        //refresh detail view
+        this.fetchUserDetailPartial(uuid)
+
+    }
+
+
+}
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    const defaultClassName = {
+        table: 'table table-striped',
+        search: "form-control",
+        header: "d-flex justify-content-end"
+    };
+
+    const grid = new gridjs.Grid({
+        className: defaultClassName,
+        sort: {
+            enabled: true,
+            multiColumn: false
+        },
+        columns: [
+            {
+                id: "uuid",
+                name: "Id",
+                hidden: true
+            },
+            {
+                id: "userId",
+                name: "Bruger",
+                formatter: (cell, row) => {
+                    return gridjs.html( `<span data-user-uuid="${row.cells[0].data}">${cell}</span>` )
+                }
+            },
+            {
+                id: "name",
+                name: "Navn"
+            },
+            {
+                id: "email",
+                name: "Email"
+            },
+             {
+                id: "accessRole",
+                name: "Rettigheder",
+                formatter: (cell, row) => {
+                    return roleOptions.find(roleOption => roleOption.value === cell).display;
+                }
+            },
+            {
+                id: "active",
+                name: "Aktiv",
+                formatter: (cell, row) => {
+                    return gridjs.html(cell === true ? '<div class="d-block badge bg-success">Ja</div>' : '<div class="d-block badge bg-danger">Nej</div>');
+                }
+            },
+            {
+                id: "actions",
+                name: "Handlinger",
+                sort: 0,
+                width: '100px',
+                formatter: (cell, row) => {
+                    const id = row.cells[0]['data'];
+                    const userId = row.cells[1]['data'];
+                    const resetButton = row.cells[4].data === 'noaccess' ? '' : `<button type="button" title="Reset brugerens password" class="btn btn-icon btn-outline-light btn-xs me-1"  onclick="users.resetUser('${id}')"><i class="pli-security-remove fs-5"></i></button>`;
+                    const editButton = `<button type="button" title="Rediger" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
+                    const deleteButton = `<button type="button" title="Slet" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
+                    return gridjs.html(`<div class='d-flex gap-1 justify-content-end'>${resetButton}${editButton}${deleteButton}</div>`);
+                }
+            }
+        ],
+        data: data,
+        language: {
+            'search': {
+                'placeholder': 'Søg'
+            },
+            'pagination': {
+                'previous': 'Forrige',
+                'next': 'Næste',
+                'showing': 'Viser',
+                'results': 'Brugere',
+                'of': 'af',
+                'to': 'til',
+                'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                'page': (page) => `Side ${page}`
+            }
+        }
+    })
+
+    grid.render(document.getElementById("userDatatable"));
+
+    //On row element click listener
+    grid.on('rowClick', (...args) => onGridRowClick(...args));
+});
+
+
+function onGridRowClick(args) {
+    const rowElement = args.target.closest('.gridjs-tr')
+    const uuid = rowElement.querySelector('[data-user-uuid]').getAttribute('data-user-uuid')
+
+    fetchUserDetailPartial(uuid)
+}
+
+async function fetchUserDetailPartial (uuid) {
+    const userDetailURL = viewUrl + '/' + uuid
+    const containerId = 'userDetailContainer'
+    fetchHtml(userDetailURL, containerId)
 }

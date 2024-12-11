@@ -257,7 +257,7 @@ public class AssetsController {
         }
 
         //Roles
-        Map<User, Set<Role>> userRoles = asset.getRoles()
+        Map<User, Collection<Role>> userRoles = asset.getRoles()
             .stream()
             .map(Role::getUsers)
             .flatMap(Set::stream)

@@ -1,10 +1,14 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.model.dto.RoleOptionDTO;
-import dk.digitalidentity.model.dto.UserWithRoleDTO;
+import dk.digitalidentity.mapping.RoleMapper;
+import dk.digitalidentity.mapping.UserMapper;
+import dk.digitalidentity.model.dto.*;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
@@ -25,13 +29,11 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class UsersController {
     final private UserService userService;
+    private final UserMapper userMapper;
+    private final AssetService assetService;
 
-    final private Map<String, RoleOptionDTO> roleOptions = Map.of(
-        "noaccess", new RoleOptionDTO("noaccess", "Ingen Adgang"),
-        "user", new RoleOptionDTO("user", "Bruger"),
-        "superuser", new RoleOptionDTO("superuser", "Superbruger"),
-        "admin", new RoleOptionDTO("admin", "Administrator")
-    );
+    final private Map<String, RoleOptionDTO> roleOptions = Map.of("noaccess", new RoleOptionDTO("noaccess", "Ingen Adgang"), "user", new RoleOptionDTO("user", "Bruger"), "superuser", new RoleOptionDTO("superuser", "Superbruger"), "admin", new RoleOptionDTO("admin", "Administrator"));
+    private final RoleMapper roleMapper;
 
     @Profile("locallogin")
     @GetMapping("all")
@@ -40,19 +42,7 @@ public class UsersController {
         model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
 
         //Model for list of users - do not set password for DTO!
-        model.addAttribute("allUsers", userService.getAll().stream().map(user -> UserWithRoleDTO.builder()
-                .uuid(user.getUuid())
-                .userId(user.getUserId())
-                .name(user.getName())
-                .email(user.getEmail())
-                .active(user.getActive())
-                .accessRole(getAccessRole(user))
-                .build()
-            )
-            .sorted(Comparator.comparing(UserWithRoleDTO::getActive)
-                .reversed()
-                .thenComparing(UserWithRoleDTO::getUserId))
-            .collect(Collectors.toList()));
+        model.addAttribute("allUsers", userService.getAll().stream().map(user -> UserWithRoleDTO.builder().uuid(user.getUuid()).userId(user.getUserId()).name(user.getName()).email(user.getEmail()).active(user.getActive()).accessRole(getAccessRole(user)).note(user.getNote()).build()).sorted(Comparator.comparing(UserWithRoleDTO::getActive).reversed().thenComparing(UserWithRoleDTO::getUserId)).collect(Collectors.toList()));
 
         //model for creating new users
         model.addAttribute("user", UserWithRoleDTO.builder().build());
@@ -62,6 +52,48 @@ public class UsersController {
 
         return "users/index";
     }
+
+    public record AssetListItemDTO(Long id, String name) {
+    }
+
+    @Profile("locallogin")
+    @GetMapping("{userUuid}")
+    public String userDetailFragment(final Model model, @PathVariable String userUuid) {
+
+        User user = userService.findByUuidIncludingInactive(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("user", userMapper.toDTO(user));
+
+        Map<AssetListItemDTO, List<Role>> assets = user.getAssetRoles().stream().collect(Collectors.groupingBy(role -> {
+            Asset asset = role.getAsset();
+            return new AssetListItemDTO(asset.getId(), asset.getName());
+        }));
+
+        Map<AssetListItemDTO, List<RoleDTO>> assetRoleMapping = assets.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, roleList -> roleMapper.toDTO(roleList.getValue())));
+
+        model.addAttribute("assetRoles", assetRoleMapping);
+
+        model.addAttribute("assets", assetService.getAllSortedByName().stream().map(asset -> new AssetListItemDTO(asset.getId(), asset.getName())).toList());
+
+        return "users/fragments/details";
+    }
+
+    @Profile("locallogin")
+    @GetMapping("{userUuid}/asset/add")
+    public String addAssetFragment(final Model model, @PathVariable String userUuid) {
+
+        User user = userService.findByUuidIncludingInactive(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        model.addAttribute("user", userMapper.toDTO(user));
+
+        Set<AssetListItemDTO> assets = user.getAssetRoles().stream()
+            .map(Role::getAsset)
+            .map(asset -> new AssetListItemDTO(asset.getId(), asset.getName())).collect(Collectors.toSet());
+
+        model.addAttribute("assets", assets);
+
+        return "users/fragments/addAssetModal";
+    }
+
+
 
     @Profile("locallogin")
     @GetMapping("create")
@@ -85,18 +117,10 @@ public class UsersController {
         model.addAttribute("roleOptions", new ArrayList<>(roleOptions.values()));
 
         //model for user being edited - do not set Password for DTO!
-        User user = userService.findByUuidIncludingInactive(id)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        User user = userService.findByUuidIncludingInactive(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 
-        model.addAttribute("user", UserWithRoleDTO.builder()
-            .uuid(user.getUuid())
-            .userId(user.getUserId())
-            .name(user.getName())
-            .email(user.getEmail())
-            .active(user.getActive())
-            .accessRole(getAccessRole(user))
-            .build());
+        model.addAttribute("user", UserWithRoleDTO.builder().uuid(user.getUuid()).userId(user.getUserId()).name(user.getName()).email(user.getEmail()).active(user.getActive()).accessRole(getAccessRole(user)).note(user.getNote()).build());
 
         //Action specified to set the posting endpoint of the fragment
         model.addAttribute("action", "edit");
@@ -108,12 +132,7 @@ public class UsersController {
     @Transactional
     @PostMapping("create")
     public String createUser(@ModelAttribute UserWithRoleDTO user) {
-        final User fullUser = User.builder()
-            .userId(user.getUserId())
-            .name(user.getName())
-            .active(user.getActive())
-            .email(user.getEmail())
-            .password(UUID.randomUUID().toString()) // This will never work, as the password should be encoded, but setting a UUID will ensure the user cannot login before the user have reset password
+        final User fullUser = User.builder().userId(user.getUserId()).name(user.getName()).active(user.getActive()).email(user.getEmail()).note(user.getNote()).password(UUID.randomUUID().toString()) // This will never work, as the password should be encoded, but setting a UUID will ensure the user cannot login before the user have reset password
             .build();
         Set<String> roles = new HashSet<>();
         if (user.getAccessRole().equals("user")) {
@@ -138,8 +157,7 @@ public class UsersController {
     @PostMapping("edit")
     public String editUser(@ModelAttribute UserWithRoleDTO user) {
         //find user to update
-        User dbUser = userService.findByUuidIncludingInactive(user.getUuid())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        User dbUser = userService.findByUuidIncludingInactive(user.getUuid()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         //Update values for the user
         Set<String> roles = new HashSet<>();
@@ -175,6 +193,12 @@ public class UsersController {
             dbUser.setEmail(updatedEmail);
         }
 
+        String updatedNote = user.getNote();
+        String existingNote = dbUser.getNote();
+        if (updatedNote != null && !updatedNote.equals(existingNote) && !updatedNote.isEmpty()) {
+            dbUser.setNote(updatedNote);
+        }
+
         Boolean updatedActiveStatus = user.getActive();
         Boolean existingctiveStatus = dbUser.getActive();
         if (updatedActiveStatus != null && !updatedActiveStatus.equals(existingctiveStatus)) {
@@ -191,9 +215,9 @@ public class UsersController {
     private static String getAccessRole(User user) {
         if (user.getRoles().contains(Roles.SUPERUSER)) {
             return "superuser";
-        } else if(user.getRoles().contains(Roles.ADMINISTRATOR)){
+        } else if (user.getRoles().contains(Roles.ADMINISTRATOR)) {
             return "admin";
-        }else if (user.getRoles().contains(Roles.USER)) {
+        } else if (user.getRoles().contains(Roles.USER)) {
             return "user";
         } else {
             return "noaccess";

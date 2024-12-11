@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<body>
+<div th:fragment="userEditModal (user, action, roleOptions)" class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Tilføj Aktiver</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form th:id="addAssetForm" class="row g-3" action="#" th:action="@{'/rest/users/'+*{uuid}+'/asset/add'}"
+              th:object="${user}"
+              method="post">
+            <div class="modal-body m-3">
+                <input id="identifier" th:field="*{uuid}" type="hidden">
+
+                <div class="row mt-4">
+                    <label th:for="assetSelector" class="col-sm-4 col-form-label">Rolle</label>
+                    <div class="col-sm-8">
+                        <select class="choices__input" data-type="select-multiple" data-trigger="" name="assets" th:id="assetSelector" hidden="" tabindex="-1" multiple>
+                            <option th:each="asset : ${assets}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
+                        </select>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" th:form="addAssetForm"
+                        th:text="Tilføj">Tilføj
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

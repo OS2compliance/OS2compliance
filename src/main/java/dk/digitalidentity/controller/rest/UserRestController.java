@@ -20,10 +20,12 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -67,6 +69,13 @@ public class UserRestController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         userService.sendForgottenPasswordMail(user);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping("{userUuid}/asset/add")
+    public ResponseEntity<?> addAssetFragment(@PathVariable String userUuid, @RequestBody List<Long> assetIds) {
+
+
+        return new ResponseEntity<>(HttpStatus.OK);
     }
 
 }
