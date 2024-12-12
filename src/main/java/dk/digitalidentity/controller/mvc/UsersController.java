@@ -12,6 +12,7 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Profile;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Controller;
@@ -77,20 +78,28 @@ public class UsersController {
         return "users/fragments/details";
     }
 
+    public record AssetRoleStateDTO(Long id, String name, Boolean isSelected) {}
+    public record AssetWithRoleDTO(Long id, String name, List<AssetRoleStateDTO> roles){}
     @Profile("locallogin")
-    @GetMapping("{userUuid}/asset/add")
-    public String addAssetFragment(final Model model, @PathVariable String userUuid) {
+    @GetMapping("{userUuid}/role/{assetId}")
+    public String addAssetRoleFragment(final Model model, @PathVariable String userUuid, @PathVariable Long assetId) {
 
-        User user = userService.findByUuidIncludingInactive(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+            User user = userService.findByUuidIncludingInactive(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("user", userMapper.toDTO(user));
 
-        Set<AssetListItemDTO> assets = user.getAssetRoles().stream()
-            .map(Role::getAsset)
-            .map(asset -> new AssetListItemDTO(asset.getId(), asset.getName())).collect(Collectors.toSet());
+        Asset asset = assetService.findById(assetId)
+            .orElseThrow();
 
-        model.addAttribute("assets", assets);
+        AssetWithRoleDTO assetDTO = new AssetWithRoleDTO(
+            asset.getId(),
+            asset.getName(),
+            asset.getRoles().stream()
+                .map( role ->  new AssetRoleStateDTO(role.getId(), role.getName(), user.getAssetRoles().contains(role)))
+                .sorted(Comparator.comparing(a -> a.name)).toList()
+        );
 
-        return "users/fragments/addAssetModal";
+        model.addAttribute("asset", assetDTO);
+        return "users/fragments/addAssetRoleModal :: addAssetRoleModal";
     }
 
 
@@ -204,6 +213,8 @@ public class UsersController {
         if (updatedActiveStatus != null && !updatedActiveStatus.equals(existingctiveStatus)) {
             dbUser.setActive(updatedActiveStatus);
         }
+
+
 
         //save user to database
         userService.save(dbUser);

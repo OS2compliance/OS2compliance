@@ -14,7 +14,7 @@
             </div>
             <div class="card-body d-flex flex-column gap-3 bg-light">
                 <div class="row">
-                    <label for="userNote" class="col-3 col-form-label">Note</label>
+                    <label for="userNote" class="col-2 col-form-label">Note</label>
                     <div class="col">
                         <textarea id="userNote" class="form-control editField"
                                   placeholder="Indtast note" th:field="*{note}" rows="3"></textarea>
@@ -22,22 +22,64 @@
                 </div>
 
                 <div class="row">
-                    <label for="assetsList" class="col-3 col-form-label">Aktiver</label>
+                    <label for="assetsList" class="col-2 col-form-label">Aktiver</label>
                     <div class="col d-flex flex-column gap-1">
 
-<!--                        <div class="justify-content-end d-flex" >-->
-<!--                            <button type="button" th:onclick="users.openAddAssetModal([[${user.uuid}]])"-->
-<!--                                    class="btn btn-secondary hstack gap-2 col-6">-->
-<!--                                <i class="ti-plus"></i> <span class="vr"></span>Tilføj Aktiv-->
-<!--                            </button>-->
-<!--                        </div>-->
-                        <div id="assetsList" class="form-control h-100">
-                            <div th:each="asset : ${assets}" class="row">
-                                <span th:text="${asset.name}" class="col"></span>
-                                <span th:text="${#maps.containsKey(assetRoles, asset)} ? ${assetRoles[asset]} : '0'" class="col"></span>
+                        <!--                        <div class="justify-content-end d-flex" >-->
+                        <!--                            <button type="button" th:onclick="users.openAddAssetModal([[${user.uuid}]])"-->
+                        <!--                                    class="btn btn-secondary hstack gap-2 col-6">-->
+                        <!--                                <i class="ti-plus"></i> <span class="vr"></span>Tilføj Aktiv-->
+                        <!--                            </button>-->
+                        <!--                        </div>-->
+                        <ul id="assetsList" class="accordion form-control p-0 h-100 gap-1 d-flex flex-column p-1"
+                            style="list-style:none">
+                            <li th:each="asset : ${assets}"
+                                th:id="'asset_'+${asset.id}+'_accordion'">
+                                <div th:if="${#maps.containsKey(assetRoles, asset)}" class="accordion-item">
+                                    <div class="accordion-heading d-flex gap-1" th:id="'asset_'+${asset.id}+'_heading'">
+                                        <button class="accordion-button collapsed bg-primary text-light gap-1 p-1 col"
+                                                type="button" data-bs-toggle="collapse" aria-expanded="false"
+                                                th:attr="aria-controls='asset_'+${asset.id}+'_content', data-bs-target='#asset_'+${asset.id}+'_content'">
+                                            <span
+                                                th:text="${#lists.size( assetRoles.get(asset))}"
+                                                class="col-1 badge bg-info"></span>
+                                            <span th:text="${asset.name}" class="col"></span>
+                                        </button>
+                                        <button type="button"
+                                                th:onclick="users.onAddAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
+                                                class="btn btn-icon btn-secondary btn-xs ti-plus col-1 position-relative"></button>
+                                    </div>
+                                    <div class="accordion-collapse collapse"
+                                         th:attr="aria-labeledby='asset_'+${asset.id}+'_heading', data-bs-parent='assetsList'"
+                                         th:id="'asset_'+${asset.id}+'_content'">
+                                        <ul class="list-group list-group-flush border">
+                                            <li th:each="role : ${assetRoles.get(asset)}" class="list-group-item"
+                                                th:text="${role.name}">
+                                            </li>
+                                        </ul>
+                                    </div>
+                                </div>
 
-                            </div>
-                        </div>
+                                <div th:unless="${#maps.containsKey(assetRoles, asset)}" class="d-flex gap-1"
+                                     th:id="'asset_'+${asset.id}+'_accordion'">
+                                    <div
+                                        class="no-content-accordion bg-light text-grey gap-1 p-1 d-flex justify-content-between rounded"
+                                        type="button" aria-expanded="false">
+                                        <span th:text="0" class="col-1 badge bg-info"></span>
+                                        <span th:text="${asset.name}" class="col"></span>
+
+                                        <span style="width:.75rem"></span>
+                                        <!-- To match ::After element in the accordion -->
+                                    </div>
+                                    <button type="button"
+                                            th:onclick="users.onAddAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
+                                            class="btn btn-icon btn-secondary btn-xs ti-plus col-1">
+                                    </button>
+                                </div>
+
+                            </li>
+
+                        </ul>
                     </div>
                 </div>
             </div>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<body>
+<div th:fragment="addAssetRoleModal" class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" >Tildel Roller</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form th:id="addRoleForm" class="row g-3" action="#" th:action="@{'/rest/users/'+${user.uuid}+'/role/add'}"
+              th:object="${asset}"
+              method="post">
+            <div class="modal-body m-3">
+                <input id="identifier" th:field="*{id}" type="hidden">
+
+                <div th:each="role : *{roles}" class="row" >
+                    <label th:for="'roleinput_'+${role.id}" class="col-sm-4 col-form-label" th:text="${role.name}"></label>
+                    <div class="col-sm-8">
+                        <div  class="form-check form-switch">
+                            <input th:id="'roleinput_'+${role.id}" type="checkbox" class="form-check-input roleInput" th:checked="${role.isSelected == true}"></input>
+                        </div>
+                    </div>
+                </div>
+
+
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" th:form="addRoleForm"
+                        th:text="Tilføj">Tilføj
+                </button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+</body>
+</html>

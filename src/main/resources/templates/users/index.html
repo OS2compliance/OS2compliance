@@ -3,6 +3,7 @@
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/users/userAdministration.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/users.css}"/>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -40,10 +41,10 @@
                 <article class="d-md-flex gap-4">
                     <div class="flex-fill">
                         <div class="card mb-3 flex-row">
-                            <div class="card-body col-8">
+                            <div class="card-body col-7 pe-0">
                                 <div id="userDatatable"></div>
                             </div>
-                            <div id="userDetailContainer" class="card-body col-4">
+                            <div id="userDetailContainer" class="card-body col-5">
                                 <div class="card border">
                                     <div class="card-header">
                                         Vælg en bruger for at se detaljer
@@ -67,7 +68,7 @@
         th:replace="~{users/fragments/edit.html :: userEditModal (user=${user}, action=${action}, roleOptions=${roleOptions})}"></div>
 </div>
 
-<div class="modal fade" id="addAssetModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+<div class="modal fade" id="addAssetRoleModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
 </div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>

@@ -54,34 +54,37 @@ function UserService () {
     }
 
 
-    this.openAddAssetModal = async (userUuid)=> {
-        const addAssetUrl = `${viewUrl}/${userUuid}/asset/add`;
-        const modalId = 'addAssetModal'
-        await fetchHtml(addAssetUrl, modalId)
-
-        const modalcontainer = document.getElementById(modalId)
-
-        choiceService.initAssetSelect('assetSelector')
-
-        const addAssetForm = modalcontainer.querySelector('#addAssetForm')
-        addAssetForm.addEventListener('submit', (event)=>this.submitAssets(event, addAssetForm, userUuid))
-
-        const modal = new bootstrap.Modal(modalcontainer);
-        modal.show();
-    }
-
-    this.submitAssets = async(event, form, uuid) => {
+    this.submitAssetRole = async(event, form, uuid, assetId) => {
         event.preventDefault()
 
         //Submit assets
-        const formData = new FormData(form)
-        const data = formData.getAll('assets')
-        const url = `${restUrl}/${uuid}/asset/add`;
+
+        const checkBoxes = document.querySelectorAll('.roleInput:checked')
+        const data = {
+            assetId :assetId,
+            selectedRoleIds: [...checkBoxes].map(box => box.id.split('_')[1])
+        }
+
+        const url = `${restUrl}/${uuid}/role/add`;
         await postData(url, data)
 
         //refresh detail view
-        this.fetchUserDetailPartial(uuid)
+        fetchUserDetailPartial(uuid)
+    }
 
+    this.onAddAssetRole = async (event, assetId, userUuid)=> {
+        const addAssetUrl = `${viewUrl}/${userUuid}/role/${assetId}`;
+        const modalId = 'addAssetRoleModal'
+        await fetchHtml(addAssetUrl, modalId)
+
+
+        const modalcontainer = document.getElementById(modalId)
+        const addAssetRoleForm = modalcontainer.querySelector('#addRoleForm')
+
+        addAssetRoleForm.addEventListener('submit', (event)=>this.submitAssetRole(event, addAssetRoleForm, userUuid, assetId))
+
+        const modal = new bootstrap.Modal(modalcontainer);
+        modal.show();
     }
 
 
