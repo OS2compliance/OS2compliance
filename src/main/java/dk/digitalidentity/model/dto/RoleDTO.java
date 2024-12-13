@@ -6,5 +6,5 @@ public record RoleDTO(
     Long id,
     String name,
     Long assetId,
-    List<String> userNames
+    List<UserDTO> users
 ) {}

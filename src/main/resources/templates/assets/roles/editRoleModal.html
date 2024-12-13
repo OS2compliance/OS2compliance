@@ -23,6 +23,15 @@
                             </div>
                         </div>
 
+                        <div class="row mt-3">
+                            <label for="name" class="col-lg-4 col-form-label">Roller</label>
+                            <div class="col-lg-8">
+                                <select class="form-control form-select choices__input" name="roleUserSelect" data-type="select-multiple"
+                                        data-trigger="" id="roleUserSelect" hidden="" tabindex="-1" multiple>
+                                    <option th:each="user : ${role.users}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
+                                </select>
+                            </div>
+                        </div>
                     </form>
                 </div>
                 <div class="modal-footer">

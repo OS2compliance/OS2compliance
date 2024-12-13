@@ -256,14 +256,7 @@ public class AssetsController {
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
 
-        //Roles
-        Map<User, Collection<Role>> userRoles = asset.getRoles()
-            .stream()
-            .map(Role::getUsers)
-            .flatMap(Set::stream)
-            .collect(Collectors.toMap(user -> user, User::getAssetRoles));
 
-        model.addAttribute("userRoles", userRoles);
 
 		return "assets/view";
 	}

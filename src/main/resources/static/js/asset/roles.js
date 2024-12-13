@@ -20,19 +20,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function initRoleGrid() {
     let gridConfig = {
         className: defaultClassName,
-        search: {
-            keyword: searchService.getSavedSearch(),
-            server: {
-                url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-            },
-            debounceTimeout: 1000
-        },
-        pagination: {
-            limit: 50,
-            server: {
-                url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-            }
-        },
         sort: {
             enabled: true,
             multiColumn: false,
@@ -57,13 +44,12 @@ function initRoleGrid() {
             {
                 name: "Brugere",
                 formatter: (cell, row) => {
-                console.log(cell)
-                const templateFunction = (userName) => `<span class="badge bg-light rounded-pill">${userName}</span>`
+                const templateFunction = (userDTO) => `<span class="badge bg-primary text-light rounded-pill p-2">${userDTO.name}</span>`
                 let htmlArray = []
                 for (const user of cell) {
                     htmlArray.push(templateFunction(user))
                 }
-                    return gridjs.html( htmlArray.toString() );
+                    return gridjs.html( htmlArray.join(" ") );
                 }
             },
             {
@@ -77,45 +63,27 @@ function initRoleGrid() {
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
                             `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${roleId}', '${name}')"><i class="pli-trash fs-5"></i></button>
-                            <button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editClicked('${roleId}')"><i class="pli-pencil fs-5"></i></button>`
+                            <button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editClicked('${roleId}', '${assetId}')"><i class="pli-pencil fs-5"></i></button>`
                             );
                     }
                 }
             }
         ],
         server:{
-            url: roleUrl,
+            url: roleUrl + '/' + assetId,
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': token
             },
-            then: data => data.content.map(roleDTO =>
+            then: data => data.map(roleDTO =>
                 [ roleDTO.id,
                 roleDTO.name,
-                roleDTO.userNames
+                roleDTO.users
                 ]
-            ),
-            total: data => data.totalCount
-        },
-        language: {
-            'search': {
-                'placeholder': 'Søg'
-            },
-            'pagination': {
-                'previous': 'Forrige',
-                'next': 'Næste',
-                'showing': 'Viser',
-                'results': 'Roller',
-                'of': 'af',
-                'to': 'til',
-                'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                'page': (page) => `Side ${page}`
-            }
+            )
         }
     };
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "roleDatatable" ));
-    searchService.initSearch(grid, gridConfig);
-    gridOptions.init(grid, document.getElementById("gridOptions"));
 
     return gridConfig
 }
@@ -166,10 +134,13 @@ async function onRoleFormSubmit(event, form, roleId) {
     const formData = new FormData(form)
 
     const data = {
-        id : roleId,
-        name : formData.get('name'),
-        assetId : assetId
-    }
+         roleDTO : {
+            id : roleId,
+            name : formData.get('name'),
+            assetId : assetId,
+        },
+        userIds : formData.getAll('roleUserSelect')
+     }
 
     await postData(roleUrl+'/edit', data)
 
@@ -178,7 +149,7 @@ async function onRoleFormSubmit(event, form, roleId) {
 
 async function editClicked(roleId) {
     const targetId = 'editRoleModalContainer'
-    const url = viewUrl + 'edit/' + roleId
+    const url = viewUrl + 'edit/' + assetId +'/' + roleId
 
     //Fetch fragment from server
     fetchHtml(url, targetId)
@@ -187,6 +158,8 @@ async function editClicked(roleId) {
             const modalContent = document.getElementById('editRoleModal')
             const form = modalContent.querySelector('#editRoleModalForm')
             form.addEventListener('submit', (event)=> onRoleFormSubmit(event, form, roleId))
+
+            usersSelect = choiceService.initUserSelect('roleUserSelect')
 
             const modal = new bootstrap.Modal(modalContent);
             modal.show();

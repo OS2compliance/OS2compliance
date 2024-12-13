@@ -1,16 +1,12 @@
 package dk.digitalidentity.mapping;
 
-import dk.digitalidentity.controller.rest.Assets.RolesRestController;
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.RoleDTO;
+import dk.digitalidentity.model.dto.UserDTO;
 import dk.digitalidentity.model.entity.Role;
-import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
@@ -21,12 +17,30 @@ public interface RoleMapper {
             role.getId(),
             role.getName(),
             role.getAsset().getId(),
-            role.getUsers().stream().map(User::getName).toList()
+            role.getUsers().stream().map(user -> UserDTO.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .uuid(user.getUuid())
+                .note(user.getNote())
+                .active(user.getActive())
+                .build()).toList()
         )).toList();
     }
 
-
-    @Mapping(target = "assetId", expression = "java(role.getAsset().getId())")
-    @Mapping(target = "userNames", expression = "java(role.getUsers().stream().map(user -> user.getName()).toList())")
-    RoleDTO toDTO(final Role role);
+    default RoleDTO toDTO(final Role role) {
+        return new RoleDTO(
+            role.getId(),
+            role.getName(),
+            role.getAsset().getId(),
+            role.getUsers().stream().map(user -> UserDTO.builder()
+                .userId(user.getUserId())
+                .email(user.getEmail())
+                .name(user.getName())
+                .uuid(user.getUuid())
+                .note(user.getNote())
+                .active(user.getActive())
+                .build()).toList()
+        );
+    };
 }

@@ -34,8 +34,8 @@ public class RoleController {
     }
 
     @RequireSuperuser
-    @GetMapping("edit/{roleId}")
-    public String editRole(final Model model, @PathVariable Long roleId) {
+    @GetMapping("edit/{assetId}/{roleId}")
+    public String editRole(final Model model, @PathVariable Long assetId, @PathVariable Long roleId) {
         Role role = roleService.getRole(roleId)
             .orElseThrow();
 
