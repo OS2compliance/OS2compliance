@@ -47,14 +47,14 @@ private final RoleDao roleDao;
     private final UserService userService;
 
     @PostMapping("{assetId}")
-    public Set<RoleDTO> list(@PathVariable(name="assetId") final Long assetId,
+    public List<RoleDTO> list(@PathVariable(name="assetId") final Long assetId,
                               @RequestParam(name = "order", required = false) final String order,
                               @RequestParam(name = "dir", required = false) final String dir) {
 
         Asset asset = assetService.findById(assetId)
             .orElseThrow();
 
-        return asset.getRoles().stream().map(mapper::toDTO).collect(Collectors.toSet());
+        return asset.getRoles().stream().map(mapper::toDTO).sorted(Comparator.comparing(RoleDTO::name)).toList();
     }
 
     public record RoleWithUserSelection(RoleDTO roleDTO, Set<String> userIds) {}

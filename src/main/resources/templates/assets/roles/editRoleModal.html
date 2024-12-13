@@ -9,7 +9,7 @@
         <div class="modal-dialog">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Opret dokument</h5>
+                    <h5 class="modal-title" th:text="${role.id == null} ? 'Opret Rolle' : 'Rediger Rolle'"></h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -24,7 +24,7 @@
                         </div>
 
                         <div class="row mt-3">
-                            <label for="name" class="col-lg-4 col-form-label">Roller</label>
+                            <label for="name" class="col-lg-4 col-form-label">Brugere</label>
                             <div class="col-lg-8">
                                 <select class="form-control form-select choices__input" name="roleUserSelect" data-type="select-multiple"
                                         data-trigger="" id="roleUserSelect" hidden="" tabindex="-1" multiple>

@@ -102,6 +102,8 @@ function initAddRoleButton() {
                     const form = modalContent.querySelector('#editRoleModalForm')
                     form.addEventListener('submit', (event)=> onRoleFormSubmit(event, form, null))
 
+                    choiceService.initUserSelect('roleUserSelect')
+
                     const modal = new bootstrap.Modal(modalContent);
                     modal.show();
             })
@@ -159,7 +161,7 @@ async function editClicked(roleId) {
             const form = modalContent.querySelector('#editRoleModalForm')
             form.addEventListener('submit', (event)=> onRoleFormSubmit(event, form, roleId))
 
-            usersSelect = choiceService.initUserSelect('roleUserSelect')
+            choiceService.initUserSelect('roleUserSelect')
 
             const modal = new bootstrap.Modal(modalContent);
             modal.show();
