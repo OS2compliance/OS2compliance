@@ -176,3 +176,36 @@ function ensureElementHasClass(elem, className) {
         elem.classList.add(className)
     }
 }
+
+
+/**
+ * Implements a listener, running the callback a set time after the inputs last keyup event.
+ * timeout is in miliseconds.
+ */
+class InputTimer {
+    #inputElement
+    #timeout
+    #callback
+    #timerId
+
+    constructor(inputElement, timeout = 1000, callback){
+        this.#inputElement = inputElement,
+        this.#timeout = timeout  ,
+        this.#callback = callback
+
+        if(this.#inputElement && this.#callback) {
+            this.#initInput()
+        } else {
+            console.error('Could not initialize InputTimer on element '+inputElement+' with callback '+callback)
+        }
+    }
+
+    #initInput() {
+        this.#inputElement.addEventListener('keyup', () => {
+            clearTimeout(this.#timerId);
+                this.#timerId = setTimeout(this.#callback, this.#timeout);
+        });
+    }
+
+
+};

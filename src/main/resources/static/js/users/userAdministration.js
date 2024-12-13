@@ -188,5 +188,20 @@ function onGridRowClick(args) {
 async function fetchUserDetailPartial (uuid) {
     const userDetailURL = viewUrl + '/' + uuid
     const containerId = 'userDetailContainer'
-    fetchHtml(userDetailURL, containerId)
+    await fetchHtml(userDetailURL, containerId)
+    initDetailPartial(uuid)
 }
+
+function initDetailPartial (uuid) {
+    //init the note input
+    const noteInput = document.getElementById('userNote')
+    new InputTimer(noteInput, 1500, async ()=> {
+        const data = {
+            note: noteInput.value
+        }
+        const url = restUrl  + '/' + uuid + '/note'
+        putData(url, data)
+    })
+
+}
+

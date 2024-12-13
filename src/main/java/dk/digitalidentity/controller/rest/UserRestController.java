@@ -85,8 +85,6 @@ public class UserRestController {
         Asset asset = assetService.findById(roleselection.assetId)
             .orElseThrow();
 
-
-//        Set<Role> updatedRoles = user.getAssetRoles();
         asset.getRoles().stream()
             .filter(role -> role.getAsset().equals(asset))
             .forEach( role -> {
@@ -100,9 +98,19 @@ public class UserRestController {
 
         assetService.save(asset);
 
-//
-//        user.setAssetRoles(updatedRoles);
-//        userService.save(user);
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    public record Note(String note){}
+    @Transactional
+    @PutMapping("{userUuid}/note")
+    @RequireAdminstrator
+    public ResponseEntity<?> updateUserNote(@PathVariable("userUuid") final String userID, @RequestBody Note note) {
+        User user = userService.findByUuid(userID)
+            .orElseThrow();
+
+        user.setNote(note.note);
+        userService.save(user);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

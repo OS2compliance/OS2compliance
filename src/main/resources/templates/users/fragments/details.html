@@ -24,13 +24,6 @@
                 <div class="row">
                     <label for="assetsList" class="col-2 col-form-label">Aktiver</label>
                     <div class="col d-flex flex-column gap-1">
-
-                        <!--                        <div class="justify-content-end d-flex" >-->
-                        <!--                            <button type="button" th:onclick="users.openAddAssetModal([[${user.uuid}]])"-->
-                        <!--                                    class="btn btn-secondary hstack gap-2 col-6">-->
-                        <!--                                <i class="ti-plus"></i> <span class="vr"></span>Tilføj Aktiv-->
-                        <!--                            </button>-->
-                        <!--                        </div>-->
                         <ul id="assetsList" class="accordion form-control p-0 h-100 gap-1 d-flex flex-column p-1"
                             style="list-style:none">
                             <li th:each="asset : ${assets}"
@@ -41,13 +34,15 @@
                                                 type="button" data-bs-toggle="collapse" aria-expanded="false"
                                                 th:attr="aria-controls='asset_'+${asset.id}+'_content', data-bs-target='#asset_'+${asset.id}+'_content'">
                                             <span
-                                                th:text="${#lists.size( assetRoles.get(asset))}"
-                                                class="col-1 badge bg-info"></span>
-                                            <span th:text="${asset.name}" class="col"></span>
+                                                    th:text="${#lists.size( assetRoles.get(asset))}"
+                                                    class="col-1 badge bg-info"></span>
+                                            <span class="col">
+                                                <a th:href="@{'/assets/' + ${asset.id}}" th:text="${asset.name}"></a>
+                                            </span>
                                         </button>
                                         <button type="button"
                                                 th:onclick="users.onAddAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
-                                                class="btn btn-icon btn-secondary btn-xs ti-plus col-1 position-relative"></button>
+                                                class="btn btn-icon btn-secondary btn-xs ti-pencil col-1 position-relative"></button>
                                     </div>
                                     <div class="accordion-collapse collapse"
                                          th:attr="aria-labeledby='asset_'+${asset.id}+'_heading', data-bs-parent='assetsList'"
@@ -63,17 +58,19 @@
                                 <div th:unless="${#maps.containsKey(assetRoles, asset)}" class="d-flex gap-1"
                                      th:id="'asset_'+${asset.id}+'_accordion'">
                                     <div
-                                        class="no-content-accordion bg-light text-grey gap-1 p-1 d-flex justify-content-between rounded"
-                                        type="button" aria-expanded="false">
+                                            class="no-content-accordion bg-light text-grey gap-1 p-1 d-flex justify-content-between rounded"
+                                            aria-expanded="false">
                                         <span th:text="0" class="col-1 badge bg-info"></span>
-                                        <span th:text="${asset.name}" class="col"></span>
+                                        <span class="col">
+                                            <a th:href="@{'/assets/' + ${asset.id}}" th:text="${asset.name}"></a>
+                                        </span>
 
                                         <span style="width:.75rem"></span>
                                         <!-- To match ::After element in the accordion -->
                                     </div>
                                     <button type="button"
                                             th:onclick="users.onAddAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
-                                            class="btn btn-icon btn-secondary btn-xs ti-plus col-1">
+                                            class="btn btn-icon btn-secondary btn-xs ti-pencil col-1">
                                     </button>
                                 </div>
 
