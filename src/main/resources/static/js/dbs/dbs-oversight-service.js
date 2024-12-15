@@ -38,7 +38,7 @@ function DBSOversightService() {
                 server: {
                     url: (prev, columns) => {
                         if (!columns.length) return prev;
-                        const columnIds = ['id', 'supplierId', 'name', 'supplier', 'supervisoryModel', 'dbsAssets', 'oversightResponsible', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
+                        const columnIds = ['id', 'supplierId', 'outstandingId', 'name', 'supplier', 'supervisoryModel', 'dbsAssets', 'oversightResponsible', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
                         return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
