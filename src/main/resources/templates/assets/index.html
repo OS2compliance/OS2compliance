@@ -232,7 +232,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 sort: 0,
                 width: '90px',
                 formatter: (cell, row) => {
-                    if(row.cells[11]['data']) {
+                    if(row.cells[12]['data']) {
                         const assetId = row.cells[0]['data'];
                         const name = row.cells[2]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
