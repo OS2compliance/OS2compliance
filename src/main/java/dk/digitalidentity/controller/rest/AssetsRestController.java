@@ -189,7 +189,7 @@ public class AssetsRestController {
         assetService.save(asset);
     }
 
-
+    @Transactional
     @PutMapping("{id}/oversightresponsible")
     public void setOversightResponsible(@PathVariable("id") final Long id, @RequestParam("userUuid") final String userUuid) {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -202,6 +202,8 @@ public class AssetsRestController {
         }
     }
 
+    @Transactional
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}/oversightresponsible")
     public void removeOversightResponsibl(@PathVariable("id") final Long id) {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
