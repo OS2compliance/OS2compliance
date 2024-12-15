@@ -173,6 +173,7 @@ function DBSOversightService() {
             Array.from(document.querySelectorAll("[id^='responsibleSelect']")).map(select => select.id).forEach(elementId => {
                 let userChoices = choiceService.initUserSelect(elementId, false);
                 userChoices.passedElement.element.addEventListener('addItem', self.handleAddRemoveEvent, false);
+                userChoices.passedElement.element.addEventListener('removeItem', self.handleAddRemoveEvent, false);
             });
             if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
                 document.getElementsByClassName("gridjs-pages")[0].children[1].click();
@@ -183,11 +184,14 @@ function DBSOversightService() {
     }
 
     this.handleAddRemoveEvent = async (event) => {
+        const assetId = event.target.dataset.assetid;
         let selected = event.target.selectedOptions;
         if (selected.length === 0) {
+            deleteData(`/rest/assets/${assetId}/oversightresponsible`)
+                .then(defaultResponseHandler)
+                .catch(defaultErrorHandler);
             return;
         }
-        const assetId = event.target.dataset.assetid;
         const userUuid = selected[0].value;
         putData(`/rest/assets/${assetId}/oversightresponsible?userUuid=${userUuid}`, {})
             .then(defaultResponseHandler)

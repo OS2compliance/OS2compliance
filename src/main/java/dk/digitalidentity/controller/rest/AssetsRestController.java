@@ -202,6 +202,12 @@ public class AssetsRestController {
         }
     }
 
+    @DeleteMapping("{id}/oversightresponsible")
+    public void removeOversightResponsibl(@PathVariable("id") final Long id) {
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        asset.setOversightResponsibleUser(null);
+    }
+
     record DPIASetFieldDTO(long id, String fieldName, String value) {}
     @RequireSuperuserOrAdministrator
     @PutMapping("dpia/schema/section/setfield")
