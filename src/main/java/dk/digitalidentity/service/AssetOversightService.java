@@ -114,7 +114,11 @@ public class AssetOversightService {
 
     private void updateAssociatedOversightCheck(final Asset asset, final Task task) {
         setTaskRevisionInterval(asset, task);
-        task.setNextDeadline(asset.getNextInspectionDate());
+        if (asset.getNextInspectionDate() != null) {
+            task.setNextDeadline(asset.getNextInspectionDate());
+        } else {
+            task.setNextDeadline(LocalDate.of(2099, 1,1));
+        }
         task.setResponsibleUser(asset.getOversightResponsibleUser());
     }
 

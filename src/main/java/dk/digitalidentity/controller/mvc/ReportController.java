@@ -132,7 +132,7 @@ public class ReportController {
     @GetMapping("yearwheel")
     public ModelAndView yearWheel(final HttpServletResponse response) {
         final LocalDate cutOff = LocalDateTime.now().minusYears(1).with(lastDayOfYear()).toLocalDate();
-        final Map<Task, List<Relatable>> taskMap = taskService.findAllTasksWithDeadlineAfter(cutOff).stream()
+        final Map<Task, List<Relatable>> taskMap = taskService.findAllYearWheelTasksWithDeadlineAfter(cutOff).stream()
             .collect(Collectors.toMap(t -> t, relationService::findAllRelatedTo));
 
         response.setContentType("application/ms-excel");

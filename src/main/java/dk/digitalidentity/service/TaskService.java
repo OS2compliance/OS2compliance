@@ -98,8 +98,8 @@ public class TaskService {
         return taskDao.findByNotifyResponsibleTrueAndNextDeadlineIn(deadlines);
     }
 
-    public List<Task> findAllTasksWithDeadlineAfter(final LocalDate date) {
-        return taskDao.findByNextDeadlineAfterOrderByNextDeadlineAsc(date);
+    public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
+        return taskDao.findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(date);
     }
 
     /**

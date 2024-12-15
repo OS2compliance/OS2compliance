@@ -105,7 +105,7 @@ function DBSOversightService() {
                     },
                 },
                 {
-                    name: "Sidst tilsyn"
+                    name: "Sidste tilsyn"
                 },
                 {
                     name: "Resultat",

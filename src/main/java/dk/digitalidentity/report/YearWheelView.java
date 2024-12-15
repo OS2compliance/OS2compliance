@@ -61,14 +61,18 @@ public class YearWheelView extends AbstractXlsView {
             } else if (task.getTaskType() == TaskType.CHECK) {
                 List<TaskLog> checkTaskLogs = taskLogs.stream()
                     .filter(log -> log.getTask() == task).toList();
-
+                Row logRow = row;
+                int cnt = 0;
                 for (TaskLog taskLog : checkTaskLogs) {
-                    final Row logRow = sheet.createRow(rowCount++);
                     createTaskColumns(logRow, task, relatedAssets);
                     createCell(logRow, 5, nullSafe(() -> taskLog.getDeadline()), dateStyle);
                     createCell(logRow, 10, taskLog.getLocalizedEnums() , style);
                     createCell(logRow, 11, nullSafe(() -> taskLog.getComment(), ""), style);
                     createCell(logRow, 12, nullSafe(() -> taskLog.getCompleted(),  null), dateStyle);
+                    cnt++;
+                    if (checkTaskLogs.size() < cnt) {
+                        logRow = sheet.createRow(rowCount++);
+                    }
                 }
             }
         }
@@ -79,7 +83,13 @@ public class YearWheelView extends AbstractXlsView {
         sheet.autoSizeColumn(4);
         // Date fields needs a little extra as excel shows it as danish format which takes up a bit more space
         sheet.setColumnWidth(5, 11 * 256);
-        IntStream.range(6, 13).forEach(i -> sheet.autoSizeColumn(i));
+        sheet.autoSizeColumn(6);
+        sheet.autoSizeColumn(7);
+        sheet.autoSizeColumn(8);
+        sheet.setColumnWidth(9, 85 * 256);
+        sheet.autoSizeColumn(10);
+        sheet.setColumnWidth(11, 75 * 256);
+        sheet.setColumnWidth(12, 11 * 256);
     }
 
     private void createTaskColumns(final Row row, final Task task, final String relatedAssets) {

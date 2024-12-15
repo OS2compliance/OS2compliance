@@ -337,7 +337,10 @@ SELECT
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
     LEFT JOIN assets_oversight ao on ao.asset_id = a.id and ao.id = (
-    	select ao2.id from assets_oversight ao2 join assets a2 on ao2.asset_id = a2.id order by ao2.creation_date desc limit 1
+    	select ao2.id from assets_oversight ao2
+        where ao2.asset_id = a.id
+        order by ao2.creation_date desc
+        limit 1
     )
     LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
     LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id
