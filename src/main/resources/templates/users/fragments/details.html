@@ -70,10 +70,7 @@
                                         class="no-content-accordion bg-light text-grey gap-1 p-1 d-flex justify-content-between rounded"
                                         aria-expanded="false">
                                         <span th:text="0" class="col-1 badge bg-info"></span>
-                                        <span class="col">
-                                            <a th:href="@{'/assets/' + ${asset.id}}" th:text="${asset.name}"
-                                               target="_blank"></a>
-                                        </span>
+                                        <span class="col" th:text="${asset.name}"></span>
 
                                         <span style="width:.75rem"></span>
                                         <!-- To match ::After element in the accordion -->

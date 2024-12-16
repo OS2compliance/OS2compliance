@@ -2,6 +2,9 @@ const users = new UserService()
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 function UserService () {
+    let selectedUserUuid
+
+
     this.deleteUser = (id, name) => {
         Swal.fire({
             text: `Er du sikker på du vil slette brugeren '${name}'?`,
@@ -69,7 +72,7 @@ function UserService () {
         await postData(url, data)
 
         //refresh detail view
-        fetchUserDetailPartial(uuid)
+        fetchUserDetailPartial(this.getSelectedUserUuid())
     }
 
     this.onAddAssetRole = async (event, assetId, userUuid)=> {
@@ -85,6 +88,14 @@ function UserService () {
 
         const modal = new bootstrap.Modal(modalcontainer);
         modal.show();
+    }
+
+    this.saveSelectedUserUuid = (uuid) => {
+        sessionStorage.setItem('admin_users_selectedUser', uuid)
+    }
+
+    this.getSelectedUserUuid = ()=> {
+        return sessionStorage.getItem('admin_users_selectedUser')
     }
 
 
@@ -175,6 +186,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     //On row element click listener
     grid.on('rowClick', (...args) => onGridRowClick(...args));
+
+    //load last selected user, if any
+    const selectedUuid = users.getSelectedUserUuid()
+    console.log('selected', selectedUuid)
+    if (selectedUuid) {
+        fetchUserDetailPartial(selectedUuid)
+    }
 });
 
 
@@ -182,6 +200,7 @@ function onGridRowClick(args) {
     const rowElement = args.target.closest('.gridjs-tr')
     const uuid = rowElement.querySelector('[data-user-uuid]').getAttribute('data-user-uuid')
 
+    users.saveSelectedUserUuid(uuid)
     fetchUserDetailPartial(uuid)
 }
 
