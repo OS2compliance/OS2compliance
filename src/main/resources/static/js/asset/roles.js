@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     let gridConfig = initRoleGrid()
 
     initAddRoleButton()
+
 });
 
 function initRoleGrid() {

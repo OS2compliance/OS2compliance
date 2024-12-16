@@ -23,22 +23,31 @@
 
                 <div class="row">
                     <label for="assetsList" class="col-2 col-form-label">Aktiver</label>
+
                     <div class="col d-flex flex-column gap-1">
+
+                        <div class="d-flex justify-content-end">
+
+                            <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                    class="btn btn-info hstack gap-2 m-0" th:onclick="onAddAsset()">
+                                <i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
+                            </button>
+                        </div>
+
                         <ul id="assetsList" class="accordion form-control p-0 h-100 gap-1 d-flex flex-column p-1"
                             style="list-style:none">
                             <li th:each="asset : ${assets}"
                                 th:id="'asset_'+${asset.id}+'_accordion'">
                                 <div th:if="${#maps.containsKey(assetRoles, asset)}" class="accordion-item">
-                                    <div class="accordion-heading d-flex gap-1" th:id="'asset_'+${asset.id}+'_heading'">
+                                    <div class="accordion-heading d-flex gap-1"
+                                         th:id="'asset_'+${asset.id}+'_heading'">
                                         <button class="accordion-button collapsed bg-primary text-light gap-1 p-1 col"
                                                 type="button" data-bs-toggle="collapse" aria-expanded="false"
                                                 th:attr="aria-controls='asset_'+${asset.id}+'_content', data-bs-target='#asset_'+${asset.id}+'_content'">
                                             <span
-                                                    th:text="${#lists.size( assetRoles.get(asset))}"
-                                                    class="col-1 badge bg-info"></span>
-                                            <span class="col">
-                                                <a th:href="@{'/assets/' + ${asset.id}}" th:text="${asset.name}"></a>
-                                            </span>
+                                                th:text="${#lists.size( assetRoles.get(asset))}"
+                                                class="col-1 badge bg-info"></span>
+                                            <span class="col" th:text="${asset.name}"></span>
                                         </button>
                                         <button type="button"
                                                 th:onclick="users.onAddAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
@@ -58,11 +67,12 @@
                                 <div th:unless="${#maps.containsKey(assetRoles, asset)}" class="d-flex gap-1"
                                      th:id="'asset_'+${asset.id}+'_accordion'">
                                     <div
-                                            class="no-content-accordion bg-light text-grey gap-1 p-1 d-flex justify-content-between rounded"
-                                            aria-expanded="false">
+                                        class="no-content-accordion bg-light text-grey gap-1 p-1 d-flex justify-content-between rounded"
+                                        aria-expanded="false">
                                         <span th:text="0" class="col-1 badge bg-info"></span>
                                         <span class="col">
-                                            <a th:href="@{'/assets/' + ${asset.id}}" th:text="${asset.name}"></a>
+                                            <a th:href="@{'/assets/' + ${asset.id}}" th:text="${asset.name}"
+                                               target="_blank"></a>
                                         </span>
 
                                         <span style="width:.75rem"></span>
@@ -77,6 +87,7 @@
                             </li>
 
                         </ul>
+
                     </div>
                 </div>
             </div>
