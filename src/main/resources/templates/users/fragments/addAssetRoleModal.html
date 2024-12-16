@@ -10,7 +10,7 @@
             <h5 class="modal-title" >Tildel Roller</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form th:id="addRoleForm" class="row g-3" action="#" th:action="@{'/rest/users/'+${user.uuid}+'/role/add'}"
+        <form th:id="editRoleForm" class="row g-3" action="#" th:action="@{'/rest/users/'+${user.uuid}+'/role/add'}"
               th:object="${asset}"
               method="post">
             <div class="modal-body m-3">
@@ -29,7 +29,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
-                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" th:form="addRoleForm"
+                <button type="submit" class="btn btn-primary" data-bs-dismiss="modal" th:form="editRoleForm"
                         th:text="Tilføj">Tilføj
                 </button>
             </div>

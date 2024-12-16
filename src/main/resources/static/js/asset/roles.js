@@ -109,7 +109,6 @@ function initAddRoleButton() {
                     modal.show();
             })
     })
-
 }
 
 function deleteClicked(roleId, name) {

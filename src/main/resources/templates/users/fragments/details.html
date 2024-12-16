@@ -50,8 +50,12 @@
                                             <span class="col" th:text="${asset.name}"></span>
                                         </button>
                                         <button type="button"
-                                                th:onclick="users.onAddAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
+                                                th:onclick="users.onEditAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
                                                 class="btn btn-icon btn-secondary btn-xs ti-pencil col-1 position-relative"></button>
+                                        <button type="button"
+                                                th:onclick="users.onAddAssetRole(event, [[${asset.id}]])"
+                                                class="btn btn-icon btn-secondary btn-xs pli-add-user col-1">
+                                        </button>
                                     </div>
                                     <div class="accordion-collapse collapse"
                                          th:attr="aria-labeledby='asset_'+${asset.id}+'_heading', data-bs-parent='assetsList'"
@@ -76,8 +80,12 @@
                                         <!-- To match ::After element in the accordion -->
                                     </div>
                                     <button type="button"
-                                            th:onclick="users.onAddAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
+                                            th:onclick="users.onEditAssetRole(event, [[${asset.id}]], [[${user.uuid}]])"
                                             class="btn btn-icon btn-secondary btn-xs ti-pencil col-1">
+                                    </button>
+                                    <button type="button"
+                                            th:onclick="users.onAddAssetRole(event, [[${asset.id}]])"
+                                            class="btn btn-icon btn-secondary btn-xs pli-add-user col-1">
                                     </button>
                                 </div>
 

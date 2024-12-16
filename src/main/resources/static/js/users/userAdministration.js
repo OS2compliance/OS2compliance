@@ -75,19 +75,59 @@ function UserService () {
         fetchUserDetailPartial(this.getSelectedUserUuid())
     }
 
-    this.onAddAssetRole = async (event, assetId, userUuid)=> {
+    this.onEditAssetRole = async (event, assetId, userUuid)=> {
         const addAssetUrl = `${viewUrl}/${userUuid}/role/${assetId}`;
         const modalId = 'addAssetRoleModal'
         await fetchHtml(addAssetUrl, modalId)
 
 
         const modalcontainer = document.getElementById(modalId)
-        const addAssetRoleForm = modalcontainer.querySelector('#addRoleForm')
+        const addAssetRoleForm = modalcontainer.querySelector('#editRoleForm')
 
         addAssetRoleForm.addEventListener('submit', (event)=>this.submitAssetRole(event, addAssetRoleForm, userUuid, assetId))
 
         const modal = new bootstrap.Modal(modalcontainer);
         modal.show();
+    }
+
+    this.onAddAssetRole = async (event, assetId) => {
+        const targetId = 'editRoleModalContainer'
+        const url = '/asset/roles/create/' + assetId
+
+        //Fetch fragment from server
+        fetchHtml(url, targetId)
+            .then( ()=> {
+                    //show modal
+                    const modalContent = document.getElementById('editRoleModal')
+                    const form = modalContent.querySelector('#editRoleModalForm')
+                    form.addEventListener('submit', (event)=> this.onAddAssetRoleFormSubmit(event, form, null))
+
+                    choiceService.initUserSelect('roleUserSelect')
+
+                    const modal = new bootstrap.Modal(modalContent);
+                    modal.show();
+            })
+    }
+
+    this.onAddAssetRoleFormSubmit = async (event, form, roleId)=> {
+        event.preventDefault();
+        console.log(form)
+        const assetId = form.getAttribute('data-assetId')
+        const formData = new FormData(form)
+
+        const data = {
+             roleDTO : {
+                id : roleId,
+                name : formData.get('name'),
+                assetId : assetId,
+            },
+            userIds : formData.getAll('roleUserSelect')
+         }
+
+        await postData('/rest/asset/roles/edit', data)
+
+        location.reload()
+
     }
 
     this.saveSelectedUserUuid = (uuid) => {
@@ -189,7 +229,6 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     //load last selected user, if any
     const selectedUuid = users.getSelectedUserUuid()
-    console.log('selected', selectedUuid)
     if (selectedUuid) {
         fetchUserDetailPartial(selectedUuid)
     }
@@ -277,4 +316,3 @@ function initSuppliersChoices() {
         checkInputField(supplierChoices);
     });
 }
-
