@@ -40,64 +40,48 @@ import java.util.stream.Collectors;
 @RequireUser
 @RequiredArgsConstructor
 public class RolesRestController {
-private final RoleDao roleDao;
+    private final RoleDao roleDao;
     private final RoleMapper mapper;
     private final RoleService roleService;
     private final AssetService assetService;
     private final UserService userService;
 
     @PostMapping("{assetId}")
-    public List<RoleDTO> list(@PathVariable(name="assetId") final Long assetId,
+    public List<RoleDTO> list(@PathVariable(name = "assetId") final Long assetId,
                               @RequestParam(name = "order", required = false) final String order,
                               @RequestParam(name = "dir", required = false) final String dir) {
 
         Asset asset = assetService.findById(assetId)
-            .orElseThrow();
+                .orElseThrow();
 
         return asset.getRoles().stream().map(mapper::toDTO).sorted(Comparator.comparing(RoleDTO::name)).toList();
     }
 
-    public record RoleWithUserSelection(RoleDTO roleDTO, Set<String> userIds) {}
+    public record RoleWithUserSelection(RoleDTO roleDTO, Set<String> userIds) {
+    }
+
     @RequireSuperuser
     @PostMapping("edit")
     public ResponseEntity<?> createRole(@RequestBody final RoleWithUserSelection roleWithUserSelection) {
         RoleDTO roleDTO = roleWithUserSelection.roleDTO;
-        System.out.println("roleWithUserSelection = " + roleWithUserSelection.userIds);
 
-        Role role = new Role();
-        if (roleDTO.id() != null) {
-            role = roleService.getRole(roleDTO.id())
-                .orElseThrow();
-        } else {
+        Role role = roleService.getRole(roleDTO.id())
+                .orElse(new Role());
+
+        if (role.getAsset() == null) {
             role.setAsset(assetService.findById(roleDTO.assetId())
-                .orElseThrow());
+                    .orElseThrow());
         }
 
-        boolean updated = false;
+        role.setName(roleDTO.name());
 
-        String updatedName = roleDTO.name();
-        if (updatedName != null
-            && !updatedName.isEmpty()
-            && !updatedName.equals(role.getName())
-        ) {
-            role.setName(roleDTO.name());
-            updated = true;
-        }
+        List<User> updatedUsers = userService.findAllByUuids(roleWithUserSelection.userIds);
+        role.setUsers(new HashSet<>(updatedUsers));
 
-        List<User> updatedUsers =  userService.findAllByUuids(roleWithUserSelection.userIds);
-        if  (!updatedUsers.equals(role.getUsers())) {
-            role.setUsers(new HashSet<>(updatedUsers));
-            updated = true;
-        }
-
-        if (updated) {
-            roleService.save(role);
-        }
-
+        roleService.save(role);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
-
 
 
     @RequireSuperuser
