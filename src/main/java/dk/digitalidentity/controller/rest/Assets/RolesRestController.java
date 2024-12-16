@@ -65,10 +65,11 @@ public class RolesRestController {
     public ResponseEntity<?> createRole(@RequestBody final RoleWithUserSelection roleWithUserSelection) {
         RoleDTO roleDTO = roleWithUserSelection.roleDTO;
 
-        Role role = roleService.getRole(roleDTO.id())
-                .orElse(new Role());
-
-        if (role.getAsset() == null) {
+        Role role = new Role();
+        if (roleDTO.id() != null) {
+            role = roleService.getRole(roleDTO.id())
+                    .orElseThrow();
+        } else {
             role.setAsset(assetService.findById(roleDTO.assetId())
                     .orElseThrow());
         }

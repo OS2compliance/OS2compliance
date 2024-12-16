@@ -6,6 +6,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -21,6 +22,8 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
     @Query("select a from Asset a inner join Property p on p.entity=a where p.key=:key")
     List<Asset> findWithPropertyKey(@Param("key") final String key);
 
+
+
     List<Asset> findAllByIdInAndDeletedFalse(Collection<Long> ids);
 
     Optional<Asset> findByIdAndDeletedFalse(final Long id);
@@ -30,4 +33,5 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
     @Query("select a from Asset a where a.name like :search and a.deleted=false")
     Page<Asset> searchForAsset(@Param("search") final String search, final Pageable pageable);
 
+    List<Asset> findByDeletedFalse(Sort sort);
 }
