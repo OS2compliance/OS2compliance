@@ -89,7 +89,7 @@ public class AssetService {
     }
 
     public List<Asset> getAllSortedByName() {
-        return assetDao.findAll(Sort.by(Sort.Direction.ASC, "name"));
+        return assetDao.findByDeletedFalse(Sort.by(Sort.Direction.ASC, "name"));
     }
 
     public List<Asset> findAllById(final Collection<Long> ids) {
