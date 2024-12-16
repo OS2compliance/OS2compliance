@@ -1,12 +1,15 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
 
-<head th:replace="~{fragments/header :: head (textEditor = true)}"></head>
+<head th:replace="~{fragments/header :: head (textEditor = true, gridjs = true)}"></head>
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/js/data-processing-component.js}" defer></script>
 <script th:src="@{/js/asset/details.js}" defer></script>
 <script th:src="@{/js/asset/dpia.js}" defer></script>
+<script th:src="@{/js/asset/roles.js}" defer></script>
 <script th:src="@{/js/oversight/oversight-service.js}" defer></script>
 
 <body class="jumping">
@@ -15,6 +18,7 @@
     <link rel="stylesheet" th:href="@{/css/assets.css}" />
     <link rel="stylesheet" th:href="@{/css/dpia_schema.css}" />
     <link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
+
     <script th:src="@{/js/risk/riskProfile.js}" defer></script>
 
     <div id="root" class="root mn--max hd--expanded">
@@ -65,6 +69,9 @@
                             </li>
                             <li class="nav-item" role="presentation">
                                 <button class="nav-link" data-bs-toggle="tab" data-bs-target="#tiaTab" type="button" role="tab" aria-controls="historik" aria-selected="false"><span th:if="${asset.tia?.assessment != null}" id="tiaBadge" class="badge" th:classappend="${asset.tia?.assessment?.name() == 'RED'} ? 'bg-red' : (${asset.tia?.assessment?.name() == 'YELLOW'} ? 'bg-yellow' : 'bg-green')">&nbsp</span>&nbspTIA</button>
+                            </li>
+                            <li class="nav-item" role="presentation">
+                                <button class="nav-link" data-bs-toggle="tab" data-bs-target="#roleTab" type="button" role="tab" aria-controls="historik" aria-selected="false">Roller</button>
                             </li>
                         </ul>
 
@@ -503,6 +510,9 @@
                             <div id="tiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="tia-tab" th:replace="~{assets/fragments/tia :: tia(${asset}, ${dpChoices})}">
                                 Transfer impact assessment
                             </div><!--  Transfer impact assessment tab end -->
+                            <div id="roleTab" class="tab-pane fade" role="tabpanel" aria-labelledby="role-tab" th:replace="~{assets/roles/view :: roles(assetId=${asset.id})}">
+                            </div>
+
                         </div>
                     </div>
                 </div>
@@ -514,6 +524,7 @@
 
     <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
     <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
+    <div id="editRoleModalContainer"></div>
 
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
@@ -524,10 +535,13 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal)}"></div>
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
-    <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true)}"></div>
+    <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, textEditor = true, gridoptions = true)}"></div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
+
+
+
 
         /*[+
             var isKitos = [[${isKitos}]];

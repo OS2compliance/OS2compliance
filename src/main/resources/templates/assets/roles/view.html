@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+<div th:fragment="roles (assetId)" id="roleTab" class="tab-pane fade" role="tabpanel" aria-labelledby="role-tab">
+
+    <div>
+        <div class="mt-3 mb-3 position-relative">
+            <div class="d-flex justify-content-end" style="z-index:10">
+                <button id="addRoleButton" type="button" th:attr="data-assetId=${assetId}"
+                        sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                        class="btn btn-secondary btn-lg hstack gap-2">
+                    <i class="ti-plus"></i> <span class="vr"></span> Ny Rolle
+                </button>
+            </div>
+            <div id="roleDatatable" class="position-relative z-1"></div>
+        </div>
+
+    </div>
+
+    <script th:inline="javascript">
+        /*<![CDATA[*/
+
+        /*[+
+            var roleUrl = [[@{/rest/asset/roles}]];
+            var viewUrl = [[@{/asset/roles/}]];
+            var deleteRoleUrl = [[@{/rest/asset/roles/delete/}]];
+            var isSuperuser = [[${#authorization.expression('hasAuthority(''ROLE_forandre'')')}]]
+        +]*/
+
+        /*]]>*/
+    </script>
+</div>
+
+
+</body>
+</html>

@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.mvc;
+package dk.digitalidentity.controller.mvc.Assets;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetMeasuresDao;
@@ -13,27 +13,7 @@ import dk.digitalidentity.model.dto.SaveMeasureDTO;
 import dk.digitalidentity.model.dto.SaveMeasuresDTO;
 import dk.digitalidentity.model.dto.ViewMeasureDTO;
 import dk.digitalidentity.model.dto.ViewMeasuresDTO;
-import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.AssetMeasure;
-import dk.digitalidentity.model.entity.AssetOversight;
-import dk.digitalidentity.model.entity.AssetSupplierMapping;
-import dk.digitalidentity.model.entity.ChoiceDPIA;
-import dk.digitalidentity.model.entity.ChoiceList;
-import dk.digitalidentity.model.entity.ChoiceMeasure;
-import dk.digitalidentity.model.entity.DPIA;
-import dk.digitalidentity.model.entity.DPIAReport;
-import dk.digitalidentity.model.entity.DPIAResponseSection;
-import dk.digitalidentity.model.entity.DPIAResponseSectionAnswer;
-import dk.digitalidentity.model.entity.DPIATemplateQuestion;
-import dk.digitalidentity.model.entity.DPIATemplateSection;
-import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
-import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
-import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Supplier;
-import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.*;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -50,17 +30,7 @@ import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.AssetOversightService;
-import dk.digitalidentity.service.AssetService;
-import dk.digitalidentity.service.ChoiceService;
-import dk.digitalidentity.service.DPIATemplateQuestionService;
-import dk.digitalidentity.service.DPIATemplateSectionService;
-import dk.digitalidentity.service.DataProcessingService;
-import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.ScaleService;
-import dk.digitalidentity.service.SupplierService;
-import dk.digitalidentity.service.TaskService;
-import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.*;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -92,15 +62,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
@@ -128,6 +90,7 @@ public class AssetsController {
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
+
 
 	@GetMapping
 	public String assetsList() {
@@ -278,6 +241,7 @@ public class AssetsController {
 		model.addAttribute("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
         model.addAttribute("defaultSendReportTo", asset.getResponsibleUsers().stream().filter(u -> StringUtils.hasLength(u.getEmail())).findFirst().orElse(null));
 
+
         // threat assessments
         model.addAttribute("threatAssessments", threatAssessments);
         final boolean threatExists = !threatAssessments.isEmpty();
@@ -291,6 +255,8 @@ public class AssetsController {
             model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
+
+
 
 		return "assets/view";
 	}

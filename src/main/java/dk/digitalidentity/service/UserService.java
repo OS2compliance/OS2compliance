@@ -4,6 +4,7 @@ import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -96,6 +97,18 @@ public class UserService {
             return Optional.empty();
         }
         return userDao.findById(uuid);
+    }
+
+    public Optional<User> findByUserIdAndHasAccessRole(final String userId) {
+        if (StringUtils.isEmpty(userId)) {
+            return Optional.empty();
+        }
+        Optional<User> foundUser = userDao.findByUserIdAndActiveIsTrue(userId);
+        if (foundUser.isEmpty() || !foundUser.get().getRoles().contains(Roles.USER)) {
+            return Optional.empty();
+        }
+
+        return foundUser;
     }
 
     public Optional<User> findByUserId(final String userId) {

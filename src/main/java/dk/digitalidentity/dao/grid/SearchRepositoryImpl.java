@@ -122,5 +122,4 @@ public class SearchRepositoryImpl implements SearchRepository {
             return findAllCustomExtra(properties, search, Collections.singletonList(Pair.of("responsibleUser", user)), page, entityClass);
         }
     }
-
 }

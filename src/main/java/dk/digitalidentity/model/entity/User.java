@@ -12,9 +12,12 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -38,6 +41,11 @@ public class User implements Serializable {
 
     @Column
     private String name;
+
+    @EqualsAndHashCode.Exclude
+    @ToString.Exclude
+    @Column
+    private String note;
 
     @Column
     @Size(max = 255)
@@ -71,5 +79,10 @@ public class User implements Serializable {
     private LocalDateTime passwordResetRequestDate;
     @Column
     private String passwordResetToken;
+
+    @ToString.Exclude
+    @EqualsAndHashCode.Exclude
+    @ManyToMany(mappedBy = "users")
+    private Set<Role> assetRoles = new HashSet<>();
 
 }

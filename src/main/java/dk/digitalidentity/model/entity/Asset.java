@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -9,18 +10,7 @@ import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -32,7 +22,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "assets")
@@ -189,5 +181,9 @@ public class Asset extends Relatable {
     @ManyToOne
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsibleUser;
+
+    @JsonIgnore
+    @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
+    private Set<Role> roles = new HashSet<>();
 
 }
