@@ -167,23 +167,28 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Opgavenavn",
+                searchable : 'name',
                 formatter: (cell, row) => {
                     const url = tasksViewUrl + row.cells[0]['data'] + "?referral=dashboard";
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
                 }
             },
             {
-                name: "Opgave type"
+                name: "Opgave type",
+                searchable : 'taskType'
             },
             {
                 name: "Ansvarlig",
+                searchable : 'responsibleUser.name',
                 hidden: true
             },
             {
-                name: "Afdeling"
+                name: "Afdeling",
+                searchable : 'responsibleOU.name'
             },
             {
                 name: "Deadline",
+                searchable : 'nextDeadline',
                 formatter: (cell, row) => {
                     var completed = row.cells[7]['data'];
                     var type = row.cells[2]['data'];
@@ -202,10 +207,12 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 }
             },
             {
-                name: "Gentages"
+                name: "Gentages",
+                searchable : 'taskRepetition'
             },
             {
                 name: "Status",
+                searchable : 'taskResult',
                 formatter: (cell, row) => {
                     var status = "";
                     var type = row.cells[2]['data'];
@@ -238,6 +245,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Tags",
+                searchable : 'tags',
                 formatter: (cell, row) => {
                     var result = '<ul>';
                     if (cell != null && cell.trim() !== '') {

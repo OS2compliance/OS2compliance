@@ -17,18 +17,10 @@ class CustomGridFunctions {
      * @param {string} dataUrl Server endpoint handling data request
      * @param {ColumnFieldConfig[]} columnFieldConfig Array of configuration object, each representing a columns search field
      */
-    constructor(grid, dataUrl, columnFieldConfig = []) {
+    constructor(grid, dataUrl) {
         this.dataUrl = dataUrl
         this.grid = grid
         this.page = 0
-
-        //Constructs an object, holding each input elements identifier and current value
-        for (const config of columnFieldConfig) {
-            this.updateColumnValue(
-                config.columnName,
-                config.valueGetter
-            )
-        }
 
         //Update vital config of grid to enable custom search, sort and pagination
         this.grid.updateConfig({
@@ -110,7 +102,7 @@ class CustomGridFunctions {
             },
         }).forceRender();
 
-        setTimeout( ()=> {
+        setTimeout(() => {
             this.initializeInputFields()
         }, 1000)
     }
@@ -121,15 +113,13 @@ class CustomGridFunctions {
 
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
-            if (!column.hidden) {
-
-
+            if (!column.hidden && column.searchable) {
                 column.columns = [
                     {
-                        name: gridjs.html(this.generateInputField(column.id)),
+                        name: gridjs.html(this.generateInputField(column.searchable)),
                         formatter: column.formatter,
-                        width : column.width,
-                        id : 'search_'+column.id
+                        width: column.width,
+                        id: 'search_' + column.id
                     }]
             }
         }
@@ -138,28 +128,43 @@ class CustomGridFunctions {
         })
     }
 
-    generateInputField(id) {
+    generateInputField(searchKey) {
         const inputElement = document.createElement('input')
         inputElement.type = 'text'
         inputElement.classList.add('grid_columnSearchInput')
         inputElement.classList.add('form-control')
+        inputElement.setAttribute('data-search-key', searchKey)
         return inputElement.outerHTML
     }
 
-    initializeInputFields () {
-            const inputFields = document.getElementsByClassName('grid_columnSearchInput')
-            console.log('fields', inputFields)
-            console.log('fields', inputFields.length)
+    initializeInputFields() {
+        const inputFields = document.getElementsByClassName('grid_columnSearchInput')
+        console.log('fields', inputFields)
+        console.log('fields', inputFields.length)
 
-            for (const input of inputFields) {
-                console.log('adding listener')
-                input.addEventListener('click', (event)=> {
-                    event.stopPropagation();
-                    event.preventDefault()
-                })
+        for (const input of inputFields) {
+            console.log('adding listener')
+            input.addEventListener('click', (event) => {
+                event.stopPropagation();
+                event.preventDefault()
+            })
 
-                input.addEventListener('keyup')
+            input.addEventListener('change', () => {
+                this.updateColumnValue(input.getAttribute('data-search-key'), () => input.value)
+                this.update(this.page, this.sortColumn, this.sortDirection)
+            })
+        }
+    }
+
+    static isSearchable(columnName) {
+        return (cell, row, column) => {
+            if (!cell) {
+                console.log(column)
+                return {
+                    'data-searchable': `${columnName}`
+                }
             }
+        }
     }
 
 
