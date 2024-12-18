@@ -27,12 +27,12 @@ class CustomGridFunctions {
         console.log(grid)
 
         //Update vital config of grid to enable custom search, sort and pagination
-        this.grid.updateConfig({
+        const gridConfig = this.grid.updateConfig({
             search: false,
             sort: true,
             pagination: {
                 enabled: true,
-                limit: this.grid.config.pagination && this.grid.config.pagination.limit ? this.grid.config.pagination.limit : this.limit ,
+                limit: this.grid.config.pagination && this.grid.config.pagination.limit ? this.grid.config.pagination.limit : this.limit,
                 server: {
                     url: (prev, page, limit) => `${this.dataUrl}?${this.updatePagination(prev, page, limit)}`
                 }
@@ -42,12 +42,13 @@ class CustomGridFunctions {
                     url: (prev, columns) => `${this.dataUrl}?${this.updateSorting(prev, columns)}`
                 }
             }
-        }).forceRender()
+        })
+
+        this.grid.on('ready', () => this.initializeInputFields())
 
         this.addSearchFields()
 
-        this.update(this.page, this.column, this.direction)
-
+        gridConfig.forceRender()
     }
 
     /**
@@ -81,7 +82,6 @@ class CustomGridFunctions {
         this.page = page
         this.limit = limit
         return this.getParamString()
-        // return `${prev}?limit=${limit}&page=${page}`
     }
 
     updateSorting(prev, columns) {
@@ -95,59 +95,13 @@ class CustomGridFunctions {
         this.sortDirection = dir
 
         return this.getParamString()
-
-        // return `${prev}?order=${colName}&dir=${dir}`;
     }
 
     updateColumnValue(column, value) {
         this.searchStrings[column] = value;
     }
 
-    /**
-     * Fetches data from the url, with the current search parameters. Then updates the given grid and forces a re-render
-     */
-    async update(page, sortColumn, sortDirection) {
-        if (page != this.page) {
-            this.page = page
-        }
-        if (sortColumn != this.sortColumn) {
-            this.sortColumn = sortColumn
-        }
-        if (sortDirection != this.sortDirection) {
-            this.sortDirection = sortDirection
-        }
-
-        //        this.grid.updateConfig({
-        //            pagination : {
-        //                server: {
-        //                    url: (prev, page, limit) => `${this.dataUrl}?${this.updatePagination(prev, page, limit)}`
-        //                  }
-        //            },
-        //            sort : {
-        //                server: {
-        //                    url: (prev, columns) => `${this.dataUrl}?${this.updateSorting(prev, columns)}`
-        //            }
-        ////             server: {
-        ////                 ...this.grid.config.server,
-        ////                 url: `${this.dataUrl}?${this.getSearchString()}`,
-        //
-        ////                                pagination: {
-        ////                                    enabled: true,
-        ////                                    ...this.grid.config.pagination,
-        ////                                    total: data.total // Total number of items from the server for pagination
-        ////                                }
-        //            },
-        //        }).forceRender();
-
-        setTimeout(() => {
-            this.initializeInputFields()
-        }, 1000)
-    }
-
     addSearchFields() {
-
-
-
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
             if (!column.hidden && column.searchable) {
@@ -160,9 +114,11 @@ class CustomGridFunctions {
                     }]
             }
         }
-        this.grid.updateConfig({
+
+        const gridConfig = this.grid.updateConfig({
             columns: updatedConfig
         })
+
     }
 
     generateInputField(searchKey) {
@@ -176,27 +132,43 @@ class CustomGridFunctions {
 
     initializeInputFields() {
         const inputFields = document.getElementsByClassName('grid_columnSearchInput')
-        console.log('fields', inputFields)
-        console.log('fields', inputFields.length)
 
         for (const input of inputFields) {
-            console.log('adding listener')
             input.addEventListener('click', (event) => {
                 event.stopPropagation();
                 event.preventDefault()
             })
 
-            input.addEventListener('change', () => {
+            input.addEventListener('change', (event) => {
+                event.stopPropagation();
+                event.preventDefault()
                 this.updateColumnValue(input.getAttribute('data-search-key'), () => input.value)
-                this.update(this.page, this.sortColumn, this.sortDirection)
+                this.onSearch()
+            })
+
+            input.addEventListener('keydown', (event) => {
+                event.stopPropagation();
             })
         }
+    }
+
+    onSearch(){
+        //get values for input fields
+        //update the url
+        for ( const [key,value] of Object.entries(this.searchStrings)) {
+            console.log(key, value())
+        }
+        this.grid.updateConfig({
+            server : {
+                 ...this.grid.config.server,
+                 url: `${this.dataUrl}?${this.getParamString()}`,
+            }
+        }).forceRender()
     }
 
     static isSearchable(columnName) {
         return (cell, row, column) => {
             if (!cell) {
-                console.log(column)
                 return {
                     'data-searchable': `${columnName}`
                 }

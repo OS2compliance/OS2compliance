@@ -117,15 +117,17 @@ public class TaskRestController {
         final Page<TaskGrid> tasks;
 
         //Get objects, filtered
-        if (!filters.isEmpty()) {
+//        if (!filters.isEmpty()) {
             //TODO - Modify findAllCustomExtra to get all if the filter is empty, and to properly utilize filter to search columns
             // search and page
             final List<String> searchableProperties = filters.keySet().stream().toList();
-            tasks = taskGridDao.findAllCustomExtra(searchableProperties, StringUtils.join(filters.values(), ", "), List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
-        } else {
-            // Fetch paged and sorted
-            tasks = taskGridDao.findAllByResponsibleUserAndCompletedFalse(user, sortAndPage);
-        }
+
+//            tasks = taskGridDao.findAllCustomExtra(searchableProperties, StringUtils.join(filters.values(), ", "), List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
+            tasks = taskGridDao.findAllWithColumnSearch(filters, List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
+//        } else {
+//            // Fetch paged and sorted
+//            tasks = taskGridDao.findAllByResponsibleUserAndCompletedFalse(user, sortAndPage);
+//        }
         assert tasks != null;
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
     }
