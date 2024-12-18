@@ -66,8 +66,6 @@ public class TaskRestController {
         }
         final Pageable sortAndPage = PageRequest.of(page, limit, sort);
 
-        System.out.println("filters = " + filters);
-
         Page<TaskGrid> tasks = null;
 
         if (!filters.isEmpty()) {
@@ -90,15 +88,15 @@ public class TaskRestController {
         @PathVariable(name = "id") final String userUuid,
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "sortColumn", required = false) String sortColumn,
-        @RequestParam(value = "sortDirection", defaultValue = "ASC") String sortDirection,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         // Remove pagination/sorting parameters from the filter map
         filters.remove("page");
         filters.remove("limit");
-        filters.remove("sortColumn");
-        filters.remove("sortDirection");
+        filters.remove("order");
+        filters.remove("dir");
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !SecurityUtil.getPrincipalUuid().equals(userUuid)) {

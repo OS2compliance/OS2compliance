@@ -10,6 +10,7 @@ class CustomGridFunctions {
     sortDirection
     sortColumn
     page
+    limit
 
     /**
      * Enabled custom sort, search and pagination for an existing GridJS object
@@ -21,6 +22,9 @@ class CustomGridFunctions {
         this.dataUrl = dataUrl
         this.grid = grid
         this.page = 0
+        this.limit = 50
+
+        console.log(grid)
 
         //Update vital config of grid to enable custom search, sort and pagination
         this.grid.updateConfig({
@@ -28,17 +32,19 @@ class CustomGridFunctions {
             sort: true,
             pagination: {
                 enabled: true,
-                limit: 50,
+                limit: this.grid.config.pagination && this.grid.config.pagination.limit ? this.grid.config.pagination.limit : this.limit ,
+                server: {
+                    url: (prev, page, limit) => `${this.dataUrl}?${this.updatePagination(prev, page, limit)}`
+                }
             },
-        })
+            sort: {
+                server: {
+                    url: (prev, columns) => `${this.dataUrl}?${this.updateSorting(prev, columns)}`
+                }
+            }
+        }).forceRender()
 
         this.addSearchFields()
-
-        // Listen for pagination and sorting changes
-        this.grid.on('pageChange', (page) => this.update(page, this.sortColumn, this.sortDirection));
-        this.grid.on('sort', (column, direction) => {
-            this.update(this.page, column, direction)
-        });
 
         this.update(this.page, this.column, this.direction)
 
@@ -47,19 +53,19 @@ class CustomGridFunctions {
     /**
      * Generates a seearch string based on searched values for columns
      */
-    getSearchString() {
+    getParamString() {
         const params = new URLSearchParams()
         if (this.page) {
             params.append("page", this.page)
         }
         if (this.sortColumn) {
-            params.append("sortColumn", this.sortColumn)
+            params.append("order", this.sortColumn)
         }
         if (this.sortDirection) {
-            params.append("sortDirection", this.sortDirection)
+            params.append("dir", this.sortDirection)
         }
-        if (this.grid.config.pagination.limit) {
-            params.append("limit", this.grid.config.pagination.limit)
+        if (this.limit) {
+            params.append("limit", this.limit)
         }
         for (const [key, value] of Object.entries(this.searchStrings)) {
             const calculatedValue = value()
@@ -69,6 +75,28 @@ class CustomGridFunctions {
         }
 
         return params.toString();
+    }
+
+    updatePagination(prev, page, limit) {
+        this.page = page
+        this.limit = limit
+        return this.getParamString()
+        // return `${prev}?limit=${limit}&page=${page}`
+    }
+
+    updateSorting(prev, columns) {
+        if (!columns.length) return this.getParamString();
+
+        const col = columns[0];
+
+        const dir = col.direction === 1 ? 'asc' : 'desc';
+        let colName = this.grid.config.columns[col.index].searchable;
+        this.sortColumn = colName
+        this.sortDirection = dir
+
+        return this.getParamString()
+
+        // return `${prev}?order=${colName}&dir=${dir}`;
     }
 
     updateColumnValue(column, value) {
@@ -89,18 +117,27 @@ class CustomGridFunctions {
             this.sortDirection = sortDirection
         }
 
-        this.grid.updateConfig({
-            server: {
-                ...this.grid.config.server,
-                url: `${this.dataUrl}?${this.getSearchString()}`,
-
-                //                pagination: {
-                //                    enabled: true,
-                //                    ...this.grid.config.pagination,
-                //                    total: data.total // Total number of items from the server for pagination
-                //                }
-            },
-        }).forceRender();
+        //        this.grid.updateConfig({
+        //            pagination : {
+        //                server: {
+        //                    url: (prev, page, limit) => `${this.dataUrl}?${this.updatePagination(prev, page, limit)}`
+        //                  }
+        //            },
+        //            sort : {
+        //                server: {
+        //                    url: (prev, columns) => `${this.dataUrl}?${this.updateSorting(prev, columns)}`
+        //            }
+        ////             server: {
+        ////                 ...this.grid.config.server,
+        ////                 url: `${this.dataUrl}?${this.getSearchString()}`,
+        //
+        ////                                pagination: {
+        ////                                    enabled: true,
+        ////                                    ...this.grid.config.pagination,
+        ////                                    total: data.total // Total number of items from the server for pagination
+        ////                                }
+        //            },
+        //        }).forceRender();
 
         setTimeout(() => {
             this.initializeInputFields()
