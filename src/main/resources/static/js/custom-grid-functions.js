@@ -27,6 +27,7 @@ class CustomGridFunctions {
 
         this.loadState()
 
+        const originalThenFunction = this.grid.config.server.then
         //Update vital config of grid to enable custom search, sort and pagination
         const gridConfig = this.grid.updateConfig({
             search: false,
@@ -34,6 +35,10 @@ class CustomGridFunctions {
             server: {
                 ...this.grid.config.server,
                 url: `${this.dataUrl}?${this.getParamString()}`,
+                then : (data) => {
+                    this.initializeInputFields()
+                    return originalThenFunction(data)
+                }
             },
             pagination: {
                 enabled: true,
@@ -52,7 +57,7 @@ class CustomGridFunctions {
         this.addSearchFields()
 
         this.grid.on('ready', () => {
-            this.loadState()
+
             this.initializeInputFields()
         })
 
@@ -187,6 +192,7 @@ class CustomGridFunctions {
      * Initializes functionality for search fields
      */
     initializeInputFields() {
+        this.loadState()
         const inputFields = document.getElementsByClassName('grid_columnSearchInput')
 
         for (const input of inputFields) {
@@ -204,8 +210,6 @@ class CustomGridFunctions {
             input.addEventListener('change', (event) => {
                 event.stopPropagation();
                 event.preventDefault()
-
-console.log(input.value)
 
                 this.updateColumnValue(key,input.value ? input.value : null)
 
@@ -228,8 +232,6 @@ console.log(input.value)
      * Updates the grid based on values of all search fields
      */
     onSearch() {
-        this.loadState()
-
         this.grid.updateConfig({
             server: {
                 ...this.grid.config.server,

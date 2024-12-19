@@ -123,7 +123,8 @@ public class TaskRestController {
         tasks = taskGridDao.findAllWithColumnSearch(filters, List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
 
         assert tasks != null;
-        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
+
+        return new PageDTO<TaskDTO>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
     }
 
     private boolean containsField(final String fieldName) {

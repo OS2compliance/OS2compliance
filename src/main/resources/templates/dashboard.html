@@ -279,7 +279,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
              then: data => data.content.map(task =>
                  [task.id, task.name, task.taskType, task.responsibleUser, task.responsibleOU, task.nextDeadline, task.taskRepetition, task.completed, task.tags]
              ),
-             total: data => data.totalCount
+             total: data => data.totalCount ? data.totalCount : 0
          },
         language: {
             'search': {
@@ -297,8 +297,10 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         }
     };
-    const gridTasks = new gridjs.Grid(gridConfigTasks).render(document.getElementById("tasksDatatable"));
-    // searchService.initSearch(gridTasks, gridConfigTasks, 'tasks');
+    const gridTasks = new gridjs.Grid(gridConfigTasks)
+        .render(document.getElementById("tasksDatatable"));
+
+gridTasks.on('load', (data)=> console.log('load', data))
 
     const taskGridFunctions = new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId)
 
