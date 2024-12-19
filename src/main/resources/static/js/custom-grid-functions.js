@@ -7,11 +7,11 @@ class CustomGridFunctions {
     dataUrl
     grid
     state = {
-        sortDirection : 'ASC',
-        sortColumn : '',
-        page : 0,
-        limit : 50,
-        searchValues : {}
+        sortDirection: 'ASC',
+        sortColumn: '',
+        page: 0,
+        limit: 50,
+        searchValues: {}
     }
 
     /**
@@ -111,7 +111,7 @@ class CustomGridFunctions {
         const col = columns[0];
 
         const dir = col.direction === 1 ? 'asc' : 'desc';
-        let colName = this.grid.config.columns[col.index].searchable;
+        let colName = this.grid.config.columns[col.index].searchable.searchKey;
         this.state.sortColumn = colName
         this.state.sortDirection = dir
 
@@ -135,13 +135,31 @@ class CustomGridFunctions {
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
             if (!column.hidden && column.searchable) {
-                column.columns = [
-                    {
-                        name: gridjs.html(this.generateInputFieldHTML(column.searchable)),
-                        formatter: column.formatter,
-                        width: column.width,
-                        id: 'search_' + column.id
-                    }]
+                let searchFieldHTML = '<div style="display:none;"></div>'
+
+                if (column.searchable.fieldId) {
+                    const foundElement = document.getElementById(column.searchable.fieldId)
+                    foundElement.classList.add('grid_columnSearchInput')
+                    foundElement.setAttribute('data-search-key', column.searchable.searchKey)
+                    searchFieldHTML = foundElement.outerHTML
+                    foundElement.remove()
+                } else {
+                    searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
+                }
+
+                column.columns = [{
+                    name: gridjs.html(searchFieldHTML),
+                    formatter: column.formatter,
+                    width: column.width,
+                    id: 'search_' + column.id
+                }]
+            } else if (!column.hidden) {
+                column.columns = [{
+                    name: gridjs.html(searchFieldHTML),
+                    formatter: column.formatter,
+                    width: column.width,
+                    id: 'search_' + column.id
+                }]
             }
         }
 
@@ -156,7 +174,7 @@ class CustomGridFunctions {
      * @param {string} searchKey name of search parameter for this field
      * @returns Text input field as HTML
      */
-    generateInputFieldHTML(searchKey) {
+    generateTextInputFieldHTML(searchKey) {
         const inputElement = document.createElement('input')
         inputElement.type = 'text'
         inputElement.classList.add('grid_columnSearchInput')
@@ -173,6 +191,10 @@ class CustomGridFunctions {
 
         for (const input of inputFields) {
             const key = input.getAttribute('data-search-key')
+            const inputType = 'text'
+
+            if (input.tagName === 'select') {inputType = 'enum'}
+            if (input.tagName === 'input' && input.type ==='date') {inputType = 'date'}
 
             input.addEventListener('click', (event) => {
                 event.stopPropagation();
@@ -183,7 +205,9 @@ class CustomGridFunctions {
                 event.stopPropagation();
                 event.preventDefault()
 
-                this.updateColumnValue(key, input.value ? input.value : null)
+console.log(input.value)
+
+                this.updateColumnValue(key,input.value ? input.value : null)
 
                 this.saveState(key, input.value)
                 this.onSearch()
@@ -225,9 +249,16 @@ class CustomGridFunctions {
      * Loads current state from local storage
      */
     loadState() {
-        const retrievedState = JSON.parse(localStorage.getItem(`${this.dataUrl}_search`) )
+        const retrievedState = JSON.parse(localStorage.getItem(`${this.dataUrl}_search`))
         if (retrievedState) {
-            this.state =  retrievedState
+            this.state = retrievedState
         }
+    }
+}
+
+class SearchableColumn {
+    constructor(searchKey, fieldId = null) {
+        this.searchKey = searchKey
+        this.fieldId = fieldId
     }
 }
