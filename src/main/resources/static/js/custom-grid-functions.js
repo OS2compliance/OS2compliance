@@ -5,34 +5,39 @@
  */
 class CustomGridFunctions {
     dataUrl
-    searchStrings = {}
     grid
-    sortDirection
-    sortColumn
-    page
-    limit
+    state = {
+        sortDirection : 'ASC',
+        sortColumn : '',
+        page : 0,
+        limit : 50,
+        searchValues : {}
+    }
 
     /**
      * Enabled custom sort, search and pagination for an existing GridJS object
      * @param {Grid} grid GridJS grid element
      * @param {string} dataUrl Server endpoint handling data request
-     * @param {ColumnFieldConfig[]} columnFieldConfig Array of configuration object, each representing a columns search field
      */
     constructor(grid, dataUrl) {
         this.dataUrl = dataUrl
         this.grid = grid
-        this.page = 0
-        this.limit = 50
+        this.state.page = 0
+        this.state.limit = 50
 
-        console.log(grid)
+        this.loadState()
 
         //Update vital config of grid to enable custom search, sort and pagination
         const gridConfig = this.grid.updateConfig({
             search: false,
             sort: true,
+            server: {
+                ...this.grid.config.server,
+                url: `${this.dataUrl}?${this.getParamString()}`,
+            },
             pagination: {
                 enabled: true,
-                limit: this.grid.config.pagination && this.grid.config.pagination.limit ? this.grid.config.pagination.limit : this.limit,
+                limit: this.grid.config.pagination && this.grid.config.pagination.limit ? this.grid.config.pagination.limit : this.state.limit,
                 server: {
                     url: (prev, page, limit) => `${this.dataUrl}?${this.updatePagination(prev, page, limit)}`
                 }
@@ -44,32 +49,35 @@ class CustomGridFunctions {
             }
         })
 
-        this.grid.on('ready', () => this.initializeInputFields())
-
         this.addSearchFields()
+
+        this.grid.on('ready', () => {
+            this.loadState()
+            this.initializeInputFields()
+        })
 
         gridConfig.forceRender()
     }
 
     /**
-     * Generates a seearch string based on searched values for columns
+     * Generates a parameters for url request, based on current state
      */
     getParamString() {
         const params = new URLSearchParams()
-        if (this.page) {
-            params.append("page", this.page)
+        if (this.state.page) {
+            params.append("page", this.state.page)
         }
-        if (this.sortColumn) {
-            params.append("order", this.sortColumn)
+        if (this.state.sortColumn) {
+            params.append("order", this.state.sortColumn)
         }
-        if (this.sortDirection) {
-            params.append("dir", this.sortDirection)
+        if (this.state.sortDirection) {
+            params.append("dir", this.state.sortDirection)
         }
-        if (this.limit) {
-            params.append("limit", this.limit)
+        if (this.state.limit) {
+            params.append("limit", this.state.limit)
         }
-        for (const [key, value] of Object.entries(this.searchStrings)) {
-            const calculatedValue = value()
+        for (const [key, value] of Object.entries(this.state.searchValues)) {
+            const calculatedValue = value
             if (calculatedValue) {
                 params.append(key, calculatedValue)
             }
@@ -78,12 +86,25 @@ class CustomGridFunctions {
         return params.toString();
     }
 
+    /**
+     * updates state on pagination change
+     * @param {URL} prev
+     * @param {number} page
+     * @param {number} limit
+     * @returns
+     */
     updatePagination(prev, page, limit) {
-        this.page = page
+        this.state.page = page
         this.limit = limit
         return this.getParamString()
     }
 
+    /**
+     * Updates state on sorting change
+     * @param {URL} prev
+     * @param {object} columns
+     * @returns
+     */
     updateSorting(prev, columns) {
         if (!columns.length) return this.getParamString();
 
@@ -91,23 +112,32 @@ class CustomGridFunctions {
 
         const dir = col.direction === 1 ? 'asc' : 'desc';
         let colName = this.grid.config.columns[col.index].searchable;
-        this.sortColumn = colName
-        this.sortDirection = dir
+        this.state.sortColumn = colName
+        this.state.sortDirection = dir
 
         return this.getParamString()
     }
 
+    /**
+     * Convenience method for updating column search state
+     * @param {string} column
+     * @param {string} value
+     */
     updateColumnValue(column, value) {
-        this.searchStrings[column] = value;
+        this.state.searchValues[column] = value;
     }
 
+
+    /**
+     * Adds a text input for every  'searchable' column in the GridJS grid, with id based on the column id
+     */
     addSearchFields() {
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
             if (!column.hidden && column.searchable) {
                 column.columns = [
                     {
-                        name: gridjs.html(this.generateInputField(column.searchable)),
+                        name: gridjs.html(this.generateInputFieldHTML(column.searchable)),
                         formatter: column.formatter,
                         width: column.width,
                         id: 'search_' + column.id
@@ -115,13 +145,18 @@ class CustomGridFunctions {
             }
         }
 
-        const gridConfig = this.grid.updateConfig({
+        this.grid.updateConfig({
             columns: updatedConfig
         })
 
     }
 
-    generateInputField(searchKey) {
+    /**
+     * Generates a html input field with the given data-search-key attribute
+     * @param {string} searchKey name of search parameter for this field
+     * @returns Text input field as HTML
+     */
+    generateInputFieldHTML(searchKey) {
         const inputElement = document.createElement('input')
         inputElement.type = 'text'
         inputElement.classList.add('grid_columnSearchInput')
@@ -130,10 +165,15 @@ class CustomGridFunctions {
         return inputElement.outerHTML
     }
 
+    /**
+     * Initializes functionality for search fields
+     */
     initializeInputFields() {
         const inputFields = document.getElementsByClassName('grid_columnSearchInput')
 
         for (const input of inputFields) {
+            const key = input.getAttribute('data-search-key')
+
             input.addEventListener('click', (event) => {
                 event.stopPropagation();
                 event.preventDefault()
@@ -142,53 +182,52 @@ class CustomGridFunctions {
             input.addEventListener('change', (event) => {
                 event.stopPropagation();
                 event.preventDefault()
-                this.updateColumnValue(input.getAttribute('data-search-key'), () => input.value)
+
+                this.updateColumnValue(key, input.value ? input.value : null)
+
+                this.saveState(key, input.value)
                 this.onSearch()
             })
 
             input.addEventListener('keydown', (event) => {
                 event.stopPropagation();
             })
+
+            const savedValue = this.state.searchValues[key]
+            if (savedValue) {
+                input.value = savedValue
+            }
         }
     }
 
-    onSearch(){
-        //get values for input fields
-        //update the url
-        for ( const [key,value] of Object.entries(this.searchStrings)) {
-            console.log(key, value())
-        }
+    /**
+     * Updates the grid based on values of all search fields
+     */
+    onSearch() {
+        this.loadState()
+
         this.grid.updateConfig({
-            server : {
-                 ...this.grid.config.server,
-                 url: `${this.dataUrl}?${this.getParamString()}`,
+            server: {
+                ...this.grid.config.server,
+                url: `${this.dataUrl}?${this.getParamString()}`,
             }
         }).forceRender()
     }
 
-    static isSearchable(columnName) {
-        return (cell, row, column) => {
-            if (!cell) {
-                return {
-                    'data-searchable': `${columnName}`
-                }
-            }
-        }
+    /**
+     * Saves current state to local storage
+     */
+    saveState() {
+        localStorage.setItem(`${this.dataUrl}_search`, JSON.stringify(this.state))
     }
 
-
-}
-
-/**
- * Data class used for initialization of CustomGridFunctions
- */
-class ColumnFieldConfig {
     /**
-     * @param {string} columnName
-     * @param {function} valueGetter side-effect free function that retrieves the value of the search field for the column.
+     * Loads current state from local storage
      */
-    constructor(columnName, valueGetter) {
-        this.columnName = columnName,
-            this.valueGetter = valueGetter
+    loadState() {
+        const retrievedState = JSON.parse(localStorage.getItem(`${this.dataUrl}_search`) )
+        if (retrievedState) {
+            this.state =  retrievedState
+        }
     }
 }

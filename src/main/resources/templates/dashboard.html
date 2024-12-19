@@ -290,8 +290,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     const gridTasks = new gridjs.Grid(gridConfigTasks).render(document.getElementById("tasksDatatable"));
     // searchService.initSearch(gridTasks, gridConfigTasks, 'tasks');
 
-    const columnFieldConfigs = [new ColumnFieldConfig('name', ()=> '')]
-    const taskGridFunctions = new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, columnFieldConfigs)
+    const taskGridFunctions = new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId)
 
 
 
