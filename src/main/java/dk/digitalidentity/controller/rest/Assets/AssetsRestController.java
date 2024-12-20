@@ -97,28 +97,29 @@ public class AssetsRestController {
     private final AssetOversightDao assetOversightDao;
 
     @PostMapping("list")
-    public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
-                                  @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-                                  @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-                                  @RequestParam(name = "order", required = false) final String order,
-                                  @RequestParam(name = "dir", required = false) final String dir) {
+    public PageDTO<AssetDTO> list(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "size", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("size");
+        filters.remove("order");
+        filters.remove("dir");
+
+        //Set sorting
         Sort sort = null;
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
+        if (StringUtils.isNotEmpty(sortColumn) && containsField(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
         } else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
+            sort = Sort.unsorted();
         }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        Page<AssetGrid> assets = null;
-        if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
-            // search and page
-            assets = assetGridDao.findAllCustom(searchableProperties, search, sortAndPage, AssetGrid.class);
-        } else {
-            // Fetch paged and sorted
-            assets = assetGridDao.findAll(sortAndPage);
-        }
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(filters, null,  sortAndPage, AssetGrid.class);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
