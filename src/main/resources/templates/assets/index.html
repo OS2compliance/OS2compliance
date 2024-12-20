@@ -39,7 +39,21 @@
                         <div class="card mb-3">
                             <div class="card-body">
                                 <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                <div id="assetsDatatable"></div>
+                                <div id="assetsDatatable" class="mt-3"></div>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetStatusSearchSelector" id="assetStatusSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetRiskSearchSelector" id="assetRiskSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -70,215 +84,11 @@
 
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
-
-    const updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        fetch(formUrl)
-            .then(response => response.text()
-                .then(data => {
-                    document.getElementById('formDialog').innerHTML = data;
-                    formLoaded();
-                    //initFormValidationForForm('formDialog');
-                }))
-            .catch(error => toastService.error(error))
-
-        let assetGridConfig = {
-            className: defaultClassName,
-            search: {
-                keyword: searchService.getSavedSearch(),
-                server: {
-                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                },
-                debounceTimeout: 1000
-            },
-            pagination: {
-                limit: 50,
-                server: {
-                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                }
-            },
-            sort: {
-                enabled: true,
-                multiColumn: false,
-                server: {
-                    url: (prev, columns) => {
-                        if (!columns.length) return prev;
-                        const columnIds = ['id','kitos', 'name', 'supplier', 'hasThirdCountryTransfer', 'assetType', 'responsibleUserNames', 'updatedAt', 'registers', 'assessmentOrder', 'assetStatusOrder'];
-                        const col = columns[0]; // multiColumn false
-                        const order = columnIds[col.index];
-                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                    }
-                }
-            },
-            columns: [
-                {
-                    name: "id",
-                    hidden: true
-                },
-                {
-                    name:"kitos",
-                    hidden: true
-                },
-                {
-                    name: "Navn",
-                    formatter: (cell, row) => {
-                        const url = viewUrl + row.cells[0]['data'];
-                        if(row.cells[1]['data'] == 'true') {
-                            return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" >`);
-                        } else {
-                            return gridjs.html(`<a href="${url}">${cell}</a>`);
-                        }
-                    }
-                },
-                {
-                    name: "Leverandør"
-                },
-                {
-                    name: "Tredjelandsoverførsel",
-                    formatter: (cell, row) => {
-                        if (cell) {
-                            return 'Ja';
-                        } else {
-                            return 'Nej';
-                        }
-                    }
-                },
-                {
-                    name: "Type"
-                },
-                {
-                    name: "Systemejer"
-                },
-                {
-                    name: "Opdateret",
-                    width: '100px'
-                },
-                {
-                    name: "Antal beh.",
-                    width: '95px'
-                },
-                {
-                    name: "Risiko vurdering",
-                    width: '100px',
-                    formatter: (cell, row) => {
-                        var assessment = [];
-                        if (cell === "Grøn") {
-                            assessment = [
-                                '<div class="d-block badge bg-green" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Lysgrøn") {
-                            assessment = [
-                                '<div class="d-block badge bg-green-300" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Gul") {
-                            assessment = [
-                                '<div class="d-block badge bg-yellow-500" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Orange") {
-                            assessment = [
-                                '<div class="d-block badge bg-orange" style="width: 60px">' + cell + '</div>'
-                            ]
-                        } else if (cell === "Rød") {
-                            assessment = [
-                                '<div class="d-block badge bg-red" style="width: 60px">' + cell + '</div>'
-                            ]
-                        }
-                        return gridjs.html(''.concat(...assessment), 'div')
-                    },
-                },
-                {
-                    name: "Status",
-                    width: '100px',
-                    formatter: (cell, row) => {
-                        var status = cell;
-                        if (cell === "Ikke startet") {
-                            status = '<div class="d-block badge bg-warning">' + cell + '</div>'
-                        } else if (cell === "I gang") {
-                            status = '<div class="d-block badge bg-info">' + cell + '</div>'
-                        } else if (cell === "Klar") {
-                            status = '<div class="d-block badge bg-success">' + cell + '</div>'
-                        }
-                        return gridjs.html(status, 'div');
-                    },
-                },
-                {
-                    id: 'handlinger',
-                    name: 'Handlinger',
-                    sort: 0,
-                    width: '90px',
-                    formatter: (cell, row) => {
-                        if(row.cells[11]['data']) {
-                            const assetId = row.cells[0]['data'];
-                            const name = row.cells[2]['data'].replaceAll("'", "\\'");
-                            return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                        }
-                    }
-                }
-            ],
-            server:{
-                url: gridAssetsUrl,
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': token
-                },
-                then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.changeable ],
-                ),
-                total: data => data.totalCount
-            },
-            language: {
-                'search': {
-                    'placeholder': 'Søg'
-                },
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'results': 'aktiver',
-                    'of': 'af',
-                    'to': 'til',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'page': (page) => `Side ${page}`
-                }
-            }
-        };
-        const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
-        searchService.initSearch(grid, assetGridConfig);
-        gridOptions.init(grid, document.getElementById("gridOptions"));
-    });
-
-    function deleteClicked(assetId, name) {
-        Swal.fire({
-          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#03a9f4',
-          cancelButtonColor: '#df5645',
-          confirmButtonText: 'Ja',
-          cancelButtonText: 'Nej'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                    .then(() => {
-                        window.location.reload();
-                    });
-          }
-        })
-    }
 
 
     /*]]>*/
 </script>
-
+<script th:src="@{/js/asset/assets.js}" defer></script>
 </body>
 
 </html>

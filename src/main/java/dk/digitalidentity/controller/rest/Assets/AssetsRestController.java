@@ -99,14 +99,14 @@ public class AssetsRestController {
     @PostMapping("list")
     public PageDTO<AssetDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "size", defaultValue = "50") int limit,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
         @RequestParam(value = "order", required = false) String sortColumn,
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         // Remove pagination/sorting parameters from the filter map
         filters.remove("page");
-        filters.remove("size");
+        filters.remove("limit");
         filters.remove("order");
         filters.remove("dir");
 
