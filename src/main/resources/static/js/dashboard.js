@@ -367,32 +367,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     let gridConfigDocuments = {
         className: defaultClassName,
-        search: {
-            keyword: searchService.getSavedSearch('documents'),
-            server: {
-                url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-            },
-            debounceTimeout: 1000
-        },
-        pagination: {
-            limit: 50,
-            server: {
-                url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-            }
-        },
-        sort: {
-            enabled: true,
-            multiColumn: false,
-            server: {
-                url: (prev, columns) => {
-                    if (!columns.length) return prev;
-                    const columnIds = ['id', 'name', 'documentType', '', 'nextRevision', 'statusOrder', 'tags'];
-                    const col = columns[0]; // multiColumn false
-                    const order = columnIds[col.index];
-                    return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
-                }
-            }
-        },
         columns: [
             {
                 name: "id",
@@ -400,23 +374,36 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Titel",
+                searchable: {
+                    searchKey : 'name'
+                },
                 formatter: (cell, row) => {
                     const url = documentsViewUrl + row.cells[0]['data'];
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
                 }
             },
             {
-                name: "Dokumentype"
+                name: "Dokumentype",
+                searchable: {
+                    searchKey : 'documentType'
+                }
             },
             {
                 name: "Ansvarlig",
                 hidden: true
             },
             {
-                name: "Næste revidering"
+                name: "Næste revidering",
+                searchable: {
+                    searchKey : 'nextRevision'
+                }
             },
             {
                 name: "Status",
+                searchable: {
+                    searchKey : 'status',
+                    fieldId: 'documentStatusSearchSelector'
+                },
                 formatter: (cell, row) => {
                     var status = cell;
                     if (cell === "Ikke startet") {
@@ -438,6 +425,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Tags",
+                searchable: {
+                    searchKey : 'tags'
+                },
                 formatter: (cell, row) => {
                     var result = '<ul>';
                     if (cell != null && cell.trim() !== '') {
@@ -480,6 +470,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
         }
     };
     const gridDocuments = new gridjs.Grid(gridConfigDocuments).render(document.getElementById("documentsDatatable"));
-    searchService.initSearch(gridDocuments, gridConfigDocuments, 'documents');
+
+    //Enables custom column search, serverside sorting and pagination
+    new CustomGridFunctions(gridDocuments, gridDocumentsUrl + "/" + userId, 'documentsDatatable')
 
 });

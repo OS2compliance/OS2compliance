@@ -112,6 +112,13 @@
                         <div id="_dm-tabsDocuments" class="tab-pane fade" role="tabpanel"
                              aria-labelledby="documents-tab">
                             <div id="documentsDatatable"></div>
+
+                            <!-- Custom search selectors-->
+                            <select class="form-control form-select editField" data-trigger="" name="documentStatusSearchSelector" id="documentStatusSearchSelector" tabindex="-1" required >
+                                <option th:text="'Alle'" th:value="null"></option>
+                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DocumentStatus).values()}"
+                                        th:value="${option}" th:text="${option.message}"></option>
+                            </select>
                         </div>
                     </div>
                 </div>
