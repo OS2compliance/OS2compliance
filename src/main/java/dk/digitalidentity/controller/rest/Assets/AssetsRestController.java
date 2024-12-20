@@ -1,8 +1,7 @@
 package dk.digitalidentity.controller.rest.Assets;
 
 import java.nio.charset.StandardCharsets;
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.event.EmailEvent;
@@ -32,6 +31,7 @@ import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.tuple.Pair;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -74,9 +74,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.Comparator;
-import java.util.Objects;
-import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -128,34 +125,38 @@ public class AssetsRestController {
     }
 
     @PostMapping("list/{id}")
-    public PageDTO<AssetDTO> list(@PathVariable(name = "id", required = true) final String uuid,
-                                  @RequestParam(name = "search", required = false) final String search,
-                                  @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-                                  @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-                                  @RequestParam(name = "order", required = false) final String order,
-                                  @RequestParam(name = "dir", required = false) final String dir) {
-        Sort sort = null;
+    public PageDTO<AssetDTO> list(
+        @PathVariable(name = "id") final String uuid,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("order");
+        filters.remove("dir");
+
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
+
+        //Set sorting
+        Sort sort = null;
+        if (StringUtils.isNotEmpty(sortColumn) && containsField(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
         } else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
+            sort = Sort.unsorted();
         }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+
         Page<AssetGrid> assets = null;
-        if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
-            // search and page
-            assets = assetGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
-        } else {
-            // Fetch paged and sorted
-            assets = assetGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage);
-        }
+        assets = assetGridDao.findAllForResponsibleUser(filters, sortAndPage, AssetGrid.class, user);
 
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }

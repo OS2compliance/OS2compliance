@@ -148,37 +148,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
         .render(document.getElementById("tasksDatatable"));
 
     //Enables custom column search, serverside sorting and pagination
-    new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId)
+    new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, 'tasksDatatable')
 
 
     let gridConfigAssets = {
         className: defaultClassName,
-        search: {
-            keyword: searchService.getSavedSearch('assets'),
-            server: {
-                url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-            },
-            debounceTimeout: 1000
-        },
-        pagination: {
-            limit: 50,
-            server: {
-                url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-            }
-        },
-        sort: {
-            enabled: true,
-            multiColumn: false,
-            server: {
-                url: (prev, columns) => {
-                    if (!columns.length) return prev;
-                    const columnIds = ['id', 'name', 'supplier', 'assetType', 'responsibleUser', 'updatedAt', 'assessmentOrder', 'assetStatusOrder'];
-                    const col = columns[0]; // multiColumn false
-                    const order = columnIds[col.index];
-                    return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
-                }
-            }
-        },
         columns: [
             {
                 name: "id",
@@ -186,29 +160,35 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Navn",
+                searchable: { searchKey: 'name' },
                 formatter: (cell, row) => {
                     const url = assetsViewUrl + row.cells[0]['data'];
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
                 }
             },
             {
-                name: "Leverandør"
+                name: "Leverandør",
+                searchable: { searchKey: 'supplier' },
             },
             {
-                name: "Type"
+                name: "Type",
+                searchable: { searchKey: 'assetType' },
             },
             {
                 name: "Systemejer",
                 hidden: true
             },
             {
-                name: "Opdateret"
+                name: "Opdateret",
+                searchable: { searchKey: 'updatedAt' },
             },
             {
-                name: "Risikovurdering"
+                name: "Risikovurdering",
+                searchable: { searchKey: 'criticality' },
             },
             {
                 name: "Status",
+                searchable: { searchKey: 'assetStatus', fieldId:'assetStatusSearchSelector' },
                 formatter: (cell, row) => {
                     var status = cell;
                     if (cell === "Ikke startet") {
@@ -256,7 +236,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
         }
     };
     const gridAssets = new gridjs.Grid(gridConfigAssets).render(document.getElementById("assetsDatatable"));
-    searchService.initSearch(gridAssets, gridConfigAssets, 'assets');
+//    searchService.initSearch(gridAssets, gridConfigAssets, 'assets');
+    new CustomGridFunctions(gridAssets, gridAssetsUrl + "/" + userId, 'assetsDatatable')
+
 
     let gridConfigRegisters = {
         className: defaultClassName,

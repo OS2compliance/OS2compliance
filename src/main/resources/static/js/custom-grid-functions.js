@@ -6,6 +6,7 @@
 class CustomGridFunctions {
     dataUrl
     grid
+    gridId
     state = {
         sortDirection: 'ASC',
         sortColumn: '',
@@ -13,17 +14,20 @@ class CustomGridFunctions {
         limit: 50,
         searchValues: {}
     }
+    #INPUTCLASSNAME
 
     /**
      * Enabled custom sort, search and pagination for an existing GridJS object
      * @param {Grid} grid GridJS grid element
      * @param {string} dataUrl Server endpoint handling data request
      */
-    constructor(grid, dataUrl) {
+    constructor(grid, dataUrl, gridId) {
         this.dataUrl = dataUrl
         this.grid = grid
         this.state.page = 0
         this.state.limit = 50
+        this.gridId = gridId
+        this.#INPUTCLASSNAME = `${this.gridId}_grid_columnSearchInput}`
 
         this.loadState()
 
@@ -144,7 +148,7 @@ class CustomGridFunctions {
 
                 if (column.searchable.fieldId) {
                     const foundElement = document.getElementById(column.searchable.fieldId)
-                    foundElement.classList.add('grid_columnSearchInput')
+                    foundElement.classList.add(this.#INPUTCLASSNAME)
                     foundElement.setAttribute('data-search-key', column.searchable.searchKey)
                     searchFieldHTML = foundElement.outerHTML
                     foundElement.remove()
@@ -182,7 +186,7 @@ class CustomGridFunctions {
     generateTextInputFieldHTML(searchKey) {
         const inputElement = document.createElement('input')
         inputElement.type = 'text'
-        inputElement.classList.add('grid_columnSearchInput')
+        inputElement.classList.add(this.#INPUTCLASSNAME)
         inputElement.classList.add('form-control')
         inputElement.setAttribute('data-search-key', searchKey)
         return inputElement.outerHTML
@@ -193,7 +197,7 @@ class CustomGridFunctions {
      */
     initializeInputFields() {
         this.loadState()
-        const inputFields = document.getElementsByClassName('grid_columnSearchInput')
+        const inputFields = document.getElementsByClassName(this.#INPUTCLASSNAME)
 
         for (const input of inputFields) {
             const key = input.getAttribute('data-search-key')
