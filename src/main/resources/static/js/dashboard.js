@@ -70,6 +70,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             {
                 name: "Status",
 //                searchable: {
+//                  //Temporarily removed until search issues for status is resolved
 //                    searchKey: 'taskResult',
 //                    fieldId:'taskStatusSelector'
 //                },
@@ -147,6 +148,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         }
     };
+
     const gridTasks = new gridjs.Grid(gridConfigTasks)
         .render(document.getElementById("tasksDatatable"));
 
@@ -238,39 +240,15 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         }
     };
+
     const gridAssets = new gridjs.Grid(gridConfigAssets).render(document.getElementById("assetsDatatable"));
-//    searchService.initSearch(gridAssets, gridConfigAssets, 'assets');
+
+    //Enables custom column search, serverside sorting and pagination
     new CustomGridFunctions(gridAssets, gridAssetsUrl + "/" + userId, 'assetsDatatable')
 
 
     let gridConfigRegisters = {
         className: defaultClassName,
-        search: {
-            keyword: searchService.getSavedSearch('registers'),
-            server: {
-                url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-            },
-            debounceTimeout: 1000
-        },
-        pagination: {
-            limit: 50,
-            server: {
-                url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-            }
-        },
-        sort: {
-            enabled: true,
-            multiColumn: false,
-            server: {
-                url: (prev, columns) => {
-                    if (!columns.length) return prev;
-                    const columnIds = ['id', 'name', 'responsibleUser', 'responsibleOUNames', 'updatedAt', 'consequenceOrder', 'statusOrder'];
-                    const col = columns[0]; // multiColumn false
-                    const order = columnIds[col.index];
-                    return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
-                }
-            }
-        },
         columns: [
             {
                 name: "id",
@@ -278,6 +256,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Titel",
+                searchable: {
+                    searchKey: 'name'
+                },
                 formatter: (cell, row) => {
                     const url = registersViewUrl + row.cells[0]['data'];
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
@@ -286,6 +267,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Ansvarlig afdeling",
+                searchable: {
+                    searchKey: 'responsibleOU'
+                },
             },
             {
                 name: "Kontakt person",
@@ -293,10 +277,16 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Senest redigeret",
+                searchable: {
+                    searchKey: 'updatedAt'
+                },
             },
             {
                 name: "Konsekvens vurdering",
                 width: "100px",
+                searchable: {
+                    searchKey: 'consequence'
+                },
                 formatter: (cell, row) => {
                     var assessment = cell;
                     if (cell === "Grøn") {
@@ -318,6 +308,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
             {
                 name: "Status",
                 width: "80px",
+                searchable: {
+                    searchKey: 'status'
+                },
                 formatter: (cell, row) => {
                     var status = cell;
                     if (cell === "Klar") {
@@ -364,8 +357,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         }
     };
+
     const gridRegisters = new gridjs.Grid(gridConfigRegisters).render(document.getElementById("registersDatatable"));
-    searchService.initSearch(gridRegisters, gridConfigRegisters, 'registers');
+
+    //Enables custom column search, serverside sorting and pagination
+    new CustomGridFunctions(gridRegisters, gridRegistersUrl + "/" + userId, 'registersDatatable')
 
     let gridConfigDocuments = {
         className: defaultClassName,
