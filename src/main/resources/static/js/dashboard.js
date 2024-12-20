@@ -285,7 +285,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 name: "Konsekvens vurdering",
                 width: "100px",
                 searchable: {
-                    searchKey: 'consequence'
+                    searchKey: 'consequence',
+                    fieldId : 'registerRiskAssessmentSearchSelector'
                 },
                 formatter: (cell, row) => {
                     var assessment = cell;
@@ -309,7 +310,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 name: "Status",
                 width: "80px",
                 searchable: {
-                    searchKey: 'status'
+                    searchKey: 'status',
+                    fieldId: 'registerStatusSearchSelector'
                 },
                 formatter: (cell, row) => {
                     var status = cell;

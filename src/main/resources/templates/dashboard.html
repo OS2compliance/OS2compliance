@@ -93,6 +93,21 @@
                         <div id="_dm-tabsRegisters" class="tab-pane fade" role="tabpanel"
                              aria-labelledby="registers-tab">
                             <div id="registersDatatable"></div>
+
+                            <!-- Custom search selectors-->
+                            <select class="form-control form-select editField" data-trigger="" name="registerRiskAssessmentSearchSelector" id="registerRiskAssessmentSearchSelector" tabindex="-1" required >
+                                <option th:text="'Alle'" th:value="null"></option>
+                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
+                                        th:value="${option}" th:text="${option.message}"></option>
+                            </select>
+
+                            <!-- Custom search selectors-->
+                            <select class="form-control form-select editField" data-trigger="" name="registerStatusSearchSelector" id="registerStatusSearchSelector" tabindex="-1" required >
+                                <option th:text="'Alle'" th:value="null"></option>
+                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
+                                        th:value="${option}" th:text="${option.message}"></option>
+                            </select>
+
                         </div>
                         <div id="_dm-tabsDocuments" class="tab-pane fade" role="tabpanel"
                              aria-labelledby="documents-tab">
