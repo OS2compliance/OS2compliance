@@ -143,8 +143,8 @@ class CustomGridFunctions {
     addSearchFields() {
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
-            if (!column.hidden && column.searchable) {
                 let searchFieldHTML = '<div style="display:none;"></div>'
+            if (!column.hidden && column.searchable) {
 
                 if (column.searchable.fieldId) {
                     const foundElement = document.getElementById(column.searchable.fieldId)

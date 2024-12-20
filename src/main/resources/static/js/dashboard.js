@@ -69,7 +69,10 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Status",
-                searchable: { searchKey: 'taskResult', fieldId:'taskStatusSelector' },
+//                searchable: {
+//                    searchKey: 'taskResult',
+//                    fieldId:'taskStatusSelector'
+//                },
                 formatter: (cell, row) => {
                     var status = "";
                     var type = row.cells[2]['data'];
