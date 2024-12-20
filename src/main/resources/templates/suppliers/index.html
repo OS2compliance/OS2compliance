@@ -39,7 +39,14 @@
 							<div class="card mb-3">
 								<div class="card-body">
                                     <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-									<div id="suppliersDatatable"></div>
+									<div id="suppliersDatatable" class="mt-5"></div>
+
+                                    <!-- Custom search selectors-->
+                                    <select class="form-control form-select editField" data-trigger="" name="supplierStatusSearchSelector" id="supplierStatusSearchSelector" tabindex="-1" required >
+                                        <option th:text="'Alle'" th:value="null"></option>
+                                        <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.SupplierStatus).values()}"
+                                                th:value="${option}" th:text="${option.message}"></option>
+                                    </select>
 								</div>
 							</div>
 						</div>
@@ -70,173 +77,9 @@
 		+]*/
 		let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-		const defaultClassName = {
-			table: 'table table-striped',
-			search: "form-control",
-			header: "d-flex justify-content-end"
-		};
-
-		 let editDialog;
-
-		const updateUrl = (prev, query) => {
-			return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-		};
-
-		function deleteClicked(supplierId, name) {
-            Swal.fire({
-              text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra leverandøren slettes også.`,
-              icon: 'warning',
-              showCancelButton: true,
-              confirmButtonColor: '#03a9f4',
-              cancelButtonColor: '#df5645',
-              confirmButtonText: 'Ja',
-              cancelButtonText: 'Nej'
-            }).then((result) => {
-              if (result.isConfirmed) {
-                fetch(`${deleteUrl}${supplierId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                        .then(() => {
-                            window.location.reload();
-                        });
-              }
-            })
-		}
-
-		function editClicked(supplierId) {
-			fetch(`${formUrl}?id=${supplierId}`)
-					.then(response => response.text()
-							.then(data => {
-								let dialog = document.getElementById('formEditDialog');
-								dialog.innerHTML = data;
-								editDialog = new bootstrap.Modal(document.getElementById('formEditDialog'));
-								editDialog.show();
-							}))
-					.catch(error => toastService.error(error));
-		}
-
-		document.addEventListener("DOMContentLoaded", function(event) {
-			fetch(formUrl)
-					.then(response => response.text()
-							.then(data => document.getElementById('formDialog').innerHTML = data))
-					.catch(error => toastService.error(error));
-
-            let gridConfig = {
-                className: defaultClassName,
-                search: {
-                    keyword: searchService.getSavedSearch(),
-                    server: {
-                        url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                    },
-                    debounceTimeout: 1000
-                },
-                pagination: {
-                    limit: 50,
-                    server: {
-                        url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                    }
-                },
-                sort: {
-                    enabled: true,
-                    multiColumn: false,
-                    server: {
-                        url: (prev, columns) => {
-                            if (!columns.length) return prev;
-
-                            const columnIds = ['id', 'name', 'solutionCount', 'updated', 'status', 'actions'];
-                            const col = columns[0]; // multiColumn false
-                            const order = columnIds[col.index];
-                            return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                        }
-                    }
-                },
-                columns: [
-                    {
-                        name: "id",
-                        hidden: true
-                    },
-                    {
-                        name: "Navn",
-                        formatter: (cell, row) => {
-                            const url = viewUrl + row.cells[0]['data'];
-                            return gridjs.html(`<a href="${url}">${cell}</a>`);
-                        },
-                        width: '40%'
-                    },
-                    {
-                        name: "Antal løsninger",
-                        width: '20%'
-                    },
-                    {
-                        name: "Opdateret",
-                        width: '100px'
-                    },
-                    {
-                        name: "Status",
-                        width: '100px',
-                        formatter: (cell, row) => {
-                            var status = cell;
-                            if (cell === "Klar") {
-                                status = [
-                                    '<div class="d-block badge bg-success">' + cell + '</div>'
-                                ]
-                            } else if (cell === "I gang") {
-                                status = [
-                                    '<div class="d-block badge bg-info">' + cell + '</div>'
-                                ]
-                            }
-                            return gridjs.html(''.concat(...status), 'div')
-                        },
-                    },
-                    {
-                        id: 'handlinger',
-                        name: 'Handlinger',
-                        sort: 0,
-                        width: '90px',
-                        formatter: (cell, row) => {
-                            const supplierId = row.cells[0]['data'];
-                            const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                            if(superuser) {
-                            return gridjs.html(
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editClicked('${supplierId}')"><i class="pli-pen-5 fs-5"></i></button>` +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${supplierId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                            }
-                        }
-                    }
-                ],
-                server:{
-                    url: gridSuppliersUrl,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token
-                    },
-                    then: data => data.suppliers.map(supplier =>
-                        [ supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.status ]
-                    ),
-                    total: data => data.count
-                },
-                language: {
-                    'search': {
-                        'placeholder': 'Søg'
-                    },
-                    'pagination': {
-                        'previous': 'Forrige',
-                        'next': 'Næste',
-                        'showing': 'Viser',
-                        'results': 'leverandører',
-                        'of': 'af',
-                        'to': 'til',
-                        'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                        'page': (page) => `Side ${page}`
-                    }
-                }
-            };
-            const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "suppliersDatatable" ));
-            searchService.initSearch(grid, gridConfig);
-            gridOptions.init(grid, document.getElementById("gridOptions"));
-		});
-
 		/*]]>*/
 	</script>
-
+    <script th:src="@{/js/supplier/supplier.js}" defer></script>
 </body>
 
 </html>

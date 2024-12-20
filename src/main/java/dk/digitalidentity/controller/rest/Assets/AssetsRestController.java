@@ -140,12 +140,6 @@ public class AssetsRestController {
         filters.remove("order");
         filters.remove("dir");
 
-        final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
         //Set sorting
         Sort sort = null;
         if (StringUtils.isNotEmpty(sortColumn) && containsField(sortColumn)) {
@@ -155,6 +149,12 @@ public class AssetsRestController {
             sort = Sort.unsorted();
         }
         final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+
+        final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
 
         Page<AssetGrid> assets = null;
         assets = assetGridDao.findAllForResponsibleUser(filters, sortAndPage, AssetGrid.class, user);

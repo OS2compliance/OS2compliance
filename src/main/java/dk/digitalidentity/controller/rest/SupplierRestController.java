@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
@@ -43,31 +44,31 @@ public class SupplierRestController {
 
     @PostMapping("list")
 	public SuppliersPageWrapper list(
-			@RequestParam(name = "search", required = false) final String search,
-			@RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-			@RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-			@RequestParam(name = "order", required = false) final String order,
-			@RequestParam(name = "dir", required = false) final String dir
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
 	) {
 
-		Sort sort = null;
-		if (StringUtils.length(order) > 0 && containsField(order)) {
-			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-			sort = Sort.by(direction, order);
-		} else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("order");
+        filters.remove("dir");
+
+        //Set sorting
+        Sort sort = null;
+        if (StringUtils.isNotEmpty(sortColumn) && containsField(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
+        } else {
+            sort = Sort.unsorted();
         }
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
 
-		final Pageable sortAndPage = PageRequest.of(page, size, sort);
 
-		Page<SupplierGrid> suppliers = null;
-		if (StringUtils.length(search) > 0) {
-			final List<String> searchableProperties = Arrays.asList("name", "updated", "localizedEnums");
-			suppliers = supplierGridDao.findAllCustom(searchableProperties, search, sortAndPage, SupplierGrid.class);
-		} else {
-			// Fetch paged and sorted
-			suppliers = supplierGridDao.findAll(sortAndPage);
-		}
+        Page<SupplierGrid> suppliers =  supplierGridDao.findAllWithColumnSearch(filters, null, sortAndPage, SupplierGrid.class);
 
 		// Convert to DTO
 		final List<SupplierGridDTO> supplierDTOs = new ArrayList<>();
