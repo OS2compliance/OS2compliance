@@ -13,6 +13,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Nyt kategoriseringsfelt på aktiver
 ### Fixed
 - (Ad-hoc) Årshjulet tog alle opgaver i stedet for kun dem der var markeret til at blive inkluderet.
+- (Ad-hoc) Rediger trusselskatalog knappen virkede ikke
 
 
 ## [2.0.0] - 2024-10-31
