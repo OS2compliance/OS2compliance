@@ -44,14 +44,14 @@
                 {
                     name: "Fagområde",
                     searchable: {
-                        searchKey: 'responsibleOU'
+                        searchKey: 'responsibleOU.name'
                     },
                     width: '15%'
                 },
                 {
                     name: "Risikoejer",
                     searchable: {
-                        searchKey: 'responsibleUser'
+                        searchKey: 'responsibleUser.name'
                     },
                     width: '15%'
                 },
