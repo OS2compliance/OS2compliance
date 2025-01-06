@@ -48,14 +48,14 @@ public class TaskRestController {
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "limit", defaultValue = "50") int limit,
         @RequestParam(value = "sortColumn", defaultValue = "nextDeadline", required = false) String sortColumn,
-        @RequestParam(value = "sortDirection", defaultValue = "asc", required = false) String sortDirection,
+        @RequestParam(value = "dir", defaultValue = "asc", required = false) String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         // Remove pagination/sorting parameters from the filter map
         filters.remove("page");
         filters.remove("limit");
         filters.remove("sortColumn");
-        filters.remove("sortDirection");
+        filters.remove("dir");
 
         Sort sort = null;
         if (StringUtils.isNotEmpty(sortColumn)) {
@@ -66,17 +66,7 @@ public class TaskRestController {
         }
         final Pageable sortAndPage = PageRequest.of(page, limit, sort);
 
-        Page<TaskGrid> tasks = null;
-
-        if (!filters.isEmpty()) {
-            // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "taskType", "responsibleUser.name", "responsibleOU.name", "nextDeadline", "localizedEnums", "tags");
-            tasks = taskGridDao.findAllCustom(searchableProperties, filters.values().toString(), sortAndPage, TaskGrid.class);
-        } else {
-            // Fetch paged and sorted
-            tasks = taskGridDao.findAll(sortAndPage);
-        }
-
+        Page<TaskGrid> tasks  = taskGridDao.findAllWithColumnSearch(filters, null, sortAndPage, TaskGrid.class);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assert tasks != null;
@@ -117,9 +107,6 @@ public class TaskRestController {
         final Page<TaskGrid> tasks;
 
         //Get objects, filtered
-
-        final List<String> searchableProperties = filters.keySet().stream().toList();
-
         tasks = taskGridDao.findAllWithColumnSearch(filters, List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
 
         assert tasks != null;
