@@ -43,6 +43,7 @@
                         <div class="card mb-3 flex-row">
                             <div class="card-body col-7 pe-0">
                                 <div id="userDatatable"></div>
+
                             </div>
                             <div id="userDetailContainer" class="card-body col-5">
                                 <div class="card border">
@@ -79,7 +80,6 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        const data = [[${allUsers}]];
         const roleOptions = [[${roleOptions}]]
         const viewUrl = [[@{/admin/users}]];
         const restUrl = [[@{/rest/users}]];

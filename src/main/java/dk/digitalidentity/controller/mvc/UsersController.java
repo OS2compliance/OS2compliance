@@ -43,7 +43,7 @@ public class UsersController {
         model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
 
         //Model for list of users - do not set password for DTO!
-        model.addAttribute("allUsers", userService.getAll().stream().map(user -> UserWithRoleDTO.builder().uuid(user.getUuid()).userId(user.getUserId()).name(user.getName()).email(user.getEmail()).active(user.getActive()).accessRole(getAccessRole(user)).note(user.getNote()).build()).sorted(Comparator.comparing(UserWithRoleDTO::getActive).reversed().thenComparing(UserWithRoleDTO::getUserId)).collect(Collectors.toList()));
+//        model.addAttribute("allUsers", userService.getAll().stream().map(user -> UserWithRoleDTO.builder().uuid(user.getUuid()).userId(user.getUserId()).name(user.getName()).email(user.getEmail()).active(user.getActive()).accessRole(getAccessRole(user)).note(user.getNote()).build()).sorted(Comparator.comparing(UserWithRoleDTO::getActive).reversed().thenComparing(UserWithRoleDTO::getUserId)).collect(Collectors.toList()));
 
         //model for creating new users
         model.addAttribute("user", UserWithRoleDTO.builder().build());

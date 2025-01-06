@@ -140,11 +140,11 @@ public class SearchRepositoryImpl implements SearchRepository {
                 final Expression<String> expressionString = criteriaBuilder.function("DATE_FORMAT", String.class, propertyPath, criteriaBuilder.literal(literal));
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(expressionString), "%" + searchEntry.getValue().toLowerCase() + "%"));
             } else if (searchEntry.getKey().equals("id")) {
-                if (NumberUtils.isParsable(searchEntry.getKey())) {
+                if (NumberUtils.isParsable(searchEntry.getValue())) {
                     predicates.add(criteriaBuilder.like(propertyPath, "%" + NumberUtils.createLong(searchEntry.getValue()) + "%"));
                 }
             } else if (propertyPath.getJavaType().isAssignableFrom(Boolean.class)) {
-                if (BooleanUtils.toBoolean(searchEntry.getKey())) {
+                if (BooleanUtils.toBoolean(searchEntry.getValue()) ) {
                     final Expression<String> expressionString = criteriaBuilder.function("BIT", String.class, propertyPath);
                     predicates.add(criteriaBuilder.like(criteriaBuilder.lower(expressionString), "%" + searchEntry.getValue().toLowerCase() + "%"));
                 }
