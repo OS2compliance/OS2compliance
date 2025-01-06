@@ -14,6 +14,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ### Fixed
 - (Ad-hoc) Årshjulet tog alle opgaver i stedet for kun dem der var markeret til at blive inkluderet.
 - (Ad-hoc) Rediger trusselskatalog knappen virkede ikke
+- (Ad-hoc) Fjernelse af revisionsdato fra et dokument gav fejl
 
 
 ## [2.0.0] - 2024-10-31
