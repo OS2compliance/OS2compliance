@@ -197,7 +197,7 @@
                             if(superuser) {
                             return gridjs.html(
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="editClicked('${supplierId}')"><i class="pli-pen-5 fs-5"></i></button>` +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${supplierId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${supplierId}', '${name.replaceAll('"', '')}')"><i class="pli-trash fs-5"></i></button>`);
                             }
                         }
                     }

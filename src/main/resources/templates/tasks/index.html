@@ -230,7 +230,7 @@
                         if(superuser) {
                             return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`
                                 + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyTaskService.showCopyDialog('${taskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name.replaceAll('"', '')}')"><i class="pli-trash fs-5"></i></button>`);
                         } else if(row.cells[10]['data']) {
                             return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`)
                         }

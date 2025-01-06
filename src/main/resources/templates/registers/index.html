@@ -220,7 +220,7 @@
                             if(superuser) {
                                 return gridjs.html(
                                     `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRegisterService.show('${registerId}')"><i class="pli-pencil fs-5"></i></button>`
-                                    + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                                    + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${registerId}', '${name.replaceAll('"', '')}')"><i class="pli-trash fs-5"></i></button>`);
                             }
                         }
                     }

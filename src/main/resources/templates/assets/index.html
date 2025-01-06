@@ -236,7 +236,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                         const assetId = row.cells[0]['data'];
                         const name = row.cells[2]['data'].replaceAll("'", "\\'");
                         return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name.replaceAll('"', '')}')"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             }
