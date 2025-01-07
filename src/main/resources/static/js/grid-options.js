@@ -55,6 +55,11 @@ function GridOptions() {
         this.grid.config.columns.forEach((column) => {
             if (column.id === element.dataset.id) {
                 column.hidden = !column.hidden;
+
+                //Updates subcolumn headers if custom grid search functionality is used
+                if (column.onHiddenUpdate) {
+                    column.onHiddenUpdate()
+                }
             }
         });
         this.updateLabels();

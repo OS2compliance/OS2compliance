@@ -127,10 +127,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
     };
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "documentsDatatable" ));
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
-
     //Enables custom column search, serverside sorting and pagination
     new CustomGridFunctions(grid, gridDocumentsUrl, 'documentsDatatable')
+
+    gridOptions.init(grid, document.getElementById("gridOptions"));
 });
 
 function deleteClicked(documentId, name) {

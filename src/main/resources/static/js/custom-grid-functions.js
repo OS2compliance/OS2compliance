@@ -60,9 +60,8 @@ class CustomGridFunctions {
 
         this.addSearchFields()
 
-        this.grid.on('ready', () => {
 
-            this.initializeInputFields()
+        this.grid.on('ready', () => {
         })
 
         gridConfig.forceRender()
@@ -143,33 +142,52 @@ class CustomGridFunctions {
     addSearchFields() {
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
-                let searchFieldHTML = '<div style="display:none;"></div>'
-            if (!column.hidden && column.searchable) {
+            let searchFieldHTML = '<div style="display:none;"></div>'
+            if (column.searchable) {
 
-                if (column.searchable.fieldId) {
+                if (column.searchable.fieldId ) {
                     const foundElement = document.getElementById(column.searchable.fieldId)
-                    foundElement.classList.add(this.#INPUTCLASSNAME)
-                    foundElement.setAttribute('data-search-key', column.searchable.searchKey)
-                    searchFieldHTML = foundElement.outerHTML
+                        foundElement.classList.add(this.#INPUTCLASSNAME)
+                        foundElement.setAttribute('data-search-key', column.searchable.searchKey)
+                        searchFieldHTML = foundElement.outerHTML
+                    if (column.hidden) {
+                        foundElement.style.display = 'none'
+                    }
                     foundElement.remove()
                 } else {
                     searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
+                }
+
+                column.onHiddenUpdate = ()=> {
+                    for (const subcolumn of column.columns) {
+                        subcolumn.hidden = column.hidden
+                    }
                 }
 
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
                     width: column.width,
+                    hidden:column.hidden ? true : false,
                     id: 'search_' + column.id
                 }]
-            } else if (!column.hidden) {
+            } else {
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
                     width: column.width,
+                    hidden:column.hidden ? true : false,
                     id: 'search_' + column.id
                 }]
+
+                column.onHiddenUpdate = ()=> {
+                    for (const subcolumn of column.columns) {
+                        subcolumn.hidden = column.hidden
+                    }
+                }
             }
+
+
         }
 
         this.grid.updateConfig({
@@ -236,6 +254,7 @@ class CustomGridFunctions {
      * Updates the grid based on values of all search fields
      */
     onSearch() {
+    console.log('searching')
         this.grid.updateConfig({
             server: {
                 ...this.grid.config.server,
