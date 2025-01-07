@@ -75,6 +75,10 @@ function GridOptions() {
                 if (object[column.id] !== null) {
                     column.hidden = !object[column.id];
                 }
+                //Updates subcolumn headers if custom grid search functionality is used
+                if (column.onHiddenUpdate) {
+                    column.onHiddenUpdate()
+                                }
             });
             this.grid.forceRender();
         }

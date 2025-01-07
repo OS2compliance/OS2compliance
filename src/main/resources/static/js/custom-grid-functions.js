@@ -158,12 +158,6 @@ class CustomGridFunctions {
                     searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
                 }
 
-                column.onHiddenUpdate = ()=> {
-                    for (const subcolumn of column.columns) {
-                        subcolumn.hidden = column.hidden
-                    }
-                }
-
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
@@ -180,13 +174,22 @@ class CustomGridFunctions {
                     id: 'search_' + column.id
                 }]
 
-                column.onHiddenUpdate = ()=> {
-                    for (const subcolumn of column.columns) {
-                        subcolumn.hidden = column.hidden
-                    }
+            }
+            column.onHiddenUpdate = ()=> {
+                for (const subcolumn of column.columns) {
+                    subcolumn.hidden = column.hidden
+                }
+                if (column.hidden) {
+                console.log(this.state)
+                console.log(column.searchable.searchKey)
+
+                    this.updateColumnValue(column.searchable.searchKey, null)
+
+                    this.saveState(column.searchable.searchKey, null)
+                    this.onSearch()
+                console.log(this.state)
                 }
             }
-
 
         }
 
@@ -254,7 +257,6 @@ class CustomGridFunctions {
      * Updates the grid based on values of all search fields
      */
     onSearch() {
-    console.log('searching')
         this.grid.updateConfig({
             server: {
                 ...this.grid.config.server,

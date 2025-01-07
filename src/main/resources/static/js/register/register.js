@@ -31,7 +31,7 @@
                     {
                         name: "Afdeling",
                         searchable : {
-                            searchKey : 'responsibleOUs'
+                            searchKey : 'responsibleOUNames'
                         },
                     },
                     {
@@ -43,7 +43,7 @@
                     {
                         name: "Kontakt",
                         searchable : {
-                            searchKey : 'responsibleUsers'
+                            searchKey : 'responsibleUserNames'
                         },
                     },
                     {
