@@ -117,6 +117,9 @@ public class AdminRestController {
         List<Relatable> relatables = relatableService.findAllById(ids);
 
         for (Relatable responsibleFor : relatables) {
+            if (responsibleFor.isDeleted()) {
+                continue;
+            }
             switch (responsibleFor.getRelationType()) {
                 case ASSET:
                     Asset asset = (Asset) responsibleFor;
