@@ -16,6 +16,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Rediger trusselskatalog knappen virkede ikke
 - (Ad-hoc) Fjernelse af revisionsdato fra et dokument gav fejl
 - (Ad-hoc) Ikke muligt at slette risikovurderinger med " i navnet
+- (Ad-hoc) Overfør inaktive rettigheder virkede ikke 
 
 ## [2.0.0] - 2024-10-31
 
