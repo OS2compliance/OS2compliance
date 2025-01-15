@@ -35,7 +35,6 @@ class CustomGridFunctions {
         //Update vital config of grid to enable custom search, sort and pagination
         const gridConfig = this.grid.updateConfig({
             search: false,
-            sort: true,
             server: {
                 ...this.grid.config.server,
                 url: `${this.dataUrl}?${this.getParamString()}`,
@@ -119,7 +118,9 @@ class CustomGridFunctions {
         const col = columns[0];
 
         const dir = col.direction === 1 ? 'asc' : 'desc';
+
         let colName = this.grid.config.columns[col.index].searchable.searchKey;
+
         this.state.sortColumn = colName
         this.state.sortDirection = dir
 
@@ -129,7 +130,7 @@ class CustomGridFunctions {
     /**
      * Convenience method for updating column search state
      * @param {string} column
-     * @param {string} value
+     * @param {string} valuef
      */
     updateColumnValue(column, value) {
         this.state.searchValues[column] = value;
@@ -140,9 +141,11 @@ class CustomGridFunctions {
      * Adds a text input for every  'searchable' column in the GridJS grid, with id based on the column id
      */
     addSearchFields() {
+        console.log(this.grid.config.columns)
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
             let searchFieldHTML = '<div style="display:none;"></div>'
+
             if (column.searchable) {
 
                 if (column.searchable.fieldId ) {
@@ -157,18 +160,22 @@ class CustomGridFunctions {
                 } else {
                     searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
                 }
+                 column.sort = true
 
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
+                    sort: true,
                     width: column.width,
                     hidden:column.hidden ? true : false,
                     id: 'search_' + column.id
                 }]
             } else {
+                 column.sort = false
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
+                    sort: false ,
                     width: column.width,
                     hidden:column.hidden ? true : false,
                     id: 'search_' + column.id
@@ -180,19 +187,14 @@ class CustomGridFunctions {
                     subcolumn.hidden = column.hidden
                 }
                 if (column.hidden) {
-                console.log(this.state)
-                console.log(column.searchable.searchKey)
-
                     this.updateColumnValue(column.searchable.searchKey, null)
 
                     this.saveState(column.searchable.searchKey, null)
                     this.onSearch()
-                console.log(this.state)
                 }
             }
-
         }
-
+        console.log(this.grid.config.columns)
         this.grid.updateConfig({
             columns: updatedConfig
         })
