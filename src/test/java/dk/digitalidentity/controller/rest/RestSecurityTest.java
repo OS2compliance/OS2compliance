@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestContainersConfiguration.class)
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "samllogin"})
 @TestPropertySource("/application-test.properties")
 public class RestSecurityTest {
     @Autowired

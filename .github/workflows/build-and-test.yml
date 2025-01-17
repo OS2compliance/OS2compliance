@@ -17,20 +17,21 @@ jobs:
       contents: read
     steps:
       - name: 'Check out repository'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: 'Set up Java'
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: 21
           distribution: 'corretto'
 
-      - name: 'Cache Maven packages'
-        uses: actions/cache@v3
+      - name: Cache local Maven repository
+        uses: actions/cache@v4
         with:
-          path: ~/.m2
-          key: ubuntu-latest-m2-${{ hashFiles('**/pom.xml', '**/*.target') }}
-          restore-keys: ubuntu-latest-m2
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
 
       - name: Build and Test
         run: ./mvnw -B clean test package --file pom.xml
