@@ -73,8 +73,7 @@ public abstract class IncidentMapper {
             case ASSETS, ASSET, SUPPLIER, SUPPLIERS -> getRelatableNames(response.getAnswerElementIds());
             case ORGANIZATION, ORGANIZATIONS -> getOrgUnitNames(response.getAnswerElementIds());
             case USER, USERS -> getUserNames(response.getAnswerElementIds());
-            case CHOICE_LIST -> nullSafe(() -> String.join(", ", response.getAnswerChoiceValues()));
-            case CHOICE_LIST_MULTIPLE -> null;
+            case CHOICE_LIST, CHOICE_LIST_MULTIPLE -> nullSafe(() -> String.join(", ", response.getAnswerChoiceValues()));
         };
     }
 

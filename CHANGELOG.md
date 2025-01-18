@@ -11,12 +11,14 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Mulighed for at vælge flere E-mail påmindelser
 - (Ad-hoc) De enkelte kontroller medtages i årshjulet
 - (Ad-hoc) Nyt kategoriseringsfelt på aktiver
+
 ### Fixed
 - (Ad-hoc) Årshjulet tog alle opgaver i stedet for kun dem der var markeret til at blive inkluderet.
 - (Ad-hoc) Rediger trusselskatalog knappen virkede ikke
 - (Ad-hoc) Fjernelse af revisionsdato fra et dokument gav fejl
 - (Ad-hoc) Ikke muligt at slette risikovurderinger med " i navnet
-- (Ad-hoc) Overfør inaktive rettigheder virkede ikke 
+- (https://github.com/OS2compliance/OS2compliance/issues/191) Overfør inaktive rettigheder virkede ikke 
+- (https://github.com/OS2compliance/OS2compliance/issues/193) Hændelser - Manglende visning af svar ved Valgliste eller Valgliste (flere svar) (Syddjurs)
 
 ## [2.0.0] - 2024-10-31
 
