@@ -224,7 +224,7 @@ class CustomGridFunctions {
 
         for (const input of inputFields) {
             const key = input.getAttribute('data-search-key')
-            const inputType = 'text'
+            let inputType = 'text'
 
             if (input.tagName === 'select') {inputType = 'enum'}
             if (input.tagName === 'input' && input.type ==='date') {inputType = 'date'}
