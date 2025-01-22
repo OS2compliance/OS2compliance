@@ -2,9 +2,11 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.RegisterGridDao;
 import dk.digitalidentity.mapping.RegisterMapper;
+import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireSuperuser;
 import dk.digitalidentity.security.RequireUser;
@@ -30,6 +32,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -43,64 +46,73 @@ public class RegisterRestController {
 
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
-            @RequestParam(name = "search", required = false) final String search,
-            @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-            @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-            @RequestParam(name = "order", required = false) final String order,
-            @RequestParam(name = "dir", required = false) final String dir) {
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "limit", defaultValue = "50") int limit,
+            @RequestParam(value = "order", required = false) String sortColumn,
+            @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+            @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("order");
+        filters.remove("dir");
+
+        //Set sorting
         Sort sort = null;
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
+        if (StringUtils.isNotEmpty(sortColumn) && containsField(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
         } else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
+            sort = Sort.unsorted();
         }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        Page<RegisterGrid> registers = null;
-        if (StringUtils.isNotEmpty(search)) {
-            // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "responsibleOUNames", "responsibleUserNames", "updatedAt", "localizedEnums");
-            registers = registerGridDao.findAllCustom(searchableProperties, search, sortAndPage, RegisterGrid.class);
-        } else {
-            // Fetch paged and sorted
-            registers = registerGridDao.findAll(sortAndPage);
-        }
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+
+        Page<RegisterGrid> registers =  registerGridDao.findAllWithColumnSearch(filters, null, sortAndPage, RegisterGrid.class);
+
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
     }
 
     @PostMapping("list/{id}")
     public PageDTO<RegisterDTO> list(
-        @PathVariable(name = "id", required = true) final String uuid,
-        @RequestParam(name = "search", required = false) final String search,
-        @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-        @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-        @RequestParam(name = "order", required = false) final String order,
-        @RequestParam(name = "dir", required = false) final String dir) {
-        if(!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
+        @PathVariable(name = "id") final String uuid,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("order");
+        filters.remove("dir");
+
+        final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+
+        //Set sorting
         Sort sort = null;
-        final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
+        if (StringUtils.isNotEmpty(sortColumn) && containsField(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
         } else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
+            sort = Sort.unsorted();
         }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+
         Page<RegisterGrid> registers = null;
-        if (StringUtils.isNotEmpty(search)) {
-            //search and page
-            final List<String> searchableProperties = Arrays.asList("name", "responsibleOUNames", "responsibleUserNames", "updatedAt", "consequence", "risk", "status");
-            registers = registerGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, RegisterGrid.class, user);
-        } else {
-            // Fetch paged and sorted
-            registers = registerGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage) ;
-        }
+
+        registers = registerGridDao.findAllForResponsibleUser(filters, sortAndPage, RegisterGrid.class, user);
+
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
     }
+
 
     private boolean containsField(final String fieldName) {
         return fieldName.equals("name") || fieldName.equals("responsibleUserNames") || fieldName.equals("responsibleOUNames")

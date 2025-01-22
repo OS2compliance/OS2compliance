@@ -2,35 +2,39 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.mapping.UserMapper;
+import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.UserDTO;
 import dk.digitalidentity.model.dto.UserWithRoleDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireAdminstrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -42,6 +46,34 @@ public class UserRestController {
     private final UserMapper userMapper;
     final private UserService userService;
     private final AssetService assetService;
+
+    @PostMapping("all")
+    public PageDTO<UserWithRoleDTO> list(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("order");
+        filters.remove("dir");
+
+        //Set sorting
+        Sort sort = null;
+        if (StringUtils.isNotEmpty(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
+        } else {
+            sort = Sort.unsorted();
+        }
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+        Page<User> users = userDao.findAllWithColumnSearch(filters, null, sortAndPage, User.class);
+
+        return new PageDTO<>(users.getTotalElements(), userMapper.toDTOWithRole(users.getContent()));
+    }
 
     @GetMapping("autocomplete")
     public PageDTO<UserDTO> autocomplete(@RequestParam("search") final String search) {
@@ -75,7 +107,9 @@ public class UserRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    public record RoleSelectionDTO(Long assetId, List<Long> selectedRoleIds) {}
+    public record RoleSelectionDTO(Long assetId, List<Long> selectedRoleIds) {
+    }
+
     @PostMapping("{userUuid}/role/add")
     public ResponseEntity<?> addAssetFragment(@PathVariable String userUuid, @RequestBody RoleSelectionDTO roleselection) {
 
@@ -87,11 +121,11 @@ public class UserRestController {
 
         asset.getRoles().stream()
             .filter(role -> role.getAsset().equals(asset))
-            .forEach( role -> {
-                if(role.getUsers().contains(user) && !roleselection.selectedRoleIds.contains(role.getId())) {
+            .forEach(role -> {
+                if (role.getUsers().contains(user) && !roleselection.selectedRoleIds.contains(role.getId())) {
                     role.getUsers().remove(user);
 
-                } else if(!role.getUsers().contains(user) && roleselection.selectedRoleIds.contains(role.getId())) {
+                } else if (!role.getUsers().contains(user) && roleselection.selectedRoleIds.contains(role.getId())) {
                     role.getUsers().add(user);
                 }
             });
@@ -101,7 +135,9 @@ public class UserRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    public record Note(String note){}
+    public record Note(String note) {
+    }
+
     @Transactional
     @PutMapping("{userUuid}/note")
     @RequireAdminstrator

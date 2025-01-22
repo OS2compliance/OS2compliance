@@ -109,26 +109,30 @@ public class RiskRestController {
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
-            @RequestParam(name = "search", required = false) final String search,
-            @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-            @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-            @RequestParam(name = "order", required = false) final String order,
-            @RequestParam(name = "dir", required = false) final String dir
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("order");
+        filters.remove("dir");
+
+        //Set sorting
         Sort sort = null;
-        if (isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
-        }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
-        final Page<RiskGrid> risks;
-        if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "responsibleUser.name", "responsibleOU.name", "date", "localizedEnums");
-            risks = riskGridDao.findAllCustom(searchableProperties, search, sortAndPage, RiskGrid.class);
+        if (StringUtils.isNotEmpty(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
         } else {
-            // Fetch paged and sorted
-            risks = riskGridDao.findAll(sortAndPage);
+            sort = Sort.unsorted();
         }
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+
+        final Page<RiskGrid> risks = riskGridDao.findAllWithColumnSearch(filters, null, sortAndPage, RiskGrid.class);
+
         assert risks != null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
@@ -415,10 +419,5 @@ public class RiskRestController {
         }
         final List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
         return new ResponsibleUsersWithElementNameDTO(asset.getName(), users);
-    }
-
-    private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("type") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
-                || fieldName.equals("date") || fieldName.equals("tasks") || fieldName.equals("assessment") || fieldName.equals("assessmentOrder");
     }
 }

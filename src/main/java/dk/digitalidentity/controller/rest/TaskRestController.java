@@ -31,6 +31,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -44,28 +45,29 @@ public class TaskRestController {
 
     @PostMapping("list")
     public PageDTO<TaskDTO> list(
-            @RequestParam(name = "search", required = false) final String search,
-            @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-            @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-            @RequestParam(name = "order", required = false) final String order,
-            @RequestParam(name = "dir", required = false) final String dir) {
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "sortColumn", defaultValue = "nextDeadline", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "asc", required = false) String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("sortColumn");
+        filters.remove("dir");
+
         Sort sort = null;
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
+        if (StringUtils.isNotEmpty(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
         } else {
             sort = Sort.by(Sort.Direction.ASC, "nextDeadline");
         }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        Page<TaskGrid> tasks = null;
-        if (StringUtils.isNotEmpty(search)) {
-            // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "taskType", "responsibleUser.name", "responsibleOU.name", "nextDeadline", "localizedEnums", "tags");
-            tasks = taskGridDao.findAllCustom(searchableProperties, search, sortAndPage, TaskGrid.class);
-        } else {
-            // Fetch paged and sorted
-            tasks = taskGridDao.findAll(sortAndPage);
-        }
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
+
+        Page<TaskGrid> tasks  = taskGridDao.findAllWithColumnSearch(filters, null, sortAndPage, TaskGrid.class);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assert tasks != null;
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
@@ -74,40 +76,47 @@ public class TaskRestController {
     @PostMapping("list/{id}")
     public PageDTO<TaskDTO> list(
         @PathVariable(name = "id") final String userUuid,
-        @RequestParam(name = "search", required = false) final String search,
-        @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-        @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-        @RequestParam(name = "order", required = false) final String order,
-        @RequestParam(name = "dir", required = false) final String dir) {
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        // Remove pagination/sorting parameters from the filter map
+        filters.remove("page");
+        filters.remove("limit");
+        filters.remove("order");
+        filters.remove("dir");
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !SecurityUtil.getPrincipalUuid().equals(userUuid)) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !SecurityUtil.getPrincipalUuid().equals(userUuid)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        Sort sort = null;
+
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
+
+        //Set sorting
+        Sort sort = null;
+        if (StringUtils.isNotEmpty(sortColumn) && containsField(sortColumn)) {
+            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
+            sort = Sort.by(direction, sortColumn);
         } else {
             sort = Sort.by(Sort.Direction.ASC, "nextDeadline");
         }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
+        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
         final Page<TaskGrid> tasks;
-        if (StringUtils.isNotEmpty(search)) {
-            // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "responsibleOU.name", "nextDeadline", "localizedEnums", "completed", "tags");
-            tasks = taskGridDao.findAllCustomExtra(searchableProperties, search, List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
-        } else {
-            // Fetch paged and sorted
-            tasks = taskGridDao.findAllByResponsibleUserAndCompletedFalse(user, sortAndPage);
-        }
+
+        //Get objects, filtered
+        tasks = taskGridDao.findAllWithColumnSearch(filters, List.of(Pair.of("responsibleUser", user), Pair.of("completed", false)), sortAndPage, TaskGrid.class);
+
         assert tasks != null;
-        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
+
+        return new PageDTO<TaskDTO>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
     }
 
     private boolean containsField(final String fieldName) {
         return fieldName.equals("name") || fieldName.equals("taskType") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
-                || fieldName.equals("nextDeadline") || fieldName.equals("taskRepetition")
-                || fieldName.equals("taskResult") || fieldName.equals("tags") || fieldName.equals("completed");
+            || fieldName.equals("nextDeadline") || fieldName.equals("taskRepetition")
+            || fieldName.equals("taskResult") || fieldName.equals("tags") || fieldName.equals("completed");
     }
 }

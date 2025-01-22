@@ -36,7 +36,21 @@
                         <div class="card mb-3">
                             <div class="card-body">
                                 <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                <div id="tasksDatatable"></div>
+                                <div class="mt-3" id="tasksDatatable"></div>
+
+                                <!-- Custom search selector-->
+                                <select class="form-control form-select editField" data-trigger="" name="assignmentTypeSelector" id="assignmentTypeSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="assignmentType : ${T(dk.digitalidentity.model.entity.enums.TaskType).values()}"
+                                            th:value="${assignmentType}" th:text="${assignmentType.message}"></option>
+                                </select>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="taskRepetitionSelector" id="taskRepetitionSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.TaskRepetition).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -62,237 +76,10 @@
         var superuser = [[${superuser}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    let today = new Date();
 
-    const DateDiff = {
-        inDays: function (d1, d2) {
-            const t2 = d2.getTime();
-            const t1 = d1.getTime();
-            return Math.floor((t2 - t1) / (24 * 3600 * 1000));
-        }
-    };
-
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
-
-    const updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
-
-    document.addEventListener("DOMContentLoaded", function() {
-
-        let gridConfig = {
-            className: defaultClassName,
-            search: {
-                keyword: searchService.getSavedSearch(),
-                server: {
-                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                },
-                debounceTimeout: 1000
-            },
-            pagination: {
-                limit: 50,
-                server: {
-                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                }
-            },
-            sort: {
-                enabled: true,
-                multiColumn: false,
-                server: {
-                    url: (prev, columns) => {
-                        if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'taskType', 'responsibleUser.name', 'responsibleOU.name', 'tags', 'nextDeadline', 'taskRepetition', '', 'completed'];
-                        const col = columns[0]; // multiColumn false
-                        const order = columnIds[col.index];
-                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                    }
-                }
-            },
-            columns: [
-                {
-                    name: "id",
-                    hidden: true
-                },
-                {
-                    name: "Opgavenavn",
-                    formatter: (cell, row) => {
-                        const url = viewUrl + row.cells[0]['data'];
-                        return gridjs.html(`<a href="${url}">${cell}</a>`);
-                    }
-                },
-                {
-                    name: "Opgave type",
-                },
-                {
-                    name: "Ansvarlig",
-                },
-                {
-                    name: "Afdeling"
-                },
-                {
-                    name: "Tags",
-                    formatter: (cell, row) => {
-                        let result = '';
-                        if (cell != null && cell.trim() !== '') {
-                            let tags = cell.split(',');
-                            for (let i =0; i< tags.length; i++) {
-                                result += '<div class="d-block badge bg-info mb-1">'+tags[i]+'</div>';
-                            }
-                        }
-                        return gridjs.html(result, 'div')
-                    },
-                },
-                {
-                    name: "Deadline",
-                    width: '90px',
-                    formatter: (cell, row) => {
-                        var completed = row.cells[9]['data'];
-                        var type = row.cells[2]['data'];
-                        if (completed && type === "Opgave") {
-                            return gridjs.html(`<span>${cell}</span>`);
-                        }
-
-                        var dateString = cell.replace(" ", "/");
-                        dateString = dateString.replace("-", "/");
-                        var dateSplit = dateString.split("/");
-                        var cellDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
-                        var diff = DateDiff.inDays(today, cellDate);
-
-                        if (diff < 0) {
-                            return gridjs.html(`<span style="color: red;">${cell}</span>`);
-                        }
-                        else if (diff < 31 && diff >= 0 ) {
-                            return gridjs.html(`<span style="color: orange;">${cell}</span>`)
-                        }
-                        else {
-                            return gridjs.html(`<span>${cell}</span>`);
-                        }
-                    }
-                },
-                {
-                    name: "Gentages",
-                    width: '95px'
-                },
-                {
-                    name: "Resultat",
-                    hidden: true,
-                },
-                {
-                    name: "Status",
-                    width: '100px',
-                    formatter: (cell, row) => {
-                        let status = "";
-                        let type = row.cells[2]['data'];
-
-                        // if completed and task type opgave
-                        if (cell && type === "Opgave") {
-                            status = '<div class="d-block badge bg-success">Udført</div>'
-                        } else {
-                            let deadline = row.cells[6]['data'];
-                            let dateString = deadline.replace(" ", "/");
-                            dateString = dateString.replace("-", "/");
-                            let dateSplit = dateString.split("/");
-                            let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
-                            let diff = DateDiff.inDays(today, deadlineAsDate);
-                            let statusText = 'Ikke udført';
-                            if(row.cells[8]['data'] === 'NO_ERROR') {
-                                statusText = 'Ingen fejl';
-                            } else if (row.cells[8]['data'] === 'NO_CRITICAL_ERROR') {
-                                statusText = 'Ingen kritiske fejl';
-                            } else if (row.cells[8]['data'] === 'CRITICAL_ERROR') {
-                                statusText = 'Kritiske fejl';
-                            }
-
-                            if (diff < 0) {
-                                status = `<div class="d-block badge bg-danger">${statusText}</div>`;
-                            } else if (diff < 31 && diff >= 0) {
-                                status = `<div class="d-block badge bg-warning">${statusText}</div>`;
-                            } else {
-                                status = `<div class="d-block badge bg-gray-800">${statusText}</div>`;
-                            }
-                        }
-
-                        return gridjs.html(status, 'div')
-                    },
-                },
-                {
-                    id: 'handlinger',
-                    name: 'Handlinger',
-                    sort: 0,
-                    width: '90px',
-                    formatter: (cell, row) => {
-                        const taskId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        if(superuser) {
-                            return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`
-                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyTaskService.showCopyDialog('${taskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                                + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                        } else if(row.cells[10]['data']) {
-                            return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`)
-                        }
-                    }
-                }
-            ],
-            server: {
-                url: gridTasksUrl,
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': token
-                },
-                then: data => data.content.map(task =>
-                    [ task.id, task.name, task.taskType,
-                        task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
-                        task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed, task.changeable ]
-                ),
-                total: data => data.totalCount
-            },
-            language: {
-                'search': {
-                    'placeholder': 'Søg'
-                },
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'results': 'Opgaver',
-                    'of': 'af',
-                    'to': 'til',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'page': (page) => `Side ${page}`
-                }
-            }
-        };
-        const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "tasksDatatable" ));
-        searchService.initSearch(grid, gridConfig);
-        gridOptions.init(grid, document.getElementById("gridOptions"));
-    });
-
-
-    function deleteClicked(taskId, name) {
-        Swal.fire({
-          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra TASK slettes også.`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#03a9f4',
-          cancelButtonColor: '#df5645',
-          confirmButtonText: 'Ja',
-          cancelButtonText: 'Nej'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`${deleteUrl}${taskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                    .then(() => {
-                        window.location.reload();
-                    });
-          }
-        })
-    }
     /*]]>*/
 </script>
-
+<script th:src="@{/js/task/task-center.js}" defer></script>
 </body>
 
 </html>

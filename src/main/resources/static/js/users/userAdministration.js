@@ -150,10 +150,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     const grid = new gridjs.Grid({
         className: defaultClassName,
-        sort: {
-            enabled: true,
-            multiColumn: false
-        },
+//        sort: {
+//            enabled: true,
+//            multiColumn: false
+//        },
         columns: [
             {
                 id: "uuid",
@@ -163,21 +163,34 @@ document.addEventListener("DOMContentLoaded", function(event) {
             {
                 id: "userId",
                 name: "Bruger",
+                searchable : {
+                    searchKey: 'userId'
+                },
                 formatter: (cell, row) => {
                     return gridjs.html( `<span data-user-uuid="${row.cells[0].data}">${cell}</span>` )
                 }
             },
             {
                 id: "name",
-                name: "Navn"
+                name: "Navn",
+                searchable : {
+                    searchKey: 'name'
+                },
             },
             {
                 id: "email",
-                name: "Email"
+                name: "Email",
+                 searchable : {
+                     searchKey: 'email'
+                 },
             },
              {
                 id: "accessRole",
                 name: "Rettigheder",
+//                searchable : {
+//                    searchKey: 'accessRole',
+//                    fieldId : 'userRoleSearchSelector'
+//                },
                 formatter: (cell, row) => {
                     return roleOptions.find(roleOption => roleOption.value === cell).display;
                 }
@@ -204,7 +217,17 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 }
             }
         ],
-        data: data,
+        server: {
+            url: restUrl + "/all",
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': token
+            },
+            then: data => data.content.map(user =>
+                [user.uuid, user.userId, user.name, user.email, user.accessRole, user.active]
+            ),
+            total: data => data.totalCount
+        },
         language: {
             'search': {
                 'placeholder': 'Søg'
@@ -223,6 +246,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
     })
 
     grid.render(document.getElementById("userDatatable"));
+
+    //Enables custom column search, serverside sorting and pagination
+    new CustomGridFunctions(grid, restUrl + "/all", 'userDatatable')
 
     //On row element click listener
     grid.on('rowClick', (...args) => onGridRowClick(...args));
