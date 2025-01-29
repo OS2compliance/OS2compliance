@@ -17,6 +17,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Rediger trusselskatalog knappen virkede ikke
 - (Ad-hoc) Fjernelse af revisionsdato fra et dokument gav fejl
 - (Ad-hoc) Ikke muligt at slette risikovurderinger med " i navnet
+- (Ad-hoc) Ikke muligt at oprette tilsyn, hvis ansvarlig ikke er sat
 - (https://github.com/OS2compliance/OS2compliance/issues/191) Overfør inaktive rettigheder virkede ikke 
 - (https://github.com/OS2compliance/OS2compliance/issues/193) Hændelser - Manglende visning af svar ved Valgliste eller Valgliste (flere svar) (Syddjurs)
 
