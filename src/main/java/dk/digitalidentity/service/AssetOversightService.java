@@ -121,7 +121,9 @@ public class AssetOversightService {
         } else {
             task.setNextDeadline(LocalDate.of(2099, 1,1));
         }
-        task.setResponsibleUser(asset.getOversightResponsibleUser());
+        if (asset.getOversightResponsibleUser() != null) {
+            task.setResponsibleUser(asset.getOversightResponsibleUser());
+        }
     }
 
     private void createAssociatedOversightCheck(final Asset asset) {
