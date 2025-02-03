@@ -6,7 +6,6 @@ import dk.digitalidentity.model.dto.IncidentFieldResponseDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
-import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.service.OrganisationService;
@@ -19,7 +18,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -59,6 +57,7 @@ public abstract class IncidentMapper {
     public IncidentFieldResponseDTO toDTOResponse(final IncidentFieldResponse response) {
         final String indexColumnName = nullSafe(() -> response.getIncidentField().getIndexColumnName());
         return IncidentFieldResponseDTO.builder()
+            .fieldId(response.getIncidentField() != null ? response.getIncidentField().getId() : null)
             .incidentType(response.getIncidentType())
             .answerValue(toAnswerValue(response))
             .indexColumnName(indexColumnName)

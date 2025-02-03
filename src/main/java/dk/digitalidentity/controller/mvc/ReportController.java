@@ -4,6 +4,7 @@ import com.lowagie.text.DocumentException;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
+import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Relatable;
@@ -94,18 +95,19 @@ public class ReportController {
         return "reports/incidentReport";
     }
 
-    @GetMapping("incident/excel")
+    @GetMapping("incidents/excel")
     public ModelAndView incidentsExcel(final HttpServletResponse response,
                                        @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
                                        @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
         final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
         final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
         final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
-
+        final List<IncidentDTO> allIncidentDTOs = incidentMapper.toDTOs(allIncidents.getContent());
         response.setContentType("application/ms-excel");
         response.setHeader("Content-Disposition", "attachment; filename=\"Incidents.xls\"");
         final Map<String, Object> model = new HashMap<>();
-        model.put("incidents", allIncidents);
+        model.put("incidents", allIncidentDTOs);
+        model.put("fields", incidentService.getAllFields());
         model.put("from", fromDT);
         model.put("to", toDT);
 
