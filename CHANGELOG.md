@@ -11,6 +11,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Mulighed for at vælge flere E-mail påmindelser
 - (Ad-hoc) De enkelte kontroller medtages i årshjulet
 - (Ad-hoc) Nyt kategoriseringsfelt på aktiver
+- (Ad-hoc) Tilføj mulighed for at trække excel rapport over hændelser
 
 ### Fixed
 - (Ad-hoc) Årshjulet tog alle opgaver i stedet for kun dem der var markeret til at blive inkluderet.
