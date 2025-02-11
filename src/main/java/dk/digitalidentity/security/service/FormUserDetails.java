@@ -1,6 +1,7 @@
 package dk.digitalidentity.security.service;
 
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.Roles;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.Setter;
@@ -27,6 +28,12 @@ public class FormUserDetails implements UserDetails {
         Set<String> roles = user.getRoles();
         if (roles == null) {
             return new HashSet<SimpleGrantedAuthority>();
+        }
+        if (roles.contains(Roles.ADMINISTRATOR)) {
+            roles.add(Roles.SUPERUSER);
+        }
+        if (roles.contains(Roles.SUPERUSER)) {
+            roles.add(Roles.USER);
         }
         return roles.stream().map(role -> new SimpleGrantedAuthority(role)).collect(Collectors.toSet());
     }

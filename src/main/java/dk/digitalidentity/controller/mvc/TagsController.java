@@ -1,26 +1,19 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.model.entity.ThreatCatalog;
-import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.Criticality;
-import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.service.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @Controller
 @RequestMapping("admin/tags")
-@RequireAdminstrator
+@RequireAdministrator
 @RequiredArgsConstructor
 public class TagsController {
     private final TagService tagService;

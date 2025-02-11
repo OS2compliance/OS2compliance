@@ -6,7 +6,7 @@ import dk.digitalidentity.model.dto.*;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
-@RequireAdminstrator
+@RequireAdministrator
 @RequestMapping("admin/users")
 @RequiredArgsConstructor
 public class UsersController {

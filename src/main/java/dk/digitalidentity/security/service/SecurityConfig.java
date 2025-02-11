@@ -23,6 +23,7 @@ public class SecurityConfig {
                     "/webjars/**",
                     "/manage/**",
                     "/css/**",
+                    "/manage/**",
                     "/js/**",
                     "/img/**",
                     "/vendor/**",

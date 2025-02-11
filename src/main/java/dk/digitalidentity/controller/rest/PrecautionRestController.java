@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.mapping.ThreatMapper;
 import dk.digitalidentity.model.entity.Precaution;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.service.PrecautionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,7 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RestController
-@RequireAdminstrator
+@RequireAdministrator
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/precautions", consumes = "application/json", produces = "application/json")
 public class PrecautionRestController {

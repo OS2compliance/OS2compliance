@@ -12,11 +12,14 @@ function OversightService() {
         this.initOversightModal().then(() => oversightDialog.show());
     }
 
-    this.initOversightModal = (oversightId) => {
+    this.initOversightModal = (oversightId, entityType, entityId) => {
+        if (entityType === undefined) {
+            let isAsset = window.location.href.indexOf('assets') > 0;
+            entityType = isAsset ? 'asset' : 'supplier';
+            entityId = isAsset ? assetId : supplierId;
+        }
+
         let params = new URLSearchParams();
-        let isAsset = window.location.href.indexOf('assets') > 0;
-        const entityType = isAsset ? 'asset' : 'supplier';
-        const entityId = isAsset ? assetId : supplierId;
         if (oversightId) {
             params.append('id', oversightId);
         }
@@ -44,21 +47,25 @@ function OversightService() {
                     datepickerOversight.open();
                 });
 
-                const inspectionDateOversightModal = MCDatepicker.create({
-                    el: '#oversightInspectionDateInput',
-                    autoClose: true,
-                    dateFormat: 'dd/mm-yyyy',
-                    selectedDate: new Date(),
-                    closeOnBlur: true,
-                    firstWeekday: 1,
-                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                    customClearBTN: "Ryd",
-                    customCancelBTN: "Annuller"
-                });
-                document.querySelector("#oversightInspectionDateBtn").addEventListener("click", () => {
-                    inspectionDateOversightModal.open();
-                });
+
+                let oversightInspectionBtn = document.querySelector("#oversightInspectionDateBtn");
+                if (oversightInspectionBtn !== null) {
+                    const inspectionDateOversightModal = MCDatepicker.create({
+                        el: '#oversightInspectionDateInput',
+                        autoClose: true,
+                        dateFormat: 'dd/mm-yyyy',
+                        selectedDate: new Date(),
+                        closeOnBlur: true,
+                        firstWeekday: 1,
+                        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                        customClearBTN: "Ryd",
+                        customCancelBTN: "Annuller"
+                    });
+                    oversightInspectionBtn.addEventListener("click", () => {
+                        inspectionDateOversightModal.open();
+                    });
+                }
 
                 //choices.js
                 const oversightSelect = document.getElementById('oversightUserSelect');
@@ -74,7 +81,7 @@ function OversightService() {
                     checkInputField(oversightResponsibleUserChoices);
                 });
             })
-            .catch(error => toastService.error(error))
+            .catch(defaultErrorHandler)
     }
 
     this.editOversight = (elem) => {

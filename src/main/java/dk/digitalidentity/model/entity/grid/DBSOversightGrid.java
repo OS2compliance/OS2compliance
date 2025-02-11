@@ -3,6 +3,8 @@ package dk.digitalidentity.model.entity.grid;
 import java.time.LocalDate;
 import java.util.List;
 
+import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Task;
 import org.hibernate.annotations.Immutable;
 
 import dk.digitalidentity.config.DBSAssetListConverter;
@@ -38,6 +40,9 @@ public class DBSOversightGrid {
     private String supplier;
 
     @Column
+    private Long supplierId;
+
+    @Column
     @Enumerated(EnumType.STRING)
     private ChoiceOfSupervisionModel supervisoryModel;
 
@@ -56,8 +61,9 @@ public class DBSOversightGrid {
 	@Enumerated(EnumType.STRING)
 	private AssetOversightStatus lastInspectionStatus;
 
-	@Column
-	private LocalDate outstandingSince;
+    @ManyToOne
+    @JoinColumn(name = "outstanding_task_id")
+    private Task outstandingTask;
 
 	@Column
 	private String localizedEnums;

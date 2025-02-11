@@ -1,9 +1,10 @@
 package dk.digitalidentity.controller.rest.Assets;
 
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 
-import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -16,13 +17,15 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -31,7 +34,6 @@ import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import org.apache.commons.lang3.StringUtils;
-import org.apache.commons.lang3.tuple.Pair;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -74,6 +76,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
 @Slf4j
 @RestController
@@ -94,7 +99,7 @@ public class AssetsRestController {
     private final EmailTemplateService emailTemplateService;
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
-    private final AssetOversightDao assetOversightDao;
+    private final AssetOversightService assetOversightService;
 
     @PostMapping("list")
     public PageDTO<AssetDTO> list(
@@ -184,14 +189,34 @@ public class AssetsRestController {
         if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, asset.getDpiaScreening(), fieldName, value);
         assetService.save(asset);
     }
 
-    record DPIASetFieldDTO(long id, String fieldName, String value) {
+    @Transactional
+    @PutMapping("{id}/oversightresponsible")
+    public void setOversightResponsible(@PathVariable("id") final Long id, @RequestParam("userUuid") final String userUuid) {
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        asset.setOversightResponsibleUser(user);
+        if (asset.getSupervisoryModel() != ChoiceOfSupervisionModel.DBS) {
+            assetOversightService.setAssetsToDbsOversight(Collections.singletonList(asset));
+        } else {
+            assetOversightService.createOrUpdateAssociatedOversightCheck(asset);
+        }
     }
 
-    @RequireSuperuser
+    @Transactional
+    @RequireSuperuserOrAdministrator
+    @DeleteMapping("{id}/oversightresponsible")
+    public void removeOversightResponsibl(@PathVariable("id") final Long id) {
+        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        asset.setOversightResponsibleUser(null);
+    }
+
+    record DPIASetFieldDTO(long id, String fieldName, String value) {}
+    @RequireSuperuserOrAdministrator
     @PutMapping("dpia/schema/section/setfield")
     public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto) {
         canSetDPIASectionFieldGuard(dto.fieldName);
@@ -200,35 +225,35 @@ public class AssetsRestController {
         dpiaTemplateSectionService.save(dpiaTemplateSection);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/section/{id}/up")
     public ResponseEntity<?> reorderUp(@PathVariable("id") final long id) {
         reorderSections(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/section/{id}/down")
     public ResponseEntity<?> reorderDown(@PathVariable("id") final long id) {
         reorderSections(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/question/{id}/up")
     public ResponseEntity<?> reorderQuestionUp(@PathVariable("id") final long id) {
         reorderQuestions(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("dpia/schema/question/{id}/down")
     public ResponseEntity<?> reorderQuestionDown(@PathVariable("id") final long id) {
         reorderQuestions(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("dpia/schema/question/{id}/delete")
     public ResponseEntity<?> deleteQuestion(@PathVariable("id") final long id) {
         final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -246,11 +271,11 @@ public class AssetsRestController {
         if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && assetOversight.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        assetOversightDao.delete(assetOversight);
+        assetOversightService.delete(assetOversight);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @Transactional
     @DeleteMapping("{assetId}/subsupplier/{subSupplierId}")
     public ResponseEntity<?> subSupplierDelete(@PathVariable("subSupplierId") final Long subSupplierId,

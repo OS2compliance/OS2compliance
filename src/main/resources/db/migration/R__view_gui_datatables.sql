@@ -116,6 +116,11 @@ SELECT
           WHEN a.asset_status = 'ON_GOING' THEN 2
           WHEN a.asset_status = 'READY' THEN 3
         END) as asset_status_order,
+    a.asset_category,
+    (CASE WHEN a.asset_category = 'GREEN' THEN 1
+          WHEN a.asset_category = 'YELLOW' THEN 2
+          WHEN a.asset_category = 'RED' THEN 3
+        END) as asset_category_order,
     ta.assessment,
     (CASE WHEN ta.assessment = 'GREEN' THEN 1
           WHEN ta.assessment = 'LIGHT_GREEN' THEN 2
@@ -221,7 +226,7 @@ FROM (
         u.active,
         t.id
     FROM users u
-    LEFT JOIN tasks t ON u.uuid = t.responsible_uuid
+    LEFT JOIN tasks t ON u.uuid = t.responsible_uuid and deleted=0
 
     UNION ALL
 
@@ -233,7 +238,7 @@ FROM (
         u.active,
         d.id
     FROM users u
-    LEFT JOIN documents d ON u.uuid = d.responsible_uuid
+    LEFT JOIN documents d ON u.uuid = d.responsible_uuid and deleted=0
 
     UNION ALL
 
@@ -245,7 +250,7 @@ FROM (
         u.active,
         s.id
     FROM users u
-    LEFT JOIN standard_sections s ON u.uuid = s.responsible_user_uuid
+    LEFT JOIN standard_sections s ON u.uuid = s.responsible_user_uuid and deleted=0
 
     UNION ALL
 
@@ -257,7 +262,7 @@ FROM (
         u.active,
         su.id
     FROM users u
-    LEFT JOIN suppliers su ON u.uuid = su.responsible_uuid
+    LEFT JOIN suppliers su ON u.uuid = su.responsible_uuid and deleted=0
 
     UNION ALL
 
@@ -269,7 +274,7 @@ FROM (
         u.active,
         ta.id
     FROM users u
-    LEFT JOIN threat_assessments ta ON u.uuid = ta.responsible_uuid
+    LEFT JOIN threat_assessments ta ON u.uuid = ta.responsible_uuid and deleted=0
 
     UNION ALL
 
@@ -282,7 +287,7 @@ FROM (
         r.id
     FROM users u
     LEFT JOIN registers_responsible_users_mapping rr ON u.uuid = rr.user_uuid
-    LEFT JOIN registers r ON rr.register_id = r.id
+    LEFT JOIN registers r ON rr.register_id = r.id and deleted=0
 
     UNION ALL
 
@@ -295,7 +300,7 @@ FROM (
         a.id
     FROM users u
     LEFT JOIN assets_responsible_users_mapping ar ON u.uuid = ar.user_uuid
-    LEFT JOIN assets a ON ar.asset_id = a.id
+    LEFT JOIN assets a ON ar.asset_id = a.id and deleted=0
 ) AS combined_ids
 GROUP BY uuid, name, user_id, email, active
 HAVING responsible_relatable_ids IS NOT NULL AND responsible_relatable_ids <> '';
@@ -321,17 +326,21 @@ SELECT
     a.id,
     a.name,
     s.name as supplier,
+    s.id as supplier_id,
     a.supervisory_model,
     GROUP_CONCAT(da.id ORDER BY da.id SEPARATOR ',') AS dbs_assets,
     a.oversight_responsible_uuid,
     ao.creation_date as last_inspection,
     ao.status as last_inspection_status,
-    IF(tl.id IS null, t.created_at, null) AS outstanding_since,
+    IF(tl.id is null, t.id, null) AS outstanding_task_id,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ao.localized_enums, '')) as localized_enums
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
     LEFT JOIN assets_oversight ao on ao.asset_id = a.id and ao.id = (
-    	select ao2.id from assets_oversight ao2 join assets a2 on ao2.asset_id = a2.id order by ao2.creation_date desc limit 1
+    	select ao2.id from assets_oversight ao2
+        where ao2.asset_id = a.id
+        order by ao2.creation_date desc
+        limit 1
     )
     LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
     LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id

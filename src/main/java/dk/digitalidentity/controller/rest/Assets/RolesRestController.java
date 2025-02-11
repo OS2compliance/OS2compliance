@@ -2,37 +2,23 @@ package dk.digitalidentity.controller.rest.Assets;
 
 
 import dk.digitalidentity.dao.RoleDao;
-import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.mapping.RoleMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
-import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RoleDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.security.Roles;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RoleService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -60,7 +46,7 @@ public class RolesRestController {
     public record RoleWithUserSelection(RoleDTO roleDTO, Set<String> userIds) {
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @PostMapping("edit")
     public ResponseEntity<?> createRole(@RequestBody final RoleWithUserSelection roleWithUserSelection) {
         RoleDTO roleDTO = roleWithUserSelection.roleDTO;
@@ -85,7 +71,7 @@ public class RolesRestController {
     }
 
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("delete/{id}")
     public ResponseEntity<?> deleteRole(@PathVariable Long id) {
         if (id != null) {

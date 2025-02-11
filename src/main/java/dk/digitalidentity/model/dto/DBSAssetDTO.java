@@ -17,6 +17,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class DBSAssetDTO {
     private Long id;
+    private Long supplierId;
     private String name;
     @JsonFormat(pattern="dd/MM-yyyy")
     private LocalDate lastSync;

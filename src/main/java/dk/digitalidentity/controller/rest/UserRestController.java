@@ -2,18 +2,13 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.mapping.UserMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.UserDTO;
 import dk.digitalidentity.model.dto.UserWithRoleDTO;
 import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.security.Roles;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
@@ -25,16 +20,11 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -89,7 +79,7 @@ public class UserRestController {
 
     @Transactional
     @DeleteMapping("delete/{userUuid}")
-    @RequireAdminstrator
+    @RequireAdministrator
     public ResponseEntity<?> deleteUser(@PathVariable("userUuid") final String userUuid) {
         User user = userService.findByUuidIncludingInactive(userUuid)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -99,7 +89,7 @@ public class UserRestController {
 
     @Transactional
     @PostMapping("reset/{userUuid}")
-    @RequireAdminstrator
+    @RequireAdministrator
     public ResponseEntity<?> resetPasswordUser(@PathVariable("userUuid") final String userID) {
         final User user = userService.findByUuid(userID)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -140,7 +130,7 @@ public class UserRestController {
 
     @Transactional
     @PutMapping("{userUuid}/note")
-    @RequireAdminstrator
+    @RequireAdministrator
     public ResponseEntity<?> updateUserNote(@PathVariable("userUuid") final String userID, @RequestBody Note note) {
         User user = userService.findByUuid(userID)
             .orElseThrow();

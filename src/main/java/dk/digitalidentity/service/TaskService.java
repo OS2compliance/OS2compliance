@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
+import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 
 @Service
@@ -42,6 +43,7 @@ public class TaskService {
     private final TaskLogDao taskLogDao;
 	private final SettingsService settingsService;
     private final RelationService relationService;
+    private final RelatableService relatableService;
 
     public List<Task> findAll() {
         return taskDao.findAll();
@@ -76,14 +78,43 @@ public class TaskService {
         return taskDao.findByTag(tagId);
     }
 
+    /**
+     * Finds all tasks ith the given deadline, which has notification enabled
+     * @param deadline a deadline
+     * @return A list of tasks
+     */
     @Transactional
-    public List<Task> findTasksThatNeedsNotification() {
-        final LocalDate date = closeToDeadline();
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineBeforeAndHasNotifiedResponsibleFalse(date);
+    public List<Task> getTasksWithDeadLineAt(LocalDate deadline) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadline(deadline);
     }
 
-    public List<Task> findAllTasksWithDeadlineAfter(final LocalDate date) {
-        return taskDao.findByNextDeadlineAfterOrderByNextDeadlineAsc(date);
+    /**
+     * Find all tasks with a deadline contained in the list of deadlines, which has notification enabled
+     * @param deadlines A list of deadlines
+     * @return A list of tasks
+     */
+    @Transactional
+    public List<Task> getTasksWithDeadLineIn(List<LocalDate> deadlines) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineIn(deadlines);
+    }
+
+    public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
+        return taskDao.findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(date);
+    }
+
+    /**
+     * If this task has an associated inspection asset it, find it
+     */
+    public Optional<Relatable> findOversightAsset(final Task task) {
+        final Long assetId = task.getProperties().stream()
+            .filter(p -> ASSOCIATED_INSPECTION_PROPERTY.equals(p.getKey()))
+            .map(p -> Long.parseLong(p.getValue()))
+            .findFirst().orElse(null);
+        if (assetId == null) {
+            return Optional.empty();
+        }
+        return Optional.of(relatableService.findById(assetId)
+            .orElseThrow(() -> new RuntimeException("Asset not found")));
     }
 
     public Task copyTask(final Task oldTask) {
@@ -205,9 +236,6 @@ public class TaskService {
         }
     }
 
-    private LocalDate closeToDeadline() {
-        return LocalDate.now().plusDays(settingsService.getInt("notify.days",10));
-    }
 
     @Transactional
     public void deleteAll(final List<Task> tasks) {
@@ -244,6 +272,15 @@ public class TaskService {
             case EVERY_THIRD_YEAR -> deadline.plusYears(3);
             default -> deadline;
         };
+    }
+
+    /**
+     * Gets all TaskLogs belonging to the given tasks
+     * @param taskList
+     * @return
+     */
+    public List<TaskLog> getLogsForTasks (final List<Task> taskList) {
+        return taskLogDao.findByTaskIdIn(taskList.stream().map(Relatable::getId).toList());
     }
 
 }

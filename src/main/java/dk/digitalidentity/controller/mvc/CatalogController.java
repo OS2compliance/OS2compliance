@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("catalogs")
-@RequireAdminstrator
+@RequireAdministrator
 @RequiredArgsConstructor
 public class CatalogController {
     private final CatalogService threatCatalogService;

@@ -1,9 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.Precaution;
-import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RelationService;
 import lombok.RequiredArgsConstructor;
@@ -26,7 +25,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("precautions")
-@RequireAdminstrator
+@RequireAdministrator
 @RequiredArgsConstructor
 public class PrecautionController {
     private final PrecautionService precautionService;

@@ -4,6 +4,7 @@ import com.lowagie.text.DocumentException;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
+import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Relatable;
@@ -12,6 +13,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
+import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.YearWheelView;
@@ -81,7 +83,7 @@ public class ReportController {
     }
 
     @GetMapping("incidents")
-    public String tagReport(final Model model,
+    public String incidents(final Model model,
                             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
                             @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
         final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
@@ -91,6 +93,25 @@ public class ReportController {
         model.addAttribute("from", from);
         model.addAttribute("to", to);
         return "reports/incidentReport";
+    }
+
+    @GetMapping("incidents/excel")
+    public ModelAndView incidentsExcel(final HttpServletResponse response,
+                                       @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
+                                       @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
+        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
+        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        final List<IncidentDTO> allIncidentDTOs = incidentMapper.toDTOs(allIncidents.getContent());
+        response.setContentType("application/ms-excel");
+        response.setHeader("Content-Disposition", "attachment; filename=\"Incidents.xls\"");
+        final Map<String, Object> model = new HashMap<>();
+        model.put("incidents", allIncidentDTOs);
+        model.put("fields", incidentService.getAllFields());
+        model.put("from", fromDT);
+        model.put("to", toDT);
+
+        return new ModelAndView(new IncidentsXlsView(), model);
     }
 
     @GetMapping("tags")
@@ -132,13 +153,16 @@ public class ReportController {
     @GetMapping("yearwheel")
     public ModelAndView yearWheel(final HttpServletResponse response) {
         final LocalDate cutOff = LocalDateTime.now().minusYears(1).with(lastDayOfYear()).toLocalDate();
-        final Map<Task, List<Relatable>> taskMap = taskService.findAllTasksWithDeadlineAfter(cutOff).stream()
+        final Map<Task, List<Relatable>> taskMap = taskService.findAllYearWheelTasksWithDeadlineAfter(cutOff).stream()
             .collect(Collectors.toMap(t -> t, relationService::findAllRelatedTo));
 
         response.setContentType("application/ms-excel");
         response.setHeader("Content-Disposition", "attachment; filename=\"Aarshjul.xls\"");
         final Map<String, Object> model = new HashMap<>();
         model.put("taskMap", taskMap);
+
+        final List<TaskLog> taskLogs =  taskService.getLogsForTasks(taskMap.keySet().stream().toList());
+        model.put("taskLogs", taskLogs);
 
         return new ModelAndView(new YearWheelView(), model);
     }

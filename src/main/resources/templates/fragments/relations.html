@@ -37,6 +37,9 @@
                             <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).ASSET}" th:href="'/assets/' + ${relation.id}">
                                 <span th:text="${relation.name}"></span>
                             </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).DBSASSET}" th:href="'/dbs/assets/'">
+                                <span th:text="${relation.name}"></span>
+                            </a>
                             <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).THREAT_ASSESSMENT}" th:href="'/risks/' + ${relation.id}">
                                 <span th:text="${relation.name}"></span>
                             </a>

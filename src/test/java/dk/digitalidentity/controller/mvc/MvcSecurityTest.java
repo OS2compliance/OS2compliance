@@ -22,7 +22,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestContainersConfiguration.class)
-@ActiveProfiles("test")
+@ActiveProfiles({"test", "locallogin"})
 @TestPropertySource("/application-test.properties")
 public class MvcSecurityTest {
     @Autowired
@@ -47,7 +47,7 @@ public class MvcSecurityTest {
     private void assertUrlProtected(final String url) throws Exception {
         mockMvc.perform(get(url))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("/saml/login"));
+            .andExpect(redirectedUrl("http://localhost/login"));
     }
 
 }
