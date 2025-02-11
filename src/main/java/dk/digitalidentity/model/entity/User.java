@@ -15,6 +15,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -80,5 +81,12 @@ public class User implements Serializable {
     @EqualsAndHashCode.Exclude
     @ManyToMany(mappedBy = "users")
     private Set<Role> assetRoles = new HashSet<>();
+
+    @PrePersist
+    public void onCreate() {
+        if (uuid == null) {
+            this.uuid = UUID.randomUUID().toString();
+        }
+    }
 
 }
