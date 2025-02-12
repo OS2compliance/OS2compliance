@@ -97,7 +97,7 @@ public class AssetsController {
 		return "assets/index";
 	}
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
 	@GetMapping("form")
 	public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
 		if (id == null) {
