@@ -3,7 +3,6 @@ let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, 
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;
     let transferTo = transferToSelect.value;
-    console.log("from " + transferFrom + " to " + transferTo);
 
     let data = {
                  "transferFrom": transferFrom,

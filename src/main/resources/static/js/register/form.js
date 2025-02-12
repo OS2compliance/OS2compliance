@@ -21,7 +21,7 @@ function CreateRegisterService() {
                     editRegisterModal.show();
                     initFormValidationForForm('createForm');
                 }))
-            .catch(error => {toastService.error(error); console.log(error)});
+            .catch(error => {toastService.error(error); console.error(error)});
     }
 
     this.onLoaded = function() {
@@ -45,7 +45,7 @@ function EditRegisterService() {
                     createRegisterModal.show();
                     initFormValidationForForm('editForm');
                 }))
-            .catch(error => {toastService.error(error); console.log(error);});
+            .catch(error => {toastService.error(error); console.error(error);});
     }
 
     this.onLoaded = function() {

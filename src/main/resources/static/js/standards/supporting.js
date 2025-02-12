@@ -199,7 +199,7 @@ function setField(standardSectionId, setFieldType, value, index) {
         }
     }).catch(function(error) {
         toastService.error(error);
-        console.log(error);
+        console.error(error);
         window.location.reload();
     });
 
@@ -272,7 +272,7 @@ function addRelations() {
     })
     .catch(function(error) {
         toastService.error(error);
-        console.log(error);
+        console.error(error);
         window.location.reload();
     });
 }

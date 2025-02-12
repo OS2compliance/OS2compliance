@@ -111,7 +111,6 @@ function UserService () {
 
     this.onAddAssetRoleFormSubmit = async (event, form, roleId)=> {
         event.preventDefault();
-        console.log(form)
         const assetId = form.getAttribute('data-assetId')
         const formData = new FormData(form)
 
