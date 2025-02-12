@@ -37,7 +37,7 @@
                     {
                         name: "Forvaltning",
                         searchable : {
-                            searchKey : 'departments'
+                            searchKey : 'departmentNames'
                         },
                     },
                     {
@@ -143,9 +143,6 @@
                     },
                     {
                         name: "Aktiver",
-                        searchable : {
-                            searchKey : 'assetCount'
-                        },
                         width: "100px"
                     },
                     {
