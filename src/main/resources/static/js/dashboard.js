@@ -268,7 +268,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             {
                 name: "Ansvarlig afdeling",
                 searchable: {
-                    searchKey: 'responsibleOU'
+                    searchKey: 'responsibleOUNames'
                 },
             },
             {
