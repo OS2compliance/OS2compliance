@@ -97,18 +97,21 @@ public class AssetsController {
 		return "assets/index";
 	}
 
+    @RequireSuperuser
 	@GetMapping("form")
 	public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
 		if (id == null) {
 			model.addAttribute("asset", new Asset());
 			model.addAttribute("formId", "createForm");
 			model.addAttribute("formTitle", "Nyt aktiv");
+            model.addAttribute("editMode", false);
 		} else {
 			final Asset asset = assetService.get(id)
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 			model.addAttribute("asset", asset);
 			model.addAttribute("formId", "editForm");
 			model.addAttribute("formTitle", "Rediger aktiv");
+            model.addAttribute("editMode", true);
 		}
 		return "assets/form";
 	}
@@ -117,13 +120,25 @@ public class AssetsController {
 	@Transactional
 	@PostMapping("form")
 	public String formCreate(@ModelAttribute final Asset asset) {
-		asset.setAssetStatus(AssetStatus.NOT_STARTED);
-		asset.setCriticality(Criticality.NON_CRITICAL);
-		asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
 
-		final Asset newAsset = assetService.create(asset);
-		return "redirect:/assets/" + newAsset.getId();
+        //Determine if creating or editing
+        if (asset.getId() != null) {
+            Asset existingAsset = assetService.findById(asset.getId())
+                .orElseThrow();
+            existingAsset.setName(asset.getName());
+
+            assetService.save(existingAsset);
+
+            return "redirect:/assets";
+        } else {
+            asset.setAssetStatus(AssetStatus.NOT_STARTED);
+            asset.setCriticality(Criticality.NON_CRITICAL);
+            asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
+            final Asset newAsset = assetService.create(asset);
+            return "redirect:/assets/" + newAsset.getId();
+        }
 	}
+
 
     record DPIAQuestionDTO(long id, long questionResponseId, String question, String instructions, String templateAnswer, String response) {}
     record DPIASectionDTO(long id, String sectionIdentifier, long sectionResponseId, String heading, String explainer, boolean canOptOut, boolean hasOptedOutResponse, List<DPIAQuestionDTO> questions) {}

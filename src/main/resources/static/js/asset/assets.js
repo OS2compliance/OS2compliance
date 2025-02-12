@@ -147,6 +147,7 @@
                             const assetId = row.cells[0]['data'];
                             const name = row.cells[2]['data'].replaceAll("'", "\\'");
                             return gridjs.html(
+                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="onEditclicked('${assetId}')"><i class="pli-pen-5 fs-5"></i></button>` +
                                 `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
                         }
                     }
@@ -203,4 +204,25 @@
                     });
           }
         })
+    }
+
+    async function onEditclicked(assetId) {
+        const response = await fetch(`${formUrl}?id=${assetId}`, {
+            headers: {
+                'X-CSRF-TOKEN': token
+            }
+        })
+
+        if (!response.ok) {
+            toastService.error(response.error)
+            console.error("Could not load edit fragment for asset")
+        }
+
+        const responseText = await response.text()
+
+        let dialog = document.getElementById('formDialog');
+        dialog.innerHTML = responseText;
+        editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
+        editDialog.show();
+
     }
