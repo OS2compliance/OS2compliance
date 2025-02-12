@@ -31,6 +31,7 @@ import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.FilterService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import org.apache.commons.lang3.StringUtils;
@@ -100,6 +101,7 @@ public class AssetsRestController {
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
     private final AssetOversightService assetOversightService;
+    private final FilterService filterService;
 
     @PostMapping("list")
     public PageDTO<AssetDTO> list(
@@ -109,22 +111,12 @@ public class AssetsRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        // Remove pagination/sorting parameters from the filter map
-        filters.remove("page");
-        filters.remove("limit");
-        filters.remove("order");
-        filters.remove("dir");
-
-        //Set sorting
-        Sort sort = null;
-        if (StringUtils.isNotEmpty(sortColumn)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, sortColumn);
-        } else {
-            sort = Sort.unsorted();
-        }
-        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
-        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(filters, null,  sortAndPage, AssetGrid.class);
+        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(
+            filterService.validateSearchFilters(filters, AssetGrid.class),
+            null,
+            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            AssetGrid.class
+        );
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
