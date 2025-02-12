@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.FilterService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -21,10 +22,19 @@ import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @RestController
@@ -36,6 +46,7 @@ public class UserRestController {
     private final UserMapper userMapper;
     final private UserService userService;
     private final AssetService assetService;
+    private final FilterService filterService;
 
     @PostMapping("all")
     public PageDTO<UserWithRoleDTO> list(
@@ -45,22 +56,12 @@ public class UserRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        // Remove pagination/sorting parameters from the filter map
-        filters.remove("page");
-        filters.remove("limit");
-        filters.remove("order");
-        filters.remove("dir");
-
-        //Set sorting
-        Sort sort = null;
-        if (StringUtils.isNotEmpty(sortColumn)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, sortColumn);
-        } else {
-            sort = Sort.unsorted();
-        }
-        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
-        Page<User> users = userDao.findAllWithColumnSearch(filters, null, sortAndPage, User.class);
+        Page<User> users =  userDao.findAllWithColumnSearch(
+            filterService.validateSearchFilters(filters, User.class),
+            null,
+            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            User.class
+        );
 
         return new PageDTO<>(users.getTotalElements(), userMapper.toDTOWithRole(users.getContent()));
     }

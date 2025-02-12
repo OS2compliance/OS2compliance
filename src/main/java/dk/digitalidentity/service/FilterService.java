@@ -15,6 +15,13 @@ import java.util.Map;
 @Service
 public class FilterService {
 
+    /**
+     * Removes non-filter items like page,limit, order and dir from the filters, then ensures that each filter key exist on the given class
+     * Any that does not exist on class is not included in the returned filter
+     * @param filters
+     * @param validationClass
+     * @return a new map of validated filters
+     */
     public Map<String, String> validateSearchFilters(Map<String, String> filters, Class<?> validationClass) {
         // Remove pagination/sorting parameters from the filter map
         filters.remove("page");
@@ -32,6 +39,14 @@ public class FilterService {
         return validatedFilters;
     }
 
+    /**
+     * Builds a Pageable from the provided input
+     * @param page
+     * @param limit
+     * @param sortColumn
+     * @param sortDirection
+     * @return a Pageable
+     */
     public Pageable buildPageable(int page, int limit, String sortColumn, String sortDirection) {
         //Set sorting
         Sort sort = null;
