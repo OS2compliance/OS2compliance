@@ -7,6 +7,7 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.SettingsService;
@@ -89,6 +90,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(18, this::seedV18);
         incrementAndPerformIfVersion(19, this::seedV19);
         incrementAndPerformIfVersion(20, this::seedV20);
+        incrementAndPerformIfVersion(21, this::seedV21);
     }
 
     @SneakyThrows
@@ -128,6 +130,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             }
             return 0;
         });
+    }
+
+    private void seedV21() {
+        settingsService.createSetting(NotificationSetting.SEVENDAYSBEFORE.getValue(), "true" , "notification", true);
+        settingsService.createSetting(NotificationSetting.ONEDAYBEFORE.getValue(), "false" , "notification", true);
+        settingsService.createSetting(NotificationSetting.ONDAY.getValue(), "false" , "notification", true);
+        settingsService.createSetting(NotificationSetting.EVERYSEVENDAYSAFTER.getValue(), "false" , "notification", true);
     }
 
     private void seedV19() {

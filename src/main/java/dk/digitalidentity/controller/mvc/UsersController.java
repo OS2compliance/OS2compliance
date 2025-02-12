@@ -6,7 +6,7 @@ import dk.digitalidentity.model.dto.*;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Role;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
@@ -25,7 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller
-@RequireAdminstrator
+@RequireAdministrator
 @RequestMapping("admin/users")
 @RequiredArgsConstructor
 public class UsersController {
@@ -43,7 +43,18 @@ public class UsersController {
         model.addAttribute("roleOptions", new ArrayList<RoleOptionDTO>(roleOptions.values()));
 
         //Model for list of users - do not set password for DTO!
-//        model.addAttribute("allUsers", userService.getAll().stream().map(user -> UserWithRoleDTO.builder().uuid(user.getUuid()).userId(user.getUserId()).name(user.getName()).email(user.getEmail()).active(user.getActive()).accessRole(getAccessRole(user)).note(user.getNote()).build()).sorted(Comparator.comparing(UserWithRoleDTO::getActive).reversed().thenComparing(UserWithRoleDTO::getUserId)).collect(Collectors.toList()));
+        model.addAttribute("allUsers", userService.getAll().stream()
+            .map(user -> UserWithRoleDTO.builder()
+                .uuid(user.getUuid())
+                .userId(user.getUserId())
+                .name(user.getName())
+                .email(user.getEmail())
+                .active(user.getActive())
+                .accessRole(getAccessRole(user))
+                .note(user.getNote())
+                .build())
+            .sorted(Comparator.comparing(UserWithRoleDTO::getActive).reversed().thenComparing(UserWithRoleDTO::getUserId))
+            .collect(Collectors.toList()));
 
         //model for creating new users
         model.addAttribute("user", UserWithRoleDTO.builder().build());

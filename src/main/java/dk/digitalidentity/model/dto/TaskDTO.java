@@ -20,7 +20,7 @@ public class TaskDTO {
     private String taskRepetition;
     private Integer taskRepetitionOrder;
     private boolean completed;
-    private TaskResult taskResult;
+    private String taskResult;
     private Integer taskResultOrder;
     private String tags;
     private boolean changeable;

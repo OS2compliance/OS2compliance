@@ -1,5 +1,5 @@
 # compile source
-FROM amazoncorretto:21 as build
+FROM amazoncorretto:21-alpine as build
 
 RUN mkdir -p /workspace/app
 WORKDIR /workspace/app

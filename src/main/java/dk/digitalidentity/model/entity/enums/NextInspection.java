@@ -4,6 +4,7 @@ import lombok.Getter;
 
 @Getter
 public enum NextInspection {
+    DBS("Følger DBS"),
     DATE("Dato"),
     MONTH("Måned"),
     QUARTER("Kvartal"),

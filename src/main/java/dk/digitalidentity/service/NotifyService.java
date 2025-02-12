@@ -39,11 +39,7 @@ public class NotifyService {
             // Do not notify task already done
             return;
         }
-        if (task.getHasNotifiedResponsible() != null && task.getHasNotifiedResponsible()) {
-            log.warn("Task '{}' already notified", task.getName());
-            return;
-        }
-        task.setHasNotifiedResponsible(true);
+
 
         EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
         if (template.isEnabled()) {

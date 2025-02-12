@@ -6,8 +6,8 @@ import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.security.RequireAdminstrator;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.transaction.Transactional;
@@ -21,7 +21,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -39,13 +38,13 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/incidents")
-@RequireSuperuser
+@RequireSuperuserOrAdministrator
 @RequiredArgsConstructor
 public class IncidentRestController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
 
-    @RequireAdminstrator
+    @RequireAdministrator
     @GetMapping("questions")
     public List<IncidentFieldDTO> list() {
         return incidentMapper.toFieldDTOs(incidentService.getAllFields());

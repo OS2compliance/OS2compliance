@@ -82,7 +82,7 @@ public class SecurityUtil {
         Object principal = authentication.getPrincipal();
         if (principal instanceof String) {
             return (String) principal ;
-        }else if (principal instanceof FormUserDetails) {
+        } else if (principal instanceof FormUserDetails) {
             return ((FormUserDetails) principal).getUserUUID();
         } else {
             throw new UsernameNotFoundException("instance of principal is of unknown type, when checking for super or own user");

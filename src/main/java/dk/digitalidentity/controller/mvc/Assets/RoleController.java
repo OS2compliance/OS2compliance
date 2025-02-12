@@ -3,19 +3,16 @@ package dk.digitalidentity.controller.mvc.Assets;
 import dk.digitalidentity.mapping.RoleMapper;
 import dk.digitalidentity.model.dto.RoleDTO;
 import dk.digitalidentity.model.entity.Role;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RoleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
-import java.util.List;
 
 @Slf4j
 @Controller
@@ -26,14 +23,14 @@ public class RoleController {
     private final RoleService roleService;
     private final RoleMapper mapper;
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @GetMapping("create/{assetId}")
     public String createRole(final Model model, @PathVariable Long assetId) {
         model.addAttribute("role", new RoleDTO(null, "", assetId, new ArrayList<>()));
         return "assets/roles/editRoleModal";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @GetMapping("edit/{assetId}/{roleId}")
     public String editRole(final Model model, @PathVariable Long assetId, @PathVariable Long roleId) {
         Role role = roleService.getRole(roleId)

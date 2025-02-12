@@ -5,9 +5,6 @@ import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-import dk.digitalidentity.model.entity.DBSAsset;
-import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,8 +18,9 @@ public class DBSOversightDTO {
 	private Long id;
 	private String name;
 	private String supplier;
+	private Long supplierId;
 	private String supervisoryModel;
-	
+
 	private List<DBSAssetDTO> dbsAssets;
 	private String oversightResponsible;
 	@JsonFormat(pattern = "dd/MM-yyyy")
@@ -30,4 +28,5 @@ public class DBSOversightDTO {
 	private String lastInspectionStatus;
 	@JsonFormat(pattern = "dd/MM-yyyy")
 	private LocalDate outstandingSince;
+    private Long outstandingId;
 }

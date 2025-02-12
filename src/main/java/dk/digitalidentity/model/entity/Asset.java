@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -78,6 +79,10 @@ public class Asset extends Relatable {
     @Column
     @Enumerated(EnumType.STRING)
     private AssetStatus assetStatus;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private AssetCategory assetCategory;
 
     @Column
     @Enumerated(EnumType.STRING)

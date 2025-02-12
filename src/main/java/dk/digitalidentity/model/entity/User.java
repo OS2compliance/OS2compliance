@@ -2,7 +2,6 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,13 +11,11 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.io.Serial;
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -33,7 +30,6 @@ public class User implements Serializable {
 
     @Id
     @Column
-    @GeneratedValue(strategy = GenerationType.UUID)
     private String uuid;
 
     @Column
@@ -77,6 +73,7 @@ public class User implements Serializable {
 
     @Column
     private LocalDateTime passwordResetRequestDate;
+
     @Column
     private String passwordResetToken;
 
@@ -84,5 +81,12 @@ public class User implements Serializable {
     @EqualsAndHashCode.Exclude
     @ManyToMany(mappedBy = "users")
     private Set<Role> assetRoles = new HashSet<>();
+
+    @PrePersist
+    public void onCreate() {
+        if (uuid == null) {
+            this.uuid = UUID.randomUUID().toString();
+        }
+    }
 
 }

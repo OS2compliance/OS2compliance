@@ -16,7 +16,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
-import dk.digitalidentity.security.RequireSuperuser;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -107,7 +107,7 @@ public class TasksController {
         return "tasks/form";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
@@ -221,6 +221,7 @@ public class TasksController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("task", task);
+        model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
         model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
@@ -273,7 +274,7 @@ public class TasksController {
         return "tasks/viewTimeline";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -340,7 +341,7 @@ public class TasksController {
         return "tasks/copyForm";
     }
 
-    @RequireSuperuser
+    @RequireSuperuserOrAdministrator
     @Transactional
     @PostMapping("{id}/copy")
     public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,

@@ -30,7 +30,7 @@
                     </div>
                 </div>
 
-                <div th:hidden="${inspectionType != T(dk.digitalidentity.model.entity.enums.NextInspection).DATE}" class="row mt-3">
+                <div th:if="${inspectionType == T(dk.digitalidentity.model.entity.enums.NextInspection).DATE}" class="row mt-3">
                     <div  class="input-group col-sm-8">
                         <label for="oversightInspectionDateInput" class="col-sm-4 col-form-label">Næste tilsyn</label>
                         <input id="oversightInspectionDateInput" type="text" class="form-control editField datepicker" th:field="*{newInspectionDate}">
@@ -45,7 +45,7 @@
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" th:field="*{responsibleUser}"
                             data-trigger="" id="oversightUserSelect" hidden="" required>
-                            <option th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}" selected></option>
+                            <option th:if="${responsibleUser != null}" th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}" selected></option>
                         </select>
                         <div class="invalid-feedback">Ansvarlig bruger påkrævet</div>
                     </div>
@@ -58,7 +58,7 @@
                             id="oversightSupervisionModelSelect" th:field="*{supervisionModel}">
                             <option
                                 th:each="supervision : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}"
-                                th:value="${supervision}" th:text="${supervision.getMessage()}">
+                                th:value="${supervision}" th:text="${supervision.getMessage()}" th:selected="${supervision == oversight.supervisionModel}">
                             </option>
                         </select>
                     </div>
