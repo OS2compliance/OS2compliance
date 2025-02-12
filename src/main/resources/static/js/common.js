@@ -90,7 +90,7 @@ const defaultResponseHandler = function (response) {
 
 const defaultErrorHandler = function(error) {
     toastService.error(error);
-    console.log(error);
+    console.error(error);
 }
 
 async function jsonCall(method, url, data = {}) {

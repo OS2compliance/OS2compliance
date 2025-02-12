@@ -141,7 +141,6 @@ class CustomGridFunctions {
      * Adds a text input for every  'searchable' column in the GridJS grid, with id based on the column id
      */
     addSearchFields() {
-        console.log(this.grid.config.columns)
         const updatedConfig = [...this.grid.config.columns]
         for (const column of updatedConfig) {
             let searchFieldHTML = '<div style="display:none;"></div>'
@@ -194,7 +193,6 @@ class CustomGridFunctions {
                 }
             }
         }
-        console.log(this.grid.config.columns)
         this.grid.updateConfig({
             columns: updatedConfig
         })
