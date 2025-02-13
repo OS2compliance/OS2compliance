@@ -44,4 +44,8 @@ public class ChoiceService {
             .collect(Collectors.toList());
     }
 
+    public List<ChoiceList> getAllCustomizableChoiceLists(){
+        return choiceListDao.findByCustomizableTrue();
+    }
+
 }
