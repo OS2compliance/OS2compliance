@@ -46,6 +46,8 @@
 
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='choicelists')}"></nav>
+
+    <div id="choiceListEditModalContainer" class="modal" role="dialog"></div>
 </div>
 
 
@@ -57,12 +59,14 @@
         const viewUrl = [[@{/admin/tags}]];
         const restUrl = [[@{/rest/tags}]];
         const data = [[${choiceLists}]];
+        const isSuperuser = [[${isSuperuser}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    let customChoiceListService
+    let customChoiceListService, networkService
 
     document.addEventListener("DOMContentLoaded", function(event) {
         customChoiceListService = new CustomChoiceListService()
+        networkService = new NetworkService()
     });
 
     /*]]>*/

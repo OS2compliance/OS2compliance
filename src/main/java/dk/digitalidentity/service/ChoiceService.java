@@ -17,6 +17,10 @@ public class ChoiceService {
     private final ChoiceValueDao choiceValueDao;
     private final ChoiceListDao choiceListDao;
 
+    public Optional<ChoiceList> findChoiceList(long id){
+        return choiceListDao.findById(id);
+    }
+
     public ChoiceService(final ChoiceValueDao choiceValueDao, final ChoiceListDao choiceListDao) {
         this.choiceValueDao = choiceValueDao;
         this.choiceListDao = choiceListDao;
