@@ -1,14 +1,16 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.AssetType;
+
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,9 +33,11 @@ public class AssetGrid {
     @Column
     private String supplier;
 
-	@Column
-	@Enumerated(EnumType.STRING)
-	private AssetType assetType;
+//	@Column
+//	@Enumerated(EnumType.STRING)
+//	private AssetType assetType;
+    @ManyToOne
+    private ChoiceValue assetType;
 
     @Column
     private String responsibleUserNames;

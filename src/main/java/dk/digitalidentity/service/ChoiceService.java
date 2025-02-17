@@ -80,4 +80,9 @@ public class ChoiceService {
         choiceValueDao.deleteById(id);
     }
 
+    public ChoiceList getAssetTypeChoiceList(){
+        return choiceListDao.findByIdentifier("asset-type")
+            .orElseThrow();
+    }
+
 }
