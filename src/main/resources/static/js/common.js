@@ -271,7 +271,7 @@ class NetworkService {
     * @returns the response as JS object
     */
     async Get(url) {
-        if (!this.XCSRFToken || token) {
+        if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
 
@@ -295,7 +295,7 @@ class NetworkService {
     * @returns response as JS object
     */
     async Post (url, data) {
-        if (!this.XCSRFToken || token) {
+        if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
 
@@ -323,7 +323,7 @@ class NetworkService {
     */
     async Put (url, data){
 
-        if (!this.XCSRFToken || token) {
+        if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
 
@@ -348,7 +348,7 @@ class NetworkService {
     * @returns response as JS object
     */
     async Delete (url) {
-        if (!this.XCSRFToken || token) {
+        if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
 

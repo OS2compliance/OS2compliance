@@ -57,16 +57,17 @@
     /*<![CDATA[*/
     /*[+
         const viewUrl = [[@{/admin/tags}]];
-        const restUrl = [[@{/rest/tags}]];
+        const restUrl = [[@{/rest/choicelists/custom}]];
         const data = [[${choiceLists}]];
         const isSuperuser = [[${isSuperuser}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    console.log(token)
     let customChoiceListService, networkService
 
     document.addEventListener("DOMContentLoaded", function(event) {
         customChoiceListService = new CustomChoiceListService()
-        networkService = new NetworkService()
+        networkService = new NetworkService(token)
     });
 
     /*]]>*/

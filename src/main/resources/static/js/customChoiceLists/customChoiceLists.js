@@ -7,6 +7,7 @@ class CustomChoiceListService {
         search: "form-control",
         header: "d-flex justify-content-end"
     };
+    #modal
 
     constructor() {
         this.initGrid()
@@ -73,8 +74,8 @@ class CustomChoiceListService {
             const url = `choicelists/${id}/edit`
 
             if (await networkService.GetFragment(url, modalContainer)) {
-                const modal = new bootstrap.Modal(modalContainer)
-                modal.show()
+                this.#modal = new bootstrap.Modal(modalContainer)
+                this.#modal.show()
             } else {
                 console.error('could not show modal for editing custom choice lists')
             }
@@ -98,6 +99,7 @@ class CustomChoiceListService {
             const button = event.target
             const newValueField = this.#generateChoiceFieldElements()
             button.parentElement.insertBefore(newValueField, button)
+            newValueField.querySelector('.choice-value-field').focus()
 
         }
 
@@ -112,7 +114,7 @@ class CustomChoiceListService {
 
 
             const removebutton = document.createElement('button')
-            removebutton.classList.add("btn", "btn-icon", "btn-outline-light", "btn-s", "align-middle")
+            removebutton.classList.add("btn", "btn-icon", "btn-outline-light", "btn-s", "align-middle", "bg-danger")
             removebutton.type = "button"
             removebutton.addEventListener('click', (e)=> this.#removeChoiceValueField(newValueFieldContainer))
             newValueFieldContainer.appendChild(removebutton)
@@ -123,5 +125,29 @@ class CustomChoiceListService {
 
             return newValueFieldContainer
 
+        }
+
+        async onChoiceListValuesSubmission(listId){
+            //find all input fields, map to id-value object and filter empty values
+            const values = Array.from(document.querySelectorAll('.choice-value-field'))
+            .map(input => {
+                const id = input.id.split('-')[0]
+                return {
+                    id : id ? id : null,
+                    value : input.value
+                }
+            })
+            .filter(choiceValue => choiceValue.value)
+
+            //Send objects to rest endpoint
+            const url = `${restUrl}/${listId}/update`
+
+            const resultOK = networkService.Put(url, values)
+            if(!resultOK) {
+                toastService.error("De ændrede værdier blev ikke accepteret af serveren, og er ikke gemt")
+            }
+
+            //dismiss modal
+            this.#modal.hide()
         }
     }

@@ -18,7 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 /**
- * Integration tests for {@link UserRestController}
+ * Integration tests for {@link dk.digitalidentity.controller.rest.Admin.UserRestController}
  */
 @Transactional
 @AutoConfigureMockMvc

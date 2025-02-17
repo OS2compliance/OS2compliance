@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.rest;
+package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.dto.EmailTemplateDTO;

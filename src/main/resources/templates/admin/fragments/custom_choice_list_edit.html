@@ -15,7 +15,7 @@
             <div th:each="value : *{values}" class="choice-value-field-container form-group d-flex gap-2 align-items-center">
                 <input th:id="${value.id}+'-choice-value'" class="choice-value-field form-control" type="text"
                        th:value="${value.caption}">
-                <button type="button" class="btn btn-icon btn-outline-light btn-s align-middle"
+                <button type="button" class="btn btn-icon btn-outline-light btn-s align-middle bg-danger"
                         th:attr="onclick='customChoiceListService.onRemoveChoiceValueField(event)'">
                     <i class="pli-remove fs-5"></i></button>
             </div>
@@ -28,7 +28,7 @@
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
             <button type="button" class="btn btn-primary"
-                    th:text="Opdater" onclick="customChoiceListService.onChoiceListValuesSubmission()">
+                    th:text="Opdater" th:attr="onclick='customChoiceListService.onChoiceListValuesSubmission('+ *{id} +')'">>
             </button>
         </div>
     </div>
