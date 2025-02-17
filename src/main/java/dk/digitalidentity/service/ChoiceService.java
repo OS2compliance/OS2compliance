@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -56,29 +57,27 @@ public class ChoiceService {
         return choiceListDao.save(choiceList);
     }
 
-    public ChoiceValue updateOrCreate(ChoiceValue choiceValue) {
-        if (choiceValue.getId() != null) {
-            ChoiceValue foundValue = choiceValueDao.findById(choiceValue.getId())
-                .orElseThrow();
-            foundValue.setCaption(choiceValue.getCaption());
-            foundValue.setDescription(choiceValue.getDescription());
-            foundValue.setIdentifier(choiceValue.getIdentifier());
-            foundValue.setLimitLower(choiceValue.getLimitLower());
-            foundValue.setLimitUpper(choiceValue.getLimitUpper());
-            foundValue.setLists(choiceValue.getLists());
-            foundValue.setChildListIdentifier(choiceValue.getChildListIdentifier());
-            return choiceValueDao.save(foundValue);
-        } else {
-            ChoiceValue createdValue = ChoiceValue.builder()
-                .identifier(choiceValue.getIdentifier())
-                .caption(choiceValue.getCaption())
-                .limitLower(choiceValue.getLimitLower())
-                .limitUpper(choiceValue.getLimitUpper())
-                .lists(choiceValue.getLists())
-                .childListIdentifier(choiceValue.getChildListIdentifier())
-                .build();
-            return choiceValueDao.save(createdValue);
+    public ChoiceValue save(ChoiceValue choiceValue) {
+        return choiceValueDao.save(choiceValue);
+    }
+
+    public ChoiceValue update(long id, String caption) {
+        ChoiceValue foundValue = choiceValueDao.findById(id)
+            .orElseThrow();
+        boolean changed = false;
+        if (!Objects.equals(caption, foundValue.getCaption())) {
+            foundValue.setCaption(caption);
+            changed = true;
         }
+
+        if (changed) {
+            return choiceValueDao.save(foundValue);
+        }
+        return foundValue;
+    }
+
+    public void delete (long id) {
+        choiceValueDao.deleteById(id);
     }
 
 }
