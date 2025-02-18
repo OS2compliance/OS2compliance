@@ -16,7 +16,9 @@
                 <input th:id="${value.id}+'-choice-value'" class="choice-value-field form-control" type="text"
                        th:value="${value.caption}">
                 <button type="button" class="btn btn-icon btn-outline-light btn-s align-middle bg-danger"
-                        th:attr="onclick='customChoiceListService.onRemoveChoiceValueField(event)'">
+                        th:attr="onclick='customChoiceListService.onRemoveChoiceValueField(event)'"
+                        th:style="${value.removable == true ? 'visibility:hidden;' : ''}"
+                >
                     <i class="pli-remove fs-5"></i></button>
             </div>
             <button type="button" class="btn btn-secondary col-12"

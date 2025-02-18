@@ -296,6 +296,10 @@ public class AssetService {
         return new PlaceholderInfo(dataProcessing.getTypesOfPersonalInformationFreetext() == null ? "" : dataProcessing.getTypesOfPersonalInformationFreetext(), selectedAccessWhoTitles, selectedAccessCountTitle, howLongTitle, personalDataTypesTitles, categoriesOfRegisteredTitles);
     }
 
+    public boolean isInUseOnAssets(Long assetTypeId) {
+        return assetDao.countByAssetType_Id(assetTypeId) > 0;
+    }
+
     record DPIAQuestionDTO(String question, String templateAnswer, String response) {}
     record DPIASectionDTO(String sectionIdentifier, String heading, String explainer, List<DPIAQuestionDTO> questions) {}
     record DPIAThreatAssessmentDTO(long threatAssessmentId, String threatAssessmentName, String date, boolean signed) {}

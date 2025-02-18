@@ -52,7 +52,7 @@
 
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
-<script th:src="@{/js/customChoiceLists/customChoiceLists.js}" defer></script>
+<script th:src="@{/js/admin/customChoiceLists/customChoiceLists.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
@@ -62,7 +62,6 @@
         const isSuperuser = [[${isSuperuser}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    console.log(token)
     let customChoiceListService, networkService
 
     document.addEventListener("DOMContentLoaded", function(event) {

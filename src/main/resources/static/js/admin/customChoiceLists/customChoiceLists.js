@@ -1,5 +1,4 @@
 
-
 class CustomChoiceListService {
     #tableIdentifier = "customChoiceListTable"
     #defaultClassName = {
@@ -12,7 +11,6 @@ class CustomChoiceListService {
     constructor() {
         this.initGrid()
     }
-
 
     initGrid() {
         let gridConfig = {
@@ -74,7 +72,9 @@ class CustomChoiceListService {
             const url = `choicelists/${id}/edit`
 
             if (await networkService.GetFragment(url, modalContainer)) {
-                this.#modal = new bootstrap.Modal(modalContainer)
+                this.#modal = new bootstrap.Modal(modalContainer, {
+                    backdrop:"static"
+                })
                 this.#modal.show()
             } else {
                 console.error('could not show modal for editing custom choice lists')

@@ -127,6 +127,7 @@ public class AssetsController {
             Asset existingAsset = assetService.findById(asset.getId())
                 .orElseThrow();
             existingAsset.setName(asset.getName());
+            existingAsset.setAssetType(asset.getAssetType());
 
             assetService.save(existingAsset);
 

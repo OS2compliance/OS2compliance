@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -12,17 +11,14 @@ import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -50,7 +46,7 @@ public class CustomChoiceListRestController {
         //find values that needs to be deleted:
         List<Long> markedForRemoval = existingIds.stream()
             .filter(existingId -> !updatedIds.contains(existingId))
-//            .filter() //TODO - check if any assets use this value
+            .filter( existingId -> !assetService.isInUseOnAssets(existingId)) //do not remove if any assets use this value
             .toList();
         for(Long id : markedForRemoval) {
             choiceService.delete(id);
