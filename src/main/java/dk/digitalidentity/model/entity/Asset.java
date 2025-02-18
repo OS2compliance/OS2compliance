@@ -59,7 +59,8 @@ public class Asset extends Relatable {
     @Column
     private String description;
 
-    @ManyToOne
+    @OneToOne
+    @JoinColumn(name="id")
     private ChoiceValue assetType;
 
     @Column

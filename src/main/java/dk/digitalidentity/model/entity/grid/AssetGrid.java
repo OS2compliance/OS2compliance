@@ -10,7 +10,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -33,11 +35,10 @@ public class AssetGrid {
     @Column
     private String supplier;
 
-//	@Column
-//	@Enumerated(EnumType.STRING)
-//	private AssetType assetType;
-    @ManyToOne
-    private ChoiceValue assetType;
+//    @OneToOne
+//    @JoinColumn(name="id")
+    @Column
+    private String assetType;
 
     @Column
     private String responsibleUserNames;
