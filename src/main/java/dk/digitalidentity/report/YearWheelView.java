@@ -70,7 +70,7 @@ public class YearWheelView extends AbstractXlsView {
                     createCell(logRow, 11, nullSafe(() -> taskLog.getComment(), ""), style);
                     createCell(logRow, 12, nullSafe(() -> taskLog.getCompleted(),  null), dateStyle);
                     cnt++;
-                    if (checkTaskLogs.size() < cnt) {
+                    if (cnt < checkTaskLogs.size()) {
                         logRow = sheet.createRow(rowCount++);
                     }
                 }

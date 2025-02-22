@@ -99,7 +99,7 @@ public class TaskService {
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
-        return taskDao.findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(date);
+        return taskDao.findTaskForYearWheel(date);
     }
 
     /**
