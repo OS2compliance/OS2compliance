@@ -71,7 +71,7 @@
                 {
                     name: "Systemejer",
                     searchable: {
-                        searchKey: 'responsibleUsers'
+                        searchKey: 'responsibleUserNames'
                     },
                 },
                 {

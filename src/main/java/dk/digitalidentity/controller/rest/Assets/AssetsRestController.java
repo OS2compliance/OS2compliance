@@ -1,11 +1,11 @@
 package dk.digitalidentity.controller.rest.Assets;
 
-import java.nio.charset.StandardCharsets;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-
+import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.mapping.AssetMapper;
+import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.DPIA;
@@ -17,23 +17,30 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetOversightService;
+import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.FilterService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
-import org.apache.commons.lang3.StringUtils;
+import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.util.ReflectionHelper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -41,9 +48,6 @@ import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -59,23 +63,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import dk.digitalidentity.dao.grid.AssetGridDao;
-import dk.digitalidentity.mapping.AssetMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
-import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.service.AssetService;
-import dk.digitalidentity.service.UserService;
-import dk.digitalidentity.util.ReflectionHelper;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -100,6 +95,7 @@ public class AssetsRestController {
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
     private final AssetOversightService assetOversightService;
+    private final FilterService filterService;
 
     @PostMapping("list")
     public PageDTO<AssetDTO> list(
@@ -109,22 +105,12 @@ public class AssetsRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        // Remove pagination/sorting parameters from the filter map
-        filters.remove("page");
-        filters.remove("limit");
-        filters.remove("order");
-        filters.remove("dir");
-
-        //Set sorting
-        Sort sort = null;
-        if (StringUtils.isNotEmpty(sortColumn)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, sortColumn);
-        } else {
-            sort = Sort.unsorted();
-        }
-        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
-        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(filters, null,  sortAndPage, AssetGrid.class);
+        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(
+            filterService.validateSearchFilters(filters, AssetGrid.class),
+            null,
+            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            AssetGrid.class
+        );
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
@@ -139,22 +125,6 @@ public class AssetsRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        // Remove pagination/sorting parameters from the filter map
-        filters.remove("page");
-        filters.remove("limit");
-        filters.remove("order");
-        filters.remove("dir");
-
-        //Set sorting
-        Sort sort = null;
-        if (StringUtils.isNotEmpty(sortColumn)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(sortDirection).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, sortColumn);
-        } else {
-            sort = Sort.unsorted();
-        }
-        final Pageable sortAndPage = PageRequest.of(page, limit, sort);
-
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
@@ -162,7 +132,11 @@ public class AssetsRestController {
         }
 
         Page<AssetGrid> assets = null;
-        assets = assetGridDao.findAllForResponsibleUser(filters, sortAndPage, AssetGrid.class, user);
+        assets = assetGridDao.findAllForResponsibleUser(
+            filterService.validateSearchFilters(filters,AssetGrid.class ),
+            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            AssetGrid.class,
+            user);
 
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
