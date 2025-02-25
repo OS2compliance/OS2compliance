@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.mvc;
+package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.dto.EmailTemplateDTO;
 import dk.digitalidentity.model.entity.EmailTemplate;

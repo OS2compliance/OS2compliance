@@ -116,7 +116,6 @@ function pageLoaded() {
                                 url = "#"; // Fallback link, hvis typen ikke er genkendt
                                 break;
                         }
-                        console.log(responsibleFor)
                         htmlResponsibleFor += `<li><a href="${url}">${responsibleFor.typeMessage}: ${responsibleFor.name}</a></li>`;
                     });
                     htmlResponsibleFor += "</ul>";

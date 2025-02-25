@@ -1,17 +1,27 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonManagedReference;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import jakarta.annotation.Nullable;
-import jakarta.persistence.*;
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,9 +59,9 @@ public class Asset extends Relatable {
     @Column
     private String description;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private AssetType assetType = AssetType.IT_SYSTEM;
+    @ManyToOne
+    @JoinColumn(name = "asset_type", nullable = false)
+    private ChoiceValue assetType;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -144,8 +154,7 @@ public class Asset extends Relatable {
 
     @Override
     public String getLocalizedEnumValues() {
-        return (assetType != null ? assetType.getMessage() + " " : "") +
-            (assetStatus != null ? assetStatus.getMessage() : "");
+        return (assetStatus != null ? assetStatus.getMessage() : "");
     }
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)

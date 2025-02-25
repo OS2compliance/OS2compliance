@@ -22,6 +22,7 @@ public interface ChoiceMeasuresMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lists", ignore = true)
+    @Mapping(target = "assetsWithType", ignore = true)
     ChoiceValue fromDTO(final ChoiceValueDTO value);
 
     default ChoiceMeasureDTO toDTO(final ChoiceMeasure measure) {
@@ -43,7 +44,7 @@ public interface ChoiceMeasuresMapper {
     default PageDTO<ChoiceMeasureDTO> toDTO(final Page<ChoiceMeasure> measures) {
         return new PageDTO<>(measures.getTotalElements(), toDTO(measures.getContent()));
     }
-    
+
     List<ChoiceMeasureDTO> toDTO(final List<ChoiceMeasure> measures);
 
 }

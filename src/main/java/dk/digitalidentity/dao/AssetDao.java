@@ -34,4 +34,7 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
     Page<Asset> searchForAsset(@Param("search") final String search, final Pageable pageable);
 
     List<Asset> findByDeletedFalse(Sort sort);
+
+    long countByAssetType_Id(Long id);
+
 }

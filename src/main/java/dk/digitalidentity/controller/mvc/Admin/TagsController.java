@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.mvc;
+package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.security.RequireAdministrator;

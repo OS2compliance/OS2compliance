@@ -113,6 +113,7 @@ public class AssetsController {
 			model.addAttribute("formTitle", "Rediger aktiv");
             model.addAttribute("editMode", true);
 		}
+        model.addAttribute("allAssetTypes", choiceService.getAssetTypeChoiceList().getValues());
 		return "assets/form";
 	}
 
@@ -126,6 +127,7 @@ public class AssetsController {
             Asset existingAsset = assetService.findById(asset.getId())
                 .orElseThrow();
             existingAsset.setName(asset.getName());
+            existingAsset.setAssetType(asset.getAssetType());
 
             assetService.save(existingAsset);
 
@@ -273,6 +275,7 @@ public class AssetsController {
 
 
 
+        model.addAttribute("allAssetTypes", choiceService.getAssetTypeChoiceList().getValues());
 		return "assets/view";
 	}
 
@@ -408,6 +411,7 @@ public class AssetsController {
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setAssetCategory(asset.getAssetCategory());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
+
 
         return "redirect:/assets/" + existingAsset.getId();
     }
