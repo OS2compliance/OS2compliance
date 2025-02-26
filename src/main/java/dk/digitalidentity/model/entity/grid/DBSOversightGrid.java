@@ -1,13 +1,12 @@
 package dk.digitalidentity.model.entity.grid;
 
 import java.time.LocalDate;
-import java.util.List;
+import java.util.Set;
 
-import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Task;
 import org.hibernate.annotations.Immutable;
 
-import dk.digitalidentity.config.DBSAssetListConverter;
+import dk.digitalidentity.config.DBSAssetSetConverter;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
@@ -47,8 +46,8 @@ public class DBSOversightGrid {
     private ChoiceOfSupervisionModel supervisoryModel;
 
     @Column
-    @Convert(converter = DBSAssetListConverter.class)
-    private List<DBSAsset> dbsAssets;
+    @Convert(converter = DBSAssetSetConverter.class)
+    private Set<DBSAsset> dbsAssets;
 
     @ManyToOne
     @JoinColumn(name = "oversight_responsible_uuid")

@@ -49,7 +49,7 @@ public class DBSOversightRestController {
 		final Pageable sortAndPage = PageRequest.of(page, size, sort);
 		Page<DBSOversightGrid> oversights = null;
 		if (StringUtils.isNotEmpty(search)) {
-		    final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "oversightResponsible", "lastInspection", "lastInspectionStatus", "localizedEnums");
+		    final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "oversightResponsible", "lastInspection", "lastInspectionStatus", "localizedEnums", "outstandingTask");
 			oversights = dbsOversightGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSOversightGrid.class);
 		} else {
 			// Fetch paged and sorted
@@ -65,6 +65,7 @@ public class DBSOversightRestController {
 				|| fieldName.equals("supervisoryModel")
 				|| fieldName.equals("oversightResponsible")
 				|| fieldName.equals("lastInspection")
+				|| fieldName.equals("outstandingTask")
 				|| fieldName.equals("lastInspectionStatus")
 				;
 	}

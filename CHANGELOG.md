@@ -21,6 +21,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Ikke muligt at oprette tilsyn, hvis ansvarlig ikke er sat
 - (https://github.com/OS2compliance/OS2compliance/issues/191) Overfør inaktive rettigheder virkede ikke 
 - (https://github.com/OS2compliance/OS2compliance/issues/193) Hændelser - Manglende visning af svar ved Valgliste eller Valgliste (flere svar) (Syddjurs)
+- (https://github.com/OS2compliance/OS2compliance/issues/195) Sortering på Ubehandlet tilsyn virker ikke
+- (https://github.com/OS2compliance/OS2compliance/issues/196) DBS aktive vises flere gange
 
 ## [2.0.0] - 2024-10-31
 

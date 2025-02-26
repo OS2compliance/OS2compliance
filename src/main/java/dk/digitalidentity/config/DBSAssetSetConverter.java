@@ -2,8 +2,8 @@ package dk.digitalidentity.config;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -23,16 +23,16 @@ import jakarta.persistence.Converter;
 @Component
 @Converter
 @Configurable
-public class DBSAssetListConverter implements AttributeConverter<List<DBSAsset>, String> {
+public class DBSAssetSetConverter implements AttributeConverter<Set<DBSAsset>, String> {
 
 	private final Supplier<DBSAssetDao> assetDao;
 
-	public DBSAssetListConverter(ObjectProvider<DBSAssetDao> assetDao) {
+	public DBSAssetSetConverter(ObjectProvider<DBSAssetDao> assetDao) {
 		this.assetDao = SingletonSupplier.of(() -> assetDao.getObject());
 	}
 
 	@Override
-	public String convertToDatabaseColumn(final List<DBSAsset> list) {
+	public String convertToDatabaseColumn(final Set<DBSAsset> list) {
 		if (list == null) {
 			return "";
 		}
@@ -40,10 +40,13 @@ public class DBSAssetListConverter implements AttributeConverter<List<DBSAsset>,
 	}
 
 	@Override
-	public List<DBSAsset> convertToEntityAttribute(final String joined) {
+	public Set<DBSAsset> convertToEntityAttribute(final String joined) {
 		if (joined == null || joined.isEmpty()) {
-			return Collections.emptyList();
+			return Collections.emptySet();
 		}
-		return Arrays.asList(joined.split(",")).stream().map(id -> assetDao.get().findById(Long.valueOf(id)).orElse(null)).filter(Objects::nonNull).toList();
+		return Arrays.stream(joined.split(","))
+            .map(id -> assetDao.get().findById(Long.valueOf(id)).orElse(null))
+            .filter(Objects::nonNull)
+            .collect(Collectors.toSet());
 	}
 }
