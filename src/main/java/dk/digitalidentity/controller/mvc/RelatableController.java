@@ -9,9 +9,12 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
@@ -20,6 +23,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -57,7 +62,8 @@ public class RelatableController {
             properties = new HashMap<>();
         }
     }
-    @RequireSuperuserOrAdministrator
+
+    @RequireUser
 	@Transactional
 	@PostMapping("relations/add")
 	public String addRelations(@ModelAttribute final AddRelationDTO dto) {
@@ -65,8 +71,9 @@ public class RelatableController {
 		if (dto.relations == null) {
 			return getReturnPath(dto.id(), relateTo);
 		}
+        ensureModificationIsAllowed(relateTo);
 
-		dto.relations().stream()
+        dto.relations().stream()
 				.map(relatedId -> relatableService.findById(relatedId)
 						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret entitet ikke fundet")))
 				.map(relatable -> Relation.builder()
@@ -85,31 +92,33 @@ public class RelatableController {
 		return getReturnPath(dto.id(), relateTo);
 	}
 
-
     record UpdateRelationDTO(long id, Map<String, String> properties) {
         public UpdateRelationDTO {
             properties = new HashMap<>();
         }
     }
-    @RequireSuperuserOrAdministrator
+
+    @RequireUser
     @Transactional
     @PostMapping("{id}/relations/{relatedId}/{relatedType}/update")
     public String updateRelation(@ModelAttribute final UpdateRelationDTO dto,
                                  @PathVariable final long id, @PathVariable final long relatedId, @PathVariable final RelationType relatedType) {
         final Relatable relatedTo = relatableService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final Relation toUpdate = relationService.findRelationEntity(relatedTo, relatedId, relatedType);
+        ensureModificationIsAllowed(relatedTo);
         setRelationProperties(toUpdate, dto.properties);
         eventPublisher.publishEvent(new RelationUpdatedEvent(toUpdate.getId()));
         return getReturnPath(id, relatedTo);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireUser
     @DeleteMapping("{id}/relations/{relatedId}/{relatedType}/remove")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
 	public String deleteRelation(@PathVariable final long id, @PathVariable final long relatedId, @PathVariable final RelationType relatedType) {
 		final Relatable relatedTo = relatableService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final Relation toDelete = relationService.findRelationEntity(relatedTo, relatedId, relatedType);
+        ensureModificationIsAllowed(relatedTo);
 		relationService.delete(toDelete);
 		return getReturnPath(id, relatedTo);
 	}
@@ -158,13 +167,14 @@ public class RelatableController {
         return getReturnPath(dto.id(), relateTo);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireUser
     @DeleteMapping("{id}/tags/{tagId}/remove")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public String deleteRelation(@PathVariable final long id, @PathVariable final long tagId) {
         final Relatable relatedTo = relatableService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final Tag tagToDelete = tagDao.findById(tagId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        ensureModificationIsAllowed(relatedTo);
         if (relatedTo.getRelationType().equals(RelationType.DOCUMENT)) {
             final Document document = (Document) relatedTo;
             document.getTags().remove(tagToDelete);
@@ -198,6 +208,22 @@ public class RelatableController {
         }
     }
 
+    /**
+     * Check if the current user is responsible for the given relatable, if not an exception is thrown
+     */
+    private void ensureModificationIsAllowed(final Relatable relateTo) {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.getAuthorities().stream()
+            .noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR))) {
+            final List<User> responsibleUsers = relatableService.findResponsibleUsers(relateTo);
+            final String principalUuid = SecurityUtil.getPrincipalUuid();
+            if (responsibleUsers.stream()
+                .map(User::getUuid)
+                .noneMatch(u -> u.equals(principalUuid))) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+            }
+        }
+    }
 
     private void setRelationProperties(final Relation relation, final Map<String, String> properties) {
         if (properties != null) {

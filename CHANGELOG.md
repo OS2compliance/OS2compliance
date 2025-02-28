@@ -23,6 +23,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/193) Hændelser - Manglende visning af svar ved Valgliste eller Valgliste (flere svar) (Syddjurs)
 - (https://github.com/OS2compliance/OS2compliance/issues/195) Sortering på Ubehandlet tilsyn virker ikke
 - (https://github.com/OS2compliance/OS2compliance/issues/196) DBS aktive vises flere gange
+- (https://github.com/OS2compliance/OS2compliance/issues/197) Bruger kan ikke lave tilknytninger
 
 ## [2.0.0] - 2024-10-31
 
