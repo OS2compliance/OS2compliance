@@ -248,14 +248,12 @@ public class DBSService {
                                 && t.getName().contains("- DBS tilsyn"))
                             .findFirst().ifPresentOrElse((task) -> {
                                     // Task already exist add our file to the existing task
-                                    task.setDescription(task.getDescription() + dbsLink(dbsOversight));
+                                    task.setDescription(task.getDescription() + dbsOversight.getName());
 
                                     //set link to the folder containing the documents
                                     task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
                                 },
                                 () -> {
-                                    //TODO - først når itsystem skifter status?
-
                                     // Create a new task
                                     Task task = new Task();
                                     task.setName(dbsOversight.getName() + " - DBS tilsyn");
@@ -263,8 +261,7 @@ public class DBSService {
                                     task.setResponsibleUser(asset.getOversightResponsibleUser());
                                     task.setTaskType(TaskType.TASK);
                                     task.setRepetition(TaskRepetition.NONE);
-                                    task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsLink(dbsOversight)
-                                    );
+                                    task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
                                     log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
                                     taskService.saveTask(task);
                                     relationService.addRelation(task, dbsAsset);
@@ -283,12 +280,6 @@ public class DBSService {
     private static String baseDBSTaskDescription(final DBSOversight dbsOversight) {
         return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
             + "Filer kan findes i DBS portalen her:\n";
-    }
-
-    private static String dbsLink(final DBSOversight dbsOversight) {
-//        return "<a href=\"https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\">" + dbsOversight.getName() + "</a>\n";
-//        return "https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\n";
-        return dbsOversight.getName();
     }
 
     private LocalDate nextRevisionQuarterToDate(String revisionValue) {
