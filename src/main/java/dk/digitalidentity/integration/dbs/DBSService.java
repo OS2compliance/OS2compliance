@@ -253,10 +253,12 @@ public class DBSService {
                             },
                             () -> {
                                 //TODO - først når itsystem skifter status?
+
                                 // Create a new task
                                 Task task = new Task();
-                                task.setName(dbsOversight.getSupplier().getName() + " - DBS tilsyn");
+                                task.setName( dbsOversight.getName() + " - DBS tilsyn");
                                 task.setNextDeadline(nowPlus14Days);
+                                task.setNextDeadline(dbsAsset.getNextRevision());
                                 task.setResponsibleUser(asset.getOversightResponsibleUser());
                                 task.setTaskType(TaskType.TASK);
                                 task.setRepetition(TaskRepetition.NONE);
