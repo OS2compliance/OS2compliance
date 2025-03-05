@@ -4,6 +4,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -79,6 +83,8 @@ public class DBSService {
                 asset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
+                asset.setStatus(itSystem.getStatus().getValue());
+                asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
                 dbsAssetDao.save(asset);
             })
             .count();
@@ -278,6 +284,22 @@ public class DBSService {
 //        return "<a href=\"https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\">" + dbsOversight.getName() + "</a>\n";
 //        return "https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\n";
         return dbsOversight.getName();
+    }
+
+    private LocalDate nextRevisionQuarterToDate(String revisionValue) {
+        if (revisionValue == null) {
+            return null;
+        }
+
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+            .appendValue(ChronoField.YEAR, 4)
+            .appendLiteral(" Q")
+            .appendValue(IsoFields.QUARTER_OF_YEAR, 1)
+            .parseDefaulting(IsoFields.DAY_OF_QUARTER, 31)
+            .toFormatter();
+        return LocalDate.parse(revisionValue, formatter)
+            .plusMonths(2)
+            .with(TemporalAdjusters.lastDayOfMonth());
     }
 
 }
