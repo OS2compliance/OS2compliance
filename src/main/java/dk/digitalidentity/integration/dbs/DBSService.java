@@ -44,15 +44,15 @@ import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 @RequiredArgsConstructor
 public class DBSService {
     private final DBSAssetDao dbsAssetDao;
-	private final DBSSupplierDao dbsSupplierDao;
-	private final DBSOversightDao dbsOversightDao;
-	private final RelationService relationService;
-	private final AssetService assetService;
-	private final TaskService taskService;
+    private final DBSSupplierDao dbsSupplierDao;
+    private final DBSOversightDao dbsOversightDao;
+    private final RelationService relationService;
+    private final AssetService assetService;
+    private final TaskService taskService;
 
     @Transactional
-	public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
-		//Filter only itSystems related to this cvr
+    public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
+        //Filter only itSystems related to this cvr
         final List<ItSystem> relevantItSystems = allItSystems.stream()
             .filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
             .toList();
@@ -82,6 +82,8 @@ public class DBSService {
                 dbsAssetDao.save(asset);
             })
             .count();
+
+        //TODO - Er det her vi skal have ITsystemets næste revisionsdato fra?
 
         // Update existing
         final long updated = allItSystems.stream()
@@ -143,9 +145,9 @@ public class DBSService {
     }
 
     @Transactional
-	public void syncOversight(final List<Document> allDocuments) {
+    public void syncOversight(final List<Document> allDocuments) {
 
-		//Remove documents without suppliers
+        //Remove documents without suppliers
         allDocuments.removeIf(d -> d.getPath().getSupplier() == null);
 
         final List<DBSOversight> existingDBSOversights = dbsOversightDao.findAll();
@@ -174,7 +176,7 @@ public class DBSService {
                 boolean changes = false;
                 if (!Objects.equals(existingDBSOversight.getName(), document.getName())) {
                     existingDBSOversight.setName(document.getName());
-                    changes  = true;
+                    changes = true;
                 }
                 if (document.getLocked() != null && !Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
                     existingDBSOversight.setLocked(document.getLocked());
@@ -191,7 +193,7 @@ public class DBSService {
         dbsOversightDao.saveAll(toBeAdded);
         log.debug("Updating {} oversights.", toBeUpdated.size());
         dbsOversightDao.saveAll(toBeUpdated);
-	}
+    }
 
     public Optional<ZonedDateTime> findNewestUpdatedTime(final List<Document> allDocuments) {
         return allDocuments.stream()
@@ -237,10 +239,14 @@ public class DBSService {
                             && t.getNextDeadline().isAfter(now)
                             && t.getName().contains("- DBS tilsyn"))
                         .findFirst().ifPresentOrElse((task) -> {
-                            // Task already exist add our file to the existing task
-                            task.setDescription(task.getDescription() + dbsLink(dbsOversight));
-                        },
+                                // Task already exist add our file to the existing task
+                                task.setDescription(task.getDescription() + dbsLink(dbsOversight));
+
+                                //set link to the folder containing the documents
+                                task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
+                            },
                             () -> {
+                                //TODO - først når itsystem skifter status?
                                 // Create a new task
                                 Task task = new Task();
                                 task.setName(dbsOversight.getSupplier().getName() + " - DBS tilsyn");
@@ -248,9 +254,7 @@ public class DBSService {
                                 task.setResponsibleUser(asset.getOversightResponsibleUser());
                                 task.setTaskType(TaskType.TASK);
                                 task.setRepetition(TaskRepetition.NONE);
-                                task.setDescription("Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
-                                    + "Filer kan findes i DBS portalen her:\n"
-                                    + dbsLink(dbsOversight)
+                                task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsLink(dbsOversight)
                                 );
                                 log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
                                 taskService.saveTask(task);
@@ -265,9 +269,15 @@ public class DBSService {
         }
     }
 
+    private static String baseDBSTaskDescription(final DBSOversight dbsOversight) {
+        return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
+            + "Filer kan findes i DBS portalen her:\n";
+    }
+
     private static String dbsLink(final DBSOversight dbsOversight) {
 //        return "<a href=\"https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\">" + dbsOversight.getName() + "</a>\n";
-        return "https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\n";
+//        return "https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\n";
+        return dbsOversight.getName();
     }
 
 }
