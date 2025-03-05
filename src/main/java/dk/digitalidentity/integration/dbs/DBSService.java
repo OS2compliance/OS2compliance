@@ -89,8 +89,6 @@ public class DBSService {
             })
             .count();
 
-        //TODO - Er det her vi skal have ITsystemets næste revisionsdato fra?
-
         // Update existing
         final long updated = allItSystems.stream()
             .filter(itSystem -> existingAssetIds.contains(itSystem.getUuid()))
@@ -210,7 +208,7 @@ public class DBSService {
     @Transactional
     public void oversightResponsible() {
         final LocalDate now = LocalDate.now();
-        final LocalDate nowPlus14Days = now.plusDays(14);
+
         // Only look back 10 days so we do not create task for everything the first time we activate DBS integration
         final List<DBSOversight> oversights = dbsOversightDao
             .findByCreatedGreaterThanAndTaskCreatedFalse(LocalDateTime.now().minusDays(10));
@@ -220,58 +218,63 @@ public class DBSService {
             log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
 
             for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
-                List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
-                log.debug("Found {} related assets.", assetRelations.size());
 
-                List<Asset> assets = assetRelations.stream()
-                    .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                    .map(assetService::findById)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .toList();
+                //Only update/create related task if itsystem status changes to published
+                if (dbsAsset.getStatus().equals("published")) {
 
-                for (Asset asset : assets) {
-                    if (asset.getOversightResponsibleUser() == null) {
-                        log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponsible is null.", asset.getId(), dbsOversight.getId());
-                        continue;
-                    }
+                    List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
+                    log.debug("Found {} related assets.", assetRelations.size());
 
-                    // Check if there is an open task already
-                    relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
-                        .map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
+                    List<Asset> assets = assetRelations.stream()
+                        .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
+                        .map(assetService::findById)
                         .filter(Optional::isPresent)
                         .map(Optional::get)
-                        .filter(t -> t.getTaskType() == TaskType.TASK
-                            && t.getNextDeadline().isAfter(now)
-                            && t.getName().contains("- DBS tilsyn"))
-                        .findFirst().ifPresentOrElse((task) -> {
-                                // Task already exist add our file to the existing task
-                                task.setDescription(task.getDescription() + dbsLink(dbsOversight));
+                        .toList();
 
-                                //set link to the folder containing the documents
-                                task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
-                            },
-                            () -> {
-                                //TODO - først når itsystem skifter status?
+                    for (Asset asset : assets) {
+                        if (asset.getOversightResponsibleUser() == null) {
+                            log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponsible is null.", asset.getId(), dbsOversight.getId());
+                            continue;
+                        }
 
-                                // Create a new task
-                                Task task = new Task();
-                                task.setName( dbsOversight.getName() + " - DBS tilsyn");
-                                task.setNextDeadline(nowPlus14Days);
-                                task.setNextDeadline(dbsAsset.getNextRevision());
-                                task.setResponsibleUser(asset.getOversightResponsibleUser());
-                                task.setTaskType(TaskType.TASK);
-                                task.setRepetition(TaskRepetition.NONE);
-                                task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsLink(dbsOversight)
-                                );
-                                log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
-                                taskService.saveTask(task);
-                                relationService.addRelation(task, dbsAsset);
-                                relationService.addRelation(task, asset);
+                        // Check if there is an open task already
+                        relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
+                            .map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .filter(t -> t.getTaskType() == TaskType.TASK
+                                && t.getNextDeadline().isAfter(now)
+                                && t.getName().contains("- DBS tilsyn"))
+                            .findFirst().ifPresentOrElse((task) -> {
+                                    // Task already exist add our file to the existing task
+                                    task.setDescription(task.getDescription() + dbsLink(dbsOversight));
 
-                            });
-                    dbsOversight.setTaskCreated(true);
-                    dbsOversightDao.save(dbsOversight);
+                                    //set link to the folder containing the documents
+                                    task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
+                                },
+                                () -> {
+                                    //TODO - først når itsystem skifter status?
+
+                                    // Create a new task
+                                    Task task = new Task();
+                                    task.setName(dbsOversight.getName() + " - DBS tilsyn");
+                                    task.setNextDeadline(dbsAsset.getNextRevision());
+                                    task.setResponsibleUser(asset.getOversightResponsibleUser());
+                                    task.setTaskType(TaskType.TASK);
+                                    task.setRepetition(TaskRepetition.NONE);
+                                    task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsLink(dbsOversight)
+                                    );
+                                    log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
+                                    taskService.saveTask(task);
+                                    relationService.addRelation(task, dbsAsset);
+                                    relationService.addRelation(task, asset);
+
+                                });
+                        dbsOversight.setTaskCreated(true);
+                        dbsOversightDao.save(dbsOversight);
+
+                    }
                 }
             }
         }
