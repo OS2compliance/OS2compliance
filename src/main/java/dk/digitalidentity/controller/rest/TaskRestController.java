@@ -5,6 +5,7 @@ import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
@@ -73,12 +74,7 @@ public class TaskRestController {
 
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<TaskGrid> tasks =  taskGridDao.findAllWithColumnSearch(
-            filterService.validateSearchFilters(filters, TaskGrid.class),
-            null,
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
-            TaskGrid.class
-        );
+        Page<TaskGrid> tasks = taskGridDao.findAllForResponsibleUser(filterService.validateSearchFilters(filters, RegisterGrid.class), filterService.buildPageable(page, limit, sortColumn, sortDirection), TaskGrid.class, user);
 
         assert tasks != null;
 
