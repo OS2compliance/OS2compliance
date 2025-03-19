@@ -6,6 +6,7 @@ import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
+import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -73,12 +74,7 @@ public class DocumentRestController {
 
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<DocumentGrid> documents =  documentGridDao.findAllWithColumnSearch(
-            filterService.validateSearchFilters(filters, DocumentGrid.class),
-            null,
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
-            DocumentGrid.class
-        );
+        Page<DocumentGrid> documents = documentGridDao.findAllForResponsibleUser(filterService.validateSearchFilters(filters, RegisterGrid.class), filterService.buildPageable(page, limit, sortColumn, sortDirection), DocumentGrid.class, user);
 
         assert documents != null;
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
