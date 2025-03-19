@@ -30,12 +30,16 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -141,6 +145,15 @@ public class AssetService {
 
     public List<Asset> findBySupplier(final Supplier supplier) {
         return assetDao.findBySupplierAndDeletedFalse(supplier);
+    }
+
+    public boolean isEditable(final Asset asset) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        return authentication.getAuthorities().stream()
+            .anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)
+                || r.getAuthority().equals(Roles.ADMINISTRATOR))
+                || asset.getResponsibleUsers().stream()
+            .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
     }
 
     /**

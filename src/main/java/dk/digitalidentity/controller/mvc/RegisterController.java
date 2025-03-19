@@ -127,9 +127,8 @@ public class RegisterController {
 
         if (existingOptional.isPresent()) {
             final ConsequenceAssessment existing = existingOptional.get();
-            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && existing.getRegister().getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
+            ensureEditingIsAllowed(existing.getRegister());
+
             existing.setAssessment(assessment.getAssessment());
             existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
             existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
@@ -179,10 +178,7 @@ public class RegisterController {
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+        ensureEditingIsAllowed(register);
         if (name != null) {
             register.setName(name);
         }
@@ -237,10 +233,7 @@ public class RegisterController {
                           @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+        ensureEditingIsAllowed(register);
         if (purpose != null) {
             register.setPurpose(purpose);
         }
@@ -268,10 +261,7 @@ public class RegisterController {
         final Register register = registerService.findById(body.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+        ensureEditingIsAllowed(register);
         dataProcessingService.update(register.getDataProcessing(), body);
         return "redirect:/registers/" + id + "?section=dataprocessing";
     }
@@ -301,7 +291,9 @@ public class RegisterController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("section", section);
-        model.addAttribute("changeableRegister", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))));
+        model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
+            .anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR)) || register.getResponsibleUsers().stream()
+            .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))));
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
         model.addAttribute("register", register);
@@ -364,6 +356,13 @@ public class RegisterController {
         model.addAttribute("properties", relation.getProperties().stream()
             .collect(Collectors.toMap(RelationProperty::getKey, RelationProperty::getValue)));
         return "registers/fragments/editAssetRelation";
+    }
+
+    private static void ensureEditingIsAllowed(final Register register) {
+        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
     }
 
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
