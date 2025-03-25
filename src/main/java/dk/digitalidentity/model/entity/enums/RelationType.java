@@ -17,7 +17,8 @@ public enum RelationType {
     PRECAUTION("Foranstaltning"),
     DBSASSET("DBSAsset"),
     DBSOVERSIGHT("DBSOversight"),
-    INCIDENT("Hændelse")
+    INCIDENT("Hændelse"),
+    DPIA("Konsekvensanalyse")
     ;
 
 	private final String message;

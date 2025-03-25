@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringSetNullSafeConverter;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -32,11 +33,7 @@ import java.util.Set;
 @Table(name = "dpia")
 @Getter
 @Setter
-public class DPIA {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-
+public class DPIA extends Relatable {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToOne
@@ -76,4 +73,14 @@ public class DPIA {
     @OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<DPIAReport> dpiaReports = new ArrayList<>();
+
+    @Override
+    public RelationType getRelationType() {
+        return RelationType.DPIA;
+    }
+
+    @Override
+    public String getLocalizedEnumValues() {
+        return revisionInterval.getMessage()+" ";
+    }
 }
