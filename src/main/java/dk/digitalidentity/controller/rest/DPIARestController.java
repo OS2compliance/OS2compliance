@@ -5,6 +5,7 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.DPIAService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -37,6 +38,7 @@ import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 @RequiredArgsConstructor
 public class DPIARestController {
     private final DPIAGridDao dpiaGridDao;
+    private final DPIAService dpiaService;
 
     public record DPIADTO(long id, String assetName, LocalDateTime updatedAt, int taskCount) {
     }
@@ -80,12 +82,6 @@ public class DPIARestController {
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void riskDelete(@PathVariable final Long id) {
-//        final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-//        // All related checks should be deleted along with the threatAssessment
-//        final List<Task> tasks = taskService.findRelatedTasks(threatAssessment, t -> t.getTaskType() == TaskType.CHECK);
-//        taskDao.deleteAll(tasks);
-//
-//        relationService.deleteRelatedTo(id);
-//        threatAssessmentService.deleteById(id);
+        dpiaService.delete(id);
     }
 }
