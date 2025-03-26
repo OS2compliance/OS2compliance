@@ -10,7 +10,7 @@ ALTER TABLE dpia
     ADD COLUMN version int NOT NULL DEFAULT 0;
 
 CREATE OR REPLACE
-VIEW view_gridjs_assessments AS
+VIEW view_gridjs_dpia AS
 SELECT
     d.id,
     a.name AS asset_name,
