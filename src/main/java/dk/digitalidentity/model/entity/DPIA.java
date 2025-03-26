@@ -81,6 +81,6 @@ public class DPIA extends Relatable {
 
     @Override
     public String getLocalizedEnumValues() {
-        return revisionInterval.getMessage()+" ";
+        return revisionInterval != null ? revisionInterval.getMessage()+" " : "";
     }
 }

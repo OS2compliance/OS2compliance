@@ -1,12 +1,13 @@
 ALTER TABLE dpia
-    ADD COLUMN created_at datetime(6)  not null,
-    ADD COLUMN created_by varchar(255) not null,
-    ADD COLUMN name varchar(768) not null,
+    ADD COLUMN created_at datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN created_by varchar(255) NOT NULL DEFAULT 'Ukendt',
+    ADD COLUMN name varchar(768) NOT NULL DEFAULT 'Konsekvensanalyse',
     ADD COLUMN updated_at datetime(6) null,
     ADD COLUMN updated_by varchar(255) null,
-    ADD COLUMN relation_type varchar(30) not null,
-    ADD COLUMN deleted bit default b'0' null,
-    ADD COLUMN localized_enums varchar(255) null;
+    ADD COLUMN relation_type varchar(30) not null DEFAULT 'DPIA',
+    ADD COLUMN deleted bit default b'0' NOT NULL,
+    ADD COLUMN localized_enums varchar(255) null,
+    ADD COLUMN version int NOT NULL DEFAULT 0;
 
 CREATE OR REPLACE
 VIEW view_gridjs_assessments AS
@@ -19,3 +20,4 @@ FROM
     dpia d
 LEFT JOIN assets a ON a.id = d.asset_id
 WHERE d.deleted = false;
+

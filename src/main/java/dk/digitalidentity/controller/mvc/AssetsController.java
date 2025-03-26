@@ -244,6 +244,7 @@ public class AssetsController {
 
         if (asset.getDpia() == null) {
             DPIA dpia = new DPIA();
+            dpia.setName(asset.getName()+" Konsekvensaanalyse");
             dpia.setAsset(asset);
             asset.setDpia(dpia);
         }
@@ -386,6 +387,7 @@ public class AssetsController {
 
         if (asset.getDpia() == null) {
             DPIA dpia = new DPIA();
+            dpia.setName(asset.getName()+" Konsekvensaanalyse");
             dpia.setAsset(asset);
             asset.setDpia(dpia);
         }
@@ -781,6 +783,7 @@ public class AssetsController {
         }
         if (asset.getDpia() == null) {
             DPIA dpia = new DPIA();
+            dpia.setName(asset.getName()+" Konsekvensaanalyse");
             dpia.setAsset(asset);
             asset.setDpia(dpia);
         }
