@@ -51,7 +51,7 @@
                 {
                     name: "Aktiv",
                     formatter: (cell, row) => {
-                        const url = baseUrl + row.cells[0]['data'];
+                        const url = baseUrl + "/" + row.cells[0]['data'];
                         return gridjs.html(`<a href="${url}">${cell}</a>`);
                     }
                 },

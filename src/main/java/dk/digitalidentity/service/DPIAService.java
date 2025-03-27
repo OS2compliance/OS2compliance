@@ -1,7 +1,6 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.DPIADao;
-import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.model.entity.DPIA;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -11,9 +10,11 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class DPIAService {
     private final DPIADao dpiaDao;
-    private final TaskDao taskDao;
-    private final RelationService relationService;
-    private final TaskService taskService;
+
+    public DPIA find (Long dpiaId) {
+        return dpiaDao.findById(dpiaId)
+            .orElseThrow();
+    }
 
     @Transactional
     public void delete(Long dpiaId) {

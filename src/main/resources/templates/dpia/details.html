@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="da"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head th:replace="~{fragments/header :: head (sweetalerts = true, textEditor = true)}"></head>
+<body class="jumping">
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dpia}">Konsekvensanalyser</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${dpia.assetName}"></li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2" th:text="${dpia.assetName}"></h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                class="btn btn-info btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
+                                data-bs-target="#createModal">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
+                        </button>
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <div class="tab-base">
+                    <ul class="nav nav-tabs" id="tabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#screeningTab"
+                                    type="button" role="tab" aria-controls="asset" aria-selected="true">
+                                <span id="dpiaBadge2" class="badge">&nbsp</span>&nbspScreening
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#consequenceAnalysisTab"
+                                    type="button"
+                                    role="tab" aria-controls="historik" aria-selected="false">Konsekvensanalyse
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="dpiaRoot">
+                        <div id="screeningTab" class="tab-pane fade active show" role="tabpanel"
+                             aria-labelledby="opgave-tab">
+                            <div th:replace="~{dpia/fragments/details_screening :: dpia_details_screening}"></div>
+                        </div>
+                        <div id="consequenceAnalysisTab" class="tab-pane fade show" role="tabpanel"
+                             aria-labelledby="opgave-tab">
+                            Test2
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='dpia')}"></nav>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (sweetalerts = true, textEditor = true)}"></div>
+<script th:src="@{/js/dpia/details.js}" defer></script>
+<!--<script th:src="@{/js/asset/dpia.js}" defer></script>-->
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        const baseUrl = [[@{/dpia}]];
+        const restUrl = [[@{/rest/dpia}]];
+        const assetId = [[${dpia.assetId}]];
+        let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+        let assetDpiaService;
+
+        let asset = [[${asset}]];
+    +]*/
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+            assetDpiaService = new AssetDpiaService()
+            assetDpiaService.init()
+
+<!--            initDpia();-->
+<!--            setDPIAEditState(true)-->
+        })
+
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>
