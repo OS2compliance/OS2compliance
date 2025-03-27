@@ -1,5 +1,7 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:replace="~{fragments/header :: head (textEditor = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/dpia/schema.js}" defer></script>
@@ -66,7 +68,7 @@
     <div class="modal fade" tabindex="-1" id="editQuestionDialog" aria-hidden="true"></div>
 
     <header th:replace="~{fragments/header :: header}"></header>
-    <nav th:replace="~{fragments/navbar :: main (page='dpia')}"></nav>
+    <nav th:replace="~{fragments/navbar :: main (page='dpia_template')}"></nav>
 </div>
 
 <div th:replace="~{fragments/footer :: footer (textEditor = true, taskDialog = true)}"></div>
