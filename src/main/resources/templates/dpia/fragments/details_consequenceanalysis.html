@@ -1,8 +1,21 @@
 <th:block th:fragment="dpia_details_consequenceanalysis"
           lang="da"
           xmlns:th="http://www.thymeleaf.org">
+    <div class="d-flex mt-2 justify-content-end">
+        <div class="d-flex align-items-end flex-row mb-3 p-1">
+            <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown" aria-expanded="false">
+                <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
+            </a>
+            <ul class="dropdown-menu dropdown-menu-end">
+                <li><a class="dropdown-item" th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='PDF')}">Download
+                    som PDF</a></li>
+                <li><a class="dropdown-item" th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='ZIP')}">Download
+                    samlet materiale</a></li>
+                <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal" class="dropdown-item">Send</a></li>
+            </ul>
+        </div>
+    </div>
     <div class="accordion" id="_dm-dpiaAccordion">
-
         <div class="accordion-item mt-1">
             <div class="accordion-header" id="_dm-defAccHeadingTwo">
                 <button class="accordion-button bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-collapseQuality" aria-expanded="true" aria-controls="_dm-collapseQuality">
