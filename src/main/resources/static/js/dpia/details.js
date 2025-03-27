@@ -1,7 +1,4 @@
 function AssetDpiaService() {
-    //    this.dpiaViewElem = null;
-    //    this.dpiaOptOutViewElem = null;
-    //    this.tabBadgeElem = null;
     this.screeningBadgeElem = null;
     this.recommendationElem = null;
     this.recommendationCardElem = null;
@@ -14,14 +11,50 @@ function AssetDpiaService() {
     this.screeningYellow = false;
 
     this.init = function() {
-        //        this.dpiaViewElem = document.getElementById('dpiaView');
-        //        this.dpiaOptOutViewElem = document.getElementById('dpiaOptOutTextView');
-        //        this.tabBadgeElem = document.getElementById("dpiaBadge");
+        this.initTabRestore()
         this.screeningBadgeElem = document.getElementById("dpiaBadge2");
         this.recommendationElem = document.getElementById("recommendation");
         this.recommendationCardElem = document.getElementById("recommendationCard");
         this.handleAnswerChange();
-        //        this.setDpiaVisibility(!asset.dpiaOptOut);
+        this.initQualityAssuranceCheckboxes()
+
+    }
+
+    this.initTabRestore = async ()=> {
+        const namespace = 'dpia_details_active_tab'
+
+        //restore saved tab, if any
+        const savedID = sessionStorage.getItem(namespace)
+        if (savedID) {
+            const tabContainer = document.querySelector(".tab-base")
+            const tabs = tabContainer.querySelectorAll('.nav-link')
+            const tabContents = tabContainer.querySelectorAll('.tab-pane')
+            let contentId;
+            for (const tab of tabs) {
+                if (tab.id === savedID) {
+                    tab.classList.add('active')
+                    contentId = tab.getAttribute('data-bs-target').substring(1)
+                } else {
+                    tab.classList.remove('active')
+                }
+            }
+            for (const content of tabContents) {
+                if (content.id === contentId) {
+                    content.classList.add('active')
+                } else {
+                    content.classList.remove('active')
+                }
+            }
+        }
+
+        //add event listeners to navtabs
+        const tabContainer = document.getElementById("tabs")
+        const navLinks = tabContainer.querySelectorAll('.nav-link')
+        for (const link of navLinks) {
+            link.addEventListener('click', ()=> {
+                sessionStorage.setItem(namespace, link.id)
+            })
+        }
     }
 
     this.updateStatistics = function() {
@@ -46,11 +79,6 @@ function AssetDpiaService() {
         this.screeningRed = this.screeningCategoriesFlagged >= 2 || alwaysRedAnswer;
         this.screeningYellow = !this.screeningRed && this.screeningCategoriesFlagged > 0;
     }
-
-    //    this.setDpiaVisibility = function (visible) {
-    //        this.dpiaViewElem.style.display = visible ? 'block' : 'none';
-    //        this.dpiaOptOutViewElem.style.display = visible ? 'none' : 'block';
-    //    }
 
     this.updateDpiaBadges = function () {
         if (asset.dpiaOptOut) {
@@ -86,40 +114,6 @@ function AssetDpiaService() {
             this.screeningBadgeElem.classList.add("bg-gray-800");
         }
     };
-
-    //    this.setDpiOptOut = function (checkboxElem) {
-    //        let optOut = checkboxElem.checked;
-    //        asset.dpiaOptOut = optOut;
-    //        let optOutBoolean = optOut ? 'true' : 'false';
-    //        assetDetailsService.setField('dpiaOptOut', optOutBoolean);
-    //        this.updateDpiaBadges();
-    //        this.setDpiaVisibility(!optOut);
-    //    }
-
-    //    this.updateDpiaOptOutReason = function(elem) {
-    //        assetDetailsService.setField('dpiaOptOutReason', elem.value);
-    //    }
-
-    this.editConsequenceLink = function() {
-        document.getElementById('consequenceLinkSaveBtn').style.display = 'block';
-        document.getElementById('consequenceLinkInput').style.display = 'block';
-        document.getElementById('consequenceLinkEditBtn').style.display = 'none';
-        document.getElementById('consequenceLink').style.display = 'none';
-    }
-
-    this.saveConsequenceLink = function() {
-        let linkInput = document.getElementById('consequenceLinkInput');
-        let linkTag = document.getElementById('consequenceLink');
-
-        linkTag.text = linkInput.value;
-
-        document.getElementById('consequenceLinkSaveBtn').style.display = 'none';
-        linkInput.style.display = 'none';
-        document.getElementById('consequenceLinkEditBtn').style.display = 'inline-block';
-        linkTag.style.display = 'inline-block';
-
-        this.setFieldScreening("consequenceLink", linkInput.value)
-    }
 
     this.setFieldScreening = function (fieldName, value) {
         putData(`/rest/assets/${assetId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
@@ -174,19 +168,6 @@ function AssetDpiaService() {
         }
     }
 
-    this.setRevisionInterval = function(assetId) {
-        fetch( `/assets/${assetId}/revision`)
-        .then(response => response.text()
-        .then(data => {
-            let dialog = document.getElementById('revisionIntervalDialog');
-            dialog.innerHTML = data;
-            revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
-            revisionDialog.show();
-            initDatepicker("#nextRevisionBtn", "#nextRevision");
-        }))
-        .catch(error => toastService.error(error));
-    }
-
     this.saveScreeningChanges = async (event)=> {
         if (!event) {return;}
         const target = event.target
@@ -215,62 +196,88 @@ function AssetDpiaService() {
         toastService.info("Valg gemt")
     }
 
-}
 
-function setDPIAEditState(enabled) {
-    const rootElement = document.getElementById('dpiaRoot');
-    if (enabled) {
-        rootElement.querySelectorAll('.editField').forEach(elem => {
-            elem.disabled = false;
-            if (elem.tagName == "A") {
-                elem.hidden = true;
-                if (elem.nextElementSibling) {
-                    elem.nextElementSibling.hidden = false;
+    this.initDpia = ()=> {
+        let editors = document.querySelectorAll('.responses');
+        for (let i = 0; i < editors.length; ++i) {
+            window.CreateCkEditor(editors[i], editor => {
+                editor.editing.view.document.on('blur', () => {
+                    var textarea = editors[i];
+                    setFieldDpiaResponse(textarea.dataset.questionid, "response", editor.getData());
+                });
+            });
+        }
+
+        let conclusionEditor = document.getElementById('conclusion');
+        window.CreateCkEditor(conclusionEditor, editor => {
+            editor.editing.view.document.on('blur', () => {
+                setFieldDpia("conclusion", editor.getData());
+            });
+        });
+
+        // Bind foldable section events after content is loaded
+        const sectionRows = document.querySelectorAll('.dpiaSchemaSectionTr');
+        for (let i = 0; i < sectionRows.length; i++) {
+            var row = sectionRows[i];
+            var sectionId = row.dataset.sectionid;
+            handleSectionRow(sectionId);
+            row.addEventListener('click', sectionRowClicked, false);
+        }
+
+        const openedSection = sessionStorage.getItem(`openedDPIASectionId${assetId}`);
+        if (openedSection !== null && openedSection !== undefined) {
+            handleSectionRow(openedSection);
+        }
+
+        // Bind change event for checkboxes
+        const checkboxes = document.querySelectorAll('input[type="checkbox"][id^="sectionCheckbox"]');
+        for (let i = 0; i < checkboxes.length; i++) {
+            checkboxes[i].addEventListener('click', (event) => event.stopPropagation()); // do not fold out/in section
+            checkboxes[i].addEventListener('change', checkboxChanged);
+        }
+
+        const selectThreatAssessmentCheckboxes = document.querySelectorAll('.selectThreatAssessment');
+        for (let i = 0; i < selectThreatAssessmentCheckboxes.length; i++) {
+            selectThreatAssessmentCheckboxes[i].addEventListener('change', handleSelectThreatAssessmentCheckboxes);
+        }
+
+        // init send to select
+        let responsibleSelect = document.getElementById('sendReportTo');
+        if(responsibleSelect !== null) {
+            choiceService.initUserSelect('sendReportTo');
+        }
+    }
+
+    this.initQualityAssuranceCheckboxes = ()=> {
+        const container = document.getElementById('qualityCheckboxesContainer')
+        container.addEventListener('change', async (event)=>{
+            const target = event.target
+            if (target.type==="checkbox" && target.classList.contains('qualityCheck')) {
+                const checkedBoxValues = [...container.querySelectorAll('.qualityCheck')]
+                    .filter( (checkboxInput)=> checkboxInput.checked)
+                    .map( (checkboxInput) => checkboxInput.value)
+                const data = {
+                    "assetId": assetId,
+                    "dpiaQualityCheckValues": checkedBoxValues
                 }
-            }
 
-            if (elem.classList.contains("datepicker")) {
-                elem.parentElement.hidden = false; // show the datepicker
-                if (elem.parentElement.nextElementSibling) {
-                    elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
+                const url = `${restUrl}/qualityassurance/update`
+                const response = await fetch(url, {
+                    method: "POST",
+                    headers: {
+                        'X-CSRF-TOKEN': token,
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(data)
+                })
+
+                if (!response.ok)  {
+                    toastService.error(response.statusText)
                 }
+
+                toastService.info("Valg gemt")
             }
-        });
-
-        rootElement.querySelectorAll('.qualityCheck').forEach(elem => {
-            elem.disabled = false;
-        });
-
-        //                document.getElementById('saveDPIABtn').hidden = false;
-        //                document.getElementById('editDPIABtn').hidden = true;
-        //                document.getElementById('cancelDPIABtn').hidden = false;
-    } else {
-        rootElement.querySelectorAll('.editField').forEach(elem => {
-            elem.disabled = true;
-            if (elem.tagName == "A") {
-                elem.hidden = false;
-                elem.nextElementSibling.hidden = true;
-            }
-
-            if (elem.classList.contains("datepicker")) {
-                if (elem.value == null || elem.value == "") {
-                    elem.parentElement.hidden = true; // hide the datepicker
-                    elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
-                }
-            }
-        });
-
-        rootElement.querySelectorAll('.qualityCheck').forEach(elem => {
-            elem.disabled = true;
-        });
-
-        //               document.getElementById('saveDPIABtn').hidden = true;
-        //               document.getElementById('editDPIABtn').hidden = false;
-        //              document.getElementById('cancelDPIABtn').hidden = true;
-
-        const form = document.getElementById("dpiaForm");
-        form.reset();
-        assetDpiaService.handleAnswerChange();
+        })
     }
 }
-
+}

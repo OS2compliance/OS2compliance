@@ -21,13 +21,15 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                        <button
+                                type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
                                 class="btn btn-info btn-lg hstack gap-2"
                                 style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
                                 data-bs-target="#createModal">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
                         </button>
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                        <button
+                                type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
                                 onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2"
                                 style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
@@ -42,13 +44,15 @@
                 <div class="tab-base">
                     <ul class="nav nav-tabs" id="tabs" role="tablist">
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#screeningTab"
+                            <button id="dpia_details_screening"
+                                class="nav-link active" data-bs-toggle="tab" data-bs-target="#screeningTab"
                                     type="button" role="tab" aria-controls="asset" aria-selected="true">
                                 <span id="dpiaBadge2" class="badge">&nbsp</span>&nbspScreening
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
-                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#consequenceAnalysisTab"
+                            <button id="dpia_details_consequenceanalysis"
+                                class="nav-link" data-bs-toggle="tab" data-bs-target="#consequenceAnalysisTab"
                                     type="button"
                                     role="tab" aria-controls="historik" aria-selected="false">Konsekvensanalyse
                             </button>
@@ -62,7 +66,8 @@
                         </div>
                         <div id="consequenceAnalysisTab" class="tab-pane fade show" role="tabpanel"
                              aria-labelledby="opgave-tab">
-                            Test2
+                            <div
+                                th:replace="~{dpia/fragments/details_consequenceanalysis :: dpia_details_consequenceanalysis}"></div>
                         </div>
                     </div>
                 </div>
@@ -74,9 +79,10 @@
     <nav th:replace="~{fragments/navbar :: main (page='dpia')}"></nav>
 </div>
 
+<link rel="stylesheet" th:href="@{/css/dpia_schema.css}"/>
 <div th:replace="~{fragments/footer :: footer (sweetalerts = true, textEditor = true)}"></div>
 <script th:src="@{/js/dpia/details.js}" defer></script>
-<!--<script th:src="@{/js/asset/dpia.js}" defer></script>-->
+<script th:src="@{/js/asset/dpia.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
@@ -93,7 +99,7 @@
             assetDpiaService = new AssetDpiaService()
             assetDpiaService.init()
 
-<!--            initDpia();-->
+            assetDpiaService.initDpia();
 <!--            setDPIAEditState(true)-->
         })
 

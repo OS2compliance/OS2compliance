@@ -39,6 +39,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
 
@@ -125,6 +126,22 @@ public class DPIARestController {
 						return newAnswer;
 					});
 			foundAnswer.setAnswer(dpiaScreeningUpdateDTO.answer);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+    public record QualityAssuranceUpdateDTO (Long assetId, Set<String> dpiaQualityCheckValues) {}
+    @Transactional
+	@PostMapping("qualityassurance/update")
+	public ResponseEntity<HttpStatus> dpia(@RequestBody final QualityAssuranceUpdateDTO qualityAssuranceUpdateDTO) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		final Asset asset = assetService.findById(qualityAssuranceUpdateDTO.assetId)
+            .orElseThrow();
+		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+        asset.getDpia().setChecks(qualityAssuranceUpdateDTO.dpiaQualityCheckValues);
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
