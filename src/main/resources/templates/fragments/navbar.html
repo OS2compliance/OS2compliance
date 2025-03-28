@@ -30,7 +30,7 @@
                     </li>
                     <li class="nav-item has-sub">
                         <a href="#" class="nav-link mininav-toggle collapsed"
-                           th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
+                           th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver' || page == 'dpia'  ? 'active' : ''}">
                             <i class="pli-crane fs-5 me-2"></i> <span class="nav-label ms-1">Aktiver</span>
                         </a>
                         <ul class="mininav-content nav collapse">
@@ -46,10 +46,7 @@
                                 <a th:href="@{/dbs/oversight}" class="nav-link"
                                    th:classappend="${page} == 'dbs_oversight' ? 'active' : ''">DBS tilsyn</a>
                             </li>
-                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
-                                <a th:href="@{/precautions}" class="nav-link"
-                                   th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
-                            </li>
+
                             <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
                                 <a th:href="@{/assets/dpia/schema}" class="nav-link"
                                    th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyse</a>
@@ -64,10 +61,14 @@
                     </li>
                     <li class="nav-item has-sub">
                         <a href="#" class="mininav-toggle nav-link collapsed"
-                           th:classappend="${page == 'risikovurderinger' || page == 'catalogs' ? 'active' : ''}">
+                           th:classappend="${page == 'risikovurderinger' || page == 'catalogs' || page == 'precautions' ? 'active' : ''}">
                             <i class="pli-flashlight fs-5 me-2"></i> <span class="nav-label ms-1">Risikostyring</span>
                         </a>
                         <ul class="mininav-content nav collapse">
+                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                                <a th:href="@{/precautions}" class="nav-link"
+                                   th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
+                            </li>
                             <li class="nav-item">
                                 <a th:href="@{/dpia}" class="nav-link"
                                    th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyser</a>
