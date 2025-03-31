@@ -2,28 +2,6 @@
           lang="da"
           xmlns:th="http://www.thymeleaf.org">
 
-    <div class="d-flex mt-2 justify-content-end">
-        <div class="d-flex align-items-end flex-row mb-3 p-1">
-            <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown" aria-expanded="false">
-                <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
-            </a>
-            <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" th:href="@{/reports/dpia/screening(assetId=${dpia.assetId}, type='PDF')}">Download
-                    som PDF</a></li>
-                <li><a class="dropdown-item" th:href="@{/reports/dpia/screening(assetId=${dpia.assetId}, type='ZIP')}">Download
-                    samlet materiale</a></li>
-                <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal" class="dropdown-item">Send</a></li>
-            </ul>
-        </div>
-    </div>
-    <div class="row mb-3">
-        <div id="recommendationCard" class="card border-2 border-danger">
-            <h5 class="card-header">Anbefaling</h5>
-            <div class="card-body">
-                <h2 id="recommendation"></h2>
-            </div>
-        </div>
-    </div>
     <div class="row mb-3">
         <form id="dpiaForm" action="#" th:action="@{/assets/dpia}" th:object="${dpiaForm}" method="post"
               class="needs-validation" novalidate>
@@ -113,5 +91,13 @@
                 </tbody>
             </table>
         </form>
+    </div>
+    <div class="row mb-3 ">
+        <div id="recommendationCard" class="card border-2 border-danger">
+            <h5 class="card-header">Anbefaling</h5>
+            <div class="card-body">
+                <h2 id="recommendation"></h2>
+            </div>
+        </div>
     </div>
 </th:block>

@@ -22,16 +22,16 @@
                     </div>
                     <div class="align-self-center d-inline-flex">
                         <button
-                                type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                class="btn btn-info btn-lg hstack gap-2"
-                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
-                                data-bs-target="#createModal" onclick="createDPIAService.formReset()">
+                            type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                            class="btn btn-info btn-lg hstack gap-2"
+                            style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
+                            data-bs-target="#createModal" onclick="createDPIAService.formReset()">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
                         </button>
                         <button
-                                type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2"
-                                style="margin-bottom: 8px; height: 45px">
+                            type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                            onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2"
+                            style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -41,33 +41,50 @@
 
         <div class="content__boxed">
             <div class="content__wrap">
-                <div class="tab-base">
-                    <ul class="nav nav-tabs" id="tabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button id="dpia_details_screening"
-                                class="nav-link active" data-bs-toggle="tab" data-bs-target="#screeningTab"
-                                    type="button" role="tab" aria-controls="asset" aria-selected="true">
-                                <span id="dpiaBadge2" class="badge">&nbsp</span>&nbspScreening
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button id="dpia_details_consequenceanalysis"
-                                class="nav-link" data-bs-toggle="tab" data-bs-target="#consequenceAnalysisTab"
-                                    type="button"
-                                    role="tab" aria-controls="historik" aria-selected="false">Konsekvensanalyse
-                            </button>
-                        </li>
-                    </ul>
+                <div class="flex-fill">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex mt-2 justify-content-end">
+                                <div class="d-flex align-items-end flex-row mb-3 p-1">
+                                    <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown"
+                                       aria-expanded="false">
+                                        <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-end">
+                                        <li><a class="dropdown-item"
+                                               th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='PDF')}">Download
+                                            som PDF</a></li>
+                                        <li><a class="dropdown-item"
+                                               th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='ZIP')}">Download
+                                            samlet materiale</a></li>
+                                        <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal"
+                                               class="dropdown-item">Send</a></li>
+                                    </ul>
+                                </div>
+                            </div>
 
-                    <div class="tab-content" id="dpiaRoot">
-                        <div id="screeningTab" class="tab-pane fade active show" role="tabpanel"
-                             aria-labelledby="opgave-tab">
-                            <div th:replace="~{dpia/fragments/details_screening :: dpia_details_screening}"></div>
-                        </div>
-                        <div id="consequenceAnalysisTab" class="tab-pane fade show" role="tabpanel"
-                             aria-labelledby="opgave-tab">
-                            <div
-                                th:replace="~{dpia/fragments/details_consequenceanalysis :: dpia_details_consequenceanalysis}"></div>
+                            <div class="accordion" id="_dm-dpiaAccordion">
+
+                                <div class="accordion-item">
+                                    <div class="accordion-header" id="screeningSectionHeader">
+                                        <button class="accordion-button collapsed bg-light" type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#screeningSectionItem" aria-expanded="false"
+                                                aria-controls="screeningSectionItem">
+                                            <span id="dpiaBadge2" class="badge">&nbsp</span>&nbspScreening
+                                        </button>
+                                    </div>
+                                    <div id="screeningSectionItem" class="accordion-collapse collapse"
+                                         aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion"
+                                         style="">
+                                        <div
+                                            th:replace="~{dpia/fragments/details_screening :: dpia_details_screening}"></div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    th:replace="~{dpia/fragments/details_consequenceanalysis :: dpia_details_consequenceanalysis}"></div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -84,7 +101,6 @@
 <link rel="stylesheet" th:href="@{/css/dpia_schema.css}"/>
 <div th:replace="~{fragments/footer :: footer (sweetalerts = true, textEditor = true)}"></div>
 <script th:src="@{/js/dpia/details.js}" defer></script>
-<script th:src="@{/js/asset/dpia.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
@@ -100,15 +116,8 @@
         document.addEventListener("DOMContentLoaded", function (event) {
             assetDpiaService = new AssetDpiaService()
             assetDpiaService.init()
-
-            assetDpiaService.initDpia();
-
-            document.addEventListener("DOMContentLoaded", function(event) {
-                createDPIAService = new CreateDPIAService()
-                createDPIAService.init()
-            }
+            assetDpiaService.initDpia()
         })
-
 
     /*]]>*/
 </script>

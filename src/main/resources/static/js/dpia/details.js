@@ -11,7 +11,7 @@ function AssetDpiaService() {
     this.screeningYellow = false;
 
     this.init = function() {
-        this.initTabRestore()
+
         this.screeningBadgeElem = document.getElementById("dpiaBadge2");
         this.recommendationElem = document.getElementById("recommendation");
         this.recommendationCardElem = document.getElementById("recommendationCard");
@@ -20,42 +20,6 @@ function AssetDpiaService() {
 
     }
 
-    this.initTabRestore = async ()=> {
-        const namespace = 'dpia_details_active_tab'
-
-        //restore saved tab, if any
-        const savedID = sessionStorage.getItem(namespace)
-        if (savedID) {
-            const tabContainer = document.querySelector(".tab-base")
-            const tabs = tabContainer.querySelectorAll('.nav-link')
-            const tabContents = tabContainer.querySelectorAll('.tab-pane')
-            let contentId;
-            for (const tab of tabs) {
-                if (tab.id === savedID) {
-                    tab.classList.add('active')
-                    contentId = tab.getAttribute('data-bs-target').substring(1)
-                } else {
-                    tab.classList.remove('active')
-                }
-            }
-            for (const content of tabContents) {
-                if (content.id === contentId) {
-                    content.classList.add('active')
-                } else {
-                    content.classList.remove('active')
-                }
-            }
-        }
-
-        //add event listeners to navtabs
-        const tabContainer = document.getElementById("tabs")
-        const navLinks = tabContainer.querySelectorAll('.nav-link')
-        for (const link of navLinks) {
-            link.addEventListener('click', ()=> {
-                sessionStorage.setItem(namespace, link.id)
-            })
-        }
-    }
 
     this.updateStatistics = function() {
         this.screeningStats = Array.from(document.querySelectorAll("select[id^='dpia-']"))
@@ -279,4 +243,77 @@ function AssetDpiaService() {
             }
         })
     }
+}
+
+function handleSectionRow(sectionId) {
+    var show = false;
+    var icon = document.getElementById("sectionIcon" + sectionId);
+    const belongingRows = document.querySelectorAll('.sectionRow' + sectionId);
+
+    for (var i = 0; i < belongingRows.length; i++) {
+        var elem = belongingRows[i];
+        if (elem.hidden) {
+            if (i == 0) {
+                show = true;
+            }
+            elem.hidden = false;
+        } else {
+            elem.hidden = true;
+        }
+    }
+
+    if (show) {
+        icon.classList.add("pli-arrow-up");
+        icon.classList.remove("pli-arrow-down");
+    } else {
+        icon.classList.remove("pli-arrow-up");
+        icon.classList.add("pli-arrow-down");
+    }
+}
+
+function sectionRowClicked() {
+    var sectionId = this.dataset.sectionid;
+    sessionStorage.setItem(`openedDPIASectionId${assetId}`, sectionId);
+    handleSectionRow(sectionId);
+}
+
+function checkboxChanged(event) {
+    const sectionId = event.target.dataset.sectionid;
+    const checked = event.target.checked;
+    setFieldDpiaResponse(sectionId, "selected", !checked);
+}
+
+function handleSelectThreatAssessmentCheckboxes(event) {
+    let selected = '';
+    const selectThreatAssessmentCheckboxes = document.querySelectorAll('.selectThreatAssessment');
+    for (let i = 0; i < selectThreatAssessmentCheckboxes.length; i++) {
+        let checkbox = selectThreatAssessmentCheckboxes[i];
+        const threatId = checkbox.dataset.threatid;
+        const checked = checkbox.checked;
+        if (checked) {
+            selected = selected + threatId + ",";
+        }
+    }
+    setFieldDpia("checkedThreatAssessmentIds", selected.slice(0, -1));
+}
+
+function setFieldDpiaResponse(id, fieldName, value) {
+    var data = {
+        "id": id,
+        "fieldName": fieldName,
+        "value": value
+    };
+    putData(`/rest/assets/${assetId}/dpia/response/setfield`, data)
+        .then(defaultResponseHandler)
+        .catch(defaultErrorHandler);
+}
+
+function setFieldDpia(fieldName, value) {
+    var data = {
+        "fieldName": fieldName,
+        "value": value
+    };
+    putData(`/rest/assets/${assetId}/dpia/setfield`, data)
+        .then(defaultResponseHandler)
+        .catch(defaultErrorHandler);
 }

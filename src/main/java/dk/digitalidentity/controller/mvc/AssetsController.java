@@ -19,7 +19,7 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetMeasure;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
-import dk.digitalidentity.model.entity.ChoiceDPIA;
+
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceMeasure;
 import dk.digitalidentity.model.entity.DPIA;
@@ -217,22 +217,7 @@ public class AssetsController {
 
 		// DPIA
 		final List<DataProtectionImpactScreeningAnswerDTO> assetDPIADTOs = new ArrayList<>();
-		final List<ChoiceDPIA> choiceDPIA = choiceDPIADao.findAll();
-        for (final ChoiceDPIA choice : choiceDPIA) {
-            final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
-            defaultAnswer.setAssessment(asset.getDpiaScreening());
-            defaultAnswer.setChoice(choice);
-            defaultAnswer.setAnswer(null);
-            defaultAnswer.setId(0);
-            final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpiaScreening().getDpiaScreeningAnswers().stream()
-                .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))
-                .findAny().orElse(defaultAnswer);
-            final DataProtectionImpactScreeningAnswerDTO dpiaDTO = new DataProtectionImpactScreeningAnswerDTO();
-            dpiaDTO.setAssetId(asset.getId());
-            dpiaDTO.setAnswer(dpiaAnswer.getAnswer());
-            dpiaDTO.setChoice(choice);
-            assetDPIADTOs.add(dpiaDTO);
-        }
+
         final DataProtectionImpactDTO dpiaForm = DataProtectionImpactDTO.builder()
             .assetId(asset.getId())
             .optOut(asset.isDpiaOptOut())
