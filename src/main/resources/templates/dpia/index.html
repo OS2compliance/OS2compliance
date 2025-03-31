@@ -21,7 +21,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createDPIAModal" onclick="createDPIAService.formReset()">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
                         </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -51,8 +51,10 @@
     <nav th:replace="~{fragments/navbar :: main (page='dpia')}"></nav>
 </div>
 
+<div th:replace="~{dpia/fragments/create_dpia_modal :: create_dpia_modal}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 <script th:src="@{/js/dpia/list.js}" defer></script>
+<script th:src="@{/js/dpia/createDPIAService.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
@@ -63,7 +65,13 @@
         const superuser = [[${superuser}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         const columnProperties = ['id', 'assetName', 'updatedAt', 'taskCount'];
+        let creatDPIAService;
     +]*/
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        createDPIAService = new CreateDPIAService()
+        createDPIAService.init()
+    })
     /*]]>*/
 </script>
 

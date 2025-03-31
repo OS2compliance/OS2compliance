@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.grid.DPIAGridDao;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.User;
@@ -145,4 +146,26 @@ public class DPIARestController {
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
+
+    public record CreateDPIAFormDTO (Long assetId){}
+    @PostMapping("create")
+    public ResponseEntity<HttpStatus> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO){
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        final Asset asset = assetService.findById(createDPIAFormDTO.assetId)
+            .orElseThrow();
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        //TODO - når assets kan supporte flere dpia'er skal dette laves om
+        if (asset.getDpia() == null) {
+            DPIA dpia = new DPIA();
+            dpia.setName(asset.getName()+" Konsekvensaanalyse");
+            dpia.setAsset(asset);
+            asset.setDpia(dpia);
+            assetService.save(asset);
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 }
