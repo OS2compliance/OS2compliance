@@ -117,7 +117,7 @@ public class DPIAController {
             .collect(Collectors.toList());
         threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
 
-
+        model.addAttribute("changeableAsset", assetService.isEditable(asset));
         model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), asset.getId(), asset.getName()));
         model.addAttribute("asset", asset);
         model.addAttribute("dpiaForm", dpiaForm);

@@ -239,7 +239,7 @@ public class AssetsController {
             assetOversightService.findByAssetOrderByCreationDateDesc(asset));
 
 		model.addAttribute("asset", asset);
-        model.addAttribute("changeableAsset", assetService.isEditable(asset));
+//        model.addAttribute("changeableAsset", assetService.isEditable(asset));
 		model.addAttribute("relatedAssets", relatedAssets);
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
@@ -776,7 +776,7 @@ public class AssetsController {
         asset.getDpia().setRevisionInterval(revisionFormDTO.revisionInterval);
         asset.getDpia().setNextRevision(revisionFormDTO.nextRevision);
         assetService.createOrUpdateAssociatedCheck(asset);
-        return "redirect:/assets/" + id;
+        return "redirect:/dpia/" + asset.getDpia().getId();
     }
 
     private List<DPIASectionDTO> buildDPIASections(Asset asset) {

@@ -20,6 +20,10 @@ function AssetDpiaService() {
 
     }
 
+    this.onCommentEdit = (event) => {
+        console.log('test') //TODO
+    }
+
 
     this.updateStatistics = function() {
         this.screeningStats = Array.from(document.querySelectorAll("select[id^='dpia-']"))
@@ -243,6 +247,19 @@ function AssetDpiaService() {
             }
         })
     }
+
+        this.setRevisionInterval = function(assetId) {
+            fetch( `/assets/${assetId}/revision`)
+                .then(response => response.text()
+                    .then(data => {
+                        let dialog = document.getElementById('revisionIntervalDialog');
+                        dialog.innerHTML = data;
+                        revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
+                        revisionDialog.show();
+                        initDatepicker("#nextRevisionBtn", "#nextRevision");
+                    }))
+                .catch(error => toastService.error(error));
+        }
 }
 
 function handleSectionRow(sectionId) {
@@ -317,3 +334,4 @@ function setFieldDpia(fieldName, value) {
         .then(defaultResponseHandler)
         .catch(defaultErrorHandler);
 }
+
