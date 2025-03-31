@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <style>
+        html { -webkit-print-color-adjust: exact; }
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 11px;
+            color: #000000 !important;
+        }
+
+        @page {
+            size: A4;
+            margin-top: 10%;
+            margin-bottom: 10%;
+            margin-left: 11%;
+            margin-right: 5%;
+            @top-center { content: element(header); }
+        }
+
+        div.box {
+            width:100%;
+            margin: 10px !important;
+            padding: 10px !important;
+            border: 1px solid black;
+            display: inline-block;
+            font-size: 9px;
+        }
+
+        tr, th, td {
+            border: 1px solid black;
+        }
+
+        .col-4 {
+            flex: 0 0 auto;
+            width: 34%;
+        }
+
+        .col-8 {
+            flex: 0 0 auto;
+            width: 66%;
+        }
+
+        .riskProfileTable {
+            font-size: 12px;
+            text-align: left;
+        }
+
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            max-width: 100%;
+        }
+
+        img {
+            display: block;
+            margin: auto;
+            object-fit: contain;
+        }
+
+        .beforeTableSection, .afterTableSection {
+            width: 47%;
+            display: inline-block;
+            vertical-align: top;
+        }
+
+        .threatAndTasksTables {
+            font-size: 9px;
+            word-wrap: break-word;
+            table-layout: fixed;
+            width: 100%;
+        }
+
+        .threatAndTasksTables td, .threatAndTasksTables th {
+            overflow-wrap: break-word;
+            max-width: 100px;
+            white-space: normal;
+        }
+
+        .riskScoreField {
+            width: 65px !important;
+            height: 65px !important;
+        }
+
+        tr {
+            page-break-inside:avoid;
+        }
+
+        .bg-danger {
+            background-color:rgb(223, 86, 69);
+        }
+
+        .bg-warning {
+            background-color: #fa9f1b;
+        }
+
+        .border-danger {
+            border-color: #df5645 !important;
+        }
+
+        .border-warning {
+            border-color: #fa9f1b;
+        }
+
+        .border-light {
+            border-color: rgb(225, 231, 240);
+        }
+
+        .bg-gray-800{
+            background-color: rgb(225, 231, 240);
+        }
+
+        .bg-light{
+            background-color: rgb(225, 231, 240);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: .35em .65em;
+            font-size: .75em;
+            font-weight: 700;
+            line-height: 1;
+            color: #fff;
+            text-align: center;
+            white-space: nowrap;
+            vertical-align: baseline;
+            border-radius: .4375rem;
+        }
+
+        .border-warning {
+            border-color: #fa9f1b !important;
+        }
+
+        .card {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+            word-wrap: break-word;
+            background-color: #fff;
+            background-clip: border-box;
+            border: 2px solid black;
+            border-radius: .4375rem;
+            box-shadow: 0 1rem 1rem -.75rem rgba(105, 96, 215, .175);
+        }
+
+        .table-striped>tbody>tr:nth-of-type(odd) {
+            color: #75868f;
+        }
+
+        .border-2 {
+            border-width: 2px !important;
+        }
+
+        .mx-auto {
+            margin-right: auto !important;
+            margin-left: auto !important;
+        }
+
+        .d-block {
+            display: block !important;
+        }
+
+        .card-body {
+            flex: 1 1 auto;
+            padding: 1.25rem 1.25rem;
+        }
+
+        .card-header:first-child {
+            border-radius: calc(.4375rem - 1px) calc(.4375rem - 1px) 0 0;
+        }
+        .card-header {
+            min-height: 3.5rem;
+        }
+        .card-header {
+            padding: .9375rem 1.25rem;
+            margin-bottom: 0;
+            background-color: #fff;
+            border-bottom: 1px solid rgba(0, 0, 0, .07);
+        }
+
+        .border-2 {
+            border-width: 2px !important;
+            border-radius: .4375rem;
+        }
+
+        .mb-3 {
+            margin-bottom: 1rem !important;
+        }
+
+        .mt-3 {
+            margin-top: 1rem !important;
+        }
+
+    </style>
+</head>
+<body>
+
+    <div class="row mb-3">
+        <table class="table table-striped">
+            <thead>
+            </thead>
+            <tbody>
+            <th:block th:each="category : ${screening.categories}">
+                <tr class="bg-light">
+                    <td colspan="3"><h5 th:text="${category.title}"></h5></td>
+                </tr>
+                <tr th:each="question : ${category.questions}">
+                    <td>
+                        <span th:text="${question.question}"></span>
+                    </td>
+                    <td th:text="${question.answer}">
+                    </td>
+                    <td>
+                        <div th:if="${question.dangerous && category.dangerousValueCount > 1}"
+                             class="d-block mx-auto badge bg-danger">Rød
+                        </div>
+                        <div th:if="${question.dangerous && category.dangerousValueCount == 1}"
+                             class="d-block mx-auto badge bg-warning">Gul
+                        </div>
+                        <div th:if="${question.answer == null || question.answer.equals('')}"
+                             class="d-block mx-auto badge bg-gray-800">Blank
+                        </div>
+                    </td>
+                </tr>
+            </th:block>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="row mb-3 mt-3">
+        <div
+            th:class="${screening.recommendedEstimation == T(dk.digitalidentity.model.entity.enums.EstimationDTO).DANGER ? 'card border-2 border-danger' : screening.recommendedEstimation == T(dk.digitalidentity.model.entity.enums.EstimationDTO).WARNING ? 'card border-2 border-warning' : 'card border-2 border-blank'}"
+            class="card border-2 border-danger">
+            <h5 class="card-header">Anbefaling</h5>
+            <div class="card-body">
+                <h2 id="recommendation" th:text="${screening.recommendation}"></h2>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

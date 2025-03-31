@@ -122,7 +122,6 @@ public class DPIAController {
         model.addAttribute("asset", asset);
         model.addAttribute("dpiaForm", dpiaForm);
         model.addAttribute("dpiaQualityCheckList", dpiaQualityCheckList);
-        model.addAttribute("dpiaForm", dpiaForm);
         model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, false));
         model.addAttribute("dpiaSections", buildDPIASections(asset));
         model.addAttribute("dpiaThreatAssesments", buildDPIAThreatAssessments(asset, threatAssessments));

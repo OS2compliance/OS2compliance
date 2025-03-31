@@ -3,10 +3,12 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.AssetOversightDao;
+import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
+import dk.digitalidentity.model.entity.ChoiceDPIA;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DPIA;
@@ -17,6 +19,7 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
+import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -26,6 +29,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
+import dk.digitalidentity.model.entity.enums.EstimationDTO;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -47,6 +51,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
+import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -56,14 +61,19 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
+import static java.util.stream.Collectors.groupingBy;
+import static java.util.stream.Collectors.toList;
+import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
 
 @Slf4j
 @Service
@@ -78,6 +88,7 @@ public class AssetService {
     private final TemplateEngine templateEngine;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final ChoiceService choiceService;
+    private final ChoiceDPIADao choiceDPIADao;
 
     public Optional<AssetOversight> getOversight(final Long oversightId) {
         return assetOversightDao.findById(oversightId);
@@ -313,6 +324,11 @@ public class AssetService {
         return convertHtmlToPdf(html);
     }
 
+    public byte[] getDPIAScreeningPdf(Asset asset) throws IOException {
+        String html = getDPIAScreeningHTML(asset);
+        return convertHtmlToPdf(html);
+    }
+
     private String getDPIAHTML(Asset asset) {
         final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
@@ -330,7 +346,88 @@ public class AssetService {
         context.setVariable("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
         context.setVariable("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
 
-        return templateEngine.process("reports/dpia_pdf", context);
+        return templateEngine.process("reports/dpia/dpia_pdf", context);
+    }
+
+
+    public record ScreeningQuestionDTO(String question, String answer,  boolean dangerous) {}
+    public record ScreeningCategoryDTO(String title, long dangerousValueCount, List<ScreeningQuestionDTO> questions) {}
+public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, String recommendation, EstimationDTO recommendedEstimation) {
+}
+
+    private String getDPIAScreeningHTML(Asset asset) {
+        List<String> dangerousValues = listOf("dpia-yes", "dpia-partially", "dpia-dont-know");
+        List<String> alwaysRed = listOf("dpia-7");
+
+        final List<DataProtectionImpactScreeningAnswer> assetDPIADTOs = new ArrayList<>();
+        final List<ChoiceDPIA> choiceDPIA = choiceDPIADao.findAll();
+        for (final ChoiceDPIA choice : choiceDPIA) {
+            final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
+            defaultAnswer.setAssessment(asset.getDpiaScreening());
+            defaultAnswer.setChoice(choice);
+            defaultAnswer.setAnswer(null);
+            defaultAnswer.setId(0);
+            final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpiaScreening().getDpiaScreeningAnswers().stream()
+                .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))
+                .findAny().orElse(defaultAnswer);
+            assetDPIADTOs.add(dpiaAnswer);
+        }
+
+        var context = new Context();
+        context.setVariable("questions", assetDPIADTOs);
+
+        Map<String, List<DataProtectionImpactScreeningAnswer>> categories = assetDPIADTOs.stream().collect(groupingBy(dto -> dto.getChoice().getCategory(), toList()));
+
+        boolean alwaysRedPresent = false;
+
+        Map<String, List<ScreeningQuestionDTO>> questionDtos = new HashMap<>();
+        for (var entrySet : categories.entrySet()) {
+            if (entrySet.getValue().stream().anyMatch(answ -> alwaysRed.contains(answ.getChoice().getIdentifier()))) {
+                alwaysRedPresent = true;
+            }
+            questionDtos.put(entrySet.getKey(), entrySet.getValue().stream().map(answer -> {
+                Optional<ChoiceValue> answerChoice = answer.getChoice().getValues().stream().filter(val -> val.getIdentifier().equalsIgnoreCase(answer.getAnswer())).findAny();
+                return new ScreeningQuestionDTO(
+                    answer.getChoice().getName(),
+                    answerChoice.isPresent() ? answerChoice.get().getCaption() : "",
+                    alwaysRed.contains(answer.getAnswer())
+                        || dangerousValues.contains(answer.getAnswer()));
+            }).toList());
+        }
+
+        List<ScreeningCategoryDTO> categoryDtos = questionDtos.entrySet().stream().map(entrySet -> new ScreeningCategoryDTO(
+            entrySet.getKey(),
+            entrySet.getValue().stream().filter(question -> question.dangerous).count(),
+            entrySet.getValue()
+        )).toList();
+
+        Map<String, Integer> orderMapping = new HashMap<>();
+        orderMapping.put("Personoplysninger", 0);
+        orderMapping.put("Behandling", 1);
+        orderMapping.put("Nye teknologier", 2);
+        List<ScreeningCategoryDTO> categoryDtosSorted = new ArrayList<>(categoryDtos);
+        categoryDtosSorted.sort(Comparator.comparingInt(a -> orderMapping.get(a.title) != null ? orderMapping.get(a.title) : 999));
+
+
+        String recommendation = "Du skal ikke udføre konsekvensanalyse da behandlingen sandsynligvis ikke indebærer risiko for de registrerede";
+        EstimationDTO recommendedEstimation = EstimationDTO.BLANK;
+        if (alwaysRedPresent || categoryDtosSorted.stream().anyMatch(cat -> cat.dangerousValueCount > 1)){
+            recommendation ="Du skal udføre konsekvensanalyse da behandlingen sandsynligvis indebærer en høj risiko for de registrerede (se røde bekymringer)";
+            recommendedEstimation = EstimationDTO.DANGER;
+        } else if (categoryDtosSorted.stream().anyMatch(cat -> cat.dangerousValueCount > 0)) {
+            recommendation = "Du skal ikke udføre konsekvensanalyse da behandlingen sandsynligvis indebærer risiko for de registrerede, men ikke en høj risiko (se gule bekymringer)";
+            recommendedEstimation = EstimationDTO.WARNING;
+        }
+
+        ScreeningDTO screeningDTO = new ScreeningDTO(
+            asset.getId(),
+            categoryDtosSorted,
+            recommendation,
+            recommendedEstimation
+        );
+
+        context.setVariable("screening", screeningDTO);
+        return templateEngine.process("reports/dpia/screening_pdf", context);
     }
 
     private List<DPIASectionDTO> buildDPIASections(Asset asset) {

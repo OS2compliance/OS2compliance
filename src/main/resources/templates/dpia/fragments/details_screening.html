@@ -8,9 +8,9 @@
                 <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
             </a>
             <ul class="dropdown-menu dropdown-menu-end">
-                <li><a class="dropdown-item" th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='PDF')}">Download
+                <li><a class="dropdown-item" th:href="@{/reports/dpia/screening(assetId=${dpia.assetId}, type='PDF')}">Download
                     som PDF</a></li>
-                <li><a class="dropdown-item" th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='ZIP')}">Download
+                <li><a class="dropdown-item" th:href="@{/reports/dpia/screening(assetId=${dpia.assetId}, type='ZIP')}">Download
                     samlet materiale</a></li>
                 <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal" class="dropdown-item">Send</a></li>
             </ul>
