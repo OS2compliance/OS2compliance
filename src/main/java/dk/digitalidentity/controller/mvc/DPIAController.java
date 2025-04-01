@@ -16,11 +16,14 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
@@ -31,16 +34,21 @@ import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -104,9 +112,9 @@ public class DPIAController {
                 .assetId(asset.getId())
                 .optOut(asset.isDpiaOptOut())
                 .questions(assetDPIADTOs)
-                .consequenceLink(asset.getDpiaScreening().getConsequenceLink())
-                .dpiaQuality(asset.getDpia() == null ? new HashSet<>() : asset.getDpia().getChecks())
-                .comment(asset.getDpia() == null ? "" : asset.getDpia().getComment())
+                .consequenceLink(dpia.getExternalLink())
+                .dpiaQuality(asset.getDpias() == null ? new HashSet<>() : dpia.getChecks())
+                .comment(asset.getDpias() == null ? "" : dpia.getComment())
                 .build();
 
         //Kvalitetssikring
@@ -116,44 +124,47 @@ public class DPIAController {
         //DPIA
         final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
-            .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
-            .map(ThreatAssessment.class::cast)
-            .collect(Collectors.toList());
-        threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
+				.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+				.map(ThreatAssessment.class::cast)
+                .sorted(Comparator.comparing(Relatable::getCreatedAt)
+                        .reversed())
+                .collect(Collectors.toList());
 
-        model.addAttribute("changeableAsset", assetService.isEditable(asset));
+		model.addAttribute("changeableAsset", assetService.isEditable(asset));
         model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), asset.getId(), asset.getName(), dpia.getComment()));
         model.addAttribute("asset", asset);
         model.addAttribute("dpiaForm", dpiaForm);
         model.addAttribute("dpiaQualityCheckList", dpiaQualityCheckList);
         model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, false));
-        model.addAttribute("dpiaSections", buildDPIASections(asset));
-        model.addAttribute("dpiaThreatAssesments", buildDPIAThreatAssessments(asset, threatAssessments));
-        model.addAttribute("dpiaReports", buildDPIAReports(asset));
-        model.addAttribute("conclusion", asset.getDpia().getConclusion());
+        model.addAttribute("dpiaSections", buildDPIASections(dpia));
+        model.addAttribute("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
+        model.addAttribute("dpiaReports", buildDPIAReports(dpia));
+        model.addAttribute("conclusion", dpia.getConclusion());
 
         return "dpia/details";
     }
 
-    private List<AssetsController.DPIASectionDTO> buildDPIASections(Asset asset) {
-        List<AssetsController.DPIASectionDTO> sections = new ArrayList<>();
+    record DPIAQuestionDTO(long id, long questionResponseId, String question, String instructions, String templateAnswer, String response) {}
+    record DPIASectionDTO(long id, String sectionIdentifier, long sectionResponseId, String heading, String explainer, boolean canOptOut, boolean hasOptedOutResponse, List<DPIAQuestionDTO> questions) {}
+    private List<DPIASectionDTO> buildDPIASections(DPIA dpia) {
+        List<DPIASectionDTO> sections = new ArrayList<>();
         List<DPIATemplateSection> allSections = dpiaTemplateSectionService.findAll().stream()
             .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
-            .collect(Collectors.toList());
+            .toList();
 
         // needed dataprocessing fields
-        PlaceholderInfo placeholderInfo = assetService.getDPIAResponsePlaceholderInfo(asset);
+        PlaceholderInfo placeholderInfo = assetService.getDPIAResponsePlaceholderInfo(dpia.getAsset());
 
         for (DPIATemplateSection templateSection : allSections) {
             if (templateSection.isHasOptedOut()) {
                 continue;
             }
 
-            List<AssetsController.DPIAQuestionDTO> questionDTOS = new ArrayList<>();
-            DPIAResponseSection matchSection = asset.getDpia().getDpiaResponseSections().stream().filter(s -> s.getDpiaTemplateSection().getId() == templateSection.getId()).findAny().orElse(null);
+            List<DPIAQuestionDTO> questionDTOS = new ArrayList<>();
+            DPIAResponseSection matchSection = dpia.getDpiaResponseSections().stream().filter(s -> s.getDpiaTemplateSection().getId() == templateSection.getId()).findAny().orElse(null);
             List<DPIATemplateQuestion> questions = templateSection.getDpiaTemplateQuestions().stream()
                 .sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey))
-                .collect(Collectors.toList());
+                .toList();
             for (DPIATemplateQuestion templateQuestion : questions) {
                 DPIAResponseSectionAnswer matchAnswer = matchSection == null ? null : matchSection.getDpiaResponseSectionAnswers().stream().filter(s -> s.getDpiaTemplateQuestion().getId() == templateQuestion.getId()).findAny().orElse(null);
 
@@ -165,19 +176,19 @@ public class DPIAController {
                     .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), placeholderInfo.getTypesOfPersonalInformationFreetext())
                     .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.getCategoriesOfRegisteredTitles()))
                     .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), placeholderInfo.getHowLongTitle())
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), asset.getDataProcessing().getDeletionProcedureLink() == null ? "" : "<a href=\"" + asset.getDataProcessing().getDeletionProcedureLink() + "\">" + asset.getDataProcessing().getDeletionProcedureLink() + "</a>");
+                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), dpia.getAsset().getDataProcessing().getDeletionProcedureLink() == null ? "" : "<a href=\"" + dpia.getAsset().getDataProcessing().getDeletionProcedureLink() + "\">" + dpia.getAsset().getDataProcessing().getDeletionProcedureLink() + "</a>");
 
                 if (matchAnswer == null) {
-                    questionDTOS.add(new AssetsController.DPIAQuestionDTO(templateQuestion.getId(), 0, templateQuestion.getQuestion(), templateQuestion.getInstructions(), templateAnswer, ""));
+                    questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getId(), 0, templateQuestion.getQuestion(), templateQuestion.getInstructions(), templateAnswer, ""));
                 } else {
-                    questionDTOS.add(new AssetsController.DPIAQuestionDTO(templateQuestion.getId(), matchAnswer.getId(), templateQuestion.getQuestion(), templateQuestion.getInstructions(), templateAnswer, matchAnswer.getResponse()));
+                    questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getId(), matchAnswer.getId(), templateQuestion.getQuestion(), templateQuestion.getInstructions(), templateAnswer, matchAnswer.getResponse()));
                 }
             }
 
             if (matchSection == null) {
-                sections.add(new AssetsController.DPIASectionDTO(templateSection.getId(), templateSection.getIdentifier(), 0, templateSection.getHeading(), templateSection.getExplainer(), templateSection.isCanOptOut(), false, questionDTOS));
+                sections.add(new DPIASectionDTO(templateSection.getId(), templateSection.getIdentifier(), 0, templateSection.getHeading(), templateSection.getExplainer(), templateSection.isCanOptOut(), false, questionDTOS));
             } else {
-                sections.add(new AssetsController.DPIASectionDTO(templateSection.getId(), templateSection.getIdentifier(), matchSection.getId(), templateSection.getHeading(), templateSection.getExplainer(), templateSection.isCanOptOut(), !matchSection.isSelected(), questionDTOS));
+                sections.add(new DPIASectionDTO(templateSection.getId(), templateSection.getIdentifier(), matchSection.getId(), templateSection.getHeading(), templateSection.getExplainer(), templateSection.isCanOptOut(), !matchSection.isSelected(), questionDTOS));
             }
 
         }
@@ -185,9 +196,9 @@ public class DPIAController {
     }
 
     record DPIAThreatAssessmentDTO(boolean selected, long threatAssessmentId, String threatAssessmentName, String date, boolean signed) {}
-    private List<DPIAThreatAssessmentDTO> buildDPIAThreatAssessments(Asset asset, List<ThreatAssessment> threatAssessments) {
+    private List<DPIAThreatAssessmentDTO> buildDPIAThreatAssessments(DPIA dpia, List<ThreatAssessment> threatAssessments) {
         List<DPIAThreatAssessmentDTO> result = new ArrayList<>();
-        Set<String> selectedThreatAssessments = asset.getDpia().getCheckedThreatAssessmentIds() == null ? new HashSet<>() : Arrays.stream(asset.getDpia().getCheckedThreatAssessmentIds().split(",")).collect(Collectors.toSet());
+        Set<String> selectedThreatAssessments = dpia.getCheckedThreatAssessmentIds() == null ? new HashSet<>() : Arrays.stream(dpia.getCheckedThreatAssessmentIds().split(",")).collect(Collectors.toSet());
         for (ThreatAssessment threatAssessment : threatAssessments) {
             boolean selected = selectedThreatAssessments.contains(threatAssessment.getId().toString());
             String date = threatAssessment.getCreatedAt().format(Constants.DK_DATE_FORMATTER);
@@ -198,14 +209,41 @@ public class DPIAController {
     }
 
     record DPIAReportDTO(long s3DocumentId, String approverName, String status, String date) {}
-    private List<DPIAReportDTO> buildDPIAReports(Asset asset) {
+    private List<DPIAReportDTO> buildDPIAReports(DPIA dpia) {
         List<DPIAReportDTO> result = new ArrayList<>();
-        final List<DPIAReport> sortedDpiaReports = asset.getDpia().getDpiaReports();
+        final List<DPIAReport> sortedDpiaReports = dpia.getDpiaReports();
         sortedDpiaReports.sort(Comparator.comparing(s -> s.getDpiaReportS3Document().getTimestamp()));
         for (DPIAReport sortedDpiaReport : sortedDpiaReports) {
             String date = sortedDpiaReport.getDpiaReportS3Document().getTimestamp().format(Constants.DK_DATE_FORMATTER);
             result.add(new DPIAReportDTO(sortedDpiaReport.getDpiaReportS3Document().getId(), sortedDpiaReport.getReportApproverName(), sortedDpiaReport.getDpiaReportApprovalStatus().getMessage(), date));
         }
         return result;
+    }
+
+    public record RevisionFormDTO(@DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextRevision, RevisionInterval revisionInterval) {}
+    @GetMapping("{dpiaId}/revision")
+    public String revisionForm(final Model model, @PathVariable final long dpiaId) {
+         DPIA dpia = dpiaService.find(dpiaId);
+        final Asset asset = dpia.getAsset();
+        assetService.updateNextRevisionAssociatedTask(dpia);
+        model.addAttribute("asset", asset);
+        model.addAttribute("RevisionFormDTO", new RevisionFormDTO(dpia.getNextRevision(), dpia.getRevisionInterval()));
+        return "assets/fragments/revisionIntervalForm";
+    }
+
+    @PostMapping("{dpiaId}/revision")
+    @Transactional
+    public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long dpiaId) {
+        DPIA dpia = dpiaService.find(dpiaId);
+        final Asset asset = dpia.getAsset();
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        dpia.setRevisionInterval(revisionFormDTO.revisionInterval);
+        dpia.setNextRevision(revisionFormDTO.nextRevision);
+        assetService.createOrUpdateAssociatedCheck(dpia);
+        return "redirect:/dpia/" + dpia.getId();
     }
 }

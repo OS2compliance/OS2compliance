@@ -5,24 +5,24 @@ function checkboxChanged(event) {
     setFieldDpiaResponse(sectionId, "selected", !checked);
 }
 
-function mailReport() {
-    var sendReportTo = document.getElementById('sendReportTo').value;
-    var reportMessage = document.getElementById('reportMessage').value;
-    var signReport = document.getElementById('signReport').checked;
-    var data = {
-                 "sendTo": sendReportTo,
-                 "message": reportMessage,
-                 "sign": signReport
-               };
-
-    postData(`/rest/assets/${assetId}/mailReport`, data).then((response) => {
-        if (!response.ok) {
-            throw new Error(`${response.status} ${response.statusText}`);
-        }
-        toastService.info("Sendt");
-        document.querySelector('#sendReportModal .btn-close').click();
-    }).catch(error => {toastService.error(error)});
-}
+//function mailReport() {
+//    var sendReportTo = document.getElementById('sendReportTo').value;
+//    var reportMessage = document.getElementById('reportMessage').value;
+//    var signReport = document.getElementById('signReport').checked;
+//    var data = {
+//                 "sendTo": sendReportTo,
+//                 "message": reportMessage,
+//                 "sign": signReport
+//               };
+//
+//    postData(`/rest/assets/${assetId}/mailReport`, data).then((response) => {
+//        if (!response.ok) {
+//            throw new Error(`${response.status} ${response.statusText}`);
+//        }
+//        toastService.info("Sendt");
+//        document.querySelector('#sendReportModal .btn-close').click();
+//    }).catch(error => {toastService.error(error)});
+//}
 
 function initDpia() {
 

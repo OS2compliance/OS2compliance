@@ -51,7 +51,6 @@ import org.springframework.web.server.ResponseStatusException;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
-import software.amazon.awssdk.services.s3.endpoints.internal.Value;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
@@ -220,16 +219,9 @@ public class AssetService {
     }
 
     @Transactional
-    public void updateNextRevisionAssociatedTask(final Asset asset) {
-        if (asset.getDpia() == null) {
-            DPIA dpia = new DPIA();
-            dpia.setName(asset.getName()+" Konsekvensaanalyse");
-            dpia.setAsset(asset);
-            asset.setDpia(dpia);
-        }
-
-        findAssociatedCheck(asset)
-            .ifPresent(t -> asset.getDpia().setNextRevision(t.getNextDeadline()));
+    public void updateNextRevisionAssociatedTask(final DPIA dpia) {
+        findAssociatedCheck(dpia.getAsset())
+            .ifPresent(t -> dpia.setNextRevision(t.getNextDeadline()));
     }
 
     public Optional<Task> findAssociatedCheck(final Asset asset) {
@@ -241,21 +233,23 @@ public class AssetService {
     }
 
     @Transactional
-    public Task createOrUpdateAssociatedCheck(final Asset asset) {
-        final LocalDate deadline = asset.getDpia().getNextRevision();
-        if (deadline != null && asset.getDpia().getRevisionInterval() != null) {
-            final Task task = findAssociatedCheck(asset).orElseGet(() -> createAssociatedCheck(asset));
+    public Task createOrUpdateAssociatedCheck(DPIA dpia) {
+        final Asset asset = dpia.getAsset();
+        final LocalDate deadline = dpia.getNextRevision();
+        if (deadline != null && dpia.getRevisionInterval() != null) {
+            final Task task = findAssociatedCheck(asset).orElseGet(() -> createAssociatedCheck(dpia));
             task.setName("DPIA for " + asset.getName());
-            task.setNextDeadline(asset.getDpia().getNextRevision());
+            task.setNextDeadline(dpia.getNextRevision());
             task.setResponsibleUser(asset.getResponsibleUsers() != null ? asset.getResponsibleUsers().get(0) : userService.currentUser());
             task.setDescription("Revider DPIA for " + asset.getName());
-            setTaskRevisionInterval(asset, task);
+            setTaskRevisionInterval(dpia, task);
             return task;
         }
         return null;
     }
 
-    private Task createAssociatedCheck(final Asset asset) {
+    private Task createAssociatedCheck(final DPIA dpia) {
+        final Asset asset = dpia.getAsset();
         final Task task = new Task();
         task.setName("DPIA for " + asset.getName());
         task.setCreatedAt(LocalDateTime.now());
@@ -267,15 +261,15 @@ public class AssetService {
         );
         task.setTaskType(TaskType.CHECK);
         task.setResponsibleUser(asset.getResponsibleUsers() != null ? asset.getResponsibleUsers().get(0) : userService.currentUser());
-        task.setNextDeadline(asset.getDpia().getNextRevision());
+        task.setNextDeadline(dpia.getNextRevision());
         task.setNotifyResponsible(true);
         final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(asset, task);
         return savedTask;
     }
 
-    private static void setTaskRevisionInterval(final Asset asset, final Task task) {
-        switch(asset.getDpia().getRevisionInterval()) {
+    private static void setTaskRevisionInterval(final DPIA dpia, final Task task) {
+        switch(dpia.getRevisionInterval()) {
             case YEARLY -> task.setRepetition(TaskRepetition.YEARLY);
             case EVERY_SECOND_YEAR -> task.setRepetition(TaskRepetition.EVERY_SECOND_YEAR);
             case EVERY_THIRD_YEAR -> task.setRepetition(TaskRepetition.EVERY_THIRD_YEAR);
@@ -319,8 +313,8 @@ public class AssetService {
     record DPIAQuestionDTO(String question, String templateAnswer, String response) {}
     record DPIASectionDTO(String sectionIdentifier, String heading, String explainer, List<DPIAQuestionDTO> questions) {}
     record DPIAThreatAssessmentDTO(long threatAssessmentId, String threatAssessmentName, String date, boolean signed) {}
-    public byte[] getDPIAPdf(Asset asset) throws IOException {
-        String html = getDPIAHTML(asset);
+    public byte[] getDPIAPdf(DPIA dpia) throws IOException {
+        String html = getDPIAHTML(dpia);
         return convertHtmlToPdf(html);
     }
 
@@ -329,7 +323,8 @@ public class AssetService {
         return convertHtmlToPdf(html);
     }
 
-    private String getDPIAHTML(Asset asset) {
+    private String getDPIAHTML(DPIA dpia) {
+        final Asset asset = dpia.getAsset();
         final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
@@ -339,9 +334,9 @@ public class AssetService {
 
         var context = new Context();
         context.setVariable("asset", asset);
-        context.setVariable("dpiaSections", buildDPIASections(asset));
-        context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(asset, threatAssessments));
-        context.setVariable("conclusion", asset.getDpia().getConclusion());
+        context.setVariable("dpiaSections", buildDPIASections(dpia));
+        context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
+        context.setVariable("conclusion", dpia.getConclusion());
         context.setVariable("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
         context.setVariable("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
         context.setVariable("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
@@ -430,7 +425,8 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
         return templateEngine.process("reports/dpia/screening_pdf", context);
     }
 
-    private List<DPIASectionDTO> buildDPIASections(Asset asset) {
+    private List<DPIASectionDTO> buildDPIASections(DPIA dpia) {
+        Asset asset = dpia.getAsset();
         List<DPIASectionDTO> sections = new ArrayList<>();
         List<DPIATemplateSection> allSections = dpiaTemplateSectionService.findAll().stream()
             .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
@@ -445,7 +441,7 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
             }
 
             List<DPIAQuestionDTO> questionDTOS = new ArrayList<>();
-            DPIAResponseSection matchSection = asset.getDpia().getDpiaResponseSections().stream().filter(s -> s.getDpiaTemplateSection().getId() == templateSection.getId()).findAny().orElse(null);
+            DPIAResponseSection matchSection = dpia.getDpiaResponseSections().stream().filter(s -> s.getDpiaTemplateSection().getId() == templateSection.getId()).findAny().orElse(null);
 
             if (matchSection != null && !matchSection.isSelected()) {
                 continue;
@@ -485,9 +481,9 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
         return sections;
     }
 
-    private List<DPIAThreatAssessmentDTO> buildDPIAThreatAssessments(Asset asset, List<ThreatAssessment> threatAssessments) {
+    private List<DPIAThreatAssessmentDTO> buildDPIAThreatAssessments(DPIA dpia, List<ThreatAssessment> threatAssessments) {
         List<DPIAThreatAssessmentDTO> result = new ArrayList<>();
-        Set<String> selectedThreatAssessments = asset.getDpia().getCheckedThreatAssessmentIds() == null ? new HashSet<>() : Arrays.stream(asset.getDpia().getCheckedThreatAssessmentIds().split(",")).collect(Collectors.toSet());
+        Set<String> selectedThreatAssessments = dpia.getCheckedThreatAssessmentIds() == null ? new HashSet<>() : Arrays.stream(dpia.getCheckedThreatAssessmentIds().split(",")).collect(Collectors.toSet());
         for (ThreatAssessment threatAssessment : threatAssessments) {
             boolean selected = selectedThreatAssessments.contains(threatAssessment.getId().toString());
             if (selected) {

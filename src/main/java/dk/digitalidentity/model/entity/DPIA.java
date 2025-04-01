@@ -10,12 +10,9 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -36,7 +33,7 @@ import java.util.Set;
 public class DPIA extends Relatable {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "asset_id")
     @JsonIgnore
     private Asset asset;
@@ -73,6 +70,12 @@ public class DPIA extends Relatable {
     @OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<DPIAReport> dpiaReports = new ArrayList<>();
+
+    @Column
+    private boolean fromExternalSource;
+
+    @Column
+    private String externalLink;
 
     @Override
     public RelationType getRelationType() {

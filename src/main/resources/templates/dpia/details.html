@@ -60,10 +60,10 @@
                                         </a>
                                         <ul class="dropdown-menu dropdown-menu-end">
                                             <li><a class="dropdown-item"
-                                                   th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='PDF')}">Download
+                                                   th:href="@{/reports/dpia(dpiaId=${dpia.id}, type='PDF')}">Download
                                                 som PDF</a></li>
                                             <li><a class="dropdown-item"
-                                                   th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='ZIP')}">Download
+                                                   th:href="@{/reports/dpia(dpiaId=${dpia.id}, type='ZIP')}">Download
                                                 samlet materiale</a></li>
                                             <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal"
                                                    class="dropdown-item">Send</a></li>
@@ -129,6 +129,7 @@
         const baseUrl = [[@{/dpia}]];
         const restUrl = [[@{/rest/dpia}]];
         const assetId = [[${dpia.assetId}]];
+        const dpiaId = [[${dpia.id}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         let assetDpiaService, createDPIAService;
 

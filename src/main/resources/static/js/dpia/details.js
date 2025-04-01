@@ -32,7 +32,7 @@ function AssetDpiaService() {
     this.onCommentEdit = async (commentValue) => {
 
         const data = {
-            assetId: assetId,
+            dpiaId: dpiaId,
             comment: commentValue
         }
         const url = `${restUrl}/comment/update`
@@ -253,7 +253,7 @@ function AssetDpiaService() {
                     .filter( (checkboxInput)=> checkboxInput.checked)
                     .map( (checkboxInput) => checkboxInput.value)
                 const data = {
-                    "assetId": assetId,
+                    "dpiaId": dpiaId,
                     "dpiaQualityCheckValues": checkedBoxValues
                 }
 
@@ -348,7 +348,7 @@ function setFieldDpiaResponse(id, fieldName, value) {
         "fieldName": fieldName,
         "value": value
     };
-    putData(`/rest/assets/${assetId}/dpia/response/setfield`, data)
+    putData(`/rest/dpia/${dpiaId}/response/setfield`, data)
         .then(defaultResponseHandler)
         .catch(defaultErrorHandler);
 }
@@ -358,8 +358,26 @@ function setFieldDpia(fieldName, value) {
         "fieldName": fieldName,
         "value": value
     };
-    putData(`/rest/assets/${assetId}/dpia/setfield`, data)
+    putData(`/rest/dpia/${dpiaId}/setfield`, data)
         .then(defaultResponseHandler)
         .catch(defaultErrorHandler);
 }
 
+function mailReport() {
+    var sendReportTo = document.getElementById('sendReportTo').value;
+    var reportMessage = document.getElementById('reportMessage').value;
+    var signReport = document.getElementById('signReport').checked;
+    var data = {
+                 "sendTo": sendReportTo,
+                 "message": reportMessage,
+                 "sign": signReport
+               };
+
+    postData(`/rest/dpia/${dpiaId}/mailReport`, data).then((response) => {
+        if (!response.ok) {
+            throw new Error(`${response.status} ${response.statusText}`);
+        }
+        toastService.info("Sendt");
+        document.querySelector('#sendReportModal .btn-close').click();
+    }).catch(error => {toastService.error(error)});
+}

@@ -16,6 +16,10 @@ public class DPIAService {
             .orElseThrow();
     }
 
+    public DPIA save(DPIA dpia) {
+        return dpiaDao.save(dpia);
+    }
+
     @Transactional
     public void delete(Long dpiaId) {
         //find dpia
@@ -23,6 +27,6 @@ public class DPIAService {
             .orElseThrow();
 
         //Set to null on asset. Cascade takes care of rest
-        dpia.getAsset().setDpia(null);
+        dpia.getAsset().setDpias(null);
     }
 }

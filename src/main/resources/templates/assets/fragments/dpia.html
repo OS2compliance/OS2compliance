@@ -14,20 +14,20 @@
                             <label for="dpiaOptOutText" class="mb-1">Begrundelse for fravalg:</label>
                             <textarea id="dpiaOptOutText" class="form-control" onchange="assetDpiaService.updateDpiaOptOutReason(this)" th:text="${asset.dpiaOptOutReason}"></textarea>
                         </div>
-                        <div>
-                            <label for="consequenceLink" class="mb-1">Eksisterende DPIA:</label>
+<!--                        <div>-->
+<!--                            <label for="consequenceLink" class="mb-1">Eksisterende DPIA:</label>-->
 
-                            &nbsp;
-                            <a class="form-control-link editField" id="consequenceLink"
-                               th:href="*{consequenceLink}" th:text="${asset.dpiaScreening.consequenceLink}"></a>
-                            <button id="consequenceLinkEditBtn" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="assetDpiaService.editConsequenceLink(this)" title="Rediger"><i class="pli-pencil fs-5"></i></button>
+<!--                            &nbsp;-->
+<!--                            <a class="form-control-link editField" id="consequenceLink"-->
+<!--                               th:href="*{consequenceLink}" th:text="${asset.dpia.externalLink}"></a>-->
+<!--                            <button id="consequenceLinkEditBtn" type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="assetDpiaService.editConsequenceLink(this)" title="Rediger"><i class="pli-pencil fs-5"></i></button>-->
 
-                            <div class="row">
-                                <input id="consequenceLinkInput" class="form-control" th:field="${asset.dpiaScreening.consequenceLink}" style="display: none; max-width: 90%;">
-                                &nbsp;
-                                <button id="consequenceLinkSaveBtn" type="button" class="btn btn-icon btn-outline-light btn-md me-1" onclick="assetDpiaService.saveConsequenceLink(this)" title="Gem" style="display: none;"><i class="pli-save fs-5"></i></button>
-                            </div>
-                        </div>
+<!--                            <div class="row">-->
+<!--                                <input id="consequenceLinkInput" class="form-control" th:field="${asset.dpia.externalLink}" style="display: none; max-width: 90%;">-->
+<!--                                &nbsp;-->
+<!--                                <button id="consequenceLinkSaveBtn" type="button" class="btn btn-icon btn-outline-light btn-md me-1" onclick="assetDpiaService.saveConsequenceLink(this)" title="Gem" style="display: none;"><i class="pli-save fs-5"></i></button>-->
+<!--                            </div>-->
+<!--                        </div>-->
                     </div>
                 </div>
                 <div id="dpiaView">
