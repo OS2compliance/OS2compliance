@@ -276,8 +276,8 @@ function AssetDpiaService() {
         })
     }
 
-        this.setRevisionInterval = function(assetId) {
-            fetch( `/assets/${assetId}/revision`)
+        this.setRevisionInterval = function(dpiaId) {
+            fetch( `/dpia/${dpiaId}/revision`)
                 .then(response => response.text()
                     .then(data => {
                         let dialog = document.getElementById('revisionIntervalDialog');

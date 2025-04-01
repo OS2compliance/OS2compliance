@@ -224,11 +224,10 @@ public class DPIAController {
     @GetMapping("{dpiaId}/revision")
     public String revisionForm(final Model model, @PathVariable final long dpiaId) {
          DPIA dpia = dpiaService.find(dpiaId);
-        final Asset asset = dpia.getAsset();
         assetService.updateNextRevisionAssociatedTask(dpia);
-        model.addAttribute("asset", asset);
+        model.addAttribute("dpiaId", dpia.getId());
         model.addAttribute("RevisionFormDTO", new RevisionFormDTO(dpia.getNextRevision(), dpia.getRevisionInterval()));
-        return "assets/fragments/revisionIntervalForm";
+        return "dpia/fragments/revisionIntervalForm";
     }
 
     @PostMapping("{dpiaId}/revision")
