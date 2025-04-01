@@ -97,11 +97,11 @@ public class DPIARestController {
 	private final Environment environment;
 	private final ApplicationEventPublisher eventPublisher;
 
-	public record DPIADTO(long id, String assetName, LocalDateTime updatedAt, int taskCount) {
+	public record DPIAListDTO(long id, String assetName, LocalDateTime updatedAt, int taskCount, Boolean isExternal) {
 	}
 
 	@PostMapping("list")
-	public PageDTO<DPIADTO> list(
+	public PageDTO<DPIAListDTO> list(
 			@RequestParam(name = "search", required = false) final String search,
 			@RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
 			@RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
@@ -123,13 +123,13 @@ public class DPIARestController {
 			dpiaGrids = dpiaGridDao.findAll(sortAndPage);
 		}
 		assert dpiaGrids != null;
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		return new PageDTO<>(dpiaGrids.getTotalElements(), dpiaGrids.stream().map(dpia ->
-						new DPIADTO(
+						new DPIAListDTO(
 								dpia.getId(),
 								dpia.getAssetName(),
 								dpia.getUpdatedAt(),
-								dpia.getTaskCount()
+								dpia.getTaskCount(),
+								dpia.isExternal()
 						))
 				.toList());
 	}

@@ -84,11 +84,13 @@ public class DPIAController {
     @GetMapping("{id}")
     public String dpiaList(final Model model, @PathVariable Long id) {
 
-        //for redirection...?
-//        return "redirect://"+url;
-
         DPIA dpia = dpiaService.find(id);
         Asset asset = dpia.getAsset();
+
+        //
+        if (dpia.isFromExternalSource()) {
+            return "redirect://" + dpia.getExternalLink();
+        }
 
         // Screening
         final List<DataProtectionImpactScreeningAnswerDTO> assetDPIADTOs = new ArrayList<>();
@@ -143,6 +145,19 @@ public class DPIAController {
 
         return "dpia/details";
     }
+
+    public record ExternalDPIADTO (Long dpiaId, String externalLink, Long assetId) {}
+    @GetMapping("external/{dpiaId}/edit")
+    public String editExternalDPIA(final Model model, Long dpiaId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        DPIA dpia = dpiaService.find(dpiaId);
+
+        model.addAttribute("externalDPIA", new ExternalDPIADTO(dpia.getId(), dpia.getExternalLink(), dpia.getAsset().getId()));
+        return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
+    }
+
 
     record DPIAQuestionDTO(long id, long questionResponseId, String question, String instructions, String templateAnswer, String response) {}
     record DPIASectionDTO(long id, String sectionIdentifier, long sectionResponseId, String heading, String explainer, boolean canOptOut, boolean hasOptedOutResponse, List<DPIAQuestionDTO> questions) {}

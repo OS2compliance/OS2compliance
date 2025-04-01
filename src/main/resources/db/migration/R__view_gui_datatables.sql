@@ -349,3 +349,16 @@ FROM assets a
     left join task_logs tl on tl.task_id = t.id 
 WHERE a.deleted = false
 GROUP BY a.id;
+
+CREATE OR REPLACE
+VIEW view_gridjs_dpia AS
+SELECT
+    d.id,
+    a.name AS asset_name,
+    d.updated_at,
+    (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = d.id OR r.relation_b_id = d.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS task_count,
+    d.from_external_source as is_external
+FROM
+    dpia d
+LEFT JOIN assets a ON a.id = d.asset_id
+WHERE d.deleted = false;

@@ -28,4 +28,7 @@ public class DPIAGrid {
 
     @Column
     private int taskCount;
+
+    @Column
+    private boolean isExternal;
 }

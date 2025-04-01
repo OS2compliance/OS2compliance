@@ -1,5 +1,5 @@
 <div th:fragment="create_external_dpia_modal" class="modal fade" id="createExternalDPIAModal" tabindex="-1"
-     aria-hidden="true">
+     aria-hidden="true" xmlns:th="http://www.thymeleaf.org">
 
     <div class="modal-dialog modal-xl">
         <div class="modal-content">
@@ -13,14 +13,16 @@
                     <div class="row mt-3">
                         <label for="linkInput" class="col-sm-4 col-form-label">Link</label>
                         <div class="col-sm-8">
-                            <input id="linkInput" class="form-control form-input"/>
+                            <input id="linkInput" class="form-control form-input" th:value="${externalDPIA != null ? externalDPIA.externalLink : '' }"/>
                         </div>
                     </div>
                     <div class="row mt-3" id="assetSelectRow">
                         <label for="externalDPIAAssetSelect" class="col-sm-4 col-form-label">For Aktiv</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="selectedAsset"
-                                    data-trigger="" id="externalDPIAAssetSelect" hidden="" tabindex="-1"></select>
+                                    data-trigger="" id="externalDPIAAssetSelect" hidden="" tabindex="-1">
+                                <option th:if="${externalDPIA != null}" th:value="${externalDPIA.assetId}" selected></option>
+                            </select>
                             <div class="invalid-feedback" id="assetError">Der skal vælges mindst et aktiv</div>
                         </div>
                     </div>
