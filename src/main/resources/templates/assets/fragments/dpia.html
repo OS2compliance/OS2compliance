@@ -34,7 +34,7 @@
                     <input name="assetId" th:value="${asset.id}" hidden>
 
                     <div class="row mt-2">
-                        <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${dpiaRevisionTasks}, relatableId=${asset.id})}"></div>
+                        <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${dpiaRevisionTasks}, relatableId=${asset.id}, customTitle='Udestående Opgaver')}"></div>
                     </div>
 
                     <div class="row mt-2">

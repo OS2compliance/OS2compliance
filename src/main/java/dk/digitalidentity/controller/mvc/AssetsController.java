@@ -254,11 +254,8 @@ public class AssetsController {
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
         model.addAttribute("supplier", supplierService.getAll());
-        model.addAttribute("dpiaQualityCheckList", dpiaQualityCheckList);
 		model.addAttribute("dpiaForm", dpiaForm);
-		model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, false));
-		model.addAttribute("dpiaSections", buildDPIASections(asset));
-		model.addAttribute("dpiaThreatAssesments", buildDPIAThreatAssessments(asset, threatAssessments));
+		model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, true));
 		model.addAttribute("dpiaReports", buildDPIAReports(asset));
 		model.addAttribute("conclusion", asset.getDpia().getConclusion());
 		model.addAttribute("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));

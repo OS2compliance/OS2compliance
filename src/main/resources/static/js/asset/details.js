@@ -109,6 +109,10 @@ function AssetDpiaService() {
         this.setFieldScreening("consequenceLink", linkInput.value)
     }
 
-
+    this.setFieldScreening = function (fieldName, value) {
+        putData(`/rest/assets/${assetId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
+        .then(defaultResponseHandler)
+        .catch(defaultErrorHandler)
+    }
 
 }
