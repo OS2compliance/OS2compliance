@@ -131,6 +131,25 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
+    @Transactional
+    public record CommentUpdateDTO(Long assetId, String comment){}
+    @PostMapping("comment/update")
+    public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
+        final Asset asset = assetService.findById(commentUpdateDTO.assetId)
+            .orElseThrow();
+        final DPIA dpia = asset.getDpia();
+
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        dpia.setComment(commentUpdateDTO.comment);
+        assetService.save(asset);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
     public record QualityAssuranceUpdateDTO (Long assetId, Set<String> dpiaQualityCheckValues) {}
     @Transactional
 	@PostMapping("qualityassurance/update")

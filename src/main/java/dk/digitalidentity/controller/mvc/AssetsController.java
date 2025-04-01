@@ -239,7 +239,7 @@ public class AssetsController {
             assetOversightService.findByAssetOrderByCreationDateDesc(asset));
 
 		model.addAttribute("asset", asset);
-        model.addAttribute("changeableAsset", assetService.isEditable(asset));
+//        model.addAttribute("changeableAsset", assetService.isEditable(asset));
 		model.addAttribute("relatedAssets", relatedAssets);
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
@@ -254,11 +254,8 @@ public class AssetsController {
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
         model.addAttribute("supplier", supplierService.getAll());
-        model.addAttribute("dpiaQualityCheckList", dpiaQualityCheckList);
 		model.addAttribute("dpiaForm", dpiaForm);
-		model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, false));
-		model.addAttribute("dpiaSections", buildDPIASections(asset));
-		model.addAttribute("dpiaThreatAssesments", buildDPIAThreatAssessments(asset, threatAssessments));
+		model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, true));
 		model.addAttribute("dpiaReports", buildDPIAReports(asset));
 		model.addAttribute("conclusion", asset.getDpia().getConclusion());
 		model.addAttribute("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
@@ -776,7 +773,7 @@ public class AssetsController {
         asset.getDpia().setRevisionInterval(revisionFormDTO.revisionInterval);
         asset.getDpia().setNextRevision(revisionFormDTO.nextRevision);
         assetService.createOrUpdateAssociatedCheck(asset);
-        return "redirect:/assets/" + id;
+        return "redirect:/dpia/" + asset.getDpia().getId();
     }
 
     private List<DPIASectionDTO> buildDPIASections(Asset asset) {

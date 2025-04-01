@@ -109,17 +109,10 @@ function AssetDpiaService() {
         this.setFieldScreening("consequenceLink", linkInput.value)
     }
 
-    this.setRevisionInterval = function(assetId) {
-        fetch( `/assets/${assetId}/revision`)
-            .then(response => response.text()
-                .then(data => {
-                    let dialog = document.getElementById('revisionIntervalDialog');
-                    dialog.innerHTML = data;
-                    revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
-                    revisionDialog.show();
-                    initDatepicker("#nextRevisionBtn", "#nextRevision");
-                }))
-            .catch(error => toastService.error(error));
+    this.setFieldScreening = function (fieldName, value) {
+        putData(`/rest/assets/${assetId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
+        .then(defaultResponseHandler)
+        .catch(defaultErrorHandler)
     }
 
 }

@@ -27,22 +27,22 @@ function mailReport() {
 function initDpia() {
 
     // Bind foldable section events after content is loaded
-    const sectionRows = document.querySelectorAll('.dpiaSchemaSectionTr');
-    for (let i = 0; i < sectionRows.length; i++) {
-        var row = sectionRows[i];
-        var sectionId = row.dataset.sectionid;
-        handleSectionRow(sectionId);
-        row.addEventListener('click', sectionRowClicked, false);
-    }
+//    const sectionRows = document.querySelectorAll('.dpiaSchemaSectionTr');
+//    for (let i = 0; i < sectionRows.length; i++) {
+//        var row = sectionRows[i];
+//        var sectionId = row.dataset.sectionid;
+//        handleSectionRow(sectionId);
+//        row.addEventListener('click', sectionRowClicked, false);
+//    }
 
-    const openedSection = sessionStorage.getItem(`openedDPIASectionId${assetId}`);
-    if (openedSection !== null && openedSection !== undefined) {
-        handleSectionRow(openedSection);
-    }
+//    const openedSection = sessionStorage.getItem(`openedDPIASectionId${assetId}`);
+//    if (openedSection !== null && openedSection !== undefined) {
+//        handleSectionRow(openedSection);
+//    }
 
     // init send to select
-    let responsibleSelect = document.getElementById('sendReportTo');
-    if(responsibleSelect !== null) {
-        choiceService.initUserSelect('sendReportTo');
-    }
+//    let responsibleSelect = document.getElementById('sendReportTo');
+//    if(responsibleSelect !== null) {
+//        choiceService.initUserSelect('sendReportTo');
+//    }
 }

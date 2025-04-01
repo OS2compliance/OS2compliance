@@ -17,7 +17,39 @@ function AssetDpiaService() {
         this.recommendationCardElem = document.getElementById("recommendationCard");
         this.handleAnswerChange();
         this.initQualityAssuranceCheckboxes()
+        this.initCommentField()
+    }
 
+    this.initCommentField = ()=> {
+        const commentFieldElement = document.getElementById('dpiaCommentArea')
+        commentFieldElement.addEventListener('change', async (event)=> {
+            if (commentFieldElement !== null) {
+                this.onCommentEdit(commentFieldElement.value)
+            }
+        })
+    }
+
+    this.onCommentEdit = async (commentValue) => {
+
+        const data = {
+            assetId: assetId,
+            comment: commentValue
+        }
+        const url = `${restUrl}/comment/update`
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                'X-CSRF-TOKEN': token,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+
+        if (!response.ok)  {
+            toastService.error(response.statusText)
+        }
+
+        toastService.info("Valg gemt")
     }
 
 
@@ -243,6 +275,19 @@ function AssetDpiaService() {
             }
         })
     }
+
+        this.setRevisionInterval = function(assetId) {
+            fetch( `/assets/${assetId}/revision`)
+                .then(response => response.text()
+                    .then(data => {
+                        let dialog = document.getElementById('revisionIntervalDialog');
+                        dialog.innerHTML = data;
+                        revisionDialog = new bootstrap.Modal(document.getElementById('revisionIntervalDialog'));
+                        revisionDialog.show();
+                        initDatepicker("#nextRevisionBtn", "#nextRevision");
+                    }))
+                .catch(error => toastService.error(error));
+        }
 }
 
 function handleSectionRow(sectionId) {
@@ -317,3 +362,4 @@ function setFieldDpia(fieldName, value) {
         .then(defaultResponseHandler)
         .catch(defaultErrorHandler);
 }
+

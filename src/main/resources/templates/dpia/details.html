@@ -45,27 +45,48 @@
                     <div class="card mb-3">
                         <div class="card-body">
                             <div class="d-flex mt-2 justify-content-end">
-                                <div class="d-flex align-items-end flex-row mb-3 p-1">
-                                    <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown"
-                                       aria-expanded="false">
-                                        <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
-                                    </a>
-                                    <ul class="dropdown-menu dropdown-menu-end">
-                                        <li><a class="dropdown-item"
-                                               th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='PDF')}">Download
-                                            som PDF</a></li>
-                                        <li><a class="dropdown-item"
-                                               th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='ZIP')}">Download
-                                            samlet materiale</a></li>
-                                        <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal"
-                                               class="dropdown-item">Send</a></li>
-                                    </ul>
+                                <div class="d-flex mt-2">
+                                    <div class="d-flex flex-fill align-items-start mb-3 p-1">
+                                        <button type="button" th:if="${changeableAsset}" class="btn btn-success"
+                                                th:onclick="|assetDpiaService.setRevisionInterval(${asset.id})|">
+                                            <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
+                                        </button>
+                                    </div>
+
+                                    <div class="d-flex align-items-end flex-row mb-3 p-1">
+                                        <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown"
+                                           aria-expanded="false">
+                                            <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item"
+                                                   th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='PDF')}">Download
+                                                som PDF</a></li>
+                                            <li><a class="dropdown-item"
+                                                   th:href="@{/reports/dpia(assetId=${dpia.assetId}, type='ZIP')}">Download
+                                                samlet materiale</a></li>
+                                            <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal"
+                                                   class="dropdown-item">Send</a></li>
+                                        </ul>
+                                    </div>
                                 </div>
                             </div>
 
                             <div class="accordion" id="_dm-dpiaAccordion">
-
                                 <div class="accordion-item">
+                                    <div class="accordion-header" id="commentAccordionHeading">
+                                        <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#commentAccordionItem" aria-expanded="false" aria-controls="commentAccordionItem">
+                                            Kommentar
+                                        </button>
+                                    </div>
+                                    <div id="commentAccordionItem" class="accordion-collapse collapse" aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
+                                        <div class="accordion-body">
+                                            <textarea id="dpiaCommentArea" th:value="${dpia.comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3" th:text="${dpia.comment}"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item mt-1">
                                     <div class="accordion-header" id="screeningSectionHeader">
                                         <button class="accordion-button collapsed bg-light" type="button"
                                                 data-bs-toggle="collapse"
@@ -96,6 +117,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='dpia')}"></nav>
 </div>
 
+<div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true"></div>
 <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
 
 <link rel="stylesheet" th:href="@{/css/dpia_schema.css}"/>

@@ -31,20 +31,10 @@
                     </div>
                 </div>
                 <div id="dpiaView">
-
                     <input name="assetId" th:value="${asset.id}" hidden>
 
-                    <div class="d-flex mt-2">
-                        <div class="d-flex flex-fill align-items-start mb-3 p-1">
-                            <button type="button" th:if="${changeableAsset}" class="btn btn-success" th:onclick="|assetDpiaService.setRevisionInterval(${asset.id})|">
-                                <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
-                            </button>
-                        </div>
-
-                    </div>
-
                     <div class="row mt-2">
-                        <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${dpiaRevisionTasks}, relatableId=${asset.id})}"></div>
+                        <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${dpiaRevisionTasks}, relatableId=${asset.id}, customTitle='Udestående Opgaver')}"></div>
                     </div>
 
                     <div class="row mt-2">
@@ -90,62 +80,6 @@
     <script th:inline="javascript">
         /*<![CDATA[*/
 
-        function setDPIAEditState(enabled) {
-            const rootElement = document.getElementById('dpiaTab');
-            if (enabled) {
-                rootElement.querySelectorAll('.editField').forEach(elem => {
-                  elem.disabled = false;
-                  if (elem.tagName == "A") {
-                      elem.hidden = true;
-                      if (elem.nextElementSibling) {
-                         elem.nextElementSibling.hidden = false;
-                      }
-                  }
-
-                  if (elem.classList.contains("datepicker")) {
-                    elem.parentElement.hidden = false; // show the datepicker
-                    if (elem.parentElement.nextElementSibling) {
-                        elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
-                    }
-                  }
-                });
-
-                rootElement.querySelectorAll('.qualityCheck').forEach(elem => {
-                  elem.disabled = false;
-                });
-
-                document.getElementById('saveDPIABtn').hidden = false;
-                document.getElementById('editDPIABtn').hidden = true;
-                document.getElementById('cancelDPIABtn').hidden = false;
-            } else {
-                rootElement.querySelectorAll('.editField').forEach(elem => {
-                  elem.disabled = true;
-                  if (elem.tagName == "A") {
-                      elem.hidden = false;
-                      elem.nextElementSibling.hidden = true;
-                  }
-
-                  if (elem.classList.contains("datepicker")) {
-                    if (elem.value == null || elem.value == "") {
-                      elem.parentElement.hidden = true; // hide the datepicker
-                      elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
-                    }
-                  }
-                });
-
-                rootElement.querySelectorAll('.qualityCheck').forEach(elem => {
-                  elem.disabled = true;
-                });
-
-                document.getElementById('saveDPIABtn').hidden = true;
-                document.getElementById('editDPIABtn').hidden = false;
-                document.getElementById('cancelDPIABtn').hidden = true;
-
-                const form = document.getElementById("dpiaForm");
-                form.reset();
-                assetDpiaService.handleAnswerChange();
-            }
-        }
 
         /*]]>*/
     </script>
