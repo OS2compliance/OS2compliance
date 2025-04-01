@@ -81,7 +81,7 @@
                                     </div>
                                     <div id="commentAccordionItem" class="accordion-collapse collapse" aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
                                         <div class="accordion-body">
-                                            <textarea id="dpiaCommentArea" th:value="${dpiaForm.comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3"></textarea>
+                                            <textarea id="dpiaCommentArea" th:value="${dpia.comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3" th:text="${dpia.comment}"></textarea>
                                         </div>
                                     </div>
                                 </div>

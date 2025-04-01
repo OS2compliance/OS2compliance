@@ -17,11 +17,39 @@ function AssetDpiaService() {
         this.recommendationCardElem = document.getElementById("recommendationCard");
         this.handleAnswerChange();
         this.initQualityAssuranceCheckboxes()
-
+        this.initCommentField()
     }
 
-    this.onCommentEdit = (event) => {
-        console.log('test') //TODO
+    this.initCommentField = ()=> {
+        const commentFieldElement = document.getElementById('dpiaCommentArea')
+        commentFieldElement.addEventListener('change', async (event)=> {
+            if (commentFieldElement !== null) {
+                this.onCommentEdit(commentFieldElement.value)
+            }
+        })
+    }
+
+    this.onCommentEdit = async (commentValue) => {
+
+        const data = {
+            assetId: assetId,
+            comment: commentValue
+        }
+        const url = `${restUrl}/comment/update`
+        const response = await fetch(url, {
+            method: "POST",
+            headers: {
+                'X-CSRF-TOKEN': token,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify(data)
+        })
+
+        if (!response.ok)  {
+            toastService.error(response.statusText)
+        }
+
+        toastService.info("Valg gemt")
     }
 
 

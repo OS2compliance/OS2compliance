@@ -72,7 +72,7 @@ public class DPIAController {
         return "dpia/index";
     }
 
-    public record DPIADetailDTO (long id, long assetId, String assetName) {}
+    public record DPIADetailDTO (long id, long assetId, String assetName, String comment) {}
     @GetMapping("{id}")
     public String dpiaList(final Model model, @PathVariable Long id) {
         DPIA dpia = dpiaService.find(id);
@@ -118,7 +118,7 @@ public class DPIAController {
         threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
 
         model.addAttribute("changeableAsset", assetService.isEditable(asset));
-        model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), asset.getId(), asset.getName()));
+        model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), asset.getId(), asset.getName(), dpia.getComment()));
         model.addAttribute("asset", asset);
         model.addAttribute("dpiaForm", dpiaForm);
         model.addAttribute("dpiaQualityCheckList", dpiaQualityCheckList);
