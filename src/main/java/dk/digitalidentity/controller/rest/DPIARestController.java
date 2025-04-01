@@ -187,4 +187,20 @@ public class DPIARestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+	public record CreateExternalDPIADTO (Long assetId, String link){}
+	@PostMapping("create")
+	public ResponseEntity<HttpStatus> createExternalDpia (@RequestBody final  CreateExternalDPIADTO createExternalDPIADTO){
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		final Asset asset = assetService.findById(createExternalDPIADTO.assetId)
+				.orElseThrow();
+		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		asset.getDpiaScreening().setConsequenceLink(createExternalDPIADTO.link);
+		assetService.save(asset);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 }

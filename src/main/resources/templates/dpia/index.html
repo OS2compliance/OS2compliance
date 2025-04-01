@@ -21,10 +21,15 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createDPIAModal" onclick="createDPIAService.formReset()">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                class="btn btn-info btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
+                                data-bs-target="#createDPIAModal" onclick="createDPIAService.formReset()">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
                         </button>
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -38,8 +43,17 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                <div id="dpiaDatatable"></div>
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                            class="btn btn-info hstack gap-2" data-bs-toggle="modal"
+                                            data-bs-target="#createExternalDPIAModal" onclick="createExternalDPIAService.formReset()">
+                                        <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern DPIA
+                                    </button>
+                                </div>
+                                <div class="position-relative">
+                                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                    <div id="dpiaDatatable"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -52,9 +66,12 @@
 </div>
 
 <div th:replace="~{dpia/fragments/create_dpia_modal :: create_dpia_modal}"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+<div th:replace="~{dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal}"></div>
+<div
+    th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 <script th:src="@{/js/dpia/list.js}" defer></script>
 <script th:src="@{/js/dpia/createDPIAService.js}" defer></script>
+<script th:src="@{/js/dpia/createExternalDPIAService.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
@@ -65,12 +82,15 @@
         const superuser = [[${superuser}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         const columnProperties = ['id', 'assetName', 'updatedAt', 'taskCount'];
-        let creatDPIAService;
+        let createDPIAService, createExternalDPIAService;
     +]*/
 
     document.addEventListener("DOMContentLoaded", function(event) {
         createDPIAService = new CreateDPIAService()
         createDPIAService.init()
+
+        createExternalDPIAService = new CreateExternalDPIAService()
+        createExternalDPIAService.init()
     })
     /*]]>*/
 </script>

@@ -75,6 +75,10 @@ public class DPIAController {
     public record DPIADetailDTO (long id, long assetId, String assetName, String comment) {}
     @GetMapping("{id}")
     public String dpiaList(final Model model, @PathVariable Long id) {
+
+        //for redirection...?
+//        return "redirect://"+url;
+
         DPIA dpia = dpiaService.find(id);
         Asset asset = dpia.getAsset();
 
