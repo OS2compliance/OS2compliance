@@ -43,11 +43,12 @@ class CreateExternalDPIAService {
             .catch(error => toastService.error(error));
     }
 
-    async submitNewExternalDPIA() {
+    async submitNewExternalDPIA(dpiaId) {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         const linkInput = document.getElementById('linkInput');
         const data = {
-            assetId : assetSelect.value,
+            dpiaId: dpiaId ? dpiaId : null,
+            assetId : assetSelect ? assetSelect.value : null,
             link: linkInput.value ? linkInput.value : ""
         }
 
@@ -66,6 +67,33 @@ class CreateExternalDPIAService {
         }
 
         location.reload()
+    }
+
+    async editExternalClicked(dpiaId) {
+        const url = `${baseUrl}/external/${dpiaId}/edit`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                'X-CSRF-TOKEN': token
+            }
+        })
+
+        if (!response.ok)  {
+            toastService.error(response.statusText)
+        }
+
+        const responseText = await response.text()
+
+        const externalModalContainer = document.getElementById("external_modal_container")
+        externalModalContainer.innerHTML = responseText
+        console.log(responseText)
+        console.log(externalModalContainer)
+
+        const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
+        console.log(modalElement)
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
     }
 
 }

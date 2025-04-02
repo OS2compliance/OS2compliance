@@ -225,25 +225,45 @@ public class DPIARestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-	public record CreateExternalDPIADTO (Long assetId, String link){}
-	@PostMapping("external/create")
-	public ResponseEntity<HttpStatus> createExternalDpia (@RequestBody final  CreateExternalDPIADTO createExternalDPIADTO){
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		final Asset asset = assetService.findById(createExternalDPIADTO.assetId)
-				.orElseThrow();
-		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
+    public record CreateExternalDPIADTO(Long dpiaId, Long assetId, String link) {
+    }
 
-		DPIA dpia = new DPIA();
-		dpia.setFromExternalSource(true);
-		dpia.setExternalLink(createExternalDPIADTO.link);
-		dpia.setName(asset.getName()+" Konsekvensaanalyse (Ekstern)");
-		dpia.setAsset(asset);
-		dpiaService.save(dpia);
+    @PostMapping("external/create")
+    public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        Asset asset;
+        DPIA dpia = null;
+        if (createExternalDPIADTO.assetId != null) {
+            asset = assetService.findById(createExternalDPIADTO.assetId)
+                .orElseThrow();
 
-		return new ResponseEntity<>(HttpStatus.OK);
-	}
+        } else {
+            dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
+            asset = dpia.getAsset();
+        }
+
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        if (createExternalDPIADTO.dpiaId != null) {
+            if (dpia == null) {
+                dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
+            }
+            dpia.setExternalLink(createExternalDPIADTO.link);
+            dpiaService.save(dpia);
+        } else {
+
+            dpia = new DPIA();
+            dpia.setFromExternalSource(true);
+            dpia.setExternalLink(createExternalDPIADTO.link);
+            dpia.setName(asset.getName() + " Konsekvensaanalyse (Ekstern)");
+            dpia.setAsset(asset);
+            dpiaService.save(dpia);
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
 
 	record DPIASetFieldDTO(long id, String fieldName, String value) {}
 	@PutMapping("{dpiaId}/response/setfield")

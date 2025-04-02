@@ -148,7 +148,7 @@ public class DPIAController {
 
     public record ExternalDPIADTO (Long dpiaId, String externalLink, Long assetId) {}
     @GetMapping("external/{dpiaId}/edit")
-    public String editExternalDPIA(final Model model, Long dpiaId) {
+    public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
 

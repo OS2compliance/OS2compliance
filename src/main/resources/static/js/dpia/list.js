@@ -82,7 +82,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                         buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${dpiaId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
                     }
                     if (superuser && isExternal) {
-                        buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="editExternalClicked('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
+                        buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalDPIAService.editExternalClicked('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
                     }
                     return gridjs.html(buttonHTML);
                 }
@@ -142,24 +142,4 @@ function deleteClicked(dpiaId, name) {
                 });
       }
     })
-}
-
-async function editExternalClicked(dpiaId) {
-    createExternalDPIAService.formReset()
-
-    const url = `${baseUrl}/external/${dpiaId}/edit`
-    const response = await fetch(url, {
-        method: "GET",
-        headers: {
-            'X-CSRF-TOKEN': token
-        }
-    })
-
-    if (!response.ok)  {
-        toastService.error(response.statusText)
-    }
-
-    const responseText = await response.text()
-    //TODO - set content
-    console.log(dpiaId)
 }
