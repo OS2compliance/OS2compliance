@@ -131,7 +131,9 @@ public class RiskRestController {
         }
         assert risks != null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(
+            risks.getTotalElements(),
+            mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
 
     record ResponsibleUserDTO(String uuid, String name, String userId) {}

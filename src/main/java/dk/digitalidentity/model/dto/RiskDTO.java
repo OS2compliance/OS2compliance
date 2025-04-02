@@ -21,4 +21,6 @@ public class RiskDTO {
     private Integer assessmentOrder;
     private String threatAssessmentReportApprovalStatus;
     private boolean changeable;
+    private boolean fromExternalSource;
+    private String externalLink;
 }

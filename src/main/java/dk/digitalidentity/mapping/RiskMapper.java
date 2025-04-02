@@ -29,6 +29,8 @@ public interface RiskMapper {
                 .name(riskGrid.getName())
                 .threatAssessmentReportApprovalStatus(riskGrid.getThreatAssessmentReportApprovalStatus().getMessage())
                 .changeable(false)
+                .fromExternalSource(riskGrid.isFromExternalSource())
+                .externalLink(riskGrid.getExternalLink() != null ? riskGrid.getExternalLink() : "")
                 .build();
     }
 

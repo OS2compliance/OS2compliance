@@ -116,6 +116,12 @@ public class ThreatAssessment extends Relatable {
     @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ThreatAssessmentResponse> threatAssessmentResponses;
 
+    @Column
+    private boolean fromExternalSource;
+
+    @Column
+    private String externalLink;
+
     @Override
     public RelationType getRelationType() {
         return RelationType.THREAT_ASSESSMENT;

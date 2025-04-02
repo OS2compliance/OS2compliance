@@ -171,7 +171,9 @@ SELECT
           WHEN t.assessment = 'ORANGE' THEN 4
           WHEN t.assessment = 'RED' THEN 5
         END) as assessment_order,
-    (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks
+    (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks,
+    t.from_external_source,
+    t.external_link
 FROM
     threat_assessments t
 WHERE t.deleted = false;
