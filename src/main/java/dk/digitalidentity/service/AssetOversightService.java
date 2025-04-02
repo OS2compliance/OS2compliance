@@ -35,6 +35,7 @@ public class AssetOversightService {
     private final RelationService relationService;
     private final UserService userService;
 
+
     public List<AssetOversight> findByAssetOrderByCreationDateDesc(final Asset asset) {
         return assetOversightDao.findByAssetOrderByCreationDateDesc(asset);
     }
@@ -120,6 +121,7 @@ public class AssetOversightService {
             task.setNextDeadline(asset.getNextInspectionDate());
         } else {
             task.setNextDeadline(LocalDate.of(2099, 1,1));
+
         }
         if (asset.getOversightResponsibleUser() != null) {
             task.setResponsibleUser(asset.getOversightResponsibleUser());
