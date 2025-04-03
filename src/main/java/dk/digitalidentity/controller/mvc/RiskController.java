@@ -454,4 +454,16 @@ public class RiskController {
         }
         return null;
     }
+
+    public record ExternalRiskassessmentDTO (Long riskId, String externalLink, Long assetId) {}
+    @GetMapping("external/{dpiaId}/edit")
+    public String riskId(final Model model, @PathVariable Long riskId) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        ThreatAssessment riskassessment = threatAssessmentService.findById(riskId).orElseThrow();
+
+//        model.addAttribute("external", new DPIAController.ExternalDPIADTO(riskassessment.getId(), riskassessment.getExternalLink(), riskassessment.get riskassessment.getAsset().getId()));
+        return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
+    }
 }

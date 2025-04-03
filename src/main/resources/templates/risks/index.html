@@ -39,8 +39,17 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                <div id="risksDatatable"></div>
+                                <div class="d-flex justify-content-end mb-3">
+                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                            class="btn btn-info hstack gap-2" data-bs-toggle="modal"
+                                            data-bs-target="#createExternalRiskassessmentModal" onclick="createExternalRiskassessmentService.formReset()">
+                                        <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern Risikovurdering
+                                    </button>
+                                </div>
+                                <div class="position-relative">
+                                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                    <div id="risksDatatable"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -52,26 +61,32 @@
     <nav th:replace="~{fragments/navbar :: main (page='risikovurderinger')}"></nav>
 </div>
 
-
+<div id="external_modal_container">
+    <div th:replace="~{risks/fragments/create_external_riskassessment_modal :: create_external_riskassessment_modal}"></div>
+</div>
 <div id="copyAssessmentContainer"></div>
 <div id="editAssessmentContainer"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
-
+<script th:src="@{/js/risk/createExternalRiskassessmentService.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
         var gridRisksUrl = [[@{/rest/risks/list}]];
+        const restUrl = [[@{/rest/risks}]];
         var baseUrl = [[@{/risks/}]];
         var viewUrl = [[@{/risks/}]];
         var deleteUrl = [[@{/risks/}]];
         var superuser = [[${superuser}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         const columnProperties = [ 'id', 'name', 'type', 'responsibleOU', 'responsibleUser', 'tasks', 'date', 'threatAssessmentReportApprovalStatus', 'assessment', 'changeable', 'fromExternalSource', 'externalLink']
+        let createExternalRiskassessmentService;
     +]*/
 
     document.addEventListener("DOMContentLoaded", function(event) {
         initTable()
+
+        createExternalRiskassessmentService = new CreateExternalRiskassessmentService()
     });
 
     /*]]>*/

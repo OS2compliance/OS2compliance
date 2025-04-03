@@ -427,8 +427,7 @@ function CreateRiskService() {
                         }
                     },
                     {
-                        name: "Type",
-                        width: '10%'
+                        name: "Type"
                     },
                     {
                         name: "Fagområde",
@@ -497,16 +496,15 @@ function CreateRiskService() {
                             //edit button
                             if ((superuser || changeable)
                                 && external) {
-                                buttonHTML = buttonHTML +
-                                    `<button type="button" class="btn btn-icon btn-outline-light btn-xs" ><i class="pli-pencil fs-5"></i></button>`
+                                buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalRiskAssessmentService.editExternalClicked('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
                             } else if(superuser || changeable) {
                                 buttonHTML = buttonHTML +
                                     `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
+                                    +`<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
                             }
                             //delete & copy buttons
                             if (superuser) {
                                 buttonHTML = buttonHTML +
-                                    `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
                                     + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
                             }
                             return  gridjs.html(buttonHTML)
