@@ -209,7 +209,7 @@ public class DPIARestController {
 
     public record CreateDPIAFormDTO (Long assetId){}
     @PostMapping("create")
-    public ResponseEntity<HttpStatus> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO){
+    public ResponseEntity<HttpStatus> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Asset asset = assetService.findById(createDPIAFormDTO.assetId)
             .orElseThrow();
@@ -217,10 +217,7 @@ public class DPIARestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-            DPIA dpia = new DPIA();
-            dpia.setName(asset.getName()+" Konsekvensaanalyse");
-            dpia.setAsset(asset);
-			dpiaService.save(dpia);
+        dpiaService.create(asset, null);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -254,11 +251,7 @@ public class DPIARestController {
             dpiaService.save(dpia);
         } else {
 
-            dpia = new DPIA();
-            dpia.setFromExternalSource(true);
-            dpia.setExternalLink(createExternalDPIADTO.link);
-            dpia.setName(asset.getName() + " Konsekvensaanalyse (Ekstern)");
-            dpia.setAsset(asset);
+            dpia = dpiaService.createExternal(asset,createExternalDPIADTO.link, null);
             dpiaService.save(dpia);
         }
 

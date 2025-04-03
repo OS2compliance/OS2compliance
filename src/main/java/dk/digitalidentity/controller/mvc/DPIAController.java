@@ -17,7 +17,6 @@ import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
@@ -82,7 +81,7 @@ public class DPIAController {
 
     public record DPIADetailDTO (long id, long assetId, String assetName, String comment) {}
     @GetMapping("{id}")
-    public String dpiaList(final Model model, @PathVariable Long id) {
+    public String dpiaDetails(final Model model, @PathVariable Long id) {
 
         DPIA dpia = dpiaService.find(id);
         Asset asset = dpia.getAsset();
@@ -192,14 +191,6 @@ public class DPIAController {
                 DPIAResponseSectionAnswer matchAnswer = matchSection == null ? null : matchSection.getDpiaResponseSectionAnswers().stream().filter(s -> s.getDpiaTemplateQuestion().getId() == templateQuestion.getId()).findAny().orElse(null);
 
                 String templateAnswer = templateQuestion.getAnswerTemplate() == null ? "" : templateQuestion.getAnswerTemplate();
-                templateAnswer = templateAnswer
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_WHO.getPlaceholder(), placeholderInfo.getSelectedAccessWhoTitles())
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_HOW_MANY.getPlaceholder(), placeholderInfo.getSelectedAccessCountTitle())
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES.getPlaceholder(), String.join(", ", placeholderInfo.getPersonalDataTypesTitles()))
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), placeholderInfo.getTypesOfPersonalInformationFreetext())
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.getCategoriesOfRegisteredTitles()))
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), placeholderInfo.getHowLongTitle())
-                    .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), dpia.getAsset().getDataProcessing().getDeletionProcedureLink() == null ? "" : "<a href=\"" + dpia.getAsset().getDataProcessing().getDeletionProcedureLink() + "\">" + dpia.getAsset().getDataProcessing().getDeletionProcedureLink() + "</a>");
 
                 if (matchAnswer == null) {
                     questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getId(), 0, templateQuestion.getQuestion(), templateQuestion.getInstructions(), templateAnswer, ""));

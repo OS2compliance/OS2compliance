@@ -253,7 +253,6 @@ public class AssetsController {
 		model.addAttribute("dpiaForm", dpiaForm);
 		model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, true));
 		model.addAttribute("dpiaReports", buildDPIAReports(asset));
-//		model.addAttribute("conclusion", asset.getDpia().getConclusion());
 		model.addAttribute("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
 		model.addAttribute("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
 		model.addAttribute("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
