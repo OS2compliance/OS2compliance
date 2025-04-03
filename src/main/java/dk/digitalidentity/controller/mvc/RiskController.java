@@ -455,15 +455,22 @@ public class RiskController {
         return null;
     }
 
-    public record ExternalRiskassessmentDTO (Long riskId, String externalLink, Long assetId) {}
-    @GetMapping("external/{dpiaId}/edit")
+    @GetMapping("external/{riskId}/edit")
     public String riskId(final Model model, @PathVariable Long riskId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
 
         ThreatAssessment riskassessment = threatAssessmentService.findById(riskId).orElseThrow();
 
-//        model.addAttribute("external", new DPIAController.ExternalDPIADTO(riskassessment.getId(), riskassessment.getExternalLink(), riskassessment.get riskassessment.getAsset().getId()));
-        return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
+        model.addAttribute("risk", riskassessment);
+        return "risks/fragments/edit_external_riskassessment_modal :: create_external_riskassessment_modal";
+    }
+
+    @GetMapping("external/create")
+    public String createExternalDPIA(final Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+        model.addAttribute("risk", new ThreatAssessment());
+        return "risks/fragments/create_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 }

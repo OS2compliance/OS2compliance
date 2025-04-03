@@ -41,8 +41,8 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-3">
                                     <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                            class="btn btn-info hstack gap-2" data-bs-toggle="modal"
-                                            data-bs-target="#createExternalRiskassessmentModal" onclick="createExternalRiskassessmentService.formReset()">
+                                            class="btn btn-info hstack gap-2"
+                                            onclick="createExternalRiskassessmentService.createExternalClicked()">
                                         <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern Risikovurdering
                                     </button>
                                 </div>

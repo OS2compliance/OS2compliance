@@ -434,15 +434,16 @@ public class RiskRestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
+        ThreatAssessment threatAssessment = null;
         if (createExternalDTO.riskId != null) {
             //editing existing
-            ThreatAssessment threatAssessment = threatAssessmentService.findById(createExternalDTO.riskId)
+            threatAssessment = threatAssessmentService.findById(createExternalDTO.riskId)
                 .orElseThrow();
             threatAssessment.setName(createExternalDTO.name);
             threatAssessment.setExternalLink(createExternalDTO.link);
         } else {
             //creating new
-            ThreatAssessment threatAssessment = new ThreatAssessment();
+            threatAssessment = new ThreatAssessment();
             threatAssessment.setExternalLink(createExternalDTO.link);
             threatAssessment.setFromExternalSource(true);
             threatAssessment.setName(createExternalDTO.name);
@@ -455,6 +456,7 @@ public class RiskRestController {
             }
 
         }
+        threatAssessmentService.save(threatAssessment);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }

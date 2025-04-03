@@ -158,6 +158,14 @@ public class DPIAController {
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
 
+    @GetMapping("external/create")
+    public String createExternalDPIA(final Model model) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
+    }
+
 
     record DPIAQuestionDTO(long id, long questionResponseId, String question, String instructions, String templateAnswer, String response) {}
     record DPIASectionDTO(long id, String sectionIdentifier, long sectionResponseId, String heading, String explainer, boolean canOptOut, boolean hasOptedOutResponse, List<DPIAQuestionDTO> questions) {}

@@ -45,8 +45,8 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-3">
                                     <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                            class="btn btn-info hstack gap-2" data-bs-toggle="modal"
-                                            data-bs-target="#createExternalDPIAModal" onclick="createExternalDPIAService.formReset()">
+                                            class="btn btn-info hstack gap-2"
+                                            onclick="createExternalDPIAService.createExternalClicked()">
                                         <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern DPIA
                                     </button>
                                 </div>
@@ -93,7 +93,6 @@
         createDPIAService.init()
 
         createExternalDPIAService = new CreateExternalDPIAService()
-        createExternalDPIAService.init()
     })
     /*]]>*/
 </script>
