@@ -196,9 +196,9 @@ function AssetDpiaService() {
     this.initDpia = ()=> {
         let editors = document.querySelectorAll('.responses');
         for (let i = 0; i < editors.length; ++i) {
-            window.CreateCkEditor(editors[i], editor => {
+            const textarea = editors[i];
+            window.CreateImageCkEditor(`/rest/file/img/upload`,editors[i], editor => {
                 editor.editing.view.document.on('blur', () => {
-                    var textarea = editors[i];
                     setFieldDpiaResponse(textarea.dataset.questionid, "response", editor.getData());
                 });
             });

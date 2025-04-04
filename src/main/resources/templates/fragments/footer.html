@@ -43,5 +43,6 @@
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.worker.js}" defer></script>
 
     <script type="module" th:if="${textEditor == true}" th:src="@{/js/create-ckeditor.js}" defer></script>
+    <script type="module" th:if="${imageTextEditor == true}" th:src="@{/js/create-image-ckeditor.js}" defer></script>
 </div>
 </body>
