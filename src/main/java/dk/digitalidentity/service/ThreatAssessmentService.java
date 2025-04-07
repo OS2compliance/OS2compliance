@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Property;
@@ -65,6 +66,7 @@ public class ThreatAssessmentService {
     private final TaskService taskService;
     private final UserService userService;
     private final TemplateEngine templateEngine;
+    private final ChoiceService choiceService;
 
     public ThreatAssessment findByS3Document(S3Document s3Document) {
         return threatAssessmentDao.findByThreatAssessmentReportS3DocumentId(s3Document.getId());
@@ -476,6 +478,7 @@ public class ThreatAssessmentService {
         return convertHtmlToPdf(html);
     }
 
+    public record registeredDataCategory (String title, List<String> types) {}
     private String getThreatAssessmentHtml(ThreatAssessment threatAssessment) {
         final List<Relatable> relations = relationService.findAllRelatedTo(threatAssessment);
         List<Task> riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
@@ -519,6 +522,73 @@ public class ThreatAssessmentService {
         context.setVariable("present", getPresent(threatAssessment));
         context.setVariable("criticality", getCriticality(riskAsset, riskRegister));
 
+        // asset / register info
+        if (riskAsset != null) {
+            String systemOwners = riskAsset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+            context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
+            context.setVariable("systemType", riskAsset.getAssetType().getMessage());
+            context.setVariable("supplier",  riskAsset.getSupplier().getName());
+            context.setVariable("systemResponsible", riskAsset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")));
+            context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
+            context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
+            String dataAccessPersons = riskAsset.getDataProcessing().getAccessWhoIdentifiers().stream()
+                .map(identifier ->
+                {
+                    Optional<ChoiceValue> value = choiceService.getValue(identifier);
+                    if (value.isPresent()) {
+                        return value.get().getCaption();
+                    }
+                    return "Ikke udfyldt";
+                }).collect(Collectors.joining(", "));
+            context.setVariable("dataAccessPersons", dataAccessPersons.isBlank() ? "Ikke udfyldt" : dataAccessPersons );
+            context.setVariable("systemType", "Fortegnelse");
+            var accessCount = choiceService.getValue(riskAsset.getDataProcessing().getAccessCountIdentifier());
+            context.setVariable("dataAccessCount",  accessCount.isPresent() ? accessCount.get().getCaption() : "0");
+            var registeredCategories = riskAsset .getDataProcessing().getRegisteredCategories();
+            context.setVariable("dataCategories", registeredCategories.stream().map(cat ->
+                {
+                    Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
+                    List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+                        .filter(Objects::nonNull)
+                        .toList();
+                    if (title.isEmpty()) {return null;}
+                    return new registeredDataCategory(title.get().getCaption(), types);
+                })
+                .filter(Objects::nonNull)
+                .toList());
+            System.out.println("registeredCategories = " + registeredCategories);
+        }
+
+        if (riskRegister != null) {
+            String systemOwners = riskRegister.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+            context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
+            context.setVariable("deletionProcedureCreated", riskRegister.getDataProcessing().getDeletionProcedure() != null ? riskRegister.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
+            context.setVariable("deletionProcedureLink", riskRegister.getDataProcessing().getDeletionProcedureLink());
+            String dataAccessPersons = riskRegister.getDataProcessing().getAccessWhoIdentifiers().stream()
+                .map(identifier ->
+                {
+                    Optional<ChoiceValue> value = choiceService.getValue(identifier);
+                    if (value.isPresent()) {
+                        return value.get().getCaption();
+                    }
+                    return "Ikke udfyldt";
+                }).collect(Collectors.joining(", "));
+            context.setVariable("dataAccessPersons", dataAccessPersons.isBlank() ? "Ikke udfyldt" : dataAccessPersons );
+            var accessCount = choiceService.getValue(riskRegister.getDataProcessing().getAccessCountIdentifier());
+            context.setVariable("dataAccessCount",  accessCount.isPresent() ? accessCount.get().getCaption() : "");
+            var registeredCategories = riskRegister.getDataProcessing().getRegisteredCategories();
+            context.setVariable("dataCategories", registeredCategories.stream().map(cat ->
+                {
+                    Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
+                    List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+                        .filter(Objects::nonNull)
+                        .toList();
+                    return title.map(choiceValue -> new registeredDataCategory(choiceValue.getCaption(), types)).orElse(null);
+                })
+                .filter(Objects::isNull)
+                .toList());
+        }
+
         // risk profile
         context.setVariable("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
         List<RiskProfileDTO> riskProfiles = buildRiskProfileDTOs(threatAssessment);
@@ -545,6 +615,7 @@ public class ThreatAssessmentService {
 
         return templateEngine.process("reports/risk_view_pdf", context);
     }
+
 
     private Map<String,String> buildRiskProfileValueMap(List<RiskProfileDTO> riskProfiles) {
         Map<String,String> result = new HashMap<>();

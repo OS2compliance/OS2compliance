@@ -439,11 +439,9 @@ function CreateRiskService() {
                     },
                     {
                         name: "Opgaver",
-                        width: '10%'
                     },
                     {
                         name: "Dato",
-                        width: '10%'
                     },
                     {
                         name: "Status",

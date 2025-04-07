@@ -89,6 +89,16 @@
             height: 65px !important;
         }
 
+        .generalInfoTable {
+            table-layout: auto;
+            border:none;
+        }
+
+        .generalInfoTable * {
+            border-style:none;
+            vertical-align; top;
+        }
+
     </style>
 </head>
 <body>
@@ -97,6 +107,37 @@
 
     <h3 th:if="${present != null}">Tilstede på mødet</h3>
     <p th:if="${present != null}" th:text="${present}"></p>
+    <br/>
+
+    <!--    system information    -->
+    <h3>Systeminformation</h3>
+
+    <table class="generalInfoTable">
+        <tbody>
+            <tr><td th:if="${systemType != null}">Systemtype:</td><td th:text="${systemType}"></td></tr>
+            <tr><td th:if="${systemOwners != null}">Systemejere:</td><td th:text="${systemOwners}"></td></tr>
+            <tr><td th:if="${systemResponsible != null}">Systemansvarlige: </td><td th:text="${systemResponsible}"></td></tr>
+            <tr><td th:if="${supplier != null}">Leverandør: </td><td th:text="${supplier}"></td></tr>
+            <tr><td style="padding-top:12px;" th:if="${dataAccessPersons != null}">Hvem har adgang til personoplysningerne?: </td><td style="padding-top:12px;" th:text="${dataAccessPersons}"></td></tr>
+            <tr><td th:if="${dataAccessCount != null}">Hvor mange har adgang til personoplysningerne?: </td><td th:text="${dataAccessCount}"></td></tr>
+            <tr><td th:if="${deletionProcedureCreated != null}">Sletteprocedure udarbejdet: </td><td th:text="${deletionProcedureCreated}"></td></tr>
+            <tr><td th:if="${deletionProcedureLink != null}">Link til Sletteprocedure: </td><td th:text="${deletionProcedureLink}"></td></tr>
+            <tr><td th:if="${dataCategories != null}" style="vertical-align:top; padding-top:12px;">Registrerede persondatakategorier: </td><td style="padding-top:12px;">
+                <table>
+                    <tbody>
+                    <tr th:each="category : ${dataCategories}" >
+                        <td  th:text="${category.title}" style="vertical-align:top; border-bottom: 1px solid gray;"></td>
+                        <td style="border-bottom: 1px solid gray;">
+                            <div th:each="type : ${category.types}" th:text="${type}"></div>
+                        </td>
+                    </tr>
+                    </tbody>
+                </table>
+            </td></tr>
+        </tbody>
+    </table>
+
+
     <br/>
     <h3>Kritikalitet</h3>
     <p th:utext="${criticality}"></p>
