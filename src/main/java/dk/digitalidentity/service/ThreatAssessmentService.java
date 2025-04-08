@@ -68,7 +68,6 @@ public class ThreatAssessmentService {
     private final UserService userService;
     private final TemplateEngine templateEngine;
     private final ChoiceService choiceService;
-    private final PrecautionService precautionService;
 
     public ThreatAssessment findByS3Document(S3Document s3Document) {
         return threatAssessmentDao.findByThreatAssessmentReportS3DocumentId(s3Document.getId());
@@ -489,8 +488,6 @@ public class ThreatAssessmentService {
         List<Task> otherTasks = new ArrayList<>();
         Asset riskAsset = null;
         Register riskRegister = null;
-        List<Precaution> relatedPrecautions = new ArrayList<>();
-        List<Precaution> otherPrecautions = new ArrayList<>();
         final List<Long> riskAssessmentTasksIds = riskAssessmentTasks.stream().map(Relatable::getId).toList();
         if (ThreatAssessmentType.ASSET == threatAssessment.getThreatAssessmentType()) {
             final Optional<Asset> asset = relations.stream().filter(r -> r.getRelationType() == RelationType.ASSET)
@@ -504,10 +501,6 @@ public class ThreatAssessmentService {
                     .map(Task.class::cast)
                     .filter(t -> !taskService.isTaskDone(t))
                     .collect(Collectors.toList());
-                relatedPrecautions = relationService.findAllRelatedTo(riskAsset).stream()
-                    .filter(related -> related.getRelationType() == RelationType.PRECAUTION)
-                    .map(Precaution.class::cast)
-                    .toList();
             }
         } else if (ThreatAssessmentType.REGISTER == threatAssessment.getThreatAssessmentType()) {
             final Optional<Register> register = relations.stream().filter(r -> r.getRelationType() == RelationType.REGISTER)
@@ -569,10 +562,10 @@ public class ThreatAssessmentService {
 
     private Context addGeneralInfoToContext (Context context, Asset riskAsset, Register riskRegister) {
         if (riskAsset != null) {
+            context.setVariable("systemType", riskAsset.getAssetType().getMessage());
             String systemOwners = riskAsset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
-            context.setVariable("systemType", riskAsset.getAssetType().getMessage());
-            context.setVariable("supplier",  riskAsset.getSupplier().getName());
+            context.setVariable("supplier", riskAsset.getSupplier() != null ?  riskAsset.getSupplier().getName() : "Ukendt");
             context.setVariable("systemResponsible", riskAsset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")));
             context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
@@ -586,7 +579,7 @@ public class ThreatAssessmentService {
                     return "Ikke udfyldt";
                 }).collect(Collectors.joining(", "));
             context.setVariable("dataAccessPersons", dataAccessPersons.isBlank() ? "Ikke udfyldt" : dataAccessPersons );
-            context.setVariable("systemType", "Fortegnelse");
+
             var accessCount = choiceService.getValue(riskAsset.getDataProcessing().getAccessCountIdentifier());
             context.setVariable("dataAccessCount",  accessCount.isPresent() ? accessCount.get().getCaption() : "0");
             var registeredCategories = riskAsset .getDataProcessing().getRegisteredCategories();
@@ -601,10 +594,10 @@ public class ThreatAssessmentService {
                 })
                 .filter(Objects::nonNull)
                 .toList());
-            System.out.println("registeredCategories = " + registeredCategories);
         }
 
         if (riskRegister != null) {
+			context.setVariable("systemType", "Fortegnelse");
             String systemOwners = riskRegister.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
             context.setVariable("deletionProcedureCreated", riskRegister.getDataProcessing().getDeletionProcedure() != null ? riskRegister.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");

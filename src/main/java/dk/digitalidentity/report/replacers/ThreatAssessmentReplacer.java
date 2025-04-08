@@ -2,6 +2,8 @@ package dk.digitalidentity.report.replacers;
 
 import dk.digitalidentity.model.PlaceHolder;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
@@ -9,6 +11,7 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
@@ -31,8 +34,10 @@ import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTextDirection;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -63,6 +68,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private final ScaleService scaleService;
     private final RelationService relationService;
     private final TaskService taskService;
+	private final ChoiceService choiceService;
 
     private static class ThreatContext {
         Asset asset;
@@ -71,6 +77,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         List<RiskProfileDTO> riskProfileDTOList;
         List<Task> riskAssessmentTasks;
         List<Task> otherTasks;
+		List<String> personsWithDataAccessList = new ArrayList<>();
     }
 
     @Override
@@ -101,7 +108,9 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
             .map(Task.class::cast)
             .collect(Collectors.toList());
         final List<Long> riskAssessmentTasksIds = context.riskAssessmentTasks.stream().map(Relatable::getId).toList();
+
         if (ThreatAssessmentType.ASSET == context.threatAssessment.getThreatAssessmentType()) {
+			//Asset specific
             final Optional<Asset> asset = relations.stream().filter(r -> r.getRelationType() == RelationType.ASSET)
                 .map(Asset.class::cast)
                 .findFirst();
@@ -110,9 +119,24 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 .filter(related -> !riskAssessmentTasksIds.contains(related.getId()))
                 .map(Task.class::cast)
                 .filter(t -> !taskService.isTaskDone(t))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList())
+			);
             context.asset = asset.orElse(null);
+
+			if (context.asset != null) {
+				context.personsWithDataAccessList = context.asset.getDataProcessing().getAccessWhoIdentifiers().stream()
+						.map(identifier ->
+						{
+							Optional<ChoiceValue> value = choiceService.getValue(identifier);
+							if (value.isPresent()) {
+								return value.get().getCaption();
+							}
+							return "Ikke udfyldt";
+						}).toList();
+			}
+
         } else if (ThreatAssessmentType.REGISTER == context.threatAssessment.getThreatAssessmentType()) {
+			//Register specific
             final Optional<Register> register = relations.stream().filter(r -> r.getRelationType() == RelationType.REGISTER)
                 .map(Register.class::cast)
                 .findFirst();
@@ -123,8 +147,22 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 .filter(t -> !taskService.isTaskDone(t))
                 .collect(Collectors.toList()));
             context.register = register.orElse(null);
+
+			if (context.register != null) {
+				context.personsWithDataAccessList = context.register.getDataProcessing().getAccessWhoIdentifiers().stream()
+						.map(identifier ->
+						{
+							Optional<ChoiceValue> value = choiceService.getValue(identifier);
+							if (value.isPresent()) {
+								return value.get().getCaption();
+							}
+							return "Ikke udfyldt";
+						}).toList();
+			}
+
         }
         context.riskProfileDTOList = threatAssessmentService.buildRiskProfileDTOs(context.threatAssessment);
+
 
         return context;
     }
@@ -148,6 +186,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
             subTitle.setAlignment(ParagraphAlignment.CENTER);
             addTextRun(subHeading(context), subTitle);
             advanceCursor(cursor);
+
+			addGeneralInfoSection(document, cursor, context);
 
             addPresentAddMeeting(document, cursor, context);
             addCriticality(document, cursor, context);
@@ -522,6 +562,114 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
             }
         }
     }
+
+	public record registeredDataCategory(String title, List<String> types) {
+	}
+
+	private void addGeneralInfoSection(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+		if (context.asset != null || context.register != null) {
+			boolean isAsset = context.asset != null;
+			DataProcessing dataProcessing = isAsset ? context.asset.getDataProcessing() : context.register.getDataProcessing();
+			List<registeredDataCategory> categories = dataProcessing.getRegisteredCategories().stream().map(cat ->
+					{
+						Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
+						List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+								.filter(Objects::nonNull)
+								.toList();
+						if (title.isEmpty()) {
+							return null;
+						}
+						return new registeredDataCategory(title.get().getCaption(), types);
+					})
+					.filter(Objects::nonNull)
+					.toList();
+
+			final XWPFParagraph heading = document.insertNewParagraph(cursor);
+			heading.setStyle(HEADING3);
+			addTextRun("Systeminformation", heading);
+			advanceCursor(cursor);
+
+			final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
+			tableParagraph.setStyle(SMALL_TEXT);
+			tableParagraph.setAlignment(ParagraphAlignment.CENTER);
+
+			advanceCursor(cursor);
+			final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
+			table.setTableAlignment(TableRowAlign.LEFT);
+
+			createTableCells(table, 8 + categories.size(), 2);
+			final XWPFTableRow row = table.getRow(0);
+
+			//System type
+			setCellTextSmall(row, 0, "Systemtype:");
+			setCellTextSmall(row, 1, isAsset ? context.asset.getAssetType().getMessage() : "Fortegnelse");
+
+			//System owners
+			final XWPFTableRow row1 = table.getRow(1);
+			String systemOwners = isAsset ?
+					context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))
+					: context.register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+			;
+			setCellTextSmall(row1, 0, "Systemejere:");
+			setCellTextSmall(row1, 1, systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
+
+			//System responsible
+			final XWPFTableRow row2 = table.getRow(2);
+			setCellTextSmall(row2, 0, "Systemansvarlige:");
+			setCellTextSmall(row2, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
+
+			//Suppliers
+			final XWPFTableRow row3 = table.getRow(3);
+			setCellTextSmall(row3, 0, "Leverandør:");
+			setCellTextSmall(row3, 1, isAsset && context.asset.getSupplier() != null ? context.asset.getSupplier().getName() : "");
+
+			//Who has access?
+			final XWPFTableRow row4 = table.getRow(4);
+			setCellTextSmall(row4, 0, "Hvem har adgang til personoplysningerne?:");
+			setCellTextSmall(row4, 1, String.join(", ", context.personsWithDataAccessList));
+
+			//Access count
+			final XWPFTableRow row5 = table.getRow(5);
+			setCellTextSmall(row5, 0, "Hvor mange har adgang til personoplysningerne?:");
+			var accessCount = choiceService.getValue(dataProcessing.getAccessCountIdentifier());
+			setCellTextSmall(row5, 1, accessCount.isPresent() ? accessCount.get().getCaption() : "");
+
+			//Deletion procedure?
+			final XWPFTableRow row6 = table.getRow(6);
+			setCellTextSmall(row6, 0, "Sletteprocedure udarbejdet?:");
+			setCellTextSmall(row6, 1, dataProcessing.getDeletionProcedure() != null ? dataProcessing.getDeletionProcedure().getMessage() : "Ikke udfyldt");
+
+			//Deletion procedure link
+			final XWPFTableRow row7 = table.getRow(7);
+			setCellTextSmall(row7, 0, "Link til sletteprocedure");
+			setCellTextSmall(row7, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
+
+			// Registered data categories
+			for (int i = 0; i < categories.size(); i++) {
+				final XWPFTableRow catRow = table.getRow(i + 8); // Add magic number of previous rows to start at the current row
+				if (i == 0) {
+					setCellTextSmall(catRow, 0, "Registrerede persondatakategorier:");
+				}
+				setCellTextSmall(catRow, 1, categories.get(i).title);
+				final XWPFTableCell cell2 = getCell(catRow, 2);
+				final XWPFParagraph paragraph = cell2.getParagraphs().getFirst();
+				paragraph.setStyle(SMALL_TEXT);
+				for(var type : categories.get(i).types){
+					XWPFRun run = paragraph.createRun();
+					run.setText(type.trim());
+					run.addBreak();
+				}
+			}
+			if (categories.isEmpty()) {
+				final XWPFTableRow row8 = table.createRow();
+				setCellTextSmall(row8, 0, "Registrerede persondatakategorier:");
+			}
+
+			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);
+			advanceCursor(cursor);
+			advanceCursor(cursor);
+		}
+	}
 
     private String riskProfileHeading(final ThreatContext context) {
         return "Risikoprofil for "  + context.threatAssessment.getName();
