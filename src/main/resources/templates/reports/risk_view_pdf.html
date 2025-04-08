@@ -6,14 +6,15 @@
             font-family: Arial, Helvetica, sans-serif;
             font-size: 11px;
             color: #000000 !important;
+            writing-mode: tb-rl;
         }
 
         @page {
-            size: A4;
-            margin-top: 10%;
-            margin-bottom: 10%;
-            margin-left: 11%;
-            margin-right: 5%;
+            size: A4 landscape;
+            margin-top: 9%;
+            margin-bottom: 9%;
+            margin-left: 7%;
+            margin-right: 7%;
             @top-center { content: element(header); }
         }
 
@@ -28,6 +29,11 @@
 
         tr, th, td {
             border: 1px solid black;
+        }
+
+        th, td {
+            padding:5px;
+            min-width: 25px;
         }
 
         .col-12 {
@@ -69,13 +75,13 @@
         .threatAndTasksTables {
             font-size: 9px;
             word-wrap: break-word;
-            table-layout: fixed;
             width: 100%;
         }
 
         .threatAndTasksTables td, .threatAndTasksTables th {
             overflow-wrap: break-word;
             max-width: 100px;
+            width:auto;
             white-space: normal;
         }
 
@@ -248,24 +254,38 @@
                     <th>Højeste konsekvens</th>
                     <th>Risiko score</th>
                     <th>Problemstilling</th>
-                    <th>Eksisterende foranstaltninger</th>
                     <th>Risikohåndtering</th>
                     <th>Uddybning af risikohåndtering</th>
+                    <th colspan="2">Foranstaltninger</th>
+                    <th>Residual Sandsynlighed</th>
+                    <th>Højeste Residual konsekvens</th>
+                    <th>Residual Risiko score</th>
                 </tr>
             </thead>
             <tbody>
-                <tr th:each="threat : ${threatsForPDF}">
-                    <td th:text="${threat.index}"></td>
-                    <td th:text="${threat.threatType}"></td>
-                    <td th:text="${threat.threat}"></td>
-                    <td th:text="${threat.probability}"></td>
-                    <td th:text="${threat.consequence}"></td>
-                    <td th:text="${threat.score}" th:style="'background-color:' + ${threat.color}"></td>
-                    <td th:text="${threat.problem}"></td>
-                    <td th:text="${threat.existingMeasures}"></td>
-                    <td th:text="${threat.method}"></td>
-                    <td th:text="${threat.elaboration}"></td>
-                </tr>
+                <th:block th:each="threat : ${threatsForPDF}">
+                    <tr>
+                        <td th:text="${threat.index}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.threatType}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.threat}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.initialRisk.probability > 0 ? threat.initialRisk.probability : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.initialRisk.consequence > 0 ? threat.initialRisk.consequence : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.initialRisk.score > 0  && threat.initialRisk.color != null? threat.initialRisk.score : ''}" th:style="'background-color:' + ${threat.initialRisk.color}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.problem}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.method}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.elaboration}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td><b>Eksisterende:</b></td>
+                        <td th:text="${threat.existingMeasures}"></td>
+                        <td th:text="${threat.residualRisk.probability > 0 ? threat.residualRisk.probability : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.residualRisk.consequence > 0 ? threat.residualRisk.consequence : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                        <td th:text="${threat.residualRisk.score > 0 && threat.residualRisk.color != null ? threat.residualRisk.score : ''}" th:style="'background-color:' + ${threat.residualRisk.color}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                    </tr>
+                    <tr th:each="precaution, iterationStatus : ${threat.linkedPrecautions}">
+                        <td rowspan="1" style="border-top: 1px dashed gray;"><b th:text="${precaution.name}" ></b></td>
+                        <td rowspan="1" style="border-top: 1px dashed gray;" th:text="${precaution.description}"></td>
+                    </tr>
+
+                </th:block>
             </tbody>
         </table>
     </div>

@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -67,6 +68,7 @@ public class ThreatAssessmentService {
     private final UserService userService;
     private final TemplateEngine templateEngine;
     private final ChoiceService choiceService;
+    private final PrecautionService precautionService;
 
     public ThreatAssessment findByS3Document(S3Document s3Document) {
         return threatAssessmentDao.findByThreatAssessmentReportS3DocumentId(s3Document.getId());
@@ -487,6 +489,8 @@ public class ThreatAssessmentService {
         List<Task> otherTasks = new ArrayList<>();
         Asset riskAsset = null;
         Register riskRegister = null;
+        List<Precaution> relatedPrecautions = new ArrayList<>();
+        List<Precaution> otherPrecautions = new ArrayList<>();
         final List<Long> riskAssessmentTasksIds = riskAssessmentTasks.stream().map(Relatable::getId).toList();
         if (ThreatAssessmentType.ASSET == threatAssessment.getThreatAssessmentType()) {
             final Optional<Asset> asset = relations.stream().filter(r -> r.getRelationType() == RelationType.ASSET)
@@ -500,6 +504,10 @@ public class ThreatAssessmentService {
                     .map(Task.class::cast)
                     .filter(t -> !taskService.isTaskDone(t))
                     .collect(Collectors.toList());
+                relatedPrecautions = relationService.findAllRelatedTo(riskAsset).stream()
+                    .filter(related -> related.getRelationType() == RelationType.PRECAUTION)
+                    .map(Precaution.class::cast)
+                    .toList();
             }
         } else if (ThreatAssessmentType.REGISTER == threatAssessment.getThreatAssessmentType()) {
             final Optional<Register> register = relations.stream().filter(r -> r.getRelationType() == RelationType.REGISTER)
@@ -523,6 +531,43 @@ public class ThreatAssessmentService {
         context.setVariable("criticality", getCriticality(riskAsset, riskRegister));
 
         // asset / register info
+        context = addGeneralInfoToContext(context, riskAsset, riskRegister);
+
+        // risk profile
+        context.setVariable("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
+        List<RiskProfileDTO> riskProfiles = buildRiskProfileDTOs(threatAssessment);
+        context.setVariable("riskProfiles", riskProfiles);
+        final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
+        context.setVariable("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
+        context.setVariable("riskProfilesValueMap", buildRiskProfileValueMap(riskProfiles));
+        context.setVariable("riskProfilesValueMapAfter", buildRiskProfileValueMapAfter(riskProfiles));
+
+        // scale explainers
+        final ScaleService.ScaleSetting scaleExplainers = ScaleService.scaleSettingsForType(scaleService.getScaleType());
+        context.setVariable("probabilityScore", scaleExplainers.getProbabilityScore());
+        context.setVariable("consequenceNumber", scaleExplainers.getConsequenceNumber());
+        context.setVariable("riskScore", scaleExplainers.getRiskScore());
+
+        // threat list
+        Map<String, List<ThreatDTO>> threatList = buildThreatList(threatAssessment);
+        context.setVariable("threatsForPDF", buildThreatsForPDF(threatList, riskProfiles, colorMap));
+
+        // taskLists
+        context.setVariable("tasksForPDF", buildTasks(riskAssessmentTasks));
+        context.setVariable("otherTasksForPDF", buildTasks(otherTasks));
+
+
+        return templateEngine.process("reports/risk_view_pdf", context);
+    }
+
+    public record PrecautionDTO (String name, String description) {}
+    private List<PrecautionDTO> buildPrecautions (List<Precaution> precautions) {
+        return precautions.stream().map(precaution ->
+                new PrecautionDTO(precaution.getName(), precaution  .getDescription()))
+            .toList();
+    }
+
+    private Context addGeneralInfoToContext (Context context, Asset riskAsset, Register riskRegister) {
         if (riskAsset != null) {
             String systemOwners = riskAsset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
@@ -588,32 +633,7 @@ public class ThreatAssessmentService {
                 .filter(Objects::isNull)
                 .toList());
         }
-
-        // risk profile
-        context.setVariable("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
-        List<RiskProfileDTO> riskProfiles = buildRiskProfileDTOs(threatAssessment);
-        context.setVariable("riskProfiles", riskProfiles);
-        final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
-        context.setVariable("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
-        context.setVariable("riskProfilesValueMap", buildRiskProfileValueMap(riskProfiles));
-        context.setVariable("riskProfilesValueMapAfter", buildRiskProfileValueMapAfter(riskProfiles));
-
-        // scale explainers
-        final ScaleService.ScaleSetting scaleExplainers = ScaleService.scaleSettingsForType(scaleService.getScaleType());
-        context.setVariable("probabilityScore", scaleExplainers.getProbabilityScore());
-        context.setVariable("consequenceNumber", scaleExplainers.getConsequenceNumber());
-        context.setVariable("riskScore", scaleExplainers.getRiskScore());
-
-        // threat list
-        Map<String, List<ThreatDTO>> threatList = buildThreatList(threatAssessment);
-        context.setVariable("threatsForPDF", buildThreatsForPDF(threatList, riskProfiles, colorMap));
-
-        // taskLists
-        context.setVariable("tasksForPDF", buildTasks(riskAssessmentTasks));
-        context.setVariable("otherTasksForPDF", buildTasks(otherTasks));
-
-
-        return templateEngine.process("reports/risk_view_pdf", context);
+        return context;
     }
 
 
@@ -670,7 +690,18 @@ public class ThreatAssessmentService {
         return result;
     }
 
-    record ThreatPDFDTO(int index, String threatType, String threat, int probability, int consequence, int score, String color, String problem, String existingMeasures, String method, String elaboration) {}
+    record RiskCalculationDTO(int probability, int consequence, int score, String color) {}
+    record ThreatPDFDTO(int index,
+                        String threatType,
+                        String threat,
+                        RiskCalculationDTO initialRisk,
+                        String problem,
+                        String existingMeasures,
+                        String method,
+                        String elaboration,
+                        List<PrecautionDTO> linkedPrecautions,
+                        RiskCalculationDTO residualRisk
+    ) {}
     private List<ThreatPDFDTO> buildThreatsForPDF(Map<String, List<ThreatDTO>> threatList, List<RiskProfileDTO> riskProfiles, Map<String, String> colorMap) {
         List<ThreatPDFDTO> result = new ArrayList<>();
         threatList.forEach((threatType, threats) -> {
@@ -681,18 +712,30 @@ public class ThreatAssessmentService {
                 if (profile != null) {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
+                    final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
+                    final int residualScore = profile.getResidualProbability() * profile.getResidualConsequence();
                     result.add(new ThreatPDFDTO(
                     t.getIndex() + 1,
                         threatType,
                         t.getThreat(),
-                        profile.getProbability(),
-                        profile.getConsequence(),
-                        score,
-                        color,
+                        new RiskCalculationDTO(
+                            profile.getProbability(),
+                            profile.getConsequence(),
+                            score,
+                            color),
                         t.getProblem(),
                         t.getExistingMeasures(),
                         t.getMethod() != null ? t.getMethod().getMessage() : "",
-                        t.getElaboration()
+                        t.getElaboration(),
+                        buildPrecautions(t.getRelatedPrecautions()
+                            .stream()
+                            .map(Precaution.class::cast)
+                            .toList() ),
+                        new RiskCalculationDTO(
+                            profile.getResidualProbability(),
+                            profile.getResidualConsequence(),
+                            residualScore,
+                            residualColor)
                     ));
                 }
             });
