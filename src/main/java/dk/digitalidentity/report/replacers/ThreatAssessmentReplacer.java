@@ -4,6 +4,7 @@ import dk.digitalidentity.model.PlaceHolder;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DataProcessing;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
@@ -31,9 +32,19 @@ import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDocument1;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHMerge;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblGrid;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTVMerge;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STMerge;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STPageOrientation;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTextDirection;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -174,6 +185,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private void insertRiskAssessment(final XWPFParagraph p, final ThreatContext context) {
         final XWPFDocument document = p.getDocument();
 
+		//set landscape orientation
+		CTDocument1 doc = document.getDocument();
+		doc.getBody().getSectPr().getPgSz().setOrient(STPageOrientation.LANDSCAPE);
+
         try (final XmlCursor cursor = p.getCTP().newCursor()) {
             final XWPFParagraph title = document.insertNewParagraph(cursor);
             title.setStyle(HEADING1);
@@ -241,19 +256,30 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         final Map<String, List<ThreatDTO>> threatList = threatAssessmentService.buildThreatList(context.threatAssessment);
-        createTableCells(table, context.riskProfileDTOList.size() + 1, 10);
+        createTableCells(table, context.riskProfileDTOList.size() + 1, 14);
 
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Nr.");
-        setCellHeaderTextSmall(headerRow, 1, "Type af trussel");
+        setCellHeaderTextSmall(headerRow, 1, "Type af\ntrussel");
         setCellHeaderTextSmall(headerRow, 2, "Trussel");
-        setCellHeaderTextSmall(headerRow, 3, "Sandsyn\nlighed");
-        setCellHeaderTextSmall(headerRow, 4, "Højeste\nkonsekv\nens");
-        setCellHeaderTextSmall(headerRow, 5, "Risiko\nscore");
+        setCellHeaderTextSmall(headerRow, 3, "Sandsynlighed");
+        setCellHeaderTextSmall(headerRow, 4, "Højest\nkonsekvens");
+        setCellHeaderTextSmall(headerRow, 5, "Risikoscore");
         setCellHeaderTextSmall(headerRow, 6, "Problemstilling");
-        setCellHeaderTextSmall(headerRow, 7, "Eksisterende foranstaltninger");
-        setCellHeaderTextSmall(headerRow, 8, "Risikohåndtering");
-        setCellHeaderTextSmall(headerRow, 9, "Uddybning af risikohåndtering");
+        setCellHeaderTextSmall(headerRow, 7, "Risikohåndtering");
+        setCellHeaderTextSmall(headerRow, 8, "Uddybning af\nrisikohåndtering");
+        setCellHeaderTextSmall(headerRow, 9, "Foranstaltninger");
+		//empty column 10 for merging
+        setCellHeaderTextSmall(headerRow, 11, "Residual\nsandsynlighed");
+        setCellHeaderTextSmall(headerRow, 12, "Residual\nHøjeste Konsekvens");
+        setCellHeaderTextSmall(headerRow, 13, "Residual\nrisikoscore");
+
+		// set table grid, or merging wont work in libreoffice. Contains "magic numbers" for a4 width and margins
+		setTableColumnsWidth(table,14 );
+
+		mergeCellHorizontally(table,0, 9, 10 );
+
+
 
         final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
 
@@ -276,9 +302,45 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                     setCellTextSmallCentered(row, 5, "" + score);
                     setCellBackgroundColor(row.getCell(5), color);
                     setCellTextSmall(row, 6, t.getProblem());
-                    setCellTextSmall(row, 7, t.getExistingMeasures());
-                    setCellTextSmall(row, 8, t.getMethod() != null ? t.getMethod().getMessage() : "");
-                    setCellTextSmall(row, 9, t.getElaboration());
+                    setCellTextSmall(row, 7, t.getMethod() != null ? t.getMethod().getMessage() : "");
+                    setCellTextSmall(row, 8, t.getElaboration());
+
+					final int residualScore = t.getResidualRiskProbability() * t.getResidualRiskConsequence();
+					setCellTextSmall(row, 11, t.getResidualRiskProbability() > 0 ? ""+t.getResidualRiskProbability() : "");
+					setCellTextSmall(row, 12, t.getResidualRiskConsequence() > 0 ? ""+t.getResidualRiskConsequence() : "");
+					final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
+					if (t.getResidualRiskConsequence() > 0 && t.getResidualRiskProbability() > 0) {
+						setCellBackgroundColor(row.getCell(13), residualColor);
+						setCellTextSmall(row, 13, ""+residualScore);
+					}
+
+					//set first precaution row to Existing
+                    setCellTextSmall(row, 9, "Eksisterende");
+                    setCellTextSmall(row, 10, t.getExistingMeasures());
+
+					//Save index of first row, for future merging
+					int mergeStartIndex = idx[0];
+					for (var relatable : t.getRelatedPrecautions()) {
+						idx[0]++;
+						//Create a row for each related precaution
+						Precaution precaution = (Precaution)relatable;
+						table.createRow();
+						XWPFTableRow precautionRow =  table.getRow(idx[0]);
+						setCellTextSmall(precautionRow, 9, precaution.getName());
+						setCellTextSmall(precautionRow, 10, precaution.getDescription());
+					}
+					//Merge all other columns than precautions
+					for(int i =0; i < 14; i++) {
+						if (i==9 || i ==10) {
+							continue;
+						}
+						System.out.println("merging column: "+i+" from row: "+mergeStartIndex+" to row: "+mergeStartIndex+t.getRelatedPrecautions().size());
+						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
+					}
+
+
+
+
                     idx[0]++;
                 }
             });
@@ -690,4 +752,83 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         }
         return "Risikoejer ikke udfyldt";
     }
+
+	/**
+	 * Shamelessly stolen from the internet: https://verytools.net/xtools-guide/en/posts/poi-tutorial-table
+	 * @param table
+	 * @param col
+	 * @param fromRow
+	 * @param toRow
+	 */
+	private void mergeCellVertically(XWPFTable table, int col, int fromRow, int toRow) {
+		for (int rowIndex = fromRow; rowIndex <= toRow; rowIndex++) {
+			XWPFTableCell cell = table.getRow(rowIndex).getCell(col);
+			CTVMerge vmerge = CTVMerge.Factory.newInstance();
+			if (rowIndex == fromRow) {
+				// The first merged cell is set with RESTART merge value
+				vmerge.setVal(STMerge.RESTART);
+			} else {
+				// Cells which join (merge) the first one, are set with CONTINUE
+				vmerge.setVal(STMerge.CONTINUE);
+				// and the content should be removed
+				clearCell(cell);
+			}
+			// Try getting the TcPr. Not simply setting an new one every time.
+			CTTcPr tcPr = cell.getCTTc().getTcPr();
+			if (tcPr == null) tcPr = cell.getCTTc().addNewTcPr();
+			tcPr.setVMerge(vmerge);
+		}
+	}
+
+	/**
+	 * Shamelessly stolen from the internet: https://verytools.net/xtools-guide/en/posts/poi-tutorial-table
+	 * @param cell
+	 */
+	private void clearCell(XWPFTableCell cell) {
+		for (int i = cell.getParagraphs().size(); i > 0; i--) {
+			cell.removeParagraph(0);
+		}
+		cell.addParagraph();
+	}
+
+	/**
+	 * Shamelessly stolen from the internet: https://verytools.net/xtools-guide/en/posts/poi-tutorial-table
+	 * @param table
+	 * @param row
+	 * @param fromCol
+	 * @param toCol
+	 */
+	public void mergeCellHorizontally(XWPFTable table, int row, int fromCol, int toCol) {
+		for (int colIndex = fromCol; colIndex <= toCol; colIndex++) {
+			XWPFTableCell cell = table.getRow(row).getCell(colIndex);
+			CTHMerge hmerge = CTHMerge.Factory.newInstance();
+			if (colIndex == fromCol) {
+				// The first merged cell is set with RESTART merge value
+				hmerge.setVal(STMerge.RESTART);
+			} else {
+				// Cells which join (merge) the first one, are set with CONTINUE
+				hmerge.setVal(STMerge.CONTINUE);
+				// and the content should be removed
+				clearCell(cell);
+			}
+			// Try getting the TcPr. Not simply setting an new one every time.
+			CTTcPr tcPr = cell.getCTTc().getTcPr();
+			if (tcPr == null) tcPr = cell.getCTTc().addNewTcPr();
+			tcPr.setHMerge(hmerge);
+		}
+	}
+
+	public static void setTableColumnsWidth(XWPFTable table, int columncount) {
+		int pageWidth = 595; // A4 width in points
+		int leftMargin = 72; // Left margin in points (1 inch)
+		int rightMargin = 72; // Right margin in points (1 inch)
+
+		int availableWidth = pageWidth - leftMargin - rightMargin;
+
+		CTTblGrid grid = table.getCTTbl().addNewTblGrid();
+		for (int i =0; i< columncount; i++) {
+			grid.addNewGridCol().setW(BigInteger.valueOf(availableWidth*20));
+		}
+	}
+
 }
