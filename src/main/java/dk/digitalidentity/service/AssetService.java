@@ -30,6 +30,7 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.TransferImpactAssessment;
 import dk.digitalidentity.model.entity.enums.EstimationDTO;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
@@ -311,7 +312,7 @@ public class AssetService {
 
     record DPIAQuestionDTO(String question, String templateAnswer, String response) {}
     record DPIASectionDTO(String sectionIdentifier, String heading, String explainer, List<DPIAQuestionDTO> questions) {}
-    record DPIAThreatAssessmentDTO(long threatAssessmentId, String threatAssessmentName, String date, boolean signed) {}
+    record DPIAThreatAssessmentDTO(long threatAssessmentId, String threatAssessmentName, String date, boolean signed, RiskAssessment status) {}
     public byte[] getDPIAPdf(DPIA dpia) throws IOException {
         String html = getDPIAHTML(dpia);
         return convertHtmlToPdf(html);
@@ -478,7 +479,7 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
             boolean selected = selectedThreatAssessments.contains(threatAssessment.getId().toString());
             if (selected) {
                 String date = threatAssessment.getCreatedAt().format(Constants.DK_DATE_FORMATTER);
-                DPIAThreatAssessmentDTO dto = new DPIAThreatAssessmentDTO(threatAssessment.getId(), threatAssessment.getName(), date, threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED));
+                DPIAThreatAssessmentDTO dto = new DPIAThreatAssessmentDTO(threatAssessment.getId(), threatAssessment.getName(), date, threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED), threatAssessment.getAssessment());
                 result.add(dto);
             }
         }
