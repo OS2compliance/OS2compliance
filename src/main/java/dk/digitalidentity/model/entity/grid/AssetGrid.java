@@ -1,6 +1,5 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
@@ -10,9 +9,6 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.Getter;
 import lombok.Setter;
@@ -35,8 +31,6 @@ public class AssetGrid {
     @Column
     private String supplier;
 
-//    @OneToOne
-//    @JoinColumn(name="id")
     @Column
     private String assetType;
 

@@ -1,4 +1,4 @@
-package dk.digitalidentity.controller.rest.Assets;
+package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.event.EmailEvent;
@@ -113,7 +113,8 @@ public class AssetsRestController {
         );
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(),
+            authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
 
     @PostMapping("list/{id}")

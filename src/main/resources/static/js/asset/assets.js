@@ -54,6 +54,7 @@
                      searchable: {
                          searchKey: 'hasThirdCountryTransfer'
                      },
+                    width: '150px',
                     formatter: (cell, row) => {
                         if (cell) {
                             return 'Ja';
@@ -64,6 +65,7 @@
                 },
                 {
                     name: "Type",
+                    width: '100px',
                     searchable: {
                         searchKey: 'assetType'
                     },
@@ -91,7 +93,7 @@
                         searchKey: 'assessment',
                         fieldId:'assetRiskSearchSelector'
                     },
-                    width: '100px',
+                    width: '130px',
                     formatter: (cell, row) => {
                         var assessment = [];
                         if (cell === "Grøn") {
@@ -124,7 +126,7 @@
                         searchKey: 'assetStatus',
                         fieldId : 'assetStatusSearchSelector'
                     },
-                    width: '100px',
+                    width: '120px',
                     formatter: (cell, row) => {
                         var status = cell;
                         if (cell === "Ikke startet") {
