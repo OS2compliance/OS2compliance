@@ -220,7 +220,7 @@ public class DBSService {
             for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
 
                 //Only update/create related task if itsystem status changes to published
-                if (dbsAsset.getStatus().equals("published")) {
+                if (dbsAsset.getStatus() != null && dbsAsset.getStatus().equals("published")) {
 
                     List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
                     log.debug("Found {} related assets.", assetRelations.size());
