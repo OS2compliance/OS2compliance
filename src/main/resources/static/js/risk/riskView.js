@@ -411,9 +411,15 @@ function updateRelatedPrecautions(choices, search, threatType, threatId, threatI
                 choices.setChoices(data.content.map(reg => {
                     return {
                         id: reg.id,
-                        name: truncateString(reg.typeMessage + ": " + reg.name, 60)
+                        name: truncateString(reg.name + ": " + reg.description, 60),
+                        title: reg.description,
+                        customProperties : {
+
+                        }
                     }
                 }), 'id', 'name', true);
+
+
             }))
         .catch(error => toastService.error(error));
 }
@@ -509,7 +515,38 @@ function pageLoaded() {
         var id = relationsSelect.dataset.id;
         var identifier = relationsSelect.dataset.identifier;
 
-        let relationsChoice = initSelect(relationsSelect, "excel-textarea");
+        const initPrecautionSelect = (element, containerInner = 'form-control') => {
+            let choices = new Choices(element, {
+                searchChoices: false,
+                removeItemButton: true,
+                allowHTML: true,
+                searchFloor: 0,
+                searchPlaceholderValue: 'Søg...',
+                searchResultLimit: 50,
+                itemSelectText: 'Vælg',
+                noChoicesText: 'Søg...',
+                noResultsText: 'Ingen fundet',
+                classNames: {
+                    containerInner: containerInner
+                },
+                duplicateItemsAllowed: false,
+            });
+            element.addEventListener("change",
+                function(event) {
+                    choices.hideDropdown();
+                },
+                false,
+            );
+            element.addEventListener("showDropdown",
+                function(event) {
+                    updateRelatedPrecautions(relationsChoice, event.detail.value ? event.detail.value : "" , dbType, id, identifier);
+                },
+                false,
+            );
+            return choices;
+        }
+        let relationsChoice = initPrecautionSelect(relationsSelect, "excel-textarea");
+
         relationsSelect.addEventListener("search",
             function(event) {
                 updateRelatedPrecautions(relationsChoice, event.detail.value, dbType, id, identifier);
