@@ -1,6 +1,6 @@
 package dk.digitalidentity.bootstrap;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ApiClientDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.dao.DocumentDao;
@@ -56,7 +56,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.core.annotation.Order;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -75,7 +74,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
     @Autowired
     private SupplierDao supplierDao;
     @Autowired
-    private GRComplianceConfiguration config;
+    private OS2complianceConfiguration config;
     @Autowired
     private TaskDao taskDao;
     @Autowired
@@ -169,7 +168,6 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 user1.setUserId("user1");
                 user1.setName("Test User 1");
                 user1.setEmail("user1@digital-identity.dk");
-                user1.setPassword(new BCryptPasswordEncoder().encode("Test1234"));
                 user1.setRoles(Set.of(Roles.ADMINISTRATOR, Roles.SUPERUSER, Roles.USER));
                 user1.setPositions(Set.of(
                     Position.builder()

@@ -1,6 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
@@ -17,7 +17,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
 import java.util.Objects;
 
 
@@ -30,7 +29,7 @@ public class SettingsController {
     private final SettingsService settingsService;
     private final HttpServletRequest httpServletRequest;
     private final KitosService kitosService;
-    private final GRComplianceConfiguration configuration;
+    private final OS2complianceConfiguration configuration;
 
     @Transactional
     @GetMapping("form")

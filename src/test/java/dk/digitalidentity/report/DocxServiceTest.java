@@ -1,6 +1,6 @@
 package dk.digitalidentity.report;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
@@ -91,7 +91,7 @@ import static org.mockito.Mockito.doReturn;
 @ContextConfiguration(classes = {DocxService.class, DocsReportGeneratorComponent.class,
     CommonPropertiesReplacer.class, Article30Replacer.class, ISO27001Replacer.class, ISO27002Replacer.class, DocsReportGeneratorComponent.class,
     ThreatAssessmentReplacer.class, ScaleService.class, ThreatAssessmentService.class, TemplateEngine.class})
-@EnableConfigurationProperties(value = GRComplianceConfiguration.class)
+@EnableConfigurationProperties(value = OS2complianceConfiguration.class)
 @TestPropertySource("/application-test.properties")
 @ActiveProfiles("test")
 public class DocxServiceTest {

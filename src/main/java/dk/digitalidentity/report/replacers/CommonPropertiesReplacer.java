@@ -1,6 +1,6 @@
 package dk.digitalidentity.report.replacers;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.PlaceHolder;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -17,9 +17,9 @@ import static dk.digitalidentity.model.PlaceHolder.MUNICIPAL_NAME;
 
 @Component
 public class CommonPropertiesReplacer implements PlaceHolderReplacer {
-    private final GRComplianceConfiguration configuration;
+    private final OS2complianceConfiguration configuration;
 
-    public CommonPropertiesReplacer(final GRComplianceConfiguration configuration) {
+    public CommonPropertiesReplacer(final OS2complianceConfiguration configuration) {
         this.configuration = configuration;
     }
 

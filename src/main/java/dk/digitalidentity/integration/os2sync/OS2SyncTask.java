@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.os2sync;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.config.property.OS2Sync;
 import dk.digitalidentity.integration.os2sync.api.HierarchyResponse;
 import lombok.extern.slf4j.Slf4j;
@@ -15,7 +15,7 @@ import java.util.Optional;
 @Component
 public class OS2SyncTask {
     @Autowired
-    private GRComplianceConfiguration configuration;
+    private OS2complianceConfiguration configuration;
     @Autowired
     private OS2SyncClient syncClient;
     @Autowired

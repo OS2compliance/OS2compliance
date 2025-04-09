@@ -1,6 +1,6 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.EmailTemplateDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.EmailTemplate;
@@ -33,7 +33,7 @@ import static org.mockito.Mockito.doReturn;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {NotifyService.class, EmailTemplateService.class, GRComplianceConfiguration.class})
+@ContextConfiguration(classes = {NotifyService.class, EmailTemplateService.class, OS2complianceConfiguration.class})
 @EnableConfigurationProperties
 @RecordApplicationEvents
 public class NotifyServiceTest {

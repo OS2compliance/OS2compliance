@@ -3,7 +3,7 @@ services:
   db:
     image: mariadb:10.6.14
     environment:
-      MARIADB_DATABASE: 'grcompliance'
+      MARIADB_DATABASE: 'os2compliance'
       MARIADB_ROOT_PASSWORD: 'Test1234'
     ports:
       - "3306:3306"
@@ -12,6 +12,27 @@ services:
     volumes:
       - compliance-db:/var/lib/mysql
       - ./docker/mysql/init:/docker-entrypoint-initdb.d
+
+  os2compliance:
+    build: .
+    ports:
+      - "8343:8343"
+    expose:
+      - "8343"
+    env_file:
+      - .env
+    environment:
+      DB_URL: "jdbc:mysql://db/os2compliance?useSSL=false&serverTimezone=UTC"
+      DB_USERNAME: "root"
+      DB_PASSWORD: "Test1234"
+      SCHEDULING_ENABLED: "true"
+      SAML_ENTITY_ID: "https://os2compliance"
+      SAML_KEYSTORE_LOCATION: "security/saml-keystore-dev.pfx"
+      SAML_KEYSTORE_PASSWORD: "Password1234"
+      SSL_KEYSTORE_LOCATION: "security/ssl-dev.pfx"
+      SSL_KEYSTORE_PASSWORD: "Test1234"
+    volumes:
+      - ./security:/app/security
 
 volumes:
   compliance-db:

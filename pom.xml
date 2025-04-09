@@ -3,7 +3,7 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>dk.digitalidentity</groupId>
-	<artifactId>grcompliance</artifactId>
+	<artifactId>os2compliance</artifactId>
 	<version>1.0.0</version>
 	<name>GRCompliance</name>
 
@@ -149,6 +149,16 @@
 			<artifactId>junit-jupiter</artifactId>
 			<scope>test</scope>
 		</dependency>
+        <dependency>
+            <groupId>dk.digitalidentity</groupId>
+            <artifactId>saml-module</artifactId>
+            <version>4.1.0</version>
+        </dependency>
+        <dependency>
+            <groupId>dk.digitalidentity</groupId>
+            <artifactId>kitos-client</artifactId>
+            <version>release-1.0.6</version>
+        </dependency>
 		<dependency>
 			<groupId>dk.digitalidentity</groupId>
 			<artifactId>dbs-client</artifactId>
@@ -257,7 +267,7 @@
 					</image>
                     <profiles>
                         <profile>dev</profile>
-                        <profile>locallogin</profile>
+                        <profile>samllogin</profile>
                     </profiles>
 				</configuration>
 			</plugin>

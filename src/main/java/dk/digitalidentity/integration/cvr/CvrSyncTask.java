@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.cvr;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
@@ -10,11 +10,11 @@ import java.util.List;
 @Slf4j
 @Component
 public class CvrSyncTask {
-    private final GRComplianceConfiguration configuration;
+    private final OS2complianceConfiguration configuration;
     private final CvrSyncService cvrSyncService;
     private final CvrService cvrService;
 
-    public CvrSyncTask(final GRComplianceConfiguration configuration, final CvrSyncService cvrSyncService, final CvrService cvrService) {
+    public CvrSyncTask(final OS2complianceConfiguration configuration, final CvrSyncService cvrSyncService, final CvrService cvrService) {
         this.configuration = configuration;
         this.cvrSyncService = cvrSyncService;
         this.cvrService = cvrService;

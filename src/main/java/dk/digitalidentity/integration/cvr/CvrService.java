@@ -1,7 +1,7 @@
 package dk.digitalidentity.integration.cvr;
 
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.cvr.api.HentVirksomhedResultat;
 import dk.digitalidentity.integration.cvr.dto.CvrSearchResultDTO;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +30,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @SuppressWarnings("SpringJavaAutowiredFieldsWarningInspection")
 public class CvrService {
     @Autowired
-    private GRComplianceConfiguration configuration;
+    private OS2complianceConfiguration configuration;
 
 
     @CacheEvict(value = "getSearchResultByCvr", allEntries = true)

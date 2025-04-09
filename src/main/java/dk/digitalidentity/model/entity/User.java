@@ -2,7 +2,6 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -12,7 +11,6 @@ import lombok.Setter;
 import lombok.ToString;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
@@ -38,15 +36,6 @@ public class User implements Serializable {
     @Column
     private String name;
 
-    @EqualsAndHashCode.Exclude
-    @ToString.Exclude
-    @Column
-    private String note;
-
-    @Column
-    @Size(max = 255)
-    private String password;
-
     @Column
     private String email;
 
@@ -70,17 +59,6 @@ public class User implements Serializable {
         cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
         mappedBy = "user")
     private Set<UserProperty> properties = new HashSet<>();
-
-    @Column
-    private LocalDateTime passwordResetRequestDate;
-
-    @Column
-    private String passwordResetToken;
-
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @ManyToMany(mappedBy = "users")
-    private Set<Role> assetRoles = new HashSet<>();
 
     @PrePersist
     public void onCreate() {

@@ -1,6 +1,5 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Task;
@@ -8,6 +7,7 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
+import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,12 +24,12 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class NotifyService {
+    private final SamlModuleConfiguration diSamlConfiguration;
     private final TaskService taskService;
     private final ApplicationEventPublisher eventPublisher;
     private final ResponsibleUserViewService responsibleUserViewService;
     private final SettingsService settingsService;
     private final EmailTemplateService emailTemplateService;
-    private final GRComplianceConfiguration configuration;
 
     @Transactional
     public void notifyTask(final Long taskId) {
@@ -44,7 +44,7 @@ public class NotifyService {
         EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
         if (template.isEnabled()) {
             final LocalDate today = LocalDate.now();
-            final String baseUrl = configuration.getBaseUrl();
+            final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
             final String url = baseUrl + "/tasks/" +  task.getId();
             final String link = "<a href=\"" + url + "\">" + url + "</a>";
             final String recipient = task.getResponsibleUser().getName();
@@ -79,7 +79,7 @@ public class NotifyService {
                 if (!responsibleUsers.isEmpty()) {
                     EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
                     if (template.isEnabled()) {
-                        final String baseUrl = configuration.getBaseUrl();
+                        final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
                         final String url = baseUrl + "/admin/inactive";
                         final String link = "<a href=\"" + url + "\">" + url + "</a>";
                         String userList = "<ul>";

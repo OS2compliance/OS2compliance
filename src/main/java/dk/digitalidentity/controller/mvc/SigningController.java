@@ -15,7 +15,7 @@ import com.itextpdf.signatures.PdfSignatureAppearance;
 import com.itextpdf.signatures.PdfSigner;
 import com.itextpdf.signatures.PrivateKeySignature;
 import com.lowagie.text.DocumentException;
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.entity.DPIAReport;
 import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -65,7 +65,7 @@ public class SigningController {
     private final S3DocumentService s3DocumentService;
     private final S3Service s3Service;
     private final UserService userService;
-    private final GRComplianceConfiguration configuration;
+    private final OS2complianceConfiguration configuration;
     private final DPIAReportService dpiaReportService;
     private DPIAReport dpiaReport;
 

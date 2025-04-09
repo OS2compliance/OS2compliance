@@ -107,7 +107,7 @@ SELECT
     a.id,
     a.name,
     s.name as supplier,
-    cv.caption as asset_type,
+    a.asset_type,
     GROUP_CONCAT(u.name SEPARATOR ', ') as responsible_user_names,
     GROUP_CONCAT(u.uuid SEPARATOR ',') as responsible_user_uuids,
     a.updated_at,
@@ -149,7 +149,6 @@ FROM assets a
                          ORDER BY r.id DESC LIMIT 1)
     LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
     LEFT JOIN users u ON ru.user_uuid = u.uuid
-    LEFT JOIN choice_values cv ON a.asset_type = cv.id
 WHERE a.deleted = false
 GROUP BY a.id;
 

@@ -22,7 +22,6 @@ public interface RoleMapper {
                 .email(user.getEmail())
                 .name(user.getName())
                 .uuid(user.getUuid())
-                .note(user.getNote())
                 .active(user.getActive())
                 .build()).toList()
         )).toList();
@@ -38,7 +37,6 @@ public interface RoleMapper {
                 .email(user.getEmail())
                 .name(user.getName())
                 .uuid(user.getUuid())
-                .note(user.getNote())
                 .active(user.getActive())
                 .build()).toList()
         );

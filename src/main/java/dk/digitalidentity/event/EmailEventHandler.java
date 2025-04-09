@@ -1,6 +1,6 @@
 package dk.digitalidentity.event;
 
-import dk.digitalidentity.config.GRComplianceConfiguration;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.service.TransportErrorHandler;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -27,7 +27,7 @@ import java.util.Properties;
 @Component
 @RequiredArgsConstructor
 public class EmailEventHandler {
-    private final GRComplianceConfiguration configuration;
+    private final OS2complianceConfiguration configuration;
 
     @Async
     @EventListener
