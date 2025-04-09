@@ -1,0 +1,20 @@
+20cf6aad-ad74-4b79-8169-b9c401de9f66,860823ea-3275-40c9-a7ff-2737a35839b0,1) Systemdrift,Klienter/servere kører ikke seneste opdatering for antivirus-systemet.,false,3
+346c78e0-cb6e-47c8-8604-06e7aa0779ba,860823ea-3275-40c9-a7ff-2737a35839b0,1) Systemdrift,"Data genskabes på udstyr, der genbruges i anden sammenhæng (fx ved udfasning eller overdragelse af mobilt udstyr eller PC)",false,4
+4d74a74c-cbd4-47a8-8685-9b4265a19d6d,860823ea-3275-40c9-a7ff-2737a35839b0,1) Systemdrift,"Systemet fejler som følge af forældet udstyr (servere, diske, etc. er ude af support)",false,1
+f6e385ff-1eff-4476-a571-33744a487e2c,860823ea-3275-40c9-a7ff-2737a35839b0,1) Systemdrift,"Opdatering af systemet, eller opdatering af udstyr systemet er afhængig af, fejler eller mangler",false,2
+27ea23ab-a927-425e-a894-68a1d037b0b2,860823ea-3275-40c9-a7ff-2737a35839b0,2) Systemfejl og fejlkonfigurationer,"Fejl i hardware eller operativsystem der understøtter forretningssystemet, herunder indbyggede/ukendte fejl og konfigurationsfejl.",false,1
+055db9b9-5fb2-42a0-9d26-e76883668a71,860823ea-3275-40c9-a7ff-2737a35839b0,3) Cybertrusler,"Hackerangreb, hvor det bliver muligt at opsnappe eller ændre data mellem to parter (Man-in-the-middle angreb)",false,7
+07721d3b-5aac-435f-94b6-2bd733c119ef,860823ea-3275-40c9-a7ff-2737a35839b0,3) Cybertrusler,"Infektion af server, klienter eller mobile enheder med malware og vira",false,1
+13a5c7a5-3474-4034-9e44-b11384104902,860823ea-3275-40c9-a7ff-2737a35839b0,3) Cybertrusler,Identitetstyveri hvor hacker får adgang til brugernavn og password,false,2
+50f31806-d9c8-445c-b394-fdba24a1a939,860823ea-3275-40c9-a7ff-2737a35839b0,3) Cybertrusler,Hackerangreb med henblik på aflytning,false,6
+541d184a-0b10-48f4-917a-09cef3725022,860823ea-3275-40c9-a7ff-2737a35839b0,3) Cybertrusler,Hackerangreb af typen Ransomware - hvor systemet/data låses/krypteres og kun frigives mod løsepenge,false,5
+8eb7be13-c538-4860-851b-35e383ebdf07,860823ea-3275-40c9-a7ff-2737a35839b0,3) Cybertrusler,"Tilsendelse af e-mail (phishing) eller sms (smishing), hvor afsender forsøger at få udleveret personlige oplysninger, som fx betalingskortoplysninger, via e-mail, en falsk hjemmeside eller andet. E-mail-spoofing bruges til at narre brugere til at tro, at en meddelelse kommer fra en person eller enhed, de kan stole på.",false,3
+cd55f592-a4d9-4584-a6c2-949ef0798dd7,860823ea-3275-40c9-a7ff-2737a35839b0,3) Cybertrusler,"Hackerangreb, af typen brute-force hvor hackeren systematisk vha. software med stort antal logon-forsøg forsøger at gætte en brugers password",false,4
+3f1f39d1-4040-4078-b3e1-643630e444d3,860823ea-3275-40c9-a7ff-2737a35839b0,4) Fejlede sikkerhedsforanstaltninger,"Brugere får adgang til oplysninger de ikke har et arbejdsbetinget behov for, fx svigt af adgangs eller rettighedsstyring",false,3
+799d4754-f338-45b4-bb31-043ada5480b7,860823ea-3275-40c9-a7ff-2737a35839b0,4) Fejlede sikkerhedsforanstaltninger,Backup bliver ikke løbende kontrolleret,false,2
+9d06f75d-9090-4947-a2c7-44c5e8008618,860823ea-3275-40c9-a7ff-2737a35839b0,4) Fejlede sikkerhedsforanstaltninger,For mange medarbejdere har administratorrettigheder til klienter,false,4
+b1814926-b34e-4859-b2a6-e223b0042748,860823ea-3275-40c9-a7ff-2737a35839b0,4) Fejlede sikkerhedsforanstaltninger,Backup er fejlbehæftet og system eller data kan ikke genskabes,false,1
+08319e1e-3480-41b5-ab5c-28fc944deb96,860823ea-3275-40c9-a7ff-2737a35839b0,5) Fysiske trusler,"Fremmede tiltvinger sig fysisk adgang til aktivet/systemet/enheden med henblik på tyveri, fx indbrud",false,2
+4bda1b1d-3d36-4ed7-9ffe-b0f73591c960,860823ea-3275-40c9-a7ff-2737a35839b0,5) Fysiske trusler,Fremmede tiltvinger sig fysisk adgang til aktivet/systemet/enheden med henblik på hacking,false,3
+67f7964f-20fc-43f0-b6d1-dd7965900e79,860823ea-3275-40c9-a7ff-2737a35839b0,5) Fysiske trusler,"Fysisk skade på udstyr som følge af støv, korrosion (rust, ætsning) eller frost, køle eller skader som følge af overophedning",false,1
+eca414d4-40e3-4137-b41a-07571b3a7e7f,860823ea-3275-40c9-a7ff-2737a35839b0,5) Fysiske trusler,"Medarbejder mister enheden, f.eks. under transport.",false,4

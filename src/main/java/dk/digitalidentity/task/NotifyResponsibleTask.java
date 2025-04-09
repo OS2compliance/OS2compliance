@@ -1,6 +1,6 @@
 package dk.digitalidentity.task;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.service.NotifyService;
@@ -27,11 +27,11 @@ public class NotifyResponsibleTask {
     private final TaskService taskService;
     private final NotifyService notifyService;
     private final SettingsService settingsService;
-    private final OS2complianceConfiguration configuration;
+    private final GRComplianceConfiguration configuration;
 
     //04:05 hver dag
-    @Scheduled(cron = "${os2compliance.mail.cron}")
-    public void notifyResponsibleUsersAboutDeadline() {
+	@Scheduled(cron = "${grcompliance.mail.cron}")
+	public void notifyResponsibleUsersAboutDeadline() {
         if (!configuration.isSchedulingEnabled()) {
             return;
         }

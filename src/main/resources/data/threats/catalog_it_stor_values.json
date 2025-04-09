@@ -1,0 +1,506 @@
+[
+  {
+    "identifier": "it_stor01",
+    "sortKey": 10,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Uanonymiserede kopier af data anvendes i test eller uddannelsesmiljøer, hvorved fortrolige data utilsigtet bliver kompromitteret",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor02",
+    "sortKey": 7,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Der gennemføres ikke løbende kontrol med loghandlinger",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor03",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Backup er fejlbehæftet og system eller data kan ikke genskabes",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor04",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Fratrådte medarbejderes adgang fjernes ikke, og vil derved kunne bruges til at kompromittere aktivet/systemet",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor05",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Manglende løbende kontrol med administratorrettigheder",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor06",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Medarbejdere har for mange rettigheder til forretningssystemet, f.eks. fordi der er for få roller at vælge mellem, manglende kontrol med rettigheder eller udbredt brug af administratorrettigheder (Der må ikke være en praksis, hvor man på rettighedsskemaet skriver ”skal ligne”)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor07",
+    "sortKey": 9,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "For mange medarbejdere har superbruger- eller administratorrettigheder til systemet, f.eks. pga. utilstrækkelig rettighedsopsætning",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor08",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Backup bliver ikke løbende kontrolleret",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor09",
+    "sortKey": 8,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Uvedkommende får adgang til systemet som følge af utilstrækkelig logon-sikkerhed (er det fx nødvendigt med MFA - Multi Faktor Autentifikation)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor10",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Logning er ikke sat korrekt op, hvorfor brud på fortrolighed ikke opdages og ikke kan dokumenteres",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor11",
+    "sortKey": 11,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "1) Fejlede sikkerhedsforanstaltninger",
+    "description": "Data i systemet er ikke pålidelige grundet systemets manglende opdatering (patching)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor12",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "2) Systemfejl og fejlkonfigurationer",
+    "description": "Fejl i systemet medfører fejl eller forsømmelser i sagsbehandlingen",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor13",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "2) Systemfejl og fejlkonfigurationer",
+    "description": "Fejl ved brevfletning medfører forkert modtager af oplysninger",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor14",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "2) Systemfejl og fejlkonfigurationer",
+    "description": "Data i systemet er ikke pålidelige grundet systemets manglende kontrol af data under indtastning",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor15",
+    "sortKey": 7,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere misbruger systemet til andet end tiltænkt",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor16",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere glemmer at journalisere",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor17",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Menneskelige fejl ifm. anvendelsen af løsningen forekommer ofte (minimum en gang ugentligt)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor18",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere får adgang til informationer, som de ikke har et arbejdsbetinget behov for at få adgang til",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor19",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere tiltvinger sig uretmæssig adgang til systemer, f.eks. ved gæt af kodeord",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor20",
+    "sortKey": 9,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Systemadministrator kompromitterer sikkerheden uforsætligt, f.eks. ved forkert systembrug eller uopmærksomhed.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor21",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Brugere er ikke bekendte med reglerne om hvad de må med data og hvad de ikke må?",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor22",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Medarbejdere håndterer/klassificerer data forkert.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor23",
+    "sortKey": 8,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "3) Medarbejder-relaterede trusler",
+    "description": "Systemadministrator kompromitterer bevidst sikkerheden.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor24",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "4) Cybertrusler",
+    "description": "Hackerangreb af typen Ransomware - hvor systemet/data låses/krypteres og kun frigives mod løsepenge",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor25",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "4) Cybertrusler",
+    "description": "Overbelastningsangreb, der gør systemet utilgængeligt (DDoS-angreb)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor26",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "4) Cybertrusler",
+    "description": "Hackerangreb, af typen brute-force hvor hackeren systematisk vha. software med stort antal logon-forsøg forsøger at gætte en brugers password",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor27",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "5) Leverandørtrusler",
+    "description": "Leverandøren har uautoriseret adgang grundet manglende rettighedsstyring eller kontrol",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor28",
+    "sortKey": 7,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "5) Leverandørtrusler",
+    "description": "Leverandørens medarbejdere får adgang til data, som de ikke har et arbejdsbetinget behov for at have adgang til.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor29",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "5) Leverandørtrusler",
+    "description": "Manglende sikkerhedsmæssig stillingtagen i kontrakter, kompromitterer sikkerheden på systemet. F.eks. Manglende Service-Level-Agreement (SLA) eller manglende rapportering på performance.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor30",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "5) Leverandørtrusler",
+    "description": "Leverandørens medarbejdere bryder bevidst sikkerheden.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor31",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "5) Leverandørtrusler",
+    "description": "Leverandøren har utilstrækkelige nødplaner eller forsømmer test af nødplan",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor32",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "5) Leverandørtrusler",
+    "description": "Leverandøren evner ikke at opretholde aftalte serviceniveau (SLA)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor33",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "5) Leverandørtrusler",
+    "description": "Leverandøren har ikke tilstrækkelige sikkerhedsprocedurer, -foranstaltninger og –kontroller, hvilket kompromitterer sikkerheden på systemet",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor34",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Fysiske trusler",
+    "description": "Brand (kontorlokaler, naboejendom, serverrum)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor35",
+    "sortKey": 17,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Uanonymiserede kopier af data anvendes i testsystemer, hvorved fortrolige data utilsigtet bliver kompromitteret",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor36",
+    "sortKey": 13,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet er svært at drifte og udvikle pga. legacy-problemer",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor37",
+    "sortKey": 7,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Co-location leaks, dvs. systemet deler infrastruktur, servere eller cloud sammen med andre kunder og fejlkonfigurationer forekommer, der medfører læk.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor38",
+    "sortKey": 11,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet fejler som følge af mangelfuld udskiftning af udstyr (servere, diske, etc)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor39",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Længerevarende systemnedbrud (op til en halv arbejdsdag)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor40",
+    "sortKey": 8,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Opdatering af systemet ødelægger funktionalitet på server eller klient",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor41",
+    "sortKey": 9,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet er svært at drifte pga. utilstrækkeligt internt personnel eller manglende nøgleperson til at løse driftsopgaven",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor42",
+    "sortKey": 16,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet er svært at drifte og udvikle pga. mangelfulde driftsprocedurer",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor43",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet har mange kendte fejl og mangler",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor44",
+    "sortKey": 12,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet er svært at drifte og udvikle pga. umoden software (mange bugs i systemet, skaber fejlbehandlinger)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor45",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemanvendelse besværliggøres af manglende administratorer",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor46",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemanvendelse besværliggøres af manglende superbrugere.",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor47",
+    "sortKey": 10,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet er teknisk underdimensioneret, hvilket viser sig ved at systemet periodisk er langsomt eller utilgængeligt",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor48",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Opdatering af systemet, eller opdatering af udstyr systemet er afhængig af, fejler eller mangler",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor49",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemdrift er ustabil pga. manglende teknisk personale eller kompetence til at løse driftopgaven (ved leverandør eller internt)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor50",
+    "sortKey": 14,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet er svært at drifte og udvikle pga. mangelfuld ansvarsfordeling",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor51",
+    "sortKey": 15,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "6) Systemdrift",
+    "description": "Systemet er svært at drifte og udvikle pga. mangelfuld dokumentation",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor52",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "7) Fysiske trusler",
+    "description": "Forsyningssvigt (el, vand, strøm, internet, køl, telekommunikation, etc.)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor53",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "7) Fysiske trusler",
+    "description": "Miljøskader i kontorlokaler eller naboområde (fx giftudslip eller radioaktivt udslip, herunder elektromagnetisk udstråling, elektromagnetisk implus, termisk udstråling)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor54",
+    "sortKey": 6,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "7) Fysiske trusler",
+    "description": "Fremmede tiltvinger sig fysisk adgang til aktivet/systemet/enheden (indbrud - tyveri)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor55",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "7) Fysiske trusler",
+    "description": "Fysisk skade på udstyr som følge af støv, korrosion (rust, ætsning) eller frost, køle eller skader som følge af overophedning",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor56",
+    "sortKey": 7,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "7) Fysiske trusler",
+    "description": "Vandskader i kontorlokaler/serverrum/kælder/arkiver",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor57",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "7) Fysiske trusler",
+    "description": "Skader som følge af naturkatastrofer - oversvømmelse, storm, etc. herunder vandskader i kontorlokaler/serverrum/kælder/arkiver",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor58",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "7) Fysiske trusler",
+    "description": "Hærværk på udstyr eller medier (ødelæggelse)",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor59",
+    "sortKey": 3,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "8) RPA-trusler",
+    "description": "Data mistes eller behandles forkert ved fejlkonfiguration af robot",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor60",
+    "sortKey": 2,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "8) RPA-trusler",
+    "description": "Der opnås adgang til en robotbrugers login-information (brugernavn og password).",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor61",
+    "sortKey": 1,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "8) RPA-trusler",
+    "description": "Manglende nøglemedarbejdere resulterer i at robot ikke kan vedligeholdes eller opdateres",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor62",
+    "sortKey": 5,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "8) RPA-trusler",
+    "description": "Ved nedbrud af robot har det en konsekvens for sagsbehandling",
+    "rights": true
+  },
+  {
+    "identifier": "it_stor63",
+    "sortKey": 4,
+    "threatCatalogIdentifier": "it_stor",
+    "threatType": "8) RPA-trusler",
+    "description": "Data mistes eller behandles forkert efter opdatering af software.",
+    "rights": true
+  }
+]

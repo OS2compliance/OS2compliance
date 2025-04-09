@@ -13,4 +13,7 @@ public class UserDTO {
     private String uuid;
     private String userId;
     private String name;
+    private String email;
+    private Boolean active;
+    private String note;
 }

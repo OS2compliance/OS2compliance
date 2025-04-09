@@ -20,7 +20,7 @@ function EditTaskService() {
                     this.taskModalDialog.innerHTML = data;
                     this.onLoaded(taskId);
                 }))
-            .catch(error => { toastService.error(error); console.log(error)});
+            .catch(error => { toastService.error(error); console.error(error)});
     }
 
     this.onLoaded = function(taskId, copy = false) {
@@ -78,7 +78,7 @@ function CopyTaskService() {
                     this.onLoaded();
                 })
             )
-            .catch(error => { toastService.error(error); console.log(error)});
+            .catch(error => { toastService.error(error); console.error(error)});
     }
 
     this.onLoaded = function() {

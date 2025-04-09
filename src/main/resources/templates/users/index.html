@@ -3,6 +3,7 @@
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/users/userAdministration.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/users.css}"/>
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -21,7 +22,8 @@
                     </div>
                     <div class="align-self-center d-inline-flex">
                         <button type="button" class="btn btn-info btn-lg hstack gap-2"
-                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="users.openEditModal(null, 'create')">
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px"
+                                onclick="users.openEditModal(null, 'create')">
 
                             <i class="ti-plus"></i> <span class="vr"></span> Ny Bruger
                         </button>
@@ -38,9 +40,18 @@
             <div class="content__wrap">
                 <article class="d-md-flex gap-4">
                     <div class="flex-fill">
-                        <div class="card mb-3">
-                            <div class="card-body">
+                        <div class="card mb-3 flex-row">
+                            <div class="card-body col-7 pe-0">
                                 <div id="userDatatable"></div>
+
+                            </div>
+                            <div id="userDetailContainer" class="card-body col-5">
+                                <div class="card border">
+                                    <div class="card-header">
+                                        Vælg en bruger for at se detaljer
+                                    </div>
+
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -54,97 +65,27 @@
 </div>
 
 <div class="modal fade" id="addUserModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
-    <div th:replace="~{users/fragments/edit.html :: userEditModal (user=${user}, action=${action}, roleOptions=${roleOptions})}"></div>
+    <div
+        th:replace="~{users/fragments/edit.html :: userEditModal (user=${user}, action=${action}, roleOptions=${roleOptions})}"></div>
 </div>
 
+<div class="modal fade" id="addAssetRoleModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+</div>
+
+<div class="modal fade" id="formDialog" aria-labelledby="assetLabel" aria-hidden="true"></div>
+
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
+<div id="editRoleModalContainer"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
-        const data = [[${allUsers}]];
         const roleOptions = [[${roleOptions}]]
         const viewUrl = [[@{/admin/users}]];
         const restUrl = [[@{/rest/users}]];
     +]*/
 
-    document.addEventListener("DOMContentLoaded", function(event) {
-        const defaultClassName = {
-            table: 'table table-striped',
-            search: "form-control",
-            header: "d-flex justify-content-end"
-        };
 
-        new gridjs.Grid({
-            className: defaultClassName,
-            sort: {
-                enabled: true,
-                multiColumn: false
-            },
-            columns: [
-                {
-                    id: "uuid",
-                    name: "Id",
-                    hidden: true
-                },
-                {
-                    id: "userId",
-                    name: "Bruger"
-                },
-                {
-                    id: "name",
-                    name: "Navn"
-                },
-                {
-                    id: "email",
-                    name: "Email"
-                },
-                 {
-                    id: "accessRole",
-                    name: "Rolle",
-                    formatter: (cell, row) => {
-                        return roleOptions.find(roleOption => roleOption.value === cell).display;
-                    }
-                },
-                {
-                    id: "active",
-                    name: "Aktiv",
-                    formatter: (cell, row) => {
-                        return gridjs.html(cell === true ? '<div class="d-block badge bg-success">Ja</div>' : '<div class="d-block badge bg-danger">Nej</div>');
-                    }
-                },
-                {
-                    id: "actions",
-                    name: "Handlinger",
-                    sort: 0,
-                    width: '90px',
-                    formatter: (cell, row) => {
-                        const id = row.cells[0]['data'];
-                        const userId = row.cells[1]['data'];
-                        const editButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.openEditModal('${id}', 'edit')"><i class="pli-pencil fs-5"></i></button>`;
-                        const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="users.deleteUser('${id}', '${userId}')"><i class="pli-trash fs-5"></i></button>`;
-                        return gridjs.html(editButton + deleteButton);
-                    }
-                }
-            ],
-            data: data,
-            language: {
-                'search': {
-                    'placeholder': 'Søg'
-                },
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'results': 'Brugere',
-                    'of': 'af',
-                    'to': 'til',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'page': (page) => `Side ${page}`
-                }
-            }
-        }).render(document.getElementById("userDatatable"));
-    });
 
 /*]]>*/
 </script>

@@ -73,6 +73,10 @@ public interface DocumentMapper {
             @Mapping(target = "properties", ignore = true),
             @Mapping(target = "roles", ignore = true),
             @Mapping(target = "password", ignore = true),
+            @Mapping(target = "passwordResetRequestDate", ignore = true),
+            @Mapping(target = "passwordResetToken", ignore = true),
+            @Mapping(target = "assetRoles", ignore = true),
+            @Mapping(target = "note", ignore = true),
     })
     User fromEO(UserWriteEO userWriteEO);
 

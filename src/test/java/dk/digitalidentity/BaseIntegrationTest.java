@@ -8,7 +8,7 @@ import org.springframework.test.context.ActiveProfiles;
 @TestUser
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestContainersConfiguration.class)
-@ActiveProfiles({"test", "samllogin"})
+@ActiveProfiles("test")
 @EnableConfigurationProperties
 public class BaseIntegrationTest {
 }

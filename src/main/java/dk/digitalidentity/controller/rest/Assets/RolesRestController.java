@@ -1,0 +1,83 @@
+package dk.digitalidentity.controller.rest.Assets;
+
+
+import dk.digitalidentity.dao.RoleDao;
+import dk.digitalidentity.mapping.RoleMapper;
+import dk.digitalidentity.model.dto.RoleDTO;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Role;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.RoleService;
+import dk.digitalidentity.service.UserService;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.*;
+
+@Slf4j
+@RestController
+@RequestMapping("rest/asset/roles")
+@RequireUser
+@RequiredArgsConstructor
+public class RolesRestController {
+    private final RoleDao roleDao;
+    private final RoleMapper mapper;
+    private final RoleService roleService;
+    private final AssetService assetService;
+    private final UserService userService;
+
+    @PostMapping("{assetId}")
+    public List<RoleDTO> list(@PathVariable(name = "assetId") final Long assetId,
+                              @RequestParam(name = "order", required = false) final String order,
+                              @RequestParam(name = "dir", required = false) final String dir) {
+
+        Asset asset = assetService.findById(assetId)
+                .orElseThrow();
+
+        return asset.getRoles().stream().map(mapper::toDTO).sorted(Comparator.comparing(RoleDTO::name)).toList();
+    }
+
+    public record RoleWithUserSelection(RoleDTO roleDTO, Set<String> userIds) {
+    }
+
+    @RequireSuperuserOrAdministrator
+    @PostMapping("edit")
+    public ResponseEntity<?> createRole(@RequestBody final RoleWithUserSelection roleWithUserSelection) {
+        RoleDTO roleDTO = roleWithUserSelection.roleDTO;
+
+        Role role = new Role();
+        if (roleDTO.id() != null) {
+            role = roleService.getRole(roleDTO.id())
+                    .orElseThrow();
+        } else {
+            role.setAsset(assetService.findById(roleDTO.assetId())
+                    .orElseThrow());
+        }
+
+        role.setName(roleDTO.name());
+
+        List<User> updatedUsers = userService.findAllByUuids(roleWithUserSelection.userIds);
+        role.setUsers(new HashSet<>(updatedUsers));
+
+        roleService.save(role);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+
+    @RequireSuperuserOrAdministrator
+    @DeleteMapping("delete/{id}")
+    public ResponseEntity<?> deleteRole(@PathVariable Long id) {
+        if (id != null) {
+            roleService.delete(id);
+        }
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+}

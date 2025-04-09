@@ -1,6 +1,6 @@
 package dk.digitalidentity.integration.os2sync;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.integration.os2sync.api.HierarchyResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -27,11 +27,11 @@ import static org.mockito.Mockito.doThrow;
  * Unit tests for {@link OS2SyncClient}
  */
 @SpringBootTest
-@ContextConfiguration(classes = {OS2complianceConfiguration.class, OS2SyncClient.class})
+@ContextConfiguration(classes = {GRComplianceConfiguration.class, OS2SyncClient.class})
 @ActiveProfiles("test")
 public class OS2SyncClientTest {
     @Autowired
-    private OS2complianceConfiguration configuration;
+    private GRComplianceConfiguration configuration;
     @Autowired
     private OS2SyncClient os2SyncClient;
     @MockBean

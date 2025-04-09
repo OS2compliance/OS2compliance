@@ -4,8 +4,11 @@ import dk.digitalidentity.model.api.PageEO;
 import dk.digitalidentity.model.api.UserEO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.UserDTO;
+import dk.digitalidentity.model.dto.UserWithRoleDTO;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.Roles;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
@@ -15,11 +18,26 @@ import java.util.List;
 public interface UserMapper {
 
     UserDTO toDTO(final User user);
-
     List<UserDTO> toDTO(final List<User> users);
-
     default PageDTO<UserDTO> toDTO(final Page<User> users) {
         return new PageDTO<>(users.getTotalElements(), toDTO(users.getContent()));
+    }
+
+
+    default UserWithRoleDTO toDTOWithRole(final User user) {
+        return UserWithRoleDTO.builder()
+            .uuid(user.getUuid())
+            .userId(user.getUserId())
+            .name(user.getName())
+            .email(user.getEmail())
+            .active(user.getActive())
+            .accessRole(getAccessRole(user))
+            .note(user.getNote()).build();
+    };
+
+    List<UserWithRoleDTO> toDTOWithRole(final List<User> users);
+    default PageDTO<UserWithRoleDTO> toDTOWithRole(final Page<User> users) {
+        return new PageDTO<>(users.getTotalElements(), toDTOWithRole(users.getContent()));
     }
 
     UserEO toEO(final User user);
@@ -36,4 +54,15 @@ public interface UserMapper {
                 .build();
     }
 
+    private static String getAccessRole(User user) {
+        if (user.getRoles().contains(Roles.SUPERUSER)) {
+            return "superuser";
+        } else if (user.getRoles().contains(Roles.ADMINISTRATOR)) {
+            return "admin";
+        } else if (user.getRoles().contains(Roles.USER)) {
+            return "user";
+        } else {
+            return "noaccess";
+        }
+    }
 }

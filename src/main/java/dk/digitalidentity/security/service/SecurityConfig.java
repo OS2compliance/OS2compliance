@@ -21,6 +21,7 @@ public class SecurityConfig {
             .authorizeHttpRequests((requests) -> requests
                 .requestMatchers(
                     "/webjars/**",
+                    "/manage/**",
                     "/css/**",
                     "/manage/**",
                     "/js/**",
@@ -28,6 +29,9 @@ public class SecurityConfig {
                     "/vendor/**",
                     "/favicon.ico",
                     "/login",
+                    "/forgotten",
+                    "/forgotten_sent",
+                    "/reset/*",
                     "/error"
                 ).permitAll()
                 .anyRequest().authenticated()

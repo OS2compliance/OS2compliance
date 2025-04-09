@@ -13,7 +13,6 @@ public interface Examples {
 
     String ASSET_NAME_EXAMPLE = "OS2compliance";
     String ASSET_DESCRIPTION_EXAMPLE = "A long description of the asset";
-    String ASSET_TYPE_EXAMPLE = "IT_SYSTEM";
     String ASSET_DPA_EXAMPLE = "ON_GOING";
     String ASSET_DPA_DATE_EXAMPLE = "29/09-2023";
     String ASSET_CONTRACT_TERMINATION_NOTICE_EXAMPLE = "3 uger";
@@ -63,4 +62,7 @@ public interface Examples {
     String PAGE_CURRENT_ITEMS_EXAMPLE = "100";
     String PAGE_TOTAL_COUNT_EXAMPLE = "250";
     String PAGE_TOTAL_PAGE_NUMBER_EXAMPLE = "0";
+
+    String ASSET_TYPE_IDENTIFIER = "asset-type-it-system-83AF9E";
+    String ASSET_TYPE_NAME = "IT-system";
 }

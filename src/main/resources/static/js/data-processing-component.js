@@ -80,7 +80,6 @@ let DataProcessingComponent = function () {
         let tagsValues = [];
         let selectedTags = container.querySelectorAll('.tagin-tag');
         for (let i=0; i<selectedTags.length; ++i) {
-            console.log(selectedTags[i].textContent);
             tagsValues.push(selectedTags[i].textContent);
         }
         this.setPersonInformationCategories(container, tagsValues);

@@ -1,0 +1,31 @@
+2a393421-496e-4042-a980-779f0ba9c24c,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Utilstrækkelige sikkerhedsforanstaltninger til håndtering af brugerautentifikation (godkendelse),false,8
+53a22dd5-04d8-489a-8648-bbba979de7a8,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Uvedkommende får adgang til systemet som følge af at data transmitteres ubeskyttet,false,10
+5742f7b2-ca2d-4384-a9b8-f4bf318c7521,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Backup er fejlbehæftet og system eller data kan ikke genskabes,false,4
+7c85ad48-213d-4e91-8932-062e434fc4c4,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Medarbejdere uden et arbejdsbetinget behov har adgang til IoT-systemet.,false,1
+879eccef-8146-4c06-8a14-ae2f013172a4,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Manglende løbende kontrol med administratorrettigheder,false,2
+a3cc9324-1cbb-43cf-b031-11bae5d48688,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Uvedkommende får adgang til systemet som følge af utilstrækkelig logon-sikkerhed (fx ikke ændret standard password),false,9
+a9bc31e7-e3f3-44e3-ba84-06a0f2511f72,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Backup bliver ikke løbende kontrolleret,false,5
+b42956c0-19f3-4dbe-8010-9ec0dc38fdda,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,"Logning er ikke sat korrekt op, hvorfor sikkerhedsbrud ikke kan efterforskes og ikke kan dokumenteres",false,7
+bfd34f76-b9bb-421b-99fe-8be17dc84868,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,"Fratrådte medarbejderes adgang fjernes ikke, og vil derved kunne bruges til at kompromittere aktivet/systemet",false,3
+dd34ab44-afa8-4c30-9e44-fae2b83a6e22,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Uvedkommende får adgang til data som følge af mangelfuld sletning af data,false,11
+e342f6e0-1584-4384-82c3-417ea390d1fa,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,"Monitorering (automatisk overvågning) er ikke sat korrekt op, hvorfor sikkerhedsbrud ikke opdages",false,6
+fbac08b2-4f7e-487c-8fd9-78d101e4bd89,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,1) Fejlede sikkerhedsforanstaltninger,Uvedkommende får adgang til data som følge af usikre forhold i tredjelande,false,12
+bf9ce2c9-7bc5-4494-bc15-7dc656bd9b3f,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,2) Systemfejl og fejlkonfigurationer,"Data i systemet er ikke fuldstændigt pålidelige, fx grundet fejlopsætning",false,1
+0bac9262-23b3-4d55-9a6b-3ceb448551c7,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,3) Medarbejder-relaterede trusler,"Medarbejdere får adgang til informationer, som de ikke har et arbejdsbetinget behov for at få adgang til",false,3
+fde85829-505a-44b6-8e02-b37f894eedc4,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,3) Medarbejder-relaterede trusler,Menneskelige fejl ifm. anvendelsen af løsningen forekommer ofte,false,2
+fedd46bb-b76f-4456-ae75-7dac9f8d047f,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,3) Medarbejder-relaterede trusler,Brugere er ikke bekendte med reglerne om hvad de må med data og hvad de ikke må? Særligt hvis IoT-enheden behandler sensitive data,false,1
+775099bd-08a2-47e8-89b4-eb7a8b37419b,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,4) Cybertrusler,"Hackerangreb, eksempelvis hvor sårbarheder i IoT-enheden anvendes som bagdør til at give adgang til netværket",false,2
+a532fabd-ff26-4bc4-b00a-5b1cbd743dbf,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,4) Cybertrusler,"Overbelastningsangreb, der gør systemet utilgængeligt (DDoS-angreb)",false,3
+facf9045-cdb2-4482-899f-8f56e99d41a1,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,4) Cybertrusler,"Hackerangreb, af typen bruteforce som giver adgang til IoT-enheden, fx som følge af svage passwords eller utilstækkelig tidsbegrænsning efter fejlet logon, ex 5, 15 eller 30 minutter.",false,1
+26178c4f-c685-4c74-8665-9ba372444ccb,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,5) Leverandørtrusler,"Manglende sikkerhedsmæssig stillingtagen i kontrakter, kompromitterer sikkerheden på systemet. F.eks. Manglende Service-Level-Agreement (SLA) eller manglende rapportering på performance.",false,1
+53bf4347-271a-47f6-9839-213001532011,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,5) Leverandørtrusler,Leverandøren evner ikke at opretholde aftalte serviceniveau (SLA). Fx for lang reaktionstid fra sårbarhed opdages til sikkerhedsopdatering er til rådighed ,false,2
+705c4507-069a-4432-ad21-89bfc8fcafb6,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,5) Leverandørtrusler,Leverandøren har ubegrænset eller for omfattende adgang til data,false,6
+7b4767f3-9c4d-4174-9c5b-59fc805c871b,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,5) Leverandørtrusler,Leverandøren har utilstrækkelige nødplaner eller forsømmer test af nødplan,false,4
+a55e6d36-201d-45d6-8146-0591900a212a,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,5) Leverandørtrusler,Leverandøren har uautoriseret adgang grundet manglende rettighedsstyring eller kontrol,false,5
+b9a9b38a-c008-48aa-aa7c-c78d7623ee0b,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,5) Leverandørtrusler,"Leverandøren har ikke tilstrækkelige sikkerhedsprocedurer, -foranstaltninger og –kontroller, hvilket kompromitterer sikkerheden på systemet",false,3
+314a688d-f371-46e5-9d52-4363629398e1,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,6) Systemdrift,Systemdrift er ustabil pga. manglende teknisk personale eller kompetence til at løse driftopgaven (ved leverandør eller internt),false,5
+382bc76b-8302-42f4-89e2-f8f28c6a3c86,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,6) Systemdrift,Systemet har mange kendte fejl og mangler,false,4
+8834f477-5e71-4bd2-b74f-c9a47d41dffa,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,6) Systemdrift,Aktivering af automatisk opdatering medfører sårbarheder.,false,2
+b38b45c8-097b-4bf2-9f38-f97d38d142d0,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,6) Systemdrift,Længerevarende systemnedbrud,false,1
+e9a073af-d4b0-4c29-b26f-79462d2d741d,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,6) Systemdrift,Systemanvendelse besværliggøres af manglende administratorer eller superbrugere.,false,6
+f3a55d38-99eb-41bf-8b60-39c928b3000e,8f83c66b-5d37-4c4d-9b61-4a1eafcaccc8,6) Systemdrift,Opdatering af IoT-enheden fejler eller mangler,false,3

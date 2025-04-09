@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
@@ -13,7 +14,6 @@ import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -29,7 +29,7 @@ import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 @RequiredArgsConstructor
 @Transactional
 public class AssetOversightService {
-    private final SamlModuleConfiguration samlConfiguration;
+    private final GRComplianceConfiguration configuration;
     private final AssetOversightDao assetOversightDao;
     private final TaskService taskService;
     private final RelationService relationService;
@@ -75,7 +75,7 @@ public class AssetOversightService {
         taskLog.setName("Tilsyn udført");
         taskLog.setComment("Status: " + oversight.getStatus().getMessage());
         taskLog.setCompleted(LocalDate.now());
-        taskLog.setDocumentationLink(samlConfiguration.getSp().getBaseUrl() + "/assets/" + oversight.getAsset().getId());
+        taskLog.setDocumentationLink(configuration.getBaseUrl() + "/assets/" + oversight.getAsset().getId());
         User responsibleUser = oversight.getResponsibleUser();
         taskLog.setResponsibleUserName(responsibleUser.getName());
         taskLog.setResponsibleUserUserId(responsibleUser.getUserId());

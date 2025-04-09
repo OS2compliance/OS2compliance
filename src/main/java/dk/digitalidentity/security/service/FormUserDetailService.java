@@ -18,7 +18,7 @@ public class FormUserDetailService implements UserDetailsService {
 
     @Override
     public UserDetails loadUserByUsername(String userID) throws UsernameNotFoundException {
-        Optional<User> user = userService.findByUserId(userID);
+        Optional<User> user = userService.findByUserIdAndHasAccessRole(userID);
         if (user.isEmpty()) {
             throw new UsernameNotFoundException("Could not find user");
         }

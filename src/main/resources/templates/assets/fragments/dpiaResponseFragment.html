@@ -1,4 +1,4 @@
-<th:block th:fragment="dpiaResponseFragment">
+<th:block th:fragment="dpiaResponseFragment" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
     <table id="dpiaSchema" style="width: 100%">
         <tbody>
             <th:block th:each="section : ${dpiaSections}">
@@ -40,7 +40,7 @@
                                 <tr>
                                     <td>Systemtype</td>
                                     <td></td>
-                                    <td th:text="${asset.assetType.getMessage()}"></td>
+                                    <td th:text="${asset.assetType.caption}"></td>
                                 </tr>
                                 <tr>
                                     <td>Leverandør</td>

@@ -25,36 +25,36 @@ import java.time.LocalDateTime;
 @Setter
 @Immutable
 public class TaskGrid {
-	@Id
-	private Long id;
+    @Id
+    private Long id;
 
-	@Column
-	private String name;
+    @Column
+    private String name;
 
-	@Column
-	@Enumerated(EnumType.STRING)
-	private TaskType taskType;
+    @Column
+    @Enumerated(EnumType.STRING)
+    private TaskType taskType;
 
-	@ManyToOne
-	@JoinColumn(name = "responsible_uuid")
-	private User responsibleUser;
+    @ManyToOne
+    @JoinColumn(name = "responsible_uuid")
+    private User responsibleUser;
 
-	@ManyToOne
-	@JoinColumn(name = "responsible_ou_uuid")
-	private OrganisationUnit responsibleOU;
+    @ManyToOne
+    @JoinColumn(name = "responsible_ou_uuid")
+    private OrganisationUnit responsibleOU;
 
-	@Column
-	private LocalDateTime nextDeadline;
+    @Column
+    private LocalDateTime nextDeadline;
 
-	@Column(name = "repetition")
-	@Enumerated(EnumType.STRING)
-	private TaskRepetition taskRepetition;
+    @Column(name = "repetition")
+    @Enumerated(EnumType.STRING)
+    private TaskRepetition taskRepetition;
 
     @Column(name = "repetition_order")
     private Integer taskRepetitionOrder;
 
-	@Column
-	private boolean completed;
+    @Column
+    private boolean completed;
 
     @Column(name = "result")
     @Enumerated(EnumType.STRING)
@@ -63,9 +63,9 @@ public class TaskGrid {
     @Column
     private Integer taskResultOrder;
 
-	@Column
-	private String localizedEnums;
+    @Column
+    private String localizedEnums;
 
-	@Column
-	private String tags;
+    @Column
+    private String tags;
 }

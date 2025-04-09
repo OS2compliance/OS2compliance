@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.config.GRComplianceConfiguration;
 import dk.digitalidentity.dao.EmailTemplateDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.EmailTemplate;
@@ -7,14 +8,13 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
@@ -33,21 +33,21 @@ import static org.mockito.Mockito.doReturn;
  */
 @SpringBootTest
 @ActiveProfiles("test")
-@ContextConfiguration(classes = {NotifyService.class, EmailTemplateService.class})
-@EnableConfigurationProperties(value = SamlModuleConfiguration.class)
+@ContextConfiguration(classes = {NotifyService.class, EmailTemplateService.class, GRComplianceConfiguration.class})
+@EnableConfigurationProperties
 @RecordApplicationEvents
 public class NotifyServiceTest {
     @Autowired
     private NotifyService notifyService;
     @Autowired
     private ApplicationEvents events;
-    @MockBean
+    @MockitoBean
     private TaskService taskService;
-    @MockBean
+    @MockitoBean
     private ResponsibleUserViewService responsibleUserViewService;
-    @MockBean
+    @MockitoBean
     private SettingsService settingsService;
-    @MockBean
+    @MockitoBean
     private EmailTemplateDao emailTemplateDao;
 
     @Test
