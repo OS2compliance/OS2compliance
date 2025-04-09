@@ -20,7 +20,7 @@ public class CvrSyncTask {
         this.cvrService = cvrService;
     }
 
-    @Scheduled(cron = "${grcompliance.integrations.cvr.cron}")
+    @Scheduled(cron = "${os2compliance.integrations.cvr.cron}")
 //    @Scheduled(fixedDelay = 10000000, initialDelay = 1000)
     public void sync() {
         if (!configuration.isSchedulingEnabled()) {

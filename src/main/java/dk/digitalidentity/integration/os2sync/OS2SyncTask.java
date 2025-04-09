@@ -21,7 +21,7 @@ public class OS2SyncTask {
     @Autowired
     private OS2SyncService syncService;
 
-    @Scheduled(cron = "${grcompliance.integrations.os2Sync.cron}")
+    @Scheduled(cron = "${os2compliance.integrations.os2Sync.cron}")
     public void sync() {
         final OS2Sync syncConfig = configuration.getIntegrations().getOs2Sync();
         if (!configuration.isSchedulingEnabled()) {

@@ -30,7 +30,7 @@ public class NotifyResponsibleTask {
     private final OS2complianceConfiguration configuration;
 
     //04:05 hver dag
-	@Scheduled(cron = "${grcompliance.mail.cron}")
+	@Scheduled(cron = "${os2compliance.mail.cron}")
 	public void notifyResponsibleUsersAboutDeadline() {
         if (!configuration.isSchedulingEnabled()) {
             return;

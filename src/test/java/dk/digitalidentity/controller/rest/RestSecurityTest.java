@@ -45,6 +45,6 @@ public class RestSecurityTest {
     private void assertUrlProtected(final String url) throws Exception {
         mockMvc.perform(get(url))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("http://localhost/login"));
+            .andExpect(redirectedUrl("http://localhost/saml2/authenticate?registrationId=IdP"));
     }
 }
