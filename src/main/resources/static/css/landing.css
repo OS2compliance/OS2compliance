@@ -1,7 +1,6 @@
 
     body {
       font-family: 'Arial', sans-serif;
-      font-size: 15px;
       margin: 0;
       padding: 0;
       background: linear-gradient(to right, #015080, #0276aa, #03538f);
@@ -33,10 +32,14 @@
     }
 
     a {
+      background-color: #014c7a;
       color: white;
-      font-size: 13px;
-    }
-
-    a:hover {
-        color: white;
+      padding: 16px 32px;
+      font-size: 20px;
+      border: none;
+      cursor: pointer;
+      border-radius: 5px;
+      display: inline-block;
+      position: center;
+      width: 35%;
     }

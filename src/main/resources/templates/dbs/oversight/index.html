@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="da">
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
+<body class="jumping">
+<script th:src="@{/js/dbs/dbs-oversight-service.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/assets.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">DBS tilsyn</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">DBS tilsyn</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <article class="d-md-flex gap-4">
+                    <div class="flex-fill">
+                        <div class="card mb-3">
+                            <div class="card-body">
+                            	<div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                <div id="assetsDatatable"></div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='dbs_oversight')}"></nav>
+</div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+
+<style>
+    #assetsDatatable table {
+        overflow: visible;
+    }
+
+    .gridjs-container .gridjs-wrapper {
+        overflow: visible;
+    }
+
+</style>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    /*[+
+        var gridDBSOversightUrl = [[@{/rest/dbs/oversight/list}]];
+        var assetsUrl = [[@{/assets/}]]
+        var suppliersUrl = [[@{/suppliers/}]]
+        var tasksUrl = [[@{/tasks/}]]
+        const superUser = [[${T(dk.digitalidentity.security.SecurityUtil).isSuperUser()}]]
+    +]*/
+
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>
