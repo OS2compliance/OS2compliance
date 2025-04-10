@@ -98,6 +98,8 @@ public class DBSService {
                         dbsAsset.setName(itSystem.getName());
                         dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                             .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
+                        dbsAsset.setStatus(itSystem.getStatus().getValue());
+                        dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
                         dbsAsset.setLastSync(lastSync);
                     });
             })
