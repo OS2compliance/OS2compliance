@@ -79,10 +79,15 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     const isExternal = row.cells[4]['data'];
                     let buttonHTML = ""
                     if(superuser) {
-                        buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${dpiaId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
-                    }
-                    if (superuser && isExternal) {
-                        buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalDPIAService.editExternalClicked('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
+                        buttonHTML = buttonHTML
+                        + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${dpiaId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
+                        if(!isExternal) {
+                            buttonHTML = buttonHTML
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="editDPIAService.openModal('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
+                        } else {
+                            buttonHTML = buttonHTML
+                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalDPIAService.editExternalClicked('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
+                        }
                     }
                     return gridjs.html(buttonHTML);
                 }

@@ -1,0 +1,28 @@
+
+<div th:fragment="edit_dpia_modal" class="modal fade" id="editDPIAModal" tabindex="-1" aria-hidden="true" xmlns:th="http://www.thymeleaf.org">
+
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rediger Konsekvensvurdering</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mt-3" id="assetSelectRow">
+                    <label for="dpia_edit_asset_select" class="col-sm-4 col-form-label">For Aktiv</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" name="selectedAsset"
+                                data-trigger="" id="dpia_edit_asset_select" hidden="" tabindex="-1" required>
+                            <option th:if="${asset != null}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
+                        </select>
+                        <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="createDPIAService.formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="button" class="btn btn-primary" th:data-dpiaId="${dpiaId}" th:onclick="editDPIAService.onSubmit(this.getAttribute('data-dpiaId'))">Gem</button>
+            </div>
+        </div>
+    </div>
+</div>
