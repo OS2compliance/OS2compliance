@@ -84,7 +84,9 @@ public class DBSService {
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
                 asset.setStatus(itSystem.getStatus().getValue());
-                asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                if (itSystem.getNextRevision() != null) {
+                    asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                }
                 dbsAssetDao.save(asset);
             })
             .count();
@@ -99,7 +101,9 @@ public class DBSService {
                         dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                             .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                         dbsAsset.setStatus(itSystem.getStatus().getValue());
-                        dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                        if (itSystem.getNextRevision() != null) {
+                            dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                        }
                         dbsAsset.setLastSync(lastSync);
                     });
             })
