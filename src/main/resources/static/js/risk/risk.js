@@ -108,13 +108,21 @@ function EditRiskService() {
             self.userChanged(userUuid);
         });
 
+        const assetSelect = this.getScopedElementById('copyAssetSelect');
+        if (assetSelect !== null) {
+            this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        }
 
         this.editAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.editAssessmentModal.show();
     }
 
     this.validate = function() {
-        return validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
+        let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
+        if (this.assetChoicesSelect != null) {
+            result &= checkInputField(this.assetChoicesSelect, true);
+        }
+        return result;
     }
 }
 
