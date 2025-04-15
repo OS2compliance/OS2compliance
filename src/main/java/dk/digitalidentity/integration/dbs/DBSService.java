@@ -268,7 +268,7 @@ public class DBSService {
                                     task.setTaskType(TaskType.TASK);
                                     task.setRepetition(TaskRepetition.NONE);
                                     task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
-                                    log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
+                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUser().getName());
                                     taskService.saveTask(task);
                                     relationService.addRelation(task, dbsAsset);
                                     relationService.addRelation(task, asset);
