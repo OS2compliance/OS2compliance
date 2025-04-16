@@ -292,6 +292,10 @@ public class DBSService {
         if (revisionValue == null) {
             return null;
         }
+        if (!revisionValue.contains("Q")) {
+            // eg. "Efter behov"
+            return LocalDate.of(2099, 1, 1);
+        }
 
         DateTimeFormatter formatter = new DateTimeFormatterBuilder()
             .appendValue(ChronoField.YEAR, 4)
