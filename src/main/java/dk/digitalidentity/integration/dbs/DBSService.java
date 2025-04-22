@@ -83,7 +83,9 @@ public class DBSService {
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
                 asset.setStatus(itSystem.getStatus().getValue());
-                asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                if (itSystem.getNextRevision() != null) {
+                    asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                }
                 dbsAssetDao.save(asset);
             })
             .count();
@@ -97,6 +99,10 @@ public class DBSService {
                         dbsAsset.setName(itSystem.getName());
                         dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                             .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
+                        dbsAsset.setStatus(itSystem.getStatus().getValue());
+                        if (itSystem.getNextRevision() != null) {
+                            dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                        }
                         dbsAsset.setLastSync(lastSync);
                     });
             })
@@ -261,7 +267,7 @@ public class DBSService {
                                     task.setTaskType(TaskType.TASK);
                                     task.setRepetition(TaskRepetition.NONE);
                                     task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
-                                    log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
+                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUser().getName());
                                     taskService.saveTask(task);
                                     relationService.addRelation(task, dbsAsset);
                                     relationService.addRelation(task, asset);
@@ -284,6 +290,10 @@ public class DBSService {
     private LocalDate nextRevisionQuarterToDate(String revisionValue) {
         if (revisionValue == null) {
             return null;
+        }
+        if (!revisionValue.contains("Q")) {
+            // eg. "Efter behov"
+            return LocalDate.of(2099, 1, 1);
         }
 
         DateTimeFormatter formatter = new DateTimeFormatterBuilder()

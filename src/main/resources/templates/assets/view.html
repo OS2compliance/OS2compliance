@@ -566,13 +566,14 @@
         let managersChoicesEditSelect = null;
         let suppliersChoicesEditSelect = null;
         let responsibleChoicesEditSelect = null;
+
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
         document.addEventListener("DOMContentLoaded", function (event) {
             initDatePickers();
-            managersChoicesEditSelect = initManagersSelect();
             suppliersChoicesEditSelect = initSuppliersSelect();
             suppliersChoicesEditSelect.disable();
+            managersChoicesEditSelect = choiceService.initUserSelect("managers", false);
             managersChoicesEditSelect.disable();
             responsibleChoicesEditSelect = choiceService.initUserSelect("responsibleUsers", false);
             responsibleChoicesEditSelect.disable();
@@ -599,13 +600,8 @@
                     activateTab(e);
                     makeInactive(panes);
                     activateTabContent(e);
-
                     //save selected tab
-                    //window.location.hash = myTabs[tab].getAttribute('data-bs-target').substr(1);
                     window.localStorage.setItem('activeTab', '#' + myTabs[tab].getAttribute('data-bs-target').substr(1));
-//                     console.log("Setting Tab: " + myTabs[tab].getAttribute('data-bs-target').substr(1));
-//                     console.log("window.location.hash: " + window.location.hash);
-
                     e.preventDefault();
                 });
             });
@@ -642,7 +638,6 @@
         function initRegisterRelationSelectPrivate() {
             const relationsSelect = document.getElementById('RegisterRelationModalrelationsSelect')
             let relationsChoice = initSelect(relationsSelect);
-            // choiceService.updateRelationsRegistersOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
                     choiceService.updateRelationsRegistersOnly(relationsChoice, event.detail.value);
@@ -660,7 +655,6 @@
          function initPrecautionRelationSelectPrivate() {
             const relationsSelect = document.getElementById('PrecautionRelationModalrelationsSelect')
             let relationsChoice = initSelect(relationsSelect);
-            // choiceService.updateRelationsPrecautionsOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
                     choiceService.updateRelationsPrecautionsOnly(relationsChoice, event.detail.value);
@@ -678,7 +672,6 @@
         function initDocumentRelationSelectPrivate() {
             const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
             let relationsChoice = initSelect(relationsSelect);
-            // choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
                     choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
@@ -696,7 +689,6 @@
         function initTaskRelationSelectPrivate() {
             const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
             let relationsChoice = initSelect(relationsSelect);
-            // choiceService.updateRelationsTasksOnly(relationsChoice, "");
             relationsSelect.addEventListener("search",
                 function(event) {
                     choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
@@ -802,28 +794,6 @@
             return arr;
         }
 
-        function updateUsers(choices, search) {
-            fetch( `/rest/users/autocomplete?search=${search}`)
-                .then(response => response.json()
-                    .then(data => {
-                        // Remove already selected users from result
-                        alreadySelected = []
-                        let sel = choices.passedElement.element;
-                        for (let i=0, n=sel.options.length;i<n;i++) {
-                            if (sel.options[i].value) alreadySelected.push(sel.options[i].value);
-                        }
-
-                        alreadySelected.forEach((uuid) => removeChoiceByUserUuid(data.content, uuid));
-
-                        choices.setChoices(data.content.map(e => {
-                            return {
-                                value: e.uuid,
-                                label: `(${e.userId}) ${e.name}`}
-                        }), 'value', 'label', false); //false to not override already selected choices
-                    }))
-                .catch(error => toastService.error(error));
-        }
-
         function updateSuppliers(choices, search) {
             fetch( `/rest/suppliers/autocomplete?search=${search}`)
                 .then(response => response.json()
@@ -844,23 +814,9 @@
                 .catch(error => toastService.error(error));
         }
 
-        function initManagersSelect() {
-            const userSelect = document.getElementById('managers');
-            const userChoices = initSelect(userSelect);
-            // updateUsers(userChoices, "");
-            userSelect.addEventListener("search",
-                function(event) {
-                    updateUsers(userChoices, event.detail.value);
-                },
-                false,
-            );
-            return userChoices;
-        }
-
         function initSuppliersSelect() {
             let supplierSelect = document.getElementById('supplier');
             const supplierChoices = initSelect(supplierSelect);
-            // updateSuppliers(supplierChoices, "");
             supplierSelect.addEventListener("search",
                 function(event) {
                     updateSuppliers(supplierChoices, event.detail.value);
