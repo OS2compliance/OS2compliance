@@ -108,7 +108,7 @@ function DBSOversightService() {
                 },
                 {
                     name: "Resultat",
-                    width: "100px",
+                    width: "150px",
                     formatter: (cell, row) => {
                         let status = cell;
                         if (cell === "Grøn") {
@@ -142,7 +142,7 @@ function DBSOversightService() {
                         return gridjs.html(html);
                     },
                     searchable: {
-                        searchKey: 'outstandingTask'
+                        searchKey: 'outstandingTask.name'
                     }
                 }
             ],
