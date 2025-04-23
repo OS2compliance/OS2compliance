@@ -23,26 +23,6 @@ function DBSAssetService() {
                 },
                 debounceTimeout: 1000
             },
-            pagination: {
-                limit: 25,
-                resetPageOnUpdate: false,
-                server: {
-                    url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}`)
-                }
-            },
-            sort: {
-                enabled: true,
-                multiColumn: false,
-                server: {
-                    url: (prev, columns) => {
-                        if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', '', 'lastSync', 'supplier' ];
-                        const col = columns[0]; // multiColumn false
-                        const order = columnIds[col.index];
-                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                    }
-                }
-            },
             columns: [
                 {
                     name: "id",
