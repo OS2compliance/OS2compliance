@@ -10,7 +10,6 @@ import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.FilterService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +26,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
+
 @Slf4j
 @RestController
 @RequestMapping("rest/documents")
@@ -36,7 +38,6 @@ public class DocumentRestController {
     private final DocumentGridDao documentGridDao;
     private final DocumentMapper mapper;
     private final UserService userService;
-    private final FilterService filterService;
 
     @PostMapping("list")
     public PageDTO<DocumentDTO> list(
@@ -47,9 +48,9 @@ public class DocumentRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         Page<DocumentGrid> documents =  documentGridDao.findAllWithColumnSearch(
-            filterService.validateSearchFilters(filters, DocumentGrid.class),
+            validateSearchFilters(filters, DocumentGrid.class),
             null,
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            buildPageable(page, limit, sortColumn, sortDirection),
             DocumentGrid.class
         );
 
@@ -74,7 +75,7 @@ public class DocumentRestController {
 
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<DocumentGrid> documents = documentGridDao.findAllForResponsibleUser(filterService.validateSearchFilters(filters, RegisterGrid.class), filterService.buildPageable(page, limit, sortColumn, sortDirection), DocumentGrid.class, user);
+        Page<DocumentGrid> documents = documentGridDao.findAllForResponsibleUser(validateSearchFilters(filters, RegisterGrid.class), buildPageable(page, limit, sortColumn, sortDirection), DocumentGrid.class, user);
 
         assert documents != null;
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));

@@ -79,6 +79,8 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
@@ -101,7 +103,6 @@ public class RiskRestController {
     private final S3DocumentService s3DocumentService;
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
-    private final FilterService filterService;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -112,9 +113,9 @@ public class RiskRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         Page<RiskGrid> risks =  riskGridDao.findAllWithColumnSearch(
-            filterService.validateSearchFilters(filters, RiskGrid.class),
+            validateSearchFilters(filters, RiskGrid.class),
             null,
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            buildPageable(page, limit, sortColumn, sortDirection),
             RiskGrid.class
         );
 

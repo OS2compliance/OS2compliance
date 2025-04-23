@@ -25,6 +25,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
+
 @Slf4j
 @RestController
 @RequestMapping("rest/registers")
@@ -34,7 +37,6 @@ public class RegisterRestController {
     private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
-    private final FilterService filterService;
 
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
@@ -45,9 +47,9 @@ public class RegisterRestController {
             @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         Page<RegisterGrid> registers =  registerGridDao.findAllWithColumnSearch(
-            filterService.validateSearchFilters(filters, RegisterGrid.class),
+            validateSearchFilters(filters, RegisterGrid.class),
             null,
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            buildPageable(page, limit, sortColumn, sortDirection),
             RegisterGrid.class
         );
 
@@ -70,7 +72,7 @@ public class RegisterRestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        Page<RegisterGrid> registers = registerGridDao.findAllForResponsibleUser(filterService.validateSearchFilters(filters, RegisterGrid.class), filterService.buildPageable(page, limit, sortColumn, sortDirection), RegisterGrid.class, user);
+        Page<RegisterGrid> registers = registerGridDao.findAllForResponsibleUser(validateSearchFilters(filters, RegisterGrid.class), buildPageable(page, limit, sortColumn, sortDirection), RegisterGrid.class, user);
 
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));

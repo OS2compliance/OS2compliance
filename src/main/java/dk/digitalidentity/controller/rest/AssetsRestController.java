@@ -34,7 +34,6 @@ import dk.digitalidentity.service.DPIAResponseSectionService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.EmailTemplateService;
-import dk.digitalidentity.service.FilterService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.UserService;
@@ -75,6 +74,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
+
 @Slf4j
 @RestController
 @RequestMapping("rest/assets")
@@ -95,7 +97,6 @@ public class AssetsRestController {
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
     private final AssetOversightService assetOversightService;
-    private final FilterService filterService;
 
     @PostMapping("list")
     public PageDTO<AssetDTO> list(
@@ -106,9 +107,9 @@ public class AssetsRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(
-            filterService.validateSearchFilters(filters, AssetGrid.class),
+            validateSearchFilters(filters, AssetGrid.class),
             null,
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            buildPageable(page, limit, sortColumn, sortDirection),
             AssetGrid.class
         );
 
@@ -134,8 +135,8 @@ public class AssetsRestController {
 
         Page<AssetGrid> assets = null;
         assets = assetGridDao.findAllForResponsibleUser(
-            filterService.validateSearchFilters(filters,AssetGrid.class ),
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            validateSearchFilters(filters,AssetGrid.class ),
+            buildPageable(page, limit, sortColumn, sortDirection),
             AssetGrid.class,
             user);
 

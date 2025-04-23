@@ -4,7 +4,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.stereotype.Service;
 
 import java.lang.reflect.Field;
 import java.util.Arrays;
@@ -12,7 +11,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-@Service
 public class FilterService {
 
     /**
@@ -22,7 +20,7 @@ public class FilterService {
      * @param validationClass
      * @return a new map of validated filters
      */
-    public Map<String, String> validateSearchFilters(Map<String, String> filters, Class<?> validationClass) {
+    public static Map<String, String> validateSearchFilters(Map<String, String> filters, Class<?> validationClass) {
         // Remove pagination/sorting parameters from the filter map
         filters.remove("page");
         filters.remove("limit");
@@ -51,7 +49,7 @@ public class FilterService {
      * @param sortDirection
      * @return a Pageable
      */
-    public Pageable buildPageable(int page, int limit, String sortColumn, String sortDirection) {
+    public static Pageable buildPageable(int page, int limit, String sortColumn, String sortDirection) {
         //Set sorting
         Sort sort = null;
         if (StringUtils.isNotEmpty(sortColumn)) {
@@ -62,4 +60,6 @@ public class FilterService {
         }
         return PageRequest.of(page, limit, sort);
     }
+
+
 }

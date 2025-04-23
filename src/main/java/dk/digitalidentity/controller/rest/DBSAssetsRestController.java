@@ -15,11 +15,7 @@ import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -29,11 +25,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -50,28 +49,18 @@ public class DBSAssetsRestController {
 
     @PostMapping("list")
 	@Transactional
-	public PageDTO<DBSAssetDTO> list(@RequestParam(name = "search", required = false) final String search,
-                                  @RequestParam(name = "page", required = false) final Integer page,
-                                  @RequestParam(name = "size", required = false) final Integer size,
-                                  @RequestParam(name = "order", required = false) final String order,
-                                  @RequestParam(name = "dir", required = false) final String dir) {
-		Sort sort = null;
-		if (StringUtils.isNotEmpty(order) && containsField(order)) {
-			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-			sort = Sort.by(direction, order);
-		} else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
-        }
-		final Pageable sortAndPage = PageRequest.of(page, size, sort);
-		Page<DBSAssetGrid> assets = null;
-		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("name", "supplier");
-			// search and page
-			assets = dbsAssetGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSAssetGrid.class);
-		} else {
-			// Fetch paged and sorted
-			assets = dbsAssetGridDao.findAll(sortAndPage);
-		}
+	public PageDTO<DBSAssetDTO> list(@RequestParam(value = "page", defaultValue = "0") int page,
+                                     @RequestParam(value = "limit", defaultValue = "50") int limit,
+                                     @RequestParam(value = "order", required = false) String sortColumn,
+                                     @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+                                     @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        Page<DBSAssetGrid> assets =  dbsAssetGridDao.findAllWithColumnSearch(
+            validateSearchFilters(filters, DBSAssetGrid.class),
+            null,
+            buildPageable(page, limit, sortColumn, sortDirection),
+            DBSAssetGrid.class
+        );
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
 	}
@@ -94,9 +83,10 @@ public class DBSAssetsRestController {
         return ResponseEntity.ok().build();
     }
 
-	private boolean containsField(final String fieldName) {
+	private static boolean containsField(final String fieldName) {
 		return fieldName.equals("lastSync")
 				|| fieldName.equals("supplier")
+                || fieldName.equals("assets.name")
 				|| fieldName.equals("name");
 	}
 }

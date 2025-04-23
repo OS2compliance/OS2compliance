@@ -27,6 +27,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Map;
 
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
+
 @Slf4j
 @RestController
 @RequestMapping("rest/tasks")
@@ -36,7 +39,6 @@ public class TaskRestController {
     private final UserService userService;
     private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
-    private final FilterService filterService;
 
     @PostMapping("list")
     public PageDTO<TaskDTO> list(
@@ -47,9 +49,9 @@ public class TaskRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         Page<TaskGrid> tasks =  taskGridDao.findAllWithColumnSearch(
-            filterService.validateSearchFilters(filters, TaskGrid.class),
+            validateSearchFilters(filters, TaskGrid.class),
             null,
-            filterService.buildPageable(page, limit, sortColumn, sortDirection),
+            buildPageable(page, limit, sortColumn, sortDirection),
             TaskGrid.class
         );
 
@@ -74,7 +76,7 @@ public class TaskRestController {
 
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<TaskGrid> tasks = taskGridDao.findAllForResponsibleUser(filterService.validateSearchFilters(filters, RegisterGrid.class), filterService.buildPageable(page, limit, sortColumn, sortDirection), TaskGrid.class, user);
+        Page<TaskGrid> tasks = taskGridDao.findAllForResponsibleUser(validateSearchFilters(filters, RegisterGrid.class), buildPageable(page, limit, sortColumn, sortDirection), TaskGrid.class, user);
 
         assert tasks != null;
 

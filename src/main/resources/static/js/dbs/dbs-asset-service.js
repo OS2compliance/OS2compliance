@@ -50,10 +50,16 @@ function DBSAssetService() {
                 },
                 {
                     name: "DBS Navn",
+                    searchable: {
+                        searchKey: 'name'
+                    },
                 },
                 {
                     name: "Aktiv(er)",
                     sort: false,
+                    searchable: {
+                        searchKey: 'assetNames'
+                    },
                     formatter: (cell, row) => {
                         const dbsAssetId = row.cells[0]['data'];
 
@@ -71,10 +77,16 @@ function DBSAssetService() {
                     width: '300px'
                 },
                 {
-                    name: "Sidst hentet"
+                    name: "Sidst hentet",
+                    searchable: {
+                        searchKey: 'lastSync'
+                    }
                 },
                 {
-                    name: "Leverandør"
+                    name: "Leverandør",
+                    searchable: {
+                        searchKey: 'supplier'
+                    }
                 }
             ],
             server:{
@@ -120,9 +132,13 @@ function DBSAssetService() {
                 assetChoices.passedElement.element.addEventListener('addItem', self.handleAddRemoveEvent, false);
             });
         });
-        searchService.initSearch(grid, gridConfig);
+
+
+        new CustomGridFunctions(grid, gridDBSAssetsUrl, 'assetsDatatable')
+
         gridOptions.init(grid, document.getElementById("gridOptions"));
 
+        // const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
     }
 
 
