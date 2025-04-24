@@ -68,10 +68,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 searchable: { searchKey: 'taskRepetition', fieldId:'taskRepetitionSelector' },
             },
             {
-                name: "Status",
+               name: "Status",
                searchable: {
-                   searchKey: 'taskResult',
-                   fieldId:'taskStatusSelector'
+                   sortKey: 'completed'
                },
                formatter: (cell, row) => {
                     var status = "";

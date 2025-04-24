@@ -76,7 +76,11 @@ public class TaskRestController {
 
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<TaskGrid> tasks = taskGridDao.findAllForResponsibleUser(validateSearchFilters(filters, RegisterGrid.class), buildPageable(page, limit, sortColumn, sortDirection), TaskGrid.class, user);
+        Page<TaskGrid> tasks = taskGridDao.findAllForResponsibleUser(
+            validateSearchFilters(filters, TaskGrid.class),
+            buildPageable(page, limit, sortColumn, sortDirection),
+            TaskGrid.class, user
+        );
 
         assert tasks != null;
 

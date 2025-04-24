@@ -116,10 +116,12 @@ class CustomGridFunctions {
         if (!columns.length) return this.getParamString();
 
         const col = columns[0];
-
         const dir = col.direction === 1 ? 'asc' : 'desc';
 
-        let colName = this.grid.config.columns[col.index].searchable.searchKey;
+        let colName = this.grid.config.columns[col.index].searchable.sortKey;
+        if (colName === undefined) {
+            colName = this.grid.config.columns[col.index].searchable.searchKey;
+        }
 
         this.state.sortColumn = colName
         this.state.sortDirection = dir
@@ -145,8 +147,9 @@ class CustomGridFunctions {
         for (const column of updatedConfig) {
             let searchFieldHTML = '<div style="display:none;"></div>'
 
-            if (column.searchable) {
+            column.sort = !!column.searchable;
 
+            if (column.searchable && column.searchable.searchKey) {
                 if (column.searchable.fieldId ) {
                     const foundElement = document.getElementById(column.searchable.fieldId)
                         foundElement.classList.add(this.#INPUTCLASSNAME)
@@ -159,22 +162,20 @@ class CustomGridFunctions {
                 } else {
                     searchFieldHTML = this.generateTextInputFieldHTML(column.searchable.searchKey)
                 }
-                 column.sort = true
 
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
-                    sort: true,
+                    sort: column.sort,
                     width: column.width,
                     hidden:column.hidden ? true : false,
                     id: 'search_' + column.id
                 }]
             } else {
-                 column.sort = false
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
-                    sort: false ,
+                    sort: column.sort ,
                     width: column.width,
                     hidden:column.hidden ? true : false,
                     id: 'search_' + column.id
