@@ -37,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -89,6 +90,10 @@ public class AssetService {
 
     public Page<Asset> getPaged(final int pageSize, final int page) {
         return assetDao.findAll(Pageable.ofSize(pageSize).withPage(page));
+    }
+
+    public List<Asset> getAllSortedByName() {
+        return assetDao.findByDeletedFalse(Sort.by(Sort.Direction.ASC, "name"));
     }
 
     public List<Asset> findAllById(final Collection<Long> ids) {
@@ -302,6 +307,10 @@ public class AssetService {
             personalDataTypesTitles.addAll(registeredPersonCategories.getValues().stream().filter(c -> registeredCategory.getPersonCategoriesInformationIdentifiers().contains(c.getIdentifier())).map(ChoiceValue::getCaption).collect(Collectors.toSet()));
         }
         return new PlaceholderInfo(dataProcessing.getTypesOfPersonalInformationFreetext() == null ? "" : dataProcessing.getTypesOfPersonalInformationFreetext(), selectedAccessWhoTitles, selectedAccessCountTitle, howLongTitle, personalDataTypesTitles, categoriesOfRegisteredTitles);
+    }
+
+    public boolean isInUseOnAssets(Long assetTypeId) {
+        return assetDao.countByAssetType_Id(assetTypeId) > 0;
     }
 
     record DPIAQuestionDTO(String question, String templateAnswer, String response) {}

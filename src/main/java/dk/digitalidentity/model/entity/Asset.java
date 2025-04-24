@@ -1,13 +1,20 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import dk.digitalidentity.model.entity.enums.*;
+import dk.digitalidentity.model.entity.enums.AssetCategory;
+import dk.digitalidentity.model.entity.enums.AssetStatus;
+import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
+import dk.digitalidentity.model.entity.enums.NextInspection;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -26,7 +33,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "assets")
@@ -50,9 +59,9 @@ public class Asset extends Relatable {
     @Column
     private String description;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private AssetType assetType = AssetType.IT_SYSTEM;
+    @ManyToOne
+    @JoinColumn(name = "asset_type", nullable = false)
+    private ChoiceValue assetType;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -145,8 +154,7 @@ public class Asset extends Relatable {
 
     @Override
     public String getLocalizedEnumValues() {
-        return (assetType != null ? assetType.getMessage() + " " : "") +
-            (assetStatus != null ? assetStatus.getMessage() : "");
+        return (assetStatus != null ? assetStatus.getMessage() : "");
     }
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
@@ -187,5 +195,9 @@ public class Asset extends Relatable {
     @ManyToOne
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsibleUser;
+
+    @JsonIgnore
+    @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
+    private Set<Role> roles = new HashSet<>();
 
 }

@@ -33,8 +33,10 @@ public class DBSAssetGrid {
     @Column
     private String supplier;
 
-    @Column
+    @Column(name = "assets_ids")
     @Convert(converter = AssetListConverter.class)
     private List<Asset> assets;
 
+    @Column(name = "asset_names")
+    private String assetNames;
 }

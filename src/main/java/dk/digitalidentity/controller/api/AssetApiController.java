@@ -10,15 +10,18 @@ import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.AssetType;
+
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -60,6 +63,7 @@ public class AssetApiController {
     private final AssetMapper assetMapper;
     private final UserService userService;
     private final SupplierService supplierService;
+    private final ChoiceService choiceService;
 
     @Operation(summary = "Fetch an asset")
     @ApiResponses(value = {
@@ -126,10 +130,16 @@ public class AssetApiController {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Version mismatch");
         }
         final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetUpdateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
+        final ChoiceList assetTypeChoiceList = choiceService.findChoiceList("asset-type")
+            .orElseThrow( () ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "No asset types found"));
+        final ChoiceValue assetType = assetTypeChoiceList.getValues().stream()
+            .filter(value -> value.getIdentifier().equals(assetUpdateEO.getAssetType().getIdentifier()) )
+            .findAny()
+            .orElseThrow(() ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "AssetType identifier is not valid"));
         asset.setName(assetUpdateEO.getName());
         asset.setResponsibleUsers(responsibleUsers);
         asset.setDescription(assetUpdateEO.getDescription());
-        asset.setAssetType(nullSafe(() -> AssetType.valueOf(assetUpdateEO.getAssetType().name())));
+        asset.setAssetType(assetType);
         asset.setDataProcessingAgreementStatus(nullSafe(() -> DataProcessingAgreementStatus.valueOf(assetUpdateEO.getDataProcessingAgreementStatus().name())));
         asset.setDataProcessingAgreementDate(assetUpdateEO.getDataProcessingAgreementDate());
         asset.setDataProcessingAgreementLink(assetUpdateEO.getDataProcessingAgreementLink());

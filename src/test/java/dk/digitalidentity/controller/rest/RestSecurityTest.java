@@ -17,7 +17,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Import(TestContainersConfiguration.class)
-@ActiveProfiles({"test", "samllogin"})
+@ActiveProfiles({"test", "locallogin"})
 @TestPropertySource("/application-test.properties")
 public class RestSecurityTest {
     @Autowired
@@ -45,6 +45,6 @@ public class RestSecurityTest {
     private void assertUrlProtected(final String url) throws Exception {
         mockMvc.perform(get(url))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("http://localhost/saml2/authenticate/IdP"));
+            .andExpect(redirectedUrl("http://localhost/saml2/authenticate?registrationId=IdP"));
     }
 }

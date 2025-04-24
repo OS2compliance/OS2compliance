@@ -141,7 +141,7 @@ export function CreateCkEditor (element, callback) {
         callback(editor);
     }).catch( error => {
         toastService.error(error);
-        console.log(error);
+        console.error(error);
     });
 
 }

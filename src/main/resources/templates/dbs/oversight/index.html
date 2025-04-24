@@ -36,7 +36,21 @@
                         <div class="card mb-3">
                             <div class="card-body">
                             	<div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                <div id="assetsDatatable"></div>
+                                <div id="assetsDatatable" class="mt-5"></div>
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="supervisoryModelSelector" id="supervisoryModelSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="oversightResultSearchSelector" id="oversightResultSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+
                             </div>
                         </div>
                     </div>

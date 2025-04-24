@@ -6,17 +6,14 @@ import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
+import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -27,8 +24,10 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -42,28 +41,19 @@ public class DocumentRestController {
 
     @PostMapping("list")
     public PageDTO<DocumentDTO> list(
-            @RequestParam(name = "search", required = false) final String search,
-            @RequestParam(name = "page", required = false) final Integer page,
-            @RequestParam(name = "size", required = false) final Integer size,
-            @RequestParam(name = "order", required = false) final String order,
-            @RequestParam(name = "dir", required = false) final String dir) {
-        Sort sort = null;
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
-        } else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
-        }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        Page<DocumentGrid> documents = null;
-        if (StringUtils.isNotEmpty(search)) {
-            // search and page
-            final List<String> searchableProperties = Arrays.asList("name", "responsibleUser.name", "nextRevision", "localizedEnums");
-            documents = documentGridDao.findAllCustom(searchableProperties, search, sortAndPage, DocumentGrid.class);
-        } else {
-            // Fetch paged and sorted
-            documents = documentGridDao.findAll(sortAndPage);
-        }
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        Page<DocumentGrid> documents =  documentGridDao.findAllWithColumnSearch(
+            validateSearchFilters(filters, DocumentGrid.class),
+            null,
+            buildPageable(page, limit, sortColumn, sortDirection),
+            DocumentGrid.class
+        );
+
         assert documents != null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
@@ -71,32 +61,22 @@ public class DocumentRestController {
 
     @PostMapping("list/{id}")
     public PageDTO<DocumentDTO> list(
-        @PathVariable(name = "id", required = true) final String uuid,
-        @RequestParam(name = "search", required = false) final String search,
-        @RequestParam(name = "page", required = false) final Integer page,
-        @RequestParam(name = "size", required = false) final Integer size,
-        @RequestParam(name = "order", required = false) final String order,
-        @RequestParam(name = "dir", required = false) final String dir) {
+        @PathVariable(name = "id") final String uuid,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        Sort sort = null;
+
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
-        }
-        final Pageable sortAndPage = sort != null ?  PageRequest.of(page, size, sort) : PageRequest.of(page, size);
-        Page<DocumentGrid> documents = null;
-        if (StringUtils.isNotEmpty(search)) {
-            // search and page
-            final List<String> searchableProperties = Arrays.asList("id", "name", "documentType", "nextRevision", "status", "tags");
-            documents = documentGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, DocumentGrid.class, user);
-        } else {
-            // Fetch paged and sorted
-            documents = documentGridDao.findAllByResponsibleUser(user, sortAndPage);
-        }
+
+        Page<DocumentGrid> documents = documentGridDao.findAllForResponsibleUser(validateSearchFilters(filters, RegisterGrid.class), buildPageable(page, limit, sortColumn, sortDirection), DocumentGrid.class, user);
+
         assert documents != null;
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }

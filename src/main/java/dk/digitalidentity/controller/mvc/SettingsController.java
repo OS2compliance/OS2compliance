@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.dto.SettingsDTO;
-import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.service.KitosService;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
-import java.util.List;
 import java.util.Objects;
 
 
