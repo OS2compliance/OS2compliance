@@ -283,7 +283,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Konsekvens vurdering",
-                width: "100px",
+                width: "150px",
                 searchable: {
                     searchKey: 'consequence',
                     fieldId : 'registerRiskAssessmentSearchSelector'
@@ -308,7 +308,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Status",
-                width: "80px",
+                width: "150px",
                 searchable: {
                     searchKey: 'status',
                     fieldId: 'registerStatusSearchSelector'
