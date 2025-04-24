@@ -69,12 +69,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Status",
-//                searchable: {
-//                  //Temporarily removed until search issues for status is resolved
-//                    searchKey: 'taskResult',
-//                    fieldId:'taskStatusSelector'
-//                },
-                formatter: (cell, row) => {
+               searchable: {
+                   searchKey: 'taskResult',
+                   fieldId:'taskStatusSelector'
+               },
+               formatter: (cell, row) => {
                     var status = "";
                     var type = row.cells[2]['data'];
 
