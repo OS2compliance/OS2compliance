@@ -82,7 +82,7 @@
                             searchKey : 'risk',
                             fieldId : 'registerRiskSearchSelector'
                         },
-                        width: "100px",
+                        width: "150px",
                         formatter: (cell, row) => {
                             let assessment = '';
                             if (cell === "Grøn") {
@@ -105,7 +105,7 @@
                             searchKey : 'assetAssessment',
                             fieldId : 'registerAssetSearchSelector'
                         },
-                        width: "100px",
+                        width: "150px",
                         formatter: (cell, row) => {
                             let assessment = '';
                             if (cell === "Grøn") {
@@ -128,7 +128,7 @@
                             searchKey : 'status',
                             fieldId : 'registerStatusSearchSelector'
                         },
-                        width: '100px',
+                        width: '150px',
                         formatter: (cell, row) => {
                             let status = cell;
                             if (cell === "Klar") {

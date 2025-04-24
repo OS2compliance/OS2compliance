@@ -118,11 +118,13 @@ class CustomGridFunctions {
         const col = columns[0];
         const dir = col.direction === 1 ? 'asc' : 'desc';
 
-        let colName = this.grid.config.columns[col.index].searchable.sortKey;
-        if (colName === undefined) {
-            colName = this.grid.config.columns[col.index].searchable.searchKey;
+        let colName = undefined;
+        if (this.grid.config.columns[col.index].searchable) {
+            colName = this.grid.config.columns[col.index].searchable.sortKey;
+            if (colName === undefined) {
+                colName = this.grid.config.columns[col.index].searchable.searchKey;
+            }
         }
-
         this.state.sortColumn = colName
         this.state.sortDirection = dir
 
