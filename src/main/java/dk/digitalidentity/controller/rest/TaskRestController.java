@@ -44,7 +44,7 @@ public class TaskRestController {
     public PageDTO<TaskDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "sortColumn", defaultValue = "nextDeadline", required = false) String sortColumn,
+        @RequestParam(value = "order", defaultValue = "nextDeadline", required = false) String sortColumn,
         @RequestParam(value = "dir", defaultValue = "asc", required = false) String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
@@ -66,7 +66,7 @@ public class TaskRestController {
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "limit", defaultValue = "50") int limit,
         @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam(value = "dir", defaultValue = "asc") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -84,12 +84,7 @@ public class TaskRestController {
 
         assert tasks != null;
 
-        return new PageDTO<TaskDTO>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
+        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
     }
 
-    private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("taskType") || fieldName.equals("responsibleUser.name") || fieldName.equals("responsibleOU.name")
-            || fieldName.equals("nextDeadline") || fieldName.equals("taskRepetition")
-            || fieldName.equals("taskResult") || fieldName.equals("tags") || fieldName.equals("completed");
-    }
 }
