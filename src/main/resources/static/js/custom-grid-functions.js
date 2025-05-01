@@ -113,7 +113,6 @@ class CustomGridFunctions {
      * @returns
      */
     updateSorting(prev, columns) {
-        console.log('updateSorting')
         if (!columns.length) return this.getParamString();
 
         const col = columns[0];
@@ -125,8 +124,6 @@ class CustomGridFunctions {
             if (colName === undefined) {
                 colName = this.grid.config.columns[col.index].searchable.searchKey;
             }
-            // this.grid.config.columns[col.index].columns[0].sortColumn = colName;
-            // this.grid.config.columns[col.index].sortColumn = colName;
         }
         this.state.sortColumn = colName
         this.state.sortDirection = dir
@@ -198,7 +195,6 @@ class CustomGridFunctions {
                     this.onSearch()
                 }
             }
-            console.log(this.grid.config)
         }
         this.grid.updateConfig({
             columns: updatedConfig
