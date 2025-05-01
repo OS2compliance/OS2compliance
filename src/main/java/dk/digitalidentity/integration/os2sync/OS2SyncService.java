@@ -40,11 +40,11 @@ public class OS2SyncService {
     private void persistUsers(final List<HierarchyUser> users) {
         log.info("Persisting {} users", users.size());
         final Set<String> existingUuids = userDao.findAllActiveUuids();
-        final Set<String> newUuids = users.stream().map(this::persist)
+        final Set<String> uuidsPresent = users.stream().map(this::persist)
                 .filter(Objects::nonNull)
                 .map(User::getUuid)
                 .collect(Collectors.toSet());
-        existingUuids.removeAll(newUuids);
+        existingUuids.removeAll(uuidsPresent);
         final int deactivatedUsers = userDao.deactivateUsers(existingUuids);
         log.info("Deactivated {} users", deactivatedUsers);
         notifyService.notifyAboutInactiveUsers(existingUuids);

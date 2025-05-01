@@ -12,6 +12,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) De enkelte kontroller medtages i årshjulet
 - (Ad-hoc) Nyt kategoriseringsfelt på aktiver
 - (Ad-hoc) Tilføj mulighed for at trække excel rapport over hændelser
+- (Ad-hoc) Kolonne søgning tilføjet
+- (Ad-hoc) Ny administrativ side, hvor det er muligt at tilføje aktive system-typer.
 
 ### Fixed
 - (Ad-hoc) Årshjulet tog alle opgaver i stedet for kun dem der var markeret til at blive inkluderet.
@@ -24,6 +26,13 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://github.com/OS2compliance/OS2compliance/issues/195) Sortering på Ubehandlet tilsyn virker ikke
 - (https://github.com/OS2compliance/OS2compliance/issues/196) DBS aktive vises flere gange
 - (https://github.com/OS2compliance/OS2compliance/issues/197) Bruger kan ikke lave tilknytninger
+
+## [2.1.0] - 2024-11-22
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-172) (Generelt) Links skal være klikbare.
+- (https://os2web.atlassian.net/browse/COMPLY-79)  (Aktiver/DPIA) Felt til DPO’s kommentarer.
+- (https://os2web.atlassian.net/browse/COMPLY-184) (Generelt) Ny brugerrolle med adgang til dashboard og ansvarlige opgaver. Skal kunne løse egne opgaver.
+- (Ad-hoc) Syddjurs: Flere tags kan udskrives på én gang.
 
 ## [2.0.0] - 2024-10-31
 
