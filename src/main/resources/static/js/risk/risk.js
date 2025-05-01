@@ -58,7 +58,7 @@
                 {
                     name: "Opgaver",
                     searchable: {
-                        searchKey: 'tasks'
+                        sortKey: 'tasks'
                     },
                     width: '10%'
                 },

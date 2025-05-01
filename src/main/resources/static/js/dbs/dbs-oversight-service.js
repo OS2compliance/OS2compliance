@@ -142,7 +142,7 @@ function DBSOversightService() {
                         return gridjs.html(html);
                     },
                     searchable: {
-                        searchKey: 'outstandingTask.name'
+                        searchKey: 'outstandingTask.createdAt'
                     }
                 }
             ],

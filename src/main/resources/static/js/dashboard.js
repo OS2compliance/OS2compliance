@@ -187,7 +187,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
             },
             {
                 name: "Risikovurdering",
-                searchable: { searchKey: 'criticality' },
+                searchable: { searchKey: 'assessment' },
             },
             {
                 name: "Status",
@@ -284,7 +284,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 width: "150px",
                 searchable: {
                     searchKey: 'consequence',
-                    fieldId : 'registerRiskAssessmentSearchSelector'
+                    fieldId : 'registerConsequenceSearchSelector'
                 },
                 formatter: (cell, row) => {
                     var assessment = cell;
@@ -383,8 +383,10 @@ document.addEventListener("DOMContentLoaded", function (event) {
             {
                 name: "Dokumentype",
                 searchable: {
-                    searchKey : 'documentType'
-                }
+                    searchKey : 'documentType',
+                    fieldId : 'documentTypeStatusSearchSelector'
+                },
+                width: '150px'
             },
             {
                 name: "Ansvarlig",

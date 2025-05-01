@@ -52,7 +52,8 @@
                 {
                     name: "Tredjelandsoverførsel",
                      searchable: {
-                         searchKey: 'hasThirdCountryTransfer'
+                         searchKey: 'hasThirdCountryTransfer',
+                         fieldId : 'assetThirdCountrySelector'
                      },
                     width: '150px',
                     formatter: (cell, row) => {
@@ -85,7 +86,10 @@
                 },
                 {
                     name: "Antal beh.",
-                    width: '95px'
+                    width: '95px',
+                    searchable: {
+                        sortKey: 'registers'
+                    },
                 },
                 {
                     name: "Risiko vurdering",

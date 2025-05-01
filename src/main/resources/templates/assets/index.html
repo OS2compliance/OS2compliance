@@ -54,6 +54,13 @@
                                     <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
                                             th:value="${option}" th:text="${option.message}"></option>
                                 </select>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="assetThirdCountrySelector" id="assetThirdCountrySelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option value="1">Ja</option>
+                                    <option value="0">Nej</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -66,11 +73,6 @@
 </div>
 <div class="modal fade" id="formDialog" aria-labelledby="assetLabel" aria-hidden="true"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
-
-<style>
-
-
-</style>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

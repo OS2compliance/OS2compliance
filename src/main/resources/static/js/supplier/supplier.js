@@ -68,7 +68,10 @@
                     },
                     {
                         name: "Antal løsninger",
-                        width: '20%'
+                        width: '20%',
+                        searchable: {
+                            sortKey: 'solutionCount'
+                        }
                     },
                     {
                         name: "Opdateret",
@@ -120,7 +123,7 @@
                     headers: {
                         'X-CSRF-TOKEN': token
                     },
-                    then: data => data.suppliers.map(supplier =>
+                    then: data => data.content.map(supplier =>
                         [ supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.status ]
                     ),
                     total: data => data.count

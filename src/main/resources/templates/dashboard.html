@@ -91,9 +91,9 @@
                              aria-labelledby="registers-tab">
                             <div id="registersDatatable"></div>
                             <!-- Custom search selectors-->
-                            <select class="form-control form-select editField" data-trigger="" name="registerRiskAssessmentSearchSelector" id="registerRiskAssessmentSearchSelector" tabindex="-1" required >
+                            <select class="form-control form-select editField" data-trigger="" name="registerConsequenceSearchSelector" id="registerConsequenceSearchSelector" tabindex="-1" required >
                                 <option th:text="'Alle'" th:value="null"></option>
-                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetStatus).values()}"
+                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ConsequenceAssessment).values()}"
                                         th:value="${option}" th:text="${option.message}"></option>
                             </select>
 
@@ -111,6 +111,12 @@
                             <select class="form-control form-select editField" data-trigger="" name="documentStatusSearchSelector" id="documentStatusSearchSelector" tabindex="-1" required >
                                 <option th:text="'Alle'" th:value="null"></option>
                                 <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DocumentStatus).values()}"
+                                        th:value="${option}" th:text="${option.message}"></option>
+                            </select>
+                            <!-- Custom search selectors-->
+                            <select class="form-control form-select editField" data-trigger="" name="documentTypeStatusSearchSelector" id="documentTypeStatusSearchSelector" tabindex="-1" required >
+                                <option th:text="'Alle'" th:value="null"></option>
+                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
                                         th:value="${option}" th:text="${option.message}"></option>
                             </select>
                         </div>

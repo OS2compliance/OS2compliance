@@ -72,8 +72,9 @@ public class SearchRepositoryImpl implements SearchRepository {
                 }
             } else if (propertyPath.getJavaType().isAssignableFrom(Boolean.class)) {
                 if (BooleanUtils.toBoolean(searchEntry.getValue()) ) {
-                    final Expression<String> expressionString = criteriaBuilder.function("BIT", String.class, propertyPath);
-                    predicates.add(criteriaBuilder.like(criteriaBuilder.lower(expressionString), "%" + searchEntry.getValue().toLowerCase() + "%"));
+                    predicates.add(criteriaBuilder.isTrue(propertyPath.as(Boolean.class)));
+                } else {
+                    predicates.add(criteriaBuilder.isFalse(propertyPath.as(Boolean.class)));
                 }
             } else {
                 predicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath), "%" + searchEntry.getValue().toLowerCase() + "%"));

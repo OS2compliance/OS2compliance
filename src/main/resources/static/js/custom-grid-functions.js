@@ -113,6 +113,7 @@ class CustomGridFunctions {
      * @returns
      */
     updateSorting(prev, columns) {
+        console.log('updateSorting')
         if (!columns.length) return this.getParamString();
 
         const col = columns[0];
@@ -124,9 +125,12 @@ class CustomGridFunctions {
             if (colName === undefined) {
                 colName = this.grid.config.columns[col.index].searchable.searchKey;
             }
+            // this.grid.config.columns[col.index].columns[0].sortColumn = colName;
+            // this.grid.config.columns[col.index].sortColumn = colName;
         }
         this.state.sortColumn = colName
         this.state.sortDirection = dir
+        this.saveState();
 
         return this.getParamString()
     }
@@ -170,19 +174,18 @@ class CustomGridFunctions {
                     formatter: column.formatter,
                     sort: column.sort,
                     width: column.width,
-                    hidden:column.hidden ? true : false,
+                    hidden: !!column.hidden,
                     id: 'search_' + column.id
                 }]
             } else {
                 column.columns = [{
                     name: gridjs.html(searchFieldHTML),
                     formatter: column.formatter,
-                    sort: column.sort ,
+                    sort: column.sort,
                     width: column.width,
-                    hidden:column.hidden ? true : false,
+                    hidden: !!column.hidden,
                     id: 'search_' + column.id
                 }]
-
             }
             column.onHiddenUpdate = ()=> {
                 for (const subcolumn of column.columns) {
@@ -195,11 +198,11 @@ class CustomGridFunctions {
                     this.onSearch()
                 }
             }
+            console.log(this.grid.config)
         }
         this.grid.updateConfig({
             columns: updatedConfig
         })
-
     }
 
     /**
@@ -260,6 +263,10 @@ class CustomGridFunctions {
      * Updates the grid based on values of all search fields
      */
     onSearch() {
+        // For some reason grid.js reset the column sort after server fetch, or forceRender, so set it again here.
+        this.grid.config.columns.forEach(column => {
+            column.columns.forEach(subcolumn => {subcolumn.sort = !!column.searchable;})
+        })
         this.grid.updateConfig({
             server: {
                 ...this.grid.config.server,
@@ -283,12 +290,5 @@ class CustomGridFunctions {
         if (retrievedState) {
             this.state = retrievedState
         }
-    }
-}
-
-class SearchableColumn {
-    constructor(searchKey, fieldId = null) {
-        this.searchKey = searchKey
-        this.fieldId = fieldId
     }
 }

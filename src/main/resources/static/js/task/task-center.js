@@ -14,10 +14,6 @@ const defaultClassName = {
     header: "d-flex justify-content-end"
 };
 
-const updateUrl = (prev, query) => {
-    return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-};
-
 document.addEventListener("DOMContentLoaded", function() {
 
     let gridConfig = {
@@ -207,10 +203,11 @@ document.addEventListener("DOMContentLoaded", function() {
     };
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "tasksDatatable" ));
 
+    //Enables custom column search, serverside sorting and pagination
+    new CustomGridFunctions(grid, gridTasksUrl, 'tasksDatatable')
+
     gridOptions.init(grid, document.getElementById("gridOptions"));
 
-        //Enables custom column search, serverside sorting and pagination
-        new CustomGridFunctions(grid, gridTasksUrl, 'tasksDatatable')
 });
 
 
