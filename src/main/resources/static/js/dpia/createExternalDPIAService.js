@@ -94,29 +94,29 @@ class CreateExternalDPIAService {
 
     }
 
-        async createExternalClicked() {
-            const url = `${baseUrl}/external/create`
-            const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    'X-CSRF-TOKEN': token
-                }
-            })
-
-            if (!response.ok)  {
-                toastService.error(response.statusText)
+    async createExternalClicked() {
+        const url = `${baseUrl}/external/create`
+        const response = await fetch(url, {
+            method: "GET",
+            headers: {
+                'X-CSRF-TOKEN': token
             }
+        })
 
-            const responseText = await response.text()
-
-            const externalModalContainer = document.getElementById("external_modal_container")
-            externalModalContainer.innerHTML = responseText
-
-            this.init()
-
-            const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
-            const modal = new bootstrap.Modal(modalElement);
-            modal.show();
+        if (!response.ok)  {
+            toastService.error(response.statusText)
         }
+
+        const responseText = await response.text()
+
+        const externalModalContainer = document.getElementById("external_modal_container")
+        externalModalContainer.innerHTML = responseText
+
+        this.init()
+
+        const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    }
 
 }

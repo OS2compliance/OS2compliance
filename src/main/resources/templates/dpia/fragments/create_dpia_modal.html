@@ -1,0 +1,26 @@
+<div th:fragment="create_dpia_modal" class="modal fade" id="createDPIAModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Opret Konsekvensvurdering</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createDPIAForm" class="row g-3 needs-validation" action="#" th:action="@{/rest/dpia/create}" method="post" novalidate>
+                    <div class="row mt-3" id="assetSelectRow">
+                        <label for="assetSelect" class="col-sm-4 col-form-label">For Aktiv</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedAsset"
+                                    data-trigger="" id="assetSelect" hidden="" tabindex="-1"></select>
+                            <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="createDPIAService.formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="button" form="createDPIAForm" class="btn btn-primary" onclick="createDPIAService.submitNewDPIA()">Gem</button>
+            </div>
+        </div>
+    </div>
+</div>
