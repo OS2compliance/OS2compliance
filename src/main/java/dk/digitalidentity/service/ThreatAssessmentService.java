@@ -4,8 +4,10 @@ import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -65,6 +67,7 @@ public class ThreatAssessmentService {
     private final TaskService taskService;
     private final UserService userService;
     private final TemplateEngine templateEngine;
+    private final ChoiceService choiceService;
 
     public ThreatAssessment findByS3Document(S3Document s3Document) {
         return threatAssessmentDao.findByThreatAssessmentReportS3DocumentId(s3Document.getId());
@@ -476,6 +479,7 @@ public class ThreatAssessmentService {
         return convertHtmlToPdf(html);
     }
 
+    public record registeredDataCategory (String title, List<String> types) {}
     private String getThreatAssessmentHtml(ThreatAssessment threatAssessment) {
         final List<Relatable> relations = relationService.findAllRelatedTo(threatAssessment);
         List<Task> riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
@@ -519,6 +523,9 @@ public class ThreatAssessmentService {
         context.setVariable("present", getPresent(threatAssessment));
         context.setVariable("criticality", getCriticality(riskAsset, riskRegister));
 
+        // asset / register info
+        context = addGeneralInfoToContext(context, riskAsset, riskRegister);
+
         // risk profile
         context.setVariable("reversedScale", scaleService.getConsequenceScale().keySet().stream().sorted(Collections.reverseOrder()).collect(Collectors.toList()));
         List<RiskProfileDTO> riskProfiles = buildRiskProfileDTOs(threatAssessment);
@@ -545,6 +552,83 @@ public class ThreatAssessmentService {
 
         return templateEngine.process("reports/risk_view_pdf", context);
     }
+
+    public record PrecautionDTO (String name, String description) {}
+    private List<PrecautionDTO> buildPrecautions (List<Precaution> precautions) {
+        return precautions.stream().map(precaution ->
+                new PrecautionDTO(precaution.getName(), precaution  .getDescription()))
+            .toList();
+    }
+
+    private Context addGeneralInfoToContext (Context context, Asset riskAsset, Register riskRegister) {
+        if (riskAsset != null) {
+            context.setVariable("systemType", riskAsset.getAssetType().getCaption());
+            String systemOwners = riskAsset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+            context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
+            context.setVariable("supplier", riskAsset.getSupplier() != null ?  riskAsset.getSupplier().getName() : "Ukendt");
+            context.setVariable("systemResponsible", riskAsset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")));
+            context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
+            context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
+            String dataAccessPersons = riskAsset.getDataProcessing().getAccessWhoIdentifiers().stream()
+                .map(identifier ->
+                {
+                    Optional<ChoiceValue> value = choiceService.getValue(identifier);
+                    if (value.isPresent()) {
+                        return value.get().getCaption();
+                    }
+                    return "Ikke udfyldt";
+                }).collect(Collectors.joining(", "));
+            context.setVariable("dataAccessPersons", dataAccessPersons.isBlank() ? "Ikke udfyldt" : dataAccessPersons );
+
+            var accessCount = choiceService.getValue(riskAsset.getDataProcessing().getAccessCountIdentifier());
+            context.setVariable("dataAccessCount",  accessCount.isPresent() ? accessCount.get().getCaption() : "0");
+            var registeredCategories = riskAsset .getDataProcessing().getRegisteredCategories();
+            context.setVariable("dataCategories", registeredCategories.stream().map(cat ->
+                {
+                    Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
+                    List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+                        .filter(Objects::nonNull)
+                        .toList();
+                    if (title.isEmpty()) {return null;}
+                    return new registeredDataCategory(title.get().getCaption(), types);
+                })
+                .filter(Objects::nonNull)
+                .toList());
+        }
+
+        if (riskRegister != null) {
+			context.setVariable("systemType", "Fortegnelse");
+            String systemOwners = riskRegister.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+            context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
+            context.setVariable("deletionProcedureCreated", riskRegister.getDataProcessing().getDeletionProcedure() != null ? riskRegister.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
+            context.setVariable("deletionProcedureLink", riskRegister.getDataProcessing().getDeletionProcedureLink());
+            String dataAccessPersons = riskRegister.getDataProcessing().getAccessWhoIdentifiers().stream()
+                .map(identifier ->
+                {
+                    Optional<ChoiceValue> value = choiceService.getValue(identifier);
+                    if (value.isPresent()) {
+                        return value.get().getCaption();
+                    }
+                    return "Ikke udfyldt";
+                }).collect(Collectors.joining(", "));
+            context.setVariable("dataAccessPersons", dataAccessPersons.isBlank() ? "Ikke udfyldt" : dataAccessPersons );
+            var accessCount = choiceService.getValue(riskRegister.getDataProcessing().getAccessCountIdentifier());
+            context.setVariable("dataAccessCount",  accessCount.isPresent() ? accessCount.get().getCaption() : "");
+            var registeredCategories = riskRegister.getDataProcessing().getRegisteredCategories();
+            context.setVariable("dataCategories", registeredCategories.stream().map(cat ->
+                {
+                    Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
+                    List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+                        .filter(Objects::nonNull)
+                        .toList();
+                    return title.map(choiceValue -> new registeredDataCategory(choiceValue.getCaption(), types)).orElse(null);
+                })
+                .filter(Objects::isNull)
+                .toList());
+        }
+        return context;
+    }
+
 
     private Map<String,String> buildRiskProfileValueMap(List<RiskProfileDTO> riskProfiles) {
         Map<String,String> result = new HashMap<>();
@@ -599,7 +683,18 @@ public class ThreatAssessmentService {
         return result;
     }
 
-    record ThreatPDFDTO(int index, String threatType, String threat, int probability, int consequence, int score, String color, String problem, String existingMeasures, String method, String elaboration) {}
+    record RiskCalculationDTO(int probability, int consequence, int score, String color) {}
+    record ThreatPDFDTO(int index,
+                        String threatType,
+                        String threat,
+                        RiskCalculationDTO initialRisk,
+                        String problem,
+                        String existingMeasures,
+                        String method,
+                        String elaboration,
+                        List<PrecautionDTO> linkedPrecautions,
+                        RiskCalculationDTO residualRisk
+    ) {}
     private List<ThreatPDFDTO> buildThreatsForPDF(Map<String, List<ThreatDTO>> threatList, List<RiskProfileDTO> riskProfiles, Map<String, String> colorMap) {
         List<ThreatPDFDTO> result = new ArrayList<>();
         threatList.forEach((threatType, threats) -> {
@@ -610,18 +705,30 @@ public class ThreatAssessmentService {
                 if (profile != null) {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
+                    final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
+                    final int residualScore = profile.getResidualProbability() * profile.getResidualConsequence();
                     result.add(new ThreatPDFDTO(
                     t.getIndex() + 1,
                         threatType,
                         t.getThreat(),
-                        profile.getProbability(),
-                        profile.getConsequence(),
-                        score,
-                        color,
+                        new RiskCalculationDTO(
+                            profile.getProbability(),
+                            profile.getConsequence(),
+                            score,
+                            color),
                         t.getProblem(),
                         t.getExistingMeasures(),
                         t.getMethod() != null ? t.getMethod().getMessage() : "",
-                        t.getElaboration()
+                        t.getElaboration(),
+                        buildPrecautions(t.getRelatedPrecautions()
+                            .stream()
+                            .map(Precaution.class::cast)
+                            .toList() ),
+                        new RiskCalculationDTO(
+                            profile.getResidualProbability(),
+                            profile.getResidualConsequence(),
+                            residualScore,
+                            residualColor)
                     ));
                 }
             });

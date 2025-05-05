@@ -6,6 +6,7 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
@@ -19,6 +20,7 @@ import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
@@ -75,6 +77,7 @@ public class ReportController {
     private final AssetService assetService;
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
+    private final DPIAService dpiaService;
 
     @GetMapping
     public String reportList(final Model model) {
@@ -215,12 +218,13 @@ public class ReportController {
     }
 
     @GetMapping("dpia")
-    public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "assetId") final Long assetId,
+    public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "dpiaId") final Long dpiaId,
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
-        Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        DPIA dpia = dpiaService.find(dpiaId);
+        Asset asset = dpia.getAsset();
         if (type.equals("PDF")) {
-            byte[] byteData = assetService.getDPIAPdf(asset);
+            byte[] byteData = assetService.getDPIAPdf(dpia);
             response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + asset.getName() + ".pdf");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
@@ -234,15 +238,69 @@ public class ReportController {
                         try {
                             ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + asset.getName() + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
-                            zipOutputStream.write(assetService.getDPIAPdf(asset));
+                            zipOutputStream.write(assetService.getDPIAPdf(dpia));
                         } catch (DocumentException e) {
                             log.warn("Could not generate pdf for dpia for asset with id " + asset.getId() + ". Exeption: "
                                 + e.getMessage());
                         }
 
                         // Add pdfs for selected threatAssessment
-                        if (asset.getDpia().getCheckedThreatAssessmentIds() != null) {
-                            List<String> selectedIds = Arrays.asList(asset.getDpia().getCheckedThreatAssessmentIds().split(","));
+                        if (dpia.getCheckedThreatAssessmentIds() != null) {
+                            String[] selectedIds = dpia.getCheckedThreatAssessmentIds().split(",");
+                            for (String threatAssessmentIdAsString : selectedIds) {
+                                long threatAssessmentId = Long.parseLong(threatAssessmentIdAsString);
+                                ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
+                                if (threatAssessment != null) {
+                                    try {
+                                        ZipEntry file = new ZipEntry("risikovurdering " + threatAssessment.getName() + ".pdf");
+                                        zipOutputStream.putNextEntry(file);
+                                        zipOutputStream.write(threatAssessmentService.getThreatAssessmentPdf(threatAssessment));
+                                    } catch (DocumentException e) {
+                                        log.warn("Could not generate pdf for threat assessment with id " + threatAssessmentId + ". Exeption: "
+                                            + e.getMessage());
+                                    }
+                                }
+                            }
+                        }
+
+                        zipOutputStream.close();
+                    }
+                );
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("dpia/screening")
+    public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaScreeningReport(@RequestParam(name = "dpiaId") final Long dpiaId,
+                                                                          @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
+                                                                          final HttpServletResponse response) throws IOException {
+        DPIA dpia = dpiaService.find(dpiaId);
+        Asset asset = dpia.getAsset();
+        if (type.equals("PDF")) {
+            byte[] byteData = assetService.getDPIAScreeningPdf(asset);
+            response.addHeader("Content-disposition", "attachment;filename=screening vedr " + asset.getName() + ".pdf");
+            response.setContentType("application/pdf");
+            response.getOutputStream().write(byteData);
+            response.flushBuffer();
+        } else if (type.equals("ZIP")) {
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + asset.getName() + ".zip\"")
+                .body(out -> {
+                        var zipOutputStream = new ZipOutputStream(out);
+
+                        // add dpia pdf
+                        try {
+                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + asset.getName() + ".pdf");
+                            zipOutputStream.putNextEntry(dpiaFile);
+                            zipOutputStream.write(assetService.getDPIAScreeningPdf(asset));
+                        } catch (DocumentException e) {
+                            log.warn("Could not generate pdf for dpia for asset with id " + asset.getId() + ". Exeption: "
+                                + e.getMessage());
+                        }
+
+                        // Add pdfs for selected threatAssessment
+                        if (dpia.getCheckedThreatAssessmentIds() != null) {
+                            String[] selectedIds = dpia.getCheckedThreatAssessmentIds().split(",");
                             for (String threatAssessmentIdAsString : selectedIds) {
                                 long threatAssessmentId = Long.parseLong(threatAssessmentIdAsString);
                                 ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);

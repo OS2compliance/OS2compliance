@@ -62,4 +62,10 @@ public class RiskGrid {
     @Column
     @Enumerated(EnumType.STRING)
     private ThreatAssessmentReportApprovalStatus threatAssessmentReportApprovalStatus;
+
+    @Column
+    private boolean fromExternalSource;
+
+    @Column
+    private String externalLink;
 }

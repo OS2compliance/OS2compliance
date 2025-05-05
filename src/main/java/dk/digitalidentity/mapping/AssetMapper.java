@@ -159,7 +159,7 @@ public interface AssetMapper {
         @Mapping(target = "responsibleUsers", source = "systemOwners"),
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
-        @Mapping(target = "dpia", ignore = true),
+        @Mapping(target = "dpias", ignore = true),
         @Mapping(target = "dpiaScreening", ignore = true),
         @Mapping(target = "managers", source = "responsibleUsers"),
         @Mapping(target = "deleted", ignore = true),

@@ -85,6 +85,18 @@
             page-break-inside:avoid
         }
 
+        .bg-green {
+            background-color:#9FCC2E;
+        }
+
+        .bg-yellow {
+            background-color: #ffe405;
+        }
+
+        .bg-red {
+            background-color: #df5645;
+        }
+
     </style>
 </head>
 <body>
@@ -142,6 +154,7 @@
             <th class="col-lg-8">Risikovurdering</th>
             <th class="col-lg-2">Dato</th>
             <th class="col-lg-1">Signeret?</th>
+            <th class="col-lg-2">Status</th>
         </tr>
         </thead>
         <tbody>
@@ -149,6 +162,11 @@
             <td th:text="${threatAssessment.threatAssessmentName}"></td>
             <td th:text="${threatAssessment.date}"></td>
             <td th:text="${threatAssessment.signed} ? 'Ja' : 'Nej'"></td>
+            <td>
+                <div th:if="${threatAssessment.status == T(dk.digitalidentity.model.entity.enums.RiskAssessment).GREEN}" class="bg-green" th:text="${threatAssessment.status.message}"></div>
+                <div th:if="${threatAssessment.status == T(dk.digitalidentity.model.entity.enums.RiskAssessment).YELLOW}" class="bg-yellow" th:text="${threatAssessment.status.message}"></div>
+                <div th:if="${threatAssessment.status == T(dk.digitalidentity.model.entity.enums.RiskAssessment).RED}" class="bg-red" th:text="${threatAssessment.status.message}"></div>
+            </td>
         </tr>
         </tbody>
     </table>

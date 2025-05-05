@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringSetNullSafeConverter;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -9,12 +10,9 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,14 +30,10 @@ import java.util.Set;
 @Table(name = "dpia")
 @Getter
 @Setter
-public class DPIA {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
-
+public class DPIA extends Relatable {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @OneToOne
+    @ManyToOne
     @JoinColumn(name = "asset_id")
     @JsonIgnore
     private Asset asset;
@@ -76,4 +70,20 @@ public class DPIA {
     @OneToMany(orphanRemoval = true, mappedBy = "dpia", cascade = CascadeType.ALL)
     @JsonIgnore
     private List<DPIAReport> dpiaReports = new ArrayList<>();
+
+    @Column
+    private boolean fromExternalSource;
+
+    @Column
+    private String externalLink;
+
+    @Override
+    public RelationType getRelationType() {
+        return RelationType.DPIA;
+    }
+
+    @Override
+    public String getLocalizedEnumValues() {
+        return revisionInterval != null ? revisionInterval.getMessage()+" " : "";
+    }
 }

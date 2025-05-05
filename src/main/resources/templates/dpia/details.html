@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="da"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head th:replace="~{fragments/header :: head (sweetalerts = true, textEditor = true)}"></head>
+<body class="jumping">
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dpia}">Konsekvensanalyser</a></li>
+                                <li class="breadcrumb-item active" aria-current="page" th:text="${dpia.assetName}"></li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2" th:text="${dpia.assetName}"></h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button
+                            type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                            class="btn btn-info btn-lg hstack gap-2"
+                            style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
+                            data-bs-target="#createModal" onclick="createDPIAService.formReset()">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
+                        </button>
+                        <button
+                            type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                            onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2"
+                            style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <div class="flex-fill">
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <div class="d-flex mt-2 justify-content-end">
+                                <div class="d-flex mt-2">
+                                    <div class="d-flex flex-fill align-items-start mb-3 p-1">
+                                        <button type="button" th:if="${changeableAsset}" class="btn btn-success"
+                                                th:onclick="|assetDpiaService.setRevisionInterval(${dpia.id})|">
+                                            <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
+                                        </button>
+                                    </div>
+
+                                    <div class="d-flex align-items-end flex-row mb-3 p-1">
+                                        <a type="button" href="#" class="btn btn-success mb-1" data-bs-toggle="dropdown"
+                                           aria-expanded="false">
+                                            <i class="pli-receipt-4"></i> <span class="vr"></span> Generer rapport
+                                        </a>
+                                        <ul class="dropdown-menu dropdown-menu-end">
+                                            <li><a class="dropdown-item"
+                                                   th:href="@{/reports/dpia(dpiaId=${dpia.id}, type='PDF')}">Download
+                                                som PDF</a></li>
+                                            <li><a class="dropdown-item"
+                                                   th:href="@{/reports/dpia(dpiaId=${dpia.id}, type='ZIP')}">Download
+                                                samlet materiale</a></li>
+                                            <li><a data-bs-toggle="modal" data-bs-target="#sendReportModal"
+                                                   class="dropdown-item">Send</a></li>
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="accordion" id="_dm-dpiaAccordion">
+                                <div class="accordion-item">
+                                    <div class="accordion-header" id="commentAccordionHeading">
+                                        <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#commentAccordionItem" aria-expanded="false" aria-controls="commentAccordionItem">
+                                            Kommentar
+                                        </button>
+                                    </div>
+                                    <div id="commentAccordionItem" class="accordion-collapse collapse" aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
+                                        <div class="accordion-body">
+                                            <textarea id="dpiaCommentArea" th:value="${dpia.comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3" th:text="${dpia.comment}"></textarea>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="accordion-item mt-1">
+                                    <div class="accordion-header" id="screeningSectionHeader">
+                                        <button class="accordion-button collapsed bg-light" type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#screeningSectionItem" aria-expanded="false"
+                                                aria-controls="screeningSectionItem">
+                                            <span id="dpiaBadge2" class="badge">&nbsp</span>&nbspScreening
+                                        </button>
+                                    </div>
+                                    <div id="screeningSectionItem" class="accordion-collapse collapse"
+                                         aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion"
+                                         style="">
+                                        <div
+                                            th:replace="~{dpia/fragments/details_screening :: dpia_details_screening}"></div>
+                                    </div>
+                                </div>
+
+                                <div
+                                    th:replace="~{dpia/fragments/details_consequenceanalysis :: dpia_details_consequenceanalysis}"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='dpia')}"></nav>
+</div>
+
+<div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true"></div>
+<div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
+
+<link rel="stylesheet" th:href="@{/css/dpia_schema.css}"/>
+<div th:replace="~{fragments/footer :: footer (sweetalerts = true, imageTextEditor = true)}"></div>
+<script th:src="@{/js/dpia/details.js}" defer></script>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    /*[+
+        const baseUrl = [[@{/dpia}]];
+        const restUrl = [[@{/rest/dpia}]];
+        const assetId = [[${dpia.assetId}]];
+        const dpiaId = [[${dpia.id}]];
+        let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+        let assetDpiaService, createDPIAService;
+
+        let asset = [[${asset}]];
+    +]*/
+
+        document.addEventListener("DOMContentLoaded", function (event) {
+            assetDpiaService = new AssetDpiaService()
+            assetDpiaService.init()
+            assetDpiaService.initDpia()
+        })
+
+    /*]]>*/
+</script>
+
+</body>
+
+</html>

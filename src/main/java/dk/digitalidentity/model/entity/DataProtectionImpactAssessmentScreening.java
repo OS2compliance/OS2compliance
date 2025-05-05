@@ -29,9 +29,6 @@ public class DataProtectionImpactAssessmentScreening {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "consequence_link")
-    private String consequenceLink;
-
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToOne

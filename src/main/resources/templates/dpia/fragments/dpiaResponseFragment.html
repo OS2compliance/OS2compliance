@@ -1,4 +1,4 @@
-<th:block th:fragment="dpiaResponseFragment" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<th:block th:fragment="dpiaResponseFragment" xmlns:th="http://www.thymeleaf.org">
     <table id="dpiaSchema" style="width: 100%">
         <tbody>
             <th:block th:each="section : ${dpiaSections}">
@@ -58,7 +58,7 @@
                                 <td th:utext="${question.instructions}">
                                 </td>
                                 <td>
-                                    <div th:if="${question.templateAnswer != null} AND ${question.templateAnswer != ''}" th:utext="${question.templateAnswer}"></div>
+<!--                                    <div th:if="${question.templateAnswer != null} AND ${question.templateAnswer != ''}" th:utext="${question.templateAnswer}"></div>-->
                                     <div class="editor-container" style="max-width: 100%">
                                         <textarea class="responses p-2" style="max-width: 100%" th:value="${question.response}" th:text="${question.response}" rows="4" th:data-questionid="${question.id}"></textarea>
                                     </div>

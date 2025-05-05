@@ -2,6 +2,9 @@ package dk.digitalidentity.report.replacers;
 
 import dk.digitalidentity.model.PlaceHolder;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.DataProcessing;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
@@ -9,6 +12,7 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
@@ -28,11 +32,23 @@ import org.apache.poi.xwpf.usermodel.XWPFTable;
 import org.apache.poi.xwpf.usermodel.XWPFTableCell;
 import org.apache.poi.xwpf.usermodel.XWPFTableRow;
 import org.apache.xmlbeans.XmlCursor;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDocument1;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHMerge;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblGrid;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTVMerge;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STMerge;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STPageOrientation;
+import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTextDirection;
 import org.springframework.stereotype.Service;
 
+import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -63,6 +79,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private final ScaleService scaleService;
     private final RelationService relationService;
     private final TaskService taskService;
+	private final ChoiceService choiceService;
 
     private static class ThreatContext {
         Asset asset;
@@ -71,6 +88,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         List<RiskProfileDTO> riskProfileDTOList;
         List<Task> riskAssessmentTasks;
         List<Task> otherTasks;
+		List<String> personsWithDataAccessList = new ArrayList<>();
     }
 
     @Override
@@ -101,7 +119,9 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
             .map(Task.class::cast)
             .collect(Collectors.toList());
         final List<Long> riskAssessmentTasksIds = context.riskAssessmentTasks.stream().map(Relatable::getId).toList();
+
         if (ThreatAssessmentType.ASSET == context.threatAssessment.getThreatAssessmentType()) {
+			//Asset specific
             final Optional<Asset> asset = relations.stream().filter(r -> r.getRelationType() == RelationType.ASSET)
                 .map(Asset.class::cast)
                 .findFirst();
@@ -110,9 +130,24 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 .filter(related -> !riskAssessmentTasksIds.contains(related.getId()))
                 .map(Task.class::cast)
                 .filter(t -> !taskService.isTaskDone(t))
-                .collect(Collectors.toList()));
+                .collect(Collectors.toList())
+			);
             context.asset = asset.orElse(null);
+
+			if (context.asset != null) {
+				context.personsWithDataAccessList = context.asset.getDataProcessing().getAccessWhoIdentifiers().stream()
+						.map(identifier ->
+						{
+							Optional<ChoiceValue> value = choiceService.getValue(identifier);
+							if (value.isPresent()) {
+								return value.get().getCaption();
+							}
+							return "Ikke udfyldt";
+						}).toList();
+			}
+
         } else if (ThreatAssessmentType.REGISTER == context.threatAssessment.getThreatAssessmentType()) {
+			//Register specific
             final Optional<Register> register = relations.stream().filter(r -> r.getRelationType() == RelationType.REGISTER)
                 .map(Register.class::cast)
                 .findFirst();
@@ -123,8 +158,22 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 .filter(t -> !taskService.isTaskDone(t))
                 .collect(Collectors.toList()));
             context.register = register.orElse(null);
+
+			if (context.register != null) {
+				context.personsWithDataAccessList = context.register.getDataProcessing().getAccessWhoIdentifiers().stream()
+						.map(identifier ->
+						{
+							Optional<ChoiceValue> value = choiceService.getValue(identifier);
+							if (value.isPresent()) {
+								return value.get().getCaption();
+							}
+							return "Ikke udfyldt";
+						}).toList();
+			}
+
         }
         context.riskProfileDTOList = threatAssessmentService.buildRiskProfileDTOs(context.threatAssessment);
+
 
         return context;
     }
@@ -135,6 +184,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
     private void insertRiskAssessment(final XWPFParagraph p, final ThreatContext context) {
         final XWPFDocument document = p.getDocument();
+
+		//set landscape orientation
+		CTDocument1 doc = document.getDocument();
+		doc.getBody().getSectPr().getPgSz().setOrient(STPageOrientation.LANDSCAPE);
 
         try (final XmlCursor cursor = p.getCTP().newCursor()) {
             final XWPFParagraph title = document.insertNewParagraph(cursor);
@@ -148,6 +201,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
             subTitle.setAlignment(ParagraphAlignment.CENTER);
             addTextRun(subHeading(context), subTitle);
             advanceCursor(cursor);
+
+			addGeneralInfoSection(document, cursor, context);
 
             addPresentAddMeeting(document, cursor, context);
             addCriticality(document, cursor, context);
@@ -201,19 +256,30 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         final Map<String, List<ThreatDTO>> threatList = threatAssessmentService.buildThreatList(context.threatAssessment);
-        createTableCells(table, context.riskProfileDTOList.size() + 1, 10);
+        createTableCells(table, context.riskProfileDTOList.size() + 1, 14);
 
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Nr.");
-        setCellHeaderTextSmall(headerRow, 1, "Type af trussel");
+        setCellHeaderTextSmall(headerRow, 1, "Type af\ntrussel");
         setCellHeaderTextSmall(headerRow, 2, "Trussel");
-        setCellHeaderTextSmall(headerRow, 3, "Sandsyn\nlighed");
-        setCellHeaderTextSmall(headerRow, 4, "Højeste\nkonsekv\nens");
-        setCellHeaderTextSmall(headerRow, 5, "Risiko\nscore");
+        setCellHeaderTextSmall(headerRow, 3, "Sandsynlighed");
+        setCellHeaderTextSmall(headerRow, 4, "Højest\nkonsekvens");
+        setCellHeaderTextSmall(headerRow, 5, "Risikoscore");
         setCellHeaderTextSmall(headerRow, 6, "Problemstilling");
-        setCellHeaderTextSmall(headerRow, 7, "Eksisterende foranstaltninger");
-        setCellHeaderTextSmall(headerRow, 8, "Risikohåndtering");
-        setCellHeaderTextSmall(headerRow, 9, "Uddybning af risikohåndtering");
+        setCellHeaderTextSmall(headerRow, 7, "Risikohåndtering");
+        setCellHeaderTextSmall(headerRow, 8, "Uddybning af\nrisikohåndtering");
+        setCellHeaderTextSmall(headerRow, 9, "Foranstaltninger");
+		//empty column 10 for merging
+        setCellHeaderTextSmall(headerRow, 11, "Residual\nsandsynlighed");
+        setCellHeaderTextSmall(headerRow, 12, "Residual\nHøjeste Konsekvens");
+        setCellHeaderTextSmall(headerRow, 13, "Residual\nrisikoscore");
+
+		// set table grid, or merging wont work in libreoffice. Contains "magic numbers" for a4 width and margins
+		setTableColumnsWidth(table,14 );
+
+		mergeCellHorizontally(table,0, 9, 10 );
+
+
 
         final Map<String, String> colorMap = scaleService.getScaleRiskScoreColorMap();
 
@@ -236,9 +302,45 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                     setCellTextSmallCentered(row, 5, "" + score);
                     setCellBackgroundColor(row.getCell(5), color);
                     setCellTextSmall(row, 6, t.getProblem());
-                    setCellTextSmall(row, 7, t.getExistingMeasures());
-                    setCellTextSmall(row, 8, t.getMethod() != null ? t.getMethod().getMessage() : "");
-                    setCellTextSmall(row, 9, t.getElaboration());
+                    setCellTextSmall(row, 7, t.getMethod() != null ? t.getMethod().getMessage() : "");
+                    setCellTextSmall(row, 8, t.getElaboration());
+
+					final int residualScore = t.getResidualRiskProbability() * t.getResidualRiskConsequence();
+					setCellTextSmall(row, 11, t.getResidualRiskProbability() > 0 ? ""+t.getResidualRiskProbability() : "");
+					setCellTextSmall(row, 12, t.getResidualRiskConsequence() > 0 ? ""+t.getResidualRiskConsequence() : "");
+					final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
+					if (t.getResidualRiskConsequence() > 0 && t.getResidualRiskProbability() > 0) {
+						setCellBackgroundColor(row.getCell(13), residualColor);
+						setCellTextSmall(row, 13, ""+residualScore);
+					}
+
+					//set first precaution row to Existing
+                    setCellTextSmall(row, 9, "Eksisterende");
+                    setCellTextSmall(row, 10, t.getExistingMeasures());
+
+					//Save index of first row, for future merging
+					int mergeStartIndex = idx[0];
+					for (var relatable : t.getRelatedPrecautions()) {
+						idx[0]++;
+						//Create a row for each related precaution
+						Precaution precaution = (Precaution)relatable;
+						table.createRow();
+						XWPFTableRow precautionRow =  table.getRow(idx[0]);
+						setCellTextSmall(precautionRow, 9, precaution.getName());
+						setCellTextSmall(precautionRow, 10, precaution.getDescription());
+					}
+					//Merge all other columns than precautions
+					for(int i =0; i < 14; i++) {
+						if (i==9 || i ==10) {
+							continue;
+						}
+						System.out.println("merging column: "+i+" from row: "+mergeStartIndex+" to row: "+mergeStartIndex+t.getRelatedPrecautions().size());
+						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
+					}
+
+
+
+
                     idx[0]++;
                 }
             });
@@ -523,6 +625,114 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         }
     }
 
+	public record registeredDataCategory(String title, List<String> types) {
+	}
+
+	private void addGeneralInfoSection(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+		if (context.asset != null || context.register != null) {
+			boolean isAsset = context.asset != null;
+			DataProcessing dataProcessing = isAsset ? context.asset.getDataProcessing() : context.register.getDataProcessing();
+			List<registeredDataCategory> categories = dataProcessing.getRegisteredCategories().stream().map(cat ->
+					{
+						Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
+						List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+								.filter(Objects::nonNull)
+								.toList();
+						if (title.isEmpty()) {
+							return null;
+						}
+						return new registeredDataCategory(title.get().getCaption(), types);
+					})
+					.filter(Objects::nonNull)
+					.toList();
+
+			final XWPFParagraph heading = document.insertNewParagraph(cursor);
+			heading.setStyle(HEADING3);
+			addTextRun("Systeminformation", heading);
+			advanceCursor(cursor);
+
+			final XWPFParagraph tableParagraph = document.insertNewParagraph(cursor);
+			tableParagraph.setStyle(SMALL_TEXT);
+			tableParagraph.setAlignment(ParagraphAlignment.CENTER);
+
+			advanceCursor(cursor);
+			final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
+			table.setTableAlignment(TableRowAlign.LEFT);
+
+			createTableCells(table, 8 + categories.size(), 2);
+			final XWPFTableRow row = table.getRow(0);
+
+			//System type
+			setCellTextSmall(row, 0, "Systemtype:");
+			setCellTextSmall(row, 1, isAsset ? context.asset.getAssetType().getCaption() : "Fortegnelse");
+
+			//System owners
+			final XWPFTableRow row1 = table.getRow(1);
+			String systemOwners = isAsset ?
+					context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))
+					: context.register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+			;
+			setCellTextSmall(row1, 0, "Systemejere:");
+			setCellTextSmall(row1, 1, systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
+
+			//System responsible
+			final XWPFTableRow row2 = table.getRow(2);
+			setCellTextSmall(row2, 0, "Systemansvarlige:");
+			setCellTextSmall(row2, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
+
+			//Suppliers
+			final XWPFTableRow row3 = table.getRow(3);
+			setCellTextSmall(row3, 0, "Leverandør:");
+			setCellTextSmall(row3, 1, isAsset && context.asset.getSupplier() != null ? context.asset.getSupplier().getName() : "");
+
+			//Who has access?
+			final XWPFTableRow row4 = table.getRow(4);
+			setCellTextSmall(row4, 0, "Hvem har adgang til personoplysningerne?:");
+			setCellTextSmall(row4, 1, String.join(", ", context.personsWithDataAccessList));
+
+			//Access count
+			final XWPFTableRow row5 = table.getRow(5);
+			setCellTextSmall(row5, 0, "Hvor mange har adgang til personoplysningerne?:");
+			var accessCount = choiceService.getValue(dataProcessing.getAccessCountIdentifier());
+			setCellTextSmall(row5, 1, accessCount.isPresent() ? accessCount.get().getCaption() : "");
+
+			//Deletion procedure?
+			final XWPFTableRow row6 = table.getRow(6);
+			setCellTextSmall(row6, 0, "Sletteprocedure udarbejdet?:");
+			setCellTextSmall(row6, 1, dataProcessing.getDeletionProcedure() != null ? dataProcessing.getDeletionProcedure().getMessage() : "Ikke udfyldt");
+
+			//Deletion procedure link
+			final XWPFTableRow row7 = table.getRow(7);
+			setCellTextSmall(row7, 0, "Link til sletteprocedure");
+			setCellTextSmall(row7, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
+
+			// Registered data categories
+			for (int i = 0; i < categories.size(); i++) {
+				final XWPFTableRow catRow = table.getRow(i + 8); // Add magic number of previous rows to start at the current row
+				if (i == 0) {
+					setCellTextSmall(catRow, 0, "Registrerede persondatakategorier:");
+				}
+				setCellTextSmall(catRow, 1, categories.get(i).title);
+				final XWPFTableCell cell2 = getCell(catRow, 2);
+				final XWPFParagraph paragraph = cell2.getParagraphs().getFirst();
+				paragraph.setStyle(SMALL_TEXT);
+				for(var type : categories.get(i).types){
+					XWPFRun run = paragraph.createRun();
+					run.setText(type.trim());
+					run.addBreak();
+				}
+			}
+			if (categories.isEmpty()) {
+				final XWPFTableRow row8 = table.createRow();
+				setCellTextSmall(row8, 0, "Registrerede persondatakategorier:");
+			}
+
+			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);
+			advanceCursor(cursor);
+			advanceCursor(cursor);
+		}
+	}
+
     private String riskProfileHeading(final ThreatContext context) {
         return "Risikoprofil for "  + context.threatAssessment.getName();
     }
@@ -542,4 +752,83 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         }
         return "Risikoejer ikke udfyldt";
     }
+
+	/**
+	 * Shamelessly stolen from the internet: https://verytools.net/xtools-guide/en/posts/poi-tutorial-table
+	 * @param table
+	 * @param col
+	 * @param fromRow
+	 * @param toRow
+	 */
+	private void mergeCellVertically(XWPFTable table, int col, int fromRow, int toRow) {
+		for (int rowIndex = fromRow; rowIndex <= toRow; rowIndex++) {
+			XWPFTableCell cell = table.getRow(rowIndex).getCell(col);
+			CTVMerge vmerge = CTVMerge.Factory.newInstance();
+			if (rowIndex == fromRow) {
+				// The first merged cell is set with RESTART merge value
+				vmerge.setVal(STMerge.RESTART);
+			} else {
+				// Cells which join (merge) the first one, are set with CONTINUE
+				vmerge.setVal(STMerge.CONTINUE);
+				// and the content should be removed
+				clearCell(cell);
+			}
+			// Try getting the TcPr. Not simply setting an new one every time.
+			CTTcPr tcPr = cell.getCTTc().getTcPr();
+			if (tcPr == null) tcPr = cell.getCTTc().addNewTcPr();
+			tcPr.setVMerge(vmerge);
+		}
+	}
+
+	/**
+	 * Shamelessly stolen from the internet: https://verytools.net/xtools-guide/en/posts/poi-tutorial-table
+	 * @param cell
+	 */
+	private void clearCell(XWPFTableCell cell) {
+		for (int i = cell.getParagraphs().size(); i > 0; i--) {
+			cell.removeParagraph(0);
+		}
+		cell.addParagraph();
+	}
+
+	/**
+	 * Shamelessly stolen from the internet: https://verytools.net/xtools-guide/en/posts/poi-tutorial-table
+	 * @param table
+	 * @param row
+	 * @param fromCol
+	 * @param toCol
+	 */
+	public void mergeCellHorizontally(XWPFTable table, int row, int fromCol, int toCol) {
+		for (int colIndex = fromCol; colIndex <= toCol; colIndex++) {
+			XWPFTableCell cell = table.getRow(row).getCell(colIndex);
+			CTHMerge hmerge = CTHMerge.Factory.newInstance();
+			if (colIndex == fromCol) {
+				// The first merged cell is set with RESTART merge value
+				hmerge.setVal(STMerge.RESTART);
+			} else {
+				// Cells which join (merge) the first one, are set with CONTINUE
+				hmerge.setVal(STMerge.CONTINUE);
+				// and the content should be removed
+				clearCell(cell);
+			}
+			// Try getting the TcPr. Not simply setting an new one every time.
+			CTTcPr tcPr = cell.getCTTc().getTcPr();
+			if (tcPr == null) tcPr = cell.getCTTc().addNewTcPr();
+			tcPr.setHMerge(hmerge);
+		}
+	}
+
+	public static void setTableColumnsWidth(XWPFTable table, int columncount) {
+		int pageWidth = 595; // A4 width in points
+		int leftMargin = 72; // Left margin in points (1 inch)
+		int rightMargin = 72; // Right margin in points (1 inch)
+
+		int availableWidth = pageWidth - leftMargin - rightMargin;
+
+		CTTblGrid grid = table.getCTTbl().addNewTblGrid();
+		for (int i =0; i< columncount; i++) {
+			grid.addNewGridCol().setW(BigInteger.valueOf(availableWidth*20));
+		}
+	}
+
 }

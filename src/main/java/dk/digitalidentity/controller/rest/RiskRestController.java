@@ -24,6 +24,7 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
@@ -405,5 +406,81 @@ public class RiskRestController {
         }
         final List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
         return new ResponsibleUsersWithElementNameDTO(asset.getName(), users);
+    }
+
+    public record CreateExternalRiskassessmentDTO(Long riskId, Set<Long> assetIds, String link, String name, ThreatAssessmentType type, Long registerId) {
+    }
+    @PostMapping("external/create")
+    public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalRiskassessmentDTO createExternalDTO) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
+
+        ThreatAssessment threatAssessment = null;
+        if (createExternalDTO.riskId != null) {
+            //editing existing
+            threatAssessment = threatAssessmentService.findById(createExternalDTO.riskId)
+                .orElseThrow();
+            threatAssessment.setName(createExternalDTO.name);
+            threatAssessment.setExternalLink(createExternalDTO.link);
+        } else {
+            //creating new
+            threatAssessment = new ThreatAssessment();
+            threatAssessment.setExternalLink(createExternalDTO.link);
+            threatAssessment.setFromExternalSource(true);
+            threatAssessment.setName(createExternalDTO.name);
+            threatAssessment.setThreatAssessmentType(createExternalDTO.type);
+            threatAssessment = threatAssessmentService.save(threatAssessment);
+            if (createExternalDTO.type.equals(ThreatAssessmentType.ASSET)) {
+                relateAssets(createExternalDTO.assetIds, threatAssessment);
+            } else if (createExternalDTO.type.equals(ThreatAssessmentType.REGISTER)) {
+                relateRegister(createExternalDTO.registerId, threatAssessment);
+            }
+
+        }
+        threatAssessmentService.save(threatAssessment);
+
+        return new ResponseEntity<>(HttpStatus.OK);
+    }
+
+    private void relateAssets(final Set<Long> selectedAsset, final ThreatAssessment savedThreatAssessment) {
+        final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
+        relatedAssets.forEach(asset -> relationService.addRelation(savedThreatAssessment, asset));
+        if (savedThreatAssessment.isInherit()) {
+            inheritRisk(savedThreatAssessment, relatedAssets);
+        }
+    }
+
+    private void relateRegister(final Long selectedRegister, final ThreatAssessment savedThreatAssessment) {
+        final Register register = registerService.findById(selectedRegister).orElseThrow(
+            () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
+        relationService.addRelation(savedThreatAssessment, register);
+    }
+
+    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
+        final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
+        savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
+        savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
+        savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
+        savedThreatAssesment.setInheritedConfidentialityOrganisation(riskDTO.getOf());
+        savedThreatAssesment.setInheritedIntegrityOrganisation(riskDTO.getOi());
+        savedThreatAssesment.setInheritedAvailabilityOrganisation(riskDTO.getOt());
+
+        for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
+            final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+            response.setName(threat.getDescription());
+            response.setConfidentialityRegistered(riskDTO.getRf());
+            response.setIntegrityRegistered(riskDTO.getRi());
+            response.setAvailabilityRegistered(riskDTO.getRt());
+            response.setConfidentialityOrganisation(riskDTO.getOf());
+            response.setIntegrityOrganisation(riskDTO.getOi());
+            response.setAvailabilityOrganisation(riskDTO.getOt());
+            response.setMethod(ThreatMethod.NONE);
+            response.setThreatCatalogThreat(threat);
+            response.setThreatAssessment(savedThreatAssesment);
+            savedThreatAssesment.getThreatAssessmentResponses().add(response);
+        }
+        threatAssessmentService.save(savedThreatAssesment);
     }
 }

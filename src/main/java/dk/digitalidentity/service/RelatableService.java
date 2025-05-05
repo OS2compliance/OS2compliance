@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DBSOversight;
+import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Register;
@@ -53,6 +54,7 @@ public class RelatableService {
             case STANDARD_SECTION -> Collections.singletonList(((StandardSection)relatable).getResponsibleUser());
             case THREAT_ASSESSMENT -> Collections.singletonList(((ThreatAssessment)relatable).getResponsibleUser());
             case THREAT_ASSESSMENT_RESPONSE -> Collections.singletonList(((ThreatAssessmentResponse)relatable).getThreatAssessment().getResponsibleUser());
+            case DPIA -> ((DPIA) relatable).getAsset().getResponsibleUsers();
         };
     }
 
