@@ -154,7 +154,7 @@ function setField() {
                 throw new Error(`${response.status} ${response.statusText}`);
             }
             toastService.info("Info", "Dine ændringer er blevet gemt")
-        }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
+        }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.error(error)});
 }
 
 function updateAverage() {
@@ -371,7 +371,6 @@ function createTaskClicked(elem) {
 }
 
 function deleteThreatClicked(elem) {
-    console.log(`delete ${elem.dataset.customid} in assessment ${elem.dataset.riskid}`)
     Swal.fire({
         text: `Er du sikker på du vil slette denne trusslen?`,
         icon: 'warning',

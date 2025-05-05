@@ -18,11 +18,12 @@ class CreateDPIAService {
 
 
     #initAssetSelect(assetSelectElement) {
+        const self = this;
         const assetChoices = initSelect(assetSelectElement);
         this.#updateTypeSelect(assetChoices, "", "ASSET");
         assetSelectElement.addEventListener("search",
             function(event) {
-                this.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
+                self.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
             },
             false,
         );

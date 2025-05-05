@@ -141,6 +141,11 @@ public class RiskController {
     @GetMapping("{id}/edit")
     public String riskEditDialog(final Model model, @PathVariable("id") final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		if (threatAssessment.getThreatAssessmentType() == ThreatAssessmentType.ASSET) {
+			final List<Relation> assetRelations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
+			model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
+		}
+
         model.addAttribute("risk", threatAssessment);
         return "risks/editForm";
     }
@@ -149,12 +154,21 @@ public class RiskController {
     @PostMapping("{id}/edit")
     public String performEdit(@PathVariable("id") final long id,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
-                              @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids) {
+                              @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
+								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets
+	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
+		}
+
+		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
+			relationService.setRelationsAbsolute(editedAssessment, selectedAssets);
+		}
         editedAssessment.setName(assessment.getName());
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         editedAssessment.setResponsibleOu(assessment.getResponsibleOu());

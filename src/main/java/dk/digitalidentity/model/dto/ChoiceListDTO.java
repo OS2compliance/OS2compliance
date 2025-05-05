@@ -25,4 +25,5 @@ public class ChoiceListDTO {
     private Boolean multiSelect;
     @Builder.Default
     private List<String> valueIdentifiers = new ArrayList<>();
+    private boolean customizable;
 }

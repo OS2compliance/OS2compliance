@@ -126,7 +126,6 @@ public class IncidentController {
 
     @PostMapping("log")
     public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
-        // TODO Add relations
         if (incident.getId() != null) {
             final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));

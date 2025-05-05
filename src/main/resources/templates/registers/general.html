@@ -106,7 +106,7 @@
                             <tbody>
                                 <tr th:with="relatedAsset = ${relatedAssetEntry.value}" th:each="relatedAssetEntry : ${relatedAssetsSubSuppliers}">
                                     <td>
-                                        <a th:text="${relatedAsset.asset.name + ' (' + relatedAsset.asset.assetType.message + ')'}" th:href="@{/assets/{id}(id=${relatedAsset.asset.id})}"></a>
+                                        <a th:text="${relatedAsset.asset.name + ' (' + relatedAsset.asset.assetType.caption + ')'}" th:href="@{/assets/{id}(id=${relatedAsset.asset.id})}"></a>
                                     </td>
                                     <td th:text="${relatedAsset.asset.supplier?.name}"></td>
                                     <td th:text="${relatedAsset.asset.DataProcessingAgreementStatus.message}"></td>

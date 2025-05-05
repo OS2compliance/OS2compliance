@@ -23,26 +23,6 @@ function DBSAssetService() {
                 },
                 debounceTimeout: 1000
             },
-            pagination: {
-                limit: 25,
-                resetPageOnUpdate: false,
-                server: {
-                    url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}`)
-                }
-            },
-            sort: {
-                enabled: true,
-                multiColumn: false,
-                server: {
-                    url: (prev, columns) => {
-                        if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', '', 'lastSync', 'supplier' ];
-                        const col = columns[0]; // multiColumn false
-                        const order = columnIds[col.index];
-                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                    }
-                }
-            },
             columns: [
                 {
                     name: "id",
@@ -50,10 +30,16 @@ function DBSAssetService() {
                 },
                 {
                     name: "DBS Navn",
+                    searchable: {
+                        searchKey: 'name'
+                    },
                 },
                 {
                     name: "Aktiv(er)",
                     sort: false,
+                    searchable: {
+                        searchKey: 'assetNames'
+                    },
                     formatter: (cell, row) => {
                         const dbsAssetId = row.cells[0]['data'];
 
@@ -71,10 +57,16 @@ function DBSAssetService() {
                     width: '300px'
                 },
                 {
-                    name: "Sidst hentet"
+                    name: "Sidst hentet",
+                    searchable: {
+                        searchKey: 'lastSync'
+                    }
                 },
                 {
-                    name: "Leverandør"
+                    name: "Leverandør",
+                    searchable: {
+                        searchKey: 'supplier'
+                    }
                 }
             ],
             server:{
@@ -120,9 +112,13 @@ function DBSAssetService() {
                 assetChoices.passedElement.element.addEventListener('addItem', self.handleAddRemoveEvent, false);
             });
         });
-        searchService.initSearch(grid, gridConfig);
+
+
+        new CustomGridFunctions(grid, gridDBSAssetsUrl, 'assetsDatatable')
+
         gridOptions.init(grid, document.getElementById("gridOptions"));
 
+        // const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
     }
 
 

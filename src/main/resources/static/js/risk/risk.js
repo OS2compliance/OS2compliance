@@ -1,4 +1,216 @@
 
+    const defaultClassName = {
+        table: 'table table-striped',
+        search: "form-control",
+        header: "d-flex justify-content-end"
+    };
+
+    document.addEventListener("DOMContentLoaded", function(event) {
+        const defaultClassName = {
+            table: 'table table-striped',
+            search: "form-control",
+            header: "d-flex justify-content-end"
+        };
+
+        let gridConfig = {
+            className: defaultClassName,
+            columns: [
+                {
+                    name: "id",
+                    hidden: true
+                },
+                {
+                    name: "Risikovurdering",
+                    searchable: {
+                        searchKey: 'name'
+                    },
+                    formatter: (cell, row) => {
+                        const external = row.cells[10]['data']
+                        const externalLink = row.cells[11]['data']
+                        const url = viewUrl + row.cells[0]['data'];
+                        if(external) {
+                            return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
+                        } else {
+                            return gridjs.html(`<a href="${url}">${cell}</a>`);
+                        }
+                    }
+                },
+                {
+                    name: "Type",
+                    searchable: {
+                        searchKey: 'type',
+                        fieldId :'riskThreatAssessmentSearchSelector'
+                    },
+                    width: '120px',
+                },
+                {
+                    name: "Fagområde",
+                    searchable: {
+                        searchKey: 'responsibleOU.name'
+                    },
+                },
+                {
+                    name: "Risikoejer",
+                    searchable: {
+                        searchKey: 'responsibleUser.name'
+                    },
+                },
+                {
+                    name: "Opgaver",
+                    searchable: {
+                        sortKey: 'tasks'
+                    },
+                    width: '120px',
+                },
+                {
+                    name: "Dato",
+                    searchable: {
+                        searchKey: 'date'
+                    },
+                    width: '120px',
+                },
+                {
+                    name: "Status",
+                    width: '120px',
+                    searchable: {
+                        searchKey: 'threatAssessmentReportApprovalStatus',
+                        fieldId: 'riskStatusSearchSelector'
+                    },
+                },
+                {
+                    name: "Risikovurdering",
+                    searchable: {
+                        searchKey: 'assessment',
+                       fieldId: 'riskAssessmentSearchSelector'
+                    },
+                    width: '120px',
+                    formatter: (cell, row) => {
+                        var status = cell;
+                        if (cell === "Grøn") {
+                            status = [
+                                '<div class="d-block badge bg-green">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Lysgrøn") {
+                            status = [
+                                '<div class="d-block badge bg-green-300">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Gul") {
+                            status = [
+                                '<div class="d-block badge bg-yellow">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Orange") {
+                            status = [
+                                '<div class="d-block badge bg-orange">' + cell + '</div>'
+                            ]
+                        } else if (cell === "Rød") {
+                            status = [
+                                '<div class="d-block badge bg-danger">' + cell + '</div>'
+                            ]
+                        } else if (cell === "NONE") {
+                            return "";
+                        }
+                        return gridjs.html(''.concat(...status), 'div')
+                    },
+                },
+                {
+                    id: 'handlinger',
+                    name: 'Handlinger',
+                    sort: 0,
+                    width: '100px',
+                    formatter: (cell, row) => {
+                        const riskId = row.cells[0]['data'];
+                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                        const external = row.cells[10]['data']
+                        const externalLink = row.cells[11]['data']
+                        const changeable = row.cells[9]['data']
+                        let buttonHTML = ''
+
+                        //edit button
+                        if ((superuser || changeable)
+                            && external) {
+                            buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalRiskassessmentService.editExternalClicked('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
+                        } else if(superuser || changeable) {
+                            buttonHTML = buttonHTML +
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
+                                +`<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
+                        }
+                        //delete & copy buttons
+                        if (superuser) {
+                            buttonHTML = buttonHTML +
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
+                        }
+                        return  gridjs.html(buttonHTML)
+                    }
+                },
+                {
+                    name: "fromExternalSource",
+                    hidden: true
+                },
+                {
+                    name: "externalLink",
+                    hidden: true
+                },
+            ],
+            server:{
+                url: gridRisksUrl,
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': token
+                },
+                then: data => data.content.map(risk =>
+                    [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.threatAssessmentReportApprovalStatus, risk.assessment, risk.changeable]
+                ),
+                then: data => data.content.map(obj => {
+                        const result = []
+                        for (const property of columnProperties) {
+                            result.push(obj[property])
+                        }
+                        return result;
+                    }
+                ),
+                total: data => data.totalCount
+            },
+            language: {
+                'search': {
+                    'placeholder': 'Søg'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': 'Opgaver',
+                    'of': 'af',
+                    'to': 'til',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'page': (page) => `Side ${page}`
+                }
+            }
+        };
+        const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
+
+        new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
+
+        gridOptions.init(grid, document.getElementById("gridOptions"));
+    });
+
+function deleteClicked(riskId, name) {
+    Swal.fire({
+      text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra risikovurderingen slettes også.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#03a9f4',
+      cancelButtonColor: '#df5645',
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${deleteUrl}${riskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+      }
+    })
+}
 
 function formReset() {
     const form = document.querySelector('form');
@@ -108,13 +320,21 @@ function EditRiskService() {
             self.userChanged(userUuid);
         });
 
+        const assetSelect = this.getScopedElementById('copyAssetSelect');
+        if (assetSelect !== null) {
+            this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        }
 
         this.editAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.editAssessmentModal.show();
     }
 
     this.validate = function() {
-        return validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
+        let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
+        if (this.assetChoicesSelect != null) {
+            result &= checkInputField(this.assetChoicesSelect, true);
+        }
+        return result;
     }
 }
 
@@ -362,218 +582,3 @@ function CreateRiskService() {
 
 
 }
-
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
-
-    const updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
-
-    function initTable() {
-    const defaultClassName = {
-                table: 'table table-striped',
-                search: "form-control",
-                header: "d-flex justify-content-end"
-            };
-
-            let gridConfig = {
-                className: defaultClassName,
-                search: {
-                    keyword: searchService.getSavedSearch(),
-                    server: {
-                        url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                    },
-                    debounceTimeout: 1000
-                },
-                pagination: {
-                    limit: 50,
-                    server: {
-                        url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                    }
-                },
-                sort: {
-                    enabled: true,
-                    multiColumn: false,
-                    server: {
-                        url: (prev, columns) => {
-                            if (!columns.length) return prev;
-                            const columnIds = columnProperties
-                            const col = columns[0]; // always sort by the fiŕst in array
-                            const order = columnIds[col.index || 1];
-                            return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                        }
-                    }
-                },
-                columns: [
-                    {
-                        name: "id",
-                        hidden: true
-                    },
-                    {
-                        name: "Risikovurdering",
-                        formatter: (cell, row) => {
-                            const external = row.cells[10]['data']
-                            const externalLink = row.cells[11]['data']
-                            const url = viewUrl + row.cells[0]['data'];
-                            if(external) {
-                                return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
-                            } else {
-                                return gridjs.html(`<a href="${url}">${cell}</a>`);
-                            }
-                        }
-                    },
-                    {
-                        name: "Type"
-                    },
-                    {
-                        name: "Fagområde",
-                        width: '15%'
-                    },
-                    {
-                        name: "Risikoejer",
-                        width: '15%'
-                    },
-                    {
-                        name: "Opgaver",
-                    },
-                    {
-                        name: "Dato",
-                    },
-                    {
-                        name: "Status",
-                        width: '10%'
-                    },
-                    {
-                        name: "Risikovurdering",
-                        width: '10%',
-                        formatter: (cell, row) => {
-                            var status = cell;
-                            if (cell === "Grøn") {
-                                status = [
-                                    '<div class="d-block badge bg-green">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Lysgrøn") {
-                                status = [
-                                    '<div class="d-block badge bg-green-300">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Gul") {
-                                status = [
-                                    '<div class="d-block badge bg-yellow">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Orange") {
-                                status = [
-                                    '<div class="d-block badge bg-orange">' + cell + '</div>'
-                                ]
-                            } else if (cell === "Rød") {
-                                status = [
-                                    '<div class="d-block badge bg-danger">' + cell + '</div>'
-                                ]
-                            } else if (cell === "NONE") {
-                                return "";
-                            }
-                            return gridjs.html(''.concat(...status), 'div')
-                        },
-                    },
-                    {
-                        id: 'handlinger',
-                        name: 'Handlinger',
-                        sort: 0,
-                        width: '10%',
-                        formatter: (cell, row) => {
-                            const riskId = row.cells[0]['data'];
-                            const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                            const external = row.cells[10]['data']
-                            const externalLink = row.cells[11]['data']
-                            const changeable = row.cells[9]['data']
-                            let buttonHTML = ''
-
-                            //edit button
-                            if ((superuser || changeable)
-                                && external) {
-                                buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalRiskassessmentService.editExternalClicked('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
-                            } else if(superuser || changeable) {
-                                buttonHTML = buttonHTML +
-                                    `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
-                                    +`<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                            }
-                            //delete & copy buttons
-                            if (superuser) {
-                                buttonHTML = buttonHTML +
-                                    `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
-                            }
-                            return  gridjs.html(buttonHTML)
-                        }
-                    },
-                    {
-                        name: "fromExternalSource",
-                        hidden: true
-                    },
-                    {
-                        name: "externalLink",
-                        hidden: true
-                    },
-                ],
-                server:{
-                    url: gridRisksUrl,
-                    method: 'POST',
-                    headers: {
-                        'X-CSRF-TOKEN': token
-                    },
-                    then: data => data.content.map(risk =>
-                        [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.threatAssessmentReportApprovalStatus, risk.assessment, risk.changeable]
-                    ),
-                    then: data => data.content.map(obj => {
-                            const result = []
-                            for (const property of columnProperties) {
-                                result.push(obj[property])
-                            }
-                            return result;
-                        }
-                    ),
-                    total: data => data.totalCount
-                },
-                language: {
-                    'search': {
-                        'placeholder': 'Søg'
-                    },
-                    'pagination': {
-                        'previous': 'Forrige',
-                        'next': 'Næste',
-                        'showing': 'Viser',
-                        'results': 'Opgaver',
-                        'of': 'af',
-                        'to': 'til',
-                        'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                        'page': (page) => `Side ${page}`
-                    }
-                }
-            };
-            const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
-            searchService.initSearch(grid, gridConfig);
-            gridOptions.init(grid, document.getElementById("gridOptions"));
-    }
-
-
-
-    function deleteClicked(riskId, name) {
-        Swal.fire({
-          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra risikovurderingen slettes også.`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#03a9f4',
-          cancelButtonColor: '#df5645',
-          confirmButtonText: 'Ja',
-          cancelButtonText: 'Nej'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`${deleteUrl}${riskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                    .then(() => {
-                        window.location.reload();
-                    });
-          }
-        })
-    }

@@ -112,7 +112,6 @@ function submitForm(event, button, state) {
         status: statusValue
     }
 
-    console.log(data)
     postData(form.getAttribute('action'), data)
         .then(response => {
             if (response.status == 200) {
@@ -142,23 +141,23 @@ function submitForm(event, button, state) {
                 documentATagsText.forEach(text => {
                     let div = document.createElement('div');
                     let node = document.createElement('a');
-                    
+
                     node.href = `${window.location.origin}/documents/${sectionId}`;
-                    
+
                     // Apply the same logic to the documents part
                     let innerText = text.includes(":") ? text.split(':')[1].trim() : text;
-                    
+
                     node.innerText = innerText;
 
                     div.appendChild(node);
                     documentsShow.appendChild(div);
                 });
-                
+
 
                 //update ui textbox for descript
                 let description = document.getElementById(`descriptionRead${sectionId}`)
                 description.innerHTML = editDescript;
-                
+
                 statusSelect.value = statusValue;
             }
             else {

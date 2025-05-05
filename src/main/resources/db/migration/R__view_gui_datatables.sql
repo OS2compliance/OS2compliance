@@ -2,7 +2,7 @@ CREATE OR REPLACE
 VIEW view_gridjs_suppliers AS
 SELECT
 	s.id,
-	s.name,
+	TRIM(s.name) as name,
 	(SELECT COUNT(1) FROM assets a WHERE a.supplier_id=s.id) AS solution_count,
     s.updated_at AS updated,
     s.status,
@@ -36,7 +36,7 @@ SELECT
         END) as task_result_order,
     (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
-    GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value ASC SEPARATOR ',') as tags
+    GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tags
 FROM tasks t
     LEFT JOIN task_logs ts on ts.task_id = t.id
     LEFT JOIN relatable_tags rt on rt.relatable_id = t.id
@@ -107,7 +107,7 @@ SELECT
     a.id,
     a.name,
     s.name as supplier,
-    a.asset_type,
+    cv.caption as asset_type,
     GROUP_CONCAT(u.name SEPARATOR ', ') as responsible_user_names,
     GROUP_CONCAT(u.uuid SEPARATOR ',') as responsible_user_uuids,
     a.updated_at,
@@ -149,6 +149,7 @@ FROM assets a
                          ORDER BY r.id DESC LIMIT 1)
     LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
     LEFT JOIN users u ON ru.user_uuid = u.uuid
+    LEFT JOIN choice_values cv ON a.asset_type = cv.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
@@ -157,7 +158,7 @@ CREATE OR REPLACE
 VIEW view_gridjs_assessments AS
 SELECT
     t.id,
-    t.name,
+    TRIM(t.name) as name,
     t.responsible_uuid,
     t.responsible_ou_uuid,
     t.threat_assessment_type as type,
@@ -314,7 +315,8 @@ SELECT
     a.name,
     a.last_sync,
     s.name as supplier,
-    GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',') AS assets
+    GROUP_CONCAT(a2.id ORDER BY a2.id SEPARATOR ',') AS assets_ids,
+    GROUP_CONCAT(a2.name ORDER BY a2.name SEPARATOR ',') AS asset_names
 FROM dbs_asset a
     LEFT JOIN dbs_supplier s on a.dbs_supplier_id = s.id
     LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
@@ -331,6 +333,7 @@ SELECT
     s.id as supplier_id,
     a.supervisory_model,
     GROUP_CONCAT(da.id ORDER BY da.id SEPARATOR ',') AS dbs_assets,
+    GROUP_CONCAT(da.name ORDER BY da.name SEPARATOR ',') AS dbs_asset_names,
     a.oversight_responsible_uuid,
     ao.creation_date as last_inspection,
     ao.status as last_inspection_status,

@@ -20,6 +20,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -164,6 +165,16 @@ public class DPIAController {
 
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
+
+	public record DPIAAssetDTO(long id, String name){}
+	@RequireSuperuserOrAdministrator
+	@GetMapping("{dpiaId}/edit")
+	public String getEditFragment(final Model model, @PathVariable Long dpiaId) {
+		final DPIA dpia = dpiaService.find(dpiaId);
+		model.addAttribute("dpiaId", dpia.getId());
+		model.addAttribute("asset", new DPIAAssetDTO(dpia.getAsset().getId(), dpia.getAsset().getName()));
+		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";
+	}
 
 
     record DPIAQuestionDTO(long id, long questionResponseId, String question, String instructions, String templateAnswer, String response) {}

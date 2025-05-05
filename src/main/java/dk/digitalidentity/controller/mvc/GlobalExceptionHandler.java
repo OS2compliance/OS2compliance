@@ -9,6 +9,7 @@ import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -34,13 +35,18 @@ public class GlobalExceptionHandler {
         return errorView(request, "errors/technicalError");
     }
 
+    @ExceptionHandler(value = MethodArgumentNotValidException.class)
+    public ModelAndView validationExceptionHandler(final HttpServletRequest request, final Exception e) throws Exception {
+        return errorView(request, "errors/badArgument");
+    }
+
     @ExceptionHandler(value = ResponseStatusException.class)
-    public ModelAndView defaultErrorHandler(final HttpServletRequest request, final ResponseStatusException e) throws Exception {
+    public ModelAndView defaultErrorHandler(final HttpServletRequest request, final ResponseStatusException e) {
         throw e;
     }
 
     @ExceptionHandler(value = {AccessDeniedException.class, UsernameNotFoundException.class})
-    public ModelAndView accessDeniedErrorHandler(final HttpServletRequest request, final Exception e) throws Exception {
+    public ModelAndView accessDeniedErrorHandler(final HttpServletRequest request, final Exception e) {
         return errorView(request, "errors/missingClaims");
     }
 

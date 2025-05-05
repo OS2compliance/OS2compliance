@@ -1,27 +1,9 @@
 package dk.digitalidentity.integration.dbs;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeFormatterBuilder;
-import java.time.temporal.ChronoField;
-import java.time.temporal.IsoFields;
-import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import dk.digitalidentity.dao.DBSAssetDao;
-import org.springframework.stereotype.Service;
-
 import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
 import dk.dbs.api.model.Supplier;
+import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
 import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
@@ -40,6 +22,23 @@ import dk.digitalidentity.service.TaskService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 
@@ -84,7 +83,9 @@ public class DBSService {
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
                 asset.setStatus(itSystem.getStatus().getValue());
-                asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                if (itSystem.getNextRevision() != null) {
+                    asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                }
                 dbsAssetDao.save(asset);
             })
             .count();
@@ -98,6 +99,10 @@ public class DBSService {
                         dbsAsset.setName(itSystem.getName());
                         dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                             .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
+                        dbsAsset.setStatus(itSystem.getStatus().getValue());
+                        if (itSystem.getNextRevision() != null) {
+                            dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                        }
                         dbsAsset.setLastSync(lastSync);
                     });
             })
@@ -208,6 +213,7 @@ public class DBSService {
     @Transactional
     public void oversightResponsible() {
         final LocalDate now = LocalDate.now();
+        final LocalDate nowPlus30Days = now.plusDays(30);
 
         // Only look back 10 days so we do not create task for everything the first time we activate DBS integration
         final List<DBSOversight> oversights = dbsOversightDao
@@ -248,7 +254,7 @@ public class DBSService {
                                 && t.getName().contains("- DBS tilsyn"))
                             .findFirst().ifPresentOrElse((task) -> {
                                     // Task already exist add our file to the existing task
-                                    task.setDescription(task.getDescription() + dbsOversight.getName());
+                                    task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
 
                                     //set link to the folder containing the documents
                                     task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
@@ -256,13 +262,13 @@ public class DBSService {
                                 () -> {
                                     // Create a new task
                                     Task task = new Task();
-                                    task.setName(dbsOversight.getName() + " - DBS tilsyn");
-                                    task.setNextDeadline(dbsAsset.getNextRevision());
+                                    task.setName(getTaskName(asset));
+                                    task.setNextDeadline(nowPlus30Days);
                                     task.setResponsibleUser(asset.getOversightResponsibleUser());
                                     task.setTaskType(TaskType.TASK);
                                     task.setRepetition(TaskRepetition.NONE);
                                     task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
-                                    log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
+                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUser().getName());
                                     taskService.saveTask(task);
                                     relationService.addRelation(task, dbsAsset);
                                     relationService.addRelation(task, asset);
@@ -277,14 +283,23 @@ public class DBSService {
         }
     }
 
+    // Generate task using name format: ”Leverandør” – ”Aktiv” – DBS Tilsyn
+    private static String getTaskName(final Asset asset) {
+        return (asset.getSupplier() != null ? (asset.getSupplier().getName() +  " - ") : "") + asset.getName() + " - DBS tilsyn";
+    }
+
     private static String baseDBSTaskDescription(final DBSOversight dbsOversight) {
         return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
-            + "Filer kan findes i DBS portalen her:\n";
+            + "Følgende filer kan findes på DBS-portalen:\n";
     }
 
     private LocalDate nextRevisionQuarterToDate(String revisionValue) {
         if (revisionValue == null) {
             return null;
+        }
+        if (!revisionValue.contains("Q")) {
+            // eg. "Efter behov"
+            return LocalDate.of(2099, 1, 1);
         }
 
         DateTimeFormatter formatter = new DateTimeFormatterBuilder()
