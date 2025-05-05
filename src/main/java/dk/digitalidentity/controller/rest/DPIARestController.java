@@ -212,9 +212,21 @@ public class DPIARestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	public record EditDPIADTO(Long assetId){}
+	@Transactional
+	@RequireSuperuserOrAdministrator
+	@PostMapping("{dpiaId}/edit")
+	public ResponseEntity<HttpStatus> createExternalDpia(@PathVariable Long dpiaId,  @RequestBody final EditDPIADTO editDPIADTO) {
+		Asset asset	= assetService.findById(editDPIADTO.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		DPIA dpia = dpiaService.find(dpiaId);
+
+		dpia.setAsset(asset);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
     public record CreateExternalDPIADTO(Long dpiaId, Long assetId, String link) {
     }
-
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

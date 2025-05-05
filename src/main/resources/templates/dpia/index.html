@@ -66,11 +66,12 @@
 <div id="external_modal_container">
     <div th:replace="~{dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal}"></div>
 </div>
-
+<div id="edit_dpia_modal_container"></div>
 <div
     th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 <script th:src="@{/js/dpia/list.js}" defer></script>
 <script th:src="@{/js/dpia/createDPIAService.js}" defer></script>
+<script th:src="@{/js/dpia/editDPIAService.js}" defer></script>
 <script th:src="@{/js/dpia/createExternalDPIAService.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -82,12 +83,13 @@
         const superuser = [[${superuser}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         const columnProperties = ['id', 'assetName', 'updatedAt', 'taskCount', 'isExternal'];
-        let createDPIAService, createExternalDPIAService;
+        let createDPIAService, createExternalDPIAService, editDPIAService;
     +]*/
 
     document.addEventListener("DOMContentLoaded", function(event) {
         createDPIAService = new CreateDPIAService()
         createDPIAService.init()
+        editDPIAService = new EditDPIAService()
 
         createExternalDPIAService = new CreateExternalDPIAService()
     })
