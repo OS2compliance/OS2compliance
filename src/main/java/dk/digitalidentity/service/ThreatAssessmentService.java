@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
+import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -68,8 +69,9 @@ public class ThreatAssessmentService {
     private final UserService userService;
     private final TemplateEngine templateEngine;
     private final ChoiceService choiceService;
+	private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
 
-    public ThreatAssessment findByS3Document(S3Document s3Document) {
+	public ThreatAssessment findByS3Document(S3Document s3Document) {
         return threatAssessmentDao.findByThreatAssessmentReportS3DocumentId(s3Document.getId());
     }
     public Optional<ThreatAssessment> findById(final Long assessmentId) {
@@ -471,7 +473,7 @@ public class ThreatAssessmentService {
         response.setCustomThreat(customThreat);
         response.setThreatCatalogThreat(threatCatalogThreat);
         threatAssessment.getThreatAssessmentResponses().add(response);
-        return response;
+        return threatAssessmentResponseDao.save(response);
     }
 
     public byte[] getThreatAssessmentPdf(ThreatAssessment threatAssessment) throws IOException {
