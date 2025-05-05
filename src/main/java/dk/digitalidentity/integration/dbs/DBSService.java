@@ -213,6 +213,7 @@ public class DBSService {
     @Transactional
     public void oversightResponsible() {
         final LocalDate now = LocalDate.now();
+        final LocalDate nowPlus30Days = now.plusDays(30);
 
         // Only look back 10 days so we do not create task for everything the first time we activate DBS integration
         final List<DBSOversight> oversights = dbsOversightDao
@@ -262,7 +263,7 @@ public class DBSService {
                                     // Create a new task
                                     Task task = new Task();
                                     task.setName(getTaskName(asset));
-                                    task.setNextDeadline(dbsAsset.getNextRevision());
+                                    task.setNextDeadline(nowPlus30Days);
                                     task.setResponsibleUser(asset.getOversightResponsibleUser());
                                     task.setTaskType(TaskType.TASK);
                                     task.setRepetition(TaskRepetition.NONE);
