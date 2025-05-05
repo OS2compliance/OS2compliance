@@ -253,7 +253,7 @@ public class DBSService {
                                 && t.getName().contains("- DBS tilsyn"))
                             .findFirst().ifPresentOrElse((task) -> {
                                     // Task already exist add our file to the existing task
-                                    task.setDescription(task.getDescription() + dbsOversight.getName());
+                                    task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
 
                                     //set link to the folder containing the documents
                                     task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
@@ -261,7 +261,7 @@ public class DBSService {
                                 () -> {
                                     // Create a new task
                                     Task task = new Task();
-                                    task.setName(dbsOversight.getName() + " - DBS tilsyn");
+                                    task.setName(getTaskName(asset));
                                     task.setNextDeadline(dbsAsset.getNextRevision());
                                     task.setResponsibleUser(asset.getOversightResponsibleUser());
                                     task.setTaskType(TaskType.TASK);
@@ -282,9 +282,14 @@ public class DBSService {
         }
     }
 
+    // Generate task using name format: ”Leverandør” – ”Aktiv” – DBS Tilsyn
+    private static String getTaskName(final Asset asset) {
+        return (asset.getSupplier() != null ? (asset.getSupplier().getName() +  " - ") : "") + asset.getName() + " - DBS tilsyn";
+    }
+
     private static String baseDBSTaskDescription(final DBSOversight dbsOversight) {
         return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
-            + "Filer kan findes i DBS portalen her:\n";
+            + "Følgende filer kan findes på DBS-portalen:\n";
     }
 
     private LocalDate nextRevisionQuarterToDate(String revisionValue) {
