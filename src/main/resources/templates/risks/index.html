@@ -22,7 +22,15 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                class="btn btn-info btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px"
+                                onclick="createExternalRiskassessmentService.createExternalClicked()">
+                            <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern Risikovurdering
+                        </button>
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                class="btn btn-info btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny risikovurdering
                         </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -40,16 +48,30 @@
                         <div class="card mb-3">
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-3">
-                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                            class="btn btn-info hstack gap-2"
-                                            onclick="createExternalRiskassessmentService.createExternalClicked()">
-                                        <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern Risikovurdering
-                                    </button>
                                 </div>
-                                <div class="position-relative">
                                     <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                    <div id="risksDatatable"></div>
-                                </div>
+                                    <div id="risksDatatable" class="mt-5"></div>
+
+                                    <!-- Custom search selectors-->
+                                    <select class="form-control form-select editField" data-trigger="" name="riskThreatAssessmentSearchSelector" id="riskThreatAssessmentSearchSelector" tabindex="-1" required >
+                                        <option th:text="'Alle'" th:value="null"></option>
+                                        <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
+                                                th:value="${option}" th:text="${option.message}"></option>
+                                    </select>
+
+                                    <!-- Custom search selectors-->
+                                    <select class="form-control form-select editField" data-trigger="" name="riskStatusSearchSelector" id="riskStatusSearchSelector" tabindex="-1" required >
+                                        <option th:text="'Alle'" th:value="null"></option>
+                                        <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus).values()}"
+                                                th:value="${option}" th:text="${option.message}"></option>
+                                    </select>
+
+                                    <!-- Custom search selectors-->
+                                    <select class="form-control form-select editField" data-trigger="" name="riskAssessmentSearchSelector" id="riskAssessmentSearchSelector" tabindex="-1" required >
+                                        <option th:text="'Alle'" th:value="null"></option>
+                                        <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
+                                                th:value="${option}" th:text="${option.message}"></option>
+                                    </select>
                             </div>
                         </div>
                     </div>
@@ -79,13 +101,12 @@
         var deleteUrl = [[@{/risks/}]];
         var superuser = [[${superuser}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
         const columnProperties = [ 'id', 'name', 'type', 'responsibleOU', 'responsibleUser', 'tasks', 'date', 'threatAssessmentReportApprovalStatus', 'assessment', 'changeable', 'fromExternalSource', 'externalLink']
         let createExternalRiskassessmentService;
     +]*/
 
     document.addEventListener("DOMContentLoaded", function(event) {
-        initTable()
-
         createExternalRiskassessmentService = new CreateExternalRiskassessmentService()
     });
 
