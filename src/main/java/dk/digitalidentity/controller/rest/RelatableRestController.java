@@ -48,7 +48,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
@@ -103,8 +103,9 @@ public class RelatableRestController {
         }
     }
 
+	public record RelatedPrecautionDTO(Long id,String name,String type,String typeMessage,String description){}
     @GetMapping("autocomplete/relatedprecautions")
-    public PageDTO<RelatableDTO> autocompletePrecautions(@RequestParam("search") final String search, @RequestParam("threatId") final long threatId, @RequestParam("threatType") final ThreatDatabaseType threatType, @RequestParam("threatIdentifier") final String threatIdentifier, @RequestParam("riskId") final long riskId) {
+    public PageDTO<RelatedPrecautionDTO> autocompletePrecautions(@RequestParam("search") final String search, @RequestParam("threatId") final long threatId, @RequestParam("threatType") final ThreatDatabaseType threatType, @RequestParam("threatIdentifier") final String threatIdentifier, @RequestParam("riskId") final long riskId) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
@@ -134,7 +135,7 @@ public class RelatableRestController {
             return new PageDTO<>(0L, new ArrayList<>());
         }
 
-        final Pageable page = PageRequest.of(0, 25, Sort.by("createdAt").descending());
+        final Pageable page = PageRequest.of(0, 50, Sort.by("name").descending());
         final List<RelationType> relationTypes = new ArrayList<>();
         relationTypes.add(RelationType.PRECAUTION);
         if (StringUtils.length(search) == 0) {
@@ -156,12 +157,13 @@ public class RelatableRestController {
 
             if (toShow.isEmpty()) {
                 final Page<Relatable> all = relatableDao.findByRelationTypeInAndDeletedFalse(relationTypes, page);
-                return mapper.toDTO(all);
+                return new PageDTO<>((long)all.getSize(),  all.map(p -> new RelatedPrecautionDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage(), ((Precaution)p).getDescription())).toList());
             } else {
-                return new PageDTO<>((long) toShow.size(), toShow.stream().map(p -> new RelatableDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage())).collect(Collectors.toList()));
+                return new PageDTO<>((long) toShow.size(), toShow.stream().map(p -> new RelatedPrecautionDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage(), p.getDescription())).toList());
             }
         } else {
-            return mapper.toDTO(relatableDao.searchByRelationTypeInAndNameLikeIgnoreCaseAndDeletedFalse(relationTypes, "%" + search + "%", page));
+			var searchResult = relatableDao.searchByRelationTypeInAndNameLikeIgnoreCaseAndDeletedFalse(relationTypes, "%" + search + "%", page);
+            return new PageDTO<>((long)searchResult.getSize(), searchResult.stream().map(p -> new RelatedPrecautionDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage(), ((Precaution)p).getDescription())).toList());
         }
     }
 
