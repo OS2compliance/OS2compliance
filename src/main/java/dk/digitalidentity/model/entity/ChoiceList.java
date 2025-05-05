@@ -36,6 +36,9 @@ public class ChoiceList {
     @Column
     private Boolean multiSelect;
 
+    @Column
+    private boolean customizable;
+
     @ManyToMany
     @JoinTable(
             name = "choice_list_values",

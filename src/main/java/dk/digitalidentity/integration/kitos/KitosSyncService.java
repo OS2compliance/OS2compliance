@@ -1,5 +1,6 @@
 package dk.digitalidentity.integration.kitos;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.KitosRolesDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.KitosRole;
@@ -8,10 +9,10 @@ import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.UserProperty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.AssetType;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
@@ -24,6 +25,7 @@ import dk.kitos.api.model.OrganizationUserResponseDTO;
 import dk.kitos.api.model.RoleOptionResponseDTO;
 import dk.kitos.api.model.TrackingEventResponseDTO;
 import jakarta.transaction.Transactional;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -42,20 +44,14 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class KitosSyncService {
     private final AssetService assetService;
     private final SupplierService supplierService;
     private final UserService userService;
     private final SettingsService settingsService;
     private final KitosRolesDao rolesDao;
-
-    public KitosSyncService(final AssetService assetService, final SupplierService supplierService, final UserService userService, final SettingsService settingsService, final KitosRolesDao rolesDao) {
-        this.assetService = assetService;
-        this.supplierService = supplierService;
-        this.userService = userService;
-        this.settingsService = settingsService;
-        this.rolesDao = rolesDao;
-    }
+    private final ChoiceService choiceService;
 
     @Transactional
     public void syncDeletedItSystems(final List<TrackingEventResponseDTO> deletionEvents) {
@@ -263,7 +259,7 @@ public class KitosSyncService {
         asset.setUpdatedAt(responseDTO.getLastModified().toLocalDateTime());
         asset.setName(responseDTO.getName());
         asset.setDescription(responseDTO.getDescription());
-        asset.setAssetType(AssetType.IT_SYSTEM);
+        asset.setAssetType(choiceService.getValue(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID).orElseThrow());
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
         asset.setSupplier(supplier);
         asset.setCriticality(Criticality.NON_CRITICAL);

@@ -146,7 +146,6 @@ function sectionRowClicked() {
 function checkboxChanged(event) {
     const sectionId = event.target.dataset.sectionid;
     const checked = event.target.checked;
-    console.log(`Section ${sectionId} has been ${checked ? 'excluded' : 'included'}.`);
     setFieldOnSection(sectionId, "hasOptedOut", checked);
 }
 

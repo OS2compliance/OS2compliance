@@ -1,0 +1,39 @@
+<html lang="en"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<div th:fragment="customChoiceListEditModal" class="modal-dialog modal-lg">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Rediger valgliste</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body d-flex flex-column gap-3 justify-content-center" th:object="${choiceList}">
+            <input id="choiceListId" th:value="*{id}" type="hidden">
+
+
+            <div th:each="value : *{values}" class="choice-value-field-container form-group d-flex gap-2 align-items-center">
+                <input th:id="${value.id}+'-choice-value'" class="choice-value-field form-control" type="text"
+                       th:value="${value.caption}">
+                <button type="button" class="btn btn-icon btn-outline-light btn-s align-middle bg-danger"
+                        th:attr="onclick='customChoiceListService.onRemoveChoiceValueField(event)'"
+                        th:style="${value.removable == true ? 'visibility:hidden;' : ''}"
+                >
+                    <i class="pli-remove fs-5"></i></button>
+            </div>
+            <button type="button" class="btn btn-secondary col-12"
+                    th:attr="onclick='customChoiceListService.onGenerateChoiceValueField(event)'">
+                <i class="pli-add fs-5"></i></button>
+
+
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="button" class="btn btn-primary"
+                    th:text="Opdater" th:attr="onclick='customChoiceListService.onChoiceListValuesSubmission('+ *{id} +')'">>
+            </button>
+        </div>
+    </div>
+</div>
+
+</html>

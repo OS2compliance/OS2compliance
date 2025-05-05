@@ -21,9 +21,9 @@ public class UserSecurityContextFactory implements WithSecurityContextFactory<Te
         final UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(annotation.uuid(), null,
             Arrays.asList(new SamlGrantedAuthority(ADMINISTRATOR), new SamlGrantedAuthority(SUPERUSER), new SamlGrantedAuthority(USER)));
         auth.setDetails(TokenUser.builder()
-                        .cvr("1234556")
-                        .username(annotation.uuid())
-                .build());
+            .cvr("1234556")
+            .username(annotation.uuid())
+            .build());
         context.setAuthentication(auth);
         return context;
     }

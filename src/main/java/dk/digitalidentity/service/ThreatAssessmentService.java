@@ -562,7 +562,7 @@ public class ThreatAssessmentService {
 
     private Context addGeneralInfoToContext (Context context, Asset riskAsset, Register riskRegister) {
         if (riskAsset != null) {
-            context.setVariable("systemType", riskAsset.getAssetType().getMessage());
+            context.setVariable("systemType", riskAsset.getAssetType().getCaption());
             String systemOwners = riskAsset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
             context.setVariable("supplier", riskAsset.getSupplier() != null ?  riskAsset.getSupplier().getName() : "Ukendt");

@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Setter
 @Immutable
 public class SupplierGrid {
-	record SupplierGridDTO(long id, String name, int solutionCount, LocalDateTime updated, String status) {}
+
 	@Id
 	private Long id;
 
