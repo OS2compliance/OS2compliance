@@ -2,8 +2,6 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -37,10 +35,6 @@ public class User implements Serializable {
 
     @Column
     private String name;
-
-    @Column
-    @Size(max = 255)
-    private String password;
 
     @Column
     private String email;

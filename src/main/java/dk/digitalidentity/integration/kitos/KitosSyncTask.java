@@ -49,27 +49,33 @@ public class KitosSyncTask {
             return;
         }
         log.info("Starting Kitos synchronisation");
-        final UUID municipalUuid = kitosClientService.lookupMunicipalUuid(configuration.getMunicipal().getCvr());
-        final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
-        final boolean reimport = !changedItSystemUsages.isEmpty();
-        // We need to fetch associated entities
-        final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
-            .map(usage -> usage.getSystemContext().getUuid())
-            .map(kitosClientService::fetchItSystem)
-            .filter(Objects::nonNull)
-            .toList();
-        final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
-        final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
+        
+        try {
+		final UUID municipalUuid = kitosClientService.lookupMunicipalUuid(configuration.getMunicipal().getCvr());
+		final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
+		final boolean reimport = !changedItSystemUsages.isEmpty();
+		// We need to fetch associated entities
+		final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
+		    .map(usage -> usage.getSystemContext().getUuid())
+		    .map(kitosClientService::fetchItSystem)
+		    .filter(Objects::nonNull)
+		    .toList();
+		final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
+		final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
 
-        if (!changedItSystemUsages.isEmpty() || !changedContracts.isEmpty()) {
-            final List<RoleOptionResponseDTO> roles = kitosClientService.listRoles(municipalUuid);
-            final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);
-            kitosService.syncRoles(roles);
-            kitosService.syncUsers(users);
-            kitosService.syncItSystems(Stream.concat(assocItSystems.stream(), changedItSystems.stream()).toList());
-            kitosService.syncItSystemUsages(changedItSystemUsages);
-            kitosService.syncItContracts(changedContracts);
-        }
+		if (!changedItSystemUsages.isEmpty() || !changedContracts.isEmpty()) {
+		    final List<RoleOptionResponseDTO> roles = kitosClientService.listRoles(municipalUuid);
+		    final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);
+		    kitosService.syncRoles(roles);
+		    kitosService.syncUsers(users);
+		    kitosService.syncItSystems(Stream.concat(assocItSystems.stream(), changedItSystems.stream()).toList());
+		    kitosService.syncItSystemUsages(changedItSystemUsages);
+		    kitosService.syncItContracts(changedContracts);
+		}
+	}
+	catch (Exception ex) {
+		log.error("Error during Kitos synchronisation", ex);
+	}
 
         log.info("Finished Kitos synchronisation");
     }
@@ -80,10 +86,17 @@ public class KitosSyncTask {
             return;
         }
         log.info("Starting Kitos deletion synchronisation");
-        final List<TrackingEventResponseDTO> deletedSystemUsageTracking = kitosClientService.fetchDeletedSystemUsages(true);
-        final List<TrackingEventResponseDTO> deletedItSystems = kitosClientService.fetchDeletedItSystems(true);
-        kitosService.syncDeletedItSystems(deletedItSystems);
-        kitosService.syncDeletedItSystemUsages(deletedSystemUsageTracking);
+        
+        try {
+		final List<TrackingEventResponseDTO> deletedSystemUsageTracking = kitosClientService.fetchDeletedSystemUsages(true);
+		final List<TrackingEventResponseDTO> deletedItSystems = kitosClientService.fetchDeletedItSystems(true);
+		kitosService.syncDeletedItSystems(deletedItSystems);
+		kitosService.syncDeletedItSystemUsages(deletedSystemUsageTracking);
+	}
+	catch (Exception ex) {
+		log.error("Error during Kitos deletion synchronisation", ex);
+	}
+
         log.info("Finished Kitos deletion synchronisation");
     }
 

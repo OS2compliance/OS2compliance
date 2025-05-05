@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da"
+<html xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <body>
@@ -119,7 +119,7 @@
                     </li>
                     <li class="nav-item has-sub" sec:authorize="hasRole('ROLE_administrator')">
                         <a href="#" class="mininav-toggle nav-link collapsed"
-                           th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' || page == 'userAdministration' ? 'active' : ''}">
+                           th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' || page == 'choicelists' ? 'active' : ''}">
                             <i class="pli-stamp fs-5 me-2"></i> <span class="nav-label ms-1">Administrativt</span>
                         </a>
                         <ul class="mininav-content nav collapse">
@@ -135,10 +135,11 @@
                                 <a th:href="@{/admin/tags}" class="nav-link"
                                    th:classappend="${page} == 'tags' ? 'active' : ''">Tags</a>
                             </li>
-<!--                            Local user management-->
-                            <li th:if="${#arrays.contains(@environment.getActiveProfiles(),'locallogin')}" class="nav-item">
-                                <a th:href="@{/admin/users/all}" class="nav-link"
-                                   th:classappend="${page} == 'userAdministration' ? 'active' : ''">Brugeradministration</a>
+
+                            <!-- custom choicelist management-->
+                            <li class="nav-item">
+                                <a th:href="@{/admin/choicelists}" class="nav-link"
+                                   th:classappend="${page} == 'choicelists' ? 'active' : ''">Valglister</a>
                             </li>
                         </ul>
                     </li>

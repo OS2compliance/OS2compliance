@@ -39,7 +39,6 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.tuple.Pair;
-import org.hibernate.validator.constraints.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -167,9 +166,9 @@ public class RegisterController {
                          @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
                          @RequestParam(value = "name", required = false) @Valid final String name,
                          @RequestParam(value = "description", required = false) @Valid final String description,
-                         @RequestParam(value = "responsibleOus", required = false) @Valid @UUID final Set<String> responsibleOuUuids,
-                         @RequestParam(value = "departments", required = false) @Valid @UUID final Set<String> departmentUuids,
-                         @RequestParam(value = "responsibleUsers", required = false) @Valid @UUID final Set<String> responsibleUserUuids,
+                         @RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
+                         @RequestParam(value = "departments", required = false) @Valid final Set<String> departmentUuids,
+                         @RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids,
                          @RequestParam(value = "criticality", required = false) final Criticality criticality,
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
                          @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,

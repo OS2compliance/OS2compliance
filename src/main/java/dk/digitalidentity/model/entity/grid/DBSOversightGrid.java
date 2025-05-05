@@ -49,6 +49,9 @@ public class DBSOversightGrid {
     @Convert(converter = DBSAssetSetConverter.class)
     private Set<DBSAsset> dbsAssets;
 
+    @Column(name = "dbs_asset_names")
+    private String dbsAssetNames;
+
     @ManyToOne
     @JoinColumn(name = "oversight_responsible_uuid")
     private User oversightResponsible;

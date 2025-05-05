@@ -19,17 +19,18 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.util.ReflectionHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
+import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.util.ReflectionHelper;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -49,7 +50,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -67,62 +72,46 @@ public class AssetsRestController {
 
 
     @PostMapping("list")
-    public PageDTO<AssetDTO> list(@RequestParam(name = "search", required = false) final String search,
-                                  @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-                                  @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-                                  @RequestParam(name = "order", required = false) final String order,
-                                  @RequestParam(name = "dir", required = false) final String dir) {
-        Sort sort = null;
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
-        } else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
-        }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        Page<AssetGrid> assets = null;
-        if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
-            // search and page
-            assets = assetGridDao.findAllCustom(searchableProperties, search, sortAndPage, AssetGrid.class);
-        } else {
-            // Fetch paged and sorted
-            assets = assetGridDao.findAll(sortAndPage);
-        }
+    public PageDTO<AssetDTO> list(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(
+            validateSearchFilters(filters, AssetGrid.class),
+            null,
+            buildPageable(page, limit, sortColumn, sortDirection),
+            AssetGrid.class
+        );
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(),
+            authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
 
     @PostMapping("list/{id}")
-    public PageDTO<AssetDTO> list(@PathVariable(name = "id", required = true) final String uuid,
-                                  @RequestParam(name = "search", required = false) final String search,
-                                  @RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-                                  @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-                                  @RequestParam(name = "order", required = false) final String order,
-                                  @RequestParam(name = "dir", required = false) final String dir) {
-        Sort sort = null;
+    public PageDTO<AssetDTO> list(
+        @PathVariable(name = "id") final String uuid,
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        if (StringUtils.isNotEmpty(order) && containsField(order)) {
-            final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-            sort = Sort.by(direction, order);
-        } else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
-        }
-        final Pageable sortAndPage = PageRequest.of(page, size, sort);
+
         Page<AssetGrid> assets = null;
-        if (StringUtils.isNotEmpty(search)) {
-            final List<String> searchableProperties = Arrays.asList("name", "supplier", "responsibleUserNames", "updatedAt", "localizedEnums");
-            // search and page
-            assets = assetGridDao.findAllForResponsibleUser(searchableProperties, search, sortAndPage, AssetGrid.class, user);
-        } else {
-            // Fetch paged and sorted
-            assets = assetGridDao.findAllByResponsibleUserUuidsContaining(user.getUuid(), sortAndPage);
-        }
+        assets = assetGridDao.findAllForResponsibleUser(
+            validateSearchFilters(filters,AssetGrid.class ),
+            buildPageable(page, limit, sortColumn, sortDirection),
+            AssetGrid.class,
+            user);
 
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
@@ -324,20 +313,6 @@ public class AssetsRestController {
         if (!(fieldName.equals("consequenceLink"))) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
-    }
-
-    private boolean containsField(final String fieldName) {
-        return fieldName.equals("assessmentOrder")
-            || fieldName.equals("supplier")
-            || fieldName.equals("risk")
-            || fieldName.equals("name")
-            || fieldName.equals("assetType")
-            || fieldName.equals("responsibleUserNames")
-            || fieldName.equals("registers")
-            || fieldName.equals("updatedAt")
-            || fieldName.equals("criticality")
-            || fieldName.equals("assetStatusOrder")
-            || fieldName.equals("hasThirdCountryTransfer");
     }
 
 

@@ -14,6 +14,7 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.math.NumberUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.data.domain.Page;
@@ -25,31 +26,33 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 
 public class SearchRepositoryImpl implements SearchRepository {
 
-	@PersistenceContext
-	private EntityManager entityManager;
+    @PersistenceContext
+    private EntityManager entityManager;
 
-    public <T> Page<T> findAllCustomExtra(final List<String> searchableProperties, final String searchString,
-                                          final List<Pair<String, Object>> extraAndFieldValue,
-                                          final Pageable page, final Class<T> entityClass) {
-        final CriteriaBuilder cb = entityManager.getCriteriaBuilder();
-        final CriteriaQuery<T> cq = cb.createQuery(entityClass);
+    public <T> Page<T> findAllWithColumnSearch(final Map<String, String> searchableProperties,
+                                               final List<Pair<String, Object>> extraAndFieldValue,
+                                               final Pageable page, final Class<T> entityClass) {
+        final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+        final CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
 
-        final Root<T> root = cq.from(entityClass);
+        final Root<T> root = criteriaQuery.from(entityClass);
         final List<Predicate> predicates = new ArrayList<>();
 
-        for (final String propertyName : searchableProperties) {
+        for (final Map.Entry<String, String> searchEntry : searchableProperties.entrySet()) {
             final Path<String> propertyPath;
-            if (propertyName.contains(".")) {
-                final String joinColumnName = propertyName.substring(0, propertyName.indexOf('.'));
-                final Join<T,?> join = root.join(joinColumnName, JoinType.LEFT);
+            if (searchEntry.getKey().contains(".")) {
+                final String joinColumnName = searchEntry.getKey().substring(0, searchEntry.getKey().indexOf('.'));
+                final Join<T, ?> join = root.join(joinColumnName, JoinType.LEFT);
 
-                final String joinProperty = propertyName.substring(propertyName.indexOf('.') + 1);
-                propertyPath  = join.get(joinProperty);
+                final String joinProperty = searchEntry.getKey().substring(searchEntry.getKey().indexOf('.') + 1);
+                propertyPath = join.get(joinProperty);
             } else {
-                propertyPath = root.get(propertyName);
+                propertyPath = root.get(searchEntry.getKey());
             }
 
             //Special case for Date type
@@ -57,45 +60,44 @@ public class SearchRepositoryImpl implements SearchRepository {
                 // if we want to search date and time "'%d/%m-%Y %T'"
                 // only date "'%d/%m-%Y'"
                 String literal = "'%d/%m-%Y'";
-                if(propertyPath.getJavaType().isAssignableFrom(LocalDateTime.class)) {
+                if (propertyPath.getJavaType().isAssignableFrom(LocalDateTime.class)) {
                     literal = "'%d/%m-%Y %T'";
                 }
 
-                final Expression<String> expressionString = cb.function("DATE_FORMAT", String.class, propertyPath, cb.literal(literal));
-                predicates.add(cb.like(cb.lower(expressionString),  "%" + searchString.toLowerCase() + "%"));
-            } else if (propertyName.equals("id")) {
-                if (NumberUtils.isParsable(searchString)) {
-                    predicates.add(cb.like(propertyPath, "%" + NumberUtils.createLong(searchString) + "%"));
+                final Expression<String> expressionString = criteriaBuilder.function("DATE_FORMAT", String.class, propertyPath, criteriaBuilder.literal(literal));
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(expressionString), "%" + searchEntry.getValue().toLowerCase() + "%"));
+            } else if (searchEntry.getKey().equals("id")) {
+                if (NumberUtils.isParsable(searchEntry.getValue())) {
+                    predicates.add(criteriaBuilder.like(propertyPath, "%" + NumberUtils.createLong(searchEntry.getValue()) + "%"));
                 }
-            } else if(propertyPath.getJavaType().isAssignableFrom(Boolean.class)) {
-                if (BooleanUtils.toBoolean(searchString)) {
-                    final Expression<String> expressionString = cb.function("BIT", String.class, propertyPath);
-                    predicates.add(cb.like(cb.lower(expressionString), "%" + searchString.toLowerCase() + "%"));
+            } else if (propertyPath.getJavaType().isAssignableFrom(Boolean.class)) {
+                if (BooleanUtils.toBoolean(searchEntry.getValue()) ) {
+                    predicates.add(criteriaBuilder.isTrue(propertyPath.as(Boolean.class)));
+                } else {
+                    predicates.add(criteriaBuilder.isFalse(propertyPath.as(Boolean.class)));
                 }
             } else {
-                predicates.add(cb.like(cb.lower(propertyPath),  "%" + searchString.toLowerCase() + "%"));
+                predicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath), "%" + searchEntry.getValue().toLowerCase() + "%"));
             }
         }
-        final Predicate or = cb.or(predicates.toArray(predicates.toArray(new Predicate[0])));
 
-        final Predicate[] andArr = extraAndFieldValue.stream()
-            .map(f -> cb.equal(root.get(f.getLeft()), f.getRight()))
-            .toArray(Predicate[]::new);
-        final Predicate and = cb.and(andArr);
-        cq.select(root).where(cb.and(and, or));
+        final Predicate satisfiesAllColumnSearches = criteriaBuilder.and(predicates.toArray(predicates.toArray(new Predicate[0])));
+
+        if (extraAndFieldValue != null) {
+
+            final Predicate[] andArr = extraAndFieldValue.stream()
+                .map(f -> criteriaBuilder.equal(root.get(f.getLeft()), f.getRight()))
+                .toArray(Predicate[]::new);
+            final Predicate satisfiesExtraConditions = criteriaBuilder.and(andArr);
+            criteriaQuery.select(root).where(criteriaBuilder.and(satisfiesExtraConditions, satisfiesAllColumnSearches));
+        } else {
+            criteriaQuery.select(root).where(satisfiesAllColumnSearches);
+        }
 
         // Order By
-        final List<Order> orderByList = new ArrayList<>();
-        for (final org.springframework.data.domain.Sort.Order order : page.getSort().toList()) {
-            if (order.isAscending()) {
-                orderByList.add(cb.asc(root.get(order.getProperty())));
-            } else {
-                orderByList.add(cb.desc(root.get(order.getProperty())));
-            }
-        }
-        cq.orderBy(orderByList);
+        criteriaQuery.orderBy(buildOrderBy(page, criteriaBuilder, root));
 
-        final TypedQuery<T> query = entityManager.createQuery(cq);
+        final TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
 
         final int totalRows = query.getResultList().size();
 
@@ -106,21 +108,49 @@ public class SearchRepositoryImpl implements SearchRepository {
     }
 
     @Override
-	public <T> Page<T> findAllCustom(final List<String> properties, final String search, final Pageable page, final Class<T> entityClass) {
-        return findAllCustomExtra(properties, search, Collections.emptyList(), page, entityClass);
-	}
-
-    @Override
-    public <T> Page<T> findAllForResponsibleUser(final List<String> properties, final String search,
-                                                 final Pageable page, final Class<T> entityClass, final User user) {
+    public <T> Page<T> findAllForResponsibleUser(final Map<String, String> searchableProperties, final Pageable page, final Class<T> entityClass, final User user) {
         // This is a bit hacky, since some entities now have a list of responsible users, we need to se which type this is
         // if it has multiple responsible users we search in a comma seperated string of uuids
         try {
             entityClass.getMethod("getResponsibleUserUuids");
-            return findAllCustomExtra(properties, search, Collections.singletonList(Pair.of("responsibleUserUuids", user.getUuid())), page, entityClass);
+            return findAllWithColumnSearch(searchableProperties, Collections.singletonList(Pair.of("responsibleUserUuids", user.getUuid())), page, entityClass);
         } catch (final NoSuchMethodException e) {
-            return findAllCustomExtra(properties, search, Collections.singletonList(Pair.of("responsibleUser", user)), page, entityClass);
+            return findAllWithColumnSearch(searchableProperties, Collections.singletonList(Pair.of("responsibleUser", user)), page, entityClass);
+
         }
+    }
+
+    private static <T> List<Order> buildOrderBy(final Pageable page, CriteriaBuilder cb, final Root<T> root) {
+        final List<Order> orderByList = new ArrayList<>();
+
+        for (final org.springframework.data.domain.Sort.Order order : page.getSort().toList()) {
+            if (order.getProperty().contains(".")) {
+                final Join<?, ?> join = findOrCreateJoin(root, StringUtils.substringBefore(order.getProperty(), "."));
+                Path<Object> path = join.get(StringUtils.substringAfter(order.getProperty(), "."));
+                orderByList.add(order.isAscending()
+                            ? cb.asc(path)
+                            : cb.desc(path));
+            } else {
+                orderByList.add(order.isAscending()
+                    ? cb.asc(root.get(order.getProperty()))
+                    : cb.desc(root.get(order.getProperty())));
+            }
+        }
+        return orderByList;
+    }
+
+    private static Join<?, ?> findOrCreateJoin(final Root<?> root, final String joinColumnName) {
+        return findJoin(root, joinColumnName)
+            .orElseGet(() -> root.join(joinColumnName, JoinType.LEFT));
+    }
+
+    private static Optional<Join<?, ?>> findJoin(final Root<?> root, final String joinColumnName) {
+        for (Join<?, ?> join : root.getJoins()) {
+            if (join.getAttribute().getName().equals(joinColumnName)) {
+                return Optional.of(join);
+            }
+        }
+        return Optional.empty();
     }
 
 }

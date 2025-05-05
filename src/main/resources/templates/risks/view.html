@@ -28,7 +28,7 @@
                             </ol>
                         </nav>
                         <h1 class="page-title mb-0 mt-2" th:text="${risk.name}"></h1>
-                        <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten er sendt til signering</p>
+                        <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
                     </div>
                     <div class="align-self-center d-inline-flex">
                         <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">

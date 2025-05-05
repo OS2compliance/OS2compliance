@@ -15,9 +15,7 @@ import java.util.List;
 public interface UserMapper {
 
     UserDTO toDTO(final User user);
-
     List<UserDTO> toDTO(final List<User> users);
-
     default PageDTO<UserDTO> toDTO(final Page<User> users) {
         return new PageDTO<>(users.getTotalElements(), toDTO(users.getContent()));
     }

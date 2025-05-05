@@ -18,6 +18,7 @@ public interface ChoiceListMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lists", ignore = true)
+    @Mapping(target = "assetsWithType", ignore = true)
     ChoiceValue fromDTO(final ChoiceValueDTO value);
 
     default ChoiceListDTO toDTO(final ChoiceList list) {

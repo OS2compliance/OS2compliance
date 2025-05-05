@@ -43,7 +43,7 @@ public class CvrSyncService {
 
     @Transactional
     public void updateFromCvr(final String cvr, final CvrSearchResultDTO cvrSearchResultDTO) {
-        supplierDao.findByCvr(cvr)
+        supplierDao.findFirstByCvr(cvr)
             .ifPresentOrElse(supplier -> {
                 supplier.getProperties().removeIf(p -> p.getKey().equals(NEEDS_CVR_UPDATE_PROPERTY));
                 supplier.getProperties().removeIf(p -> p.getKey().equals(CVR_UPDATED_PROPERTY));
@@ -69,7 +69,7 @@ public class CvrSyncService {
 
     @Transactional
     public void removeNeedsCvrSync(final String cvr) {
-        supplierDao.findByCvr(cvr)
+        supplierDao.findFirstByCvr(cvr)
             .ifPresentOrElse(supplier -> {
                     supplier.getProperties().removeIf(p -> p.getKey().equals(NEEDS_CVR_UPDATE_PROPERTY));
                     supplier.getProperties().removeIf(p -> p.getKey().equals(CVR_UPDATED_PROPERTY));

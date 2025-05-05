@@ -101,7 +101,7 @@
                                                     class="col-sm-3 col-form-label">Systemtype</label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control editField" id="systemType" th:field="*{assetType}" disabled>
-                                                        <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.AssetType).values()}" th:value="${type}" th:text="${type.getMessage()}" th:selected="${type} == *{assetType}"></option>
+                                                        <option th:each="type : ${allAssetTypes}" th:value="${type.id}" th:text="${type.caption}" th:selected="${type.id} == *{assetType.id}"></option>
                                                     </select >
                                                 </div>
                                             </div>

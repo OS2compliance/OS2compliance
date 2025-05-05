@@ -55,6 +55,11 @@ function GridOptions() {
         this.grid.config.columns.forEach((column) => {
             if (column.id === element.dataset.id) {
                 column.hidden = !column.hidden;
+
+                //Updates subcolumn headers if custom grid search functionality is used
+                if (column.onHiddenUpdate) {
+                    column.onHiddenUpdate()
+                }
             }
         });
         this.updateLabels();
@@ -70,6 +75,10 @@ function GridOptions() {
                 if (object[column.id] !== null) {
                     column.hidden = !object[column.id];
                 }
+                //Updates subcolumn headers if custom grid search functionality is used
+                if (column.onHiddenUpdate) {
+                    column.onHiddenUpdate()
+                                }
             });
             this.grid.forceRender();
         }
@@ -86,7 +95,8 @@ function GridOptions() {
     this.iterateColumns = function(callback) {
         return this.grid.config.columns.forEach((column) => {
             if (column.id !== "id" && column.id !== "handlinger" && column.id !== "titel" && column.id !== "navn"
-                && column.id !== "kitos" && column.id !== "opgavenavn" && column.id !== "risikovurdering") {
+                && column.id !== "kitos" && column.id !== "opgavenavn" && column.id !== "risikovurdering"
+                && column.id !== "supplierId" && column.id !== "outstandingTaskId") {
                 callback(column);
             }
         });

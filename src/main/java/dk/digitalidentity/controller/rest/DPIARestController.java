@@ -115,13 +115,13 @@ public class DPIARestController {
 		}
 		final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
 		final Page<DPIAGrid> dpiaGrids;
-		if (StringUtils.isNotEmpty(search)) {
-			final List<String> searchableProperties = Arrays.asList("assetName", "updatedAt");
-			dpiaGrids = dpiaGridDao.findAllCustom(searchableProperties, search, sortAndPage, DPIAGrid.class);
-		} else {
+//		if (StringUtils.isNotEmpty(search)) {
+//			final List<String> searchableProperties = Arrays.asList("assetName", "updatedAt");
+//			dpiaGrids = dpiaGridDao.findAllCustom(searchableProperties, search, sortAndPage, DPIAGrid.class);
+//		} else {
 			// Fetch paged and sorted
 			dpiaGrids = dpiaGridDao.findAll(sortAndPage);
-		}
+//		}
 		assert dpiaGrids != null;
 		return new PageDTO<>(dpiaGrids.getTotalElements(), dpiaGrids.stream().map(dpia ->
 						new DPIAListDTO(
