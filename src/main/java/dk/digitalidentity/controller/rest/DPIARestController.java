@@ -36,7 +36,6 @@ import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
@@ -44,9 +43,6 @@ import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -68,13 +64,14 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
-import static org.apache.commons.lang3.ObjectUtils.isNotEmpty;
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -97,37 +94,30 @@ public class DPIARestController {
 	private final Environment environment;
 	private final ApplicationEventPublisher eventPublisher;
 
-	public record DPIAListDTO(long id, String assetName, LocalDateTime updatedAt, int taskCount, Boolean isExternal) {
+	public record DPIAListDTO(long id, String assetName, LocalDate updatedAt, int taskCount, Boolean isExternal) {
 	}
 
 	@PostMapping("list")
 	public PageDTO<DPIAListDTO> list(
-			@RequestParam(name = "search", required = false) final String search,
-			@RequestParam(name = "page", required = false, defaultValue = "0") final Integer page,
-			@RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
-			@RequestParam(name = "order", required = false) final String order,
-			@RequestParam(name = "dir", required = false) final String dir
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam Map<String, String> filters // Dynamic filters for search fields
 	) {
-		Sort sort = null;
-		if (isNotEmpty(order)) {
-			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-			sort = Sort.by(direction, order);
-		}
-		final Pageable sortAndPage = sort != null ? PageRequest.of(page, size, sort) : PageRequest.of(page, size);
-		final Page<DPIAGrid> dpiaGrids;
-//		if (StringUtils.isNotEmpty(search)) {
-//			final List<String> searchableProperties = Arrays.asList("assetName", "updatedAt");
-//			dpiaGrids = dpiaGridDao.findAllCustom(searchableProperties, search, sortAndPage, DPIAGrid.class);
-//		} else {
-			// Fetch paged and sorted
-			dpiaGrids = dpiaGridDao.findAll(sortAndPage);
-//		}
+		Page<DPIAGrid> dpiaGrids =  dpiaGridDao.findAllWithColumnSearch(
+				validateSearchFilters(filters, DPIAGrid.class),
+				null,
+				buildPageable(page, limit, sortColumn, sortDirection),
+				DPIAGrid.class
+		);
+
 		assert dpiaGrids != null;
 		return new PageDTO<>(dpiaGrids.getTotalElements(), dpiaGrids.stream().map(dpia ->
 						new DPIAListDTO(
 								dpia.getId(),
 								dpia.getAssetName(),
-								dpia.getUpdatedAt(),
+								dpia.getUpdatedAt() != null ? dpia.getUpdatedAt().toLocalDate() : null,
 								dpia.getTaskCount(),
 								dpia.isExternal()
 						))

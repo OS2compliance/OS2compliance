@@ -41,7 +41,7 @@
                         searchKey: 'type',
                         fieldId :'riskThreatAssessmentSearchSelector'
                     },
-                    width: '10%'
+                    width: '120px',
                 },
                 {
                     name: "Fagområde",
@@ -60,15 +60,18 @@
                     searchable: {
                         sortKey: 'tasks'
                     },
+                    width: '120px',
                 },
                 {
                     name: "Dato",
                     searchable: {
                         searchKey: 'date'
                     },
+                    width: '120px',
                 },
                 {
                     name: "Status",
+                    width: '120px',
                     searchable: {
                         searchKey: 'threatAssessmentReportApprovalStatus',
                         fieldId: 'riskStatusSearchSelector'
@@ -80,7 +83,7 @@
                         searchKey: 'assessment',
                        fieldId: 'riskAssessmentSearchSelector'
                     },
-                    width: '10%',
+                    width: '120px',
                     formatter: (cell, row) => {
                         var status = cell;
                         if (cell === "Grøn") {
@@ -113,7 +116,7 @@
                     id: 'handlinger',
                     name: 'Handlinger',
                     sort: 0,
-                    width: '10%',
+                    width: '100px',
                     formatter: (cell, row) => {
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");

@@ -23,6 +23,12 @@
                     <div class="align-self-center d-inline-flex">
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
                                 class="btn btn-info btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px"
+                                onclick="createExternalDPIAService.createExternalClicked()">
+                            <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern DPIA
+                        </button>
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                class="btn btn-info btn-lg hstack gap-2"
                                 style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
                                 data-bs-target="#createDPIAModal" onclick="createDPIAService.formReset()">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
@@ -43,17 +49,8 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div class="d-flex justify-content-end mb-3">
-                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                            class="btn btn-info hstack gap-2"
-                                            onclick="createExternalDPIAService.createExternalClicked()">
-                                        <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern DPIA
-                                    </button>
-                                </div>
-                                <div class="position-relative">
-                                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                    <div id="dpiaDatatable"></div>
-                                </div>
+                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                <div id="dpiaDatatable" class="mt-5"></div>
                             </div>
                         </div>
                     </div>
