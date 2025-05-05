@@ -14,6 +14,18 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Tilføj mulighed for at trække excel rapport over hændelser
 - (Ad-hoc) Kolonne søgning tilføjet
 - (Ad-hoc) Ny administrativ side, hvor det er muligt at tilføje aktive system-typer.
+- (Syddjurs/Norddjurs) Ændringer til konsekvensvurderingsrapporten - Der tilføjes en liste af risikovurdering i rapporten
+- (Syddjurs/Norddjurs) Mulighed for indsættelse af billeder - Det skal være muligt at indsætte billeder i besvarelserne i konsekvensanalysen.
+- (Syddjurs/Norddjurs) Tilføjelser til risikovurderingsrapporten
+- (Syddjurs/Norddjurs) Konsekvensanalysen: Ændring i linkede felter
+- (Syddjurs/Norddjurs) Tilføjelse af eksterne risikovurdering
+- (Syddjurs/Norddjurs) Ændring af eksisterende DPIA
+- (Syddjurs/Norddjurs) Tilretning af aktiver -> DPIA-fanen
+- (Syddjurs/Norddjurs) Ny konsekvensanalyse detalje side
+- (Syddjurs/Norddjurs) Foranstaltninger genvej flyttes
+- (Syddjurs/Norddjurs) Konsekvensanalyse genvej flyttes
+- (Syddjurs/Norddjurs) Nyt konsekvensanalyser modul
+- (Syddjurs/Norddjurs) Ændringer til konsekvensvurderingsrapporten
 
 ### Fixed
 - (Ad-hoc) Årshjulet tog alle opgaver i stedet for kun dem der var markeret til at blive inkluderet.
