@@ -89,7 +89,7 @@ public class DPIAController {
 
         //
         if (dpia.isFromExternalSource()) {
-            return "redirect://" + dpia.getExternalLink();
+            return "redirect:" + dpia.getExternalLink();
         }
 
         // Screening

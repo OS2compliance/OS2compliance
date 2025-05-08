@@ -62,7 +62,7 @@
                         <ul class="mininav-content nav collapse">
                             <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
                                 <a th:href="@{/assets/dpia/schema}" class="nav-link"
-                                   th:classappend="${page} == 'dpia_template' ? 'active' : ''">DPIA-Skabelon</a>
+                                   th:classappend="${page} == 'dpia_template' ? 'active' : ''">Skabelon til konsekvensanalyse</a>
                             </li>
                             <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
                                 <a th:href="@{/precautions}" class="nav-link"
