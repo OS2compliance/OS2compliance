@@ -66,6 +66,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -163,8 +164,8 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    @Transactional
     public record CommentUpdateDTO(Long dpiaId, String comment){}
+    @Transactional
     @PostMapping("comment/update")
     public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
         final DPIA dpia = dpiaService.find(commentUpdateDTO.dpiaId);
@@ -197,7 +198,7 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    public record CreateDPIAFormDTO (Long assetId){}
+    public record CreateDPIAFormDTO (String title, Long assetId){}
     @PostMapping("create")
     public ResponseEntity<HttpStatus> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -207,12 +208,12 @@ public class DPIARestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        dpiaService.create(asset, null);
+        dpiaService.create(asset, createDPIAFormDTO.title);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-	public record EditDPIADTO(Long assetId){}
+	public record EditDPIADTO(String title, Long assetId){}
 	@Transactional
 	@RequireSuperuserOrAdministrator
 	@PostMapping("{dpiaId}/edit")
@@ -220,28 +221,30 @@ public class DPIARestController {
 		Asset asset	= assetService.findById(editDPIADTO.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		DPIA dpia = dpiaService.find(dpiaId);
 
+		if(!editDPIADTO.title.isBlank()) {
+			dpia.setName(editDPIADTO.title);
+		}
 		dpia.setAsset(asset);
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    public record CreateExternalDPIADTO(Long dpiaId, Long assetId, String link) {
+    public record CreateExternalDPIADTO(Long dpiaId, String title, List<Long> assetId, String link) {
     }
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        Asset asset;
+        List<Asset> assets;
         DPIA dpia = null;
-        if (createExternalDPIADTO.assetId != null) {
-            asset = assetService.findById(createExternalDPIADTO.assetId)
-                .orElseThrow();
+        if (!createExternalDPIADTO.assetId.isEmpty()) {
+            assets = assetService.findAllById(createExternalDPIADTO.assetId);
 
         } else {
             dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
-            asset = dpia.getAsset();
+            assets = dpia.getAsset();
         }
 
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !assets.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -253,7 +256,7 @@ public class DPIARestController {
             dpiaService.save(dpia);
         } else {
 
-            dpia = dpiaService.createExternal(asset,createExternalDPIADTO.link, null);
+            dpia = dpiaService.createExternal(assets,createExternalDPIADTO.link, createExternalDPIADTO.title);
             dpiaService.save(dpia);
         }
 

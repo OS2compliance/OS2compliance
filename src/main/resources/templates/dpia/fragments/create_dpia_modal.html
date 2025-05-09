@@ -7,11 +7,15 @@
             </div>
             <div class="modal-body">
                 <form id="createDPIAForm" class="row g-3 needs-validation" action="#" th:action="@{/rest/dpia/create}" method="post" novalidate>
+                    <div class="row g-3">
+                        <label for="titleInput" class="col-sm-3 col-form-label">Titel</label>
+                        <input type="text" class="form-control" id="titleInput" name="title" placeholder="Titel" required>
+                    </div>
                     <div class="row mt-3" id="assetSelectRow">
                         <label for="assetSelect" class="col-sm-4 col-form-label">For Aktiv</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" name="selectedAsset"
-                                    data-trigger="" id="assetSelect" hidden="" tabindex="-1"></select>
+                            <select class="form-control form-select choices__input" name="selectedAsset" data-type="select-multiple"
+                                    data-trigger="" id="assetSelect" hidden="" tabindex="-1" multiple></select>
                             <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
                         </div>
                     </div>

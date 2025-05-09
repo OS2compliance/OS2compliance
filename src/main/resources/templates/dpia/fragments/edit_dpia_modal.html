@@ -8,6 +8,11 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
+                <div class="row g-3">
+                    <label for="titleInput" class="col-sm-3 col-form-label">Titel</label>
+                    <input type="text" class="form-control" id="titleInput" name="title" placeholder="Titel" required
+                    th:value="${dpia.title}">
+                </div>
                 <div class="row mt-3" id="assetSelectRow">
                     <label for="dpia_edit_asset_select" class="col-sm-4 col-form-label">For Aktiv</label>
                     <div class="col-sm-8">

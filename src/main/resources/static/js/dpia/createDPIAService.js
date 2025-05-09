@@ -45,8 +45,10 @@ class CreateDPIAService {
     }
 
     async submitNewDPIA() {
+        const titleInput = document.getElementById('titleInput');
         const assetSelect = document.getElementById('assetSelect');
         const data = {
+            title: titleInput.value,
             assetId : assetSelect.value
         }
 

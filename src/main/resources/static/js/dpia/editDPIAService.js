@@ -6,8 +6,10 @@ class EditDPIAService {
     constructor() {}
 
     async onSubmit(dpiaId) {
+        const titleInput = document.getElementById('titleInput');
         const assetSelect = document.getElementById(this.assetSelectElementId);
         const data = {
+            title: titleInput.value,
             assetId : assetSelect.value
         }
 
