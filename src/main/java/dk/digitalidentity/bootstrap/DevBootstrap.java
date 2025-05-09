@@ -399,26 +399,6 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 regAsset.setRelationBType(RelationType.ASSET);
                 relationDao.save(regAsset);
 
-                ThreatAssessment assessment = new ThreatAssessment();
-                assessment.setName(os2Compliance.getName());
-                assessment.setAssessment(RiskAssessment.GREEN);
-                assessment.setThreatAssessmentType(ThreatAssessmentType.ASSET);
-                assessment.setRegistered(true);
-                assessment.setOrganisation(true);
-                assessment.setInherit(false);
-                assessment.setResponsibleOu(hjelmOu);
-                assessment.setResponsibleUser(user1);
-                assessment.setThreatCatalog(threatCatalogDao.findById("it_lille").orElseThrow());
-                assessment = threatAssessmentDao.save(assessment);
-
-                final Relation riskAsset = new Relation();
-                riskAsset.setRelationAId(assessment.getId());
-                riskAsset.setRelationAType(RelationType.THREAT_ASSESSMENT);
-                riskAsset.setRelationBId(os2Compliance.getId());
-                riskAsset.setRelationBType(RelationType.ASSET);
-
-                relationDao.save(riskAsset);
-
                 Asset asset1 = new Asset();
                 asset1.setSupplier(supplier2);
                 asset1.setAssetType(itsystemAssetType);
