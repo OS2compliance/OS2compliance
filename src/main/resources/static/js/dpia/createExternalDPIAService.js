@@ -10,6 +10,9 @@ class CreateExternalDPIAService {
     init() {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         this.assetChoicesSelect = this.#initAssetSelect(assetSelect);
+
+        const datepickerElement = document.getElementById('externalUserUpdateDateField')
+        this.initDatePicker('externalUserUpdateDateField', datepickerElement.value)
     }
 
     formReset() {
@@ -48,10 +51,12 @@ class CreateExternalDPIAService {
     async submitNewExternalDPIA(dpiaId) {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         const linkInput = document.getElementById('linkInput');
+        const userUpdatedDateElement = document.getElementById('externalUserUpdateDateField')
         const data = {
             dpiaId: dpiaId ? dpiaId : null,
             assetId : assetSelect ? assetSelect.value : null,
-            link: linkInput.value ? linkInput.value : ""
+            link: linkInput.value ? linkInput.value : "",
+            userUpdatedDate: userUpdatedDateElement.value,
         }
 
         const url = `${restUrl}/external/create`
@@ -89,6 +94,9 @@ class CreateExternalDPIAService {
         const externalModalContainer = document.getElementById("external_modal_container")
         externalModalContainer.innerHTML = responseText
 
+        const datepickerElement = document.getElementById('externalUserUpdateDateField')
+        this.initDatePicker('externalUserUpdateDateField', datepickerElement.value)
+
         const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
@@ -118,6 +126,24 @@ class CreateExternalDPIAService {
         const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
+    }
+
+    initDatePicker(id, selectedDate) {
+        const [day, rest] = selectedDate ? selectedDate.split('/') : [null, null];
+        const [month, year] = rest ? rest.split('-') : [null, null];
+
+        return MCDatepicker.create({
+            el: `#${id}`,
+            autoClose: true,
+            dateFormat: 'dd/mm-yyyy',
+            closeOnBlur: true,
+            firstWeekday: 1,
+            customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+            customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+            customClearBTN: "Ryd",
+            customCancelBTN: "Annuller",
+            selectedDate: selectedDate ? new Date(parseInt(year), parseInt(month) - 1, parseInt(day)) : new Date(),
+        });
     }
 
 }

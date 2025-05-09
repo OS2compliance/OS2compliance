@@ -40,7 +40,24 @@ document.addEventListener("DOMContentLoaded", function(event) {
             {
                 name: "Opdateret",
                 searchable: {
-                    searchKey: 'updatedAt'
+                    searchKey: 'userUpdatedDate'
+                },
+                formatter: (date) => {
+                    if (date) {
+                        const dateObj = new Date(date);
+                        return dateObj.toLocaleString('da-DK', {
+                            timeZone: 'Europe/Copenhagen',
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                        }).replaceAll('.', '-').replace('-', '/');
+                    }
+                    return '';
+                },
+                sort: {
+                    compare: (a, b) => {
+                        return new Date(b) < new Date(a);
+                    }
                 },
                 width: '150px'
             },

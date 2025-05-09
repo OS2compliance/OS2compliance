@@ -19,6 +19,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
 import java.util.List;
 
 @Service
@@ -54,11 +55,12 @@ public class DPIAService {
      * @param name Name of the DPIA. If null, set to default (asset.name + " Konsekvensaanalyse")
      * @return
      */
-    public DPIA create(Asset asset, String name) throws IOException {
+    public DPIA create(Asset asset, String name, LocalDate userUpdatedDate) throws IOException {
         // default dpia creation
         DPIA dpia = new DPIA();
         dpia.setName(name != null ? name : asset.getName()+" Konsekvensaanalyse");
         dpia.setAsset(asset);
+		dpia.setUserUpdatedDate(userUpdatedDate);
         dpia = save(dpia);
 
         //find all templated answers
@@ -103,11 +105,12 @@ public class DPIAService {
      * @param name Name of the DPIA. If null, set to default (asset.name + " Konsekvensaanalyse")
      * @return
      */
-    public DPIA createExternal(Asset asset, String externalLink, String name) {
+    public DPIA createExternal(Asset asset, String externalLink, String name, LocalDate userUpdatedDate) {
         DPIA dpia = new DPIA();
         dpia.setName(name != null ? name : asset.getName()+" Konsekvensaanalyse");
         dpia.setAsset(asset);
         dpia.setFromExternalSource(true);
+        dpia.setUserUpdatedDate(userUpdatedDate);
         dpia.setExternalLink(externalLink);
         return save(dpia);
     }

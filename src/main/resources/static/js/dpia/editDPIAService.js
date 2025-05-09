@@ -7,8 +7,10 @@ class EditDPIAService {
 
     async onSubmit(dpiaId) {
         const assetSelect = document.getElementById(this.assetSelectElementId);
+        const userUpdatedDateElement = document.getElementById('editUserUpdateDateField')
         const data = {
-            assetId : assetSelect.value
+            assetId : assetSelect.value,
+            userUpdatedDate: userUpdatedDateElement.value,
         }
 
         const url = `${restUrl}/${dpiaId}/edit`
@@ -83,11 +85,31 @@ class EditDPIAService {
         await this.#fetchModalContent(dpiaId)
 
         this.#initAssetSelection()
+        const datepickerElement = document.getElementById('editUserUpdateDateField')
+        this.initDatePicker('editUserUpdateDateField', datepickerElement.value || '')
 
         const modalElement = document.getElementById(this.editModalId)
-        console.log(modalElement)
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
+    }
+
+    initDatePicker(id, selectedDate) {
+        const [day, rest] = selectedDate ? selectedDate.split('/') : null;
+        const [month, year] = rest ? rest.split('-') : null;
+
+
+        return MCDatepicker.create({
+            el: `#${id}`,
+            autoClose: true,
+            dateFormat: 'dd/mm-yyyy',
+            closeOnBlur: true,
+            firstWeekday: 1,
+            customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+            customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+            customClearBTN: "Ryd",
+            customCancelBTN: "Annuller",
+            selectedDate: selectedDate ? new Date(parseInt(year), parseInt(month) - 1, parseInt(day)) : new Date(),
+        });
     }
 
 }

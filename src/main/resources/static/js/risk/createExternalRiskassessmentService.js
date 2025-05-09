@@ -11,7 +11,6 @@ class CreateExternalRiskassessmentService {
     init() {
         const assetSelect = document.getElementById('externalRiskassessmentAssetSelect');
         // this.assetChoicesSelect = this.#initAssetSelect(assetSelect);
-        console.log(assetSelect)
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
 
 
@@ -54,8 +53,6 @@ class CreateExternalRiskassessmentService {
             name : nameElement.value
         }
 
-        console.log(data)
-
         const url = `${restUrl}/external/create`
         const response = await fetch(url, {
             method: "POST",
@@ -90,10 +87,6 @@ class CreateExternalRiskassessmentService {
 
         const externalModalContainer = document.getElementById("external_modal_container")
         externalModalContainer.innerHTML = responseText
-        console.log(responseText)
-        console.log(externalModalContainer)
-
-//        this.init()
 
         const modalElement = externalModalContainer.querySelector('#createExternalRiskassessmentModal')
         const modal = new bootstrap.Modal(modalElement);

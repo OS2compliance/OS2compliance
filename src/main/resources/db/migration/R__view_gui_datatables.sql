@@ -360,7 +360,7 @@ VIEW view_gridjs_dpia AS
 SELECT
     d.id,
     a.name AS asset_name,
-    d.updated_at,
+    d.user_updated_date,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = d.id OR r.relation_b_id = d.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS task_count,
     d.from_external_source as is_external
 FROM

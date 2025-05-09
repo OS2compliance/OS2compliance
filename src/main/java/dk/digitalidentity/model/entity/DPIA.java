@@ -77,6 +77,10 @@ public class DPIA extends Relatable {
     @Column
     private String externalLink;
 
+	@Column
+	@DateTimeFormat(pattern = "dd/MM-yyyy")
+	private LocalDate userUpdatedDate;
+
     @Override
     public RelationType getRelationType() {
         return RelationType.DPIA;

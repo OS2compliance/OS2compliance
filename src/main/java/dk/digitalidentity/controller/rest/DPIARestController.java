@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.grid.DPIAGridDao;
 import dk.digitalidentity.event.EmailEvent;
@@ -65,7 +66,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
@@ -94,7 +94,7 @@ public class DPIARestController {
 	private final Environment environment;
 	private final ApplicationEventPublisher eventPublisher;
 
-	public record DPIAListDTO(long id, String assetName, LocalDate updatedAt, int taskCount, Boolean isExternal) {
+	public record DPIAListDTO(long id, String assetName, LocalDate userUpdatedDate, int taskCount, Boolean isExternal) {
 	}
 
 	@PostMapping("list")
@@ -117,7 +117,7 @@ public class DPIARestController {
 						new DPIAListDTO(
 								dpia.getId(),
 								dpia.getAssetName(),
-								dpia.getUpdatedAt() != null ? dpia.getUpdatedAt().toLocalDate() : null,
+								dpia.getUserUpdatedDate(),
 								dpia.getTaskCount(),
 								dpia.isExternal()
 						))
@@ -163,8 +163,8 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    @Transactional
     public record CommentUpdateDTO(Long dpiaId, String comment){}
+    @Transactional
     @PostMapping("comment/update")
     public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
         final DPIA dpia = dpiaService.find(commentUpdateDTO.dpiaId);
@@ -197,22 +197,22 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    public record CreateDPIAFormDTO (Long assetId){}
+    public record CreateDPIAFormDTO (Long assetId, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate){}
     @PostMapping("create")
     public ResponseEntity<HttpStatus> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final Asset asset = assetService.findById(createDPIAFormDTO.assetId)
             .orElseThrow();
         if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        dpiaService.create(asset, null);
+        dpiaService.create(asset, null, createDPIAFormDTO.userUpdatedDate);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-	public record EditDPIADTO(Long assetId){}
+	public record EditDPIADTO(Long assetId, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate){}
 	@Transactional
 	@RequireSuperuserOrAdministrator
 	@PostMapping("{dpiaId}/edit")
@@ -220,12 +220,13 @@ public class DPIARestController {
 		Asset asset	= assetService.findById(editDPIADTO.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		DPIA dpia = dpiaService.find(dpiaId);
 
+		dpia.setUserUpdatedDate(editDPIADTO.userUpdatedDate);
 		dpia.setAsset(asset);
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    public record CreateExternalDPIADTO(Long dpiaId, Long assetId, String link) {
+    public record CreateExternalDPIADTO(Long dpiaId, Long assetId, String link, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate) {
     }
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
@@ -250,10 +251,11 @@ public class DPIARestController {
                 dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
             }
             dpia.setExternalLink(createExternalDPIADTO.link);
+			dpia.setUserUpdatedDate(createExternalDPIADTO.userUpdatedDate);
             dpiaService.save(dpia);
         } else {
 
-            dpia = dpiaService.createExternal(asset,createExternalDPIADTO.link, null);
+            dpia = dpiaService.createExternal(asset,createExternalDPIADTO.link, null, createExternalDPIADTO.userUpdatedDate);
             dpiaService.save(dpia);
         }
 

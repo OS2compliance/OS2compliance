@@ -146,7 +146,7 @@ public class DPIAController {
         return "dpia/details";
     }
 
-    public record ExternalDPIADTO (Long dpiaId, String externalLink, Long assetId) {}
+    public record ExternalDPIADTO (Long dpiaId, String externalLink, Long assetId, LocalDate userUpdatedDate) {}
     @GetMapping("external/{dpiaId}/edit")
     public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -154,7 +154,7 @@ public class DPIAController {
 
         DPIA dpia = dpiaService.find(dpiaId);
 
-        model.addAttribute("externalDPIA", new ExternalDPIADTO(dpia.getId(), dpia.getExternalLink(), dpia.getAsset().getId()));
+        model.addAttribute("externalDPIA", new ExternalDPIADTO(dpia.getId(), dpia.getExternalLink(), dpia.getAsset().getId(), dpia.getUserUpdatedDate()));
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
 
@@ -171,6 +171,7 @@ public class DPIAController {
 	@GetMapping("{dpiaId}/edit")
 	public String getEditFragment(final Model model, @PathVariable Long dpiaId) {
 		final DPIA dpia = dpiaService.find(dpiaId);
+		model.addAttribute("userUpdatedDate", dpia.getUserUpdatedDate());
 		model.addAttribute("dpiaId", dpia.getId());
 		model.addAttribute("asset", new DPIAAssetDTO(dpia.getAsset().getId(), dpia.getAsset().getName()));
 		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";

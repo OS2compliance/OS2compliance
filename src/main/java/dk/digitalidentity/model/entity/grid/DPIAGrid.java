@@ -8,7 +8,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Immutable;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "view_gridjs_dpia")
@@ -24,7 +24,7 @@ public class DPIAGrid {
     private String assetName;
 
     @Column
-    private LocalDateTime updatedAt;
+    private LocalDate userUpdatedDate;
 
     @Column
     private int taskCount;
