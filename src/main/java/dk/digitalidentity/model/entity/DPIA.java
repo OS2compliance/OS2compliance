@@ -77,7 +77,19 @@ public class DPIA extends Relatable {
     @Column
     private String externalLink;
 
-    @Override
+	@Column
+	@DateTimeFormat(pattern = "dd/MM-yyyy")
+	private LocalDate userUpdatedDate;
+
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "responsible_user_uuid")
+	private User responsibleUser;
+
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "responsible_ou_uuid")
+	private OrganisationUnit responsibleOu;
+
+	@Override
     public RelationType getRelationType() {
         return RelationType.DPIA;
     }
