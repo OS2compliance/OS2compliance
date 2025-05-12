@@ -222,7 +222,7 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
-        Asset asset = dpia.getAsset();
+        Asset asset = dpia.getAssets();
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(dpia);
             response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + asset.getName() + ".pdf");
@@ -276,7 +276,7 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
-        Asset asset = dpia.getAsset();
+        Asset asset = dpia.getAssets();
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAScreeningPdf(asset);
             response.addHeader("Content-disposition", "attachment;filename=screening vedr " + asset.getName() + ".pdf");

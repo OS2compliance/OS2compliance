@@ -11,6 +11,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
@@ -31,12 +32,9 @@ import java.util.Set;
 @Getter
 @Setter
 public class DPIA extends Relatable {
-    @ToString.Exclude
-    @EqualsAndHashCode.Exclude
-    @ManyToOne
-    @JoinColumn(name = "asset_id")
-    @JsonIgnore
-    private Asset asset;
+    @ManyToMany(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@JsonIgnore
+    private List<Asset> assets;
 
     @Column(name = "dpia_checked_choice_list_identifiers")
     @Convert(converter = StringSetNullSafeConverter.class)

@@ -183,9 +183,10 @@ public class Asset extends Relatable {
 
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
     private DataProtectionImpactAssessmentScreening dpiaScreening;
+
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-    @OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
+	@ManyToMany(mappedBy = "assets", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
     private List<DPIA> dpias = new ArrayList<>();
 
     @ToString.Exclude

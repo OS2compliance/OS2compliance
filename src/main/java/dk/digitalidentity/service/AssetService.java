@@ -225,12 +225,12 @@ public class AssetService {
 
     @Transactional
     public void updateNextRevisionAssociatedTask(final DPIA dpia) {
-        findAssociatedCheck(dpia.getAsset())
-            .ifPresent(t -> dpia.setNextRevision(t.getNextDeadline()));
+			findAssociatedCheck(dpia)
+				.ifPresent(t -> dpia.setNextRevision(t.getNextDeadline()));
     }
 
-    public Optional<Task> findAssociatedCheck(final Asset asset) {
-        final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + asset.getId());
+    public Optional<Task> findAssociatedCheck(final DPIA dpia) {
+        final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpia.getId());
         if (tasks == null || tasks.isEmpty()) {
             return Optional.empty();
         }
@@ -239,14 +239,15 @@ public class AssetService {
 
     @Transactional
     public Task createOrUpdateAssociatedCheck(DPIA dpia) {
-        final Asset asset = dpia.getAsset();
         final LocalDate deadline = dpia.getNextRevision();
         if (deadline != null && dpia.getRevisionInterval() != null) {
-            final Task task = findAssociatedCheck(asset).orElseGet(() -> createAssociatedCheck(dpia));
-            task.setName("DPIA for " + asset.getName());
+            final Task task = findAssociatedCheck(dpia).orElseGet(() -> createAssociatedCheck(dpia));
+			String name = "DPIA for " + dpia.getAssets().getFirst().getName();
+			name +=  (dpia.getAssets().size() > 1) ? " med flere" : "";
+			task.setName(name);
             task.setNextDeadline(dpia.getNextRevision());
-            task.setResponsibleUser(asset.getResponsibleUsers() != null ? asset.getResponsibleUsers().get(0) : userService.currentUser());
-            task.setDescription("Revider DPIA for " + asset.getName());
+            task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
+            task.setDescription("Revider DPIA for " + String.join(", ",  dpia.getAssets().stream().map(Relatable::getName).toList()));
             setTaskRevisionInterval(dpia, task);
             return task;
         }
@@ -254,22 +255,28 @@ public class AssetService {
     }
 
     private Task createAssociatedCheck(final DPIA dpia) {
-        final Asset asset = dpia.getAsset();
+        final List<Asset> assets = dpia.getAssets();
         final Task task = new Task();
-        task.setName("DPIA for " + asset.getName());
+
+		if(assets.size() > 1) {
+			task.setName("DPIA for " + assets.getFirst().getName() + " med flere");
+		} else {
+        	task.setName("DPIA for " + assets.getFirst().getName());
+		}
+
         task.setCreatedAt(LocalDateTime.now());
         task.getProperties().add(Property.builder()
             .entity(task)
             .key(ASSOCIATED_ASSET_DPIA_PROPERTY)
-            .value("" + asset.getId())
+            .value("" + dpia.getId())
             .build()
         );
         task.setTaskType(TaskType.CHECK);
-        task.setResponsibleUser(asset.getResponsibleUsers() != null ? asset.getResponsibleUsers().get(0) : userService.currentUser());
+		task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
         task.setNextDeadline(dpia.getNextRevision());
         task.setNotifyResponsible(true);
         final Task savedTask = taskService.saveTask(task);
-        relationService.addRelation(asset, task);
+        relationService.addRelation(dpia, task);
         return savedTask;
     }
 
@@ -333,7 +340,8 @@ public class AssetService {
     }
 
     private String getDPIAHTML(DPIA dpia) {
-        final Asset asset = dpia.getAsset();
+		//TODO
+        final Asset asset = dpia.getAssets().getFirst();
         final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
@@ -435,14 +443,10 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
     }
 
     private List<DPIASectionDTO> buildDPIASections(DPIA dpia) {
-        Asset asset = dpia.getAsset();
         List<DPIASectionDTO> sections = new ArrayList<>();
         List<DPIATemplateSection> allSections = dpiaTemplateSectionService.findAll().stream()
             .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
             .collect(Collectors.toList());
-
-        // needed dataprocessing fields
-        PlaceholderInfo placeholderInfo = getDPIAResponsePlaceholderInfo(asset);
 
         for (DPIATemplateSection templateSection : allSections) {
             if (templateSection.isHasOptedOut()) {

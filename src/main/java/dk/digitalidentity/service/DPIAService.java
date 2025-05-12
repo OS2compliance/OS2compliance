@@ -65,7 +65,7 @@ public class DPIAService {
         // default dpia creation
         DPIA dpia = new DPIA();
         dpia.setName(name != null ? name : asset.getName()+" Konsekvensaanalyse");
-        dpia.setAsset(asset);
+        dpia.setAssets(asset);
 		dpia.setUserUpdatedDate(userUpdatedDate);
 
 		if (responsibleUserUuid != null) {
@@ -89,7 +89,7 @@ public class DPIAService {
                 .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), placeholderInfo.getTypesOfPersonalInformationFreetext())
                 .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.getCategoriesOfRegisteredTitles()))
                 .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), placeholderInfo.getHowLongTitle())
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), dpia.getAsset().getDataProcessing().getDeletionProcedureLink() == null ? "" : "<a href=\"" + dpia.getAsset().getDataProcessing().getDeletionProcedureLink() + "\">" + dpia.getAsset().getDataProcessing().getDeletionProcedureLink() + "</a>");
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), dpia.getAssets().getDataProcessing().getDeletionProcedureLink() == null ? "" : "<a href=\"" + dpia.getAssets().getDataProcessing().getDeletionProcedureLink() + "\">" + dpia.getAssets().getDataProcessing().getDeletionProcedureLink() + "</a>");
 
 
             //create new DPIAResponseSection & DPIAResponseSectionAnswer with the templated answers
@@ -115,15 +115,15 @@ public class DPIAService {
 
     /**
      * Creates a default external DPIA, saving it to db and returning the saved entity
-     * @param asset
+     * @param assets
      * @param externalLink
      * @param name Name of the DPIA. If null, set to default (asset.name + " Konsekvensaanalyse")
      * @return
      */
-    public DPIA createExternal(Asset asset, String externalLink, String name, LocalDate userUpdatedDate,String responsibleUserUuid, String responsibleOuUuid) {
+    public DPIA createExternal(List<Asset> assets, String externalLink, String name, LocalDate userUpdatedDate,String responsibleUserUuid, String responsibleOuUuid) {
         DPIA dpia = new DPIA();
-        dpia.setName(name != null ? name : asset.getName()+" Konsekvensaanalyse");
-        dpia.setAsset(asset);
+        dpia.setName(name);
+        dpia.setAssets(assets);
         dpia.setFromExternalSource(true);
         dpia.setUserUpdatedDate(userUpdatedDate);
         dpia.setExternalLink(externalLink);

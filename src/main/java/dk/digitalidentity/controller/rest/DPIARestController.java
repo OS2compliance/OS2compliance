@@ -70,7 +70,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -182,7 +181,7 @@ public class DPIARestController {
     @PostMapping("comment/update")
     public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
         final DPIA dpia = dpiaService.find(commentUpdateDTO.dpiaId);
-        final Asset asset = dpia.getAsset();
+        final Asset asset = dpia.getAssets();
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
@@ -200,7 +199,7 @@ public class DPIARestController {
 	@PostMapping("qualityassurance/update")
 	public ResponseEntity<HttpStatus> dpia(@RequestBody final QualityAssuranceUpdateDTO qualityAssuranceUpdateDTO) {
 		final DPIA dpia = dpiaService.find(qualityAssuranceUpdateDTO.dpiaId);
-		final Asset asset = dpia.getAsset();
+		final Asset asset = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -238,7 +237,7 @@ public class DPIARestController {
 		if(!editDPIADTO.title.isBlank()) {
 			dpia.setName(editDPIADTO.title);
 		}
-		dpia.setAsset(asset);
+		dpia.setAssets(asset);
 
 		if (editDPIADTO.responsibleUserUuid != null) {
 			User user = userService.findByUuid(editDPIADTO.responsibleUserUuid).orElse(null);
@@ -264,12 +263,16 @@ public class DPIARestController {
 
         } else {
             dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
-            assets = dpia.getAsset();
+            assets = dpia.getAssets();
         }
 
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !assets.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))
+				&& !assets.stream()
+				.flatMap(a -> a.getResponsibleUsers().stream()
+						.map(User::getUuid)).toList()
+				.contains(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 
         if (createExternalDPIADTO.dpiaId != null) {
 			//Update
@@ -289,7 +292,7 @@ public class DPIARestController {
             dpiaService.save(dpia);
         } else {
 			//Create
-            dpia = dpiaService.createExternal(asset,createExternalDPIADTO.link, createExternalDPIADTO.title, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
+            dpia = dpiaService.createExternal(assets,createExternalDPIADTO.link, createExternalDPIADTO.title, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
             dpiaService.save(dpia);
         }
 
@@ -300,7 +303,7 @@ public class DPIARestController {
 	@PutMapping("{dpiaId}/response/setfield")
 	public void setDPIAResponseField(@RequestBody final DPIASetFieldDTO dto, @PathVariable final long dpiaId) throws IOException {
 		final DPIA dpia = dpiaService.find(dpiaId);
-		final Asset asset = dpia.getAsset();
+		final Asset asset = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -357,7 +360,7 @@ public class DPIARestController {
 	@PutMapping("{dpiaId}/setfield")
 	public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto, @PathVariable long dpiaId) {
 		final DPIA dpia = dpiaService.find(dpiaId);
-		final Asset asset = dpia.getAsset();
+		final Asset asset = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -391,7 +394,7 @@ public class DPIARestController {
 	@PostMapping("{dpiaId}/mailReport")
 	public ResponseEntity<?> mailReport(@PathVariable final long dpiaId, @RequestBody final MailReportDTO dto) throws IOException {
 		final DPIA dpia = dpiaService.find(dpiaId);
-		Asset asset = dpia.getAsset();
+		Asset asset = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);

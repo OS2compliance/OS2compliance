@@ -85,7 +85,7 @@ public class DPIAController {
     public String dpiaDetails(final Model model, @PathVariable Long id) {
 
         DPIA dpia = dpiaService.find(id);
-        Asset asset = dpia.getAsset();
+        Asset asset = dpia.getAssets();
 
         //
         if (dpia.isFromExternalSource()) {
@@ -154,7 +154,7 @@ public class DPIAController {
 
         DPIA dpia = dpiaService.find(dpiaId);
 
-        model.addAttribute("externalDPIA", new ExternalDPIADTO(dpia.getId(), dpia.getName(), dpia.getExternalLink(), dpia.getAsset().getId(), dpia.getUserUpdatedDate()));
+        model.addAttribute("externalDPIA", new ExternalDPIADTO(dpia.getId(), dpia.getName(), dpia.getExternalLink(), dpia.getAssets().getId(), dpia.getUserUpdatedDate()));
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
 
@@ -174,7 +174,7 @@ public class DPIAController {
 		model.addAttribute("title", dpia.getName());
 		model.addAttribute("userUpdatedDate", dpia.getUserUpdatedDate());
 		model.addAttribute("dpiaId", dpia.getId());
-		model.addAttribute("asset", new DPIAAssetDTO(dpia.getAsset().getId(), dpia.getAsset().getName()));
+		model.addAttribute("asset", new DPIAAssetDTO(dpia.getAssets().getId(), dpia.getAssets().getName()));
 		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";
 	}
 
@@ -188,7 +188,7 @@ public class DPIAController {
             .toList();
 
         // needed dataprocessing fields
-        PlaceholderInfo placeholderInfo = assetService.getDPIAResponsePlaceholderInfo(dpia.getAsset());
+        PlaceholderInfo placeholderInfo = assetService.getDPIAResponsePlaceholderInfo(dpia.getAssets());
 
         for (DPIATemplateSection templateSection : allSections) {
             if (templateSection.isHasOptedOut()) {
@@ -261,7 +261,7 @@ public class DPIAController {
     @Transactional
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long dpiaId) {
         DPIA dpia = dpiaService.find(dpiaId);
-        final Asset asset = dpia.getAsset();
+        final Asset asset = dpia.getAssets();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
