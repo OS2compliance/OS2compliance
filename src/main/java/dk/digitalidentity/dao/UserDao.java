@@ -18,6 +18,8 @@ public interface UserDao extends JpaRepository<User, String>, SearchRepository {
     @Query("select u.uuid from User u where u.active=true")
     Set<String> findAllActiveUuids();
 
+	Page<User> findAllByActiveTrue(Pageable page);
+
     List<User> findAllByUuidInAndActiveTrue(final Collection<String> uuids);
 
     @Modifying

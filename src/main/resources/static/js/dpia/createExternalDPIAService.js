@@ -10,6 +10,8 @@ class CreateExternalDPIAService {
     init() {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         this.assetChoicesSelect = this.#initAssetSelect(assetSelect);
+        this.#initSearchOus('externalOuSelect')
+        this.#initSearchUsers('externalUserSelect')
 
         const datepickerElement = document.getElementById('externalUserUpdateDateField')
         this.initDatePicker('externalUserUpdateDateField', datepickerElement.value)
@@ -52,11 +54,15 @@ class CreateExternalDPIAService {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         const linkInput = document.getElementById('linkInput');
         const userUpdatedDateElement = document.getElementById('externalUserUpdateDateField')
+        const userSelect = document.getElementById('userSelect');
+        const ouSelect = document.getElementById('ouSelect');
         const data = {
             dpiaId: dpiaId ? dpiaId : null,
             assetId : assetSelect ? assetSelect.value : null,
             link: linkInput.value ? linkInput.value : "",
             userUpdatedDate: userUpdatedDateElement.value,
+            responsibleUserUuid: userSelect.value,
+            responsibleOuUuid: ouSelect.value,
         }
 
         const url = `${restUrl}/external/create`
@@ -96,6 +102,8 @@ class CreateExternalDPIAService {
 
         const datepickerElement = document.getElementById('externalUserUpdateDateField')
         this.initDatePicker('externalUserUpdateDateField', datepickerElement.value)
+        this.#initSearchOus('externalOuSelect')
+        this.#initSearchUsers('externalUserSelect')
 
         const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
         const modal = new bootstrap.Modal(modalElement);
@@ -144,6 +152,14 @@ class CreateExternalDPIAService {
             customCancelBTN: "Annuller",
             selectedDate: selectedDate ? new Date(parseInt(year), parseInt(month) - 1, parseInt(day)) : new Date(),
         });
+    }
+
+    #initSearchOus(elementId){
+        choiceService.initOUSelect(elementId)
+    }
+
+    #initSearchUsers(elementId){
+        choiceService.initUserSelect(elementId)
     }
 
 }

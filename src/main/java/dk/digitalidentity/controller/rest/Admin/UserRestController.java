@@ -30,7 +30,7 @@ public class UserRestController {
     public PageDTO<UserDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());
         if (StringUtils.length(search) == 0) {
-            return userMapper.toDTO(userDao.findAll(page));
+            return userMapper.toDTO(userDao.findAllByActiveTrue(page));
         } else {
             final String replacedString = search.replace(' ', '%');
             return userMapper.toDTO(userDao.searchForUser("%" + replacedString + "%", page));

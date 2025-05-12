@@ -6,7 +6,11 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAResponseSection;
 import dk.digitalidentity.model.entity.DPIAResponseSectionAnswer;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
+import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
+import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
+import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
@@ -31,6 +35,8 @@ public class DPIAService {
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
     private final DPIAResponseSectionService dpiaResponseSectionService;
     private final DPIAResponseSectionAnswerService dpiaResponseSectionAnswerService;
+	private final UserService userService;
+	private final OrganisationService organisationService;
 
     public DPIA find (Long dpiaId) {
         return dpiaDao.findById(dpiaId)
@@ -55,12 +61,21 @@ public class DPIAService {
      * @param name Name of the DPIA. If null, set to default (asset.name + " Konsekvensaanalyse")
      * @return
      */
-    public DPIA create(Asset asset, String name, LocalDate userUpdatedDate) throws IOException {
+    public DPIA create(Asset asset, String name, LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid) throws IOException {
         // default dpia creation
         DPIA dpia = new DPIA();
         dpia.setName(name != null ? name : asset.getName()+" Konsekvensaanalyse");
         dpia.setAsset(asset);
 		dpia.setUserUpdatedDate(userUpdatedDate);
+
+		if (responsibleUserUuid != null) {
+			User user = userService.findByUuid(responsibleUserUuid).orElse(null);
+			dpia.setResponsibleUser(user);
+		}
+		if (responsibleOuUuid != null) {
+			OrganisationUnit ou = organisationService.get(responsibleOuUuid).orElse(null);
+			dpia.setResponsibleOu(ou);
+		}
         dpia = save(dpia);
 
         //find all templated answers
@@ -105,13 +120,21 @@ public class DPIAService {
      * @param name Name of the DPIA. If null, set to default (asset.name + " Konsekvensaanalyse")
      * @return
      */
-    public DPIA createExternal(Asset asset, String externalLink, String name, LocalDate userUpdatedDate) {
+    public DPIA createExternal(Asset asset, String externalLink, String name, LocalDate userUpdatedDate,String responsibleUserUuid, String responsibleOuUuid) {
         DPIA dpia = new DPIA();
         dpia.setName(name != null ? name : asset.getName()+" Konsekvensaanalyse");
         dpia.setAsset(asset);
         dpia.setFromExternalSource(true);
         dpia.setUserUpdatedDate(userUpdatedDate);
         dpia.setExternalLink(externalLink);
+		if (responsibleUserUuid != null) {
+			User user = userService.findByUuid(responsibleUserUuid).orElse(null);
+			dpia.setResponsibleUser(user);
+		}
+		if (responsibleOuUuid != null) {
+			OrganisationUnit ou = organisationService.get(responsibleOuUuid).orElse(null);
+			dpia.setResponsibleOu(ou);
+		}
         return save(dpia);
     }
 
@@ -129,4 +152,27 @@ public class DPIAService {
 
         return (bos.toString(StandardCharsets.UTF_8));
     }
+
+	public DPIAScreeningConclusion calculateScreeningConclusion( List<DataProtectionImpactScreeningAnswer> screeningAnswers, boolean isDpiaOptOut) {
+		if(isDpiaOptOut) {
+			return DPIAScreeningConclusion.GREY;
+		}
+
+		List<String> dangerousAnswers = List.of("dpia-yes", "dpia-dont-know", "dpia-partially");
+		List<String> criticalQuestionsIdentifiers = List.of("dpia-7");
+
+		boolean containsCritical = screeningAnswers.stream().anyMatch(s -> criticalQuestionsIdentifiers.contains(s.getChoice().getIdentifier()));
+		if (containsCritical) {
+			return DPIAScreeningConclusion.RED;
+		}
+
+		int dangerousAnswerCount = (int) screeningAnswers.stream().filter(s -> dangerousAnswers.contains(s.getAnswer())).count();
+
+		if(dangerousAnswerCount == 1) {
+			return DPIAScreeningConclusion.YELLOW;
+		} else if(dangerousAnswerCount > 1) {
+			return DPIAScreeningConclusion.RED;
+		}
+		return DPIAScreeningConclusion.GREEN;
+	}
 }

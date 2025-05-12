@@ -51,6 +51,19 @@
                             <div class="card-body">
                                 <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="dpiaDatatable" class="mt-5"></div>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="dpiaStatusSearchSelector" id="dpiaStatusSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+
+                                <select class="form-control form-select editField" data-trigger="" name="screeningConclusionSearchSelector" id="screeningConclusionSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -82,7 +95,7 @@
         const deleteUrl = restUrl+"/delete";
         const superuser = [[${superuser}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-        const columnProperties = ['id', 'assetName', 'userUpdatedDate', 'taskCount', 'isExternal'];
+        const columnProperties = ['id', 'assetName', 'responsibleOUName', 'responsibleUserName',  'userUpdatedDate', 'taskCount', 'reportApprovalStatus', 'screeningConclusion', 'isExternal'];
         let createDPIAService, createExternalDPIAService, editDPIAService;
     +]*/
 

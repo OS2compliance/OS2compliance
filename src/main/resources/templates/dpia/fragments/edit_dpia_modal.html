@@ -24,6 +24,18 @@
                         <input id="editUserUpdateDateField" class="form-control" type="text" th:value="${#temporals.format(userUpdatedDate, 'dd/MM-yyyy')}">
                     </div>
                 </div>
+                <div class="row mt-3">
+                    <label for="userSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="userSelect" hidden="" tabindex="-1" required></select>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label for="ouSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="ouSelect" hidden="" tabindex="-1" required></select>
+                    </div>
+                </div>
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="createDPIAService.formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>

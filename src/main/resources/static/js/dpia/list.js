@@ -29,13 +29,25 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 },
                 formatter: (cell, row) => {
                     const url = baseUrl + "/" + row.cells[0]['data'];
-                    const isExternal = row.cells[4]['data'];
+                    const isExternal = row.cells[8]['data']; //last cell in row contains the external boolean
                     if (isExternal) {
                         return gridjs.html(`<a href="${url}" target="_blank">${cell} (Ekstern)</a>`);
                     } else {
                         return gridjs.html(`<a href="${url}">${cell}</a>`);
                     }
                 }
+            },
+            {
+                name: "Fagområde",
+                searchable: {
+                    searchKey: 'responsibleOuUuid'
+                },
+            },
+            {
+                name: "Risikoejer",
+                searchable: {
+                    searchKey: 'responsibleUserUuid'
+                },
             },
             {
                 name: "Opdateret",
@@ -67,6 +79,40 @@ document.addEventListener("DOMContentLoaded", function(event) {
                     sortKey: 'taskCount'
                 },
                 width: '100px'
+            },
+            {
+                name: "Status",
+                width: '120px',
+                searchable: {
+                    searchKey: 'reportApprovalStatus',
+                    fieldId: 'dpiaStatusSearchSelector',
+                },
+            },
+            {
+                name: "Screening",
+                width: '120px',
+                searchable: {
+                    searchKey: 'screeningConclusion',
+                    fieldId: 'screeningConclusionSearchSelector',
+                },
+                formatter: (cell, row) => {
+                    let html = ``;
+                    if (cell) {
+                        if (cell === 'RED') {
+                            html = `<span class="badge bg-red">&nbsp</span>`;
+                        }
+                        if (cell === 'YELLOW') {
+                            html = `<span class="badge bg-yellow">&nbsp</span>`;
+                        }
+                        if (cell === 'GREEN') {
+                            html = `<span class="badge bg-green">&nbsp</span>`;
+                        }
+                        if (cell === 'GREY') {
+                            html = `<span class="badge bg-gray-800">&nbsp</span>`;
+                        }
+                    }
+                    return  gridjs.html(html);
+                },
             },
             {
                 id: 'handlinger',

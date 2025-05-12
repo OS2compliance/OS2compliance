@@ -37,6 +37,7 @@ import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -49,6 +50,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
@@ -120,6 +122,7 @@ public class AssetsController {
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
+	private final DPIAService dpiaService;
 
 
 	@GetMapping
@@ -363,6 +366,8 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
+		asset.getDpiaScreening().setConclusion(dpiaService.calculateScreeningConclusion(asset.getDpiaScreening().getDpiaScreeningAnswers(), asset.isDpiaOptOut()));
+
         final DataProtectionImpactAssessmentScreening dpiaScreening = asset.getDpiaScreening();
         for (final DataProtectionImpactScreeningAnswerDTO question : dpiaForm.getQuestions()) {
             final DataProtectionImpactScreeningAnswer foundAnswer = dpiaScreening.getDpiaScreeningAnswers().stream()

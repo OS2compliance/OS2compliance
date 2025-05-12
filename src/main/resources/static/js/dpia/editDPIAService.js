@@ -8,9 +8,13 @@ class EditDPIAService {
     async onSubmit(dpiaId) {
         const assetSelect = document.getElementById(this.assetSelectElementId);
         const userUpdatedDateElement = document.getElementById('editUserUpdateDateField')
+        const userSelect = document.getElementById('userSelect');
+        const ouSelect = document.getElementById('ouSelect');
         const data = {
             assetId : assetSelect.value,
             userUpdatedDate: userUpdatedDateElement.value,
+            responsibleUserUuid: userSelect.value,
+            responsibleOuUuid: ouSelect.value,
         }
 
         const url = `${restUrl}/${dpiaId}/edit`
@@ -88,6 +92,9 @@ class EditDPIAService {
         const datepickerElement = document.getElementById('editUserUpdateDateField')
         this.initDatePicker('editUserUpdateDateField', datepickerElement.value || '')
 
+        this.#initSearchOus('ouSelect')
+        this.#initSearchUsers('userSelect')
+
         const modalElement = document.getElementById(this.editModalId)
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
@@ -110,6 +117,14 @@ class EditDPIAService {
             customCancelBTN: "Annuller",
             selectedDate: selectedDate ? new Date(parseInt(year), parseInt(month) - 1, parseInt(day)) : new Date(),
         });
+    }
+
+    #initSearchOus(elementId){
+        choiceService.initOUSelect(elementId)
+    }
+
+    #initSearchUsers(elementId){
+        choiceService.initUserSelect(elementId)
     }
 
 }

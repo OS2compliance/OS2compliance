@@ -31,6 +31,18 @@
                             <input id="externalUserUpdateDateField" class="form-control" type="text" th:value="${externalDPIA != null ? #temporals.format(externalDPIA.userUpdatedDate, 'dd/MM-yyyy') : ''}">
                         </div>
                     </div>
+                    <div class="row mt-3">
+                        <label for="externalUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalUserSelect" hidden="" tabindex="-1" required></select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="externalOuSelect" hidden="" tabindex="-1" required></select>
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">

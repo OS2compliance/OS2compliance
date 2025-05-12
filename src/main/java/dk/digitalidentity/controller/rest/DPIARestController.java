@@ -15,11 +15,14 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.EmailTemplate;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.S3Document;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
+import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
@@ -32,6 +35,7 @@ import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.UserService;
@@ -93,8 +97,9 @@ public class DPIARestController {
 	private final EmailTemplateService emailTemplateService;
 	private final Environment environment;
 	private final ApplicationEventPublisher eventPublisher;
+	private final OrganisationService organisationService;
 
-	public record DPIAListDTO(long id, String assetName, LocalDate userUpdatedDate, int taskCount, Boolean isExternal) {
+	public record DPIAListDTO(long id, String assetName, String responsibleUserName, String responsibleOUName, LocalDate userUpdatedDate, int taskCount, ThreatAssessmentReportApprovalStatus status, DPIAScreeningConclusion screeningConclusion, Boolean isExternal) {
 	}
 
 	@PostMapping("list")
@@ -117,8 +122,12 @@ public class DPIARestController {
 						new DPIAListDTO(
 								dpia.getId(),
 								dpia.getAssetName(),
+								dpia.getResponsibleUserName()	,
+								dpia.getResponsibleOuName(),
 								dpia.getUserUpdatedDate(),
 								dpia.getTaskCount(),
+								dpia.getReportApprovalStatus(),
+								dpia.getScreeningConclusion(),
 								dpia.isExternal()
 						))
 				.toList());
@@ -139,7 +148,7 @@ public class DPIARestController {
 	@PostMapping("screening/update")
 	public ResponseEntity<HttpStatus> dpia(@RequestBody final DPIAScreeningUpdateDTO dpiaScreeningUpdateDTO) {
 		final Asset asset = assetService.findById(dpiaScreeningUpdateDTO.assetId)
-            .orElseThrow();
+				.orElseThrow();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
@@ -147,18 +156,21 @@ public class DPIARestController {
 
 		final DataProtectionImpactAssessmentScreening dpiaScreening = asset.getDpiaScreening();
 
-			final DataProtectionImpactScreeningAnswer foundAnswer = dpiaScreening.getDpiaScreeningAnswers().stream()
-					.filter(a -> a.getChoice().getIdentifier().equalsIgnoreCase(dpiaScreeningUpdateDTO.choiceIdentifier))
-					.findFirst()
-					.orElseGet(() -> {
-						final DataProtectionImpactScreeningAnswer newAnswer = DataProtectionImpactScreeningAnswer.builder()
-								.assessment(dpiaScreening)
-								.choice(choiceDPIADao.findByIdentifier(dpiaScreeningUpdateDTO.choiceIdentifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
-								.build();
-						dpiaScreening.getDpiaScreeningAnswers().add(newAnswer);
-						return newAnswer;
-					});
-			foundAnswer.setAnswer(dpiaScreeningUpdateDTO.answer);
+		final DataProtectionImpactScreeningAnswer foundAnswer = dpiaScreening.getDpiaScreeningAnswers().stream()
+				.filter(a -> a.getChoice().getIdentifier().equalsIgnoreCase(dpiaScreeningUpdateDTO.choiceIdentifier))
+				.findFirst()
+				.orElseGet(() -> {
+					final DataProtectionImpactScreeningAnswer newAnswer = DataProtectionImpactScreeningAnswer.builder()
+							.assessment(dpiaScreening)
+							.choice(choiceDPIADao.findByIdentifier(dpiaScreeningUpdateDTO.choiceIdentifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
+							.build();
+					dpiaScreening.getDpiaScreeningAnswers().add(newAnswer);
+					return newAnswer;
+				});
+		foundAnswer.setAnswer(dpiaScreeningUpdateDTO.answer);
+
+		//calculate and set new screening conclusion
+		dpiaScreening.setConclusion(dpiaService.calculateScreeningConclusion(dpiaScreening.getDpiaScreeningAnswers(), asset.isDpiaOptOut()));
 
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
@@ -197,7 +209,7 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    public record CreateDPIAFormDTO (Long assetId, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate){}
+    public record CreateDPIAFormDTO (Long assetId, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid){}
     @PostMapping("create")
     public ResponseEntity<HttpStatus> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
 	        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -207,12 +219,12 @@ public class DPIARestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        dpiaService.create(asset, null, createDPIAFormDTO.userUpdatedDate);
+        dpiaService.create(asset, null, createDPIAFormDTO.userUpdatedDate, createDPIAFormDTO.responsibleUserUuid, createDPIAFormDTO.responsibleOuUuid);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-	public record EditDPIADTO(Long assetId, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate){}
+	public record EditDPIADTO(Long assetId, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid){}
 	@Transactional
 	@RequireSuperuserOrAdministrator
 	@PostMapping("{dpiaId}/edit")
@@ -223,10 +235,19 @@ public class DPIARestController {
 		dpia.setUserUpdatedDate(editDPIADTO.userUpdatedDate);
 		dpia.setAsset(asset);
 
+		if (editDPIADTO.responsibleUserUuid != null) {
+			User user = userService.findByUuid(editDPIADTO.responsibleUserUuid).orElse(null);
+			dpia.setResponsibleUser(user);
+		}
+		if (editDPIADTO.responsibleOuUuid != null) {
+			OrganisationUnit ou = organisationService.get(editDPIADTO.responsibleOuUuid).orElse(null);
+			dpia.setResponsibleOu(ou);
+		}
+
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-    public record CreateExternalDPIADTO(Long dpiaId, Long assetId, String link, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate) {
+    public record CreateExternalDPIADTO(Long dpiaId, Long assetId, String link, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid) {
     }
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
@@ -247,15 +268,24 @@ public class DPIARestController {
         }
 
         if (createExternalDPIADTO.dpiaId != null) {
+			//Update
             if (dpia == null) {
                 dpia = dpiaService.find(createExternalDPIADTO.dpiaId);
             }
             dpia.setExternalLink(createExternalDPIADTO.link);
 			dpia.setUserUpdatedDate(createExternalDPIADTO.userUpdatedDate);
+			if (createExternalDPIADTO.responsibleUserUuid != null) {
+				User user = userService.findByUuid(createExternalDPIADTO.responsibleUserUuid).orElse(null);
+				dpia.setResponsibleUser(user);
+			}
+			if (createExternalDPIADTO.responsibleOuUuid != null) {
+				OrganisationUnit ou = organisationService.get(createExternalDPIADTO.responsibleOuUuid).orElse(null);
+				dpia.setResponsibleOu(ou);
+			}
             dpiaService.save(dpia);
         } else {
-
-            dpia = dpiaService.createExternal(asset,createExternalDPIADTO.link, null, createExternalDPIADTO.userUpdatedDate);
+			//Create
+            dpia = dpiaService.createExternal(asset,createExternalDPIADTO.link, null, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
             dpiaService.save(dpia);
         }
 

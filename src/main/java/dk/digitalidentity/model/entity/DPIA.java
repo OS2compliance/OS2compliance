@@ -81,7 +81,15 @@ public class DPIA extends Relatable {
 	@DateTimeFormat(pattern = "dd/MM-yyyy")
 	private LocalDate userUpdatedDate;
 
-    @Override
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "responsible_user_uuid")
+	private User responsibleUser;
+
+	@ManyToOne(cascade = CascadeType.ALL)
+	@JoinColumn(name = "responsible_ou_uuid")
+	private OrganisationUnit responsibleOu;
+
+	@Override
     public RelationType getRelationType() {
         return RelationType.DPIA;
     }
