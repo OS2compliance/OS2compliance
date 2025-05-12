@@ -67,7 +67,9 @@
                                 <div th:replace="~{fragments/gridOptions :: dropdown}">
 
                                 </div>
-                                <div id="incidentsTable"></div>
+                                <div class="grid-scroll-wrapper">
+                                    <div id="incidentsTable"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -94,7 +96,6 @@
     var superuser = [[${superuser}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
     /*]]>*/
 </script>
 
