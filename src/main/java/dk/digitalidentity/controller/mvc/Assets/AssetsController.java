@@ -6,9 +6,9 @@ import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
+import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
-import dk.digitalidentity.model.dto.DataProtectionImpactDTO;
 import dk.digitalidentity.model.dto.DataProtectionImpactScreeningAnswerDTO;
 import dk.digitalidentity.model.dto.SaveMeasureDTO;
 import dk.digitalidentity.model.dto.SaveMeasuresDTO;
@@ -26,8 +26,6 @@ import dk.digitalidentity.model.entity.DPIAReport;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
-import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
@@ -37,7 +35,6 @@ import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
-import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -268,7 +265,7 @@ public class AssetsController {
 		model.addAttribute("measuresForm", measuresForm);
         model.addAttribute("supplier", supplierService.getAll());
 		model.addAttribute("dpiaForm", dpiaForm);
-		model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, true));
+		model.addAttribute("dpiaRevisionTasks",asset.getDpias().stream().flatMap(dpia -> taskService.buildDPIARelatedTasks(dpia.getId(), true).stream()).toList());
 		model.addAttribute("dpiaReports", buildDPIAReports(asset));
 		model.addAttribute("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
 		model.addAttribute("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
@@ -359,29 +356,28 @@ public class AssetsController {
 
     @Transactional
     @PostMapping("dpia")
-    public String dpia(@ModelAttribute final DataProtectionImpactDTO dpiaForm) {
+    public String dpia(@ModelAttribute final AssetDPIAPageDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
-		asset.getDpiaScreening().setConclusion(dpiaService.calculateScreeningConclusion(asset.getDpiaScreening().getDpiaScreeningAnswers(), asset.isDpiaOptOut()));
 
-        final DataProtectionImpactAssessmentScreening dpiaScreening = asset.getDpiaScreening();
-        for (final DataProtectionImpactScreeningAnswerDTO question : dpiaForm.getQuestions()) {
-            final DataProtectionImpactScreeningAnswer foundAnswer = dpiaScreening.getDpiaScreeningAnswers().stream()
-                .filter(a -> a.getChoice().getIdentifier().equalsIgnoreCase(question.getChoice().getIdentifier()))
-                .findFirst().orElseGet(() -> {
-                    final DataProtectionImpactScreeningAnswer newAnswer = DataProtectionImpactScreeningAnswer.builder()
-                        .assessment(dpiaScreening)
-                        .choice(choiceDPIADao.findByIdentifier(question.getChoice().getIdentifier()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
-                        .build();
-                    dpiaScreening.getDpiaScreeningAnswers().add(newAnswer);
-                    return newAnswer;
-                });
-            foundAnswer.setAnswer(question.getAnswer());
-        }
+//        final DataProtectionImpactAssessmentScreening dpiaScreening = asset.getDpiaScreening();
+//        for (final DataProtectionImpactScreeningAnswerDTO question : dpiaForm.getQuestions()) {
+//            final DataProtectionImpactScreeningAnswer foundAnswer = dpiaScreening.getDpiaScreeningAnswers().stream()
+//                .filter(a -> a.getChoice().getIdentifier().equalsIgnoreCase(question.getChoice().getIdentifier()))
+//                .findFirst().orElseGet(() -> {
+//                    final DataProtectionImpactScreeningAnswer newAnswer = DataProtectionImpactScreeningAnswer.builder()
+//                        .assessment(dpiaScreening)
+//                        .choice(choiceDPIADao.findByIdentifier(question.getChoice().getIdentifier()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)))
+//                        .build();
+//                    dpiaScreening.getDpiaScreeningAnswers().add(newAnswer);
+//                    return newAnswer;
+//                });
+//            foundAnswer.setAnswer(question.getAnswer());
+//        }
 
 //
 //        if (asset.getDpia() == null) {

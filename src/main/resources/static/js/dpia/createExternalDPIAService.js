@@ -33,6 +33,21 @@ class CreateExternalDPIAService {
             },
             false,
         );
+
+        //update title if empty
+        assetSelectElement.addEventListener('change', (event)=> {
+            const selected = event.target.selectedOptions
+            const titleElement = document.getElementById('externalTitleInput')
+            if (titleElement.value === null
+                || titleElement.value === '') {
+                if (selected.length > 1) {
+                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "") + ' med flere'
+                } else if (selected.length === 1) {
+                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
+                }
+            }
+        })
+
         return assetChoices;
     }
 
@@ -51,6 +66,7 @@ class CreateExternalDPIAService {
     }
 
     async submitNewExternalDPIA(dpiaId) {
+        const titleInput = document.getElementById('externalTitleInput');
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         const linkInput = document.getElementById('linkInput');
         const userUpdatedDateElement = document.getElementById('externalUserUpdateDateField')
@@ -58,11 +74,12 @@ class CreateExternalDPIAService {
         const ouSelect = document.getElementById('ouSelect');
         const data = {
             dpiaId: dpiaId ? dpiaId : null,
-            assetId : assetSelect ? assetSelect.value : null,
+            assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
             link: linkInput.value ? linkInput.value : "",
             userUpdatedDate: userUpdatedDateElement.value,
             responsibleUserUuid: userSelect.value,
             responsibleOuUuid: ouSelect.value,
+            title: titleInput.value,
         }
 
         const url = `${restUrl}/external/create`

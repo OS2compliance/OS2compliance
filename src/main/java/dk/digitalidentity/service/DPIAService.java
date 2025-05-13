@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAResponseSection;
 import dk.digitalidentity.model.entity.DPIAResponseSectionAnswer;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
+import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
@@ -57,15 +58,15 @@ public class DPIAService {
 
     /**
      * Creates a new DPIA, saving it to the db and returning the saved entity
-     * @param asset
-     * @param name Name of the DPIA. If null, set to default (asset.name + " Konsekvensaanalyse")
+     * @param assets
+     * @param name
      * @return
      */
-    public DPIA create(Asset asset, String name, LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid) throws IOException {
+    public DPIA create(List<Asset> assets, String name, LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid) throws IOException {
         // default dpia creation
         DPIA dpia = new DPIA();
-        dpia.setName(name != null ? name : asset.getName()+" Konsekvensaanalyse");
-        dpia.setAssets(asset);
+        dpia.setName(name);
+        dpia.setAssets(assets);
 		dpia.setUserUpdatedDate(userUpdatedDate);
 
 		if (responsibleUserUuid != null) {
@@ -76,21 +77,25 @@ public class DPIAService {
 			OrganisationUnit ou = organisationService.get(responsibleOuUuid).orElse(null);
 			dpia.setResponsibleOu(ou);
 		}
+
+		DataProtectionImpactAssessmentScreening screening = new DataProtectionImpactAssessmentScreening();
+		screening.setConclusion(calculateScreeningConclusion(screening.getDpiaScreeningAnswers()));
+		dpia.setDpiaScreening(screening);
+
         dpia = save(dpia);
 
         //find all templated answers
         List<DPIATemplateQuestion> dpiaTemplateQuestions = dpiaTemplateQuestionService.findByAnswerTemplateNotNull();
-        PlaceholderInfo placeholderInfo = assetService.getDPIAResponsePlaceholderInfo(asset);
+        List<PlaceholderInfo> placeholderInfo = assets.stream().map(assetService::getDPIAResponsePlaceholderInfo).toList();
         for (DPIATemplateQuestion templateQuestion : dpiaTemplateQuestions) {
             String templateAnswer = templateQuestion.getAnswerTemplate()
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_WHO.getPlaceholder(), placeholderInfo.getSelectedAccessWhoTitles())
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_HOW_MANY.getPlaceholder(), placeholderInfo.getSelectedAccessCountTitle())
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES.getPlaceholder(), String.join(", ", placeholderInfo.getPersonalDataTypesTitles()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), placeholderInfo.getTypesOfPersonalInformationFreetext())
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.getCategoriesOfRegisteredTitles()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), placeholderInfo.getHowLongTitle())
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), dpia.getAssets().getDataProcessing().getDeletionProcedureLink() == null ? "" : "<a href=\"" + dpia.getAssets().getDataProcessing().getDeletionProcedureLink() + "\">" + dpia.getAssets().getDataProcessing().getDeletionProcedureLink() + "</a>");
-
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_WHO.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getSelectedAccessWhoTitles).toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_HOW_MANY.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getSelectedAccessCountTitle).toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES.getPlaceholder(), String.join(", ", placeholderInfo.stream().flatMap(p -> p.getPersonalDataTypesTitles().stream()).toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getTypesOfPersonalInformationFreetext).toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.stream().flatMap(p -> p.getCategoriesOfRegisteredTitles().stream()).toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getHowLongTitle).toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), String.join(", ", assets.stream().map(a -> "<a href=\"" + a.getDataProcessing().getDeletionProcedureLink() + "\">" + a.getDataProcessing().getDeletionProcedureLink() + "</a>").toList()));
 
             //create new DPIAResponseSection & DPIAResponseSectionAnswer with the templated answers
             DPIAResponseSection responseSection = new DPIAResponseSection();
@@ -153,10 +158,7 @@ public class DPIAService {
         return (bos.toString(StandardCharsets.UTF_8));
     }
 
-	public DPIAScreeningConclusion calculateScreeningConclusion( List<DataProtectionImpactScreeningAnswer> screeningAnswers, boolean isDpiaOptOut) {
-		if(isDpiaOptOut) {
-			return DPIAScreeningConclusion.GREY;
-		}
+	public DPIAScreeningConclusion calculateScreeningConclusion( List<DataProtectionImpactScreeningAnswer> screeningAnswers) {
 
 		List<String> dangerousAnswers = List.of("dpia-yes", "dpia-dont-know", "dpia-partially");
 		List<String> criticalQuestionsIdentifiers = List.of("dpia-7");

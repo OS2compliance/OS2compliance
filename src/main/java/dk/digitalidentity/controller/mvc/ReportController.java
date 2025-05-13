@@ -222,25 +222,25 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
-        Asset asset = dpia.getAssets();
+//        Asset asset = dpia.getAssets();
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAPdf(dpia);
-            response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + asset.getName() + ".pdf");
+            response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + dpia.getName() + ".pdf");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
         } else if (type.equals("ZIP")) {
-            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + asset.getName() + ".zip\"")
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
                 .body(out -> {
                         var zipOutputStream = new ZipOutputStream(out);
 
                         // add dpia pdf
                         try {
-                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + asset.getName() + ".pdf");
+                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + dpia.getName() + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
                             zipOutputStream.write(assetService.getDPIAPdf(dpia));
                         } catch (DocumentException e) {
-                            log.warn("Could not generate pdf for dpia for asset with id " + asset.getId() + ". Exeption: "
+                            log.warn("Could not generate pdf for dpia for asset with id " + dpia.getId() + ". Exeption: "
                                 + e.getMessage());
                         }
 
@@ -276,25 +276,25 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
-        Asset asset = dpia.getAssets();
+//        Asset asset = dpia.getAssets();
         if (type.equals("PDF")) {
-            byte[] byteData = assetService.getDPIAScreeningPdf(asset);
-            response.addHeader("Content-disposition", "attachment;filename=screening vedr " + asset.getName() + ".pdf");
+            byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
+            response.addHeader("Content-disposition", "attachment;filename=screening vedr " + dpia.getName() + ".pdf");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
         } else if (type.equals("ZIP")) {
-            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + asset.getName() + ".zip\"")
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
                 .body(out -> {
                         var zipOutputStream = new ZipOutputStream(out);
 
                         // add dpia pdf
                         try {
-                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + asset.getName() + ".pdf");
+                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + dpia.getName() + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
-                            zipOutputStream.write(assetService.getDPIAScreeningPdf(asset));
+                            zipOutputStream.write(assetService.getDPIAScreeningPdf(dpia));
                         } catch (DocumentException e) {
-                            log.warn("Could not generate pdf for dpia for asset with id " + asset.getId() + ". Exeption: "
+                            log.warn("Could not generate pdf for dpia for asset with id " + dpia.getId() + ". Exeption: "
                                 + e.getMessage());
                         }
 

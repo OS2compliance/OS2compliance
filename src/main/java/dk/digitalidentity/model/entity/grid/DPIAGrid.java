@@ -25,7 +25,7 @@ public class DPIAGrid {
     private Long id;
 
     @Column
-    private String assetName;
+    private String name;
 
 	@Column
 	private String responsibleUserName;

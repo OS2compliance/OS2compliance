@@ -6,19 +6,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.List;
-import java.util.Set;
-
 @Getter
 @Setter
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class DataProtectionImpactDTO {
+public class AssetDPIAPageDTO {
     private Long assetId;
     private boolean optOut;
-    private List<DataProtectionImpactScreeningAnswerDTO> questions;
-    private Set<String> dpiaQuality;
-    private String consequenceLink;
+//    private List<DataProtectionImpactScreeningAnswerDTO> questions;
+//    private Set<String> dpiaQuality;
+//    private String consequenceLink;
     private String comment;
 }

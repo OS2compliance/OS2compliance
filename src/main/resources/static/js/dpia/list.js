@@ -23,9 +23,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 hidden: true
             },
             {
-                name: "Aktiv",
+                name: "Titel",
                 searchable: {
-                    searchKey: 'assetName'
+                    searchKey: 'name'
                 },
                 formatter: (cell, row) => {
                     const url = baseUrl + "/" + row.cells[0]['data'];
@@ -122,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 formatter: (cell, row) => {
                     const dpiaId = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    const isExternal = row.cells[4]['data'];
+                    const isExternal = row.cells[8]['data'];
                     let buttonHTML = ""
                     if(superuser) {
                         buttonHTML = buttonHTML

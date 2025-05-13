@@ -6,13 +6,13 @@ class EditDPIAService {
     constructor() {}
 
     async onSubmit(dpiaId) {
-        const titleInput = document.getElementById('titleInput');
+        const titleInput = document.getElementById('editTitleInput');
         const assetSelect = document.getElementById(this.assetSelectElementId);
         const userUpdatedDateElement = document.getElementById('editUserUpdateDateField')
         const userSelect = document.getElementById('userSelect');
         const ouSelect = document.getElementById('ouSelect');
         const data = {
-            assetId : assetSelect.value,
+            assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
             userUpdatedDate: userUpdatedDateElement.value,
             responsibleUserUuid: userSelect.value,
             responsibleOuUuid: ouSelect.value,
@@ -48,6 +48,21 @@ class EditDPIAService {
             },
             false,
         );
+
+        //update title if empty
+        assetSelectElement.addEventListener('change', (event) => {
+            const selected = event.target.selectedOptions
+            const titleElement = document.getElementById('editTitleInput')
+            if (titleElement.value === null
+                || titleElement.value === '') {
+                if (selected.length > 1) {
+                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "") + ' med flere'
+                } else if (selected.length === 1) {
+                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
+                }
+            }
+        })
+
         return assetChoices;
         }
     }
@@ -94,8 +109,8 @@ class EditDPIAService {
         const datepickerElement = document.getElementById('editUserUpdateDateField')
         this.initDatePicker('editUserUpdateDateField', datepickerElement.value || '')
 
-        this.#initSearchOus('ouSelect')
-        this.#initSearchUsers('userSelect')
+        this.#initSearchOus('editOuSelect')
+        this.#initSearchUsers('editUserSelect')
 
         const modalElement = document.getElementById(this.editModalId)
         const modal = new bootstrap.Modal(modalElement);

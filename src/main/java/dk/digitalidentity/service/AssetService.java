@@ -116,10 +116,7 @@ public class AssetService {
 
     public Asset create(final Asset asset) {
         final Asset saved = assetDao.save(asset);
-        if (saved.getDpiaScreening() == null) {
-            saved.setDpiaScreening(new DataProtectionImpactAssessmentScreening());
-            saved.getDpiaScreening().setAsset(saved);
-        }
+
         if (saved.getDataProcessing() == null) {
             saved.setDataProcessing(new DataProcessing());
         }
@@ -170,6 +167,15 @@ public class AssetService {
                 || asset.getResponsibleUsers().stream()
             .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
     }
+
+	public boolean isEditable(final List<Asset> assets) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return authentication.getAuthorities().stream()
+				.anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)
+						|| r.getAuthority().equals(Roles.ADMINISTRATOR))
+				|| assets.stream().flatMap(a->a.getResponsibleUsers().stream())
+				.anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
+	}
 
     /**
      * Will find the main supplier {@link AssetSupplierMapping} if none is found a default placeholder will be returned
@@ -334,13 +340,12 @@ public class AssetService {
         return convertHtmlToPdf(html);
     }
 
-    public byte[] getDPIAScreeningPdf(Asset asset) throws IOException {
-        String html = getDPIAScreeningHTML(asset);
+    public byte[] getDPIAScreeningPdf(DPIA dpia) throws IOException {
+        String html = getDPIAScreeningHTML(dpia);
         return convertHtmlToPdf(html);
     }
 
     private String getDPIAHTML(DPIA dpia) {
-		//TODO
         final Asset asset = dpia.getAssets().getFirst();
         final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
@@ -364,10 +369,10 @@ public class AssetService {
 
     public record ScreeningQuestionDTO(String question, String answer,  boolean dangerous) {}
     public record ScreeningCategoryDTO(String title, long dangerousValueCount, List<ScreeningQuestionDTO> questions) {}
-public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, String recommendation, EstimationDTO recommendedEstimation) {
+public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, String recommendation, EstimationDTO recommendedEstimation) {
 }
 
-    private String getDPIAScreeningHTML(Asset asset) {
+    private String getDPIAScreeningHTML(DPIA dpia) {
         List<String> dangerousValues = listOf("dpia-yes", "dpia-partially", "dpia-dont-know");
         List<String> alwaysRed = listOf("dpia-7");
 
@@ -375,11 +380,11 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
         final List<ChoiceDPIA> choiceDPIA = choiceDPIADao.findAll();
         for (final ChoiceDPIA choice : choiceDPIA) {
             final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
-            defaultAnswer.setAssessment(asset.getDpiaScreening());
+            defaultAnswer.setAssessment(dpia.getDpiaScreening());
             defaultAnswer.setChoice(choice);
             defaultAnswer.setAnswer(null);
             defaultAnswer.setId(0);
-            final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpiaScreening().getDpiaScreeningAnswers().stream()
+            final DataProtectionImpactScreeningAnswer dpiaAnswer = dpia.getDpiaScreening().getDpiaScreeningAnswers().stream()
                 .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))
                 .findAny().orElse(defaultAnswer);
             assetDPIADTOs.add(dpiaAnswer);
@@ -432,7 +437,7 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
         }
 
         ScreeningDTO screeningDTO = new ScreeningDTO(
-            asset.getId(),
+            dpia.getId(),
             categoryDtosSorted,
             recommendation,
             recommendedEstimation

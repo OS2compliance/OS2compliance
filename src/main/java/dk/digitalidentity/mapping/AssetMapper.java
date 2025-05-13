@@ -160,7 +160,6 @@ public interface AssetMapper {
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpias", ignore = true),
-        @Mapping(target = "dpiaScreening", ignore = true),
         @Mapping(target = "managers", source = "responsibleUsers"),
         @Mapping(target = "deleted", ignore = true),
         @Mapping(target = "localizedEnums", ignore = true),

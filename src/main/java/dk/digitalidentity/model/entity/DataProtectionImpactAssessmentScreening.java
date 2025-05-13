@@ -35,9 +35,9 @@ public class DataProtectionImpactAssessmentScreening {
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToOne
-    @JoinColumn(name = "asset_id")
+    @JoinColumn(name = "dpia_id")
     @JsonIgnore
-    private Asset asset;
+    private DPIA dpia;
 
 	@Column
 	@Enumerated(EnumType.STRING)

@@ -7,6 +7,7 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
+import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
@@ -20,6 +21,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.UserService;
@@ -69,9 +71,9 @@ public class AssetsRestController {
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final AssetOversightService assetOversightService;
+	private final DPIAService dPIAService;
 
-
-    @PostMapping("list")
+	@PostMapping("list")
     public PageDTO<AssetDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
         @RequestParam(value = "limit", defaultValue = "50") int limit,
@@ -133,14 +135,13 @@ public class AssetsRestController {
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                                       @RequestParam(value = "value", required = false) final String value) {
         canSetFieldDPIAScreeningGuard(fieldName);
-        final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		DPIA dpia = dPIAService.find(id);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !isResponsibleForAsset(dpia.getAssets())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, asset.getDpiaScreening(), fieldName, value);
-        assetService.save(asset);
+        ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, dpia.getDpiaScreening(), fieldName, value);
     }
 
     @Transactional
@@ -314,6 +315,14 @@ public class AssetsRestController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         }
     }
+
+	private boolean isResponsibleForAsset(List<Asset> assets) {
+		return assets.stream().flatMap(a ->
+						a.getResponsibleUsers().stream()
+								.map(User::getUuid))
+				.toList()
+				.contains(SecurityUtil.getPrincipalUuid());
+	}
 
 
 }

@@ -181,12 +181,10 @@ public class Asset extends Relatable {
     @Column
     private String threatAssessmentOptOutReason;
 
-    @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "asset")
-    private DataProtectionImpactAssessmentScreening dpiaScreening;
-
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-	@ManyToMany(mappedBy = "assets", cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+	@JsonIgnore
     private List<DPIA> dpias = new ArrayList<>();
 
     @ToString.Exclude
@@ -200,6 +198,8 @@ public class Asset extends Relatable {
 
     @JsonIgnore
     @OneToMany(mappedBy="asset", fetch = FetchType.LAZY)
-    private Set<Role> roles = new HashSet<>();
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private Set<Role> roles = new HashSet<>();
 
 }

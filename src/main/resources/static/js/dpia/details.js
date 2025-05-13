@@ -112,7 +112,7 @@ function AssetDpiaService() {
     };
 
     this.setFieldScreening = function (fieldName, value) {
-        putData(`/rest/assets/${assetId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
+        putData(`/rest/assets/${dpiaId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
         .then(defaultResponseHandler)
         .catch(defaultErrorHandler)
     }
@@ -170,7 +170,7 @@ function AssetDpiaService() {
         const choiceIdentifier = target.id
         const selectedOption = target.selectedOptions[0]
         const data = {
-            "assetId": assetId,
+            "dpiaId": dpiaId,
             "answer": selectedOption.value,
             "choiceIdentifier": choiceIdentifier
         }

@@ -10,10 +10,13 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
+import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -32,9 +35,15 @@ import java.util.Set;
 @Getter
 @Setter
 public class DPIA extends Relatable {
-    @ManyToMany(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@ManyToMany
+	@JoinTable(
+			name = "dpia_asset",
+			joinColumns = { @JoinColumn(name = "dpia_id") },
+			inverseJoinColumns = { @JoinColumn(name = "asset_id") }
+	)
+	@ToString.Exclude
 	@JsonIgnore
-    private List<Asset> assets;
+	private List<Asset> assets = new ArrayList<>();
 
     @Column(name = "dpia_checked_choice_list_identifiers")
     @Convert(converter = StringSetNullSafeConverter.class)
@@ -79,13 +88,16 @@ public class DPIA extends Relatable {
 	@DateTimeFormat(pattern = "dd/MM-yyyy")
 	private LocalDate userUpdatedDate;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "responsible_user_uuid")
 	private User responsibleUser;
 
-	@ManyToOne(cascade = CascadeType.ALL)
+	@ManyToOne
 	@JoinColumn(name = "responsible_ou_uuid")
 	private OrganisationUnit responsibleOu;
+
+	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "dpia")
+	private DataProtectionImpactAssessmentScreening dpiaScreening;
 
 	@Override
     public RelationType getRelationType() {
