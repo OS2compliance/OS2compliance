@@ -183,7 +183,7 @@ public class Asset extends Relatable {
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
+	@ManyToMany(mappedBy = "assets", fetch = FetchType.LAZY, cascade = CascadeType.PERSIST)
 	@JsonIgnore
     private List<DPIA> dpias = new ArrayList<>();
 

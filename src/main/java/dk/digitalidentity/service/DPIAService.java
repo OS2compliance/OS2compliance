@@ -81,6 +81,7 @@ public class DPIAService {
 		DataProtectionImpactAssessmentScreening screening = new DataProtectionImpactAssessmentScreening();
 		screening.setConclusion(calculateScreeningConclusion(screening.getDpiaScreeningAnswers()));
 		dpia.setDpiaScreening(screening);
+		screening.setDpia(dpia);
 
         dpia = save(dpia);
 

@@ -77,13 +77,6 @@ function AssetDpiaService() {
     }
 
     this.updateDpiaBadges = function () {
-        if (asset.dpiaOptOut) {
-            if (this.tabBadgeElem) {
-                this.tabBadgeElem.classList.add("bg-gray-800");
-            }
-            this.screeningBadgeElem.classList.add("bg-gray-800");
-            return;
-        }
         if (this.tabBadgeElem) {
             this.tabBadgeElem.classList.value = 'badge';
         }
@@ -220,7 +213,7 @@ function AssetDpiaService() {
             row.addEventListener('click', sectionRowClicked, false);
         }
 
-        const openedSection = sessionStorage.getItem(`openedDPIASectionId${assetId}`);
+        const openedSection = sessionStorage.getItem(`openedDPIASectionId${dpiaId}`);
         if (openedSection !== null && openedSection !== undefined) {
             handleSectionRow(openedSection);
         }
@@ -318,7 +311,7 @@ function handleSectionRow(sectionId) {
 
 function sectionRowClicked() {
     var sectionId = this.dataset.sectionid;
-    sessionStorage.setItem(`openedDPIASectionId${assetId}`, sectionId);
+    sessionStorage.setItem(`openedDPIASectionId${dpiaId}`, sectionId);
     handleSectionRow(sectionId);
 }
 
