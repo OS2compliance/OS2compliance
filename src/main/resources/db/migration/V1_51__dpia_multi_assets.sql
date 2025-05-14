@@ -40,7 +40,7 @@ ALTER TABLE dpia
     DROP FOREIGN KEY FK_ASSET_DPIA_ON_ASSET;
 
 ALTER TABLE dpia
-DROP COLUMN asset_id
+DROP COLUMN asset_id;
 
 UPDATE dpia d
 SET d.name = (SELECT a.name
