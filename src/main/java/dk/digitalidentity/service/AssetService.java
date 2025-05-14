@@ -18,7 +18,6 @@ import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
@@ -346,22 +345,24 @@ public class AssetService {
     }
 
     private String getDPIAHTML(DPIA dpia) {
-        final Asset asset = dpia.getAssets().getFirst();
-        final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
+        final List<Asset> assets = dpia.getAssets();
+        final List<Relatable> allRelatedTo = assets.stream().flatMap(a -> relationService.findAllRelatedTo(a).stream()).toList();
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
-            .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
-            .map(ThreatAssessment.class::cast)
-            .collect(Collectors.toList());
-        threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
+				.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+				.map(ThreatAssessment.class::cast)
+				.sorted(Comparator.comparing(Relatable::getCreatedAt)
+						.reversed())
+				.collect(Collectors.toList());
 
-        var context = new Context();
-        context.setVariable("asset", asset);
+		var context = new Context();
         context.setVariable("dpiaSections", buildDPIASections(dpia));
         context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
         context.setVariable("conclusion", dpia.getConclusion());
-        context.setVariable("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
-        context.setVariable("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
-        context.setVariable("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
+		context.setVariable("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
+		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a->a.getAssetType().getCaption()).toList()));
+        context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" +u.getUserId()+")")).toList()));
+        context.setVariable("managerNames", String.join(", ", assets.stream().flatMap( a -> a.getManagers().stream().map(u -> u.getName() + " (" +u.getUserId()+")")).toList()));
+        context.setVariable("supplierName", String.join(", ", assets.stream().map( a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
 
         return templateEngine.process("reports/dpia/dpia_pdf", context);
     }

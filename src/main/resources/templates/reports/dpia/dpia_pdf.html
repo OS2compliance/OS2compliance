@@ -101,7 +101,7 @@
 </head>
 <body>
 
-<h1 th:text="'Konsekvensanalyse vedr. ' + ${asset.name}" style="text-align: center;"></h1>
+<h1 th:text="'Konsekvensanalyse vedr. ' + ${assetNames}" style="text-align: center;"></h1>
 <div th:each="section : ${dpiaSections}">
     <h2 th:text="${section.heading}"></h2>
     <p th:utext="${section.explainer}"></p>
@@ -116,7 +116,7 @@
         <th:block th:if="${section.sectionIdentifier == 'scope'}">
             <tr>
                 <td>Systemets navn</td>
-                <td th:text="${asset.name}"></td>
+                <td th:text="${assetNames}"></td>
             </tr>
             <tr>
                 <td>Systemejer</td>
@@ -124,7 +124,7 @@
             </tr>
             <tr>
                 <td>Systemtype</td>
-                <td th:text="${asset.assetType.caption}"></td>
+                <td th:text="${assetTypeNames}"></td>
             </tr>
             <tr>
                 <td>Leverandør</td>

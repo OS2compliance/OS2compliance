@@ -372,6 +372,7 @@ public class DPIARestController {
 		} else if (dto.fieldName.equals("checkedThreatAssessmentIds")) {
 			dpia.setCheckedThreatAssessmentIds(dto.value);
 		}
+		dpiaService.save(dpia);
 	}
 
 	/**

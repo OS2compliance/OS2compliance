@@ -25,7 +25,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Service
 @RequiredArgsConstructor
@@ -43,7 +45,7 @@ public class DPIAService {
         return dpiaDao.findById(dpiaId)
             .orElseThrow();
     }
-
+	@Transactional
     public DPIA save(DPIA dpia) {
         return dpiaDao.save(dpia);
     }
@@ -159,17 +161,40 @@ public class DPIAService {
         return (bos.toString(StandardCharsets.UTF_8));
     }
 
+	/**
+	 * Calculates the danger indicator for a screening by the following rules:
+	 * If all answers are blank -> Grey
+	 * If one of the "critical" questions have a dangerous answer -> Red
+	 * If two or more sections contains dangerous answers -> Red
+	 * If exactly one section contains dangerous answers - > Yellow
+	 * Otherwise -> Green
+	 * @param screeningAnswers
+	 * @return
+	 */
 	public DPIAScreeningConclusion calculateScreeningConclusion( List<DataProtectionImpactScreeningAnswer> screeningAnswers) {
+		if(screeningAnswers.stream().allMatch(a -> a.getAnswer().isBlank())) {
+			return DPIAScreeningConclusion.GREY;
+		}
 
 		List<String> dangerousAnswers = List.of("dpia-yes", "dpia-dont-know", "dpia-partially");
 		List<String> criticalQuestionsIdentifiers = List.of("dpia-7");
 
-		boolean containsCritical = screeningAnswers.stream().anyMatch(s -> criticalQuestionsIdentifiers.contains(s.getChoice().getIdentifier()));
+		boolean containsCritical = screeningAnswers.stream()
+				.filter(s -> criticalQuestionsIdentifiers.contains(s.getChoice().getIdentifier()))
+				.anyMatch(s -> dangerousAnswers.contains(s.getAnswer()));
 		if (containsCritical) {
 			return DPIAScreeningConclusion.RED;
 		}
 
-		int dangerousAnswerCount = (int) screeningAnswers.stream().filter(s -> dangerousAnswers.contains(s.getAnswer())).count();
+		Set<String> dangerousSections = new HashSet<>();
+
+		for (var answer : screeningAnswers) {
+			if (dangerousAnswers.contains(answer.getAnswer())){
+				dangerousSections.add(answer.getChoice().getCategory());
+			}
+		}
+
+		int dangerousAnswerCount = dangerousSections.size();
 
 		if(dangerousAnswerCount == 1) {
 			return DPIAScreeningConclusion.YELLOW;
