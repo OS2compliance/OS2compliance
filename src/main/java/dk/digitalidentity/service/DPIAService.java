@@ -67,7 +67,12 @@ public class DPIAService {
     public DPIA create(List<Asset> assets, String name, LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid) throws IOException {
         // default dpia creation
         DPIA dpia = new DPIA();
-        dpia.setName(name);
+
+		if (name == null || name.isEmpty()) {
+			dpia.setName(assets.size()>1 ? "Konsekvensanalyse for" + assets.getFirst().getName() + " med flere" : "Konsekvensanalyse for" + assets.getFirst().getName());
+		} else {
+        	dpia.setName(name);
+		}
         dpia.setAssets(assets);
 		dpia.setUserUpdatedDate(userUpdatedDate);
 

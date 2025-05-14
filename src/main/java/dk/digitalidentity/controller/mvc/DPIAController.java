@@ -195,8 +195,12 @@ public class DPIAController {
 		model.addAttribute("userUpdatedDate", dpia.getUserUpdatedDate());
 		model.addAttribute("dpiaId", dpia.getId());
 		model.addAttribute("assets", dpia.getAssets().stream().map(a -> new DPIAAssetDTO(a.getId(), a.getName())).toList());
-		model.addAttribute("responsibleUser", new DPIAResponsibleUser(dpia.getResponsibleUser().getUuid(), dpia.getResponsibleUser().getName()));
-		model.addAttribute("responsibleOu", new DPIAResponsibleOu(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName()));
+		if (dpia.getResponsibleUser() != null) {
+			model.addAttribute("responsibleUser", new DPIAResponsibleUser(dpia.getResponsibleUser().getUuid(), dpia.getResponsibleUser().getName()));
+		}
+		if (dpia.getResponsibleOu() != null) {
+			model.addAttribute("responsibleOu", new DPIAResponsibleOu(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName()));
+		}
 		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";
 	}
 

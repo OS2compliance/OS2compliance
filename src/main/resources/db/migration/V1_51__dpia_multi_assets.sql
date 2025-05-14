@@ -41,3 +41,11 @@ ALTER TABLE dpia
 
 ALTER TABLE dpia
 DROP COLUMN asset_id
+
+UPDATE dpia d
+SET d.name = (SELECT a.name
+              FROM assets a
+                       LEFT JOIN dpia_asset da on a.id = da.asset_id
+              WHERE da.dpia_id = d.id
+              LIMIT 1)
+WHERE d.name = 'Konsekvensanalyse'
