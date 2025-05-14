@@ -228,28 +228,13 @@ public class AssetsController {
             asset.getId(),
             asset.isDpiaOptOut()
         );
-//        final DataProtectionImpactDTO dpiaForm = DataProtectionImpactDTO.builder()
-//            .assetId(asset.getId())
-//            .optOut(asset.isDpiaOptOut())
-//            .questions(assetDPIADTOs)
-//            .consequenceLink(asset.getDpia().getExternalLink())
-//            .dpiaQuality(asset.getDpia() == null ? new HashSet<>() : asset.getDpia().getChecks())
-//            .comment(asset.getDpia() == null ? "" : asset.getDpia().getComment())
-//            .build();
-
-//        if (asset.getDpia() == null) {
-//            DPIA dpia = new DPIA();
-//            dpia.setName(asset.getName()+" Konsekvensaanalyse");
-//            dpia.setAsset(asset);
-//            asset.setDpia(dpia);
-//        }
 
         // Oversights
         final List<AssetOversight> oversights = new ArrayList<>(
             assetOversightService.findByAssetOrderByCreationDateDesc(asset));
 
 		model.addAttribute("asset", asset);
-//        model.addAttribute("changeableAsset", assetService.isEditable(asset));
+        model.addAttribute("changeableAsset", assetService.isEditable(asset));
 		model.addAttribute("relatedAssets", relatedAssets);
 		model.addAttribute("relatedIncidents", relatedIncidents);
 		model.addAttribute("registers", registers);
