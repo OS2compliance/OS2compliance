@@ -34,7 +34,7 @@
                     <label for="editUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="editUserSelect" hidden="" tabindex="-1" required>
-                            <option th:value="${responsibleUser.uuid}" th:text="${responsibleUser.name}" selected></option>
+                            <option th:if="${responsibleUser != null}" th:value="${responsibleUser.uuid}" th:text="${responsibleUser.name}" selected></option>
                         </select>
                     </div>
                 </div>
@@ -42,7 +42,7 @@
                     <label for="editOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="editOuSelect" hidden="" tabindex="-1" required>
-                            <option th:value="${responsibleOu.uuid}" th:text="${responsibleOu.name}" selected></option>
+                            <option th:if="${responsibleOu != null}" th:value="${responsibleOu.uuid}" th:text="${responsibleOu.name}" selected></option>
                         </select>
                     </div>
                 </div>

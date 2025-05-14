@@ -22,33 +22,34 @@ class CreateExternalDPIAService {
         this.formElement.reset();
     }
 
+    #initAssetSelect(assetSelectElement){
+        if (assetSelectElement !== null) {
 
-    #initAssetSelect(assetSelectElement) {
-        const self = this;
-        const assetChoices = initSelect(assetSelectElement);
-        this.#updateTypeSelect(assetChoices, "", "ASSET");
-        assetSelectElement.addEventListener("search",
-            function(event) {
-                self.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
-            },
-            false,
-        );
+            const assetChoices = initSelect(assetSelectElement);
+            this.#updateTypeSelect(assetChoices, "", "ASSET");
+            assetSelectElement.addEventListener("search",
+                function(event) {
+                    this.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
+                },
+                false,
+            );
 
-        //update title if empty
-        assetSelectElement.addEventListener('change', (event)=> {
-            const selected = event.target.selectedOptions
-            const titleElement = document.getElementById('externalTitleInput')
-            if (titleElement.value === null
-                || titleElement.value === '') {
-                if (selected.length > 1) {
-                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "") + ' med flere'
-                } else if (selected.length === 1) {
-                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
+            //update title if empty
+            assetSelectElement.addEventListener('change', (event) => {
+                const selected = event.target.selectedOptions
+                const titleElement = document.getElementById('externalTitleInput')
+                if (titleElement.value === null
+                    || titleElement.value === '') {
+                    if (selected.length > 1) {
+                        titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "") + ' med flere'
+                    } else if (selected.length === 1) {
+                        titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
+                    }
                 }
-            }
-        })
+            })
 
-        return assetChoices;
+            return assetChoices;
+        }
     }
 
     #updateTypeSelect(choices, search, types) {
@@ -70,8 +71,8 @@ class CreateExternalDPIAService {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         const linkInput = document.getElementById('linkInput');
         const userUpdatedDateElement = document.getElementById('externalUserUpdateDateField')
-        const userSelect = document.getElementById('userSelect');
-        const ouSelect = document.getElementById('ouSelect');
+        const userSelect = document.getElementById('externalUserSelect');
+        const ouSelect = document.getElementById('externalOuSelect');
         const data = {
             dpiaId: dpiaId ? dpiaId : null,
             assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
@@ -117,10 +118,7 @@ class CreateExternalDPIAService {
         const externalModalContainer = document.getElementById("external_modal_container")
         externalModalContainer.innerHTML = responseText
 
-        const datepickerElement = document.getElementById('externalUserUpdateDateField')
-        this.initDatePicker('externalUserUpdateDateField', datepickerElement.value)
-        this.#initSearchOus('externalOuSelect')
-        this.#initSearchUsers('externalUserSelect')
+        this.init()
 
         const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
         const modal = new bootstrap.Modal(modalElement);

@@ -17,11 +17,15 @@
                             <input id="linkInput" class="form-control form-input" th:value="${externalDPIA != null && externalDPIA != '' ? externalDPIA.externalLink : '' }"/>
                         </div>
                     </div>
-                    <div th:if="${externalDPIA == null || externalDPIA == '' }" class="row mt-3" id="assetSelectRow">
+                    <div class="row mt-3" id="assetSelectRow">
                         <label for="externalDPIAAssetSelect" class="col-sm-4 col-form-label">For Aktiv</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="selectedAsset"
                                     data-trigger="" id="externalDPIAAssetSelect" hidden="" tabindex="-1" multiple>
+                                <th:block th:if="${externalDPIA != null && externalDPIA != ''}">
+                                    <option  th:each="asset : ${externalDPIA.assets}"
+                                            th:value="${asset.id}" th:text="${asset.name}" selected></option>
+                                </th:block>
                             </select>
                             <div class="invalid-feedback" id="assetError">Der skal vælges mindst et aktiv</div>
                         </div>
@@ -41,13 +45,21 @@
                     <div class="row mt-3">
                         <label for="externalUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalUserSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalUserSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${externalDPIA != null && externalDPIA != ''}">
+                                    <option th:if="${externalDPIA.responsibleUser != null}" th:value="${externalDPIA.responsibleUser.uuid}" th:text="${externalDPIA.responsibleUser.name}" selected></option>
+                                </th:block>
+                            </select>
                         </div>
                     </div>
                     <div class="row mt-3">
                         <label for="externalOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="externalOuSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="externalOuSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${externalDPIA != null && externalDPIA != ''}">
+                                    <option th:if="${externalDPIA.responsibleOu != null}" th:value="${externalDPIA.responsibleOu.uuid}" th:text="${externalDPIA.responsibleOu.name}" selected></option>
+                                </th:block>
+                            </select>
                         </div>
                     </div>
                 </form>

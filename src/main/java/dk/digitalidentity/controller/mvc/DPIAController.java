@@ -154,7 +154,9 @@ public class DPIAController {
         return "dpia/details";
     }
 
-    public record ExternalDPIADTO (Long dpiaId, String externalLink, List<Long> assetIds, LocalDate userUpdatedDate, String title) {}
+	public record ExternalDPIAOptionDTO(Long id, String name) {}
+	public record ExternalDPIAUserOptionDTO(String uuid, String name) {}
+    public record ExternalDPIADTO (Long dpiaId, String externalLink, List<ExternalDPIAOptionDTO> assets, LocalDate userUpdatedDate, String title, ExternalDPIAUserOptionDTO responsibleUser, ExternalDPIAUserOptionDTO responsibleOu ) {}
     @GetMapping("external/{dpiaId}/edit")
     public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -162,7 +164,15 @@ public class DPIAController {
 
         DPIA dpia = dpiaService.find(dpiaId);
 
-        model.addAttribute("externalDPIA", new ExternalDPIADTO(dpia.getId(), dpia.getExternalLink(), dpia.getAssets().stream().map(Asset::getId).toList(), dpia.getUserUpdatedDate(), dpia.getName()));
+        model.addAttribute("externalDPIA", new ExternalDPIADTO(
+				dpia.getId(),
+				dpia.getExternalLink(),
+				dpia.getAssets().stream().map(a -> new ExternalDPIAOptionDTO(a.getId(), a.getName())).toList(),
+				dpia.getUserUpdatedDate(),
+				dpia.getName(),
+				new ExternalDPIAUserOptionDTO(dpia.getResponsibleUser().getUuid(), dpia.getResponsibleUser().getName()),
+				new ExternalDPIAUserOptionDTO(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName())
+		));
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
 
