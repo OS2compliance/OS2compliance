@@ -103,7 +103,8 @@ public class DPIAService {
                 .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getTypesOfPersonalInformationFreetext).toList()))
                 .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.stream().flatMap(p -> p.getCategoriesOfRegisteredTitles().stream()).toList()))
                 .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getHowLongTitle).toList()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), String.join(", ", assets.stream().map(a -> "<a href=\"" + a.getDataProcessing().getDeletionProcedureLink() + "\">" + a.getDataProcessing().getDeletionProcedureLink() + "</a>").toList()));
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), String.join(", ", assets.stream().map(a -> "<a href=\"" + a.getDataProcessing().getDeletionProcedureLink() + "\">" + a.getDataProcessing().getDeletionProcedureLink() + "</a>").toList()));
+
 
             //create new DPIAResponseSection & DPIAResponseSectionAnswer with the templated answers
             DPIAResponseSection responseSection = new DPIAResponseSection();
