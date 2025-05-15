@@ -35,12 +35,10 @@ import org.apache.xmlbeans.XmlCursor;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTDocument1;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTHMerge;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblGrid;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTblWidth;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTTcPr;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.CTVMerge;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STMerge;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STPageOrientation;
-import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTblWidth;
 import org.openxmlformats.schemas.wordprocessingml.x2006.main.STTextDirection;
 import org.springframework.stereotype.Service;
 
@@ -275,7 +273,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         setCellHeaderTextSmall(headerRow, 13, "Residual\nrisikoscore");
 
 		// set table grid, or merging wont work in libreoffice. Contains "magic numbers" for a4 width and margins
-		setTableColumnsWidth(table,14 );
+		setTableColumnsEqualWidth(table,14 );
 
 		mergeCellHorizontally(table,0, 9, 10 );
 
@@ -659,7 +657,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
 			table.setTableAlignment(TableRowAlign.LEFT);
 
-			createTableCells(table, 8 + categories.size(), 2);
+			createTableCells(table, 8 + categories.size(), 3);
 			final XWPFTableRow row = table.getRow(0);
 
 			//System type
@@ -818,8 +816,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 		}
 	}
 
-	public static void setTableColumnsWidth(XWPFTable table, int columncount) {
-		int pageWidth = 595; // A4 width in points
+	public static void setTableColumnsEqualWidth(XWPFTable table, int columncount) {
+		int pageWidth = 841; // A4 (horizontal) width in points
 		int leftMargin = 72; // Left margin in points (1 inch)
 		int rightMargin = 72; // Right margin in points (1 inch)
 
@@ -830,5 +828,4 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			grid.addNewGridCol().setW(BigInteger.valueOf(availableWidth*20));
 		}
 	}
-
 }
