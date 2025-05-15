@@ -38,6 +38,11 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
+import org.jsoup.select.Elements;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -54,10 +59,12 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -88,8 +95,9 @@ public class AssetService {
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final ChoiceService choiceService;
     private final ChoiceDPIADao choiceDPIADao;
+	private final S3Service s3Service;
 
-    public Optional<AssetOversight> getOversight(final Long oversightId) {
+	public Optional<AssetOversight> getOversight(final Long oversightId) {
         return assetOversightDao.findById(oversightId);
     }
 
@@ -355,7 +363,9 @@ public class AssetService {
 				.collect(Collectors.toList());
 
 		var context = new Context();
-        context.setVariable("dpiaSections", buildDPIASections(dpia));
+
+		List<DPIASectionDTO> sections =  buildDPIASections(dpia);
+        context.setVariable("dpiaSections",sections);
         context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
         context.setVariable("conclusion", dpia.getConclusion());
 		context.setVariable("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
@@ -471,13 +481,16 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
                 .collect(Collectors.toList());
 
             for (DPIATemplateQuestion templateQuestion : questions) {
+
                 DPIAResponseSectionAnswer matchAnswer = matchSection == null ? null : matchSection.getDpiaResponseSectionAnswers().stream().filter(s -> s.getDpiaTemplateQuestion().getId() == templateQuestion.getId()).findAny().orElse(null);
 
                 String templateAnswer = templateQuestion.getAnswerTemplate() == null ? "" : templateQuestion.getAnswerTemplate();
                 if (matchAnswer == null) {
                     questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, ""));
                 } else {
-                    questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, matchAnswer.getResponse()));
+					String imgParsedResponse = handleResponseImg(matchAnswer.getResponse());
+					System.out.println(imgParsedResponse);
+                    questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, imgParsedResponse));
                 }
             }
 
@@ -515,4 +528,98 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
         outputStream.close();
         return result;
     }
+
+	private String handleResponseImg(String response) {
+		Document doc = Jsoup.parse(response);
+		Elements imgTags = doc.select("img[src]");
+
+		for (Element img : imgTags) {
+			String src = img.attr("src");
+			try {
+				String processedSrc = convertImgSrcToBase64(src);
+				img.attr("src", processedSrc);
+				img = setImgResizedStyle(img);
+			} catch (IOException | InterruptedException ioE) {
+				System.out.println("Failed to convert image: " + src);
+			}
+		}
+
+		doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+		doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
+		doc.outputSettings().charset(StandardCharsets.UTF_8);
+
+		return doc.body().html();
+	}
+
+
+	private String convertImgSrcToBase64(String imageUrl) throws IOException, InterruptedException {
+
+		int keyIndex = imageUrl.indexOf("key=");
+		String key = imageUrl.substring(keyIndex + "key=".length());
+
+		String base64 = Base64.getEncoder().encodeToString(s3Service.downloadBytes(key));
+		String contentType = "image/png";
+		if (key.endsWith(".jpg") || key.endsWith(".jpeg")) {
+			contentType = "image/jpeg";
+		}
+		if (key.endsWith(".gif")) {
+			contentType = "image/gif";
+		}
+		return "data:" + contentType + ";base64," + base64;
+	}
+
+	/**
+	 * Dirty hack because aspect ratio is to new to be supported by flying saucer
+	 * @param img
+	 * @return
+	 */
+	private Element setImgResizedStyle(Element img) {
+		String style = img.attr("style");
+
+		Float aspectRatioA = null;
+		Float aspectRatioB = null;
+		Float widthPercent = null;
+
+		Map<String, String> newProperties = new HashMap<>();
+		String[] properties = style.split(";");
+		for (String property : properties) {
+			String[] keyValuePair = property.split(":");
+			String key = keyValuePair[0];
+			String value = keyValuePair[1];
+			newProperties.put(key, value);
+		}
+
+		if (!newProperties.containsKey("aspect-ratio") || !newProperties.containsKey("width")) {
+			return img;
+		}
+		String[] aspectRatioSet = newProperties.get("aspect-ratio").split("/");
+		try {
+			aspectRatioA = (aspectRatioSet[0] == null || aspectRatioSet[0].trim().isEmpty()) ? null : Float.parseFloat(aspectRatioSet[0].trim());
+
+			aspectRatioB = (aspectRatioSet[1] == null || aspectRatioSet[1].trim().isEmpty()) ? null : Float.parseFloat(aspectRatioSet[1].trim());
+
+			String widthPercentString = newProperties.get("width");
+			widthPercent = widthPercentString.replace("%", "").trim().isEmpty() ? null : Float.parseFloat(widthPercentString.replace("%", "").trim());
+		} catch (NumberFormatException e) {
+			return img;
+		}
+
+		if (widthPercent != null && aspectRatioA != null && aspectRatioB != null) {
+			Float ratio = aspectRatioA / aspectRatioB;
+			Float heightPercent =  widthPercent * ratio;
+			newProperties.put("height", heightPercent + "%");
+		}
+
+		StringBuilder builder = new StringBuilder();
+		for (Map.Entry<String, String> entry : newProperties.entrySet()) {
+			builder
+					.append(entry.getKey())
+					.append(":")
+					.append(entry.getValue())
+					.append(";");
+		}
+		System.out.println(builder.toString());
+		img.attr("style", builder.toString());
+		return img;
+	}
 }
