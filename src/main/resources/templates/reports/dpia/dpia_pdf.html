@@ -138,7 +138,6 @@
         <tr th:each="question : ${section.questions}">
             <td th:text="${question.question}"></td>
             <td>
-                <div th:if="${question.templateAnswer != null} AND ${question.templateAnswer != ''}" th:utext="${question.templateAnswer}"></div>
                 <div th:utext="${question.response}" style="max-width: 100%"></div>
             </td>
         </tr>

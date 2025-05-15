@@ -462,7 +462,7 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
         List<DPIASectionDTO> sections = new ArrayList<>();
         List<DPIATemplateSection> allSections = dpiaTemplateSectionService.findAll().stream()
             .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
-            .collect(Collectors.toList());
+            .toList();
 
         for (DPIATemplateSection templateSection : allSections) {
             if (templateSection.isHasOptedOut()) {
@@ -478,7 +478,7 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 
             List<DPIATemplateQuestion> questions = templateSection.getDpiaTemplateQuestions().stream()
                 .sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey))
-                .collect(Collectors.toList());
+                .toList();
 
             for (DPIATemplateQuestion templateQuestion : questions) {
 
@@ -489,16 +489,11 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
                     questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, ""));
                 } else {
 					String imgParsedResponse = handleResponseImg(matchAnswer.getResponse());
-					System.out.println(imgParsedResponse);
                     questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, imgParsedResponse));
                 }
             }
 
-            if (matchSection == null) {
-                sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
-            } else {
-                sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
-            }
+			sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
 
         }
         return sections;
