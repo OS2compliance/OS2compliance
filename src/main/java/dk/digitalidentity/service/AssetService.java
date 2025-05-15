@@ -59,6 +59,10 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -553,19 +557,57 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 
 
 	private String convertImgSrcToBase64(String imageUrl) throws IOException, InterruptedException {
+		String contentType = "image/png";
+		String result = "";
 
 		int keyIndex = imageUrl.indexOf("key=");
-		String key = imageUrl.substring(keyIndex + "key=".length());
+		if (imageUrl.contains("key=")) {
+			String key = imageUrl.substring(keyIndex + "key=".length());
+			String base64 = Base64.getEncoder().encodeToString(s3Service.downloadBytes(key));
+			if (key.endsWith(".jpg") || key.endsWith(".jpeg")) {
+				contentType = "image/jpeg";
+			}
+			else if (key.endsWith(".gif")) {
+				contentType = "image/gif";
+			}
+			else if (key.endsWith(".svg")) {
+				contentType = "image/svg";
+			}
+			result="data:" + contentType + ";base64," + base64;
+		} else {
+			result = getExternalImgAsBase64(imageUrl);
+		}
+		return result;
+	}
 
-		String base64 = Base64.getEncoder().encodeToString(s3Service.downloadBytes(key));
+	private String getExternalImgAsBase64(String imageUrl) {
 		String contentType = "image/png";
-		if (key.endsWith(".jpg") || key.endsWith(".jpeg")) {
-			contentType = "image/jpeg";
+		String imageBytes = "";
+		try {
+			HttpClient client = HttpClient.newHttpClient();
+			HttpRequest request = HttpRequest.newBuilder()
+					.uri(URI.create(imageUrl))
+					.GET()
+					.build();
+
+			HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+			if (response.statusCode() != 200) {
+				throw new IOException("Failed to fetch image from external URL: " + imageUrl);
+			}
+
+			imageBytes =  Base64.getEncoder().encodeToString(response.body());
+			contentType = response.headers().firstValue("Content-Type").orElse("image/png");
+
+			// Strip any charset info, just keep the MIME type
+			int semicolonIndex = contentType.indexOf(";");
+			if (semicolonIndex != -1) {
+				contentType = contentType.substring(0, semicolonIndex);
+			}
+		} catch (IOException | InterruptedException ioE) {
+			log.warn("Could not retrieve external image url for report");
 		}
-		if (key.endsWith(".gif")) {
-			contentType = "image/gif";
-		}
-		return "data:" + contentType + ";base64," + base64;
+		return "data:" + contentType + ";base64," + imageBytes;
 	}
 
 	/**
