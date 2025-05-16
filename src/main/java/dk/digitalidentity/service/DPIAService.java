@@ -97,13 +97,34 @@ public class DPIAService {
         List<PlaceholderInfo> placeholderInfo = assets.stream().map(assetService::getDPIAResponsePlaceholderInfo).toList();
         for (DPIATemplateQuestion templateQuestion : dpiaTemplateQuestions) {
             String templateAnswer = templateQuestion.getAnswerTemplate()
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_WHO.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getSelectedAccessWhoTitles).toList()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_HOW_MANY.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getSelectedAccessCountTitle).toList()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES.getPlaceholder(), String.join(", ", placeholderInfo.stream().flatMap(p -> p.getPersonalDataTypesTitles().stream()).toList()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getTypesOfPersonalInformationFreetext).toList()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.stream().flatMap(p -> p.getCategoriesOfRegisteredTitles().stream()).toList()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), String.join(", ", placeholderInfo.stream().map(PlaceholderInfo::getHowLongTitle).toList()))
-                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), String.join(", ", assets.stream().map(a -> "<a href=\"" + a.getDataProcessing().getDeletionProcedureLink() + "\">" + a.getDataProcessing().getDeletionProcedureLink() + "</a>").toList()));
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_WHO.getPlaceholder(), String.join(", ", placeholderInfo.stream()
+						.map(PlaceholderInfo::getSelectedAccessWhoTitles)
+						.filter(s->!s.isEmpty())
+						.toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_HOW_MANY.getPlaceholder(), String.join(", ", placeholderInfo.stream()
+						.map(PlaceholderInfo::getSelectedAccessCountTitle)
+						.filter(s->!s.isEmpty())
+						.toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES.getPlaceholder(), String.join(", ", placeholderInfo.stream()
+						.flatMap(p -> p.getPersonalDataTypesTitles().stream())
+						.filter(s->!s.isEmpty())
+						.toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_DATA_TYPES_FREETEXT.getPlaceholder(), String.join(", ", placeholderInfo.stream()
+						.map(PlaceholderInfo::getTypesOfPersonalInformationFreetext)
+						.filter(s->!s.isEmpty())
+						.toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_CATEGORIES_OF_REGISTERED.getPlaceholder(), String.join(", ", placeholderInfo.stream()
+						.flatMap(p -> p.getCategoriesOfRegisteredTitles().stream())
+						.filter(s->!s.isEmpty())
+						.toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_PERSONAL_HOW_LONG.getPlaceholder(), String.join(", ", placeholderInfo.stream()
+						.map(PlaceholderInfo::getHowLongTitle)
+						.filter(s->!s.isEmpty())
+						.toList()))
+                .replace(DPIAAnswerPlaceholder.DATA_PROCESSING_DELETE_LINK.getPlaceholder(), String.join(", ", assets.stream()
+						.filter(a-> a.getDataProcessing().getDeletionProcedureLink() != null && !a.getDataProcessing().getDeletionProcedureLink().isBlank())
+						.map(a -> "<a href=\"" + a.getDataProcessing().getDeletionProcedureLink() + "\">" + a.getDataProcessing().getDeletionProcedureLink() + "</a>")
+						.toList()));
 
 
             //create new DPIAResponseSection & DPIAResponseSectionAnswer with the templated answers
