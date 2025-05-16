@@ -210,9 +210,10 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
+	public record CreateDPIAResponse(Long dpiaId) {};
     public record CreateDPIAFormDTO (String title, List<Long> assetIds, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid){}
     @PostMapping("create")
-    public ResponseEntity<HttpStatus> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
+    public ResponseEntity<CreateDPIAResponse> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
 	        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final List<Asset> assets = assetService.findAllById(createDPIAFormDTO.assetIds);
 		if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
@@ -220,9 +221,9 @@ public class DPIARestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        dpiaService.create(assets, createDPIAFormDTO.title, createDPIAFormDTO.userUpdatedDate, createDPIAFormDTO.responsibleUserUuid, createDPIAFormDTO.responsibleOuUuid);
+        DPIA dpia = dpiaService.create(assets, createDPIAFormDTO.title, createDPIAFormDTO.userUpdatedDate, createDPIAFormDTO.responsibleUserUuid, createDPIAFormDTO.responsibleOuUuid);
 
-        return new ResponseEntity<>(HttpStatus.OK);
+        return new ResponseEntity<>(new CreateDPIAResponse(dpia.getId()), HttpStatus.OK);
     }
 
 	public record EditDPIADTO(String title, List<Long> assetIds, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid){}
