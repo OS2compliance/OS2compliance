@@ -529,6 +529,7 @@ function pageLoaded() {
                     containerInner: containerInner
                 },
                 duplicateItemsAllowed: false,
+                shouldSort: false,
             });
             element.addEventListener("change",
                 function(event) {
