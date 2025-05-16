@@ -612,7 +612,9 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 	 */
 	private Element setImgResizedStyle(Element img) {
 		String style = img.attr("style");
-
+		if (style.isBlank()) {
+			return img;
+		}
 		Float aspectRatioA = null;
 		Float aspectRatioB = null;
 		Float widthPercent = null;

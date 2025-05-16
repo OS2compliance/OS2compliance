@@ -177,7 +177,6 @@ public class DPIARestController {
 	}
 
     public record CommentUpdateDTO(Long dpiaId, String comment){}
-    @Transactional
     @PostMapping("comment/update")
     public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
         final DPIA dpia = dpiaService.find(commentUpdateDTO.dpiaId);
@@ -189,7 +188,7 @@ public class DPIARestController {
         }
 
         dpia.setComment(commentUpdateDTO.comment);
-		assets.forEach(assetService::save);
+		dpiaService.save(dpia);
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
@@ -291,6 +290,9 @@ public class DPIARestController {
 			if (createExternalDPIADTO.responsibleOuUuid != null) {
 				OrganisationUnit ou = organisationService.get(createExternalDPIADTO.responsibleOuUuid).orElse(null);
 				dpia.setResponsibleOu(ou);
+			}
+			if (createExternalDPIADTO.title != null && !createExternalDPIADTO.title.isBlank()) {
+				dpia.setName(createExternalDPIADTO.title);
 			}
             dpiaService.save(dpia);
         } else {
