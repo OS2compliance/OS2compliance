@@ -140,7 +140,7 @@
 <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
 
 <link rel="stylesheet" th:href="@{/css/dpia_schema.css}"/>
-<div th:replace="~{fragments/footer :: footer (sweetalerts = true, imageTextEditor = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (sweetalerts = true, imageTextEditor = true, taskDialog = true)}"></div>
 <script th:src="@{/js/dpia/details.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
