@@ -103,7 +103,12 @@ class CreateDPIAService {
             toastService.error(response.statusText)
         }
 
-        location.reload()
+        const responseJson = await response.json()
+        if (responseJson.dpiaId) {
+            location.href = baseUrl+`/${responseJson.dpiaId}`
+        } else {
+            location.reload()
+        }
     }
 
     initDatePicker(id) {
