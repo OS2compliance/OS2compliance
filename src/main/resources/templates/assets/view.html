@@ -840,6 +840,10 @@
                     }
                 });
 
+                document.getElementById('saveEditAssetBtn').hidden = false;
+                document.getElementById('cancelBtn').hidden = false;
+                document.getElementById('editAssetBtn').hidden = true;
+
                 if (!isKitos) {
                     managersChoicesEditSelect.enable();
                 }
@@ -861,6 +865,11 @@
                         }
                     }
                 });
+
+                document.getElementById('saveEditAssetBtn').hidden = true;
+                document.getElementById('cancelBtn').hidden = true;
+                document.getElementById('editAssetBtn').hidden = false;
+
                 suppliersChoicesEditSelect.disable();
                 managersChoicesEditSelect.disable();
                 responsibleChoicesEditSelect.disable();
