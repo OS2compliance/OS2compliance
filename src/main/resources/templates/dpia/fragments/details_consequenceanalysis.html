@@ -1,15 +1,6 @@
 <th:block th:fragment="dpia_details_consequenceanalysis"
           lang="da"
           xmlns:th="http://www.thymeleaf.org">
-
-        <div class="accordion-item mt-1">
-            <div class="accordion-header" id="_dm-defAccHeadingTwo">
-                <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-collapseQuality" aria-expanded="true" aria-controls="_dm-collapseQuality">
-                    Kvalitetssikring
-                </button>
-            </div>
-            <div id="_dm-collapseQuality" class="accordion-collapse collapse" aria-labelledby="_dm-defAccHeadingTwo" data-bs-parent="#_dm-dpiaAccordion" style="">
-                <div class="accordion-body">
                     <div class="row mb-3">
                         <strong>Konsekvensanalyse vedrørende databeskyttelse</strong>
                         <p>En konsekvensanalyse er et krav efter databeskyttelsesreglerne. Analysen er et værktøj, som gør det muligt at arbejde med de risici, som en behandlingsaktivitet kan indebære, på en systematisk måde.</p>
@@ -32,26 +23,9 @@
                         <strong>Tjekliste til kvalitetssikring</strong>
                         <fieldset id="qualityCheckboxesContainer">
                             <div class="mt-2" th:each="question : ${dpiaQualityCheckList.values}">
-                                <input class="form-check-input qualityCheck" type="checkbox" name="dpiaQuality[]" th:checked="${#lists.contains(dpiaForm.dpiaQuality, question.identifier)}" th:value="${question.identifier}">&nbsp;<span th:text="${question.caption}"></span>
+                                <input class="form-check-input qualityCheck" type="checkbox" name="dpiaQuality[]" th:checked="${#lists.contains(qualityassuranceCheckedValues, question.identifier)}" th:value="${question.identifier}">&nbsp;<span th:text="${question.caption}"></span>
                             </div>
                         </fieldset>
 
                     </div>
-                </div>
-            </div>
-        </div>
-        <div class="accordion-item mt-1">
-            <div class="accordion-header" id="_dm-defAccHeadingThree">
-                <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#_dm-collapseDPIA" aria-expanded="true" aria-controls="_dm-collapseDPIA">
-                    Konsekvensanalyse (DPIA)
-                </button>
-            </div>
-            <div id="_dm-collapseDPIA" class="accordion-collapse collapse" aria-labelledby="_dm-defAccHeadingThree" data-bs-parent="#_dm-dpiaAccordion" style="">
-                <div class="accordion-body">
-                    <div class="row mb-3">
-                        <div th:replace="~{dpia/fragments/dpiaResponseFragment :: dpiaResponseFragment}"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
 </th:block>

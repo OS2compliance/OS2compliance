@@ -23,13 +23,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 hidden: true
             },
             {
-                name: "Aktiv",
+                name: "Titel",
                 searchable: {
-                    searchKey: 'assetName'
+                    searchKey: 'name'
                 },
                 formatter: (cell, row) => {
                     const url = baseUrl + "/" + row.cells[0]['data'];
-                    const isExternal = row.cells[4]['data'];
+                    const isExternal = row.cells[8]['data']; //last cell in row contains the external boolean
                     if (isExternal) {
                         return gridjs.html(`<a href="${url}" target="_blank">${cell} (Ekstern)</a>`);
                     } else {
@@ -38,9 +38,38 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 }
             },
             {
+                name: "Fagområde",
+                searchable: {
+                    searchKey: 'responsibleOuUuid'
+                },
+            },
+            {
+                name: "Risikoejer",
+                searchable: {
+                    searchKey: 'responsibleUserUuid'
+                },
+            },
+            {
                 name: "Opdateret",
                 searchable: {
-                    searchKey: 'updatedAt'
+                    searchKey: 'userUpdatedDate'
+                },
+                formatter: (date) => {
+                    if (date) {
+                        const dateObj = new Date(date);
+                        return dateObj.toLocaleString('da-DK', {
+                            timeZone: 'Europe/Copenhagen',
+                            year: "numeric",
+                            month: "2-digit",
+                            day: "2-digit",
+                        }).replaceAll('.', '-').replace('-', '/');
+                    }
+                    return '';
+                },
+                sort: {
+                    compare: (a, b) => {
+                        return new Date(b) < new Date(a);
+                    }
                 },
                 width: '150px'
             },
@@ -52,6 +81,40 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 width: '100px'
             },
             {
+                name: "Status",
+                width: '120px',
+                searchable: {
+                    searchKey: 'reportApprovalStatus',
+                    fieldId: 'dpiaStatusSearchSelector',
+                },
+            },
+            {
+                name: "Screening",
+                width: '120px',
+                searchable: {
+                    searchKey: 'screeningConclusion',
+                    fieldId: 'screeningConclusionSearchSelector',
+                },
+                formatter: (cell, row) => {
+                    let html = ``;
+                    if (cell) {
+                        if (cell === 'RED') {
+                            html = `<span class="badge bg-red">&nbsp</span>`;
+                        }
+                        if (cell === 'YELLOW') {
+                            html = `<span class="badge bg-yellow">&nbsp</span>`;
+                        }
+                        if (cell === 'GREEN') {
+                            html = `<span class="badge bg-green">&nbsp</span>`;
+                        }
+                        if (cell === 'GREY') {
+                            html = `<span class="badge bg-gray-800">&nbsp</span>`;
+                        }
+                    }
+                    return  gridjs.html(html);
+                },
+            },
+            {
                 id: 'handlinger',
                 name: 'Handlinger',
                 sort: 0,
@@ -59,7 +122,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 formatter: (cell, row) => {
                     const dpiaId = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    const isExternal = row.cells[4]['data'];
+                    const isExternal = row.cells[8]['data'];
                     let buttonHTML = ""
                     if(superuser) {
                         buttonHTML = buttonHTML

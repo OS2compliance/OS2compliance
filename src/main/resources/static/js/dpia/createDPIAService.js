@@ -9,6 +9,14 @@ class CreateDPIAService {
     init() {
         const assetSelect = document.getElementById('assetSelect');
         this.assetChoicesSelect = this.#initAssetSelect(assetSelect);
+        this.#initSearchOus('ouSelect')
+        this.#initSearchUsers('userSelect')
+
+        const datepickerElement = document.getElementById('createUserUpdateDateField')
+        const userUpdatedDateDatepicker = this.initDatePicker('createUserUpdateDateField')
+        datepickerElement.addEventListener('click', ()=> {
+            userUpdatedDateDatepicker.open()
+        })
     }
 
     formReset() {
@@ -27,7 +35,30 @@ class CreateDPIAService {
             },
             false,
         );
+
+        //update title if empty
+        assetSelectElement.addEventListener('change', (event)=> {
+            const selected = event.target.selectedOptions
+            const titleElement = document.getElementById('createTitleInput')
+            if (titleElement.value === null
+                || titleElement.value === '') {
+                if (selected.length > 1) {
+                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "") + ' med flere'
+                } else if (selected.length === 1) {
+                    titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
+                }
+            }
+        })
+
         return assetChoices;
+    }
+
+    #initSearchOus(elementId){
+        choiceService.initOUSelect(elementId)
+    }
+
+    #initSearchUsers(elementId){
+        choiceService.initUserSelect(elementId)
     }
 
     #updateTypeSelect(choices, search, types) {
@@ -45,9 +76,17 @@ class CreateDPIAService {
     }
 
     async submitNewDPIA() {
+        const titleInput = document.getElementById('createTitleInput');
         const assetSelect = document.getElementById('assetSelect');
+        const userUpdatedDateElement = document.getElementById('createUserUpdateDateField')
+        const userSelect = document.getElementById('userSelect');
+        const ouSelect = document.getElementById('ouSelect');
         const data = {
-            assetId : assetSelect.value
+            assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
+            userUpdatedDate: userUpdatedDateElement.value,
+            responsibleUserUuid: userSelect.value,
+            responsibleOuUuid: ouSelect.value,
+            title: titleInput.value,
         }
 
         const url = `${restUrl}/create`
@@ -64,7 +103,26 @@ class CreateDPIAService {
             toastService.error(response.statusText)
         }
 
-        location.reload()
+        const responseJson = await response.json()
+        if (responseJson.dpiaId) {
+            location.href = baseUrl+`/${responseJson.dpiaId}`
+        } else {
+            location.reload()
+        }
+    }
+
+    initDatePicker(id) {
+        return MCDatepicker.create({
+            el: `#${id}`,
+            autoClose: true,
+            dateFormat: 'dd/mm-yyyy',
+            closeOnBlur: true,
+            firstWeekday: 1,
+            customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+            customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+            customClearBTN: "Ryd",
+            customCancelBTN: "Annuller"
+        });
     }
 
 }

@@ -57,6 +57,44 @@
                         </div>
                     </div>
 
+                    <div class="row mt-2">
+                        <div class="card shadow-none col-md-12">
+                            <div class="card-header toolbar">
+                                <h5 class="toolbar-start m-0">Tilknyttede DPIA'er</h5>
+                            </div>
+                            <div class="card-body">
+                                <table class="table table-striped">
+                                    <thead>
+                                    <tr>
+                                        <th class="col-lg-5">Titel</th>
+                                        <th class="col-lg-2">Risikoejer</th>
+                                        <th class="col-lg-2">Fagområde</th>
+                                        <th class="col-lg-2">Opdateringsdato</th>
+                                        <th class="col-lg-1">Screening</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    <tr th:each="dpia : ${relatedDPIAs}">
+                                        <td >
+                                            <a th:href="'/dpia/'+${dpia.id}" th:text="${dpia.name}"></a>
+                                        </td>
+                                        <td th:text="${dpia.responsibleUserName}"></td>
+                                        <td th:text="${dpia.responsibleOuName}"></td>
+                                        <td th:text="${dpia.userUpdatedDate}"></td>
+                                        <td th:switch="${dpia.screeningConclusion}">
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).RED}" class="badge bg-red">&nbsp</span>
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).YELLOW}" class="badge bg-yellow">&nbsp</span>
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).GREEN}" class="badge bg-green">&nbsp</span>
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).GREY}" class="badge bg-green">&nbsp</span>
+                                            <span th:case="*"></span>
+                                        </td>
+                                    </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
                 </div>
             </div>
         </div>

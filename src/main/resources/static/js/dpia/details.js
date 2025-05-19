@@ -77,13 +77,6 @@ function AssetDpiaService() {
     }
 
     this.updateDpiaBadges = function () {
-        if (asset.dpiaOptOut) {
-            if (this.tabBadgeElem) {
-                this.tabBadgeElem.classList.add("bg-gray-800");
-            }
-            this.screeningBadgeElem.classList.add("bg-gray-800");
-            return;
-        }
         if (this.tabBadgeElem) {
             this.tabBadgeElem.classList.value = 'badge';
         }
@@ -112,7 +105,7 @@ function AssetDpiaService() {
     };
 
     this.setFieldScreening = function (fieldName, value) {
-        putData(`/rest/assets/${assetId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
+        putData(`/rest/assets/${dpiaId}/dpiascreening/setfield?name=${fieldName}&value=${value}`)
         .then(defaultResponseHandler)
         .catch(defaultErrorHandler)
     }
@@ -170,7 +163,7 @@ function AssetDpiaService() {
         const choiceIdentifier = target.id
         const selectedOption = target.selectedOptions[0]
         const data = {
-            "assetId": assetId,
+            "dpiaId": dpiaId,
             "answer": selectedOption.value,
             "choiceIdentifier": choiceIdentifier
         }
@@ -220,7 +213,7 @@ function AssetDpiaService() {
             row.addEventListener('click', sectionRowClicked, false);
         }
 
-        const openedSection = sessionStorage.getItem(`openedDPIASectionId${assetId}`);
+        const openedSection = sessionStorage.getItem(`openedDPIASectionId${dpiaId}`);
         if (openedSection !== null && openedSection !== undefined) {
             handleSectionRow(openedSection);
         }
@@ -318,7 +311,7 @@ function handleSectionRow(sectionId) {
 
 function sectionRowClicked() {
     var sectionId = this.dataset.sectionid;
-    sessionStorage.setItem(`openedDPIASectionId${assetId}`, sectionId);
+    sessionStorage.setItem(`openedDPIASectionId${dpiaId}`, sectionId);
     handleSectionRow(sectionId);
 }
 

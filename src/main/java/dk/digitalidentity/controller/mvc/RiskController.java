@@ -325,13 +325,17 @@ public class RiskController {
         threatAssessmentService.deleteById(id);
     }
 
+	public record CustomThreatDTO (Long id, String threatType, String description) {}
     @Transactional
     @RequireSuperuserOrAdministrator
     @PostMapping("{id}/customthreats/create")
-    public String formCreateCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreat customThreat) {
+    public String formCreateCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreatDTO customThreatDTO) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		CustomThreat customThreat = new CustomThreat();
+		customThreat.setThreatType(customThreatDTO.threatType);
+		customThreat.setDescription(customThreatDTO.description);
         customThreat.setThreatAssessment(threatAssessment);
-        threatAssessment.getCustomThreats().add(customThreat);
+		threatAssessment.getCustomThreats().add(customThreat);
         threatAssessmentService.save(threatAssessment);
         eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(id).build());
 

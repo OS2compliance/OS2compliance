@@ -18,7 +18,6 @@ import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Register;
@@ -39,6 +38,11 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.jsoup.nodes.Entities;
+import org.jsoup.select.Elements;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
@@ -55,10 +59,16 @@ import org.xhtmlrenderer.pdf.ITextRenderer;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.net.http.HttpClient;
+import java.net.http.HttpRequest;
+import java.net.http.HttpResponse;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -89,8 +99,9 @@ public class AssetService {
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final ChoiceService choiceService;
     private final ChoiceDPIADao choiceDPIADao;
+	private final S3Service s3Service;
 
-    public Optional<AssetOversight> getOversight(final Long oversightId) {
+	public Optional<AssetOversight> getOversight(final Long oversightId) {
         return assetOversightDao.findById(oversightId);
     }
 
@@ -116,10 +127,7 @@ public class AssetService {
 
     public Asset create(final Asset asset) {
         final Asset saved = assetDao.save(asset);
-        if (saved.getDpiaScreening() == null) {
-            saved.setDpiaScreening(new DataProtectionImpactAssessmentScreening());
-            saved.getDpiaScreening().setAsset(saved);
-        }
+
         if (saved.getDataProcessing() == null) {
             saved.setDataProcessing(new DataProcessing());
         }
@@ -170,6 +178,15 @@ public class AssetService {
                 || asset.getResponsibleUsers().stream()
             .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
     }
+
+	public boolean isEditable(final List<Asset> assets) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		return authentication.getAuthorities().stream()
+				.anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)
+						|| r.getAuthority().equals(Roles.ADMINISTRATOR))
+				|| assets.stream().flatMap(a->a.getResponsibleUsers().stream())
+				.anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
+	}
 
     /**
      * Will find the main supplier {@link AssetSupplierMapping} if none is found a default placeholder will be returned
@@ -225,12 +242,12 @@ public class AssetService {
 
     @Transactional
     public void updateNextRevisionAssociatedTask(final DPIA dpia) {
-        findAssociatedCheck(dpia.getAsset())
-            .ifPresent(t -> dpia.setNextRevision(t.getNextDeadline()));
+			findAssociatedCheck(dpia)
+				.ifPresent(t -> dpia.setNextRevision(t.getNextDeadline()));
     }
 
-    public Optional<Task> findAssociatedCheck(final Asset asset) {
-        final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + asset.getId());
+    public Optional<Task> findAssociatedCheck(final DPIA dpia) {
+        final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpia.getId());
         if (tasks == null || tasks.isEmpty()) {
             return Optional.empty();
         }
@@ -239,14 +256,15 @@ public class AssetService {
 
     @Transactional
     public Task createOrUpdateAssociatedCheck(DPIA dpia) {
-        final Asset asset = dpia.getAsset();
         final LocalDate deadline = dpia.getNextRevision();
         if (deadline != null && dpia.getRevisionInterval() != null) {
-            final Task task = findAssociatedCheck(asset).orElseGet(() -> createAssociatedCheck(dpia));
-            task.setName("DPIA for " + asset.getName());
+            final Task task = findAssociatedCheck(dpia).orElseGet(() -> createAssociatedCheck(dpia));
+			String name = "DPIA for " + dpia.getAssets().getFirst().getName();
+			name +=  (dpia.getAssets().size() > 1) ? " med flere" : "";
+			task.setName(name);
             task.setNextDeadline(dpia.getNextRevision());
-            task.setResponsibleUser(asset.getResponsibleUsers() != null ? asset.getResponsibleUsers().get(0) : userService.currentUser());
-            task.setDescription("Revider DPIA for " + asset.getName());
+            task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
+            task.setDescription("Revider DPIA for " + String.join(", ",  dpia.getAssets().stream().map(Relatable::getName).toList()));
             setTaskRevisionInterval(dpia, task);
             return task;
         }
@@ -254,22 +272,28 @@ public class AssetService {
     }
 
     private Task createAssociatedCheck(final DPIA dpia) {
-        final Asset asset = dpia.getAsset();
+        final List<Asset> assets = dpia.getAssets();
         final Task task = new Task();
-        task.setName("DPIA for " + asset.getName());
+
+		if(assets.size() > 1) {
+			task.setName("DPIA for " + assets.getFirst().getName() + " med flere");
+		} else {
+        	task.setName("DPIA for " + assets.getFirst().getName());
+		}
+
         task.setCreatedAt(LocalDateTime.now());
         task.getProperties().add(Property.builder()
             .entity(task)
             .key(ASSOCIATED_ASSET_DPIA_PROPERTY)
-            .value("" + asset.getId())
+            .value("" + dpia.getId())
             .build()
         );
         task.setTaskType(TaskType.CHECK);
-        task.setResponsibleUser(asset.getResponsibleUsers() != null ? asset.getResponsibleUsers().get(0) : userService.currentUser());
+		task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
         task.setNextDeadline(dpia.getNextRevision());
         task.setNotifyResponsible(true);
         final Task savedTask = taskService.saveTask(task);
-        relationService.addRelation(asset, task);
+        relationService.addRelation(dpia, task);
         return savedTask;
     }
 
@@ -327,28 +351,32 @@ public class AssetService {
         return convertHtmlToPdf(html);
     }
 
-    public byte[] getDPIAScreeningPdf(Asset asset) throws IOException {
-        String html = getDPIAScreeningHTML(asset);
+    public byte[] getDPIAScreeningPdf(DPIA dpia) throws IOException {
+        String html = getDPIAScreeningHTML(dpia);
         return convertHtmlToPdf(html);
     }
 
     private String getDPIAHTML(DPIA dpia) {
-        final Asset asset = dpia.getAsset();
-        final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
+        final List<Asset> assets = dpia.getAssets();
+        final List<Relatable> allRelatedTo = assets.stream().flatMap(a -> relationService.findAllRelatedTo(a).stream()).toList();
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
-            .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
-            .map(ThreatAssessment.class::cast)
-            .collect(Collectors.toList());
-        threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
+				.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+				.map(ThreatAssessment.class::cast)
+				.sorted(Comparator.comparing(Relatable::getCreatedAt)
+						.reversed())
+				.collect(Collectors.toList());
 
-        var context = new Context();
-        context.setVariable("asset", asset);
-        context.setVariable("dpiaSections", buildDPIASections(dpia));
+		var context = new Context();
+
+		List<DPIASectionDTO> sections =  buildDPIASections(dpia);
+        context.setVariable("dpiaSections",sections);
         context.setVariable("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
         context.setVariable("conclusion", dpia.getConclusion());
-        context.setVariable("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
-        context.setVariable("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
-        context.setVariable("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
+		context.setVariable("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
+		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a->a.getAssetType().getCaption()).toList()));
+        context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" +u.getUserId()+")")).toList()));
+        context.setVariable("managerNames", String.join(", ", assets.stream().flatMap( a -> a.getManagers().stream().map(u -> u.getName() + " (" +u.getUserId()+")")).toList()));
+        context.setVariable("supplierName", String.join(", ", assets.stream().map( a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
 
         return templateEngine.process("reports/dpia/dpia_pdf", context);
     }
@@ -356,10 +384,10 @@ public class AssetService {
 
     public record ScreeningQuestionDTO(String question, String answer,  boolean dangerous) {}
     public record ScreeningCategoryDTO(String title, long dangerousValueCount, List<ScreeningQuestionDTO> questions) {}
-public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, String recommendation, EstimationDTO recommendedEstimation) {
+public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, String recommendation, EstimationDTO recommendedEstimation) {
 }
 
-    private String getDPIAScreeningHTML(Asset asset) {
+    private String getDPIAScreeningHTML(DPIA dpia) {
         List<String> dangerousValues = listOf("dpia-yes", "dpia-partially", "dpia-dont-know");
         List<String> alwaysRed = listOf("dpia-7");
 
@@ -367,11 +395,11 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
         final List<ChoiceDPIA> choiceDPIA = choiceDPIADao.findAll();
         for (final ChoiceDPIA choice : choiceDPIA) {
             final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
-            defaultAnswer.setAssessment(asset.getDpiaScreening());
+            defaultAnswer.setAssessment(dpia.getDpiaScreening());
             defaultAnswer.setChoice(choice);
             defaultAnswer.setAnswer(null);
             defaultAnswer.setId(0);
-            final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpiaScreening().getDpiaScreeningAnswers().stream()
+            final DataProtectionImpactScreeningAnswer dpiaAnswer = dpia.getDpiaScreening().getDpiaScreeningAnswers().stream()
                 .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))
                 .findAny().orElse(defaultAnswer);
             assetDPIADTOs.add(dpiaAnswer);
@@ -424,7 +452,7 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
         }
 
         ScreeningDTO screeningDTO = new ScreeningDTO(
-            asset.getId(),
+            dpia.getId(),
             categoryDtosSorted,
             recommendation,
             recommendedEstimation
@@ -435,14 +463,10 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
     }
 
     private List<DPIASectionDTO> buildDPIASections(DPIA dpia) {
-        Asset asset = dpia.getAsset();
         List<DPIASectionDTO> sections = new ArrayList<>();
         List<DPIATemplateSection> allSections = dpiaTemplateSectionService.findAll().stream()
             .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
-            .collect(Collectors.toList());
-
-        // needed dataprocessing fields
-        PlaceholderInfo placeholderInfo = getDPIAResponsePlaceholderInfo(asset);
+            .toList();
 
         for (DPIATemplateSection templateSection : allSections) {
             if (templateSection.isHasOptedOut()) {
@@ -458,24 +482,22 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
 
             List<DPIATemplateQuestion> questions = templateSection.getDpiaTemplateQuestions().stream()
                 .sorted(Comparator.comparing(DPIATemplateQuestion::getSortKey))
-                .collect(Collectors.toList());
+                .toList();
 
             for (DPIATemplateQuestion templateQuestion : questions) {
+
                 DPIAResponseSectionAnswer matchAnswer = matchSection == null ? null : matchSection.getDpiaResponseSectionAnswers().stream().filter(s -> s.getDpiaTemplateQuestion().getId() == templateQuestion.getId()).findAny().orElse(null);
 
                 String templateAnswer = templateQuestion.getAnswerTemplate() == null ? "" : templateQuestion.getAnswerTemplate();
                 if (matchAnswer == null) {
                     questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, ""));
                 } else {
-                    questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, matchAnswer.getResponse()));
+					String imgParsedResponse = handleResponseImg(matchAnswer.getResponse());
+                    questionDTOS.add(new DPIAQuestionDTO(templateQuestion.getQuestion(), templateAnswer, imgParsedResponse));
                 }
             }
 
-            if (matchSection == null) {
-                sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
-            } else {
-                sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
-            }
+			sections.add(new DPIASectionDTO(templateSection.getIdentifier(), templateSection.getHeading(), templateSection.getExplainer(), questionDTOS));
 
         }
         return sections;
@@ -505,4 +527,138 @@ public record ScreeningDTO(Long assetId, List<ScreeningCategoryDTO> categories, 
         outputStream.close();
         return result;
     }
+
+	private String handleResponseImg(String response) {
+		Document doc = Jsoup.parse(response);
+		Elements imgTags = doc.select("img[src]");
+
+		for (Element img : imgTags) {
+			String src = img.attr("src");
+			try {
+				String processedSrc = convertImgSrcToBase64(src);
+				img.attr("src", processedSrc);
+				img = setImgResizedStyle(img);
+			} catch (IOException | InterruptedException ioE) {
+				System.out.println("Failed to convert image: " + src);
+			}
+		}
+
+		doc.outputSettings().syntax(Document.OutputSettings.Syntax.xml);
+		doc.outputSettings().escapeMode(Entities.EscapeMode.xhtml);
+		doc.outputSettings().charset(StandardCharsets.UTF_8);
+
+		return doc.body().html();
+	}
+
+
+	private String convertImgSrcToBase64(String imageUrl) throws IOException, InterruptedException {
+		String contentType = "image/png";
+		String result = "";
+
+		int keyIndex = imageUrl.indexOf("key=");
+		if (imageUrl.contains("key=")) {
+			String key = imageUrl.substring(keyIndex + "key=".length());
+			String base64 = Base64.getEncoder().encodeToString(s3Service.downloadBytes(key));
+			if (key.endsWith(".jpg") || key.endsWith(".jpeg")) {
+				contentType = "image/jpeg";
+			}
+			else if (key.endsWith(".gif")) {
+				contentType = "image/gif";
+			}
+			else if (key.endsWith(".svg")) {
+				contentType = "image/svg";
+			}
+			result="data:" + contentType + ";base64," + base64;
+		} else {
+			result = getExternalImgAsBase64(imageUrl);
+		}
+		return result;
+	}
+
+	private String getExternalImgAsBase64(String imageUrl) {
+		String contentType = "image/png";
+		String imageBytes = "";
+		try {
+			HttpClient client = HttpClient.newHttpClient();
+			HttpRequest request = HttpRequest.newBuilder()
+					.uri(URI.create(imageUrl))
+					.GET()
+					.build();
+
+			HttpResponse<byte[]> response = client.send(request, HttpResponse.BodyHandlers.ofByteArray());
+
+			if (response.statusCode() != 200) {
+				throw new IOException("Failed to fetch image from external URL: " + imageUrl);
+			}
+
+			imageBytes =  Base64.getEncoder().encodeToString(response.body());
+			contentType = response.headers().firstValue("Content-Type").orElse("image/png");
+
+			// Strip any charset info, just keep the MIME type
+			int semicolonIndex = contentType.indexOf(";");
+			if (semicolonIndex != -1) {
+				contentType = contentType.substring(0, semicolonIndex);
+			}
+		} catch (IOException | InterruptedException ioE) {
+			log.warn("Could not retrieve external image url for report");
+		}
+		return "data:" + contentType + ";base64," + imageBytes;
+	}
+
+	/**
+	 * Dirty hack because aspect ratio is to new to be supported by flying saucer
+	 * @param img
+	 * @return
+	 */
+	private Element setImgResizedStyle(Element img) {
+		String style = img.attr("style");
+		if (style.isBlank()) {
+			return img;
+		}
+		Float aspectRatioA = null;
+		Float aspectRatioB = null;
+		Float widthPercent = null;
+
+		Map<String, String> newProperties = new HashMap<>();
+		String[] properties = style.split(";");
+		for (String property : properties) {
+			String[] keyValuePair = property.split(":");
+			String key = keyValuePair[0];
+			String value = keyValuePair[1];
+			newProperties.put(key, value);
+		}
+
+		if (!newProperties.containsKey("aspect-ratio") || !newProperties.containsKey("width")) {
+			return img;
+		}
+		String[] aspectRatioSet = newProperties.get("aspect-ratio").split("/");
+		try {
+			aspectRatioA = (aspectRatioSet[0] == null || aspectRatioSet[0].trim().isEmpty()) ? null : Float.parseFloat(aspectRatioSet[0].trim());
+
+			aspectRatioB = (aspectRatioSet[1] == null || aspectRatioSet[1].trim().isEmpty()) ? null : Float.parseFloat(aspectRatioSet[1].trim());
+
+			String widthPercentString = newProperties.get("width");
+			widthPercent = widthPercentString.replace("%", "").trim().isEmpty() ? null : Float.parseFloat(widthPercentString.replace("%", "").trim());
+		} catch (NumberFormatException e) {
+			return img;
+		}
+
+		if (widthPercent != null && aspectRatioA != null && aspectRatioB != null) {
+			Float ratio = aspectRatioA / aspectRatioB;
+			Float heightPercent =  widthPercent * ratio;
+			newProperties.put("height", heightPercent + "%");
+		}
+
+		StringBuilder builder = new StringBuilder();
+		for (Map.Entry<String, String> entry : newProperties.entrySet()) {
+			builder
+					.append(entry.getKey())
+					.append(":")
+					.append(entry.getValue())
+					.append(";");
+		}
+		System.out.println(builder.toString());
+		img.attr("style", builder.toString());
+		return img;
+	}
 }

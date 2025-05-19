@@ -96,28 +96,6 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     @SneakyThrows
     private void seedV20() {
 
-        threatCatalogImporter.importCatalog("./data/threats/catalog_datacenter.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_datacenter_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_it_stor.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_it_stor_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_it_lille_rpa.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_it_lille_rpa_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_ai.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_ai_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_behandlingsaktiviteter.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_behandlingsaktiviteter_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_endpoints.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_endpoints_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_enheder.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_enheder_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_iot.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_iot_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_it_lille.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_it_lille_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_netvaerk.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_netvaerk_values.json");
-        threatCatalogImporter.importCatalog("./data/threats/catalog_serversoftware.json");
-        threatCatalogImporter.importThreats("./data/threats/catalog_serversoftware_values.json");
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -300,14 +278,6 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             choiceImporter.importList("./data/choices/data-processing-person-storage-duration-list.json");
             choiceImporter.importList("./data/choices/data-processing-receiver-list.json");
             choiceImporter.importList("./data/choices/data-processing-supplier-accept-list.json");
-
-            threatCatalogImporter.importCatalog("./data/threats/catalog_none.json");
-            threatCatalogImporter.importCatalog("./data/threats/catalog_datacenter.json");
-            threatCatalogImporter.importThreats("./data/threats/catalog_datacenter_values.json");
-            threatCatalogImporter.importCatalog("./data/threats/catalog_it_stor.json");
-            threatCatalogImporter.importThreats("./data/threats/catalog_it_stor_values.json");
-            threatCatalogImporter.importCatalog("./data/threats/catalog_it_lille_rpa.json");
-            threatCatalogImporter.importThreats("./data/threats/catalog_it_lille_rpa_values.json");
 
             templateImporter.importStandardTemplate("./data/standards/iso27001.json");
             templateImporter.importStandardSections("./data/standards/iso27001_sections.json");

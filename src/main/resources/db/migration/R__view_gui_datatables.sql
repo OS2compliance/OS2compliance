@@ -359,11 +359,14 @@ CREATE OR REPLACE
 VIEW view_gridjs_dpia AS
 SELECT
     d.id,
-    a.name AS asset_name,
-    d.updated_at,
+    d.name,
+    (SELECT us.name FROM users us WHERE us.uuid = d.responsible_user_uuid) AS responsible_user_name,
+    (SELECT ou.name FROM ous ou WHERE ou.uuid = d.responsible_ou_uuid) AS responsible_ou_name,
+    d.user_updated_date,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = d.id OR r.relation_b_id = d.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS task_count,
+    (SELECT dr.dpia_report_approval_status FROM dpia_report dr WHERE dr.dpia_id = d.id) AS report_approval_status,
+    (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id) as screening_conclusion,
     d.from_external_source as is_external
 FROM
     dpia d
-LEFT JOIN assets a ON a.id = d.asset_id
 WHERE d.deleted = false;

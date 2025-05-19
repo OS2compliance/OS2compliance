@@ -10,6 +10,11 @@ class CreateExternalDPIAService {
     init() {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         this.assetChoicesSelect = this.#initAssetSelect(assetSelect);
+        this.#initSearchOus('externalOuSelect')
+        this.#initSearchUsers('externalUserSelect')
+
+        const datepickerElement = document.getElementById('externalUserUpdateDateField')
+        this.initDatePicker('externalUserUpdateDateField', datepickerElement.value)
     }
 
     formReset() {
@@ -17,18 +22,34 @@ class CreateExternalDPIAService {
         this.formElement.reset();
     }
 
+    #initAssetSelect(assetSelectElement){
+        if (assetSelectElement !== null) {
 
-    #initAssetSelect(assetSelectElement) {
-        const self = this;
-        const assetChoices = initSelect(assetSelectElement);
-        this.#updateTypeSelect(assetChoices, "", "ASSET");
-        assetSelectElement.addEventListener("search",
-            function(event) {
-                self.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
-            },
-            false,
-        );
-        return assetChoices;
+            const assetChoices = initSelect(assetSelectElement);
+            this.#updateTypeSelect(assetChoices, "", "ASSET");
+            assetSelectElement.addEventListener("search",
+                function(event) {
+                    this.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
+                },
+                false,
+            );
+
+            //update title if empty
+            assetSelectElement.addEventListener('change', (event) => {
+                const selected = event.target.selectedOptions
+                const titleElement = document.getElementById('externalTitleInput')
+                if (titleElement.value === null
+                    || titleElement.value === '') {
+                    if (selected.length > 1) {
+                        titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "") + ' med flere'
+                    } else if (selected.length === 1) {
+                        titleElement.value = 'Konsekvensanalyse for ' + selected[0].textContent.replace("Aktiv: ", "")
+                    }
+                }
+            })
+
+            return assetChoices;
+        }
     }
 
     #updateTypeSelect(choices, search, types) {
@@ -46,12 +67,20 @@ class CreateExternalDPIAService {
     }
 
     async submitNewExternalDPIA(dpiaId) {
+        const titleInput = document.getElementById('externalTitleInput');
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         const linkInput = document.getElementById('linkInput');
+        const userUpdatedDateElement = document.getElementById('externalUserUpdateDateField')
+        const userSelect = document.getElementById('externalUserSelect');
+        const ouSelect = document.getElementById('externalOuSelect');
         const data = {
             dpiaId: dpiaId ? dpiaId : null,
-            assetId : assetSelect ? assetSelect.value : null,
-            link: linkInput.value ? linkInput.value : ""
+            assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
+            link: linkInput.value ? linkInput.value : "",
+            userUpdatedDate: userUpdatedDateElement.value,
+            responsibleUserUuid: userSelect.value,
+            responsibleOuUuid: ouSelect.value,
+            title: titleInput.value,
         }
 
         const url = `${restUrl}/external/create`
@@ -89,6 +118,8 @@ class CreateExternalDPIAService {
         const externalModalContainer = document.getElementById("external_modal_container")
         externalModalContainer.innerHTML = responseText
 
+        this.init()
+
         const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
@@ -118,6 +149,32 @@ class CreateExternalDPIAService {
         const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
+    }
+
+    initDatePicker(id, selectedDate) {
+        const [day, rest] = selectedDate ? selectedDate.split('/') : [null, null];
+        const [month, year] = rest ? rest.split('-') : [null, null];
+
+        return MCDatepicker.create({
+            el: `#${id}`,
+            autoClose: true,
+            dateFormat: 'dd/mm-yyyy',
+            closeOnBlur: true,
+            firstWeekday: 1,
+            customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+            customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+            customClearBTN: "Ryd",
+            customCancelBTN: "Annuller",
+            selectedDate: selectedDate ? new Date(parseInt(year), parseInt(month) - 1, parseInt(day)) : new Date(),
+        });
+    }
+
+    #initSearchOus(elementId){
+        choiceService.initOUSelect(elementId)
+    }
+
+    #initSearchUsers(elementId){
+        choiceService.initUserSelect(elementId)
     }
 
 }

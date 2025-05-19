@@ -190,9 +190,9 @@ public class TaskService {
         return relatedTasks;
     }
 
-    public List<TaskDTO> buildDPIARelatedTasks(final Asset asset, final boolean onlyNotCompleted) {
+    public List<TaskDTO> buildDPIARelatedTasks(final long dpiaId, final boolean onlyNotCompleted) {
         final List<TaskDTO> relatedTasks = new ArrayList<>();
-        final List<Task> tasks = findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + asset.getId());
+        final List<Task> tasks = findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpiaId);
         for (final Task task : tasks) {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;

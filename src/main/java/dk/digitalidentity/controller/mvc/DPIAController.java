@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.ChoiceDPIADao;
-import dk.digitalidentity.model.dto.DataProtectionImpactDTO;
 import dk.digitalidentity.model.dto.DataProtectionImpactScreeningAnswerDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceDPIA;
@@ -13,6 +12,7 @@ import dk.digitalidentity.model.entity.DPIAResponseSection;
 import dk.digitalidentity.model.entity.DPIAResponseSectionAnswer;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
+import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -80,12 +80,14 @@ public class DPIAController {
         return "dpia/index";
     }
 
-    public record DPIADetailDTO (long id, long assetId, String assetName, String comment) {}
+	public record DPIAScreeningDTO(List<DataProtectionImpactScreeningAnswerDTO> questions){}
+	public record DPIADetailAssetDTO(long id, String name) {}
+    public record DPIADetailDTO (long id, String name, List<DPIADetailAssetDTO> assets, String comment) {}
     @GetMapping("{id}")
     public String dpiaDetails(final Model model, @PathVariable Long id) {
 
         DPIA dpia = dpiaService.find(id);
-        Asset asset = dpia.getAsset();
+        List<Asset> assets = dpia.getAssets();
 
         //
         if (dpia.isFromExternalSource()) {
@@ -93,38 +95,38 @@ public class DPIAController {
         }
 
         // Screening
+		if (dpia.getDpiaScreening() == null) {
+			DataProtectionImpactAssessmentScreening dataProtectionImpactAssessmentScreening = new DataProtectionImpactAssessmentScreening();
+			dataProtectionImpactAssessmentScreening.setConclusion(dpiaService.calculateScreeningConclusion(dataProtectionImpactAssessmentScreening.getDpiaScreeningAnswers()));
+			dataProtectionImpactAssessmentScreening.setDpiaScreeningAnswers(new ArrayList<>());
+			dpia.setDpiaScreening(dataProtectionImpactAssessmentScreening);
+		}
         final List<DataProtectionImpactScreeningAnswerDTO> assetDPIADTOs = new ArrayList<>();
         final List<ChoiceDPIA> choiceDPIA = choiceDPIADao.findAll();
         for (final ChoiceDPIA choice : choiceDPIA) {
             final DataProtectionImpactScreeningAnswer defaultAnswer = new DataProtectionImpactScreeningAnswer();
-            defaultAnswer.setAssessment(asset.getDpiaScreening());
+            defaultAnswer.setAssessment(dpia.getDpiaScreening());
             defaultAnswer.setChoice(choice);
             defaultAnswer.setAnswer(null);
             defaultAnswer.setId(0);
-            final DataProtectionImpactScreeningAnswer dpiaAnswer = asset.getDpiaScreening().getDpiaScreeningAnswers().stream()
+            final DataProtectionImpactScreeningAnswer dpiaAnswer = dpia.getDpiaScreening().getDpiaScreeningAnswers().stream()
                     .filter(m -> Objects.equals(m.getChoice().getId(), choice.getId()))
                     .findAny().orElse(defaultAnswer);
             final DataProtectionImpactScreeningAnswerDTO dpiaDTO = new DataProtectionImpactScreeningAnswerDTO();
-            dpiaDTO.setAssetId(asset.getId());
+            dpiaDTO.setAssetIds(assets.stream().map(Asset::getId).toList());
             dpiaDTO.setAnswer(dpiaAnswer.getAnswer());
             dpiaDTO.setChoice(choice);
             assetDPIADTOs.add(dpiaDTO);
         }
-        final DataProtectionImpactDTO dpiaForm = DataProtectionImpactDTO.builder()
-                .assetId(asset.getId())
-                .optOut(asset.isDpiaOptOut())
-                .questions(assetDPIADTOs)
-                .consequenceLink(dpia.getExternalLink())
-                .dpiaQuality(asset.getDpias() == null ? new HashSet<>() : dpia.getChecks())
-                .comment(asset.getDpias() == null ? "" : dpia.getComment())
-                .build();
+
+		final DPIAScreeningDTO dpiaScreeningDTO = new DPIAScreeningDTO(assetDPIADTOs);
 
         //Kvalitetssikring
         final ChoiceList dpiaQualityCheckList = choiceService.findChoiceList("dpia-quality-checklist")
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find dpia quality checklist"));
 
         //DPIA
-        final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
+        final List<Relatable> allRelatedTo = assets.stream().flatMap(a -> relationService.findAllRelatedTo(a).stream()).toList();
         final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
 				.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
 				.map(ThreatAssessment.class::cast)
@@ -132,12 +134,18 @@ public class DPIAController {
                         .reversed())
                 .collect(Collectors.toList());
 
-		model.addAttribute("changeableAsset", assetService.isEditable(asset));
-        model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), asset.getId(), asset.getName(), dpia.getComment()));
-        model.addAttribute("asset", asset);
-        model.addAttribute("dpiaForm", dpiaForm);
+		model.addAttribute("changeableAsset", assetService.isEditable(assets));
+        model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), dpia.getName(), assets.stream().map(a-> new DPIADetailAssetDTO(a.getId(), a.getName())).toList(), dpia.getComment()));
+        model.addAttribute("assets", assets);
+		model.addAttribute("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
+		model.addAttribute("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a->a.getAssetType().getCaption()).toList()));
+		model.addAttribute("responsibleUserNames", String.join(", ", dpia.getAssets().stream().flatMap(a -> a.getResponsibleUsers().stream().map(User::getName)).toList()));
+		model.addAttribute("supplierNames", String.join(", ", dpia.getAssets().stream().map( a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
+		model.addAttribute("managerNames", String.join(", ", dpia.getAssets().stream().flatMap( a -> a.getManagers().stream().map(User::getName)).toList()));
+        model.addAttribute("dpiaScreeningDTO", dpiaScreeningDTO);
+		model.addAttribute("qualityassuranceCheckedValues", dpia.getChecks());
         model.addAttribute("dpiaQualityCheckList", dpiaQualityCheckList);
-        model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(asset, false));
+        model.addAttribute("dpiaRevisionTasks", taskService.buildDPIARelatedTasks(dpia.getId(), false));
         model.addAttribute("dpiaSections", buildDPIASections(dpia));
         model.addAttribute("dpiaThreatAssesments", buildDPIAThreatAssessments(dpia, threatAssessments));
         model.addAttribute("dpiaReports", buildDPIAReports(dpia));
@@ -146,7 +154,9 @@ public class DPIAController {
         return "dpia/details";
     }
 
-    public record ExternalDPIADTO (Long dpiaId, String externalLink, Long assetId) {}
+	public record ExternalDPIAOptionDTO(Long id, String name) {}
+	public record ExternalDPIAUserOptionDTO(String uuid, String name) {}
+    public record ExternalDPIADTO (Long dpiaId, String externalLink, List<ExternalDPIAOptionDTO> assets, LocalDate userUpdatedDate, String title, ExternalDPIAUserOptionDTO responsibleUser, ExternalDPIAUserOptionDTO responsibleOu ) {}
     @GetMapping("external/{dpiaId}/edit")
     public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -154,7 +164,15 @@ public class DPIAController {
 
         DPIA dpia = dpiaService.find(dpiaId);
 
-        model.addAttribute("externalDPIA", new ExternalDPIADTO(dpia.getId(), dpia.getExternalLink(), dpia.getAsset().getId()));
+        model.addAttribute("externalDPIA", new ExternalDPIADTO(
+				dpia.getId(),
+				dpia.getExternalLink(),
+				dpia.getAssets().stream().map(a -> new ExternalDPIAOptionDTO(a.getId(), a.getName())).toList(),
+				dpia.getUserUpdatedDate(),
+				dpia.getName(),
+				new ExternalDPIAUserOptionDTO(dpia.getResponsibleUser().getUuid(), dpia.getResponsibleUser().getName()),
+				new ExternalDPIAUserOptionDTO(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName())
+		));
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
 
@@ -166,13 +184,23 @@ public class DPIAController {
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
 
+	public record DPIAResponsibleUser(String uuid, String name){}
+	public record DPIAResponsibleOu(String uuid, String name){}
 	public record DPIAAssetDTO(long id, String name){}
 	@RequireSuperuserOrAdministrator
 	@GetMapping("{dpiaId}/edit")
 	public String getEditFragment(final Model model, @PathVariable Long dpiaId) {
 		final DPIA dpia = dpiaService.find(dpiaId);
+		model.addAttribute("title", dpia.getName());
+		model.addAttribute("userUpdatedDate", dpia.getUserUpdatedDate());
 		model.addAttribute("dpiaId", dpia.getId());
-		model.addAttribute("asset", new DPIAAssetDTO(dpia.getAsset().getId(), dpia.getAsset().getName()));
+		model.addAttribute("assets", dpia.getAssets().stream().map(a -> new DPIAAssetDTO(a.getId(), a.getName())).toList());
+		if (dpia.getResponsibleUser() != null) {
+			model.addAttribute("responsibleUser", new DPIAResponsibleUser(dpia.getResponsibleUser().getUuid(), dpia.getResponsibleUser().getName()));
+		}
+		if (dpia.getResponsibleOu() != null) {
+			model.addAttribute("responsibleOu", new DPIAResponsibleOu(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName()));
+		}
 		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";
 	}
 
@@ -185,8 +213,8 @@ public class DPIAController {
             .sorted(Comparator.comparing(DPIATemplateSection::getSortKey))
             .toList();
 
-        // needed dataprocessing fields
-        PlaceholderInfo placeholderInfo = assetService.getDPIAResponsePlaceholderInfo(dpia.getAsset());
+//        // needed dataprocessing fields
+//        PlaceholderInfo placeholderInfo = assetService.getDPIAResponsePlaceholderInfo(dpia.getAssets());
 
         for (DPIATemplateSection templateSection : allSections) {
             if (templateSection.isHasOptedOut()) {
@@ -259,9 +287,9 @@ public class DPIAController {
     @Transactional
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long dpiaId) {
         DPIA dpia = dpiaService.find(dpiaId);
-        final Asset asset = dpia.getAsset();
+        final List<Asset> assets = dpia.getAssets();
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !isResponsibleForAsset(assets)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -270,4 +298,12 @@ public class DPIAController {
         assetService.createOrUpdateAssociatedCheck(dpia);
         return "redirect:/dpia/" + dpia.getId();
     }
+
+	private boolean isResponsibleForAsset(List<Asset> assets) {
+		return assets.stream().flatMap(a ->
+						a.getResponsibleUsers().stream()
+								.map(User::getUuid))
+				.toList()
+				.contains(SecurityUtil.getPrincipalUuid());
+	}
 }
