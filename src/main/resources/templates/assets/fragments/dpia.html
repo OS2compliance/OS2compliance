@@ -74,18 +74,19 @@
                                     </tr>
                                     </thead>
                                     <tbody>
-                                    <tr th:each="dpia : ${asset.dpias}">
+                                    <tr th:each="dpia : ${relatedDPIAs}">
                                         <td >
                                             <a th:href="'/dpia/'+${dpia.id}" th:text="${dpia.name}"></a>
                                         </td>
-                                        <td th:text="${dpia.responsibleUser.name}"></td>
-                                        <td th:text="${dpia.responsibleOu.name}"></td>
+                                        <td th:text="${dpia.responsibleUserName}"></td>
+                                        <td th:text="${dpia.responsibleOuName}"></td>
                                         <td th:text="${dpia.userUpdatedDate}"></td>
-                                        <td>
-                                            <span th:if="${dpia.dpiaScreening.conclusion == T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).RED}" class="badge bg-red">&nbsp</span>
-                                            <span th:if="${dpia.dpiaScreening.conclusion == T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).YELLOW}" class="badge bg-yellow">&nbsp</span>
-                                            <span th:if="${dpia.dpiaScreening.conclusion == T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).GREEN}" class="badge bg-green">&nbsp</span>
-                                            <span th:if="${dpia.dpiaScreening.conclusion == T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).GREY}" class="badge bg-gray-800">&nbsp</span>
+                                        <td th:switch="${dpia.screeningConclusion}">
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).RED}" class="badge bg-red">&nbsp</span>
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).YELLOW}" class="badge bg-yellow">&nbsp</span>
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).GREEN}" class="badge bg-green">&nbsp</span>
+                                            <span th:case="${T(dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion).GREY}" class="badge bg-green">&nbsp</span>
+                                            <span th:case="*"></span>
                                         </td>
                                     </tr>
                                     </tbody>

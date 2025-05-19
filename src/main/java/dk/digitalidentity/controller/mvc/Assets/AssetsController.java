@@ -9,7 +9,6 @@ import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
-import dk.digitalidentity.model.dto.DataProtectionImpactScreeningAnswerDTO;
 import dk.digitalidentity.model.dto.SaveMeasureDTO;
 import dk.digitalidentity.model.dto.SaveMeasuresDTO;
 import dk.digitalidentity.model.dto.ViewMeasureDTO;
@@ -35,6 +34,7 @@ import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -86,6 +86,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -171,9 +172,8 @@ public class AssetsController {
         }
 	}
 
-    record AssetDPIADTO(Long assetId, boolean optOut) {}
-    record DPIAQuestionDTO(long id, long questionResponseId, String question, String instructions, String templateAnswer, String response) {}
-    record DPIASectionDTO(long id, String sectionIdentifier, long sectionResponseId, String heading, String explainer, boolean canOptOut, boolean hasOptedOutResponse, List<DPIAQuestionDTO> questions) {}
+    record AssetEditDPIADTO(Long assetId, boolean optOut) {}
+	public record AssetRelatedDPIADTO(long id, String name, String responsibleUserName, String responsibleOuName, LocalDate userUpdatedDate, DPIAScreeningConclusion screeningConclusion) {}
 	@GetMapping("{id}")
     @Transactional
 	public String view(final Model model, @PathVariable final long id) {
@@ -196,8 +196,8 @@ public class AssetsController {
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
 						"Could not find acceptListIdentifiers Choices"));
 
-        final ChoiceList dpiaQualityCheckList = choiceService.findChoiceList("dpia-quality-checklist")
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find dpia quality checklist"));
+//        final ChoiceList dpiaQualityCheckList = choiceService.findChoiceList("dpia-quality-checklist")
+//            .orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find dpia quality checklist"));
 
 		// MEASURES
 
@@ -222,12 +222,23 @@ public class AssetsController {
 		final ViewMeasuresDTO measuresForm = new ViewMeasuresDTO(0L, measures);
 
 		// DPIA
-		final List<DataProtectionImpactScreeningAnswerDTO> assetDPIADTOs = new ArrayList<>();
+//		final List<DataProtectionImpactScreeningAnswerDTO> assetDPIADTOs = new ArrayList<>();
 
-        final AssetDPIADTO dpiaForm = new AssetDPIADTO(
+        final AssetEditDPIADTO dpiaForm = new AssetEditDPIADTO(
             asset.getId(),
             asset.isDpiaOptOut()
         );
+
+		List<AssetRelatedDPIADTO> relatedDPIADTOs = asset.getDpias().stream().map(dpia -> new AssetRelatedDPIADTO(
+				dpia.getId(),
+				dpia.getName(),
+				dpia.getResponsibleUser().getName() + " (" + dpia.getResponsibleUser().getUserId()+")",
+				dpia.getResponsibleOu().getName(),
+				dpia.getUserUpdatedDate(),
+				dpia.getDpiaScreening() != null ? dpia.getDpiaScreening().getConclusion() : null // external dpias have no screening
+		)).toList();
+
+
 
         // Oversights
         final List<AssetOversight> oversights = new ArrayList<>(
@@ -250,6 +261,7 @@ public class AssetsController {
 		model.addAttribute("measuresForm", measuresForm);
         model.addAttribute("supplier", supplierService.getAll());
 		model.addAttribute("dpiaForm", dpiaForm);
+		model.addAttribute("relatedDPIAs", relatedDPIADTOs);
 		model.addAttribute("dpiaRevisionTasks",asset.getDpias().stream().flatMap(dpia -> taskService.buildDPIARelatedTasks(dpia.getId(), true).stream()).toList());
 		model.addAttribute("dpiaReports", buildDPIAReports(asset));
 		model.addAttribute("responsibleUserNames", asset.getResponsibleUsers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
