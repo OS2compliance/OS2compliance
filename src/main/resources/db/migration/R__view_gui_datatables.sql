@@ -364,7 +364,7 @@ SELECT
     (SELECT ou.name FROM ous ou WHERE ou.uuid = d.responsible_ou_uuid) AS responsible_ou_name,
     d.user_updated_date,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = d.id OR r.relation_b_id = d.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS task_count,
-    (SELECT dr.dpia_report_approval_status FROM dpia_report dr WHERE dr.dpia_id = d.id) AS report_approval_status,
+    (SELECT dr.dpia_report_approval_status FROM dpia_report dr WHERE dr.dpia_id = d.id order by dr.id desc limit 1) AS report_approval_status,
     (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id) as screening_conclusion,
     d.from_external_source as is_external
 FROM
