@@ -232,8 +232,8 @@ public class AssetsController {
 		List<AssetRelatedDPIADTO> relatedDPIADTOs = asset.getDpias().stream().map(dpia -> new AssetRelatedDPIADTO(
 				dpia.getId(),
 				dpia.getName(),
-				dpia.getResponsibleUser().getName() + " (" + dpia.getResponsibleUser().getUserId()+")",
-				dpia.getResponsibleOu().getName(),
+				dpia.getResponsibleUser() != null ? (dpia.getResponsibleUser().getName() + " (" + dpia.getResponsibleUser().getUserId()+")") : "",
+				dpia.getResponsibleOu() != null ? dpia.getResponsibleOu().getName() : "",
 				dpia.getUserUpdatedDate(),
 				dpia.getDpiaScreening() != null ? dpia.getDpiaScreening().getConclusion() : null // external dpias have no screening
 		)).toList();
