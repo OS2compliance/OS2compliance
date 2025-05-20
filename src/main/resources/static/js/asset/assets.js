@@ -10,13 +10,20 @@
 
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(formUrl)
-            .then(response => response.text()
-                .then(data => {
-                    document.getElementById('formDialog').innerHTML = data;
-                    formLoaded();
-                    //initFormValidationForForm('formDialog');
-                }))
-            .catch(error => toastService.error(error))
+            .then(response => {
+                if (response.ok) {
+                    response.text()
+                        .then(data => {
+                            console.log(data)
+                            document.getElementById('formDialog').innerHTML = data;
+                            formLoaded();
+                            //initFormValidationForForm('formDialog');
+                        })
+                }
+            })
+            .catch(error => {
+                toastService.error(error)
+            })
 
         let assetGridConfig = {
             className: defaultClassName,

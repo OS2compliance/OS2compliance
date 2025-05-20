@@ -7,6 +7,7 @@ import org.springframework.boot.web.servlet.error.DefaultErrorAttributes;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -32,12 +33,12 @@ public class GlobalExceptionHandler {
             throw e;
         }
         log.error("Unhandled error, method: {}, url: {}", request.getMethod(), request.getRequestURI(), e);
-        return errorView(request, "errors/technicalError");
+        return errorView(request, HttpStatus.INTERNAL_SERVER_ERROR, "errors/technicalError");
     }
 
     @ExceptionHandler(value = MethodArgumentNotValidException.class)
     public ModelAndView validationExceptionHandler(final HttpServletRequest request, final Exception e) throws Exception {
-        return errorView(request, "errors/badArgument");
+        return errorView(request, HttpStatus.BAD_REQUEST, "errors/badArgument");
     }
 
     @ExceptionHandler(value = ResponseStatusException.class)
@@ -47,17 +48,17 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(value = {AccessDeniedException.class, UsernameNotFoundException.class})
     public ModelAndView accessDeniedErrorHandler(final HttpServletRequest request, final Exception e) {
-        return errorView(request, "errors/missingClaims");
+        return errorView(request, HttpStatus.FORBIDDEN, "errors/missingClaims");
     }
 
-    private ModelAndView errorView(final HttpServletRequest request, final String viewName) {
+    private ModelAndView errorView(final HttpServletRequest request, final HttpStatusCode statusCode, final String viewName) {
         // Otherwise setup and send the user to a default error-view.
         final Map<String, Object> body = getErrorAttributes(new ServletWebRequest(request));
         final ModelAndView mav = new ModelAndView();
         mav.addAllObjects(body);
         mav.addObject("url", request.getRequestURL());
         mav.setViewName(viewName);
-        mav.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        mav.setStatus(statusCode);
         return mav;
     }
 
