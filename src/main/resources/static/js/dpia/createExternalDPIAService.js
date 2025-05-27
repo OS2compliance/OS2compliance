@@ -2,6 +2,8 @@ class CreateExternalDPIAService {
     assetChoicesSelect
     formElement
     externalModalContainer
+    responsibleUserChoice = null
+    responsibleOUChoice = null
 
     constructor () {
 
@@ -78,8 +80,8 @@ class CreateExternalDPIAService {
             assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
             link: linkInput.value ? linkInput.value : "",
             userUpdatedDate: userUpdatedDateElement.value,
-            responsibleUserUuid: userSelect.value,
-            responsibleOuUuid: ouSelect.value,
+            responsibleUserUuid: this.responsibleUserChoice.getValue(true),
+            responsibleOuUuid: this.responsibleOUChoice.getValue(true),
             title: titleInput.value,
         }
 
@@ -178,11 +180,11 @@ class CreateExternalDPIAService {
     }
 
     #initSearchOus(elementId){
-        choiceService.initOUSelect(elementId)
+        this.responsibleOUChoice = choiceService.initOUSelect(elementId)
     }
 
     #initSearchUsers(elementId){
-        choiceService.initUserSelect(elementId)
+        this.responsibleUserChoice = choiceService.initUserSelect(elementId)
     }
 
 }

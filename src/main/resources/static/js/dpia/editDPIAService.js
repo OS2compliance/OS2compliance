@@ -2,6 +2,8 @@ class EditDPIAService {
     assetSelectElementId = 'dpia_edit_asset_select'
     editModalContainerID = 'edit_dpia_modal_container'
     editModalId = 'editDPIAModal'
+    responsibleUserChoice = null
+    responsibleOUChoice = null
 
     constructor() {}
 
@@ -9,13 +11,11 @@ class EditDPIAService {
         const titleInput = document.getElementById('editTitleInput');
         const assetSelect = document.getElementById(this.assetSelectElementId);
         const userUpdatedDateElement = document.getElementById('editUserUpdateDateField')
-        const userSelect = document.getElementById('userSelect');
-        const ouSelect = document.getElementById('ouSelect');
         const data = {
             assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,
             userUpdatedDate: userUpdatedDateElement.value,
-            responsibleUserUuid: userSelect.value,
-            responsibleOuUuid: ouSelect.value,
+            responsibleUserUuid: this.responsibleUserChoice.getValue(true),
+            responsibleOuUuid: this.responsibleOUChoice.getValue(true),
             title: titleInput.value,
         }
 
@@ -145,11 +145,11 @@ class EditDPIAService {
     }
 
     #initSearchOus(elementId){
-        choiceService.initOUSelect(elementId)
+        this.responsibleOUChoice = choiceService.initOUSelect(elementId)
     }
 
     #initSearchUsers(elementId){
-        choiceService.initUserSelect(elementId)
+        this.responsibleUserChoice = choiceService.initUserSelect(elementId)
     }
 
 }
