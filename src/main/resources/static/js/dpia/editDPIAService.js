@@ -78,6 +78,7 @@ class EditDPIAService {
 
         if (!response.ok)  {
             toastService.error(response.statusText)
+            throw Error("Error in getting editing view for dpia: "+dpiaId)
         }
 
         const responseText = await response.text()
@@ -103,24 +104,31 @@ class EditDPIAService {
     }
 
     async openModal(dpiaId) {
-        await this.#fetchModalContent(dpiaId)
+        try {
+            await this.#fetchModalContent(dpiaId)
 
-        this.#initAssetSelection()
-        const datepickerElement = document.getElementById('editUserUpdateDateField')
-        this.initDatePicker('editUserUpdateDateField', datepickerElement.value || '')
+            this.#initAssetSelection()
+            const datepickerElement = document.getElementById('editUserUpdateDateField')
+            this.initDatePicker('editUserUpdateDateField', datepickerElement.value || '')
 
-        this.#initSearchOus('editOuSelect')
-        this.#initSearchUsers('editUserSelect')
+            this.#initSearchOus('editOuSelect')
+            this.#initSearchUsers('editUserSelect')
 
-        const modalElement = document.getElementById(this.editModalId)
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
+            const modalElement = document.getElementById(this.editModalId)
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } catch (e) {
+            console.error("could not open edit view:\n" + e.message)
+        }
     }
 
     initDatePicker(id, selectedDate) {
-        const [day, rest] = selectedDate ? selectedDate.split('/') : null;
-        const [month, year] = rest ? rest.split('-') : null;
-
+        let date = new Date()
+        if (selectedDate) {
+            const [day, rest] = selectedDate ? selectedDate.split('/') : [null, null];
+            const [month, year] = rest ? rest.split('-') : [null, null];
+            date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+        }
 
         return MCDatepicker.create({
             el: `#${id}`,
@@ -132,7 +140,7 @@ class EditDPIAService {
             customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
             customClearBTN: "Ryd",
             customCancelBTN: "Annuller",
-            selectedDate: selectedDate ? new Date(parseInt(year), parseInt(month) - 1, parseInt(day)) : new Date(),
+            selectedDate: date,
         });
     }
 

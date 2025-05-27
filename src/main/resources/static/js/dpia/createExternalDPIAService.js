@@ -101,29 +101,33 @@ class CreateExternalDPIAService {
     }
 
     async editExternalClicked(dpiaId) {
-        const url = `${baseUrl}/external/${dpiaId}/edit`
-        const response = await fetch(url, {
-            method: "GET",
-            headers: {
-                'X-CSRF-TOKEN': token
+        try {
+            const url = `${baseUrl}/external/${dpiaId}/edit`
+            const response = await fetch(url, {
+                method: "GET",
+                headers: {
+                    'X-CSRF-TOKEN': token
+                }
+            })
+
+            if (!response.ok) {
+                toastService.error(response.statusText)
+                throw Error("Error in getting editing view for external dpia: " + dpiaId)
             }
-        })
 
-        if (!response.ok)  {
-            toastService.error(response.statusText)
+            const responseText = await response.text()
+
+            const externalModalContainer = document.getElementById("external_modal_container")
+            externalModalContainer.innerHTML = responseText
+
+            this.init()
+
+            const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
+            const modal = new bootstrap.Modal(modalElement);
+            modal.show();
+        } catch (e) {
+            console.error("could not open edit view:\n" + e.message)
         }
-
-        const responseText = await response.text()
-
-        const externalModalContainer = document.getElementById("external_modal_container")
-        externalModalContainer.innerHTML = responseText
-
-        this.init()
-
-        const modalElement = externalModalContainer.querySelector('#createExternalDPIAModal')
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-
     }
 
     async createExternalClicked() {
@@ -152,8 +156,12 @@ class CreateExternalDPIAService {
     }
 
     initDatePicker(id, selectedDate) {
-        const [day, rest] = selectedDate ? selectedDate.split('/') : [null, null];
-        const [month, year] = rest ? rest.split('-') : [null, null];
+        let date = new Date()
+        if (selectedDate) {
+            const [day, rest] = selectedDate ? selectedDate.split('/') : [null, null];
+            const [month, year] = rest ? rest.split('-') : [null, null];
+            date = new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
+        }
 
         return MCDatepicker.create({
             el: `#${id}`,
@@ -165,7 +173,7 @@ class CreateExternalDPIAService {
             customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
             customClearBTN: "Ryd",
             customCancelBTN: "Annuller",
-            selectedDate: selectedDate ? new Date(parseInt(year), parseInt(month) - 1, parseInt(day)) : new Date(),
+            selectedDate: date,
         });
     }
 
