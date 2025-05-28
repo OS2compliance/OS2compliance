@@ -252,7 +252,7 @@
                                             <td class="riskViewTh">Tilknyttede foranstaltninger</td>
                                             <td class="riskViewTd editCell" colspan="13">
                                                 <select class="choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" multiple>
-                                                    <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name}" selected></option>
+                                                    <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name+ ': ' + precaution.description }" selected></option>
                                                 </select>
                                             </td>
                                         </tr>
