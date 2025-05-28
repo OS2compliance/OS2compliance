@@ -410,7 +410,8 @@ function updateRelatedPrecautions(choices, search, threatType, threatId, threatI
                 choices.setChoices(data.content.map(reg => {
                     return {
                         id: reg.id,
-                        name: truncateString(reg.name + ": " + reg.description, 60),
+                        // name: truncateString(reg.name + ": " + reg.description, 60),
+                        name: reg.name + ": " + reg.description,
                         title: reg.description,
                         customProperties : {
 
