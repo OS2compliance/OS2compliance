@@ -1,7 +1,6 @@
 class CreateExternalDPIAService {
     assetChoicesSelect
     formElement
-    externalModalContainer
     responsibleUserChoice = null
     responsibleOUChoice = null
 
@@ -73,8 +72,6 @@ class CreateExternalDPIAService {
         const assetSelect = document.getElementById('externalDPIAAssetSelect');
         const linkInput = document.getElementById('linkInput');
         const userUpdatedDateElement = document.getElementById('externalUserUpdateDateField')
-        const userSelect = document.getElementById('externalUserSelect');
-        const ouSelect = document.getElementById('externalOuSelect');
         const data = {
             dpiaId: dpiaId ? dpiaId : null,
             assetIds : assetSelect ? [...assetSelect.selectedOptions].map(o => o.value) : null,

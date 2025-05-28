@@ -535,22 +535,38 @@ public class RiskController {
         return null;
     }
 
+	record ResponsibleUserDTO(String uuid, String name) {}
+	record ResponsibleOUDTO (String uuid, String name ) {}
+	record SimpleEditRiskAsset(Long id, String name) {}
+	record ExternalThreatAssessmentEditDTO(Long id, String name, ThreatAssessmentType threatAssessmentType, ResponsibleOUDTO responsibleOu, ResponsibleUserDTO responsibleUser, List<SimpleEditRiskAsset> relatedAssets, String externalLink) {}
     @GetMapping("external/{riskId}/edit")
     public String riskId(final Model model, @PathVariable Long riskId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
 
-        ThreatAssessment riskassessment = threatAssessmentService.findById(riskId).orElseThrow();
+		ThreatAssessment riskassessment = threatAssessmentService.findById(riskId)
+				.orElseThrow();
+		final List<Relation> assetRelations = relationService.findRelatedToWithType(riskassessment, RelationType.ASSET);
+		var externalDTO = new ExternalThreatAssessmentEditDTO(
+				riskassessment.getId(),
+				riskassessment.getName(),
+				riskassessment.getThreatAssessmentType(),
+				riskassessment.getResponsibleOu() != null ? new ResponsibleOUDTO(riskassessment.getResponsibleOu().getUuid(), riskassessment.getResponsibleOu().getName()) : null,
+				riskassessment.getResponsibleUser() != null ? new ResponsibleUserDTO(riskassessment.getResponsibleUser().getUuid(), riskassessment.getResponsibleUser().getName()) : null,
+				assetService.findAllByRelations(assetRelations).stream().map(a -> new SimpleEditRiskAsset(a.getId(), a.getName())).toList(),
+				riskassessment.getExternalLink()
+		);
 
-        model.addAttribute("risk", riskassessment);
+        model.addAttribute("risk", externalDTO);
         return "risks/fragments/edit_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 
+	record ExternalThreatAssessmentCreateDTO(Long id, String name, ThreatAssessmentType threatAssessmentType, ResponsibleOUDTO responsibleOu, ResponsibleUserDTO responsibleUser, String externalLink) {}
     @GetMapping("external/create")
     public String createExternalDPIA(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
-        model.addAttribute("risk", new ThreatAssessment());
+        model.addAttribute("risk", new ExternalThreatAssessmentCreateDTO(null, "", ThreatAssessmentType.ASSET, new ResponsibleOUDTO("", ""), new ResponsibleUserDTO("", ""), "")); // emppty dto
         return "risks/fragments/create_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 }
