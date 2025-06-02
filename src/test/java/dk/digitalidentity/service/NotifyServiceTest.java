@@ -1,6 +1,5 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.EmailTemplateDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.EmailTemplate;

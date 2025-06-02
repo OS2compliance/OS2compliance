@@ -50,7 +50,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 },
             },
             {
-                name: "Opdateret",
+                name: "Godkendelsesdato",
                 searchable: {
                     searchKey: 'userUpdatedDate'
                 },

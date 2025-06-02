@@ -1,57 +1,107 @@
-
-
 class CreateExternalRiskassessmentService {
     assetChoicesSelect
     formElement
+    createResponsibleUserChoice = null
+    createResponsibleOuChoice = null
+    editResponsibleUserChoice = null
+    editResponsibleOUChoice = null
 
     constructor () {
-//        this.init()
     }
 
-    init() {
-        const assetSelect = document.getElementById('externalRiskassessmentAssetSelect');
-        // this.assetChoicesSelect = this.#initAssetSelect(assetSelect);
+    initCreateModal() {
+        const assetSelect = document.getElementById('externalCreateRiskassessmentAssetSelect');
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        this.createResponsibleOuChoice = this.#initSearchOus('externalCreateOuSelect')
+        this.createResponsibleUserChoice = this.#initSearchUsers('externalCreateUserSelect')
 
 
-        const registerSelect = document.getElementById('registerSelect');
+        const registerSelect = document.getElementById('createRegisterSelect');
 
         this.registerChoicesSelect = initRegisterSelect(registerSelect);
 
         const self = this
+        const modalContainerElement = document.getElementById("createExternalRiskassessmentModal")
 
-        const typeInput = document.getElementById("threatAssessmentType")
-        this.typeChanged(typeInput.value);
+        const typeInput = document.getElementById("createThreatAssessmentType")
+        this.typeChanged(typeInput.value, modalContainerElement);
         typeInput.addEventListener('change', function(event) {
-            self.typeChanged(this.value);
+            const modalContainerElement = document.getElementById("createExternalRiskassessmentModal")
+            self.typeChanged(this.value, modalContainerElement);
         });
 
         this.assetChoicesSelect.passedElement.element.addEventListener('change', function() {
-            self.clearAssetValidationError();
-            self.loadAssetSection();
+            const modalContainerElement = document.getElementById("createExternalRiskassessmentModal")
+            self.clearAssetValidationError(modalContainerElement, 'externalCreateRiskassessmentAssetSelect');
         });
 
     }
 
-    formReset() {
-        this.formElement = document.getElementById('createExternalRiskassessmentForm');
+    initEditModal() {
+        const assetSelect = document.getElementById('externalEditRiskassessmentAssetSelect');
+        this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        this.editResponsibleOUChoice = this.#initSearchOus('externalEditOuSelect')
+        this.editResponsibleUserChoice = this.#initSearchUsers('externalEditUserSelect')
+
+        const self = this
+
+        this.assetChoicesSelect.passedElement.element.addEventListener('change', function() {
+            const modalContainerElement = document.getElementById("createExternalRiskassessmentModal")
+            self.clearAssetValidationError(modalContainerElement, 'externalEditRiskassessmentAssetSelect');
+            // self.loadAssetSection(modalContainerElement, 'externalEditRiskassessmentAssetSelect');
+        });
+    }
+
+    formReset(id) {
+        this.formElement = document.getElementById(id);
         this.formElement.reset();
     }
 
-    async submitNewExternal(riskId) {
-        const assetSelect = document.getElementById('externalRiskassessmentAssetSelect');
+    collectCreateData() {
+        const assetSelect = document.getElementById('externalCreateRiskassessmentAssetSelect');
         const linkInput = document.getElementById('linkInput');
-        const typeElement = document.getElementById('threatAssessmentType')
+        const typeElement = document.getElementById('createThreatAssessmentType')
         const registerSelect = document.getElementById('registerSelect')
-        const nameElement = document.getElementById('name')
-        const data = {
+        const nameElement = document.getElementById('createName')
+
+        const responsibleUserUuid = this.createResponsibleUserChoice.getValue(true)
+        const responsibleOuUuid = this.createResponsibleOuChoice.getValue(true)
+
+        return {
             type: typeElement.value,
-            riskId: riskId ? riskId : null,
-            assetId : assetSelect ? [...assetSelect.selectedOptions].map(option => option.value) : [],
+            riskId: null,
+            assetIds : assetSelect ? [...assetSelect.selectedOptions].map(option => option.value) : [],
             registerId : registerSelect ? registerSelect.value : null,
             link: linkInput.value ? linkInput.value : "",
-            name : nameElement.value
+            name : nameElement.value,
+            responsibleUserUuid: responsibleUserUuid,
+            responsibleOuUuid: responsibleOuUuid,
         }
+    }
+
+    collectEditData(riskId) {
+        const assetSelect = document.getElementById('externalEditRiskassessmentAssetSelect');
+        const linkInput = document.getElementById('linkInput');
+        const typeElement = document.getElementById('editThreatAssessmentType')
+        const nameElement = document.getElementById('editName')
+
+        const responsibleUserUuid = this.editResponsibleUserChoice.getValue(true)
+        const responsibleOuUuid = this.editResponsibleOUChoice.getValue(true)
+
+        return {
+            type: typeElement.value,
+            riskId: riskId ? riskId : null,
+            assetIds : assetSelect ? [...assetSelect.selectedOptions].map(option => option.value) : [],
+            registerId : registerSelect ? registerSelect.value : null,
+            link: linkInput.value ? linkInput.value : "",
+            name : nameElement.value,
+            responsibleUserUuid: responsibleUserUuid,
+            responsibleOuUuid: responsibleOuUuid,
+        }
+    }
+
+    async submitNewExternal(riskId) {
+        const data = riskId ? this.collectEditData(riskId) : this.collectCreateData()
 
         const url = `${restUrl}/external/create`
         const response = await fetch(url, {
@@ -81,12 +131,15 @@ class CreateExternalRiskassessmentService {
 
         if (!response.ok)  {
             toastService.error(response.statusText)
+            throw Error ("could not load external riskassessment edit view: " + riskId + "")
         }
 
         const responseText = await response.text()
 
         const externalModalContainer = document.getElementById("external_modal_container")
         externalModalContainer.innerHTML = responseText
+
+        this.initEditModal()
 
         const modalElement = externalModalContainer.querySelector('#createExternalRiskassessmentModal')
         const modal = new bootstrap.Modal(modalElement);
@@ -105,6 +158,7 @@ class CreateExternalRiskassessmentService {
 
         if (!response.ok)  {
             toastService.error(response.statusText)
+            throw Error ("could not load external riskassessment create view: " + riskId + "")
         }
 
         const responseText = await response.text()
@@ -112,57 +166,44 @@ class CreateExternalRiskassessmentService {
         const externalModalContainer = document.getElementById("external_modal_container")
         externalModalContainer.innerHTML = responseText
 
-        this.init()
+        this.initCreateModal()
 
         const modalElement = externalModalContainer.querySelector('#createExternalRiskassessmentModal')
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
     }
 
-    typeChanged (selectedType) {
+    typeChanged (selectedType, parentElement) {
         if (selectedType === 'ASSET') {
-            document.getElementById("registerSelectRow").style.display = 'none';
-            document.getElementById("assetSelectRow").style.display = '';
+            parentElement.querySelector("#registerSelectRow").style.display = 'none';
+            parentElement.querySelector("#assetSelectRow").style.display = '';
         } else if (selectedType === 'REGISTER') {
-            document.getElementById("registerSelectRow").style.display = '';
-            document.getElementById("assetSelectRow").style.display = 'none';
+            parentElement.querySelector("#registerSelectRow").style.display = '';
+            parentElement.querySelector("#assetSelectRow").style.display = 'none';
         } else {
-            document.getElementById("registerSelectRow").style.display = 'none';
-            document.getElementById("assetSelectRow").style.display = 'none';
+            parentElement.querySelector("#registerSelectRow").style.display = 'none';
+            parentElement.querySelector("#assetSelectRow").style.display = 'none';
         }
-        document.getElementById("inheritRow").style.display = 'none';
+        const inheritRow = parentElement.querySelector("#inheritRow")
+        if (inheritRow) {
+            inheritRow.style.display = '';
+        }
         this.registerChoicesSelect.removeActiveItems();
         this.assetChoicesSelect.removeActiveItems();
         this.selectedType = selectedType;
     }
 
-    clearAssetValidationError() {
-        document.getElementById("assetSelect").parentElement.classList.remove('is-invalid');
-        document.getElementById("assetError").classList.remove('show');
+    clearAssetValidationError(parent, assetSelectId) {
+        parent.querySelector(`#${assetSelectId}`).parentElement.classList.remove('is-invalid');
+        parent.querySelector("#assetError").classList.remove('show');
     }
 
 
-    loadAssetSection () {
-        const selectedAsset = document.getElementById("assetSelect").value;
-        fetch( `/rest/risks/asset?assetIds=${selectedAsset}`)
-        .then(response => response.json()
-        .then(data => {
-            if (data.elementName != null) {
-                document.getElementById('name').value = data.elementName;
-            } else {
-                document.getElementById('name').value = "";
-            }
+    #initSearchOus(elementId){
+       return choiceService.initOUSelect(elementId)
+    }
 
-            // set text in table
-            document.getElementById("RF").innerHTML = data.rf === 0 ? "" : data.rf;
-            document.getElementById("OF").innerHTML = data.of === 0 ? "" : data.of;
-            document.getElementById("RI").innerHTML = data.ri === 0 ? "" : data.ri;
-            document.getElementById("OI").innerHTML = data.oi === 0 ? "" : data.oi;
-            document.getElementById("RT").innerHTML = data.rt === 0 ? "" : data.rt;
-            document.getElementById("OT").innerHTML = data.ot === 0 ? "" : data.ot;
-
-            document.getElementById("inheritRow").style.display = '';
-        }))
-        .catch(error => toastService.error(error));
+    #initSearchUsers(elementId){
+        return choiceService.initUserSelect(elementId)
     }
 }

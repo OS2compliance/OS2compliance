@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.EmailTemplate;
+import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -25,6 +26,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
@@ -40,6 +42,7 @@ import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.model.RiskDTO;
+import dk.digitalidentity.service.model.TaskDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -64,7 +67,9 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -216,11 +221,68 @@ public class RiskController {
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
 
+	record SimpleThreatDTO(
+			long id,
+			long responseId,
+			String identifier,
+			ThreatDatabaseType dataType,
+			String type,
+			String threat,
+			boolean notRelevant,
+			int probability,
+			int rf,
+			int ri,
+			int rt,
+			int of,
+			int oi,
+			int ot,
+			String problem,
+			String existingMeasures,
+			List<Precaution> relatedPrecautions,
+			ThreatMethod method,
+			String elaboration,
+			int residualRiskConsequence,
+			int residualRiskProbability,
+			int index,
+			List<TaskDTO> tasks
+	) {
+	}
     @GetMapping("{id}")
     public String risk(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("risk", threatAssessment);
-        model.addAttribute("threats", threatAssessmentService.buildThreatList(threatAssessment));
+
+		Map<String, List<SimpleThreatDTO>> threatsDto = new HashMap<>();
+		for (var entryset : threatAssessmentService.buildThreatList(threatAssessment).entrySet()) {
+			var simpleDtoList = entryset.getValue().stream()
+					.map( threatDTO -> new SimpleThreatDTO(
+							threatDTO.getId(),
+							threatDTO.getResponseId(),
+							threatDTO.getIdentifier(),
+							threatDTO.getDataType(),
+							threatDTO.getType(),
+							threatDTO.getThreat(),
+							threatDTO.isNotRelevant(),
+							threatDTO.getProbability(),
+							threatDTO.getRf(),
+							threatDTO.getRi(),
+							threatDTO.getRt(),
+							threatDTO.getOf(),
+							threatDTO.getOi(),
+							threatDTO.getOt(),
+							threatDTO.getProblem(),
+							threatDTO.getExistingMeasures(),
+							(threatDTO.getRelatedPrecautions().stream().map(r -> (Precaution) r).toList()),
+							threatDTO.getMethod(),
+							threatDTO.getElaboration(),
+							threatDTO.getResidualRiskConsequence(),
+							threatDTO.getResidualRiskProbability(),
+							threatDTO.getIndex(),
+							threatDTO.getTasks()
+					)).toList();
+			threatsDto.put(entryset.getKey(), simpleDtoList);
+		}
+        model.addAttribute("threats", threatsDto);
         model.addAttribute("elementName", findElementName(threatAssessment));
         model.addAttribute("customThreat", new CustomThreat());
         model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
@@ -442,7 +504,7 @@ public class RiskController {
                 .map(a -> a.getRelationAType() == RelationType.ASSET ? a.getRelationAId() : a.getRelationBId())
                 .map(assetService::findById)
                 .filter(Optional::isPresent)
-                .map(Optional::get).collect(Collectors.toList());
+                .map(Optional::get).toList();
             for (final Asset asset : assets) {
                 if (asset.getResponsibleUsers() != null) {
                     for (final User responsibleUser : asset.getResponsibleUsers()) {
@@ -458,7 +520,7 @@ public class RiskController {
                 .map(a -> a.getRelationAType() == RelationType.REGISTER ? a.getRelationAId() : a.getRelationBId())
                 .map(registerService::findById)
                 .filter(Optional::isPresent)
-                .map(Optional::get).collect(Collectors.toList());
+                .map(Optional::get).toList();
 
             for (final Register register : registers) {
                 if (register.getResponsibleUsers() != null) {
@@ -473,22 +535,38 @@ public class RiskController {
         return null;
     }
 
+	record ResponsibleUserDTO(String uuid, String name) {}
+	record ResponsibleOUDTO (String uuid, String name ) {}
+	record SimpleEditRiskAsset(Long id, String name) {}
+	record ExternalThreatAssessmentEditDTO(Long id, String name, ThreatAssessmentType threatAssessmentType, ResponsibleOUDTO responsibleOu, ResponsibleUserDTO responsibleUser, List<SimpleEditRiskAsset> relatedAssets, String externalLink) {}
     @GetMapping("external/{riskId}/edit")
     public String riskId(final Model model, @PathVariable Long riskId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
 
-        ThreatAssessment riskassessment = threatAssessmentService.findById(riskId).orElseThrow();
+		ThreatAssessment riskassessment = threatAssessmentService.findById(riskId)
+				.orElseThrow();
+		final List<Relation> assetRelations = relationService.findRelatedToWithType(riskassessment, RelationType.ASSET);
+		var externalDTO = new ExternalThreatAssessmentEditDTO(
+				riskassessment.getId(),
+				riskassessment.getName(),
+				riskassessment.getThreatAssessmentType(),
+				riskassessment.getResponsibleOu() != null ? new ResponsibleOUDTO(riskassessment.getResponsibleOu().getUuid(), riskassessment.getResponsibleOu().getName()) : null,
+				riskassessment.getResponsibleUser() != null ? new ResponsibleUserDTO(riskassessment.getResponsibleUser().getUuid(), riskassessment.getResponsibleUser().getName()) : null,
+				assetService.findAllByRelations(assetRelations).stream().map(a -> new SimpleEditRiskAsset(a.getId(), a.getName())).toList(),
+				riskassessment.getExternalLink()
+		);
 
-        model.addAttribute("risk", riskassessment);
+        model.addAttribute("risk", externalDTO);
         return "risks/fragments/edit_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 
+	record ExternalThreatAssessmentCreateDTO(Long id, String name, ThreatAssessmentType threatAssessmentType, ResponsibleOUDTO responsibleOu, ResponsibleUserDTO responsibleUser, String externalLink) {}
     @GetMapping("external/create")
     public String createExternalDPIA(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
-        model.addAttribute("risk", new ThreatAssessment());
+        model.addAttribute("risk", new ExternalThreatAssessmentCreateDTO(null, "", ThreatAssessmentType.ASSET, new ResponsibleOUDTO("", ""), new ResponsibleUserDTO("", ""), "")); // emppty dto
         return "risks/fragments/create_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 }

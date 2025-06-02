@@ -115,9 +115,9 @@ document.addEventListener("DOMContentLoaded", function() {
             },
             {
                 name: "Status",
-//                searchable: {
-//                    searchKey: 'completed',
-//                },
+                searchable: {
+                    sortKey: 'completed'
+                },
                 width: '100px',
                 formatter: (cell, row) => {
                     let status = "";

@@ -9,14 +9,55 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="createExternalRiskassessmentForm" class="row g-3 needs-validation" action="#"
+                <form id="editExternalRiskassessmentForm" class="row g-3 needs-validation" action="#"
                       th:object="${risk}"
                       th:action="@{/rest/risk/external/create}" method="post" novalidate>
                     <div class="row mt-3">
-                        <label for="name" class="col-sm-4 col-form-label">Titel</label>
+                        <label for="editThreatAssessmentType" class="col-sm-4 col-form-label">Type</label>
                         <div class="col-sm-8">
-                            <input id="name" th:field="*{name}" type="text" class="form-control" required>
+                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="editThreatAssessmentType" required disabled readonly>
+                                <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
+                                        th:value="${type}" th:text="${type.message}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="assetSelectRow">
+                        <label for="externalEditRiskassessmentAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedAsset" data-type="select-multiple"
+                                    data-trigger="" id="externalEditRiskassessmentAssetSelect" hidden="" tabindex="-1" multiple>
+<!--                                <th:block th:if="${risk != null && risk != ''}">-->
+                                    <option th:each="asset : ${risk.relatedAssets}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
+<!--                                </th:block>-->
+                            </select>
+                            <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="editName" class="col-sm-4 col-form-label">Titel</label>
+                        <div class="col-sm-8">
+                            <input id="editName" th:field="*{name}" type="text" class="form-control" required>
                             <div class="invalid-feedback">Der skal angives en titel</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalEditUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalEditUserSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${risk != null && risk != '' && risk.responsibleUser != null}">
+                                    <option th:if="${risk.responsibleUser != null}" th:value="${risk.responsibleUser.uuid}" th:text="${risk.responsibleUser.name}" selected></option>
+                                </th:block>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalEditOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="externalEditOuSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${risk != null && risk != '' && risk.responsibleOu != null}">
+                                    <option th:if="${risk.responsibleOu != null}" th:value="${risk.responsibleOu.uuid}" th:text="${risk.responsibleOu.name}" selected></option>
+                                </th:block>
+                            </select>
                         </div>
                     </div>
                     <div class="row mt-3">
@@ -28,12 +69,12 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="createExternalRiskassessmentService.formReset()"
+                <button type="button" onclick="createExternalRiskassessmentService.formReset('editExternalRiskassessmentForm')"
                         class="btn btn-secondary"
                         data-bs-dismiss="modal">Annuller
                 </button>
                 <button type="button"
-                        form="createExternalRiskassessmentForm" class="btn btn-primary"
+                        form="editExternalRiskassessmentForm" class="btn btn-primary"
                         th:attr="onclick=${'createExternalRiskassessmentService.submitNewExternal('+ risk.id +')'}">
                     Gem
                 </button>

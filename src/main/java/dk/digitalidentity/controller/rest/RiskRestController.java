@@ -11,6 +11,7 @@ import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -35,7 +36,7 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
-import dk.digitalidentity.service.FilterService;
+import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
@@ -104,6 +105,7 @@ public class RiskRestController {
     private final S3DocumentService s3DocumentService;
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
+	private final OrganisationService organisationService;
 
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
@@ -408,14 +410,22 @@ public class RiskRestController {
         return new ResponsibleUsersWithElementNameDTO(asset.getName(), users);
     }
 
-    public record CreateExternalRiskassessmentDTO(Long riskId, Set<Long> assetIds, String link, String name, ThreatAssessmentType type, Long registerId) {
+    public record CreateExternalRiskassessmentDTO(Long riskId, Set<Long> assetIds, String link, String name, ThreatAssessmentType type, Long registerId, String responsibleUserUuid, String responsibleOuUuid) {
     }
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalRiskassessmentDTO createExternalDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+		}
+		User responsibleUser = null;
+		OrganisationUnit responsibleOu = null;
+		if (createExternalDTO.responsibleUserUuid != null) {
+			responsibleUser = userService.findByUuid(createExternalDTO.responsibleUserUuid).orElse(null);
+		}
+		if (createExternalDTO.responsibleOuUuid != null) {
+			responsibleOu = organisationService.get(createExternalDTO.responsibleOuUuid).orElse(null);
+		}
 
         ThreatAssessment threatAssessment = null;
         if (createExternalDTO.riskId != null) {
@@ -424,20 +434,28 @@ public class RiskRestController {
                 .orElseThrow();
             threatAssessment.setName(createExternalDTO.name);
             threatAssessment.setExternalLink(createExternalDTO.link);
-        } else {
+			threatAssessment.setResponsibleUser(responsibleUser);
+			threatAssessment.setResponsibleOu(responsibleOu);
+			if (createExternalDTO.type.equals(ThreatAssessmentType.ASSET)) {
+				relateAssets(createExternalDTO.assetIds, threatAssessment);
+			} else if (createExternalDTO.type.equals(ThreatAssessmentType.REGISTER)) {
+				relateRegister(createExternalDTO.registerId, threatAssessment);
+			}
+		} else {
             //creating new
             threatAssessment = new ThreatAssessment();
             threatAssessment.setExternalLink(createExternalDTO.link);
             threatAssessment.setFromExternalSource(true);
             threatAssessment.setName(createExternalDTO.name);
             threatAssessment.setThreatAssessmentType(createExternalDTO.type);
+			threatAssessment.setResponsibleUser(responsibleUser);
+			threatAssessment.setResponsibleOu(responsibleOu);
             threatAssessment = threatAssessmentService.save(threatAssessment);
             if (createExternalDTO.type.equals(ThreatAssessmentType.ASSET)) {
                 relateAssets(createExternalDTO.assetIds, threatAssessment);
             } else if (createExternalDTO.type.equals(ThreatAssessmentType.REGISTER)) {
                 relateRegister(createExternalDTO.registerId, threatAssessment);
             }
-
         }
         threatAssessmentService.save(threatAssessment);
 

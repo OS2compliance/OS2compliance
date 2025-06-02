@@ -12,9 +12,9 @@
                       th:action="@{/rest/risk/external/create}" method="post" novalidate>
                     <input id="sendEmail" name="sendEmail" value="false" hidden>
                     <div class="row mt-3">
-                        <label for="threatAssessmentType" class="col-sm-4 col-form-label">Type</label>
+                        <label for="createThreatAssessmentType" class="col-sm-4 col-form-label">Type</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="threatAssessmentType" required>
+                            <select class="form-control form-select" th:field="*{threatAssessmentType}" id="createThreatAssessmentType" required>
                                 <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
                                         th:value="${type}" th:text="${type.message}"></option>
                             </select>
@@ -22,25 +22,45 @@
                         </div>
                     </div>
                     <div class="row mt-3" id="registerSelectRow">
-                        <label for="registerSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
+                        <label for="createRegisterSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1"></select>
+                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="createRegisterSelect" hidden="" tabindex="-1"></select>
                             <div class="invalid-feedback" id="registerError">Der skal vælges mindst en behandlingsaktivitet</div>
                         </div>
                     </div>
                     <div class="row mt-3" id="assetSelectRow">
-                        <label for="externalRiskassessmentAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
+                        <label for="externalCreateRiskassessmentAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="selectedAsset" data-type="select-multiple"
-                                    data-trigger="" id="externalRiskassessmentAssetSelect" hidden="" tabindex="-1" multiple></select>
+                                    data-trigger="" id="externalCreateRiskassessmentAssetSelect" hidden="" tabindex="-1" multiple></select>
                             <div class="invalid-feedback" id="assetError">Der skal vælges mindst et asset</div>
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="name" class="col-sm-4 col-form-label">Titel</label>
+                        <label for="createName" class="col-sm-4 col-form-label">Titel</label>
                         <div class="col-sm-8">
-                            <input id="name" th:field="*{name}" type="text" class="form-control" required>
+                            <input id="createName" th:field="*{name}" type="text" class="form-control" required>
                             <div class="invalid-feedback">Der skal angives en titel</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalCreateUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalCreateUserSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${risk != null && risk != ''}">
+                                    <option th:if="${risk.responsibleUser != null}" th:value="${risk.responsibleUser.uuid}" th:text="${risk.responsibleUser.name}" selected></option>
+                                </th:block>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalCreateOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="externalCreateOuSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${risk != null && risk != ''}">
+                                    <option th:if="${risk.responsibleOu != null}" th:value="${risk.responsibleOu.uuid}" th:text="${risk.responsibleOu.name}" selected></option>
+                                </th:block>
+                            </select>
                         </div>
                     </div>
                     <div class="row mt-3">
@@ -52,7 +72,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="createExternalRiskassessmentService.formReset()" class="btn btn-secondary"
+                <button type="button" onclick="createExternalRiskassessmentService.formReset('createExternalRiskassessmentForm')" class="btn btn-secondary"
                         data-bs-dismiss="modal">Annuller
                 </button>
                 <button th:if="${external != null && external != ''}" type="button" form="createExternalRiskassessmentForm" class="btn btn-primary"
