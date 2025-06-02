@@ -99,7 +99,9 @@ public class DBSService {
                         dbsAsset.setName(itSystem.getName());
                         dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                             .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
-                        dbsAsset.setStatus(itSystem.getStatus().getValue());
+						if (itSystem.getStatus() != null) {
+							dbsAsset.setStatus(itSystem.getStatus().getValue());
+						}
                         if (itSystem.getNextRevision() != null) {
                             dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
                         }
