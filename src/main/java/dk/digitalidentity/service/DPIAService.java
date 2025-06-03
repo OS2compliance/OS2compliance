@@ -45,6 +45,11 @@ public class DPIAService {
         return dpiaDao.findById(dpiaId)
             .orElseThrow();
     }
+
+	public List<DPIA> findAll() {
+		return dpiaDao.findAll();
+	}
+
 	@Transactional
     public DPIA save(DPIA dpia) {
         return dpiaDao.save(dpia);

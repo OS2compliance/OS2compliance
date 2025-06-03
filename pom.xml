@@ -97,11 +97,11 @@
 			<artifactId>mysql-connector-j</artifactId>
 		</dependency>
 
-                <dependency>
-                        <groupId>dk.digitalidentity</groupId>
-                        <artifactId>downdetector-module-java21</artifactId>
-                        <version>1.0.2</version>
-                </dependency>
+		<dependency>
+				<groupId>dk.digitalidentity</groupId>
+				<artifactId>downdetector-module-java21</artifactId>
+				<version>1.0.2</version>
+		</dependency>
 
         <dependency>
             <groupId>org.apache.httpcomponents.client5</groupId>

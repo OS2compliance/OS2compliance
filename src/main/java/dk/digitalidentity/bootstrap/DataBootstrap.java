@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
+import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
@@ -49,7 +50,6 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 @RequiredArgsConstructor
 public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent> {
     private final ChoiceListImporter choiceImporter;
-    private final ThreatCatalogImporter threatCatalogImporter;
     private final StandardTemplateImporter templateImporter;
     private final TagDao tagDao;
     private final RegisterImporter registerImporter;
@@ -60,6 +60,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final ChoiceValueDao valueDao;
     private final PlatformTransactionManager transactionManager;
     private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
+	private final DPIAService dpiaService;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -91,6 +92,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(19, this::seedV19);
         incrementAndPerformIfVersion(20, this::seedV20);
         incrementAndPerformIfVersion(21, this::seedV21);
+        incrementAndPerformIfVersion(22, this::seedV22);
     }
 
     @SneakyThrows
@@ -109,6 +111,16 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+	private void seedV22() {
+		dpiaService.findAll()
+				.forEach(dpia -> {
+					if (dpia.getDpiaScreening() != null) {
+						dpia.getDpiaScreening().setConclusion(dpiaService.calculateScreeningConclusion(dpia.getDpiaScreening().getDpiaScreeningAnswers()));
+						dpiaService.save(dpia);
+					}
+				});
+	}
 
     private void seedV21() {
         settingsService.createSetting(NotificationSetting.SEVENDAYSBEFORE.getValue(), "true" , "notification", true);
