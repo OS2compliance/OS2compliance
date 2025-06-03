@@ -1,0 +1,1 @@
+update dpia set from_external_source=false, external_link=null where external_link='';

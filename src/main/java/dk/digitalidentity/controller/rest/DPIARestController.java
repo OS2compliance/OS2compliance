@@ -297,8 +297,7 @@ public class DPIARestController {
             dpiaService.save(dpia);
         } else {
 			//Create
-            dpia = dpiaService.createExternal(assets,createExternalDPIADTO.link, createExternalDPIADTO.title, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
-            dpiaService.save(dpia);
+            dpiaService.createExternal(assets,createExternalDPIADTO.link, createExternalDPIADTO.title, createExternalDPIADTO.userUpdatedDate, createExternalDPIADTO.responsibleUserUuid, createExternalDPIADTO.responsibleOuUuid);
         }
 
         return new ResponseEntity<>(HttpStatus.OK);

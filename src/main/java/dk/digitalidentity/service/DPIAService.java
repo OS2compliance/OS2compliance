@@ -69,6 +69,7 @@ public class DPIAService {
      * @param name
      * @return
      */
+	@Transactional
     public DPIA create(List<Asset> assets, String name, LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid) throws IOException {
         // default dpia creation
         DPIA dpia = new DPIA();
@@ -160,6 +161,7 @@ public class DPIAService {
      * @param name Name of the DPIA. If null, set to default (asset.name + " Konsekvensaanalyse")
      * @return
      */
+	@Transactional
     public DPIA createExternal(List<Asset> assets, String externalLink, String name, LocalDate userUpdatedDate,String responsibleUserUuid, String responsibleOuUuid) {
         DPIA dpia = new DPIA();
         dpia.setName(name);

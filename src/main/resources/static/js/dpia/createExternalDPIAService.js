@@ -27,10 +27,11 @@ class CreateExternalDPIAService {
         if (assetSelectElement !== null) {
 
             const assetChoices = initSelect(assetSelectElement);
+            const self = this;
             this.#updateTypeSelect(assetChoices, "", "ASSET");
             assetSelectElement.addEventListener("search",
                 function(event) {
-                    this.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
+                    self.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
                 },
                 false,
             );

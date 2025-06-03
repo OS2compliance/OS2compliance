@@ -42,9 +42,10 @@ class EditDPIAService {
 
         const assetChoices = initSelect(assetSelectElement);
         this.#updateTypeSelect(assetChoices, "", "ASSET");
+        const self = this;
         assetSelectElement.addEventListener("search",
             function(event) {
-                this.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
+                self.#updateTypeSelect(assetChoices, event.detail.value, "ASSET");
             },
             false,
         );

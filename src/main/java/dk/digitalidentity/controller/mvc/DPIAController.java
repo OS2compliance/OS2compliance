@@ -14,6 +14,7 @@ import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
@@ -164,14 +165,16 @@ public class DPIAController {
 
         DPIA dpia = dpiaService.find(dpiaId);
 
-        model.addAttribute("externalDPIA", new ExternalDPIADTO(
+		final User responsibleUser = dpia.getResponsibleUser();
+		final OrganisationUnit responsibleOu = dpia.getResponsibleOu();
+		model.addAttribute("externalDPIA", new ExternalDPIADTO(
 				dpia.getId(),
 				dpia.getExternalLink(),
 				dpia.getAssets().stream().map(a -> new ExternalDPIAOptionDTO(a.getId(), a.getName())).toList(),
 				dpia.getUserUpdatedDate(),
 				dpia.getName(),
-				new ExternalDPIAUserOptionDTO(dpia.getResponsibleUser().getUuid(), dpia.getResponsibleUser().getName()),
-				new ExternalDPIAUserOptionDTO(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName())
+				new ExternalDPIAUserOptionDTO(responsibleUser != null ? responsibleUser.getUuid() : null, responsibleUser != null ? responsibleUser.getName() : null),
+				new ExternalDPIAUserOptionDTO(responsibleOu != null ? responsibleOu.getUuid() : null, responsibleOu != null ? responsibleOu.getName() : null)
 		));
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
