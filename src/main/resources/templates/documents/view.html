@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (sweetalerts = true)}"></head>
 <body class="jumping">
 <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
 <script th:src="@{/js/document/document.js}" defer></script>
@@ -181,7 +181,7 @@
 
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${document.id})}"/>
 <div th:replace="~{fragments/addTags :: addTags(relatableId=${document.id})}"/>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true)}"/>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"/>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

@@ -120,7 +120,7 @@ public class KitosClientService {
     }
 
     /**
-     * Fetch all it-contract in use by the current municipal
+     * Fetch all it-systems in use by the current municipal
      */
     public List<ItSystemResponseDTO> fetchChangedItSystems(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_SYSTEM_OFFSET_SETTING_KEY,
