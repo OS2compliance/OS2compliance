@@ -140,7 +140,7 @@ public class TaskService {
             findLinkedDocument(task)
                 .ifPresent(d -> {
                     // Deadline was changed on the task, reflect this on the document next revision
-                    if (!d.getNextRevision().isEqual(task.getNextDeadline())) {
+                    if (d.getNextRevision() == null || !d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(task.getNextDeadline());
                     }
                 });
@@ -156,7 +156,7 @@ public class TaskService {
             // Check if we need to move date on related assets
             findLinkedDocument(task)
                 .ifPresent(d -> {
-                    if (d.getNextRevision().isEqual(task.getNextDeadline())) {
+                    if (d.getNextRevision() == null || d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(nextDeadline);
                     }
                 });
