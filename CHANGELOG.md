@@ -7,6 +7,47 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.2.0]
+
+### Added
+- (Ad-hoc) Mulighed for at vælge flere E-mail påmindelser
+- (Ad-hoc) De enkelte kontroller medtages i årshjulet
+- (Ad-hoc) Nyt kategoriseringsfelt på aktiver
+- (Ad-hoc) Tilføj mulighed for at trække excel rapport over hændelser
+- (Ad-hoc) Kolonne søgning tilføjet
+- (Ad-hoc) Ny administrativ side, hvor det er muligt at tilføje aktive system-typer.
+- (Syddjurs/Norddjurs) Ændringer til konsekvensvurderingsrapporten - Der tilføjes en liste af risikovurdering i rapporten
+- (Syddjurs/Norddjurs) Mulighed for indsættelse af billeder - Det skal være muligt at indsætte billeder i besvarelserne i konsekvensanalysen.
+- (Syddjurs/Norddjurs) Tilføjelser til risikovurderingsrapporten
+- (Syddjurs/Norddjurs) Konsekvensanalysen: Ændring i linkede felter
+- (Syddjurs/Norddjurs) Tilføjelse af eksterne risikovurdering
+- (Syddjurs/Norddjurs) Ændring af eksisterende DPIA
+- (Syddjurs/Norddjurs) Tilretning af aktiver -> DPIA-fanen
+- (Syddjurs/Norddjurs) Ny konsekvensanalyse detalje side
+- (Syddjurs/Norddjurs) Foranstaltninger genvej flyttes
+- (Syddjurs/Norddjurs) Konsekvensanalyse genvej flyttes
+- (Syddjurs/Norddjurs) Nyt konsekvensanalyser modul
+- (Syddjurs/Norddjurs) Ændringer til konsekvensvurderingsrapporten
+
+### Fixed
+- (Ad-hoc) Årshjulet tog alle opgaver i stedet for kun dem der var markeret til at blive inkluderet.
+- (Ad-hoc) Rediger trusselskatalog knappen virkede ikke
+- (Ad-hoc) Fjernelse af revisionsdato fra et dokument gav fejl
+- (Ad-hoc) Ikke muligt at slette risikovurderinger med " i navnet
+- (Ad-hoc) Ikke muligt at oprette tilsyn, hvis ansvarlig ikke er sat
+- (https://github.com/OS2compliance/OS2compliance/issues/191) Overfør inaktive rettigheder virkede ikke 
+- (https://github.com/OS2compliance/OS2compliance/issues/193) Hændelser - Manglende visning af svar ved Valgliste eller Valgliste (flere svar) (Syddjurs)
+- (https://github.com/OS2compliance/OS2compliance/issues/195) Sortering på Ubehandlet tilsyn virker ikke
+- (https://github.com/OS2compliance/OS2compliance/issues/196) DBS aktive vises flere gange
+- (https://github.com/OS2compliance/OS2compliance/issues/197) Bruger kan ikke lave tilknytninger
+
+## [2.1.0] - 2024-11-22
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-172) (Generelt) Links skal være klikbare.
+- (https://os2web.atlassian.net/browse/COMPLY-79)  (Aktiver/DPIA) Felt til DPO’s kommentarer.
+- (https://os2web.atlassian.net/browse/COMPLY-184) (Generelt) Ny brugerrolle med adgang til dashboard og ansvarlige opgaver. Skal kunne løse egne opgaver.
+- (Ad-hoc) Syddjurs: Flere tags kan udskrives på én gang.
+
 ## [2.0.0] - 2024-10-31
 
 ### Fixed

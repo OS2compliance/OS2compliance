@@ -19,7 +19,10 @@ public class AssetDTO {
     private String assessment;
     private Integer assessmentOrder;
     private String assetStatus;
+    private String assetCategory;
+    private Integer assetCategoryOrder;
     private String kitos;
     private boolean hasThirdCountryTransfer;
     private int registers;
+    private boolean changeable;
 }

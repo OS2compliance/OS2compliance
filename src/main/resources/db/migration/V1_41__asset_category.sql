@@ -1,0 +1,1 @@
+ALTER TABLE assets ADD COLUMN asset_category varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_danish_ci NULL;

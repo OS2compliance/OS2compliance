@@ -1,13 +1,9 @@
 package dk.digitalidentity.controller.rest;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.Map;
 
-import org.apache.commons.lang3.StringUtils;
+import dk.digitalidentity.security.RequireUser;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -18,10 +14,12 @@ import dk.digitalidentity.mapping.DBSOversightMapper;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
-import dk.digitalidentity.security.RequireUser;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -34,43 +32,20 @@ public class DBSOversightRestController {
 
 	@PostMapping("list")
 	@Transactional
-	public PageDTO<DBSOversightDTO> list(@RequestParam(name = "search", required = false) final String search,
-                                  @RequestParam(name = "page", required = false) final Integer page,
-                                  @RequestParam(name = "size", required = false) final Integer size,
-                                  @RequestParam(name = "order", required = false) final String order,
-                                  @RequestParam(name = "dir", required = false) final String dir) {
-		Sort sort = null;
-		if (StringUtils.isNotEmpty(order) && containsField(order)) {
-			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
-			sort = Sort.by(direction, order);
-		} else {
-            sort = Sort.by(Sort.Direction.ASC, "name");
-        }
-		final Pageable sortAndPage = PageRequest.of(page, size, sort);
-		Page<DBSOversightGrid> oversights = null;
-		if (StringUtils.isNotEmpty(search)) {
-		    //Pre search
-//		    Page<DBSOversightGrid> allOversights = dbsOversightGridDao.findAll(sortAndPage);
-//		    List<Long> extra = allOversights.getContent().stream().filter(o -> o.getDbsAssets().stream().anyMatch(a -> a.getName() != null && a.getName().contains(search))).map(x -> x.getId()).toList();
-		    final List<String> searchableProperties = Arrays.asList("name", "supplier", "supervisoryModel", "oversightResponsible", "lastInspection", "lastInspectionStatus", "outstandingSince", "localizedEnums");
-			// search and page
-			oversights = dbsOversightGridDao.findAllCustom(searchableProperties, search, sortAndPage, DBSOversightGrid.class);
-		} else {
-			// Fetch paged and sorted
-			oversights = dbsOversightGridDao.findAll(sortAndPage);
-		}
+	public PageDTO<DBSOversightDTO> list(@RequestParam(value = "page", defaultValue = "0") int page,
+                                         @RequestParam(value = "limit", defaultValue = "50") int limit,
+                                         @RequestParam(value = "order", required = false) String sortColumn,
+                                         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+                                         @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+        Page<DBSOversightGrid> oversights =  dbsOversightGridDao.findAllWithColumnSearch(
+            validateSearchFilters(filters, DBSOversightGrid.class),
+            null,
+            buildPageable(page, limit, sortColumn, sortDirection),
+            DBSOversightGrid.class
+        );
 
-		return new PageDTO<>(oversights.getTotalElements(), mapper.toDTO(oversights.getContent()));
+        return new PageDTO<>(oversights.getTotalElements(), mapper.toDTO(oversights.getContent()));
 	}
 
-	private boolean containsField(final String fieldName) {
-		return fieldName.equals("name")
-				|| fieldName.equals("supplier")
-				|| fieldName.equals("supervisoryModel")
-				|| fieldName.equals("oversightResponsible")
-				|| fieldName.equals("lastInspection")
-				|| fieldName.equals("lastInspectionStatus")
-				|| fieldName.equals("outstandingSince")
-				;
-	}
 }

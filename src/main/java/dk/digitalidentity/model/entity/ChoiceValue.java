@@ -7,6 +7,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -15,7 +16,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 
@@ -54,6 +57,11 @@ public class ChoiceValue {
     @ManyToMany(mappedBy = "values")
     @Builder.Default
     private Set<ChoiceList> lists = new HashSet<>();
+
+    @JsonIgnore
+    @OneToMany(mappedBy = "assetType")
+    @Builder.Default
+    private List<Asset> assetsWithType = new ArrayList<>();
 
     @Override
     public boolean equals(final Object o) {

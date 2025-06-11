@@ -3,7 +3,7 @@
         <div class="card-header toolbar">
             <h5 class="toolbar-start m-0">Tilknytninger</h5>
             <div class="toolbar-end">
-                <button th:unless="${completed}" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${relatableId}, data-index=${statIndex}" data-bs-toggle="modal" data-bs-target="#addRelationModal">Tilføj</button>
+                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:unless="${completed}" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${relatableId}, data-index=${statIndex}" data-bs-toggle="modal" data-bs-target="#addRelationModal">Tilføj</button>
             </div>
         </div>
         <div class="card-body">
@@ -37,6 +37,9 @@
                             <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).ASSET}" th:href="'/assets/' + ${relation.id}">
                                 <span th:text="${relation.name}"></span>
                             </a>
+                            <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).DBSASSET}" th:href="'/dbs/assets/'">
+                                <span th:text="${relation.name}"></span>
+                            </a>
                             <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).THREAT_ASSESSMENT}" th:href="'/risks/' + ${relation.id}">
                                 <span th:text="${relation.name}"></span>
                             </a>
@@ -47,8 +50,8 @@
                     </td>
                     <td th:text="${relation.relationType.getMessage()}" class="col-lg-2" />
                     <td class="col-lg-1">
-                        <i th:if="${!customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
-                        <i th:if="${customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
+                        <i sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:if="${!customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
+                        <i sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:if="${customDelete}" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" th:attr="data-relatableid=${relatableId}, data-relationid=${relation.id}, data-relationtype=${relation.relationType}"></i>
                     </td>
                 </tr>
                 </tbody>

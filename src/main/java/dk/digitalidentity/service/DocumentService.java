@@ -13,6 +13,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -75,7 +76,11 @@ public class DocumentService {
                 .anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
             ).findFirst().map(Task.class::cast).orElse(null);
         if (task != null) {
-            task.setNextDeadline(document.getNextRevision());
+            if (document.getNextRevision() != null) {
+                task.setNextDeadline(document.getNextRevision());
+            } else {
+                task.setNextDeadline(LocalDate.of(2099, 1,1));
+            }
             setTaskRevisionInterval(document, task);
         }
     }

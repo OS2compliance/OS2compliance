@@ -26,10 +26,10 @@
                         </div>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createIncidentDialog">
+                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createIncidentDialog">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny hændelse
                         </button>
-                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -51,9 +51,9 @@
                             <div class="card-header toolbar">
                                 <h5 class="toolbar-start m-0"></h5>
                                 <div class="toolbar-end">
-                                    <button id="editDescBtn" type="button" class="btn btn-secondary btn-xs" onclick="incidentViewService.setEditable('_dm-tabsIncident', true)">Rediger</button>
-                                    <button id="cancelBtn" type="button" onclick="incidentViewService.setEditable('_dm-tabsIncident', false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
-                                    <button id="saveBtn" th:form="${formId}" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                                    <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-xs" onclick="incidentViewService.setEditable('_dm-tabsIncident', true)">Rediger</button>
+                                    <button id="cancelBtn" th:if="${changeableIncident}" type="button" onclick="incidentViewService.setEditable('_dm-tabsIncident', false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                                    <button id="saveBtn" th:if="${changeableIncident}" th:form="${formId}" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                                 </div>
                             </div>
                             <div class="card-body">

@@ -2,7 +2,7 @@
 let userChoicesEditSelect = null;
 
 function formReset() {
-    const form = document.querySelector('form');
+const form = document.querySelector('form');
     form.reset();
 }
 
@@ -29,6 +29,8 @@ function editMode(enabled) {
         userChoicesEditSelect.enable();
         document.getElementById('saveEditBtn').hidden = false;
         document.getElementById('editBtn').hidden = true;
+        document.querySelector('.clickableDocLink').style.display = 'none'
+        document.querySelector('.editableDocLink').style.display = ''
     } else {
         document.querySelectorAll('.editField').forEach(elem => {
           elem.disabled = true;
@@ -36,6 +38,8 @@ function editMode(enabled) {
         userChoicesEditSelect.disable();
         document.getElementById('saveEditBtn').hidden = true;
         document.getElementById('editBtn').hidden = false;
+                document.querySelector('.clickableDocLink').style.display = ''
+                document.querySelector('.editableDocLink').style.display = 'none'
     }
 }
 

@@ -5,9 +5,9 @@
     <form id="dataprocessingAgreementForm" action="#" th:action="@{/assets/oversight}" method="post" class="needs-validation" novalidate>
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-                <button id="editDataAgreementBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataAgreementEditState(true)">Rediger</button>
-                <button id="cancelDataAgreementBtn" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataAgreementEditState(false)" hidden>Annuller</button>
-                <button id="saveDataAgreementBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                <button id="editDataAgreementBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataAgreementEditState(true)">Rediger</button>
+                <button id="cancelDataAgreementBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataAgreementEditState(false)" hidden>Annuller</button>
+                <button id="saveDataAgreementBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
                 <div class="row mb-3" th:object="${asset}">
                     <input th:field="${asset.id}" hidden>
                     <!--- Table 1 Data process agreement-->
@@ -50,12 +50,14 @@
                                 </td>
                                 <td>
                                     <select class="form-control form-select editField" th:field="*{supervisoryModel}" tabindex="-1" disabled>
+                                        <option value=""></option>
                                         <option th:each="model : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}" th:value="${model.name}" th:text="${model.message}"></option>
                                     </select>
                                 </td>
                                 <td>
                                     <div>
                                         <select id="nextInspectionSelectId" class="form-control form-select editField" th:field="*{nextInspection}" tabindex="-1" disabled  onchange="nextInspectionSelect()">
+                                            <option value=""></option>
                                             <option th:each="inspection : ${T(dk.digitalidentity.model.entity.enums.NextInspection).values()}" th:value="${inspection.name}" th:text="${inspection.message}"></option>
                                         </select>
                                     </div>

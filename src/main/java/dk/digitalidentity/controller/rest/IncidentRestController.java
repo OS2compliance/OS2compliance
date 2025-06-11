@@ -6,9 +6,8 @@ import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.model.entity.grid.DocumentGrid;
-import dk.digitalidentity.security.RequireAdminstrator;
+import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.transaction.Transactional;
@@ -34,21 +33,18 @@ import org.springframework.web.server.ResponseStatusException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 @Slf4j
 @RestController
 @RequestMapping("rest/incidents")
-@RequireUser
+@RequireSuperuserOrAdministrator
 @RequiredArgsConstructor
 public class IncidentRestController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
 
-    @RequireAdminstrator
+    @RequireAdministrator
     @GetMapping("questions")
     public List<IncidentFieldDTO> list() {
         return incidentMapper.toFieldDTOs(incidentService.getAllFields());
@@ -90,6 +86,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @RequireUser
     @PostMapping("list")
     public PageDTO<IncidentDTO> list(
         @RequestParam(name = "search", required = false) final String search,
@@ -117,6 +114,7 @@ public class IncidentRestController {
         return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
     }
 
+    @RequireUser
     @GetMapping("columns")
     public List<String> visibleColumns() {
         return incidentService.getAllFields().stream()

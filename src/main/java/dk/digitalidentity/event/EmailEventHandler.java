@@ -39,7 +39,11 @@ public class EmailEventHandler {
             return;
         }
         Transport transport = null;
-        log.info("Sending email: '" + event.getSubject() + "' to " + event.getEmail());
+        log.info("Sending email: '{}' to {}", event.getSubject(), event.getEmail());
+        if (event.getEmail() == null) {
+            log.warn("Email is null. Skipping email event");
+            return;
+        }
 
         try {
             final Properties props = System.getProperties();

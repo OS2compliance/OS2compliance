@@ -15,7 +15,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import java.util.concurrent.TimeUnit;
 
 @Configuration
-@EnableJdbcHttpSession
+@EnableJdbcHttpSession(maxInactiveIntervalInSeconds = 28800)
 @EnableJpaAuditing(auditorAwareRef = "auditorAware")
 public class AppConfig implements WebMvcConfigurer {
 

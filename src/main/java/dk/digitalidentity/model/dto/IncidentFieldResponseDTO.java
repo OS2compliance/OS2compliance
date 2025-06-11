@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class IncidentFieldResponseDTO {
+    private Long fieldId;
     private String question;
     private IncidentType incidentType;
     private String indexColumnName;

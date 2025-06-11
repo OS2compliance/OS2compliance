@@ -1,0 +1,103 @@
+<th:block th:fragment="dpia_details_screening"
+          lang="da"
+          xmlns:th="http://www.thymeleaf.org">
+
+    <div class="row mb-3">
+        <form id="dpiaForm" action="#" th:action="@{/assets/dpia}" th:object="${dpiaScreeningDTO}" method="post"
+              class="needs-validation" novalidate>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    <th class="col-lg-8"></th>
+                    <th class="col-lg-2"></th>
+                    <th class="col-lg-1"></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr class="bg-light" style="--bs-table-accent-bg: none;">
+                    <td colspan="3"><h5>Personoplysninger</h5></td>
+                </tr>
+                <tr th:each="question, itemStat : *{questions.?[choice.category == 'Personoplysninger']}">
+                    <td>
+                        <span th:text="${question.choice.name}"></span>
+                        <input th:name="|questions[${itemStat.index}].choice.identifier|"
+                               th:value="${question.choice.identifier}" hidden>
+                    </td>
+                    <td>
+                        <select class="form-control form-select editField" th:id="${question.choice.identifier}"
+                                onchange="assetDpiaService.handleAnswerChange(event)"
+                                th:attr="data-category=${question.choice.category}"
+                                th:name="|questions[${itemStat.index}].answer|" tabindex="-1">
+                            <option value=""></option>
+                            <option th:each="choice: ${question.choice.values}" th:value="${choice.identifier}"
+                                    th:selected="${question.answer == choice.identifier}"
+                                    th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
+                        </select>
+                    </td>
+                    <td>
+
+                    </td>
+                </tr>
+                <tr class="bg-light" style="--bs-table-accent-bg: none;">
+                    <td colspan="3"><h5>Behandling</h5></td>
+                </tr>
+                <tr th:each="question, itemStat : *{questions.?[choice.category == 'Behandling']}">
+                    <td>
+                        <span th:text="${question.choice.name}"></span>
+                        <input th:name="|questions[${itemStat.index + 3}].choice.identifier|"
+                               th:value="${question.choice.identifier}" hidden>
+                    </td>
+                    <td>
+                        <select class="form-control form-select editField" th:id="${question.choice.identifier}"
+                                onchange="assetDpiaService.handleAnswerChange(event)"
+                                th:name="|questions[${itemStat.index + 3}].answer|"
+                                th:attr="data-category=${question.choice.category}"
+                                tabindex="-1">
+                            <option value=""></option>
+                            <option th:each="choice: ${question.choice.values}" th:value="${choice.identifier}"
+                                    th:selected="${question.answer == choice.identifier}"
+                                    th:text="${choice.caption + ' ' + (choice.description ?: '')}">
+                            </option>
+                        </select>
+                    </td>
+                    <td>
+
+                    </td>
+                </tr>
+                <tr class="bg-light" style="--bs-table-accent-bg: none;">
+                    <td colspan="3"><h5>Nye teknologier</h5></td>
+                </tr>
+                <tr th:each="question, itemStat : *{questions.?[choice.category == 'Nye teknologier']}">
+                    <td>
+                        <span th:text="${question.choice.name}"></span>
+                        <input th:name="|questions[${itemStat.index + 9}].choice.identifier|"
+                               th:value="${question.choice.identifier}" hidden>
+                    </td>
+                    <td>
+                        <select class="form-control form-select editField" th:id="${question.choice.identifier}"
+                                onchange="assetDpiaService.handleAnswerChange(event)"
+                                th:attr="data-category=${question.choice.category}"
+                                th:name="|questions[${itemStat.index + 9}].answer|" tabindex="-1">
+                            <option value=""></option>
+                            <option th:each="choice: ${question.choice.values}" th:value="${choice.identifier}"
+                                    th:selected="${question.answer == choice.identifier}"
+                                    th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
+                        </select>
+                    </td>
+                    <td>
+
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+    </div>
+    <div class="row mb-3 ">
+        <div id="recommendationCard" class="card border-2 border-danger">
+            <h5 class="card-header">Anbefaling</h5>
+            <div class="card-body">
+                <h2 id="recommendation"></h2>
+            </div>
+        </div>
+    </div>
+</th:block>

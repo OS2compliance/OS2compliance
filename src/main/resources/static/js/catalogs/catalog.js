@@ -22,7 +22,7 @@ function CatalogService() {
     }
 
     this.editCatalog = function(identifier) {
-        fetch(`${formUrl}?id=${identifier}`)
+        fetch(`${edit}?id=${identifier}`)
             .then(response => response.text()
                 .then(data => {
                     let dialog = document.getElementById('editCatalogDialog');

@@ -21,12 +21,12 @@ function CreateRegisterService() {
                     editRegisterModal.show();
                     initFormValidationForForm('createForm');
                 }))
-            .catch(error => {toastService.error(error); console.log(error)});
+            .catch(error => {toastService.error(error); console.error(error)});
     }
 
     this.onLoaded = function() {
         choiceService.initUserSelect('createFormUserSelect', false);
-        initOUSelect('createFormOuSelect', false);
+        choiceService.initOUSelect('createFormOuSelect', false);
     }
 
 }
@@ -45,11 +45,11 @@ function EditRegisterService() {
                     createRegisterModal.show();
                     initFormValidationForForm('editForm');
                 }))
-            .catch(error => {toastService.error(error); console.log(error);});
+            .catch(error => {toastService.error(error); console.error(error);});
     }
 
     this.onLoaded = function() {
         choiceService.initUserSelect('editFormUserSelect', false);
-        initOUSelect('editFormOuSelect', false);
+        choiceService.initOUSelect('editFormOuSelect', false);
     }
 }

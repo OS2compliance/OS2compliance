@@ -7,6 +7,7 @@ import dk.digitalidentity.model.dto.ChoiceListDTO;
 import dk.digitalidentity.model.dto.ChoiceValueDTO;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -29,7 +30,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequireUser
+@RequireSuperuserOrAdministrator
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/choice-lists", consumes = "application/json", produces = "application/json")
 public class ChoiceListRestController {
@@ -73,6 +74,7 @@ public class ChoiceListRestController {
         return mapper.toDTO(savedEntity);
     }
 
+    @RequireUser
     @GetMapping("{identifier}")
     public ChoiceListDTO getList(@PathVariable("identifier") final String identifier) {
         final ChoiceList foundList = choiceListDao.findByIdentifier(identifier)

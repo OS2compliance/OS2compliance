@@ -1,14 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.Convert;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Index;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.EqualsAndHashCode;
@@ -17,8 +10,10 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 @Table(name = "users", indexes = {
@@ -29,7 +24,8 @@ import java.util.Set;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class User {
+public class User implements Serializable {
+
     @Id
     @Column
     private String uuid;
@@ -63,5 +59,12 @@ public class User {
         cascade = {CascadeType.PERSIST, CascadeType.REMOVE},
         mappedBy = "user")
     private Set<UserProperty> properties = new HashSet<>();
+
+    @PrePersist
+    public void onCreate() {
+        if (uuid == null) {
+            this.uuid = UUID.randomUUID().toString();
+        }
+    }
 
 }

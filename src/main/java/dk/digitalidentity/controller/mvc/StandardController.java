@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardsService;
+import dk.digitalidentity.service.SupportingStandardService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -45,7 +46,7 @@ public class StandardController {
     private final RelationService relationService;
     private final StandardSectionDao standardSectionDao;
     private final StandardTemplateDao standardTemplateDao;
-
+    private final SupportingStandardService supportingStandardService;
 
     record StandardSectionDTO(StandardSection standardSection,
                               List<Relatable> relatedDocuments,
@@ -159,10 +160,8 @@ public class StandardController {
     @Transactional
     @GetMapping("supporting/{id}")
     public String supportingPage(final Model model, @PathVariable final String id, @RequestParam(required = false) final StandardSectionStatus status) {
-        final StandardTemplate template = standardTemplateDao.findByIdentifier(id);
-        if (template == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND);
-        }
+        StandardTemplate template = supportingStandardService.lookup(id)
+            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("template", template);
         model.addAttribute("relationMap", buildRelationsMap(template));
         model.addAttribute("isNSIS", template.getIdentifier().toLowerCase().startsWith("nsis"));

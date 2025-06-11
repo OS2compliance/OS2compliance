@@ -7,7 +7,7 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
-import dk.digitalidentity.samlmodule.config.settings.DISAML_Configuration;
+import dk.digitalidentity.samlmodule.config.SamlModuleConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -24,7 +24,7 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class NotifyService {
-    private final DISAML_Configuration diSamlConfiguration;
+    private final SamlModuleConfiguration diSamlConfiguration;
     private final TaskService taskService;
     private final ApplicationEventPublisher eventPublisher;
     private final ResponsibleUserViewService responsibleUserViewService;
@@ -39,11 +39,7 @@ public class NotifyService {
             // Do not notify task already done
             return;
         }
-        if (task.getHasNotifiedResponsible() != null && task.getHasNotifiedResponsible()) {
-            log.warn("Task '{}' already notified", task.getName());
-            return;
-        }
-        task.setHasNotifiedResponsible(true);
+
 
         EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
         if (template.isEnabled()) {
@@ -81,7 +77,7 @@ public class NotifyService {
             if (StringUtils.hasLength(email)) {
                 List<ResponsibleUserView> responsibleUsers = responsibleUserViewService.findAllIn(newlyInactiveUuids);
                 if (!responsibleUsers.isEmpty()) {
-                    EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
+                    EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.INACTIVE_USERS);
                     if (template.isEnabled()) {
                         final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
                         final String url = baseUrl + "/admin/inactive";

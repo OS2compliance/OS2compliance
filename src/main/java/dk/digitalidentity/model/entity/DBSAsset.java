@@ -31,6 +31,12 @@ public class DBSAsset extends Relatable {
     @Column
     private LocalDate lastSync;
 
+    @Column
+    private String status;
+
+    @Column
+    private LocalDate nextRevision;
+
     @Override
     public RelationType getRelationType() {
         return RelationType.DBSASSET;

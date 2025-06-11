@@ -1,4 +1,5 @@
 test-result-*.docx
+application-dev.properties
 
 .DS_Store
 

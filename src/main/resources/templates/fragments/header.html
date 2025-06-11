@@ -20,7 +20,7 @@
 <link th:if="${textEditor == true}" rel="stylesheet" th:href="@{/vendor/ckeditor5/ckeditor5.css}" />
 
 <link rel="stylesheet" th:href="@{/css/global.css}" />
-<script type="importmap">
+<script th:if="${textEditor == true}" type="importmap">
     {
         "imports": {
             "ckeditor5": "/vendor/ckeditor5/ckeditor5.js",
@@ -30,7 +30,9 @@
 </script>
 <script th:if="${textEditor == true}" type="module">
     import { CreateCkEditor } from "/js/create-ckeditor.js";
+    import { CreateImageCkEditor } from "/js/create-image-ckeditor.js";
     window.CreateCkEditor = CreateCkEditor;
+    window.CreateImageCkEditor = CreateImageCkEditor;
 </script>
 
 </head>

@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function ViewTaskService() {
     this.userChoicesEditSelect = null;
     this.ouChoicesEditSelect = null;
+    this.nameField = null;
 
     this.init = function() {
 
@@ -18,6 +19,14 @@ function ViewTaskService() {
         initFormValidationForForm('editForm');
         initFormValidationForForm('completeTaskForm');
         initDatepicker("#deadlineBtn", "#deadline");
+    }
+
+    // In case this task is an oversight, a special oversight dialog can be shown
+    this.showOversightDialog = (source) => {
+        const assetId = source.dataset.assetId;
+        const url = `/assets/oversight/${assetId}/asset`;
+        oversightService.initOversightModal(null, 'asset', assetId)
+            .then(() => {oversightDialog.show()});
     }
 
     this.setEditMode = function(enabled) {
@@ -32,6 +41,7 @@ function ViewTaskService() {
             document.getElementById('completeBtn').hidden = true;
             document.getElementById('realLink').hidden = true;
             document.getElementById('linkField').hidden = false;
+            this.nameField.disabled = false
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -43,6 +53,7 @@ function ViewTaskService() {
             document.getElementById('completeBtn').hidden = false;
             document.getElementById('realLink').hidden = false;
             document.getElementById('linkField').hidden = true;
+            this.nameField.disabled = true
         }
     }
 
@@ -50,6 +61,7 @@ function ViewTaskService() {
         const self = this;
         this.userChoicesEditSelect = choiceService.initUserSelect('userSelect');
         this.ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
+        this.nameField = document.getElementById("taskNameField")
 
         this.userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.userChoicesEditSelect);
@@ -114,6 +126,6 @@ function ViewTaskService() {
                         }
                     }), 'id', 'name', true);
                 }))
-            .catch(error => toastService.error(error));
+            .catch(defaultErrorHandler);
     }
 }

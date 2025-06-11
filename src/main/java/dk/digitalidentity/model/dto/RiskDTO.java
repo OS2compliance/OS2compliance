@@ -20,4 +20,7 @@ public class RiskDTO {
     private String assessment;
     private Integer assessmentOrder;
     private String threatAssessmentReportApprovalStatus;
+    private boolean changeable;
+    private boolean fromExternalSource;
+    private String externalLink;
 }

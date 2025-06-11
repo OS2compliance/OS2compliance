@@ -56,6 +56,6 @@ public class SupplierService {
     }
 
     public Optional<Supplier> findByCvr(final String cvr) {
-        return supplierDao.findByCvr(cvr);
+        return supplierDao.findFirstByCvr(cvr);
     }
 }

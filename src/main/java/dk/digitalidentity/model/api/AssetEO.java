@@ -21,14 +21,12 @@ import static dk.digitalidentity.model.api.Examples.ASSET_DPA_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_DPA_INSPECTION_SETTING_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_DPA_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_DPA_SUPERVISION_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_SUPERVISION_FREQ_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_EMERGENCY_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_NAME_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_PRODUCT_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_RE_ESTAB_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_SOC_CRITICALITY_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_STATUS_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_TYPE_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ID_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.OFFSET_DATE_TIME_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.USER_EXAMPLE;
@@ -41,9 +39,6 @@ import static dk.digitalidentity.model.api.Examples.VERSION_EXAMPLE;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 @Schema(name = "Asset")
 public class AssetEO {
-    public enum AssetType {
-        IT_SYSTEM, MODULE, SERVER, SERVICE
-    }
     public enum DataProcessingAgreementStatus {
         YES, NO, ON_GOING, NOT_RELEVANT
     }
@@ -53,7 +48,7 @@ public class AssetEO {
         SWORN_STATEMENT, INDEPENDENT_AUDIT, SOC_STATEMENT, DSD, DBS
     }
     public enum NextInspection {
-        DATE, MONTH, QUARTER, HALF_YEAR, YEAR, EVERY_2_YEARS, EVERY_3_YEARS
+        DATE, MONTH, QUARTER, HALF_YEAR, YEAR, EVERY_2_YEARS, EVERY_3_YEARS, DBS
     }
     public enum AssetStatus {
         READY, ON_GOING, NOT_STARTED
@@ -79,8 +74,8 @@ public class AssetEO {
     private List<UserEO> systemOwners;
     @Schema(description = "Asset description", example = ASSET_DESCRIPTION_EXAMPLE)
     private String description;
-    @Schema(description = "Type of the asset", example = ASSET_TYPE_EXAMPLE)
-    private AssetType assetType;
+    @Schema(description = "Type of the asset")
+    private AssetTypeEO assetType;
     @Schema(description = "Status of the data processing agreement", example = ASSET_DPA_EXAMPLE)
     private DataProcessingAgreementStatus dataProcessingAgreementStatus;
     @Schema(description = "Date of the data processing agreement", example = ASSET_DPA_DATE_EXAMPLE)

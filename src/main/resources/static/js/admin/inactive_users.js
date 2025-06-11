@@ -3,7 +3,6 @@ let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, 
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;
     let transferTo = transferToSelect.value;
-    console.log("from " + transferFrom + " to " + transferTo);
 
     let data = {
                  "transferFrom": transferFrom,
@@ -22,24 +21,29 @@ function transferResponsibility() {
     }).catch(error => {toastService.error(error)});
 }
 
-function initModalWithDefaultTransferFrom(transferFromUuid) {
-        transferFromChoice.setChoiceByValue(transferFromUuid);
-        var transferResponsibilityBootstrapModal = new bootstrap.Modal(transferResponsibilityModal);
+function initModalWithDefaultTransferFrom(elem) {
+    let uuid = elem.dataset.uuid;
+    let name = elem.dataset.name;
+    transferFromChoice.setChoices([{
+        label: name,
+        value: uuid,
+        selected: true
+    }]);
+    var transferResponsibilityBootstrapModal = new bootstrap.Modal(transferResponsibilityModal);
+    transferFromChoice.disable();
 
-        transferFromChoice.disable();
-
-        transferResponsibilityBootstrapModal.show();
+    transferResponsibilityBootstrapModal.show();
 }
 
 function pageLoaded() {
 
     transferFromSelect = document.getElementById('transferFrom');
     if(transferFromSelect !== null) {
-        transferFromChoice = choiceService.initUserSelect('transferFrom');
+        transferFromChoice = choiceService.initUserSelect('transferFrom', false);
     }
     transferToSelect = document.getElementById('transferTo');
     if(transferToSelect !== null) {
-        transferToChoice = choiceService.initUserSelect('transferTo');
+        transferToChoice = choiceService.initUserSelect('transferTo', false);
     }
 
     transferResponsibilityModal = document.getElementById('transferResponsibilityModal');
@@ -106,7 +110,7 @@ function pageLoaded() {
                                 url = `/risks/${responsibleFor.id}`;
                                 break;
                             case "STANDARD_SECTION":
-                                url = `/standards/supporting/${responsibleFor.standardIdentifier}`;
+                                url = `/standards/supporting/${responsibleFor.id}`;
                                 break;
                             default:
                                 url = "#"; // Fallback link, hvis typen ikke er genkendt
@@ -125,7 +129,8 @@ function pageLoaded() {
                 width: '90px',
                 formatter: (cell, row) => {
                     const uuid = row.cells[0]['data'];
-                    const transferButton = `<button type="button" title="Overfør ansvar" class="btn btn-icon btn-xs me-1" onclick="initModalWithDefaultTransferFrom('${uuid}')"><i class="ti-angle-double-right fs-5"></i></button>`;
+                    const name = row.cells[1]['data'];
+                    const transferButton = `<button type="button" title="Overfør ansvar" class="btn btn-icon btn-xs me-1" data-name="${name}" data-uuid="${uuid}" onclick="initModalWithDefaultTransferFrom(this)"><i class="ti-angle-double-right fs-5"></i></button>`;
                     return gridjs.html(transferButton);
                 }
             }

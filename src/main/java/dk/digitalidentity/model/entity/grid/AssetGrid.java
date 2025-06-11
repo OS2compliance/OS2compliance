@@ -1,7 +1,8 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.AssetType;
+
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -30,9 +31,8 @@ public class AssetGrid {
     @Column
     private String supplier;
 
-	@Column
-	@Enumerated(EnumType.STRING)
-	private AssetType assetType;
+    @Column
+    private String assetType;
 
     @Column
     private String responsibleUserNames;
@@ -49,6 +49,13 @@ public class AssetGrid {
 
 	@Column
 	private Integer assetStatusOrder;
+
+    @Column
+    @Enumerated(EnumType.STRING)
+    private AssetCategory assetCategory;
+
+    @Column
+    private Integer assetCategoryOrder;
 
     @Column(name = "kitos")
     private boolean kitos;

@@ -16,7 +16,16 @@ public class SessionExcludeFilter extends OncePerRequestFilter {
     @SuppressWarnings("NullableProblems")
     @Override
     protected void doFilterInternal(final HttpServletRequest request, final HttpServletResponse response, final FilterChain filterChain) throws ServletException, IOException {
-        if (request.getRequestURI().startsWith("/api/") || request.getRequestURI().startsWith("/manage/") || request.getRequestURI().equals("/")) {
+        if (request.getRequestURI().startsWith("/api/")
+            || request.getRequestURI().startsWith("/manage/")
+            || request.getRequestURI().equals("/")
+            || request.getRequestURI().startsWith("/webjars/")
+            || request.getRequestURI().startsWith("/vendor/")
+            || request.getRequestURI().startsWith("/css/")
+            || request.getRequestURI().startsWith("/js/")
+            || request.getRequestURI().startsWith("/img/")
+            || request.getRequestURI().startsWith("/favicon.ico")
+        ){
             request.setAttribute("org.springframework.session.web.http.SessionRepositoryFilter.FILTERED", Boolean.TRUE);
         }
         filterChain.doFilter(request, response);

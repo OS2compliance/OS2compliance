@@ -1,20 +1,19 @@
 package dk.digitalidentity.integration.dbs;
 
-import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Optional;
-
 import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
 import dk.dbs.api.model.Supplier;
-import org.springframework.scheduling.annotation.EnableScheduling;
-import org.springframework.scheduling.annotation.Scheduled;
-import org.springframework.stereotype.Component;
-
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.EnableScheduling;
+import org.springframework.scheduling.annotation.Scheduled;
+import org.springframework.stereotype.Component;
+
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component

@@ -26,8 +26,8 @@ function checkCvr(cvr) {
             if (json.zipCode) {
                 inputPostNr.value = json.zipCode;
             }
-            if (json.by) {
-                inputBy.value = json.by;
+            if (json.city) {
+                inputBy.value = json.city;
             }
             if (json.country) {
                 inputLand.value = json.country;

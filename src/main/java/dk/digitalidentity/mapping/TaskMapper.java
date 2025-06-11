@@ -1,10 +1,13 @@
 package dk.digitalidentity.mapping;
 
+import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -25,13 +28,34 @@ public interface TaskMapper {
                 .taskRepetition(nullSafe(() -> taskGrid.getTaskRepetition().getMessage()))
                 .taskRepetitionOrder(taskGrid.getTaskRepetitionOrder())
                 .taskType(nullSafe(() -> taskGrid.getTaskType().getMessage()))
-                .taskResult(nullSafe(() -> taskGrid.getTaskResult()))
+                .taskResult(nullSafe(() -> taskGrid.getTaskResult().getValue()))
                 .taskResultOrder(taskGrid.getTaskResultOrder())
                 .completed(nullSafe(taskGrid::isCompleted))
                 .tags(nullSafe(() -> taskGrid.getTags()))
+                .changeable(false)
                 .build();
     }
 
-    List<TaskDTO> toDTO(List<TaskGrid> taskGrids);
+    //provides a mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
+    default TaskDTO toDTO(final TaskGrid taskGrid, boolean superuser, String principalUuid) {
+        TaskDTO taskDTO = toDTO(taskGrid);
+        if(superuser || principalUuid.equals(taskGrid.getResponsibleUser().getUuid())) {
+            taskDTO.setChangeable(true);
+        }
+        return taskDTO;
+    }
+
+    default List<TaskDTO> toDTO(List<TaskGrid> taskGrid) {
+        List<TaskDTO> taskDTOS = new ArrayList<>();
+        taskGrid.forEach(a -> taskDTOS.add(toDTO(a)));
+        return taskDTOS;
+    }
+
+    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
+    default List<TaskDTO> toDTO(List<TaskGrid> taskGrid, boolean superuser, String principalUuid) {
+        List<TaskDTO> taskDTOS = new ArrayList<>();
+        taskGrid.forEach(a -> taskDTOS.add(toDTO(a, superuser, principalUuid)));
+        return taskDTOS;
+    }
 
 }

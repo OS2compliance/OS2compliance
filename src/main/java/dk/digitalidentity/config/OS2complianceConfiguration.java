@@ -23,6 +23,7 @@ public class OS2complianceConfiguration {
     private boolean schedulingEnabled = true;
     private boolean seedData = true;
     private String authorityUser;
+    private String authoritySuperuser;
     private String authorityAdministrator;
     @NestedConfigurationProperty
     private Municipal municipal = new Municipal();

@@ -9,6 +9,10 @@
 	vertical-align: middle;
 }
 
+#assetsDatatable td[data-column-id="kategori"] {
+	vertical-align: middle;
+}
+
 .is-invalid2 {
 	border: 1px solid #dc3545 !important;
 }

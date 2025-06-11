@@ -7,9 +7,9 @@
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
-                    <button id="editPurposeBtn" type="button" class="btn btn-secondary btn-xs" onclick="registerPurposeService.setPurposeEditState(true)">Rediger</button>
-                    <button id="cancelPurposeBtn" type="button" onclick="registerPurposeService.setPurposeEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
-                    <button id="savePurposeBtn" form="editPurposeId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
+                    <button id="editPurposeBtn" th:if="${changeableRegister}" type="button" class="btn btn-secondary btn-xs" onclick="registerPurposeService.setPurposeEditState(true)">Rediger</button>
+                    <button id="cancelPurposeBtn" th:if="${changeableRegister}" type="button" onclick="registerPurposeService.setPurposeEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="savePurposeBtn" th:if="${changeableRegister}" form="editPurposeId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                 </div>
             </div>
             <div class="card-body pt-0">

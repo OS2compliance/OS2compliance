@@ -2,7 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
 <body class="jumping">
-<script th:src="@{/js/document/document.js}" defer></script>
+<script th:src="@{/js/document/index.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/documents.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -21,10 +21,10 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createDocumentDialog">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createDocumentDialog">
                             <i class="ti-plus"></i> <span class="vr"></span> Nyt dokument
                         </button>
-                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -39,7 +39,21 @@
                         <div class="card mb-3">
                             <div class="card-body">
                             	<div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                <div id="documentsDatatable"></div>
+                                <div class="mt-3" id="documentsDatatable"></div>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="documentTypeStatusSearchSelector" id="documentTypeStatusSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
+
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="statusSearchSelector" id="statusSearchSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DocumentStatus).values()}"
+                                            th:value="${option}" th:text="${option.message}"></option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -61,166 +75,11 @@
         var gridDocumentsUrl = [[@{/rest/documents/list}]];
         var viewUrl = [[@{/documents/}]];
         var deleteUrl = [[@{/documents/}]];
+        var isSuperuser = [[${isSuperuser}]]
     +]*/
 
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
-
-    const updateUrl = (prev, query) => {
-        return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
-    };
-
-
-    function createDocumentFormLoaded() {
-        initDatepicker("#nextRevisionBtn", "#nextRevision");
-        userChoicesEditSelect = choiceService.initUserSelect('userSelect');
-        choiceService.initDocumentRelationSelect();
-        choiceService.initTagSelect('createDocumentTagsSelect');
-
-        userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
-            checkInputField(userChoicesEditSelect);
-        });
-        initFormValidationForForm("createDocumentModal", () => validateChoices(userChoicesEditSelect));
-    }
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        createDocumentFormLoaded();
-
-        let gridConfig = {
-            className: defaultClassName,
-            search: {
-                keyword: searchService.getSavedSearch(),
-                server: {
-                    url: (prev, keyword) => updateUrl(prev, `search=${keyword}`)
-                },
-                debounceTimeout: 1000
-            },
-            pagination: {
-                limit: 50,
-                server: {
-                    url: (prev, page, size) => updateUrl(prev, `size=${size}&page=${page}`)
-                }
-            },
-            sort: {
-                enabled: true,
-                multiColumn: false,
-                server: {
-                    url: (prev, columns) => {
-                        if (!columns.length) return prev;
-                        const columnIds = ['id', 'name', 'documentTypeOrder', 'responsibleUser.name', 'nextRevision', 'statusOrder'];
-                        const col = columns[0]; // multiColumn false
-                        const order = columnIds[col.index];
-                        return updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                    }
-                }
-            },
-            columns: [
-                {
-                    name: "id",
-                    hidden: true
-                },
-                {
-                    name: "Titel",
-                    formatter: (cell, row) => {
-                        const url = viewUrl + row.cells[0]['data'];
-                        return gridjs.html(`<a href="${url}">${cell}</a>`);
-                    }
-                },
-                {
-                    name: "Dokumentype",
-                    width: '120px'
-                },
-                {
-                    name: "Ansvarlig"
-                },
-                {
-                    name: "Næste revidering",
-                    width: '100px',
-                },
-                {
-                    name: "Status",
-                    width: '100px',
-                    formatter: (cell, row) => {
-                        var status = cell;
-                        if (cell === "Ikke startet") {
-                            status = '<div class="d-block badge bg-warning">' + cell + '</div>';
-                        } else if (cell === "I gang") {
-                            status = '<div class="d-block badge bg-info">' + cell + '</div>';
-                        } else if (cell === "Klar") {
-                            status = '<div class="d-block badge bg-success">' + cell + '</div>';
-                        }
-
-                        return gridjs.html(status, 'div')
-                    },
-                },
-                {
-                    id: 'handlinger',
-                    name: 'Handlinger',
-                    sort: 0,
-                    width: '90px',
-                    formatter: (cell, row) => {
-                        const documentId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${documentId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                    }
-                }
-            ],
-            server:{
-                url: gridDocumentsUrl,
-                method: 'POST',
-                headers: {
-                    'X-CSRF-TOKEN': token
-                },
-                then: data => data.content.map(document =>
-                    [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status ]
-                ),
-                total: data => data.totalCount
-            },
-            language: {
-                'search': {
-                    'placeholder': 'Søg'
-                },
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'results': 'Opgaver',
-                    'of': 'af',
-                    'to': 'til',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'page': (page) => `Side ${page}`
-                }
-            }
-        };
-        const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "documentsDatatable" ));
-        searchService.initSearch(grid, gridConfig);
-        gridOptions.init(grid, document.getElementById("gridOptions"));
-    });
-
-    function deleteClicked(documentId, name) {
-        Swal.fire({
-          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra DOCUMENT slettes også.`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#03a9f4',
-          cancelButtonColor: '#df5645',
-          confirmButtonText: 'Ja',
-          cancelButtonText: 'Nej'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`${deleteUrl}${documentId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                    .then(() => {
-                        window.location.reload();
-                    });
-          }
-        })
-    }
     /*]]>*/
 </script>
 

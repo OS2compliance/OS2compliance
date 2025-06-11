@@ -1,0 +1,78 @@
+<div th:fragment="create_external_dpia_modal" class="modal fade" id="createExternalDPIAModal" tabindex="-1"
+     aria-hidden="true" xmlns:th="http://www.thymeleaf.org">
+
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 th:if="${externalDPIA == null}" class="modal-title">Opret Extern DPIA</h5>
+                <h5 th:unless="${externalDPIA == null}" class="modal-title">Rediger Extern DPIA</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="createExternalDPIAForm" class="row g-3 needs-validation" action="#"
+                      th:action="@{/rest/dpia/external/create}" method="post" novalidate>
+                    <div class="row mt-3">
+                        <label for="linkInput" class="col-sm-4 col-form-label">Eksternt Link</label>
+                        <div class="col-sm-8">
+                            <input id="linkInput" class="form-control form-input" th:value="${externalDPIA != null && externalDPIA != '' ? externalDPIA.externalLink : '' }"/>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="assetSelectRow">
+                        <label for="externalDPIAAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedAsset"
+                                    data-trigger="" id="externalDPIAAssetSelect" hidden="" tabindex="-1" multiple>
+                                <th:block th:if="${externalDPIA != null && externalDPIA != ''}">
+                                    <option  th:each="asset : ${externalDPIA.assets}"
+                                            th:value="${asset.id}" th:text="${asset.name}" selected></option>
+                                </th:block>
+                            </select>
+                            <div class="invalid-feedback" id="assetError">Der skal vælges mindst et aktiv</div>
+                        </div>
+                    </div>
+                    <div class="row g-3">
+                        <label for="externalTitleInput" class="col-sm-4 col-form-label">Titel</label>
+                        <div class="col-sm-8">
+                            <input type="text" class="form-control" id="externalTitleInput" name="title" placeholder="Titel" required th:value="${externalDPIA != null ? externalDPIA.title : ''}"/>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalUserUpdateDateField" class="col-sm-4 col-form-label">Godkendelsesdato</label>
+                        <div class="col-sm-8">
+                            <input id="externalUserUpdateDateField" class="form-control" type="text" th:value="${externalDPIA != null ? #temporals.format(externalDPIA.userUpdatedDate, 'dd/MM-yyyy') : ''}">
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalUserSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${externalDPIA != null && externalDPIA != ''}">
+                                    <option th:if="${externalDPIA.responsibleUser != null}" th:value="${externalDPIA.responsibleUser.uuid}" th:text="${externalDPIA.responsibleUser.name}" selected></option>
+                                </th:block>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="externalOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" data-trigger="" name="afdeling" id="externalOuSelect" hidden="" tabindex="-1" required>
+                                <th:block th:if="${externalDPIA != null && externalDPIA != ''}">
+                                    <option th:if="${externalDPIA.responsibleOu != null}" th:value="${externalDPIA.responsibleOu.uuid}" th:text="${externalDPIA.responsibleOu.name}" selected></option>
+                                </th:block>
+                            </select>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" onclick="createExternalDPIAService.formReset()" class="btn btn-secondary"
+                        data-bs-dismiss="modal">Annuller
+                </button>
+                <button th:if="${externalDPIA != null && externalDPIA != ''}" type="button" form="createExternalDPIAForm" class="btn btn-primary"
+                        th:attr="onclick=${'createExternalDPIAService.submitNewExternalDPIA('+ externalDPIA.dpiaId +')'}">Gem</button>
+                <button th:if="${externalDPIA == null || externalDPIA == ''}" type="button" form="createExternalDPIAForm" class="btn btn-primary"
+                        th:attr="onclick='createExternalDPIAService.submitNewExternalDPIA(null)'">Gem</button>
+            </div>
+        </div>
+    </div>
+</div>

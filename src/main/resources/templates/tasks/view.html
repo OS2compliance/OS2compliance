@@ -4,10 +4,12 @@
 <body class="jumping">
 
 <script th:src="@{/js/task/view.js}" defer></script>
+<script th:src="@{/js/oversight/oversight-service.js}" defer></script>
 <script th:src="@{/js/tag-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
+    <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
     <section id="content" class="content">
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
@@ -19,11 +21,12 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${task.name}"></li>
                             </ol>
                         </nav>
-                        <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>
+<!--                        <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>-->
+                        <input id="taskNameField" name="taskTitle" class="page-title transparent-input mb-0 mt-2" th:field="*{name}" disabled />
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
                     </div>
@@ -45,11 +48,11 @@
 
                     <div class="tab-content">
                         <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
-                            <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
-                                    <button th:unless="${completed}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button th:unless="${completed}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
-                                    <button th:unless="${completed}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.empty}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
+                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.present}" id="oversightBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" onclick="viewTaskService.showOversightDialog(this)" th:attr="data-asset-id=${oversightAsset.get().id}">Udfør tilsyn</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">
@@ -107,7 +110,7 @@
                                     <label for="description" class="col-sm-2 col-form-label">Beskrivelse</label>
                                     <div class="col-sm-10">
                                         <div class="input-group">
-                                            <textarea id="description" class="form-control editField" placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+                                            <textarea id="description" class="form-control editField" placeholder="Indtast beskrivelse" th:field="*{description}" rows="8"></textarea>
                                             <div class="invalid-feedback">Der skal indtastes en beskrivelse</div>
                                         </div>
                                     </div>
@@ -174,7 +177,6 @@
                                         </div>
                                     </div>
                                 </th:block>
-                            </form>
 
                             <div class="row">
                                 <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
@@ -191,10 +193,12 @@
             </div>
         </div>
     </section>
+                            </form>
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}"></nav>
 </div>
 
+<div id="oversightDialog" class="modal fade" aria-hidden="true"></div>
 <th:block th:with="myFancyReferral=${param.referral}">
 <div th:replace="~{tasks/completeTask :: completeTask (referral=${myFancyReferral})}"></div>
 </th:block>
@@ -208,6 +212,8 @@
 
     /*[+
         var taskId = [[${task.id}]];
+        var oversightUrl = [[@{/assets/oversight}]];
+        var oversightDialog;
     +]*/
     /*]]>*/
 </script>
