@@ -1,5 +1,5 @@
 ALTER TABLE dpia
-    ADD COLUMN created_at datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    ADD COLUMN created_at datetime(6)  NOT NULL DEFAULT CURRENT_TIMESTAMP(6),
     ADD COLUMN created_by varchar(255) NOT NULL DEFAULT 'Ukendt',
     ADD COLUMN name varchar(768) NOT NULL DEFAULT 'Konsekvensanalyse',
     ADD COLUMN updated_at datetime(6) null,
