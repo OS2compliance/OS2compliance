@@ -28,6 +28,7 @@ public class AssetOversight {
     private long id;
     @ManyToOne
     @JoinColumn(name = "responsible_uuid")
+	@JsonIgnore
     private User responsibleUser;
     @Column
     @Enumerated(EnumType.STRING)

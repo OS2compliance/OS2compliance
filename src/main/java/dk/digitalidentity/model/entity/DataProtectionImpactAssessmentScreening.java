@@ -1,9 +1,12 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -29,15 +32,16 @@ public class DataProtectionImpactAssessmentScreening {
     @Column(name = "id")
     private Long id;
 
-    @Column(name = "consequence_link")
-    private String consequenceLink;
-
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
     @OneToOne
-    @JoinColumn(name = "asset_id")
+    @JoinColumn(name = "dpia_id")
     @JsonIgnore
-    private Asset asset;
+    private DPIA dpia;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private DPIAScreeningConclusion conclusion;
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude

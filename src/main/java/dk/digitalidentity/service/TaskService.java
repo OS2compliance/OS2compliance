@@ -99,7 +99,7 @@ public class TaskService {
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
-        return taskDao.findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(date);
+        return taskDao.findTaskForYearWheel(date);
     }
 
     /**
@@ -140,7 +140,7 @@ public class TaskService {
             findLinkedDocument(task)
                 .ifPresent(d -> {
                     // Deadline was changed on the task, reflect this on the document next revision
-                    if (!d.getNextRevision().isEqual(task.getNextDeadline())) {
+                    if (d.getNextRevision() == null || !d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(task.getNextDeadline());
                     }
                 });
@@ -156,7 +156,7 @@ public class TaskService {
             // Check if we need to move date on related assets
             findLinkedDocument(task)
                 .ifPresent(d -> {
-                    if (d.getNextRevision().isEqual(task.getNextDeadline())) {
+                    if (d.getNextRevision() == null || d.getNextRevision().isEqual(task.getNextDeadline())) {
                         d.setNextRevision(nextDeadline);
                     }
                 });
@@ -190,9 +190,9 @@ public class TaskService {
         return relatedTasks;
     }
 
-    public List<TaskDTO> buildDPIARelatedTasks(final Asset asset, final boolean onlyNotCompleted) {
+    public List<TaskDTO> buildDPIARelatedTasks(final long dpiaId, final boolean onlyNotCompleted) {
         final List<TaskDTO> relatedTasks = new ArrayList<>();
-        final List<Task> tasks = findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + asset.getId());
+        final List<Task> tasks = findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpiaId);
         for (final Task task : tasks) {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;

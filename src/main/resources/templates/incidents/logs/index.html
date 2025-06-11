@@ -60,13 +60,16 @@
                                     </div>
                                     <div class="col-lg-2 col-md-2 col-sm-2">
                                         <button class="btn btn-success" type="button" onclick="incidentGridService.generateReport()" style="z-index: 2; position: relative">Print rapport</button>
+                                        <a class="btn btn-success" onclick="incidentGridService.generateExcel()" type="button" style="z-index: 2; position: relative">Hent excel fil</a>
                                     </div>
                                     <div class="col-lg-3 col-md-1"></div>
                                 </div>
                                 <div th:replace="~{fragments/gridOptions :: dropdown}">
 
                                 </div>
-                                <div id="incidentsTable"></div>
+                                <div class="grid-scroll-wrapper">
+                                    <div id="incidentsTable"></div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -93,7 +96,6 @@
     var superuser = [[${superuser}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
     /*]]>*/
 </script>
 

@@ -1,0 +1,31 @@
+<th:block th:fragment="dpia_details_consequenceanalysis"
+          lang="da"
+          xmlns:th="http://www.thymeleaf.org">
+                    <div class="row mb-3">
+                        <strong>Konsekvensanalyse vedrørende databeskyttelse</strong>
+                        <p>En konsekvensanalyse er et krav efter databeskyttelsesreglerne. Analysen er et værktøj, som gør det muligt at arbejde med de risici, som en behandlingsaktivitet kan indebære, på en systematisk måde.</p>
+                        <p>Analysen skal gennemføres, hvis en behandlingsaktivitet sandsynligvis vil indebære høje risici for de registrerede.</p>
+                        <p>Reglerne om konsekvensanalyse og eventuel høring af Datatilsynet skal sikre, at ingen behandling, hvor der er en iboende høj risiko, igangsættes, uden man har arbejdet med og nedbragt sådanne risici.</p>
+
+                        <strong>Hvordan gennemføres analysen?</strong>
+                        <p>En analyse bør iværksættes tidligt i et projektforløb, og inden en behandlingsaktivitet iværksættes. Analysen bør ske sideløbende med projektforløbet og omfatte følgende:</p>
+                        <ol style="margin-left: 15px;">
+                            <li>Vurdering af, om en konsekvensanalyse er nødvendig</li>
+                            <li>Beskrivelse af behandlingsaktiviteten</li>
+                            <li>Vurdering af lovlighed</li>
+                            <li>Identifikation og vurdering af risici</li>
+                            <li>Identifikation og implementering af relevante mitigerende foranstaltninger</li>
+                            <li>Rådførelse med relevante interessenter</li>
+                            <li>Planlægning af, hvornår og hvordan relevante foranstaltninger implementeres</li>
+                            <li>Regelmæssig ajourføring</li>
+                        </ol>
+
+                        <strong>Tjekliste til kvalitetssikring</strong>
+                        <fieldset id="qualityCheckboxesContainer">
+                            <div class="mt-2" th:each="question : ${dpiaQualityCheckList.values}">
+                                <input class="form-check-input qualityCheck" type="checkbox" name="dpiaQuality[]" th:checked="${#lists.contains(qualityassuranceCheckedValues, question.identifier)}" th:value="${question.identifier}">&nbsp;<span th:text="${question.caption}"></span>
+                            </div>
+                        </fieldset>
+
+                    </div>
+</th:block>

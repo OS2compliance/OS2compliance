@@ -1,23 +1,9 @@
 package dk.digitalidentity.integration.dbs;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZonedDateTime;
-import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-
-import dk.digitalidentity.dao.DBSAssetDao;
-import org.springframework.stereotype.Service;
-
 import dk.dbs.api.model.Document;
 import dk.dbs.api.model.ItSystem;
 import dk.dbs.api.model.Supplier;
+import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.dao.DBSOversightDao;
 import dk.digitalidentity.dao.DBSSupplierDao;
 import dk.digitalidentity.integration.dbs.exception.DBSSynchronizationException;
@@ -36,6 +22,23 @@ import dk.digitalidentity.service.TaskService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
+import java.time.temporal.IsoFields;
+import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 
@@ -44,15 +47,15 @@ import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 @RequiredArgsConstructor
 public class DBSService {
     private final DBSAssetDao dbsAssetDao;
-	private final DBSSupplierDao dbsSupplierDao;
-	private final DBSOversightDao dbsOversightDao;
-	private final RelationService relationService;
-	private final AssetService assetService;
-	private final TaskService taskService;
+    private final DBSSupplierDao dbsSupplierDao;
+    private final DBSOversightDao dbsOversightDao;
+    private final RelationService relationService;
+    private final AssetService assetService;
+    private final TaskService taskService;
 
     @Transactional
-	public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
-		//Filter only itSystems related to this cvr
+    public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
+        //Filter only itSystems related to this cvr
         final List<ItSystem> relevantItSystems = allItSystems.stream()
             .filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
             .toList();
@@ -79,6 +82,10 @@ public class DBSService {
                 asset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
+                asset.setStatus(itSystem.getStatus().getValue());
+                if (itSystem.getNextRevision() != null) {
+                    asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                }
                 dbsAssetDao.save(asset);
             })
             .count();
@@ -92,6 +99,12 @@ public class DBSService {
                         dbsAsset.setName(itSystem.getName());
                         dbsAsset.setSupplier(dbsSupplierDao.findByDbsId(itSystem.getSupplier().getId())
                             .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
+						if (itSystem.getStatus() != null) {
+							dbsAsset.setStatus(itSystem.getStatus().getValue());
+						}
+                        if (itSystem.getNextRevision() != null) {
+                            dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+                        }
                         dbsAsset.setLastSync(lastSync);
                     });
             })
@@ -143,9 +156,9 @@ public class DBSService {
     }
 
     @Transactional
-	public void syncOversight(final List<Document> allDocuments) {
+    public void syncOversight(final List<Document> allDocuments) {
 
-		//Remove documents without suppliers
+        //Remove documents without suppliers
         allDocuments.removeIf(d -> d.getPath().getSupplier() == null);
 
         final List<DBSOversight> existingDBSOversights = dbsOversightDao.findAll();
@@ -174,7 +187,7 @@ public class DBSService {
                 boolean changes = false;
                 if (!Objects.equals(existingDBSOversight.getName(), document.getName())) {
                     existingDBSOversight.setName(document.getName());
-                    changes  = true;
+                    changes = true;
                 }
                 if (document.getLocked() != null && !Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
                     existingDBSOversight.setLocked(document.getLocked());
@@ -191,7 +204,7 @@ public class DBSService {
         dbsOversightDao.saveAll(toBeAdded);
         log.debug("Updating {} oversights.", toBeUpdated.size());
         dbsOversightDao.saveAll(toBeUpdated);
-	}
+    }
 
     public Optional<ZonedDateTime> findNewestUpdatedTime(final List<Document> allDocuments) {
         return allDocuments.stream()
@@ -202,7 +215,8 @@ public class DBSService {
     @Transactional
     public void oversightResponsible() {
         final LocalDate now = LocalDate.now();
-        final LocalDate nowPlus14Days = now.plusDays(14);
+        final LocalDate nowPlus30Days = now.plusDays(30);
+
         // Only look back 10 days so we do not create task for everything the first time we activate DBS integration
         final List<DBSOversight> oversights = dbsOversightDao
             .findByCreatedGreaterThanAndTaskCreatedFalse(LocalDateTime.now().minusDays(10));
@@ -212,62 +226,93 @@ public class DBSService {
             log.debug("Oversight has {} assigned assets.", dbsOversight.getSupplier().getAssets().size());
 
             for (DBSAsset dbsAsset : dbsOversight.getSupplier().getAssets()) {
-                List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
-                log.debug("Found {} related assets.", assetRelations.size());
 
-                List<Asset> assets = assetRelations.stream()
-                    .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
-                    .map(assetService::findById)
-                    .filter(Optional::isPresent)
-                    .map(Optional::get)
-                    .toList();
+                //Only update/create related task if itsystem status changes to published
+                if (dbsAsset.getStatus() != null && dbsAsset.getStatus().equals("published")) {
 
-                for (Asset asset : assets) {
-                    if (asset.getOversightResponsibleUser() == null) {
-                        log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponsible is null.", asset.getId(), dbsOversight.getId());
-                        continue;
-                    }
+                    List<Relation> assetRelations = relationService.findRelatedToWithType(dbsAsset, RelationType.ASSET);
+                    log.debug("Found {} related assets.", assetRelations.size());
 
-                    // Check if there is an open task already
-                    relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
-                        .map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
+                    List<Asset> assets = assetRelations.stream()
+                        .map(r -> r.getRelationAType().equals(RelationType.ASSET) ? r.getRelationAId() : r.getRelationBId())
+                        .map(assetService::findById)
                         .filter(Optional::isPresent)
                         .map(Optional::get)
-                        .filter(t -> t.getTaskType() == TaskType.TASK
-                            && t.getNextDeadline().isAfter(now)
-                            && t.getName().contains("- DBS tilsyn"))
-                        .findFirst().ifPresentOrElse((task) -> {
-                            // Task already exist add our file to the existing task
-                            task.setDescription(task.getDescription() + dbsLink(dbsOversight));
-                        },
-                            () -> {
-                                // Create a new task
-                                Task task = new Task();
-                                task.setName(dbsOversight.getSupplier().getName() + " - DBS tilsyn");
-                                task.setNextDeadline(nowPlus14Days);
-                                task.setResponsibleUser(asset.getOversightResponsibleUser());
-                                task.setTaskType(TaskType.TASK);
-                                task.setRepetition(TaskRepetition.NONE);
-                                task.setDescription("Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
-                                    + "Filer kan findes i DBS portalen her:\n"
-                                    + dbsLink(dbsOversight)
-                                );
-                                log.debug("Created task: {} {} {}", task.getName(), task.getNextDeadline().format(DateTimeFormatter.ofPattern("yyyy-MM-dd")), task.getResponsibleUser().getName());
-                                taskService.saveTask(task);
-                                relationService.addRelation(task, dbsAsset);
-                                relationService.addRelation(task, asset);
+                        .toList();
 
-                            });
-                    dbsOversight.setTaskCreated(true);
-                    dbsOversightDao.save(dbsOversight);
+                    for (Asset asset : assets) {
+                        if (asset.getOversightResponsibleUser() == null) {
+                            log.warn("Skipping Asset: {} for DBSOversight: {} because OversightResponsible is null.", asset.getId(), dbsOversight.getId());
+                            continue;
+                        }
+
+                        // Check if there is an open task already
+                        relationService.findRelatedToWithType(dbsAsset, RelationType.TASK).stream()
+                            .map(r -> taskService.findById(r.getRelationAType() == RelationType.TASK ? r.getRelationAId() : r.getRelationBId()))
+                            .filter(Optional::isPresent)
+                            .map(Optional::get)
+                            .filter(t -> t.getTaskType() == TaskType.TASK
+                                && t.getNextDeadline().isAfter(now)
+                                && t.getName().contains("- DBS tilsyn"))
+                            .findFirst().ifPresentOrElse((task) -> {
+                                    // Task already exist add our file to the existing task
+                                    task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
+
+                                    //set link to the folder containing the documents
+                                    task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
+                                },
+                                () -> {
+                                    // Create a new task
+                                    Task task = new Task();
+                                    task.setName(getTaskName(asset));
+                                    task.setNextDeadline(nowPlus30Days);
+                                    task.setResponsibleUser(asset.getOversightResponsibleUser());
+                                    task.setTaskType(TaskType.TASK);
+                                    task.setRepetition(TaskRepetition.NONE);
+                                    task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
+                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUser().getName());
+                                    taskService.saveTask(task);
+                                    relationService.addRelation(task, dbsAsset);
+                                    relationService.addRelation(task, asset);
+
+                                });
+                        dbsOversight.setTaskCreated(true);
+                        dbsOversightDao.save(dbsOversight);
+
+                    }
                 }
             }
         }
     }
 
-    private static String dbsLink(final DBSOversight dbsOversight) {
-//        return "<a href=\"https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\">" + dbsOversight.getName() + "</a>\n";
-        return "https://www.dbstilsyn.dk/document/" + dbsOversight.getId() + "/download\n";
+    // Generate task using name format: ”Leverandør” – ”Aktiv” – DBS Tilsyn
+    private static String getTaskName(final Asset asset) {
+        return (asset.getSupplier() != null ? (asset.getSupplier().getName() +  " - ") : "") + asset.getName() + " - DBS tilsyn";
+    }
+
+    private static String baseDBSTaskDescription(final DBSOversight dbsOversight) {
+        return "Udfør tilsyn af " + dbsOversight.getSupplier().getName() + "\n"
+            + "Følgende filer kan findes på DBS-portalen:\n";
+    }
+
+    private LocalDate nextRevisionQuarterToDate(String revisionValue) {
+        if (revisionValue == null) {
+            return null;
+        }
+        if (!revisionValue.contains("Q")) {
+            // eg. "Efter behov"
+            return LocalDate.of(2099, 1, 1);
+        }
+
+        DateTimeFormatter formatter = new DateTimeFormatterBuilder()
+            .appendValue(ChronoField.YEAR, 4)
+            .appendLiteral(" Q")
+            .appendValue(IsoFields.QUARTER_OF_YEAR, 1)
+            .parseDefaulting(IsoFields.DAY_OF_QUARTER, 31)
+            .toFormatter();
+        return LocalDate.parse(revisionValue, formatter)
+            .plusMonths(2)
+            .with(TemporalAdjusters.lastDayOfMonth());
     }
 
 }

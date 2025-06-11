@@ -4,7 +4,8 @@ import com.lowagie.text.DocumentException;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
-import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.dto.IncidentDTO;
+import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
@@ -12,11 +13,13 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
+import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
@@ -73,6 +76,7 @@ public class ReportController {
     private final AssetService assetService;
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
+    private final DPIAService dpiaService;
 
     @GetMapping
     public String reportList(final Model model) {
@@ -81,7 +85,7 @@ public class ReportController {
     }
 
     @GetMapping("incidents")
-    public String tagReport(final Model model,
+    public String incidents(final Model model,
                             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
                             @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
         final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
@@ -91,6 +95,25 @@ public class ReportController {
         model.addAttribute("from", from);
         model.addAttribute("to", to);
         return "reports/incidentReport";
+    }
+
+    @GetMapping("incidents/excel")
+    public ModelAndView incidentsExcel(final HttpServletResponse response,
+                                       @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
+                                       @RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
+        final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
+        final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
+        final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
+        final List<IncidentDTO> allIncidentDTOs = incidentMapper.toDTOs(allIncidents.getContent());
+        response.setContentType("application/ms-excel");
+        response.setHeader("Content-Disposition", "attachment; filename=\"Incidents.xls\"");
+        final Map<String, Object> model = new HashMap<>();
+        model.put("incidents", allIncidentDTOs);
+        model.put("fields", incidentService.getAllFields());
+        model.put("from", fromDT);
+        model.put("to", toDT);
+
+        return new ModelAndView(new IncidentsXlsView(), model);
     }
 
     @GetMapping("tags")
@@ -194,34 +217,88 @@ public class ReportController {
     }
 
     @GetMapping("dpia")
-    public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "assetId") final Long assetId,
+    public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "dpiaId") final Long dpiaId,
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
-        Asset asset = assetService.findById(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        DPIA dpia = dpiaService.find(dpiaId);
         if (type.equals("PDF")) {
-            byte[] byteData = assetService.getDPIAPdf(asset);
-            response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + asset.getName() + ".pdf");
+            byte[] byteData = assetService.getDPIAPdf(dpia);
+            response.addHeader("Content-disposition", "attachment;filename=konsekvensanalyse vedr " + dpia.getName() + ".pdf");
             response.setContentType("application/pdf");
             response.getOutputStream().write(byteData);
             response.flushBuffer();
         } else if (type.equals("ZIP")) {
-            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + asset.getName() + ".zip\"")
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
                 .body(out -> {
                         var zipOutputStream = new ZipOutputStream(out);
 
                         // add dpia pdf
                         try {
-                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + asset.getName() + ".pdf");
+                            ZipEntry dpiaFile = new ZipEntry("konsekvensanalyse vedr " + dpia.getName() + ".pdf");
                             zipOutputStream.putNextEntry(dpiaFile);
-                            zipOutputStream.write(assetService.getDPIAPdf(asset));
+                            zipOutputStream.write(assetService.getDPIAPdf(dpia));
                         } catch (DocumentException e) {
-                            log.warn("Could not generate pdf for dpia for asset with id " + asset.getId() + ". Exeption: "
+                            log.warn("Could not generate pdf for dpia for asset with id " + dpia.getId() + ". Exeption: "
                                 + e.getMessage());
                         }
 
                         // Add pdfs for selected threatAssessment
-                        if (asset.getDpia().getCheckedThreatAssessmentIds() != null) {
-                            List<String> selectedIds = Arrays.asList(asset.getDpia().getCheckedThreatAssessmentIds().split(","));
+                        if (dpia.getCheckedThreatAssessmentIds() != null) {
+                            String[] selectedIds = dpia.getCheckedThreatAssessmentIds().split(",");
+                            for (String threatAssessmentIdAsString : selectedIds) {
+                                long threatAssessmentId = Long.parseLong(threatAssessmentIdAsString);
+                                ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
+                                if (threatAssessment != null) {
+                                    try {
+                                        ZipEntry file = new ZipEntry("risikovurdering " + threatAssessment.getName() + ".pdf");
+                                        zipOutputStream.putNextEntry(file);
+                                        zipOutputStream.write(threatAssessmentService.getThreatAssessmentPdf(threatAssessment));
+                                    } catch (DocumentException e) {
+                                        log.warn("Could not generate pdf for threat assessment with id " + threatAssessmentId + ". Exeption: "
+                                            + e.getMessage());
+                                    }
+                                }
+                            }
+                        }
+
+                        zipOutputStream.close();
+                    }
+                );
+        }
+
+        return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping("dpia/screening")
+    public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaScreeningReport(@RequestParam(name = "dpiaId") final Long dpiaId,
+                                                                          @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
+                                                                          final HttpServletResponse response) throws IOException {
+        DPIA dpia = dpiaService.find(dpiaId);
+//        Asset asset = dpia.getAssets();
+        if (type.equals("PDF")) {
+            byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
+            response.addHeader("Content-disposition", "attachment;filename=screening vedr " + dpia.getName() + ".pdf");
+            response.setContentType("application/pdf");
+            response.getOutputStream().write(byteData);
+            response.flushBuffer();
+        } else if (type.equals("ZIP")) {
+            return ResponseEntity.ok().header("Content-Disposition", "attachment; filename=\"konsekvensanalyse vedr " + dpia.getName() + ".zip\"")
+                .body(out -> {
+                        var zipOutputStream = new ZipOutputStream(out);
+
+                        // add dpia pdf
+                        try {
+                            ZipEntry dpiaFile = new ZipEntry("screening vedr " + dpia.getName() + ".pdf");
+                            zipOutputStream.putNextEntry(dpiaFile);
+                            zipOutputStream.write(assetService.getDPIAScreeningPdf(dpia));
+                        } catch (DocumentException e) {
+                            log.warn("Could not generate pdf for dpia for asset with id " + dpia.getId() + ". Exeption: "
+                                + e.getMessage());
+                        }
+
+                        // Add pdfs for selected threatAssessment
+                        if (dpia.getCheckedThreatAssessmentIds() != null) {
+                            String[] selectedIds = dpia.getCheckedThreatAssessmentIds().split(",");
                             for (String threatAssessmentIdAsString : selectedIds) {
                                 long threatAssessmentId = Long.parseLong(threatAssessmentIdAsString);
                                 ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);

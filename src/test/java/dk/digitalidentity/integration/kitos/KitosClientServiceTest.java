@@ -15,9 +15,9 @@ import dk.kitos.api.model.OrganizationResponseDTO;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
@@ -43,19 +43,19 @@ import static org.mockito.Mockito.doReturn;
 @ContextConfiguration(classes = {OS2complianceConfiguration.class, KitosClientService.class, KitosMapperImpl.class})
 @ActiveProfiles("test")
 public class KitosClientServiceTest {
-    @MockBean
+    @MockitoBean
     private ApiV2ItSystemApi itSystemApiMock;
-    @MockBean
+    @MockitoBean
     private ApiV2ItSystemUsageApi itSystemUsageApiMock;
-    @MockBean
+    @MockitoBean
     private ApiV2OrganizationApi organizationApiMock;
-    @MockBean
+    @MockitoBean
     private ApiV2ItSystemUsageRoleTypeApi systemUsageRoleTypeApiMock;
-    @MockBean
+    @MockitoBean
     private ApiV2ItContractApi contractApiMock;
-    @MockBean
+    @MockitoBean
     private ApiV2DeltaFeedApi deltaFeedApiMock;
-    @MockBean
+    @MockitoBean
     private SettingsService settingsServiceMock;
 
     @Autowired

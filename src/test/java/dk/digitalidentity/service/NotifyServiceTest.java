@@ -12,9 +12,9 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.context.event.ApplicationEvents;
 import org.springframework.test.context.event.RecordApplicationEvents;
 
@@ -41,13 +41,13 @@ public class NotifyServiceTest {
     private NotifyService notifyService;
     @Autowired
     private ApplicationEvents events;
-    @MockBean
+    @MockitoBean
     private TaskService taskService;
-    @MockBean
+    @MockitoBean
     private ResponsibleUserViewService responsibleUserViewService;
-    @MockBean
+    @MockitoBean
     private SettingsService settingsService;
-    @MockBean
+    @MockitoBean
     private EmailTemplateDao emailTemplateDao;
 
     @Test

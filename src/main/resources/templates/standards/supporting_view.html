@@ -182,7 +182,7 @@
         var templateIdentifier = [[${template.identifier}]];
         var testMap = [[${relationMap}]]
     +]*/
-
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     document.addEventListener("DOMContentLoaded", function(event) {
         supportingStandartsViewLoaded();
         addRelationFormLoaded();

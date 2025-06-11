@@ -25,3 +25,18 @@
 #tasksDatatable td[data-column-id="resultat"] {
     vertical-align: middle;
 }
+
+.transparent-input {
+    line-height: 1.2;
+    background-color: transparent;
+    /*outline: -webkit-focus-ring-color auto 1px;*/''
+    box-shadow: inset 0 0 2px white;
+    border-radius: 0.5rem;
+}
+
+.transparent-input:disabled {
+    background-color: transparent;
+    outline: transparent;
+    /*border-width: 2px;*/
+    border-style: none;
+}

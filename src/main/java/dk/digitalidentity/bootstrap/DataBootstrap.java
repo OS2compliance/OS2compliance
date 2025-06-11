@@ -10,12 +10,14 @@ import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
+import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Value;
@@ -48,7 +50,6 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 @RequiredArgsConstructor
 public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent> {
     private final ChoiceListImporter choiceImporter;
-    private final ThreatCatalogImporter threatCatalogImporter;
     private final StandardTemplateImporter templateImporter;
     private final TagDao tagDao;
     private final RegisterImporter registerImporter;
@@ -59,6 +60,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final ChoiceValueDao valueDao;
     private final PlatformTransactionManager transactionManager;
     private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
+	private final DPIAService dpiaService;
 
     @Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -89,6 +91,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(18, this::seedV18);
         incrementAndPerformIfVersion(19, this::seedV19);
         incrementAndPerformIfVersion(20, this::seedV20);
+        incrementAndPerformIfVersion(21, this::seedV21);
+        incrementAndPerformIfVersion(22, this::seedV22);
+    }
+
+    @SneakyThrows
+    private void seedV20() {
+
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -103,7 +112,17 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         });
     }
 
-    private void seedV20() {
+	private void seedV22() {
+		dpiaService.findAll()
+				.forEach(dpia -> {
+					if (dpia.getDpiaScreening() != null) {
+						dpia.getDpiaScreening().setConclusion(dpiaService.calculateScreeningConclusion(dpia.getDpiaScreening().getDpiaScreeningAnswers()));
+						dpiaService.save(dpia);
+					}
+				});
+	}
+
+    private void seedV21() {
         settingsService.createSetting(NotificationSetting.SEVENDAYSBEFORE.getValue(), "true" , "notification", true);
         settingsService.createSetting(NotificationSetting.ONEDAYBEFORE.getValue(), "false" , "notification", true);
         settingsService.createSetting(NotificationSetting.ONDAY.getValue(), "false" , "notification", true);
@@ -272,11 +291,6 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             choiceImporter.importList("./data/choices/data-processing-receiver-list.json");
             choiceImporter.importList("./data/choices/data-processing-supplier-accept-list.json");
 
-            threatCatalogImporter.importCatalog("./data/threats/catalog_none.json");
-            threatCatalogImporter.importCatalog("./data/threats/catalog_a.json");
-            threatCatalogImporter.importThreats("./data/threats/catalog_a_values.json");
-            threatCatalogImporter.importCatalog("./data/threats/catalog_b.json");
-            threatCatalogImporter.importThreats("./data/threats/catalog_b_values.json");
             templateImporter.importStandardTemplate("./data/standards/iso27001.json");
             templateImporter.importStandardSections("./data/standards/iso27001_sections.json");
             templateImporter.importStandardTemplate("./data/standards/iso27002.json");

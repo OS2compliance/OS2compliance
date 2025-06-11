@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -16,6 +17,10 @@ import java.util.stream.Collectors;
 public class ChoiceService {
     private final ChoiceValueDao choiceValueDao;
     private final ChoiceListDao choiceListDao;
+
+    public Optional<ChoiceList> findChoiceList(long id) {
+        return choiceListDao.findById(id);
+    }
 
     public ChoiceService(final ChoiceValueDao choiceValueDao, final ChoiceListDao choiceListDao) {
         this.choiceValueDao = choiceValueDao;
@@ -42,6 +47,42 @@ public class ChoiceService {
         return choiceList.getValues().stream()
             .sorted(Comparator.comparing(ChoiceValue::getIdentifier))
             .collect(Collectors.toList());
+    }
+
+    public List<ChoiceList> getAllCustomizableChoiceLists() {
+        return choiceListDao.findByCustomizableTrue();
+    }
+
+    public ChoiceList save(ChoiceList choiceList) {
+        return choiceListDao.save(choiceList);
+    }
+
+    public ChoiceValue save(ChoiceValue choiceValue) {
+        return choiceValueDao.save(choiceValue);
+    }
+
+    public ChoiceValue update(long id, String caption) {
+        ChoiceValue foundValue = choiceValueDao.findById(id)
+            .orElseThrow();
+        boolean changed = false;
+        if (!Objects.equals(caption, foundValue.getCaption())) {
+            foundValue.setCaption(caption);
+            changed = true;
+        }
+
+        if (changed) {
+            return choiceValueDao.save(foundValue);
+        }
+        return foundValue;
+    }
+
+    public void delete (long id) {
+        choiceValueDao.deleteById(id);
+    }
+
+    public ChoiceList getAssetTypeChoiceList(){
+        return choiceListDao.findByIdentifier("asset-type")
+            .orElseThrow();
     }
 
 }

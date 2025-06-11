@@ -77,7 +77,7 @@ public class NotifyService {
             if (StringUtils.hasLength(email)) {
                 List<ResponsibleUserView> responsibleUsers = responsibleUserViewService.findAllIn(newlyInactiveUuids);
                 if (!responsibleUsers.isEmpty()) {
-                    EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_REMINDER);
+                    EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.INACTIVE_USERS);
                     if (template.isEnabled()) {
                         final String baseUrl = diSamlConfiguration.getSp().getBaseUrl();
                         final String url = baseUrl + "/admin/inactive";

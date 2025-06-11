@@ -21,14 +21,13 @@ import static dk.digitalidentity.model.api.Examples.ASSET_DPA_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_DPA_INSPECTION_SETTING_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_DPA_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_DPA_SUPERVISION_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_SUPERVISION_FREQ_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_EMERGENCY_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_NAME_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_PRODUCT_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_RE_ESTAB_LINK_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_SOC_CRITICALITY_EXAMPLE;
 import static dk.digitalidentity.model.api.Examples.ASSET_STATUS_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_TYPE_EXAMPLE;
+
 
 @Data
 @Builder
@@ -44,8 +43,8 @@ public class AssetCreateEO {
     private List<UserWriteEO> systemOwners;
     @Schema(description = "Asset description", example = ASSET_DESCRIPTION_EXAMPLE)
     private String description;
-    @Schema(description = "Type of the asset", example = ASSET_TYPE_EXAMPLE)
-    private AssetEO.AssetType assetType;
+    @Schema(description = "Type of the asset")
+    private AssetTypeUpdateEO assetType;
     @Schema(description = "Status of the data processing agreement", example = ASSET_DPA_EXAMPLE)
     private AssetEO.DataProcessingAgreementStatus dataProcessingAgreementStatus;
     @Schema(description = "Date of the data processing agreement", example = ASSET_DPA_DATE_EXAMPLE)

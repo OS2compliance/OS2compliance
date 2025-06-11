@@ -9,6 +9,7 @@
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
+    <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
     <section id="content" class="content">
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
@@ -20,7 +21,8 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${task.name}"></li>
                             </ol>
                         </nav>
-                        <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>
+<!--                        <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>-->
+                        <input id="taskNameField" name="taskTitle" class="page-title transparent-input mb-0 mt-2" th:field="*{name}" disabled />
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
@@ -46,7 +48,6 @@
 
                     <div class="tab-content">
                         <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
-                            <form id="editForm" action="#" th:action="@{/tasks/edit}" th:object="${task}" method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button th:unless="${completed}" th:if="${changeableTask}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
                                     <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
@@ -109,7 +110,7 @@
                                     <label for="description" class="col-sm-2 col-form-label">Beskrivelse</label>
                                     <div class="col-sm-10">
                                         <div class="input-group">
-                                            <textarea id="description" class="form-control editField" placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+                                            <textarea id="description" class="form-control editField" placeholder="Indtast beskrivelse" th:field="*{description}" rows="8"></textarea>
                                             <div class="invalid-feedback">Der skal indtastes en beskrivelse</div>
                                         </div>
                                     </div>
@@ -176,7 +177,6 @@
                                         </div>
                                     </div>
                                 </th:block>
-                            </form>
 
                             <div class="row">
                                 <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
@@ -193,6 +193,7 @@
             </div>
         </div>
     </section>
+                            </form>
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}"></nav>
 </div>

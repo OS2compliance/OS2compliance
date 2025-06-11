@@ -15,7 +15,7 @@ public interface SupplierDao extends JpaRepository<Supplier, Long> {
 	@Query("select s from Supplier s where s.name like :search or s.cvr like :search")
 	Page<Supplier> searchForSupplier(@Param("search") final String search, final Pageable pageable);
 
-    Optional<Supplier> findByCvr(final String cvr);
+    Optional<Supplier> findFirstByCvr(final String cvr);
 
     Optional<Supplier> findByNameIgnoreCase(final String name);
 

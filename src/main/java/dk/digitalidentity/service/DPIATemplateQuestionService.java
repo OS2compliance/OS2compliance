@@ -5,7 +5,6 @@ import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,5 +24,9 @@ public class DPIATemplateQuestionService {
 
     public List<DPIATemplateQuestion> findAll() {
         return dpiaTemplateQuestionDao.findAll();
+    }
+
+    public List<DPIATemplateQuestion> findByAnswerTemplateNotNull() {
+        return dpiaTemplateQuestionDao.findByAnswerTemplateNotNull();
     }
 }

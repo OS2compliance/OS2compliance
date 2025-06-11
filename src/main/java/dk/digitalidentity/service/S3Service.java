@@ -17,6 +17,7 @@ import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 import software.amazon.awssdk.services.s3.model.S3Exception;
 
 import java.io.IOException;
+import java.io.InputStream;
 
 @Service
 @Slf4j
@@ -59,6 +60,25 @@ public class S3Service {
 				.key(key)
 				.build());
 		return response.readAllBytes();
+    }
+
+    public InputStream downloadAsStream (String key) {
+        final String bucket = config.getS3().getBucketName();
+        try {
+            s3Client.headObject(HeadObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build());
+        } catch (S3Exception e) {
+            if (e.statusCode() == 404) {
+                log.debug("Not found. Bucket: " + bucket + " Key: " + key);
+            }
+            return null;
+        }
+        return s3Client.getObject(GetObjectRequest.builder()
+            .bucket(bucket)
+            .key(key)
+            .build());
     }
 
 	public void delete(String key) {

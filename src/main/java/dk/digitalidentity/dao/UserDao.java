@@ -1,5 +1,6 @@
 package dk.digitalidentity.dao;
 
+import dk.digitalidentity.dao.grid.SearchRepository;
 import dk.digitalidentity.model.entity.User;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -13,9 +14,11 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
-public interface UserDao extends JpaRepository<User, String>  {
+public interface UserDao extends JpaRepository<User, String>, SearchRepository {
     @Query("select u.uuid from User u where u.active=true")
     Set<String> findAllActiveUuids();
+
+	Page<User> findAllByActiveTrue(Pageable page);
 
     List<User> findAllByUuidInAndActiveTrue(final Collection<String> uuids);
 

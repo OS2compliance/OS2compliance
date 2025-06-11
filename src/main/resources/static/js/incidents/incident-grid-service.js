@@ -34,6 +34,10 @@ function IncidentGridService() {
             });
     }
 
+    this.generateExcel = () => {
+        window.location.href = `/reports/incidents/excel?from=${this.filterFrom}&to=${this.filterTo}`;
+    }
+
     this.generateReport = () => {
         fetch(`/reports/incidents?from=${this.filterFrom}&to=${this.filterTo}`)
             .then(response => {
@@ -125,7 +129,6 @@ function IncidentGridService() {
         this.incidentGrid.render(document.getElementById("incidentsTable"));
         searchService.initSearch(this.incidentGrid, this.currentConfig);
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
-
     }
 
     this.mapRow = (field) => {
@@ -158,11 +161,13 @@ function IncidentGridService() {
                 formatter: (cell, row) => {
                     const url = viewUrl + row.cells[0]['data'];
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
-                }
+                },
+                width: '250px'
             },
             {
                 id: "createdAt",
-                name: "Oprettet"
+                name: "Oprettet",
+                width: '120px'
             }];
         columnNames.forEach(c => {
             this.columns.push({

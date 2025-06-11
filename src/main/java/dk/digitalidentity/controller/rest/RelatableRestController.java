@@ -6,7 +6,6 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.RelatableMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RelatableDTO;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Relatable;
@@ -46,9 +45,8 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
+
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
@@ -103,8 +101,9 @@ public class RelatableRestController {
         }
     }
 
+	public record RelatedPrecautionDTO(Long id,String name,String type,String typeMessage,String description){}
     @GetMapping("autocomplete/relatedprecautions")
-    public PageDTO<RelatableDTO> autocompletePrecautions(@RequestParam("search") final String search, @RequestParam("threatId") final long threatId, @RequestParam("threatType") final ThreatDatabaseType threatType, @RequestParam("threatIdentifier") final String threatIdentifier, @RequestParam("riskId") final long riskId) {
+    public PageDTO<RelatedPrecautionDTO> autocompletePrecautions(@RequestParam("search") final String search, @RequestParam("threatId") final long threatId, @RequestParam("threatType") final ThreatDatabaseType threatType, @RequestParam("threatIdentifier") final String threatIdentifier, @RequestParam("riskId") final long riskId) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
@@ -113,20 +112,31 @@ public class RelatableRestController {
 
         ThreatAssessmentResponse response;
         if (threatType.equals(ThreatDatabaseType.CATALOG)) {
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			//find the relevant threat in the catalog
+            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream()
+					.filter(t -> t.getIdentifier().equals(threatIdentifier))
+					.findAny()
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
             response = threatAssessment.getThreatAssessmentResponses().stream()
                 .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
                 .findAny()
                 .orElse(null);
+			//If no response to the threat is found, create a blank one
             if (response == null) {
                 response = threatAssessmentService.createResponse(threatAssessment, threat, null);
             }
         } else if (threatType.equals(ThreatDatabaseType.CUSTOM)) {
-            final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(threatId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			//find the relevant threat in the catalog
+            final CustomThreat threat = threatAssessment.getCustomThreats().stream()
+					.filter(t -> t.getId().equals(threatId))
+					.findAny()
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream()
                 .filter(r -> r.getCustomThreat() != null && Objects.equals(r.getCustomThreat().getId(), threat.getId()))
                 .findAny()
                 .orElse(null);
+			//If no response to the threat is found, create a blank one
             if (response == null) {
                 response = threatAssessmentService.createResponse(threatAssessment, null, threat);
             }
@@ -134,34 +144,47 @@ public class RelatableRestController {
             return new PageDTO<>(0L, new ArrayList<>());
         }
 
-        final Pageable page = PageRequest.of(0, 25, Sort.by("createdAt").descending());
         final List<RelationType> relationTypes = new ArrayList<>();
         relationTypes.add(RelationType.PRECAUTION);
-        if (StringUtils.length(search) == 0) {
+        if (search.isBlank()) {
 
-            // if any show precautions related to related assets first
-            final List<Precaution> toShow = new ArrayList<>();
-            final List<Relation> relatedAssets = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
-            for (final Relation assetRelation : relatedAssets) {
-                final Optional<Asset> assetOptional = assetService.get(assetRelation.getRelationAType().equals(RelationType.ASSET) ? assetRelation.getRelationAId() : assetRelation.getRelationBId());
-                if (assetOptional.isPresent()) {
-                    final Asset asset = assetOptional.get();
-                    final List<Relation> existingAssetPrecautionRelations = relationService.findRelatedToWithType(asset, RelationType.PRECAUTION);
-                    for (final Relation existingAssetPrecautionRelation : existingAssetPrecautionRelations) {
-                        final Optional<Precaution> precautionOptional = precautionService.get(existingAssetPrecautionRelation.getRelationAType().equals(RelationType.PRECAUTION) ? existingAssetPrecautionRelation.getRelationAId() : existingAssetPrecautionRelation.getRelationBId());
-                        precautionOptional.ifPresent(toShow::add);
-                    }
-                }
-            }
+            // Find any precautions related to assets that is related to the threatassesment
+            final List<Long> relatedAssets = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET).stream()
+					.map(ar -> ar.getRelationAType().equals(RelationType.ASSET) ? ar.getRelationAId() : ar.getRelationBId())
+					.toList();
 
-            if (toShow.isEmpty()) {
-                final Page<Relatable> all = relatableDao.findByRelationTypeInAndDeletedFalse(relationTypes, page);
-                return mapper.toDTO(all);
-            } else {
-                return new PageDTO<>((long) toShow.size(), toShow.stream().map(p -> new RelatableDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage())).collect(Collectors.toList()));
-            }
+			List<Long> relatedPrecautionIds = relationService.findRelatedToWithType(relatedAssets, RelationType.PRECAUTION).stream()
+					.map(re -> re.getRelationAType().equals(RelationType.PRECAUTION) ? re.getRelationAId() : re.getRelationBId())
+					.toList();
+
+			// Sort all precautions, with the ones related to related assets at the top, by name otherwise
+			final List<RelatedPrecautionDTO> sortedContent = precautionService.findAll().stream()
+					.sorted((a, b) -> {
+						boolean aRelatedToAsset = relatedPrecautionIds.contains(a.getId());
+						boolean bRelatedToAsset = relatedPrecautionIds.contains(b.getId());
+						if (aRelatedToAsset && !bRelatedToAsset) {
+							return -1;
+						} else if (!aRelatedToAsset && bRelatedToAsset) {
+							return 1;
+						} else {
+							//compare both by name if they both are related, or if none of them are
+							return a.getName().compareToIgnoreCase(b.getName());
+						}
+					})
+					.map(p -> new RelatedPrecautionDTO(
+							p.getId(),
+							p.getName(),
+							p.getRelationType().toString(),
+							p.getRelationType().getMessage(),
+							p.getDescription()
+					))
+					.toList();
+
+                return new PageDTO<>((long)sortedContent.size(),  sortedContent);
         } else {
-            return mapper.toDTO(relatableDao.searchByRelationTypeInAndNameLikeIgnoreCaseAndDeletedFalse(relationTypes, "%" + search + "%", page));
+        	final Pageable page = PageRequest.of(0, 50, Sort.by("name").descending());
+			var searchResult = relatableDao.searchByRelationTypeInAndNameLikeIgnoreCaseAndDeletedFalse(relationTypes, "%" + search + "%", page);
+            return new PageDTO<>((long)searchResult.getSize(), searchResult.stream().map(p -> new RelatedPrecautionDTO(p.getId(), p.getName(), p.getRelationType().toString(), p.getRelationType().getMessage(), ((Precaution)p).getDescription())).toList());
         }
     }
 

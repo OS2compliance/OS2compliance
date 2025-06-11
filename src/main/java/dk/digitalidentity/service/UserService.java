@@ -2,7 +2,9 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,12 +16,9 @@ import java.util.Optional;
 import java.util.Set;
 
 @Service
+@RequiredArgsConstructor
 public class UserService {
     private final UserDao userDao;
-
-    public UserService(final UserDao userDao) {
-        this.userDao = userDao;
-    }
 
     public User currentUser() {
         final String loggedInUserUuid = SecurityUtil.getLoggedInUserUuid();
@@ -52,6 +51,18 @@ public class UserService {
             return Optional.empty();
         }
         return userDao.findById(uuid);
+    }
+
+    public Optional<User> findByUserIdAndHasAccessRole(final String userId) {
+        if (StringUtils.isEmpty(userId)) {
+            return Optional.empty();
+        }
+        Optional<User> foundUser = userDao.findByUserIdAndActiveIsTrue(userId);
+        if (foundUser.isEmpty() || !foundUser.get().getRoles().contains(Roles.USER)) {
+            return Optional.empty();
+        }
+
+        return foundUser;
     }
 
     public Optional<User> findByUserId(final String userId) {

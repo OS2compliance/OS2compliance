@@ -2,7 +2,7 @@
 let userChoicesEditSelect = null;
 
 function formReset() {
-    const form = document.querySelector('form');
+const form = document.querySelector('form');
     form.reset();
 }
 

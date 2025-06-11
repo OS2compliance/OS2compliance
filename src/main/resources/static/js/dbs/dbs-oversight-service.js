@@ -25,33 +25,13 @@ function DBSOversightService() {
                 },
                 debounceTimeout: 1000
             },
-            pagination: {
-                limit: 25,
-                resetPageOnUpdate: false,
-                server: {
-                    url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}`)
-                }
-            },
-            sort: {
-                enabled: true,
-                multiColumn: false,
-                server: {
-                    url: (prev, columns) => {
-                        if (!columns.length) return prev;
-                        const columnIds = ['id', 'supplierId', 'outstandingId', 'name', 'supplier', 'supervisoryModel', 'dbsAssets', 'oversightResponsible', 'lastInspection', 'lastInspectionStatus', 'outstandingSince' ];
-                        const col = columns[0]; // multiColumn false
-                        const order = columnIds[col.index];
-                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
-                    }
-                }
-            },
             columns: [
                 {
                     name: "id",
                     hidden: true,
                 },
                 {
-                    name: "suplierId",
+                    name: "supplierId",
                     hidden: true,
                 },
                 {
@@ -64,6 +44,9 @@ function DBSOversightService() {
                         let assetId = row.cells[0].data;
                         let html = `<a href="${assetsUrl}${assetId}">${cell}</a>`
                         return gridjs.html(html);
+                    },
+                    searchable: {
+                        searchKey: 'name'
                     }
                 },
                 {
@@ -72,10 +55,17 @@ function DBSOversightService() {
                         let supplierId = row.cells[1].data;
                         let html = `<a href="${suppliersUrl}${supplierId}">${cell}</a>`
                         return gridjs.html(html);
+                    },
+                    searchable: {
+                        searchKey: 'supplier'
                     }
                 },
                 {
                     name: "Tilsynsform",
+                    searchable: {
+                        searchKey: 'supervisoryModel',
+                        fieldId : 'supervisoryModelSelector'
+                    }
                 },
                 {
                     name: "DBS",
@@ -89,6 +79,9 @@ function DBSOversightService() {
 
                         html += '</ul>'
                         return gridjs.html(html);
+                    },
+                    searchable: {
+                        searchKey: 'dbsAssetNames'
                     }
                 },
                 {
@@ -103,13 +96,19 @@ function DBSOversightService() {
                             option +
                             `</select>`);
                     },
+                    searchable: {
+                        searchKey: 'oversightResponsible.name'
+                    }
                 },
                 {
-                    name: "Sidste tilsyn"
+                    name: "Sidste tilsyn",
+                    searchable: {
+                        searchKey: 'lastInspection'
+                    }
                 },
                 {
                     name: "Resultat",
-                    width: "100px",
+                    width: "150px",
                     formatter: (cell, row) => {
                         let status = cell;
                         if (cell === "Grøn") {
@@ -126,6 +125,10 @@ function DBSOversightService() {
                             ]
                         }
                         return gridjs.html(status, 'div');
+                    },
+                    searchable: {
+                        searchKey: 'lastInspectionStatus',
+                        fieldId : 'oversightResultSearchSelector'
                     }
                 },
                 {
@@ -137,6 +140,9 @@ function DBSOversightService() {
                         }
                         let html = `<a href="${tasksUrl}${taskId}">${cell}</a>`
                         return gridjs.html(html);
+                    },
+                    searchable: {
+                        searchKey: 'outstandingTask.createdAt'
                     }
                 }
             ],
@@ -180,6 +186,9 @@ function DBSOversightService() {
             }
         });
         searchService.initSearch(grid, gridConfig);
+
+        new CustomGridFunctions(grid, gridDBSOversightUrl, 'assetsDatatable')
+
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }
 

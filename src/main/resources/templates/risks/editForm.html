@@ -1,5 +1,7 @@
 
-<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true"
+     xmlns:th="http://www.thymeleaf.org"
+     xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
@@ -16,6 +18,16 @@
                                 <option th:each="type : ${T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).values()}"
                                         th:value="${type}" th:text="${type.message}"></option>
                             </select>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="copyAssetSelectRow" th:if="*{threatAssessmentType.name() == 'ASSET'}">
+                        <label for="copyAssetSelect" class="col-sm-4 col-form-label">Aktiver</label>
+                        <div class="col-sm-8">
+                            <select class="form-control form-select choices__input" name="selectedAssets" data-type="select-multiple"
+                                    data-trigger="" id="copyAssetSelect" hidden="" tabindex="-1" multiple required>
+                                <option th:each="asset : ${relatedAssets}" th:value="${asset.id}" th:text="${asset.name}" selected></option>
+                            </select>
+                            <div class="invalid-feedback">Der skal vælges mindst et aktiv</div>
                         </div>
                     </div>
                     <div class="row mt-3">

@@ -28,7 +28,7 @@
                             </ol>
                         </nav>
                         <h1 class="page-title mb-0 mt-2" th:text="${risk.name}"></h1>
-                        <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten er sendt til signering</p>
+                        <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
                     </div>
                     <div class="align-self-center d-inline-flex">
                         <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -252,7 +252,7 @@
                                             <td class="riskViewTh">Tilknyttede foranstaltninger</td>
                                             <td class="riskViewTd editCell" colspan="13">
                                                 <select class="choices__input select-precaution" data-type="select-multiple" data-trigger="" name="relations" th:id="${formId + 'RelationsSelect'}" hidden="" tabindex="-1" th:attr="data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" multiple>
-                                                    <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name}" selected></option>
+                                                    <option th:each="precaution : ${row.relatedPrecautions}" th:value="${precaution.id}" th:text="${precaution.name+ ': ' + precaution.description }" selected></option>
                                                 </select>
                                             </td>
                                         </tr>
@@ -351,7 +351,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='risikovurderinger')}"></nav>
 </div>
 
-<div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true"></div>
+
 
 <div class="modal fade" id="customThreatFormDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
     <div class="modal-dialog">

@@ -15,6 +15,9 @@ public interface TaskDao extends JpaRepository<Task, Long> {
 
     List<Task> findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(final LocalDate date);
 
+    @Query("select t from Task  t left join TaskLog tl on tl.task=t where t.includeInReport=true and (t.nextDeadline > :deadline or tl.completed > :deadline) order by t.nextDeadline")
+    List<Task> findTaskForYearWheel(@Param("deadline") final LocalDate date);
+
     @Query("select t from Task t join Property p on p.entity=t where p.key=:key and p.value=:value")
     List<Task> findByProperty(@Param("key") final String key, @Param("value") final String value);
 
