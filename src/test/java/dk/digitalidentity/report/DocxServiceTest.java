@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.ThreatAssessmentDao;
+import dk.digitalidentity.dao.ThreatAssessmentResponseDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -117,6 +118,8 @@ public class DocxServiceTest {
     private TaskService taskServiceMock;
     @MockitoSpyBean
     private ThreatAssessmentService threatAssessmentServiceMock;
+    @MockitoBean
+    private ThreatAssessmentResponseDao threatAssessmentResponseDaoMock;
     @MockitoBean
     private SettingsService settingsServiceMock;
     @MockitoBean
@@ -436,6 +439,7 @@ public class DocxServiceTest {
         asset.setDataProcessing(dataProcessing);
         asset.setCriticality(Criticality.CRITICAL);
         asset.setEmergencyPlanLink("https://aarhusbryghus.dk/");
+		asset.setAssetType(new ChoiceValue());
 
         final Supplier supplier = new Supplier();
         supplier.setName("Supplier " + idx);

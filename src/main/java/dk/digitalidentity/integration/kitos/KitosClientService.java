@@ -73,7 +73,7 @@ public class KitosClientService {
         List<OrganizationUserResponseDTO> currentUsers;
         int page = 0;
         do {
-            currentUsers = organizationApi.getManyOrganizationV2GetOrganizationUsers(municipalUuid, null, null, null, page++, KitosConstants.PAGE_SIZE);
+            currentUsers = organizationApi.getManyOrganizationV2GetOrganizationUsers(municipalUuid, null, null, null, null, page++, KitosConstants.PAGE_SIZE);
             allUsers.addAll(currentUsers);
         } while (currentUsers.size() == KitosConstants.PAGE_SIZE && page < KitosConstants.MAX_PAGE_REQUEST);
         return allUsers;
@@ -115,7 +115,7 @@ public class KitosClientService {
     public List<ItContractResponseDTO> fetchChangedItContracts(final UUID municipalUuid, final boolean reimport) {
         return deltaFetch(IT_CONTRACT_OFFSET_SETTING_KEY,
             pageAndOffset -> contractApi.getManyItContractV2GetItContracts(municipalUuid, null, null, null, null,
-                null, null, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
+                null, null, null, reimport ? KITOS_DELTA_START_FROM_OFFSET : pageAndOffset.getValue().plusNanos(1000L), null, pageAndOffset.getKey(), KitosConstants.PAGE_SIZE),
             ItContractResponseDTO::getLastModified);
     }
 
