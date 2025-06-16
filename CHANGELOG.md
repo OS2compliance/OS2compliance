@@ -7,6 +7,10 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.2.1]
+### Fixed
+- (Ad-hoc) Der var en fejl på konsekvensvurderingsoverblikssiden, der fjorde at den ikke kunne vises korrekt, det er retttet.
+
 ## [2.2.0]
 
 ### Added
