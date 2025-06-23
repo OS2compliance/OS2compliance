@@ -2,10 +2,8 @@ package dk.digitalidentity.controller.mvc.Assets;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetMeasuresDao;
-import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
 import dk.digitalidentity.integration.kitos.KitosConstants;
-import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
@@ -47,7 +45,6 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
-import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
@@ -63,7 +60,6 @@ import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -86,7 +82,6 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -104,23 +99,19 @@ import static dk.digitalidentity.util.LinkHelper.linkify;
 @RequestMapping("assets")
 @RequiredArgsConstructor
 public class AssetsController {
-    private final ApplicationEventPublisher eventPublisher;
 	private final RelationService relationService;
     private final ChoiceService choiceService;
 	private final SupplierService supplierService;
 	private final AssetMeasuresDao assetMeasuresDao;
 	private final ChoiceMeasuresDao choiceMeasuresDao;
-	private final ChoiceDPIADao choiceDPIADao;
     private final DataProcessingService dataProcessingService;
     private final ScaleService scaleService;
     private final ThreatAssessmentService threatAssessmentService;
     private final AssetOversightService assetOversightService;
     private final AssetService assetService;
-    private final AssetMapper assetMapper;
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
-	private final DPIAService dpiaService;
 
 
 	@GetMapping
