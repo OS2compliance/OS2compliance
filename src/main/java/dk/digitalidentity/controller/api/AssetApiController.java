@@ -9,6 +9,7 @@ import dk.digitalidentity.model.api.PageEO;
 import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -110,6 +111,9 @@ public class AssetApiController {
         if (assetCreateEO.getSubSuppliers() != null) {
             addSubSuppliers(assetCreateEO.getSubSuppliers(), asset);
         }
+		if (assetCreateEO.getProductLinks() != null) {
+			addProductLinks(assetCreateEO.getProductLinks(), asset);
+		}
         return assetMapper.toEO(assetService.create(asset));
     }
 
@@ -149,7 +153,6 @@ public class AssetApiController {
         asset.setAssetStatus(nullSafe(() -> AssetStatus.valueOf(assetUpdateEO.getAssetStatus().name())));
         asset.setCriticality(nullSafe(() -> Criticality.valueOf(assetUpdateEO.getCriticality().name())));
         asset.setSociallyCritical(assetUpdateEO.isSociallyCritical());
-        asset.setProductLink(assetUpdateEO.getProductLink());
         asset.setEmergencyPlanLink(assetUpdateEO.getEmergencyPlanLink());
         asset.setReEstablishmentPlanLink(assetUpdateEO.getReEstablishmentPlanLink());
         asset.setContractLink(assetUpdateEO.getContractLink());
@@ -170,6 +173,10 @@ public class AssetApiController {
         if (assetUpdateEO.getSubSuppliers() != null) {
             addSubSuppliers(assetUpdateEO.getSubSuppliers(), asset);
         }
+		asset.getProductLinks().clear();
+		if (assetUpdateEO.getProductLinks() != null) {
+			addProductLinks(assetUpdateEO.getProductLinks(), asset);
+		}
         asset.getProperties().clear();
         asset.getProperties().addAll(assetMapper.fromEO(assetUpdateEO.getProperties()));
     }
@@ -206,6 +213,13 @@ public class AssetApiController {
             .toList();
         asset.getManagers().addAll(a);
     }
+
+	private void addProductLinks(final List<String> productLinksEO, final Asset asset) {
+		final List<AssetProductLink> productLinks = productLinksEO.stream()
+				.map(l -> new AssetProductLink(null, l, asset))
+				.toList();
+		asset.getProductLinks().addAll(productLinks);
+	}
 
     private void setSupplier(final SupplierWriteEO assetCreateEO, final Asset asset) {
         final Supplier supplier = supplierService.get(assetCreateEO.getId())

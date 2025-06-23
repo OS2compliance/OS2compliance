@@ -102,9 +102,6 @@ public class Asset extends Relatable {
     private boolean sociallyCritical;
 
     @Column
-    private String productLink;
-
-    @Column
     private String emergencyPlanLink;
 
     @Column
@@ -201,5 +198,10 @@ public class Asset extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	private Set<Role> roles = new HashSet<>();
+
+	@OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<AssetProductLink> productLinks = new ArrayList<>();
 
 }

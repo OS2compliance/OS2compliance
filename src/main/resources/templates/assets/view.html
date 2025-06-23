@@ -179,14 +179,13 @@
                                         <!-- Column 2 -->
                                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 gx-4">
                                             <div class="row mb-3">
-                                                <label for="productLink" class="col-sm-3 col-form-label">Link til
-                                                    produktside</label>
+                                                <label for="productLink" class="col-sm-3 col-form-label">Reference/link</label>
                                                 <div class="col-sm-9">
                                                     <a class="form-control-link editField" id="productLink"
-                                                        th:href="@{*{productLink}}" target="_blank" rel="noopener noreferrer"
-                                                        th:text="*{productLink}"></a>
+                                                        th:href="@{*{productLinks}}" target="_blank" rel="noopener noreferrer"
+                                                        th:text="*{productLinks}"></a>
                                                     <input class="form-control" id="productLinkEdit"
-                                                        th:field="*{productLink}" hidden>
+                                                        th:field="*{productLinks}" hidden>
                                                 </div>
                                             </div>
 

@@ -15,6 +15,7 @@ import dk.digitalidentity.dao.ThreatCatalogDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.entity.ApiClient;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Contact;
@@ -61,6 +62,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.UUID;
@@ -386,9 +388,14 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 os2Compliance.setAssetStatus(AssetStatus.NOT_STARTED);
                 os2Compliance.setCriticality(Criticality.CRITICAL);
                 os2Compliance.setEmergencyPlanLink("https://google.com");
-                os2Compliance.setProductLink("https://os2compliance.dk");
                 os2Compliance.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 os2Compliance.setDataProcessing(dataProcessing);
+
+				os2Compliance.setProductLinks(new ArrayList<>());
+				AssetProductLink assetProductLink = new AssetProductLink();
+				assetProductLink.setAsset(os2Compliance);
+				assetProductLink.setUrl("https://os2compliance.dk");
+				os2Compliance.getProductLinks().add(assetProductLink);
 
                 os2Compliance = assetService.create(os2Compliance);
 
@@ -409,9 +416,15 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset1.setAssetStatus(AssetStatus.NOT_STARTED);
                 asset1.setCriticality(Criticality.CRITICAL);
                 asset1.setEmergencyPlanLink("https://google.com");
-                asset1.setProductLink("https://os2compliance.dk");
                 asset1.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 asset1.setDataProcessing(new DataProcessing());
+
+				asset1.setProductLinks(new ArrayList<>());
+				AssetProductLink assetProductLink1 = new AssetProductLink();
+				assetProductLink1.setAsset(asset1);
+				assetProductLink1.setUrl("https://os2compliance.dk");
+				asset1.getProductLinks().add(assetProductLink1);
+
                 asset1 = assetService.create(asset1);
 
                 final Relation taskAsset = new Relation();
@@ -431,9 +444,15 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset2.setAssetStatus(AssetStatus.ON_GOING);
                 asset2.setCriticality(Criticality.CRITICAL);
                 asset2.setEmergencyPlanLink("https://google.com");
-                asset2.setProductLink("https://os2compliance.dk");
                 asset2.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 asset2.setDataProcessing(new DataProcessing());
+
+				asset2.setProductLinks(new ArrayList<>());
+				AssetProductLink assetProductLink2 = new AssetProductLink();
+				assetProductLink2.setAsset(asset2);
+				assetProductLink2.setUrl("https://os2compliance.dk");
+				asset2.getProductLinks().add(assetProductLink2);
+
                 assetService.create(asset2);
 
                 final Asset asset3 = new Asset();
@@ -446,9 +465,15 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset3.setAssetStatus(AssetStatus.READY);
                 asset3.setCriticality(Criticality.NON_CRITICAL);
                 asset3.setEmergencyPlanLink("https://google.com");
-                asset3.setProductLink("https://os2compliance.dk");
                 asset3.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 asset3.setDataProcessing(new DataProcessing());
+
+				asset3.setProductLinks(new ArrayList<>());
+				AssetProductLink assetProductLink3 = new AssetProductLink();
+				assetProductLink3.setAsset(asset3);
+				assetProductLink3.setUrl("https://os2compliance.dk");
+				asset3.getProductLinks().add(assetProductLink3);
+
                 assetService.create(asset3);
 
                 ///////////////////////////////////

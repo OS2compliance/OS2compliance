@@ -408,9 +408,7 @@ public class AssetsController {
             existingAsset.setSupplier(asset.getSupplier());
         }
         existingAsset.setAssetType(asset.getAssetType());
-        existingAsset.setProductLink(asset.getProductLink());
         existingAsset.setCriticality(asset.getCriticality());
-
         existingAsset.setDescription(asset.getDescription());
         existingAsset.setSociallyCritical(asset.isSociallyCritical());
         existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
@@ -424,6 +422,8 @@ public class AssetsController {
         existingAsset.setAssetCategory(asset.getAssetCategory());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
+		// TODO AMALIE håndter productLink -> links hvis ikke kitos. hvis kitos ik rediger
+		//		existingAsset.setProductLink(asset.getProductLink());
 
         return "redirect:/assets/" + existingAsset.getId();
     }
