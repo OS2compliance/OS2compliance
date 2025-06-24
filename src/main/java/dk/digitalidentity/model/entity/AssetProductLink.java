@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -7,7 +8,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
-@Table(name = "asset_product_links")
+@Table(name = "assets_product_links")
 @Getter
 @Setter
 @AllArgsConstructor
@@ -21,6 +22,7 @@ public class AssetProductLink {
 	@Column(nullable = false)
 	private String url;
 
+	@JsonIgnore
 	@ManyToOne
 	@JoinColumn(name = "asset_id", nullable = false)
 	private Asset asset;

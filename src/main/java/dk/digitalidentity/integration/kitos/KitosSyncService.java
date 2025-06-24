@@ -2,9 +2,11 @@ package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.KitosRolesDao;
+import dk.digitalidentity.model.dto.enums.KitosField;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.KitosRole;
 import dk.digitalidentity.model.entity.Property;
+import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.UserProperty;
@@ -235,6 +237,11 @@ public class KitosSyncService {
         if (!supplierOverriden(asset)) {
             asset.setSupplier(findOrCreateSupplier(responseDTO));
         }
+
+		String setting = settingsService.getString(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, null);
+		if (setting != null) {
+			if ()
+		}
     }
 
     private boolean supplierOverriden(final Asset asset) {

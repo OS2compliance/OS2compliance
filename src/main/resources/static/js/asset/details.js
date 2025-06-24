@@ -58,6 +58,49 @@ function AssetDetailsService() {
         this.setTreatAssessmentVisibility(!optOut);
     }
 
+    this.addProductLink = function() {
+        const container = document.getElementById("productLinksEditContainer");
+        const index = container.children.length;
+
+        const div = document.createElement("div");
+        div.className = "input-group mb-2";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = `productLinks[${index}].url`;
+        input.className = "form-control editField";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn btn-danger editField";
+        removeBtn.innerText = "-";
+        removeBtn.onclick = function () {
+            assetDetailsService.removeProductLink(removeBtn);
+        };
+
+        div.appendChild(input);
+        div.appendChild(removeBtn);
+        container.appendChild(div);
+    }
+
+    this.removeProductLink = function(btn) {
+        const div = btn.parentNode;
+        div.remove();
+        assetDetailsService.reindexProductLinks();
+    }
+
+    this.reindexProductLinks = function() {
+        const container = document.getElementById("productLinksEditContainer");
+        const children = container.children;
+
+        for (let i = 0; i < children.length; i++) {
+            const input = children[i].querySelector('input[name^="productLinks"]');
+            if (input) {
+                input.name = `productLinks[${i}].url`;
+            }
+        }
+    }
+
 }
 
 function AssetDpiaService() {

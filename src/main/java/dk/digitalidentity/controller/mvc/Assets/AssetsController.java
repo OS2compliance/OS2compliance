@@ -16,6 +16,7 @@ import dk.digitalidentity.model.dto.ViewMeasuresDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetMeasure;
 import dk.digitalidentity.model.entity.AssetOversight;
+import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -95,6 +96,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 import static dk.digitalidentity.util.LinkHelper.linkify;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
@@ -422,10 +424,17 @@ public class AssetsController {
         existingAsset.setAssetCategory(asset.getAssetCategory());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
-		// TODO AMALIE håndter productLink -> links hvis ikke kitos. hvis kitos ik rediger
-		//		existingAsset.setProductLink(asset.getProductLink());
+		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
+			existingAsset.getProductLinks().clear();
+			for (AssetProductLink link : asset.getProductLinks()) {
+				if (link.getUrl() != null && !link.getUrl().isBlank()) {
+					link.setAsset(existingAsset);
+					existingAsset.getProductLinks().add(link);
+				}
+			}
+		}
 
-        return "redirect:/assets/" + existingAsset.getId();
+		return "redirect:/assets/" + existingAsset.getId();
     }
 
     @GetMapping("subsupplier")

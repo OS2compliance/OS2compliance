@@ -179,13 +179,28 @@
                                         <!-- Column 2 -->
                                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 gx-4">
                                             <div class="row mb-3">
-                                                <label for="productLink" class="col-sm-3 col-form-label">Reference/link</label>
+                                                <label class="col-sm-3 col-form-label">Referencer/links</label>
                                                 <div class="col-sm-9">
-                                                    <a class="form-control-link editField" id="productLink"
-                                                        th:href="@{*{productLinks}}" target="_blank" rel="noopener noreferrer"
-                                                        th:text="*{productLinks}"></a>
-                                                    <input class="form-control" id="productLinkEdit"
-                                                        th:field="*{productLinks}" hidden>
+                                                    <!-- view mode -->
+                                                    <div id="productLinksViewContainer" class="editField">
+                                                        <div th:each="link : *{productLinks}" class="mb-1">
+                                                            <a th:href="${link.url}" th:text="${link.url}" class="form-control-link" target="_blank" rel="noopener noreferrer"></a>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- edit mode -->
+                                                    <div id="productLinksEditContainer" hidden>
+                                                        <div th:each="link, iterStat : *{productLinks}" class="input-group mb-2">
+                                                            <input type="text"
+                                                                   th:name="'productLinks[' + ${iterStat.index} + '].url'"
+                                                                   th:value="${link.url}"
+                                                                   class="form-control editField">
+                                                            <button type="button" class="btn btn-danger editField" onclick="assetDetailsService.removeProductLink(this)">-</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <button id="addProductLinkBtn" class="btn btn-secondary editField" type="button"
+                                                            onclick="assetDetailsService.addProductLink()" hidden>+ Tilføj link</button>
                                                 </div>
                                             </div>
 
@@ -845,10 +860,13 @@
 
                 if (!isKitos) {
                     managersChoicesEditSelect.enable();
+                    document.getElementById("productLinksViewContainer").hidden = true;
+                    document.getElementById("productLinksEditContainer").hidden = false;
+                    document.getElementById("addProductLinkBtn").hidden = false;
                 }
+
                 suppliersChoicesEditSelect.enable();
                 responsibleChoicesEditSelect.enable();
-
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                     elem.disabled = true;
@@ -873,6 +891,11 @@
                 managersChoicesEditSelect.disable();
                 responsibleChoicesEditSelect.disable();
 
+                if (!isKitos) {
+                    document.getElementById("productLinksViewContainer").hidden = false;
+                    document.getElementById("productLinksEditContainer").hidden = true;
+                    document.getElementById("addProductLinkBtn").hidden = true;
+                }
             }
         }
 
