@@ -3,8 +3,6 @@ package dk.digitalidentity.model.dto.enums;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import lombok.Getter;
 
-import java.util.List;
-
 @Getter
 public enum KitosField {
 

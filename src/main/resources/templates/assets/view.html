@@ -272,9 +272,17 @@
 
                                             <div class="row mb-3">
                                                 <label for="contractDate"
-                                                    class="col-sm-3 col-form-label">Kontraktdato</label>
+                                                    class="col-sm-3 col-form-label">
+                                                    Kontraktdato &nbsp;
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                </label>
                                                 <div class="col-sm-9 my-auto">
-                                                    <div class="input-group" th:hidden="*{contractDate == null}">
+                                                    <div th:if="${isKitos}" th:hidden="*{contractDate == null}">
+                                                        <input id="contractDate" type="text"
+                                                               class="form-control datepicker"
+                                                               th:field="*{contractDate}" readonly>
+                                                    </div>
+                                                    <div th:unless="${isKitos}" class="input-group" th:hidden="*{contractDate == null}">
                                                         <input id="contractDate" type="text"
                                                             class="form-control editField datepicker"
                                                             th:field="*{contractDate}">
@@ -292,9 +300,17 @@
 
                                             <div class="row mb-3">
                                                 <label for="contractTermination"
-                                                    class="col-sm-3 col-form-label">Kontraktophør</label>
+                                                    class="col-sm-3 col-form-label">
+                                                    Kontraktophør &nbsp;
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                </label>
                                                 <div class="col-sm-9 my-auto">
-                                                    <div class="input-group" th:hidden="*{contractTermination == null}">
+                                                    <div th:if="${isKitos}" th:hidden="*{contractTermination == null}">
+                                                        <input id="contractTermination" type="text"
+                                                               class="form-control datepicker"
+                                                               th:field="*{contractTermination}" readonly>
+                                                    </div>
+                                                    <div th:unless="${isKitos}" class="input-group" th:hidden="*{contractTermination == null}">
                                                         <input id="contractTermination" type="text"
                                                             class="form-control editField datepicker"
                                                             th:field="*{contractTermination}">
@@ -312,14 +328,19 @@
 
                                             <div class="row mb-3">
                                                 <label for="terminationNotice"
-                                                    class="col-sm-3 col-form-label">Opsigelsesvarsel</label>
+                                                    class="col-sm-3 col-form-label">
+                                                    Opsigelsesvarsel &nbsp;
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                </label>
                                                 <div class="col-sm-9">
+                                                    <input th:if="${isKitos}" class="form-control" id="terminationNotice"
+                                                           th:value="*{terminationNotice}" readonly>
                                                     <!--                                                 When that field will be an enum -->
                                                     <!--                                                 <select class="form-control form-select" th:field="*{criticality}" name="criticality" id="criticality" tabindex="-1" disabled> -->
                                                     <!--                                                     <option th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}" -->
                                                     <!--                                                             th:value="${crit.name}" th:text="${crit.message}"></option> -->
                                                     <!--                                                 </select> -->
-                                                    <input class="form-control editField" id="terminationNotice"
+                                                    <input th:unless="${isKitos}" class="form-control editField" id="terminationNotice"
                                                         th:value="*{terminationNotice}" disabled>
                                                 </div>
                                             </div>
@@ -750,36 +771,37 @@
         }
 
         function initDatePickers() {
-            const contractDatePicker = MCDatepicker.create({
-                el: '#contractDate',
-                autoClose: true,
-                dateFormat: 'dd/mm-yyyy',
-                closeOnBlur: true,
-                firstWeekday: 1,
-                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                customClearBTN: "Ryd",
-                customCancelBTN: "Annuller"
-            });
-            document.querySelector( "#contractDateBtn" ).addEventListener( "click", () => {
-                contractDatePicker.open();
-            });
+            if (!isKitos) {
+                const contractDatePicker = MCDatepicker.create({
+                    el: '#contractDate',
+                    autoClose: true,
+                    dateFormat: 'dd/mm-yyyy',
+                    closeOnBlur: true,
+                    firstWeekday: 1,
+                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                    customClearBTN: "Ryd",
+                    customCancelBTN: "Annuller"
+                });
+                document.querySelector( "#contractDateBtn" ).addEventListener( "click", () => {
+                    contractDatePicker.open();
+                });
 
-
-            const contractTerminationPicker = MCDatepicker.create({
-                el: '#contractTermination',
-                autoClose: true,
-                dateFormat: 'dd/mm-yyyy',
-                closeOnBlur: true,
-                firstWeekday: 1,
-                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                customClearBTN: "Ryd",
-                customCancelBTN: "Annuller"
-            });
-            document.querySelector( "#contractTerminationBtn" ).addEventListener( "click", () => {
-                contractTerminationPicker.open();
-            });
+                const contractTerminationPicker = MCDatepicker.create({
+                    el: '#contractTermination',
+                    autoClose: true,
+                    dateFormat: 'dd/mm-yyyy',
+                    closeOnBlur: true,
+                    firstWeekday: 1,
+                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                    customClearBTN: "Ryd",
+                    customCancelBTN: "Annuller"
+                });
+                document.querySelector( "#contractTerminationBtn" ).addEventListener( "click", () => {
+                    contractTerminationPicker.open();
+                });
+            }
         }
 
         function removeChoiceByUserUuid(arr, uuid) {
