@@ -2,6 +2,8 @@ package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
 import dk.digitalidentity.integration.kitos.mapper.KitosMapper;
+import dk.digitalidentity.model.api.AssetEO;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.service.SettingsService;
 import dk.kitos.api.ApiV2DeltaFeedApi;
 import dk.kitos.api.ApiV2ItContractApi;
@@ -9,6 +11,7 @@ import dk.kitos.api.ApiV2ItSystemApi;
 import dk.kitos.api.ApiV2ItSystemUsageApi;
 import dk.kitos.api.ApiV2ItSystemUsageRoleTypeApi;
 import dk.kitos.api.ApiV2OrganizationApi;
+import dk.kitos.api.model.ArchivingUpdateRequestDTO;
 import dk.kitos.api.model.GDPRWriteRequestDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -33,15 +36,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_CONTRACT_OFFSET_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_DELETION_OFFSET_USAGE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_ENTITY_TYPE;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_OFFSET_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_ENTITY_TYPE;
-import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM_OFFSET;
-import static dk.digitalidentity.integration.kitos.KitosConstants.USAGE_DELETION_OFFSET_USAGE_SETTING_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 
 @Slf4j
 @Service
@@ -144,10 +139,12 @@ public class KitosClientService {
     /**
      * Update business criticality for an it-system usage
      */
-    public void updateBusinessCritical(final String itSystemUuid, boolean critical) {
+    public void updateBusinessCriticalAndArchiveDuty(final String itSystemUuid, boolean critical, AssetEO.ArchiveDuty archiveDuty) {
         final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
         final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
-        if (update.getGdpr() == null) {
+
+
+		if (update.getGdpr() == null) {
             update.setGdpr(new GDPRWriteRequestDTO());
         }
         final GDPRWriteRequestDTO gdpr = update.getGdpr();
@@ -167,18 +164,47 @@ public class KitosClientService {
             gdpr.setDpiaDocumentation(null);
         }
 
+		if (archiveDuty != null) {
+			if (update.getArchiving() == null) {
+				update.setArchiving(new ArchivingUpdateRequestDTO());
+			}
+			update.getArchiving().setArchiveDuty(toArchiveDutyEnum(archiveDuty));
+		}
+
         // Only send
-        update.setArchiving(null);
         update.setGeneral(null);
         update.setLocalKleDeviations(null);
         update.setOrganizationUsage(null);
         update.setExternalReferences(null);
         update.setRoles(null);
         update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
-        itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
+
+		//itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
     }
 
-    private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
+	private ArchivingUpdateRequestDTO.ArchiveDutyEnum toArchiveDutyEnum(AssetEO.ArchiveDuty archiveDuty) {
+		switch (archiveDuty) {
+			case K -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.K;
+			}
+			case B -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.B;
+			}
+			case UNDECIDED -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
+			}
+			case UNKNOWN -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNKNOWN;
+			}
+			case PRESERVEDATACANDISCARDDOCUMENTS -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.PRESERVEDATACANDISCARDDOCUMENTS;
+			}
+		}
+
+		return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
+	}
+
+	private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
         return simpleLinkDTO != null && simpleLinkDTO.getUrl() == null && simpleLinkDTO.getName() == null;
     }
 

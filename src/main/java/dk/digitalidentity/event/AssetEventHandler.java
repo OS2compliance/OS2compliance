@@ -27,10 +27,10 @@ public class AssetEventHandler {
         final AssetEO asset = event.getAsset();
         if (configuration.getIntegrations().getKitos().isEnabled()) {
             findKitosUsageUuid(asset).ifPresent(uuid -> {
-                if (asset.getCriticality() != null) {
-                    clientService.updateBusinessCritical(uuid, asset.getCriticality().equals(AssetEO.Criticality.CRITICAL));
-                    log.info("Updated criticality for asset: {}", asset.getId());
-                }
+				if (asset.getCriticality() != null || asset.getArchive() != null) {
+					clientService.updateBusinessCriticalAndArchiveDuty(uuid, AssetEO.Criticality.CRITICAL.equals(asset.getCriticality()), asset.getArchive());
+					log.info("Updated criticality and ArchiveDuty for asset: {}", asset.getId());
+				}
             });
         }
     }
