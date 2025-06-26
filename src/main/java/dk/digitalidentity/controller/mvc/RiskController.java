@@ -68,6 +68,7 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -252,7 +253,7 @@ public class RiskController {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         model.addAttribute("risk", threatAssessment);
 
-		Map<String, List<SimpleThreatDTO>> threatsDto = new HashMap<>();
+		Map<String, List<SimpleThreatDTO>> threatsDto = new LinkedHashMap<>();
 		for (var entryset : threatAssessmentService.buildThreatList(threatAssessment).entrySet()) {
 			var simpleDtoList = entryset.getValue().stream()
 					.map( threatDTO -> new SimpleThreatDTO(

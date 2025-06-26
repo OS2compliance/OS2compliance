@@ -464,9 +464,9 @@ public class ThreatAssessmentService {
     public ThreatAssessmentResponse createResponse(final ThreatAssessment threatAssessment, final ThreatCatalogThreat threatCatalogThreat, final CustomThreat customThreat) {
         final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
         if (customThreat != null) {
-            response.setName(customThreat.getDescription());
+            response.setName(StringUtils.truncate(customThreat.getDescription(), 255));
         } else if (threatCatalogThreat != null) {
-            response.setName(threatCatalogThreat.getDescription());
+            response.setName(StringUtils.truncate(threatCatalogThreat.getDescription(), 255));
         }
         response.setMethod(ThreatMethod.NONE);
         response.setThreatAssessment(threatAssessment);
