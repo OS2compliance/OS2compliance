@@ -4,9 +4,11 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
+import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
+import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
 import dk.digitalidentity.model.dto.SaveMeasureDTO;
@@ -433,6 +435,10 @@ public class AssetsController {
 				}
 			}
 		}
+        eventPublisher.publishEvent(AssetUpdatedEvent.builder()
+                .asset(assetMapper.toEO(existingAsset))
+            .build());
+
 
 		return "redirect:/assets/" + existingAsset.getId();
     }
@@ -499,6 +505,17 @@ public class AssetsController {
 			asset.getSuppliers().add(newSubsupplier);
 		}
 		return "redirect:/assets/" + asset.getId();
+	}
+
+	@Transactional
+	@DeleteMapping("subsupplier")
+	public String subSupplierDelete(@RequestParam(name = "id") final Long id, @RequestParam(name = "asset") final Long assetId) {
+		final Asset asset = assetService.get(assetId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		final AssetSupplierMapping subsupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), id)).findAny()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		asset.getSuppliers().remove(subsupplier);
+		return "/assets/" + asset.getId();
 	}
 
 
