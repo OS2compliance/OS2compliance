@@ -12,25 +12,7 @@ import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Set;
 
-import static dk.digitalidentity.model.api.Examples.ASSET_CONTRACT_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_CONTRACT_TERMINATION_NOTICE_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_CRITICALITY_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DESCRIPTION_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_DATE_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_INSPECTION_SETTING_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_SUPERVISION_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_EMERGENCY_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_NAME_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_PRODUCT_LINKS_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_RE_ESTAB_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_SOC_CRITICALITY_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_STATUS_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ID_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.OFFSET_DATE_TIME_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.USER_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.VERSION_EXAMPLE;
+import static dk.digitalidentity.model.api.Examples.*;
 
 @Data
 @Builder
@@ -56,6 +38,10 @@ public class AssetEO {
     public enum Criticality {
         CRITICAL, NON_CRITICAL
     }
+	public enum ArchiveDuty {
+		UNDECIDED,B,K,UNKNOWN,PRESERVEDATACANDISCARDDOCUMENTS
+	}
+
     @Schema(description = "Internal ID in OS2compliance", accessMode = Schema.AccessMode.READ_ONLY, example = ID_EXAMPLE)
     private Long id;
     @Schema(description = "Resource version, must always match current version when updating", example = VERSION_EXAMPLE)
@@ -106,8 +92,8 @@ public class AssetEO {
     private LocalDate contractTermination;
     @Schema(description = "Contract termination notice", example = ASSET_CONTRACT_TERMINATION_NOTICE_EXAMPLE)
     private String terminationNotice;
-    @Schema(description = "Archiving flag", example = "false")
-    private boolean archive;
+    @Schema(description = "Archiving flag", example = ASSET_ARCHIVE_EXAMPLE)
+    private ArchiveDuty archive;
     @Schema(description = "Supplier")
     private SupplierShallowEO supplier;
     @Schema(description = "Sub suppliers")

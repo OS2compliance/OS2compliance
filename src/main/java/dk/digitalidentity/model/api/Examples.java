@@ -65,4 +65,5 @@ public interface Examples {
 
     String ASSET_TYPE_IDENTIFIER = "asset-type-it-system-83AF9E";
     String ASSET_TYPE_NAME = "IT-system";
+	String ASSET_ARCHIVE_EXAMPLE = "UNDECIDED";
 }

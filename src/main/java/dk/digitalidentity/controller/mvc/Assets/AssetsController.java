@@ -419,7 +419,7 @@ public class AssetsController {
         existingAsset.setContractDate(asset.getContractDate());
         existingAsset.setContractTermination(asset.getContractTermination());
         existingAsset.setTerminationNotice(asset.getTerminationNotice());
-        existingAsset.setArchive(asset.isArchive());
+        existingAsset.setArchive(asset.getArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setAssetCategory(asset.getAssetCategory());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());

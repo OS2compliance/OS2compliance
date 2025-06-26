@@ -15,6 +15,7 @@ import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -159,7 +160,7 @@ public class AssetApiController {
         asset.setContractDate(assetUpdateEO.getContractDate());
         asset.setContractTermination(assetUpdateEO.getContractTermination());
         asset.setTerminationNotice(assetUpdateEO.getTerminationNotice());
-        asset.setArchive(assetUpdateEO.isArchive());
+        asset.setArchive(ArchiveDuty.fromApiEnum(assetUpdateEO.getArchive()));
         if (assetUpdateEO.getSupplier() != null) {
             setSupplier(assetUpdateEO.getSupplier(), asset);
         } else {

@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.UserProperty;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
@@ -184,7 +185,7 @@ public class KitosSyncService {
 					nullSafe(() -> itContractResponseDTO.getGeneral().getValidity().getValidTo().toLocalDate())
 			);
 		} else if (KitosField.SYSTEMS_CONTRACT_EXPIRES.equals(KitosField.valueOf(settingContractTerminationDate))) {
-			// TODO AMALIE Systemer -> Kontrakt -> Indgået
+			// TODO AMALIE Systemer -> Kontrakt -> Udløber
 		}
 
     }
@@ -197,6 +198,8 @@ public class KitosSyncService {
         addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
         setAssetOwner(asset, itSystemUsageResponseDTO);
         setAssetManagers(asset, itSystemUsageResponseDTO);
+		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
+
         final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
         if (businessCritical != null) {
             if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.YES && asset.getCriticality() != Criticality.CRITICAL) {
