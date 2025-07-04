@@ -11,15 +11,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
 function AssetRiskKitosService() {
 
     this.init = function () {
-        initDatepicker("#riskAssessmentConductedDateBtn", "#riskAssessmentConductedDate");
-
-        const resultSelect = document.getElementById("result");
-        const hiddenResult = document.getElementById("hiddenResult");
-        resultSelect.addEventListener("change", () => {
-            if (!resultSelect.disabled) {
-                hiddenResult.value = resultSelect.value;
-            }
-        });
+        const datePicker = initDatepicker("#riskAssessmentConductedDateBtn", "#riskAssessmentConductedDate");
 
         const form = document.getElementById("riskAssessmentKitosSyncForm");
         form.addEventListener("submit", (event) => this.validateFormBeforeSubmit(event, form));
@@ -50,40 +42,22 @@ function AssetRiskKitosService() {
             document.getElementById("riskAssessmentConducted").checked = assessment != null;
             document.getElementById("riskAssessmentConductedDate").value = formatDateToDdMmYyyy(newestRiskAssessmentDate);
             document.getElementById("result").value = assessment;
-            document.getElementById("hiddenResult").value = assessment;
         }
     }
 
     this.toggleReadonlyFields = function (lock) {
-        document.getElementById("riskAssessmentConducted").disabled = lock;
-        document.getElementById("riskAssessmentConductedDate").readOnly = lock;
+        document.getElementById("riskAssessmentConductedDate").disabled = lock;
         document.getElementById("result").disabled = lock;
+        document.getElementById("riskAssessmentConductedDateBtn").disabled = lock;
     }
 
     this.validateFormBeforeSubmit = (event, form) => {
-    console.log("Form validation")
         let valid = true;
         let invalidFields = [];
 
-        // validate name field
-        const resultInput = form.querySelector('input[name="result"]');
-        if (resultInput) {
-            console.log("result input")
-            const val = resultInput.value.trim();
-            const feedback = resultInput.parentElement.querySelector('.invalid-feedback');
-            const isValid = val !== "";
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(resultInput);
-            }
-            assetRiskKitosService.setFieldValidity(resultInput, feedback, isValid);
-        }
-
-        // validate date fields
+        // validate date field
         const dateInput = form.querySelector('input[name="riskAssessmentConductedDate"]');
         if (dateInput) {
-            console.log("date input")
             const val = dateInput.value.trim();
             const feedback = dateInput.parentElement.querySelector('.invalid-feedback');
             const isValid = val === "" || isValidDateDMY(val);
@@ -101,6 +75,10 @@ function AssetRiskKitosService() {
                 invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
                 invalidFields[0].focus();
             }
+        } else {
+            // enable fields if disabled, to make sure they are included in the form on submit
+            document.getElementById("riskAssessmentConductedDate").disabled = false;
+            document.getElementById("result").disabled = false;
         }
     };
 

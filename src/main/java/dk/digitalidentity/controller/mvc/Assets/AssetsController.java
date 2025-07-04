@@ -1,7 +1,6 @@
 package dk.digitalidentity.controller.mvc.Assets;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.AssetMeasuresDao;
@@ -9,8 +8,8 @@ import dk.digitalidentity.dao.ChoiceMeasuresDao;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
-import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
 import dk.digitalidentity.mapping.AssetMapper;
+import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.DataProcessingOversightDTO;
 import dk.digitalidentity.model.dto.SaveMeasureDTO;
@@ -22,7 +21,6 @@ import dk.digitalidentity.model.entity.AssetMeasure;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
-
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceMeasure;
 import dk.digitalidentity.model.entity.DPIA;
@@ -97,7 +95,6 @@ import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -107,7 +104,8 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.*;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_ASSET_RISK_CHANGED_QUEUE;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_RISK_LAST_SYNC_PROPERTY_KEY;
 import static dk.digitalidentity.util.LinkHelper.linkify;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
@@ -350,10 +348,10 @@ public class AssetsController {
 				.assetKitosId(kitosId)
 				.riskAssessmentConducted(body.riskAssessmentConducted())
 				.riskAssessmentConductedDate(body.riskAssessmentConductedDate)
-				.result(body.result != null ? RiskAssessment.valueOf(body.result) : null)
-				.riskAssessmentName(body.fillOption.equals("AUTO") ? newestThreatAssessment.getName() : null)
-				.riskAssessmentUrl(body.fillOption.equals("AUTO") ? request.getScheme() + "://" + request.getServerName() + "/risks/" + newestThreatAssessment.getId() : null)
-				.nextRiskAssessment(body.fillOption.equals("AUTO") && newestThreatAssessment.getNextRevision() != null ? Date.from(newestThreatAssessment.getNextRevision().atStartOfDay(ZoneId.systemDefault()).toInstant()) : null)
+				.result(body.result != null && !body.result.isBlank() ? RiskAssessment.valueOf(body.result) : null)
+				.riskAssessmentName(body.fillOption.equals("AUTO") && newestThreatAssessment != null? newestThreatAssessment.getName() : null)
+				.riskAssessmentUrl(body.fillOption.equals("AUTO")  && newestThreatAssessment != null? request.getScheme() + "://" + request.getServerName() + "/risks/" + newestThreatAssessment.getId() : null)
+				.nextRiskAssessment(body.fillOption.equals("AUTO") && newestThreatAssessment != null && newestThreatAssessment.getNextRevision() != null ? Date.from(newestThreatAssessment.getNextRevision().atStartOfDay(ZoneId.systemDefault()).toInstant()) : null)
 			.build();
 
 		eventPublisher.publishEvent(QueueMessage.builder()

@@ -30,9 +30,8 @@
                         <div class="col-md-6">
                             <label for="riskAssessmentConductedDate" class="form-label">Dato for seneste risikovurdering</label>
                             <div class="input-group">
-                                <input id="riskAssessmentConductedDate" type="text"
-                                       class="form-control editField datepicker"
-                                       th:field="*{riskAssessmentConductedDate}">
+                                <input id="riskAssessmentConductedDate" th:field="*{riskAssessmentConductedDate}" type="text"
+                                       class="form-control editField datepicker">
                                 <button id="riskAssessmentConductedDateBtn" class="btn btn-primary"
                                         type="button"
                                         style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;">
@@ -40,18 +39,15 @@
                                 </button>
                                 <div class="invalid-feedback">Du skal angive en gyldig dato i formatet dd/MM-yyyy eller lade den være tom</div>
                             </div>
-
                         </div>
 
                         <div class="col-md-6">
                             <label for="result" class="form-label">Resultat</label>
-                            <select id="result" class="form-select">
+                            <select id="result" class="form-select" th:field="*{result}">
                                 <option value=""></option>
                                 <option th:each="assessment : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
                                         th:value="${assessment.name}" th:text="${assessment.message}"></option>
                             </select>
-                            <input type="hidden" th:field="*{result}" id="hiddenResult">
-                            <div class="invalid-feedback">Der skal vælges et resultat</div>
                         </div>
                     </form>
                 </div>

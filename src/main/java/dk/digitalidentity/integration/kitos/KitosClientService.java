@@ -231,6 +231,10 @@ public class KitosClientService {
 	}
 
 	private GDPRWriteRequestDTO.RiskAssessmentResultEnum getRiskAssessmentResult(RiskAssessment result) {
+		if (result == null) {
+			return GDPRWriteRequestDTO.RiskAssessmentResultEnum.UNDECIDED;
+		}
+
 		// the api only have three possible results, OS2compliance has five. We are rounding up
 		return switch (result) {
 			case LIGHT_GREEN, GREEN -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.LOW;
