@@ -16,18 +16,6 @@
     border-color:#FFDE07FF
 }
 
-.grid-scroll-wrapper {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-}
-
-.card-body, .grid-scroll-wrapper {
-    max-width: calc(100vw - 220px) !important;
-    width: 100% !important;
-    overflow-x: auto !important;
-}
-
 /*Validation*/
 .input-group .form-control.is-valid, .input-group .form-select.is-valid, .was-validated .input-group .form-control:valid, .was-validated .input-group .form-select:valid {
     z-index: 0;

@@ -1,0 +1,12 @@
+
+.grid-scroll-wrapper {
+    display: block;
+    width: 100%;
+    overflow-x: auto;
+}
+
+.card-body, .grid-scroll-wrapper {
+    max-width: calc(100vw - 220px) !important;
+    width: 100% !important;
+    overflow-x: auto !important;
+}
