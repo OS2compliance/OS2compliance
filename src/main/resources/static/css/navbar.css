@@ -1,0 +1,90 @@
+.mainnav.full {
+    width: 220px;
+}
+
+.mainnav.hidden {
+    display: none;
+}
+
+/* Icon-only mini nav */
+.mainnav.mini {
+    width: 60px;
+}
+
+#mainnav-menu a.nav-link.active2 {
+    display: block;
+    width: 100%;
+    height: 40px;
+    position: relative;
+}
+
+#mainnav-menu a.nav-link.active2 .nav-label {
+    display: none;
+}
+
+#mainnav span.nav-link.active2 {
+    display: block;
+    width: 100%;
+    height: 40px;
+    position: relative;
+}
+
+#mainnav span.nav-link.active2 .nav-label {
+    display: none;
+}
+
+/* Override Bootstrap margin and font-size to center icon */
+#mainnav-menu a.nav-link.active2 .nav-icons {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0 !important;
+    font-size: 15px !important;
+}
+
+#mainnav-menu .nav-link.inactive {
+    display: flex;
+}
+
+/* Override Bootstrap margin and font-size to center icon */
+#mainnav span.nav-link.active2 .nav-icons {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    margin: 0 !important;
+    font-size: 15px !important;
+}
+
+#mainnav span.nav-link.inactive {
+    display: flex;
+}
+
+/* Overlay mode for small screens */
+.mainnav.overlay {
+    position: fixed;
+    z-index: 1050;
+    left: 0;
+    top: 0;
+    height: 100%;
+    background: white;
+    width: 240px;
+    box-shadow: 2px 0 8px rgba(0,0,0,0.2);
+}
+
+/* Backdrop for focus mode */
+#nav-backdrop {
+    display: none;
+    position: fixed;
+    z-index: 1040;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.3);
+}
+
+#nav-backdrop.active {
+    display: block;
+}

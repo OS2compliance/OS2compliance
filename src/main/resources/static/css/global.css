@@ -1,3 +1,23 @@
+.navbar-top-links > li {
+    font-size: 16px;
+    line-height: 1em;
+    vertical-align: middle;
+}
+
+.navbar-top-links .tgl-menu-btn > a,
+.navbar-top-links .tgl-menu-btn > a:hover,
+.navbar-top-links .tgl-menu-btn > a:focus {
+    background-color: transparent;
+    color: #fff !important;
+    cursor: pointer;
+}
+
+@media (max-width: 991px) {
+    .brand-wrap > a {
+        display: none;
+    }
+}
+
 .mc-calendar {
     z-index: 1060 !important;
 }
