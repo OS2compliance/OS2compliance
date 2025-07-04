@@ -14,12 +14,15 @@ public interface KitosConstants {
 
     String KITOS_UUID_PROPERTY_KEY = "kitos_uuid";
     String KITOS_USAGE_UUID_PROPERTY_KEY = "kitos_usage_uuid";
+	String KITOS_RISK_LAST_SYNC_PROPERTY_KEY = "kitos_risk_last_sync";
     String KITOS_OWNER_ROLE_SETTING_KEY = "kitos_owner_role_uuid";
     String KITOS_RESPONSIBLE_ROLE_SETTING_KEY = "kitos_responsible_role_uuid";
 
     String KITOS_FIELDS_ASSET_LINK_SOURCE = "kitos_fields_asset_link_source";
     String KITOS_FIELDS_CONTRACT_DATE = "kitos_fields_contract_date";
     String KITOS_FIELDS_CONTRACT_END= "kitos_fields_contract_end";
+
+	String KITOS_ASSET_RISK_CHANGED_QUEUE = "kitosRiskQueue";
 
     ZonedDateTime KITOS_DELTA_START_FROM = OffsetDateTime.of(1970, 1, 1, 0, 0, 0 ,0, ZoneOffset.UTC).toZonedDateTime();
     OffsetDateTime KITOS_DELTA_START_FROM_OFFSET = KITOS_DELTA_START_FROM.toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);

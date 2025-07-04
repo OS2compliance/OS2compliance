@@ -47,6 +47,16 @@ function initDatepicker(elementQuerySelector, inputField) {
     });
     return datePicker;
 }
+
+function formatDateToDdMmYyyy(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${day}/${month}-${year}`;
+}
+
 function checkInputField(my_choices, atleastOne = false) {
     const inner_element = my_choices.containerInner.element;
     const value = my_choices.getValue(true);

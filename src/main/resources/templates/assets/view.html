@@ -524,6 +524,12 @@
                             <div id="dataProcessingTab" class="tab-pane fade" role="tabpanel" aria-labelledby="data-processing-tab" th:replace="~{assets/fragments/dataprocessing :: dataprocessing(${asset}, ${dataProcessing})}">
                             </div>
                             <div id="riskAssessmentTab" class="tab-pane fade" role="tabpanel" aria-labelledby="risk-assesssment-tab">
+                                <div th:if="${isKitos}" style="margin-bottom: 20px">
+                                    <button class="btn btn-secondary" onclick="assetRiskKitosService.openModal()">Synkroniser til OS2kitos</button>
+                                    <div th:if="${riskAssessmentKitosLastSync} != null">
+                                        <small>Sidst synkroniseret: <span th:text="${#temporals.format(riskAssessmentKitosLastSync, 'dd/MM-yyyy HH:mm')}"></span></small>
+                                    </div>
+                                </div>
                                 <div>
                                     <label class="mb-2">
                                         <input class="form-check-input editField" onchange="assetDetailsService.setRiskAssessmentOptOut(this)" name="threatAssessmentOptOutReason" type="checkbox" th:checked="${asset.isThreatAssessmentOptOut()}"> Risikovurdering fravalgt
@@ -578,6 +584,7 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal)}"></div>
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
+    <div th:replace="~{assets/fragments/riskAssessmentKitosModal :: riskAssessmentKitosModalFragment}"></div>
     <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true)}"></div>
 
     <script th:inline="javascript">
@@ -592,6 +599,7 @@
             var supplierId = [[${asset.supplier?.id}]];
             let assetId = [[${asset.id}]];
             let assessment = [[${risk?.assessment}]];
+            let newestRiskAssessmentDate = [[${risk?.createdAt}]];
             let asset = [[${asset}]];
         +]*/
 

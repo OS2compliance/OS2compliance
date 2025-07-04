@@ -1,10 +1,119 @@
 
 let assetDetailsService = new AssetDetailsService();
 let assetDpiaService = new AssetDpiaService();
+let assetRiskKitosService = new AssetRiskKitosService();
 document.addEventListener("DOMContentLoaded", function (event) {
     assetDetailsService.init();
     assetDpiaService.init();
+    assetRiskKitosService.init();
 });
+
+function AssetRiskKitosService() {
+
+    this.init = function () {
+        initDatepicker("#riskAssessmentConductedDateBtn", "#riskAssessmentConductedDate");
+
+        const resultSelect = document.getElementById("result");
+        const hiddenResult = document.getElementById("hiddenResult");
+        resultSelect.addEventListener("change", () => {
+            if (!resultSelect.disabled) {
+                hiddenResult.value = resultSelect.value;
+            }
+        });
+
+        const form = document.getElementById("riskAssessmentKitosSyncForm");
+        form.addEventListener("submit", (event) => this.validateFormBeforeSubmit(event, form));
+    }
+
+    this.resetForm = function () {
+        const form = document.getElementById("riskAssessmentKitosSyncForm");
+        form.querySelector("#autoFill").checked = true;
+        form.querySelector("#riskAssessmentConducted").checked = false;
+        form.querySelector("#riskAssessmentConductedDate").value = "";
+        form.querySelector("#result").value = "";
+        this.toggleReadonlyFields(true);
+    }
+
+    this.openModal = function () {
+        const modalElement = document.getElementById("riskAssessmentKitosModal");
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+
+        this.handleAutoFill();
+    }
+
+    this.handleAutoFill = function () {
+        const autoFillChecked = document.getElementById("autoFill").checked;
+        this.toggleReadonlyFields(autoFillChecked);
+
+        if (autoFillChecked) {
+            document.getElementById("riskAssessmentConducted").checked = assessment != null;
+            document.getElementById("riskAssessmentConductedDate").value = formatDateToDdMmYyyy(newestRiskAssessmentDate);
+            document.getElementById("result").value = assessment;
+            document.getElementById("hiddenResult").value = assessment;
+        }
+    }
+
+    this.toggleReadonlyFields = function (lock) {
+        document.getElementById("riskAssessmentConducted").disabled = lock;
+        document.getElementById("riskAssessmentConductedDate").readOnly = lock;
+        document.getElementById("result").disabled = lock;
+    }
+
+    this.validateFormBeforeSubmit = (event, form) => {
+    console.log("Form validation")
+        let valid = true;
+        let invalidFields = [];
+
+        // validate name field
+        const resultInput = form.querySelector('input[name="result"]');
+        if (resultInput) {
+            console.log("result input")
+            const val = resultInput.value.trim();
+            const feedback = resultInput.parentElement.querySelector('.invalid-feedback');
+            const isValid = val !== "";
+
+            if (!isValid) {
+                valid = false;
+                invalidFields.push(resultInput);
+            }
+            assetRiskKitosService.setFieldValidity(resultInput, feedback, isValid);
+        }
+
+        // validate date fields
+        const dateInput = form.querySelector('input[name="riskAssessmentConductedDate"]');
+        if (dateInput) {
+            console.log("date input")
+            const val = dateInput.value.trim();
+            const feedback = dateInput.parentElement.querySelector('.invalid-feedback');
+            const isValid = val === "" || isValidDateDMY(val);
+
+            if (!isValid) {
+                valid = false;
+                invalidFields.push(dateInput);
+            }
+            assetRiskKitosService.setFieldValidity(dateInput, feedback, isValid);
+        }
+
+        if (!valid) {
+            event.preventDefault();
+            if (invalidFields.length > 0) {
+                invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+                invalidFields[0].focus();
+            }
+        }
+    };
+
+    this.setFieldValidity = (field, feedback, isValid) => {
+        if (isValid) {
+            field.classList.remove("is-invalid");
+            if (feedback) feedback.style.display = "none";
+        } else {
+            field.classList.add("is-invalid");
+            if (feedback) feedback.style.display = "block";
+        }
+    };
+}
 
 function AssetDetailsService() {
 

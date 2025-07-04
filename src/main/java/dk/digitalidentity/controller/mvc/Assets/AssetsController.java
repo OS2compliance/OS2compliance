@@ -1,8 +1,12 @@
 package dk.digitalidentity.controller.mvc.Assets;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import dk.digitalidentity.Constants;
+import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
+import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.AssetDPIAPageDTO;
@@ -26,6 +30,7 @@ import dk.digitalidentity.model.entity.DPIAReport;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
@@ -39,6 +44,7 @@ import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.ForwardInformationToOtherSuppliers;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
@@ -56,6 +62,9 @@ import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.simple_queue.QueueMessage;
+import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -86,15 +95,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.util.LinkHelper.linkify;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
@@ -119,6 +132,7 @@ public class AssetsController {
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
 	private final AssetMapper assetMapper;
 	private final ApplicationEventPublisher eventPublisher;
+	private final OS2complianceConfiguration os2complianceConfiguration;
 
 
 	@GetMapping
@@ -170,6 +184,8 @@ public class AssetsController {
         }
 	}
 
+	// the riskAssessmentConductedDate has to be of type Date because LocalDate can not be parsed by JsonSimpleMessage
+	record RiskAssessmentKitosSync(long assetId, String fillOption, boolean riskAssessmentConducted, @DateTimeFormat(pattern = "dd/MM-yyyy") Date riskAssessmentConductedDate, String result) {}
     record AssetEditDPIADTO(Long assetId, boolean optOut) {}
 	public record AssetRelatedDPIADTO(long id, String name, String responsibleUserName, String responsibleOuName, LocalDate userUpdatedDate, DPIAScreeningConclusion screeningConclusion) {}
 	@GetMapping("{id}")
@@ -267,6 +283,13 @@ public class AssetsController {
 		model.addAttribute("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
         model.addAttribute("defaultSendReportTo", asset.getResponsibleUsers().stream().filter(u -> StringUtils.hasLength(u.getEmail())).findFirst().orElse(null));
 
+		String riskAssessmentKitosLastSyncString = asset.getProperties().stream()
+				.filter(p -> p.getKey().equals(KITOS_RISK_LAST_SYNC_PROPERTY_KEY))
+				.map(p -> p.getValue())
+				.findFirst().orElse(null);
+		model.addAttribute("riskAssessmentKitosSyncObject", new RiskAssessmentKitosSync(asset.getId(), "AUTO", false, null, ""));
+		model.addAttribute("riskAssessmentKitosLastSync", riskAssessmentKitosLastSyncString != null ? LocalDateTime.parse(riskAssessmentKitosLastSyncString) : null);
+
 
         // threat assessments
         model.addAttribute("threatAssessments", threatAssessments);
@@ -282,10 +305,64 @@ public class AssetsController {
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
 
-
-
         model.addAttribute("allAssetTypes", choiceService.getAssetTypeChoiceList().getValues());
 		return "assets/view";
+	}
+
+	@Transactional
+	@PostMapping("riskassessment/kitos")
+	public String setKitosSync(@ModelAttribute final RiskAssessmentKitosSync body, HttpServletRequest request) throws JsonProcessingException {
+		final Asset asset = assetService.get(body.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		String kitosId = asset.getProperties().stream().filter(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY)).map(p -> p.getValue()).findFirst().orElse(null);
+		boolean isKitos = kitosId != null;
+		if (!os2complianceConfiguration.getIntegrations().getKitos().isEnabled() || !isKitos) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+		}
+
+		final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(asset);
+		final List<ThreatAssessment> threatAssessments = allRelatedTo.stream()
+				.filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
+				.map(ThreatAssessment.class::cast)
+				.collect(Collectors.toList());
+		threatAssessments.sort(Comparator.comparing(Relatable::getCreatedAt).reversed());
+
+		ThreatAssessment newestThreatAssessment = null;
+		if (!threatAssessments.isEmpty()) {
+			newestThreatAssessment = threatAssessments.get(0);
+		}
+
+		// update last kitos risk sync property
+		asset.getProperties().stream()
+				.filter(p -> p.getKey().equals(KITOS_RISK_LAST_SYNC_PROPERTY_KEY))
+				.findFirst()
+				.ifPresentOrElse(
+						p -> p.setValue(LocalDateTime.now().toString()),
+						() -> asset.getProperties().add(Property.builder()
+								.key(KITOS_RISK_LAST_SYNC_PROPERTY_KEY)
+								.value(LocalDateTime.now().toString())
+								.entity(asset)
+								.build())
+				);
+
+		// create event
+		AssetRiskKitosEvent assetRiskKitosEvent = AssetRiskKitosEvent.builder()
+				.assetId(body.assetId())
+				.assetKitosId(kitosId)
+				.riskAssessmentConducted(body.riskAssessmentConducted())
+				.riskAssessmentConductedDate(body.riskAssessmentConductedDate)
+				.result(body.result != null ? RiskAssessment.valueOf(body.result) : null)
+				.riskAssessmentName(body.fillOption.equals("AUTO") ? newestThreatAssessment.getName() : null)
+				.riskAssessmentUrl(body.fillOption.equals("AUTO") ? request.getScheme() + "://" + request.getServerName() + "/risks/" + newestThreatAssessment.getId() : null)
+				.nextRiskAssessment(body.fillOption.equals("AUTO") && newestThreatAssessment.getNextRevision() != null ? Date.from(newestThreatAssessment.getNextRevision().atStartOfDay(ZoneId.systemDefault()).toInstant()) : null)
+			.build();
+
+		eventPublisher.publishEvent(QueueMessage.builder()
+				.queue(KITOS_ASSET_RISK_CHANGED_QUEUE)
+				.priority(1L)
+				.body(JsonSimpleMessage.toJson(assetRiskKitosEvent))
+			.build());
+
+		return "redirect:/assets/" + body.assetId;
 	}
 
     @RequireSuperuserOrAdministrator
