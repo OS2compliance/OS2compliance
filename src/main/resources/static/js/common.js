@@ -57,6 +57,23 @@ function formatDateToDdMmYyyy(dateString) {
     return `${day}/${month}-${year}`;
 }
 
+function isValidDateDMY(dateStr) {
+    // d/MM-yyyy or dd/MM-yyyy
+    const regex = /^(\d{1,2})\/(\d{2})-(\d{4})$/;
+    const match = dateStr.match(regex);
+    if(!match) return false;
+
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+
+    const date = new Date(year, month - 1, day);
+    if(date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        return false;
+    }
+    return true;
+}
+
 function checkInputField(my_choices, atleastOne = false) {
     const inner_element = my_choices.containerInner.element;
     const value = my_choices.getValue(true);

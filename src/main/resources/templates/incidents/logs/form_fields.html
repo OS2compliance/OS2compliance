@@ -13,7 +13,8 @@
 <th:block th:fragment="textField(response, idx)" th:with="fieldId=${formId} + ${#ids.seq('text')}">
     <label th:for="${fieldId}" class="col-sm-4 col-form-label" th:text="${response.question}"></label>
     <div class="col-sm-8">
-        <textarea class="form-control" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerText|" th:text="${response.answerText}" rows="4"></textarea>
+        <textarea class="form-control textField" style="width: 100%" th:id="${fieldId}" th:name="|responses[${idx}].answerText|" th:text="${response.answerText}" rows="4"></textarea>
+        <div class="invalid-feedback">Teksten må maks være 65.000 tegn.</div>
     </div>
 </th:block>
 
@@ -25,6 +26,7 @@
             <button th:id="${fieldId} + 'Btn'" class="btn btn-primary dateBtn" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;">
                 <i class="pli-calendar-4 fs-5"></i>
             </button>
+            <div class="invalid-feedback">Du skal angive en gyldig dato i formatet dd/MM-yyyy eller lade den være tom</div>
         </div>
     </div>
 </th:block>
