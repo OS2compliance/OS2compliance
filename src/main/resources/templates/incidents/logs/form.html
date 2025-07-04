@@ -10,7 +10,8 @@
                 <div class="row mt-2" >
                     <label for="title" class="col-sm-4 col-form-label">Titel</label>
                     <div class="col-sm-8">
-                        <input class="form-control" th:field="*{name}" style="width: 100%" id="title" type="text" required>
+                        <input class="form-control" th:field="*{name}" style="width: 100%" id="title" type="text">
+                        <div class="invalid-feedback">Navnet må ikke være tomt og max 768 tegn</div>
                     </div>
                 </div>
                 <div th:each="response, idx : ${incident.responses}" class="row mt-3">

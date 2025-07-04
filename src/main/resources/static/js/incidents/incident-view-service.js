@@ -6,7 +6,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 // Requires incident-service also
 function IncidentViewService() {
 
-    this.init = () => {}
+    this.init = () => {
+        const form = document.getElementById(formId);
+        form.addEventListener("submit", (event) => incidentService.validateFormBeforeSubmit(event, form));
+    }
 
     this.setEditable = (dialogId, editable) => {
         const editDescBtn = document.querySelector('#editDescBtn');
