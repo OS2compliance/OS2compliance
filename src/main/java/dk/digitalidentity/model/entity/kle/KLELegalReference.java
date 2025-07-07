@@ -1,4 +1,4 @@
-package dk.digitalidentity.model.entity.KLE;
+package dk.digitalidentity.model.entity.kle;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

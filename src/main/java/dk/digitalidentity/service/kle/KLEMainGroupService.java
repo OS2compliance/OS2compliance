@@ -1,7 +1,7 @@
-package dk.digitalidentity.service.KLE;
+package dk.digitalidentity.service.kle;
 
-import dk.digitalidentity.dao.KLE.KLEMainGroupDao;
-import dk.digitalidentity.model.entity.KLE.KLEMainGroup;
+import dk.digitalidentity.dao.kle.KLEMainGroupDao;
+import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

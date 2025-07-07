@@ -1,10 +1,10 @@
-package dk.digitalidentity.service.KLE;
+package dk.digitalidentity.service.kle;
 
 import dk.digitalidentity.kle_client.KLEClient;
-import dk.digitalidentity.model.entity.KLE.KLEGroup;
-import dk.digitalidentity.model.entity.KLE.KLELegalReference;
-import dk.digitalidentity.model.entity.KLE.KLEMainGroup;
-import dk.digitalidentity.model.entity.KLE.KLESubject;
+import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLELegalReference;
+import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
 import dk.kle_online.rest.resources.full.EmneKomponent;
 import dk.kle_online.rest.resources.full.GruppeKomponent;
 import dk.kle_online.rest.resources.full.HovedgruppeKomponent;
@@ -42,19 +42,16 @@ public class KLEService {
 
 	/**
 	 * Fetches an Emneplan containing all data from KLE API
+	 *
 	 * @return KLEEmneplanKomponent containing all data from KLE API
 	 */
-	public KLEEmneplanKomponent fetchAllFromApi() {
-		try {
-			return kLEClient.getEmnePlan();
-		}
-		catch (JAXBException e) {
-			throw new RuntimeException(e);
-		}
+	public KLEEmneplanKomponent fetchAllFromApi() throws JAXBException {
+		return kLEClient.getEmnePlan();
 	}
 
 	/**
 	 * Removes all KLE-related entities in database and replaces them with entities based on a fetch from KLE api
+	 *
 	 * @param emneplan the result of a fetch from KLE Api
 	 * @return a list of MainGroups
 	 */
@@ -127,7 +124,7 @@ public class KLEService {
 	private KLELegalReference addKLELegalReference(RetskildeReferenceKomponent kleLegalReference, KLEGroup group, KLESubject subject) {
 		KLELegalReference current = kleLegalReferenceCache.stream().filter(l -> l.getAccessionNumber().equals(kleLegalReference.getRetsinfoAccessionsNr())).findAny().orElse(null);
 		if (current == null) {
-			current= mapToLegalReference(kleLegalReference);
+			current = mapToLegalReference(kleLegalReference);
 			kleLegalReferenceCache.add(current);
 		}
 		if (group != null) {
@@ -158,18 +155,20 @@ public class KLEService {
 	}
 
 	private String vejledningToString(VejledningKomponent vejledningKomponent) {
-		if(vejledningKomponent == null) {
+		if (vejledningKomponent == null) {
 			return "";
 		}
 		return String.join("<br>", vejledningKomponent.getVejledningTekst().getP().stream().flatMap(p -> p.getContent().stream()).map(Object::toString).toList());
 	}
 
 	private static Duration fromXmlDuration(javax.xml.datatype.Duration xmlDuration) {
-		if (xmlDuration == null) return null;
+		if (xmlDuration == null)
+			return null;
 		try {
 			// Method 1: Use ISO-8601 string (most accurate)
 			return Duration.parse(xmlDuration.toString());
-		} catch (Exception e) {
+		}
+		catch (Exception e) {
 			// Fallback: Use time in milliseconds
 			long millis = xmlDuration.getTimeInMillis(new Date());
 			return Duration.ofMillis(millis);

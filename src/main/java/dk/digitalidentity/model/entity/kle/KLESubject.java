@@ -1,4 +1,4 @@
-package dk.digitalidentity.model.entity.KLE;
+package dk.digitalidentity.model.entity.kle;
 
 import dk.digitalidentity.config.DurationConverter;
 import jakarta.persistence.CascadeType;

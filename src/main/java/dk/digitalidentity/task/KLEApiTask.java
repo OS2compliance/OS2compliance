@@ -1,7 +1,8 @@
 package dk.digitalidentity.task;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
-import dk.digitalidentity.service.KLE.KLEService;
+import dk.digitalidentity.service.kle.KLEService;
+import jakarta.xml.bind.JAXBException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.EnableScheduling;
@@ -18,7 +19,7 @@ public class KLEApiTask {
 
 	@Scheduled(cron = "${os2compliance.integrations.kleclient.all_cron}") // Default 02.30 each day
 	@Scheduled(initialDelay = 2000, fixedDelay = Long.MAX_VALUE)
-	public void fetchAllFromKLEAPI() {
+	public void fetchAllFromKLEAPI() throws JAXBException {
 		if (!configuration.isSchedulingEnabled()) {
 			log.info("Not syncing with KLE API; Scheduling is disabled.");
 			return;
@@ -30,6 +31,11 @@ public class KLEApiTask {
 
 		log.info("Syncing data from KLE API");
 
-		kleService.syncToDatabase(kleService.fetchAllFromApi());
+		try {
+			kleService.syncToDatabase(kleService.fetchAllFromApi());
+		}
+		catch (JAXBException e) {
+			log.error(e.getMessage(), e);
+		}
 	}
 }

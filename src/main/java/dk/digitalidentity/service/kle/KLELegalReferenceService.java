@@ -1,7 +1,7 @@
-package dk.digitalidentity.service.KLE;
+package dk.digitalidentity.service.kle;
 
-import dk.digitalidentity.dao.KLE.KLELegalReferenceDao;
-import dk.digitalidentity.model.entity.KLE.KLELegalReference;
+import dk.digitalidentity.dao.kle.KLELegalReferenceDao;
+import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
