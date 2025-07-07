@@ -18,8 +18,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Builder
 @Getter
@@ -54,14 +54,14 @@ public class KLEGroup {
 	private KLEMainGroup mainGroup;
 
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
-	private List<KLESubject> subjects = new ArrayList<>();
+	private Set<KLESubject> subjects = new HashSet<>();
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinTable(
 			name = "kle_group_legal_reference",
 			joinColumns = @JoinColumn(name = "group_number"),
 			inverseJoinColumns = @JoinColumn(name = "accession_number")
 	)
-	private List<KLELegalReference> legalReferences = new ArrayList<>();
+	private Set<KLELegalReference> legalReferences = new HashSet<>();
 
 }

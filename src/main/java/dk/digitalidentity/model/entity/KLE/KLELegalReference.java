@@ -12,8 +12,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -38,8 +38,8 @@ public class KLELegalReference {
 	private String title;
 
 	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
-	private List<KLEGroup> groups = new ArrayList<>();
+	private Set<KLEGroup> groups = new HashSet<>();
 
 	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
-	private List<KLESubject> subjects = new ArrayList<>();
+	private Set<KLESubject> subjects = new HashSet<>();
 }

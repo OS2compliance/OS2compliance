@@ -20,8 +20,8 @@ import lombok.Setter;
 
 import java.time.Duration;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @NoArgsConstructor
 @AllArgsConstructor
@@ -62,12 +62,12 @@ public class KLESubject {
 	@JoinColumn(name = "group_number", referencedColumnName = "group_number")
 	private KLEGroup group;
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	@JoinTable(
 			name = "kle_subject_legal_reference",
 			joinColumns = @JoinColumn(name = "subject_number"),
 			inverseJoinColumns = @JoinColumn(name = "accession_number")
 	)
-	private List<KLELegalReference> legalReferences = new ArrayList<>();
+	private Set<KLELegalReference> legalReferences = new HashSet<>();
 
 }
