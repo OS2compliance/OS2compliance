@@ -6,9 +6,17 @@
     display: none;
 }
 
-/* Icon-only mini nav */
 .mainnav.mini {
     width: 60px;
+}
+
+.mainnav.mini .mainnav__inner {
+    z-index: 1050;
+}
+
+.mainnav.mini .mainnav__top-content {
+    overflow: visible;
+    z-index: 1050;
 }
 
 #mainnav-menu a.nav-link.active2 {
@@ -33,7 +41,6 @@
     display: none;
 }
 
-/* Override Bootstrap margin and font-size to center icon */
 #mainnav-menu a.nav-link.active2 .nav-icons {
     position: absolute;
     top: 50%;
@@ -47,7 +54,6 @@
     display: flex;
 }
 
-/* Override Bootstrap margin and font-size to center icon */
 #mainnav span.nav-link.active2 .nav-icons {
     position: absolute;
     top: 50%;
@@ -61,7 +67,6 @@
     display: flex;
 }
 
-/* Overlay mode for small screens */
 .mainnav.overlay {
     position: fixed;
     z-index: 1050;
@@ -73,7 +78,6 @@
     box-shadow: 2px 0 8px rgba(0,0,0,0.2);
 }
 
-/* Backdrop for focus mode */
 #nav-backdrop {
     display: none;
     position: fixed;
@@ -86,5 +90,89 @@
 }
 
 #nav-backdrop.active {
+    display: block;
+}
+
+.mainnav.mini .nav-item.has-sub {
+    position: relative;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content {
+    position: absolute;
+    left: 100%;
+    top: 0;
+    min-width: 170px;
+    background: #fff;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: none;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content.show {
+    display: block;
+}
+
+.mainnav.mini .nav-item.has-sub:hover .mininav-content {
+    display: block;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content .nav-item {
+    width: 100%;
+    border-bottom: 1px solid #eee;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content .nav-item:last-child {
+    border-bottom: none;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content .nav-link {
+    padding: 12px 16px;
+    color: #333;
+    text-decoration: none;
+    display: block;
+    white-space: nowrap;
+    height: auto;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content .nav-link:hover {
+    background-color: #f8f9fa;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content .nav-link.active {
+    background-color: #007bff;
+    color: white;
+}
+
+.mainnav.mini .nav-item.has-sub .mininav-content .nav-link .nav-label {
+    display: inline !important;
+}
+
+.mainnav.mini .nav-item.has-sub > .nav-link {
+    position: relative;
+}
+
+.mainnav.mini .nav-item.has-sub > .nav-link.active2::after {
+    content: '▶';
+    position: absolute;
+    right: 4px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 8px;
+    opacity: 0.6;
+    z-index: 1;
+}
+
+.mainnav.full .nav-item.has-sub .mininav-content {
+    position: static;
+    display: none;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+    min-width: auto;
+}
+
+.mainnav.full .nav-item.has-sub .mininav-content.show {
     display: block;
 }
