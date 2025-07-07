@@ -190,6 +190,7 @@ public class KitosClientService {
 	 * Update risk assessment for an it-system usage
 	 */
 	public void updateAssetRiskAssessment(String itSystemUuid, AssetRiskKitosEvent event) {
+		// TODO test
 		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
 		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
 

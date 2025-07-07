@@ -29,8 +29,8 @@ public class AssetRiskKitosEventHandler implements SimpleMessageHandler {
 		final AssetRiskKitosEvent event = JsonSimpleMessage.fromJson(message.getBody(), AssetRiskKitosEvent.class);
 
 		if (configuration.getIntegrations().getKitos().isEnabled()) {
-			if (event.getAssetKitosId() != null) {
-				clientService.updateAssetRiskAssessment(event.getAssetKitosId(), event);
+			if (event.getAssetKitosItSystemUsageId() != null) {
+				clientService.updateAssetRiskAssessment(event.getAssetKitosItSystemUsageId(), event);
 				log.info("Updated riskAssessment for asset: {}", event.getAssetId());
 			}
 		}

@@ -16,7 +16,7 @@ import java.util.Date;
 @AllArgsConstructor
 public class AssetRiskKitosEvent {
     private long assetId;
-	private String assetKitosId;
+	private String assetKitosItSystemUsageId;
 	private boolean riskAssessmentConducted;
 	private Date riskAssessmentConductedDate;
 	private RiskAssessment result;

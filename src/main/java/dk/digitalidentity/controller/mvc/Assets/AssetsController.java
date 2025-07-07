@@ -343,9 +343,10 @@ public class AssetsController {
 				);
 
 		// create event
+		String kitosUsageId = asset.getProperties().stream().filter(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY)).map(p -> p.getValue()).findFirst().orElse(null);
 		AssetRiskKitosEvent assetRiskKitosEvent = AssetRiskKitosEvent.builder()
 				.assetId(body.assetId())
-				.assetKitosId(kitosId)
+				.assetKitosItSystemUsageId(kitosUsageId)
 				.riskAssessmentConducted(body.riskAssessmentConducted())
 				.riskAssessmentConductedDate(body.riskAssessmentConductedDate)
 				.result(body.result != null && !body.result.isBlank() ? RiskAssessment.valueOf(body.result) : null)
