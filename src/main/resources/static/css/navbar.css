@@ -22,8 +22,11 @@
 #mainnav-menu a.nav-link.active2 {
     display: block;
     width: 100%;
-    height: 40px;
+    min-height: 40px;
+    height: auto;
     position: relative;
+    word-wrap: break-word;
+    white-space: normal;
 }
 
 #mainnav-menu a.nav-link.active2 .nav-label {
@@ -31,10 +34,10 @@
 }
 
 #mainnav span.nav-link.active2 {
-    display: block;
-    width: 100%;
-    height: 40px;
     position: relative;
+    display: block;
+    text-align: center;
+    height: 40px;
 }
 
 #mainnav span.nav-link.active2 .nav-label {
