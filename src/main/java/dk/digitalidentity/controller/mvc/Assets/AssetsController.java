@@ -104,8 +104,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_ASSET_RISK_CHANGED_QUEUE;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_RISK_LAST_SYNC_PROPERTY_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.util.LinkHelper.linkify;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
@@ -288,6 +287,12 @@ public class AssetsController {
 		model.addAttribute("riskAssessmentKitosSyncObject", new RiskAssessmentKitosSync(asset.getId(), "AUTO", false, null, ""));
 		model.addAttribute("riskAssessmentKitosLastSync", riskAssessmentKitosLastSyncString != null ? LocalDateTime.parse(riskAssessmentKitosLastSyncString) : null);
 
+		String dpiaKitosLastSyncString = asset.getProperties().stream()
+				.filter(p -> p.getKey().equals(KITOS_DPIA_LAST_SYNC_PROPERTY_KEY))
+				.map(p -> p.getValue())
+				.findFirst().orElse(null);
+		model.addAttribute("dpiaKitosLastSync", dpiaKitosLastSyncString != null ? LocalDateTime.parse(dpiaKitosLastSyncString) : null);
+		model.addAttribute("dpiaKitosSyncPossible",  !relatedDPIADTOs.isEmpty());
 
         // threat assessments
         model.addAttribute("threatAssessments", threatAssessments);

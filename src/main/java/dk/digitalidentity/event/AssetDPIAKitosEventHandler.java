@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class AssetRiskKitosEventHandler implements SimpleMessageHandler {
+public class AssetDPIAKitosEventHandler implements SimpleMessageHandler {
 
 	private final KitosClientService clientService;
 	private final OS2complianceConfiguration configuration;
@@ -21,17 +21,17 @@ public class AssetRiskKitosEventHandler implements SimpleMessageHandler {
 
 	@Override
 	public boolean handles(QueueMessage message) {
-		return KitosConstants.KITOS_ASSET_RISK_CHANGED_QUEUE.equals(message.getQueue());
+		return KitosConstants.KITOS_ASSET_DPIA_CHANGED_QUEUE.equals(message.getQueue());
 	}
 
 	@Override
 	public boolean handleMessage(QueueMessage message) {
-		final AssetRiskKitosEvent event = JsonSimpleMessage.fromJson(message.getBody(), AssetRiskKitosEvent.class);
+		final AssetDPIAKitosEvent event = JsonSimpleMessage.fromJson(message.getBody(), AssetDPIAKitosEvent.class);
 
 		if (configuration.getIntegrations().getKitos().isEnabled()) {
 			if (event.getAssetKitosItSystemUsageId() != null) {
-				clientService.updateAssetRiskAssessment(event.getAssetKitosItSystemUsageId(), event);
-				log.info("Updated riskAssessment in Kitos for asset: {}", event.getAssetId());
+				clientService.updateAssetDPIA(event.getAssetKitosItSystemUsageId(), event);
+				log.info("Updated DPIA in Kitos for asset: {}", event.getAssetId());
 			}
 		}
 

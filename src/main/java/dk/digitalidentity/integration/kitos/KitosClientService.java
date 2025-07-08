@@ -1,5 +1,6 @@
 package dk.digitalidentity.integration.kitos;
 
+import dk.digitalidentity.event.AssetDPIAKitosEvent;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
 import dk.digitalidentity.integration.kitos.mapper.KitosMapper;
@@ -152,21 +153,7 @@ public class KitosClientService {
             update.setGdpr(new GDPRWriteRequestDTO());
         }
         final GDPRWriteRequestDTO gdpr = update.getGdpr();
-        if (isEmpty(gdpr.getDirectoryDocumentation())) {
-            gdpr.setDirectoryDocumentation(null);
-        }
-        if (isEmpty(gdpr.getTechnicalPrecautionsDocumentation())) {
-            gdpr.setTechnicalPrecautionsDocumentation(null);
-        }
-        if (isEmpty(gdpr.getUserSupervisionDocumentation())) {
-            gdpr.setUserSupervisionDocumentation(null);
-        }
-        if (isEmpty(gdpr.getRiskAssessmentDocumentation())) {
-            gdpr.setRiskAssessmentDocumentation(null);
-        }
-        if (isEmpty(gdpr.getDpiaDocumentation())) {
-            gdpr.setDpiaDocumentation(null);
-        }
+		setGdprFieldsNull(gdpr);
 
 		if (archiveDuty != null) {
 			if (update.getArchiving() == null) {
@@ -189,30 +176,15 @@ public class KitosClientService {
 	/**
 	 * Update risk assessment for an it-system usage
 	 */
-	public void updateAssetRiskAssessment(String itSystemUuid, AssetRiskKitosEvent event) {
-		// TODO test
-		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
+	public void updateAssetRiskAssessment(String itSystemUsageUuid, AssetRiskKitosEvent event) {
+		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
 		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
 
 		if (update.getGdpr() == null) {
 			update.setGdpr(new GDPRWriteRequestDTO());
 		}
 		final GDPRWriteRequestDTO gdpr = update.getGdpr();
-		if (isEmpty(gdpr.getDirectoryDocumentation())) {
-			gdpr.setDirectoryDocumentation(null);
-		}
-		if (isEmpty(gdpr.getTechnicalPrecautionsDocumentation())) {
-			gdpr.setTechnicalPrecautionsDocumentation(null);
-		}
-		if (isEmpty(gdpr.getUserSupervisionDocumentation())) {
-			gdpr.setUserSupervisionDocumentation(null);
-		}
-		if (isEmpty(gdpr.getRiskAssessmentDocumentation())) {
-			gdpr.setRiskAssessmentDocumentation(null);
-		}
-		if (isEmpty(gdpr.getDpiaDocumentation())) {
-			gdpr.setDpiaDocumentation(null);
-		}
+		setGdprFieldsNull(gdpr);
 
 		// Only send
 		update.setGeneral(null);
@@ -228,7 +200,53 @@ public class KitosClientService {
 		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getRiskAssessmentUrl());
 		update.getGdpr().setPlannedRiskAssessmentDate(getOffsetDateTime(event.getNextRiskAssessment()));
 
-		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
+		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update);
+	}
+
+	/**
+	 * Update DPIA for an it-system usage
+	 */
+	public void updateAssetDPIA(String itSystemUsageUuid, AssetDPIAKitosEvent event) {
+		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
+		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+
+		if (update.getGdpr() == null) {
+			update.setGdpr(new GDPRWriteRequestDTO());
+		}
+		final GDPRWriteRequestDTO gdpr = update.getGdpr();
+		setGdprFieldsNull(gdpr);
+
+		// Only send
+		update.setGeneral(null);
+		update.setLocalKleDeviations(null);
+		update.setOrganizationUsage(null);
+		update.setExternalReferences(null);
+		update.setRoles(null);
+		update.getGdpr().setDpiaConducted(GDPRWriteRequestDTO.DpiaConductedEnum.YES);
+		update.getGdpr().setDpiaDate(getOffsetDateTime(event.getDpiaDate()));
+		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
+		update.getGdpr().getRiskAssessmentDocumentation().setName(event.getDpiaName());
+		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getDpiaUrl());
+
+		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update);
+	}
+
+	private void setGdprFieldsNull(GDPRWriteRequestDTO gdpr) {
+		if (isEmpty(gdpr.getDirectoryDocumentation())) {
+			gdpr.setDirectoryDocumentation(null);
+		}
+		if (isEmpty(gdpr.getTechnicalPrecautionsDocumentation())) {
+			gdpr.setTechnicalPrecautionsDocumentation(null);
+		}
+		if (isEmpty(gdpr.getUserSupervisionDocumentation())) {
+			gdpr.setUserSupervisionDocumentation(null);
+		}
+		if (isEmpty(gdpr.getRiskAssessmentDocumentation())) {
+			gdpr.setRiskAssessmentDocumentation(null);
+		}
+		if (isEmpty(gdpr.getDpiaDocumentation())) {
+			gdpr.setDpiaDocumentation(null);
+		}
 	}
 
 	private GDPRWriteRequestDTO.RiskAssessmentResultEnum getRiskAssessmentResult(RiskAssessment result) {

@@ -2,11 +2,39 @@
 let assetDetailsService = new AssetDetailsService();
 let assetDpiaService = new AssetDpiaService();
 let assetRiskKitosService = new AssetRiskKitosService();
+let assetDpiaKitosService = new AssetDpiaKitosService();
 document.addEventListener("DOMContentLoaded", function (event) {
     assetDetailsService.init();
     assetDpiaService.init();
     assetRiskKitosService.init();
 });
+
+function AssetDpiaKitosService() {
+    this.confirmSync = function () {
+        Swal.fire({
+                    text: `Er du sikker på du vil synkronisere DPIA til OS2kitos?`,
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#03a9f4',
+                    cancelButtonColor: '#df5645',
+                    confirmButtonText: 'Ja',
+                    cancelButtonText: 'Nej'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        fetch(`/rest/assets/${assetId}/dpia/kitos`,
+                            {method: "POST", headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': token}})
+                            .then(response => {
+                                if (response.status == 200) {
+                                    toastService.info("Opdatering af OS2kitos DPIA er sat i kø, og kan forventes at være opdateret inden for ganske kort tid.", "", "5000")
+                                } else {
+                                    toastService.error("Der opstod en fejl")
+                                }
+                            })
+                            .catch(error => toastService.error(error));
+                    }
+                });
+    }
+}
 
 function AssetRiskKitosService() {
 
