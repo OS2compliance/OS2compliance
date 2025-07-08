@@ -37,6 +37,7 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.kle.KLEGroupService;
 import dk.digitalidentity.service.kle.KLEMainGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -59,6 +60,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -85,6 +87,7 @@ public class RegisterController {
     private final TaskService taskService;
     private final UserService userService;
 	private final KLEMainGroupService kLEMainGroupService;
+	private final KLEGroupService kLEGroupService;
 
 	@GetMapping
     public String registerList(Model model) {
@@ -166,19 +169,22 @@ public class RegisterController {
     }
 
     @PostMapping("{id}/update")
-    public String update(@PathVariable final Long id,
-                         @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
-                         @RequestParam(value = "name", required = false) @Valid final String name,
-                         @RequestParam(value = "description", required = false) @Valid final String description,
-                         @RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
-                         @RequestParam(value = "departments", required = false) @Valid final Set<String> departmentUuids,
-                         @RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids,
-                         @RequestParam(value = "criticality", required = false) final Criticality criticality,
-                         @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
-                         @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
-                         @RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
-                         @RequestParam(required = false) final String section,
-                         @RequestParam(value = "status", required = false) final RegisterStatus status) {
+	public String update(@PathVariable final Long id,
+			@RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
+			@RequestParam(value = "name", required = false) @Valid final String name,
+			@RequestParam(value = "description", required = false) @Valid final String description,
+			@RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
+			@RequestParam(value = "departments", required = false) @Valid final Set<String> departmentUuids,
+			@RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids,
+			@RequestParam(value = "criticality", required = false) final Criticality criticality,
+			@RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
+			@RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
+			@RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
+			@RequestParam(required = false) final String section,
+			@RequestParam(value = "status", required = false) final RegisterStatus status,
+			@RequestParam(value = "mainGroups", required = false) final Set<String> mainGroupIds,
+			@RequestParam(value = "groups", required = false) final Set<String> groupIds
+			) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
@@ -221,6 +227,18 @@ public class RegisterController {
         if (status != null) {
             register.setStatus(status);
         }
+
+		if (mainGroupIds != null && !mainGroupIds.isEmpty()) {
+			register.setKleMainGroups(kLEMainGroupService.getAllByMainGroupNumbers(mainGroupIds));
+		} else {
+			register.setKleMainGroups(new HashSet<>());
+		}
+		if (groupIds != null && !groupIds.isEmpty()) {
+			register.setKleGroups(kLEGroupService.getAllByGroupNumbers(groupIds));
+		} else {
+			register.setKleGroups(new HashSet<>());
+		}
+
         registerService.save(register);
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
@@ -296,6 +314,8 @@ public class RegisterController {
 				.map(mg -> new SelectionDTO(mg.getMainGroupNumber()+" "+mg.getTitle(), mg.getMainGroupNumber(), register.getKleMainGroups().contains(mg)))
 				.toList();
 		model.addAttribute("mainGroups", mainGroups);
+
+		model.addAttribute("kleGroups", register.getKleGroups().stream().map(g -> new SelectionDTO(g.getGroupNumber(), g.getTitle(), true)));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
