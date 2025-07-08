@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
+import dk.digitalidentity.model.dto.SelectionDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -21,6 +22,7 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
@@ -35,6 +37,7 @@ import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.kle.KLEMainGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -81,8 +84,9 @@ public class RegisterController {
     private final DataProcessingService dataProcessingService;
     private final TaskService taskService;
     private final UserService userService;
+	private final KLEMainGroupService kLEMainGroupService;
 
-    @GetMapping
+	@GetMapping
     public String registerList(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
@@ -287,6 +291,12 @@ public class RegisterController {
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
         final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
+		final List<SelectionDTO> mainGroups = kLEMainGroupService.getAll().stream()
+				.sorted(Comparator.comparing(KLEMainGroup::getMainGroupNumber))
+				.map(mg -> new SelectionDTO(mg.getMainGroupNumber()+" "+mg.getTitle(), mg.getMainGroupNumber(), false))
+				.toList();
+		model.addAttribute("mainGroups", mainGroups);
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("section", section);
@@ -302,14 +312,14 @@ public class RegisterController {
         model.addAttribute("gdprP7Choices", gdprP7Choices);
         model.addAttribute("relatedDocuments", allRelatedTo.stream()
                 .filter(r -> r.getRelationType() == RelationType.DOCUMENT)
-                .collect(Collectors.toList()));
+                .toList());
         model.addAttribute("relatedTasks", allRelatedTo.stream()
                 .filter(r -> r.getRelationType() == RelationType.TASK)
-                .collect(Collectors.toList()));
+				.toList());
         model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("threatAssessments", allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
-            .collect(Collectors.toList()));
+				.toList());
         model.addAttribute("assetThreatAssessments", assetThreatAssessments);
         model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
@@ -367,13 +377,13 @@ public class RegisterController {
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted(Comparator.comparingInt(a -> asNumber(a.getIdentifier())))
-                .collect(Collectors.toList());
+				.toList();
     }
 
     private static List<ChoiceValue> sortChoicesAlpha(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted((a, b) -> a.getCaption().compareToIgnoreCase(b.getCaption()))
-                .collect(Collectors.toList());
+				.toList();
     }
 
 }
