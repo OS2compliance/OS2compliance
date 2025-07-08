@@ -293,7 +293,7 @@ public class RegisterController {
 
 		final List<SelectionDTO> mainGroups = kLEMainGroupService.getAll().stream()
 				.sorted(Comparator.comparing(KLEMainGroup::getMainGroupNumber))
-				.map(mg -> new SelectionDTO(mg.getMainGroupNumber()+" "+mg.getTitle(), mg.getMainGroupNumber(), false))
+				.map(mg -> new SelectionDTO(mg.getMainGroupNumber()+" "+mg.getTitle(), mg.getMainGroupNumber(), register.getKleMainGroups().contains(mg)))
 				.toList();
 		model.addAttribute("mainGroups", mainGroups);
 
