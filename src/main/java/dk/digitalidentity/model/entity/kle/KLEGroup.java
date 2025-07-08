@@ -49,6 +49,9 @@ public class KLEGroup {
 	@Column(name = "uuid")
 	private String uuid;
 
+	@Column
+	private boolean deleted;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "main_group_number", referencedColumnName = "main_group_number")
 	private KLEMainGroup mainGroup;

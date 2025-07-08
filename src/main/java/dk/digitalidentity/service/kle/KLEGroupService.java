@@ -6,6 +6,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
+
 @Transactional
 @RequiredArgsConstructor
 @Service
@@ -14,5 +16,9 @@ public class KLEGroupService {
 
 	public KLEGroup save(KLEGroup group) {
 		return kleGroupdao.save(group);
+	}
+
+	public void softDeleteAllNotMatching(Collection<String> groupNumbers) {
+		kleGroupdao.softDeleteByGroupNumbers(groupNumbers);
 	}
 }

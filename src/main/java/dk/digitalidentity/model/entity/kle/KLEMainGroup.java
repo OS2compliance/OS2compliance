@@ -45,6 +45,9 @@ public class KLEMainGroup {
 	@Column(name = "uuid")
 	private String uuid;
 
+	@Column
+	private boolean deleted;
+
 	@OneToMany(mappedBy = "mainGroup", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Set<KLEGroup> kleGroups = new HashSet<>();
 

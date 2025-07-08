@@ -57,12 +57,48 @@ public class KLEService {
 	 */
 	@Transactional
 	public List<KLEMainGroup> syncToDatabase(KLEEmneplanKomponent emneplan) {
-		// Delete all existing in db (cascading)
-		kLEMainGroupService.deleteAll();
 
 		// Map and persist
 		kleLegalReferenceCache = new HashSet<>(); // Reset cache used for legalreferences
-		return emneplan.getHovedgruppe().stream().map(this::mapToMainGroup).toList();
+		List<KLEMainGroup> mainGroups = emneplan.getHovedgruppe().stream().map(this::mapToMainGroup).toList();
+
+		// Delete all existing in db
+		deleteUnusedFromDatabase(mainGroups);
+
+		return kLEMainGroupService.saveAll(mainGroups);
+	}
+
+	/**
+	 * Soft deletes any KLE objects in the db not matching the list of maingroup (and its content)
+	 * @param mainGroups Master list of KLEMainGroups, groups and subjects
+	 */
+	public void deleteUnusedFromDatabase(List<KLEMainGroup> mainGroups) {
+		Set<String> mainGroupNumbers = new HashSet<>();
+		Set<String> groupNumbers = new HashSet<>();
+		Set<String> subjectNumbers = new HashSet<>();
+		Set<String> legalRefNumbers = new HashSet<>();
+
+		for (KLEMainGroup mainGroup : mainGroups) {
+			mainGroupNumbers.add(mainGroup.getMainGroupNumber());
+			groupNumbers.addAll(mainGroup.getKleGroups().stream()
+					.map(KLEGroup::getGroupNumber)
+					.collect(Collectors.toSet()));
+			subjectNumbers.addAll(mainGroup.getKleGroups().stream()
+					.flatMap(g -> g.getSubjects().stream())
+					.map(KLESubject::getSubjectNumber)
+					.collect(Collectors.toSet()));
+			legalRefNumbers.addAll(mainGroup.getKleGroups().stream()
+					.flatMap(g -> g.getSubjects().stream()
+							.flatMap(s -> s.getLegalReferences().stream()))
+					.map(KLELegalReference::getAccessionNumber)
+					.collect(Collectors.toSet()));
+		}
+
+		kLEMainGroupService.softDeleteAllNotMatching(mainGroupNumbers);
+		kLEGroupService.softDeleteAllNotMatching(groupNumbers);
+		kLESubjectService.softDeleteAllNotMatching(subjectNumbers);
+		kLELegalReferenceService.softDeleteAllNotMatching(legalRefNumbers);
+
 	}
 
 	private KLEMainGroup mapToMainGroup(HovedgruppeKomponent hovedgruppe) {
@@ -75,6 +111,7 @@ public class KLEService {
 				.creationDate(gregorianToLocalDate(hovedgruppe.getHovedgruppeAdministrativInfo().getOprettetDato()))
 				.lastUpdateDate(lastChanged.map(this::gregorianToLocalDate).orElse(null))
 				.uuid(hovedgruppe.getUUID())
+				.deleted(false)
 				.build();
 
 		KLEMainGroup persistedMainGroup = kLEMainGroupService.save(mainGroup);
@@ -93,6 +130,7 @@ public class KLEService {
 				.lastUpdateDate(lastChanged.map(this::gregorianToLocalDate).orElse(null))
 				.uuid(gruppe.getUUID())
 				.mainGroup(mainGroup)
+				.deleted(false)
 				.build();
 
 		KLEGroup persistedGroup = kLEGroupService.save(kleGroup);
@@ -113,6 +151,7 @@ public class KLEService {
 				.durationBeforeDeletion(fromXmlDuration(emne.getSletningJaevnfoerPersondataloven()))
 				.uuid(emne.getUUID())
 				.group(group)
+				.deleted(false)
 				.build();
 
 		KLESubject persistedSubject = kLESubjectService.save(kleSubject);
@@ -133,6 +172,7 @@ public class KLEService {
 		if (subject != null) {
 			subject.getLegalReferences().add(current);
 		}
+		current.setDeleted(false);
 
 		return current;
 	}
