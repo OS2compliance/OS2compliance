@@ -5,6 +5,9 @@ import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+import java.util.List;
+
 @RequiredArgsConstructor
 @Service
 public class KLEMainGroupService {
@@ -14,7 +17,11 @@ public class KLEMainGroupService {
 		return kleMainGroupDao.save(kleMainGroup);
 	}
 
-	public void deleteAll(){
-		kleMainGroupDao.deleteAll();
+	public List<KLEMainGroup> saveAll(List<KLEMainGroup> mainGroups) {
+		return kleMainGroupDao.saveAll(mainGroups);
+	}
+
+	public void softDeleteAllNotMatching(Collection<String> mainGroupNumbers) {
+		kleMainGroupDao.softDeleteByMainGroupNumbers(mainGroupNumbers);
 	}
 }

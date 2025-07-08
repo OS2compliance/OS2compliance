@@ -5,6 +5,8 @@ import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
+
 @RequiredArgsConstructor
 @Service
 public class KLELegalReferenceService {
@@ -12,5 +14,9 @@ public class KLELegalReferenceService {
 
 	public KLELegalReference save(KLELegalReference kleLegalReference) {
 		return kleLegalReferenceDao.save(kleLegalReference);
+	}
+
+	public void softDeleteAllNotMatching(Collection<String> accessionNumbers) {
+		kleLegalReferenceDao.softDeleteByAccessionNumbers(accessionNumbers);
 	}
 }

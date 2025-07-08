@@ -37,6 +37,9 @@ public class KLELegalReference {
 	@Column(name = "title", nullable = false)
 	private String title;
 
+	@Column
+	private boolean deleted;
+
 	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
 	private Set<KLEGroup> groups = new HashSet<>();
 

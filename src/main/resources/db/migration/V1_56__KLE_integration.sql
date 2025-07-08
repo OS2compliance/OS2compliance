@@ -3,7 +3,8 @@ CREATE TABLE kle_legal_reference
     accession_number VARCHAR(50) PRIMARY KEY,
     paragraph        TEXT,
     url              VARCHAR(500),
-    title            VARCHAR(500) NOT NULL
+    title            VARCHAR(500) NOT NULL,
+    deleted          BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE kle_main_group
@@ -13,7 +14,8 @@ CREATE TABLE kle_main_group
     instruction_text  TEXT,
     creation_date     DATE,
     last_update_date  DATE,
-    uuid              VARCHAR(36)  NULL -- At this point in time, uuid is not guaranteed present or unique
+    uuid              VARCHAR(36)  NULL, -- At this point in time, uuid is not guaranteed present or unique
+    deleted           BOOLEAN DEFAULT FALSE
 );
 
 CREATE TABLE kle_group
@@ -23,7 +25,8 @@ CREATE TABLE kle_group
     instruction_text  TEXT,
     creation_date     DATE,
     last_update_date  DATE,
-    uuid              VARCHAR(36)  NULL, -- At this point in time, uuid is not guaranteed present or unique
+    uuid              VARCHAR(36)  NULL, -- At this point in time, uuid is not guaranteed present or unique,
+    deleted           BOOLEAN DEFAULT FALSE,
     main_group_number VARCHAR(50)  NOT NULL,
     CONSTRAINT FK_kle_group_main_group_number FOREIGN KEY (main_group_number) REFERENCES kle_main_group (main_group_number) ON DELETE CASCADE
 );
@@ -39,6 +42,7 @@ CREATE TABLE kle_subject
     preservation_code        VARCHAR(50),
     duration_before_deletion VARCHAR(50),
     uuid                     VARCHAR(36)  NULL, -- At this point in time, uuid is not guaranteed present or unique
+    deleted                  BOOLEAN DEFAULT FALSE,
     group_number             VARCHAR(50)  NOT NULL,
     CONSTRAINT FK_kle_subject_group_number FOREIGN KEY (group_number) REFERENCES kle_group (group_number) ON DELETE CASCADE
 );
