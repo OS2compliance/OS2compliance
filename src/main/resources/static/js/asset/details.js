@@ -188,10 +188,10 @@ function AssetDetailsService() {
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
         removeBtn.className = "btn btn-danger editField";
-        removeBtn.innerText = "-";
-        removeBtn.onclick = function () {
+        removeBtn.textContent = "-";
+        removeBtn.addEventListener("click", function () {
             assetDetailsService.removeProductLink(removeBtn);
-        };
+        });
 
         div.appendChild(input);
         div.appendChild(removeBtn);

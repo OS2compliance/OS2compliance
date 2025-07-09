@@ -392,10 +392,10 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 os2Compliance.setDataProcessing(dataProcessing);
 
 				os2Compliance.setProductLinks(new ArrayList<>());
-				AssetProductLink assetProductLink = new AssetProductLink();
-				assetProductLink.setAsset(os2Compliance);
-				assetProductLink.setUrl("https://os2compliance.dk");
-				os2Compliance.getProductLinks().add(assetProductLink);
+                AssetProductLink assetProductLink = new AssetProductLink();
+                assetProductLink.setAsset(os2Compliance);
+                assetProductLink.setUrl("https://os2compliance.dk");
+                os2Compliance.getProductLinks().add(assetProductLink);
 
                 os2Compliance = assetService.create(os2Compliance);
 
@@ -419,11 +419,11 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset1.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 asset1.setDataProcessing(new DataProcessing());
 
-				asset1.setProductLinks(new ArrayList<>());
-				AssetProductLink assetProductLink1 = new AssetProductLink();
+                asset1.setProductLinks(new ArrayList<>());
+                AssetProductLink assetProductLink1 = new AssetProductLink();
 				assetProductLink1.setAsset(asset1);
-				assetProductLink1.setUrl("https://os2compliance.dk");
-				asset1.getProductLinks().add(assetProductLink1);
+                assetProductLink1.setUrl("https://os2compliance.dk");
+                asset1.getProductLinks().add(assetProductLink1);
 
                 asset1 = assetService.create(asset1);
 
@@ -447,11 +447,11 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset2.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 asset2.setDataProcessing(new DataProcessing());
 
-				asset2.setProductLinks(new ArrayList<>());
+                asset2.setProductLinks(new ArrayList<>());
 				AssetProductLink assetProductLink2 = new AssetProductLink();
-				assetProductLink2.setAsset(asset2);
-				assetProductLink2.setUrl("https://os2compliance.dk");
-				asset2.getProductLinks().add(assetProductLink2);
+                assetProductLink2.setAsset(asset2);
+                assetProductLink2.setUrl("https://os2compliance.dk");
+                asset2.getProductLinks().add(assetProductLink2);
 
                 assetService.create(asset2);
 
@@ -468,11 +468,11 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset3.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
                 asset3.setDataProcessing(new DataProcessing());
 
-				asset3.setProductLinks(new ArrayList<>());
-				AssetProductLink assetProductLink3 = new AssetProductLink();
-				assetProductLink3.setAsset(asset3);
-				assetProductLink3.setUrl("https://os2compliance.dk");
-				asset3.getProductLinks().add(assetProductLink3);
+                asset3.setProductLinks(new ArrayList<>());
+                AssetProductLink assetProductLink3 = new AssetProductLink();
+                assetProductLink3.setAsset(asset3);
+                assetProductLink3.setUrl("https://os2compliance.dk");
+                asset3.getProductLinks().add(assetProductLink3);
 
                 assetService.create(asset3);
 

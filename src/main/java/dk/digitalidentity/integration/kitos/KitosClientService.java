@@ -30,7 +30,6 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
-import java.time.LocalDate;
 import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -41,7 +40,15 @@ import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.*;
+import static dk.digitalidentity.integration.kitos.KitosConstants.IT_CONTRACT_OFFSET_SETTING_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_DELETION_OFFSET_USAGE_SETTING_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_ENTITY_TYPE;
+import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_OFFSET_SETTING_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_ENTITY_TYPE;
+import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DELTA_START_FROM_OFFSET;
+import static dk.digitalidentity.integration.kitos.KitosConstants.USAGE_DELETION_OFFSET_USAGE_SETTING_KEY;
 
 @Slf4j
 @Service
