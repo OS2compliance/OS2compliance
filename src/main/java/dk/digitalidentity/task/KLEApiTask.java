@@ -17,8 +17,8 @@ public class KLEApiTask {
 	private final KLEService kleService;
 	private final OS2complianceConfiguration configuration;
 
-//	@Scheduled(cron = "${os2compliance.integrations.kleclient.all_cron}") // Default 02.30 each day
-	@Scheduled(initialDelay = 2000, fixedDelay = Long.MAX_VALUE) // Enable to run at startup
+	@Scheduled(cron = "${os2compliance.integrations.kleclient.allCron} ?: 0 30 2 * * *") // Default 02.30 each day
+//	@Scheduled(initialDelay = 2000, fixedDelay = Long.MAX_VALUE) // Enable to run at startup
 	public void fetchAllFromKLEAPI() {
 		if (!configuration.isSchedulingEnabled()) {
 			log.info("Not syncing with KLE API; Scheduling is disabled.");
