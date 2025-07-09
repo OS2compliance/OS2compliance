@@ -329,13 +329,17 @@
 		<finalName>os2compliance</finalName>
 	</build>
 
+        <repositories>
+                <repository>
+                        <id>1-maven-repository</id>
+                        <name>Maven Repository</name>
+                        <url>https://repo.maven.apache.org/maven2/</url>
+                </repository>
 
-	<repositories>
-		<repository>
-			<id>shared-resources</id>
-			<name>Shared Resources</name>
-			<url>https://mvn.digital-identity.dk/release</url>
-		</repository>
-	</repositories>
-
+                <repository>
+                        <id>2-shared-resources</id>
+                        <name>Shared Resources</name>
+                        <url>https://mvn.digital-identity.dk/release</url>
+                </repository>
+        </repositories>
 </project>
