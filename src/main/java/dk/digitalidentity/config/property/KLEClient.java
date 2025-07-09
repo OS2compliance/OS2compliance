@@ -7,5 +7,5 @@ import lombok.Setter;
 @Setter
 public class KLEClient {
 	private boolean enabled = true;
-	private String all_cron;
+	private String allCron;
 }
