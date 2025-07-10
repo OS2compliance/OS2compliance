@@ -17,6 +17,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static dk.digitalidentity.integration.kitos.KitosConstants.IT_SYSTEM_USAGE_OFFSET_SETTING_KEY;
@@ -68,7 +70,7 @@ public class KitosSyncTask {
 		    final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);
 		    kitosService.syncRoles(roles);
 		    kitosService.syncUsers(users);
-		    kitosService.syncItSystems(Stream.concat(assocItSystems.stream(), changedItSystems.stream()).toList());
+		    kitosService.syncItSystems(mergeUniqueItSystems(assocItSystems, changedItSystems));
 		    kitosService.syncItSystemUsages(changedItSystemUsages);
 		    kitosService.syncItContracts(changedContracts);
 		}
@@ -112,5 +114,15 @@ public class KitosSyncTask {
         return false;
     }
 
-
+	private List<ItSystemResponseDTO> mergeUniqueItSystems(List<ItSystemResponseDTO> list1, List<ItSystemResponseDTO> list2) {
+		return Stream.concat(list1.stream(), list2.stream())
+				.collect(Collectors.toMap(
+						ItSystemResponseDTO::getUuid,
+						Function.identity(),
+						(existing, replacement) -> existing
+				))
+				.values()
+				.stream()
+				.toList();
+	}
 }

@@ -2,6 +2,12 @@
 <html lang="DA" xmlns:th="http://www.thymeleaf.org">
 <body>
 <div th:fragment="dpia(asset)" id="dpiaTab" class="tab-pane fade" role="tabpanel" aria-labelledby="dpia-tab">
+    <div th:if="${isKitos AND dpiaKitosSyncPossible}" style="margin-bottom: 20px">
+        <button class="btn btn-secondary" onclick="assetDpiaKitosService.confirmSync()">Synkroniser til OS2kitos</button>
+        <div th:if="${dpiaKitosLastSync} != null">
+            <small>Sidst synkroniseret: <span th:text="${#temporals.format(dpiaKitosLastSync, 'dd/MM-yyyy HH:mm')}"></span></small>
+        </div>
+    </div>
     <form id="dpiaForm" action="#" th:action="@{/assets/dpia}"  method="post" class="needs-validation" novalidate>
         <div class="row">
             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">

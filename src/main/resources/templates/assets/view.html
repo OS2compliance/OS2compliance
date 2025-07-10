@@ -179,14 +179,28 @@
                                         <!-- Column 2 -->
                                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 gx-4">
                                             <div class="row mb-3">
-                                                <label for="productLink" class="col-sm-3 col-form-label">Link til
-                                                    produktside</label>
+                                                <label class="col-sm-3 col-form-label">Referencer/links</label>
                                                 <div class="col-sm-9">
-                                                    <a class="form-control-link editField" id="productLink"
-                                                        th:href="@{*{productLink}}" target="_blank" rel="noopener noreferrer"
-                                                        th:text="*{productLink}"></a>
-                                                    <input class="form-control" id="productLinkEdit"
-                                                        th:field="*{productLink}" hidden>
+                                                    <!-- view mode -->
+                                                    <div id="productLinksViewContainer" class="editField">
+                                                        <div th:each="link : *{productLinks}" class="mb-1">
+                                                            <a th:href="${link.url}" th:text="${link.url}" class="form-control-link" target="_blank" rel="noopener noreferrer"></a>
+                                                        </div>
+                                                    </div>
+
+                                                    <!-- edit mode -->
+                                                    <div id="productLinksEditContainer" hidden>
+                                                        <div th:each="link, iterStat : *{productLinks}" class="input-group mb-2">
+                                                            <input type="text"
+                                                                   th:name="'productLinks[' + ${iterStat.index} + '].url'"
+                                                                   th:value="${link.url}"
+                                                                   class="form-control editField">
+                                                            <button type="button" class="btn btn-danger editField" onclick="assetDetailsService.removeProductLink(this)">-</button>
+                                                        </div>
+                                                    </div>
+
+                                                    <button id="addProductLinkBtn" class="btn btn-secondary editField" type="button"
+                                                            onclick="assetDetailsService.addProductLink()" hidden>+ Tilføj link</button>
                                                 </div>
                                             </div>
 
@@ -258,9 +272,17 @@
 
                                             <div class="row mb-3">
                                                 <label for="contractDate"
-                                                    class="col-sm-3 col-form-label">Kontraktdato</label>
+                                                    class="col-sm-3 col-form-label">
+                                                    Kontraktdato &nbsp;
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                </label>
                                                 <div class="col-sm-9 my-auto">
-                                                    <div class="input-group" th:hidden="*{contractDate == null}">
+                                                    <div th:if="${isKitos}" th:hidden="*{contractDate == null}">
+                                                        <input id="contractDate" type="text"
+                                                               class="form-control datepicker"
+                                                               th:field="*{contractDate}" readonly>
+                                                    </div>
+                                                    <div th:unless="${isKitos}" class="input-group" th:hidden="*{contractDate == null}">
                                                         <input id="contractDate" type="text"
                                                             class="form-control editField datepicker"
                                                             th:field="*{contractDate}">
@@ -278,9 +300,17 @@
 
                                             <div class="row mb-3">
                                                 <label for="contractTermination"
-                                                    class="col-sm-3 col-form-label">Kontraktophør</label>
+                                                    class="col-sm-3 col-form-label">
+                                                    Kontraktophør &nbsp;
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                </label>
                                                 <div class="col-sm-9 my-auto">
-                                                    <div class="input-group" th:hidden="*{contractTermination == null}">
+                                                    <div th:if="${isKitos}" th:hidden="*{contractTermination == null}">
+                                                        <input id="contractTermination" type="text"
+                                                               class="form-control datepicker"
+                                                               th:field="*{contractTermination}" readonly>
+                                                    </div>
+                                                    <div th:unless="${isKitos}" class="input-group" th:hidden="*{contractTermination == null}">
                                                         <input id="contractTermination" type="text"
                                                             class="form-control editField datepicker"
                                                             th:field="*{contractTermination}">
@@ -298,23 +328,32 @@
 
                                             <div class="row mb-3">
                                                 <label for="terminationNotice"
-                                                    class="col-sm-3 col-form-label">Opsigelsesvarsel</label>
+                                                    class="col-sm-3 col-form-label">
+                                                    Opsigelsesvarsel &nbsp;
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                </label>
                                                 <div class="col-sm-9">
+                                                    <input th:if="${isKitos}" class="form-control" id="terminationNotice"
+                                                           th:value="*{terminationNotice}" readonly>
                                                     <!--                                                 When that field will be an enum -->
                                                     <!--                                                 <select class="form-control form-select" th:field="*{criticality}" name="criticality" id="criticality" tabindex="-1" disabled> -->
                                                     <!--                                                     <option th:each="crit : ${T(dk.digitalidentity.model.entity.enums.Criticality).values()}" -->
                                                     <!--                                                             th:value="${crit.name}" th:text="${crit.message}"></option> -->
                                                     <!--                                                 </select> -->
-                                                    <input class="form-control editField" id="terminationNotice"
+                                                    <input th:unless="${isKitos}" class="form-control editField" id="terminationNotice"
                                                         th:value="*{terminationNotice}" disabled>
                                                 </div>
                                             </div>
 
                                             <div class="row mb-3">
-                                                <label for="archive" class="col-sm-3 col-form-label">Systemet skal arkiveres</label>
+                                                <label for="archive" class="col-sm-3 col-form-label">
+                                                    Systemet skal arkiveres &nbsp;
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                </label>
                                                 <div class="col-sm-9 my-auto">
-                                                    <input id="archive" th:field="*{archive}" th:checked="*{archive}"
-                                                        class="form-check-input editField" type="checkbox" disabled>
+                                                    <select class="form-control form-select editField" th:field="*{archive}" name="archive" id="archive" tabindex="-1" disabled>
+                                                        <option th:each="val : ${T(dk.digitalidentity.model.entity.enums.ArchiveDuty).values()}" th:value="${val}" th:text="${val.message}"></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>
@@ -485,6 +524,12 @@
                             <div id="dataProcessingTab" class="tab-pane fade" role="tabpanel" aria-labelledby="data-processing-tab" th:replace="~{assets/fragments/dataprocessing :: dataprocessing(${asset}, ${dataProcessing})}">
                             </div>
                             <div id="riskAssessmentTab" class="tab-pane fade" role="tabpanel" aria-labelledby="risk-assesssment-tab">
+                                <div th:if="${isKitos}" style="margin-bottom: 20px">
+                                    <button class="btn btn-secondary" onclick="assetRiskKitosService.openModal()">Synkroniser til OS2kitos</button>
+                                    <div th:if="${riskAssessmentKitosLastSync} != null">
+                                        <small>Sidst synkroniseret: <span th:text="${#temporals.format(riskAssessmentKitosLastSync, 'dd/MM-yyyy HH:mm')}"></span></small>
+                                    </div>
+                                </div>
                                 <div>
                                     <label class="mb-2">
                                         <input class="form-check-input editField" onchange="assetDetailsService.setRiskAssessmentOptOut(this)" name="threatAssessmentOptOutReason" type="checkbox" th:checked="${asset.isThreatAssessmentOptOut()}"> Risikovurdering fravalgt
@@ -539,6 +584,7 @@
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal)}"></div>
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
+    <div th:replace="~{assets/fragments/riskAssessmentKitosModal :: riskAssessmentKitosModalFragment}"></div>
     <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true)}"></div>
 
     <script th:inline="javascript">
@@ -553,6 +599,7 @@
             var supplierId = [[${asset.supplier?.id}]];
             let assetId = [[${asset.id}]];
             let assessment = [[${risk?.assessment}]];
+            let newestRiskAssessmentDate = [[${risk?.createdAt}]];
             let asset = [[${asset}]];
         +]*/
 
@@ -736,36 +783,37 @@
         }
 
         function initDatePickers() {
-            const contractDatePicker = MCDatepicker.create({
-                el: '#contractDate',
-                autoClose: true,
-                dateFormat: 'dd/mm-yyyy',
-                closeOnBlur: true,
-                firstWeekday: 1,
-                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                customClearBTN: "Ryd",
-                customCancelBTN: "Annuller"
-            });
-            document.querySelector( "#contractDateBtn" ).addEventListener( "click", () => {
-                contractDatePicker.open();
-            });
+            if (!isKitos) {
+                const contractDatePicker = MCDatepicker.create({
+                    el: '#contractDate',
+                    autoClose: true,
+                    dateFormat: 'dd/mm-yyyy',
+                    closeOnBlur: true,
+                    firstWeekday: 1,
+                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                    customClearBTN: "Ryd",
+                    customCancelBTN: "Annuller"
+                });
+                document.querySelector( "#contractDateBtn" ).addEventListener( "click", () => {
+                    contractDatePicker.open();
+                });
 
-
-            const contractTerminationPicker = MCDatepicker.create({
-                el: '#contractTermination',
-                autoClose: true,
-                dateFormat: 'dd/mm-yyyy',
-                closeOnBlur: true,
-                firstWeekday: 1,
-                customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                customClearBTN: "Ryd",
-                customCancelBTN: "Annuller"
-            });
-            document.querySelector( "#contractTerminationBtn" ).addEventListener( "click", () => {
-                contractTerminationPicker.open();
-            });
+                const contractTerminationPicker = MCDatepicker.create({
+                    el: '#contractTermination',
+                    autoClose: true,
+                    dateFormat: 'dd/mm-yyyy',
+                    closeOnBlur: true,
+                    firstWeekday: 1,
+                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+                    customClearBTN: "Ryd",
+                    customCancelBTN: "Annuller"
+                });
+                document.querySelector( "#contractTerminationBtn" ).addEventListener( "click", () => {
+                    contractTerminationPicker.open();
+                });
+            }
         }
 
         function removeChoiceByUserUuid(arr, uuid) {
@@ -846,10 +894,13 @@
 
                 if (!isKitos) {
                     managersChoicesEditSelect.enable();
+                    document.getElementById("productLinksViewContainer").hidden = true;
+                    document.getElementById("productLinksEditContainer").hidden = false;
+                    document.getElementById("addProductLinkBtn").hidden = false;
                 }
+
                 suppliersChoicesEditSelect.enable();
                 responsibleChoicesEditSelect.enable();
-
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                     elem.disabled = true;
@@ -874,6 +925,11 @@
                 managersChoicesEditSelect.disable();
                 responsibleChoicesEditSelect.disable();
 
+                if (!isKitos) {
+                    document.getElementById("productLinksViewContainer").hidden = false;
+                    document.getElementById("productLinksEditContainer").hidden = true;
+                    document.getElementById("addProductLinkBtn").hidden = true;
+                }
             }
         }
 
