@@ -22,6 +22,7 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
@@ -315,7 +316,16 @@ public class RegisterController {
 				.toList();
 		model.addAttribute("mainGroups", mainGroups);
 
-		model.addAttribute("kleGroups", register.getKleGroups().stream().map(g -> new SelectionDTO(g.getGroupNumber(), g.getTitle(), true)));
+		final Set<KLEGroup> kleGroups = register.getKleGroups();
+		model.addAttribute("kleGroups", kleGroups.stream()
+				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
+				.map(g -> new SelectionDTO(g.getGroupNumber(), g.getTitle(), true)));
+
+		final List<SelectionDTO> kleLegalReferences = kleGroups.stream()
+				.flatMap(g -> g.getLegalReferences().stream())
+				.map(lr -> new SelectionDTO(lr.getAccessionNumber(), lr.getTitle(), register.getRelevantKLELegalReferences().contains(lr)))
+				.toList();
+		model.addAttribute("kleLegalReferences", kleLegalReferences);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 

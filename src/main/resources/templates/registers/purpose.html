@@ -20,6 +20,14 @@
                             <textarea name="purpose" th:field="*{purpose}" id="purpose" class="p-2 form-control" th:text="${register.purpose}" rows="4" readonly></textarea>
                         </div>
                     </div>
+                    <div class="row">
+                        <label for="relevantLegalReferencesSelector" class="col-form-label col-lg-3">Relevante Lovhenvisninger</label>
+                        <div class="col-lg-9">
+                            <select name="relevantLegalReferences" id="relevantLegalReferencesSelector" class="form-control" disabled>
+                                <option th:each="legalRef : ${relevantLegalReferences}" th:text="${legalRef.display}" th:value="${legalRef.value}" th:selected="${legalRef.selected}"></option>
+                            </select>
+                        </div>
+                    </div>
                     <div class="row mt-4">
                         <label class="col-form-label col-lg-3 col-sm-12">GDPR lovhjemmel</label>
                         <div class="col-sm-12 col-lg-9 mt-2">

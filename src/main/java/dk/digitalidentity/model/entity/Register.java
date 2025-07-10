@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -135,6 +136,14 @@ public class Register extends Relatable {
 			inverseJoinColumns = @JoinColumn(name = "kle_group_number")
 	)
 	private Set<KLEGroup> kleGroups = new HashSet<>();
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@JoinTable(
+			name = "register_kle_legal_reference",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "kle_accession_number")
+	)
+	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {
