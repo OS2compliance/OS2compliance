@@ -273,7 +273,14 @@ public class RiskRestController {
             case OT -> response.setAvailabilityOrganisation(Integer.parseInt(dto.value()));
             case PROBLEM -> response.setProblem(dto.value());
             case EXISTING_MEASURES -> response.setExistingMeasures(dto.value());
-            case METHOD -> response.setMethod(ThreatMethod.valueOf(dto.value()));
+            case METHOD -> {
+				ThreatMethod threatMethod = ThreatMethod.valueOf(dto.value());
+				response.setMethod(threatMethod);
+				if (threatMethod.equals(ThreatMethod.NONE) || threatMethod.equals(ThreatMethod.ACCEPT)) {
+					response.setResidualRiskProbability(null);
+					response.setResidualRiskConsequence(null);
+				}
+			}
             case ELABORATION -> response.setElaboration(dto.value());
             case RESIDUAL_RISK_PROBABILITY -> response.setResidualRiskProbability(Integer.parseInt(dto.value()));
             case RESIDUAL_RISK_CONSEQUENCE -> response.setResidualRiskConsequence(Integer.parseInt(dto.value()));
