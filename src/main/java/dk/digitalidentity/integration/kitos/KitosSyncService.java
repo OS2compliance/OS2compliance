@@ -2,12 +2,16 @@ package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.Constants;
 import dk.digitalidentity.dao.KitosRolesDao;
+import dk.digitalidentity.model.dto.enums.KitosField;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.KitosRole;
 import dk.digitalidentity.model.entity.Property;
+import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.UserProperty;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
@@ -16,6 +20,7 @@ import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.UserService;
+import dk.kitos.api.model.ExternalReferenceDataResponseDTO;
 import dk.kitos.api.model.GDPRRegistrationsResponseDTO;
 import dk.kitos.api.model.IdentityNamePairResponseDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
@@ -34,6 +39,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.NEEDS_CVR_UPDATE_PROPERTY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY;
@@ -159,12 +165,29 @@ public class KitosSyncService {
         if (!itContractResponseDTO.getGeneral().getValidity().getValid()) {
             return;
         }
-        asset.setContractDate(
-            nullSafe(() -> itContractResponseDTO.getGeneral().getValidity().getValidFrom().toLocalDate())
-        );
-        asset.setContractTermination(
-            nullSafe(() -> itContractResponseDTO.getGeneral().getValidity().getValidTo().toLocalDate())
-        );
+
+		asset.setTerminationNotice(
+				nullSafe(() -> itContractResponseDTO.getTermination().getTerms().getNoticePeriodMonths().getName())
+		);
+
+		String settingContractDate = settingsService.getString(KitosConstants.KITOS_FIELDS_CONTRACT_DATE, null);
+		if (settingContractDate == null || KitosField.SYSTEMS_CONTRACT_FRONTPAGE_FROM.equals(KitosField.valueOf(settingContractDate))) {
+			asset.setContractDate(
+					nullSafe(() -> itContractResponseDTO.getGeneral().getValidity().getValidFrom().toLocalDate())
+			);
+		} else if (KitosField.SYSTEMS_CONTRACT_CONCLUDED.equals(KitosField.valueOf(settingContractDate))) {
+			// TODO AMALIE Systemer -> Kontrakt -> Indgået
+		}
+
+		String settingContractTerminationDate = settingsService.getString(KitosConstants.KITOS_FIELDS_CONTRACT_DATE, null);
+		if (settingContractTerminationDate == null || KitosField.SYSTEMS_CONTRACT_FRONTPAGE_TO.equals(KitosField.valueOf(settingContractTerminationDate))) {
+			asset.setContractTermination(
+					nullSafe(() -> itContractResponseDTO.getGeneral().getValidity().getValidTo().toLocalDate())
+			);
+		} else if (KitosField.SYSTEMS_CONTRACT_EXPIRES.equals(KitosField.valueOf(settingContractTerminationDate))) {
+			// TODO AMALIE Systemer -> Kontrakt -> Udløber
+		}
+
     }
 
     private void updateAssetWith(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
@@ -175,6 +198,8 @@ public class KitosSyncService {
         addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
         setAssetOwner(asset, itSystemUsageResponseDTO);
         setAssetManagers(asset, itSystemUsageResponseDTO);
+		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
+
         final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
         if (businessCritical != null) {
             if (businessCritical == GDPRRegistrationsResponseDTO.BusinessCriticalEnum.YES && asset.getCriticality() != Criticality.CRITICAL) {
@@ -183,8 +208,18 @@ public class KitosSyncService {
                 asset.setCriticality(Criticality.NON_CRITICAL);
             }
         }
-    }
 
+		String setting = settingsService.getString(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, null);
+		if (setting != null && KitosField.SYSTEMS_REFS_DOCUMENT.equals(KitosField.valueOf(setting))) {
+			asset.getProductLinks().clear();
+			asset.getProductLinks().addAll(
+				itSystemUsageResponseDTO.getExternalReferences().stream()
+						.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
+						.map(e -> new AssetProductLink(null, e.getUrl(), asset))
+					.collect(Collectors.toList())
+			);
+		}
+    }
 
     private void setAssetManagers(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
         final String responsibleRoleUuid = settingsService.getString(KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "");
@@ -235,7 +270,9 @@ public class KitosSyncService {
         if (!supplierOverriden(asset)) {
             asset.setSupplier(findOrCreateSupplier(responseDTO));
         }
-    }
+
+		setLinksFromKitosSystem(responseDTO, asset);
+	}
 
     private boolean supplierOverriden(final Asset asset) {
         //noinspection DataFlowIssue
@@ -264,10 +301,12 @@ public class KitosSyncService {
         asset.setSupplier(supplier);
         asset.setCriticality(Criticality.NON_CRITICAL);
         asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
-        assetService.create(asset);
+		setLinksFromKitosSystem(responseDTO, asset);
+
+		assetService.create(asset);
     }
 
-    private Supplier findOrCreateSupplier(final ItSystemResponseDTO responseDTO) {
+	private Supplier findOrCreateSupplier(final ItSystemResponseDTO responseDTO) {
         if (responseDTO.getRightsHolder() == null) {
             return null;
         }
@@ -363,5 +402,18 @@ public class KitosSyncService {
                     .build())
             );
     }
+
+	private void setLinksFromKitosSystem(ItSystemResponseDTO responseDTO, Asset asset) {
+		String setting = settingsService.getString(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, null);
+		if (setting != null && KitosField.SYSTEMS_FRONTPAGE_REFS.equals(KitosField.valueOf(setting))) {
+			asset.getProductLinks().clear();
+			asset.getProductLinks().addAll(
+				responseDTO.getExternalReferences().stream()
+						.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
+						.map(e -> new AssetProductLink(null, e.getUrl(), asset))
+					.collect(Collectors.toList())
+			);
+		}
+	}
 
 }

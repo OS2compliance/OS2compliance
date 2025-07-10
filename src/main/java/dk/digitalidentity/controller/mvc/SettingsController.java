@@ -1,7 +1,9 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.SettingsDTO;
+import dk.digitalidentity.model.dto.enums.KitosField;
 import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.service.KitosService;
@@ -17,8 +19,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
-
+import java.util.stream.Collectors;
 
 @Slf4j
 @Controller
@@ -38,8 +42,18 @@ public class SettingsController {
         settings.addList(settingsService.getByEditable());
         model.addAttribute("settings", settings);
         model.addAttribute("page", getParentType(httpServletRequest.getHeader("Referer")));
-        model.addAttribute("kitosRoles", kitosService.kitosRoles());
-        model.addAttribute("kitosEnabled", configuration.getIntegrations().getKitos().isEnabled());
+
+		boolean kitosEnabled = configuration.getIntegrations().getKitos().isEnabled();
+		model.addAttribute("kitosEnabled", kitosEnabled);
+		if (kitosEnabled) {
+			model.addAttribute("kitosRoles", kitosService.kitosRoles());
+
+			List<KitosField> fields = Arrays.asList(KitosField.values());
+			model.addAttribute("kitosFieldsForAssetLinkSource", fields.stream().filter(f -> f.getForField().equals(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE)).collect(Collectors.toSet()));
+			model.addAttribute("kitosFieldsForContractDate", fields.stream().filter(f -> f.getForField().equals(KitosConstants.KITOS_FIELDS_CONTRACT_DATE)).collect(Collectors.toSet()));
+			model.addAttribute("kitosFieldsForContractEnd", fields.stream().filter(f -> f.getForField().equals(KitosConstants.KITOS_FIELDS_CONTRACT_END)).collect(Collectors.toSet()));
+		}
+
 
         return "fragments/settings";
     }
