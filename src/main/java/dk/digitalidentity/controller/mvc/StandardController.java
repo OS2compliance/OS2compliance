@@ -53,11 +53,6 @@ public class StandardController {
                               List<Relatable> relatedSections) {}
     record StandardTemplateSectionDTO(StandardTemplateSection standardTemplateSection,
                                       List<StandardSectionDTO> standardSectionDTOs) {}
-    @GetMapping
-    public String index() {
-        return "standards/index";
-    }
-
 
     @Transactional
     @GetMapping("section/{sectionId}")
@@ -133,7 +128,7 @@ public class StandardController {
 
     record StandardTemplateListDTO(String identifier, String name, String compliance) {}
     @Transactional
-    @GetMapping("supporting")
+    @GetMapping
     public String supportingPage(final Model model) {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
         for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(StandardTemplate::isSupporting).toList()) {
