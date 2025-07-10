@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
@@ -102,9 +103,6 @@ public class Asset extends Relatable {
     private boolean sociallyCritical;
 
     @Column
-    private String productLink;
-
-    @Column
     private String emergencyPlanLink;
 
     @Column
@@ -128,8 +126,9 @@ public class Asset extends Relatable {
     @Column
     private String terminationNotice;
 
-    @Column
-    private boolean archive;
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ArchiveDuty archive = ArchiveDuty.UNDECIDED;
 
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
@@ -201,5 +200,10 @@ public class Asset extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	private Set<Role> roles = new HashSet<>();
+
+	@OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<AssetProductLink> productLinks = new ArrayList<>();
 
 }

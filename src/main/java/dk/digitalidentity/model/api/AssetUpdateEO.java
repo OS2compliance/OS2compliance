@@ -13,22 +13,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
-import static dk.digitalidentity.model.api.Examples.ASSET_CONTRACT_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_CONTRACT_TERMINATION_NOTICE_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_CRITICALITY_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DESCRIPTION_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_DATE_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_INSPECTION_SETTING_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_DPA_SUPERVISION_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_EMERGENCY_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_NAME_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_PRODUCT_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_RE_ESTAB_LINK_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_SOC_CRITICALITY_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.ASSET_STATUS_EXAMPLE;
-import static dk.digitalidentity.model.api.Examples.VERSION_EXAMPLE;
+import static dk.digitalidentity.model.api.Examples.*;
 
 @Data
 @Builder
@@ -67,8 +52,6 @@ public class AssetUpdateEO {
     private AssetEO.Criticality criticality;
     @Schema(description = "Socially critical flag", example = ASSET_SOC_CRITICALITY_EXAMPLE)
     private boolean sociallyCritical;
-    @Schema(description = "Product link", example = ASSET_PRODUCT_LINK_EXAMPLE)
-    private String productLink;
     @Schema(description = "Emergency plan link", example = ASSET_EMERGENCY_LINK_EXAMPLE)
     private String emergencyPlanLink;
     @Schema(description = "Reestablishment plan link", example = ASSET_RE_ESTAB_LINK_EXAMPLE)
@@ -81,8 +64,8 @@ public class AssetUpdateEO {
     private LocalDate contractTermination;
     @Schema(description = "Contract termination notice", example = ASSET_CONTRACT_TERMINATION_NOTICE_EXAMPLE)
     private String terminationNotice;
-    @Schema(description = "Archiving flag", example = "false")
-    private boolean archive;
+    @Schema(description = "Archiving flag", example = ASSET_ARCHIVE_EXAMPLE)
+    private AssetEO.ArchiveDuty archive;
     @Schema(description = "Supplier")
     private SupplierWriteEO supplier;
     @Schema(description = "Sub suppliers")
@@ -91,4 +74,6 @@ public class AssetUpdateEO {
     private List<UserWriteEO> responsibleUsers;
     @Schema(description = "Custom properties that can be set on the asset, can be external identifier flags etc.")
     private Set<PropertyEO> properties;
+	@Schema(description = "Product links", example = ASSET_PRODUCT_LINKS_EXAMPLE)
+	private List<String> productLinks;
 }
