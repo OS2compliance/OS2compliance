@@ -241,6 +241,11 @@
 			<artifactId>kle-api-client</artifactId>
 			<version>1.1.1</version>
 		</dependency>
+		<dependency>
+			<groupId>dk.digitalidentity</groupId>
+			<artifactId>simple-queue</artifactId>
+			<version>1.0.8</version>
+		</dependency>
     </dependencies>
 
 	<build>
