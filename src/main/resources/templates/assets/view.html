@@ -359,7 +359,9 @@
 
                                             <div class="row mb-3">
                                                 <label for="archive" class="col-sm-3 col-form-label">
-                                                    Systemet skal arkiveres &nbsp;
+                                                    Systemet skal arkiveres
+                                                    <span th:if="${isKitos}" class="pli-exclamation" style="color: orange; font-weight: bold;" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
+                                                    &nbsp;
                                                     <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
