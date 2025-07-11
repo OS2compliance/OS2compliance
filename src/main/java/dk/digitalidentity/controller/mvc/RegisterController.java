@@ -327,7 +327,7 @@ public class RegisterController {
 		final Set<KLEGroup> kleGroups = register.getKleGroups();
 		model.addAttribute("kleGroups", kleGroups.stream()
 				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
-				.map(g -> new SelectionDTO(g.getGroupNumber(), g.getTitle(), true)));
+				.map(g -> new SelectionDTO(g.getGroupNumber() +" " + g.getTitle(), g.getGroupNumber(), true)));
 
 		final Set<SelectionDTO> kleLegalReferences = kleGroups.stream()
 				.flatMap(g -> g.getLegalReferences().stream())
