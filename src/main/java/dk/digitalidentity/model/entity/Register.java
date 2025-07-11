@@ -141,7 +141,7 @@ public class Register extends Relatable {
 	@JoinTable(
 			name = "register_kle_legal_reference",
 			joinColumns = @JoinColumn(name = "register_id"),
-			inverseJoinColumns = @JoinColumn(name = "kle_accession_number")
+			inverseJoinColumns = @JoinColumn(name = "accession_number")
 	)
 	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 

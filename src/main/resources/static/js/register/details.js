@@ -166,6 +166,7 @@ let registerPurposeService = new RegisterPurposeService();
 function RegisterPurposeService() {
 
     this.init = function () {
+        kleService.initLegalReferenceSelect()
     };
 
     this.setPurposeEditState = function (editable) {
@@ -192,8 +193,11 @@ function RegisterPurposeService() {
         purpose.readOnly = !editable;
         purposeNotes.readOnly = !editable;
         if (!editable) {
+            kleService.legalReferenceSelectorInstance.disable();
             const form = document.querySelector('#editPurposeId');
             form.reset();
+        } else {
+            kleService.legalReferenceSelectorInstance.enable();
         }
     }
 }
@@ -502,8 +506,10 @@ document.addEventListener("DOMContentLoaded", function () {
 class KLESelectionService {
     mainGroupSelectId = 'mainGroupSelector'
     groupSelectId = 'groupSelector'
+    legalReferenceSelectId = 'relevantLegalReferencesSelector'
     mainGroupSelectorInstance = null
     groupSelectorInstance = null
+    legalReferenceSelectorInstance = null
 
     constructor() {
     }
@@ -544,5 +550,14 @@ class KLESelectionService {
     #initGroupSelect() {
         const groupSelect = document.getElementById(this.groupSelectId)
         this.groupSelectorInstance = initSelect(groupSelect);
+    }
+
+    initLegalReferenceSelect() {
+        if (this.legalReferenceSelectorInstance) {
+            this.legalReferenceSelectorInstance.destroy()
+        }
+
+        const legalRefSelect = document.getElementById(this.legalReferenceSelectId);
+        this.legalReferenceSelectorInstance = initSelect(legalRefSelect);
     }
 }
