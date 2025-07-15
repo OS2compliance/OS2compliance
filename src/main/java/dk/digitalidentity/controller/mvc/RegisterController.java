@@ -55,6 +55,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
@@ -169,6 +170,7 @@ public class RegisterController {
                          @RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
                          @RequestParam(value = "departments", required = false) @Valid final Set<String> departmentUuids,
                          @RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids,
+                         @RequestParam(value = "customResponsibleUsers", required = false) @Valid final Set<String> customResponsibleUserUuids,
                          @RequestParam(value = "criticality", required = false) final Criticality criticality,
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
                          @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
@@ -202,6 +204,12 @@ public class RegisterController {
         } else {
             register.setResponsibleUsers(null);
         }
+		if (customResponsibleUserUuids != null && !customResponsibleUserUuids.isEmpty()) {
+			final List<User> customResponsibleUsers = userService.findAllByUuids(customResponsibleUserUuids);
+			register.setCustomResponsibleUsers(customResponsibleUsers);
+		} else {
+			register.setCustomResponsibleUsers(new ArrayList<>());
+		}
         if (emergencyPlanLink != null) {
             register.setEmergencyPlanLink(emergencyPlanLink);
         }
@@ -383,13 +391,13 @@ public class RegisterController {
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted(Comparator.comparingInt(a -> asNumber(a.getIdentifier())))
-                .collect(Collectors.toList());
+				.toList();
     }
 
     private static List<ChoiceValue> sortChoicesAlpha(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted((a, b) -> a.getCaption().compareToIgnoreCase(b.getCaption()))
-                .collect(Collectors.toList());
+				.toList();
     }
 
 }

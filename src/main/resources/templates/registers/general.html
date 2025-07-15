@@ -56,11 +56,18 @@
                                 <option th:each="ou : *{responsibleOus}" th:value="${ou.uuid}" th:text="${ou.name}" selected></option>
                             </select>
                         </div>
-                        <div>
+                        <div class="form-group row">
                             <label for="userSelect" class="col-form-label">Behandlingsansvarlige</label>
                             <select class="form-select choices__input" th:field="*{responsibleUsers}"
                                     data-trigger="" name="ansvarlig" id="userSelect" tabindex="-1" multiple="multiple" disabled>
                                 <option th:each="user : *{responsibleUsers}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
+                            </select>
+                        </div>
+                        <div class="form-group row">
+                            <label for="customUserField" class="col-form-label">Behandlingsansvarlige</label>
+                            <select class="form-select choices__input" th:field="*{customResponsibleUsers}"
+                                    data-trigger="" name="ansvarlig" id="customUserField" tabindex="-1" multiple="multiple" disabled>
+                                <option th:each="user : *{customResponsibleUsers}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
                             </select>
                         </div>
                     </div>

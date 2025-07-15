@@ -1,5 +1,6 @@
 
 let userChoices;
+let customResponsibleUserChoices;
 let ouChoices;
 let departmentChoices;
 
@@ -21,12 +22,15 @@ function RegisterGeneralService() {
         departmentChoices = choiceService.initOUSelect('departmentSelect', false);
         ouChoices = choiceService.initOUSelect('ouSelect', false);
         userChoices = choiceService.initUserSelect('userSelect', false);
+        customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
 
         form.addEventListener('reset', (ev) => {
             ouChoices.destroy();
             ouChoices.init();
             userChoices.destroy();
             userChoices.init();
+            customResponsibleUserChoices.destroy();
+            customResponsibleUserChoices.init();
             departmentChoices.destroy();
             departmentChoices.init();
         })
@@ -112,10 +116,12 @@ function RegisterGeneralService() {
             const form = document.getElementById('editDescId');
             form.reset();
             userChoices.disable();
+            customResponsibleUserChoices.disable();
             ouChoices.disable();
             departmentChoices.disable();
         } else {
             userChoices.enable();
+            customResponsibleUserChoices.enable();
             ouChoices.enable();
             departmentChoices.enable();
         }
