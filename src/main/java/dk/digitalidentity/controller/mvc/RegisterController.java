@@ -87,11 +87,11 @@ public class RegisterController {
 	private final SettingsService settingsService;
 
 	@GetMapping
-    public String registerList(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
-        return "registers/index";
-    }
+	public String registerList(Model model) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+		return "registers/index";
+	}
 
 
     @GetMapping("form")

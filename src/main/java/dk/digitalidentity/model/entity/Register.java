@@ -50,7 +50,7 @@ public class Register extends Relatable {
 
 	@ManyToMany
     @JoinTable(
-        name = "register_custom_responsible_user",
+        name = "register_custom_responsible_user_mapping",
         joinColumns = { @JoinColumn(name = "register_id") },
         inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
     )
