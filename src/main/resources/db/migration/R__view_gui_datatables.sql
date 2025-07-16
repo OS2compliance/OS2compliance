@@ -93,7 +93,7 @@ LEFT JOIN threat_assessments ta ON ta.id = (
         WHERE rel.relation_b_id = tb.id OR rel.relation_a_id = tb.id)
 LEFT JOIN registers_responsible_users_mapping rum ON rum.register_id = r.id
 LEFT JOIN users u ON rum.user_uuid = u.uuid
-LEFT JOIN register_custom_responsible_user crum ON crum.register_id = r.id
+LEFT JOIN register_custom_responsible_user_mapping crum ON crum.register_id = r.id
 LEFT JOIN users cru ON crum.user_uuid = cru.uuid
 LEFT JOIN registers_responsible_ous_mapping roum ON roum.register_id = r.id
 LEFT JOIN ous ou ON roum.ou_uuid = ou.uuid
