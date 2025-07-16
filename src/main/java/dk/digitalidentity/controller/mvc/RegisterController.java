@@ -298,9 +298,11 @@ public class RegisterController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("section", section);
-        model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
-            .anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR)) || register.getResponsibleUsers().stream()
-            .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))));
+		model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
+				.anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR))
+				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
+				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
+		);
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
         model.addAttribute("register", register);
@@ -383,7 +385,11 @@ public class RegisterController {
 
     private static void ensureEditingIsAllowed(final Register register) {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(authentication.getAuthorities().stream()
+				.noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))
+				&& !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+				&& !register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+		) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }

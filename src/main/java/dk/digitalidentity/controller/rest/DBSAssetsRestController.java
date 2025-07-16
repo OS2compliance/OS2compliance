@@ -57,7 +57,6 @@ public class DBSAssetsRestController {
     ) {
         Page<DBSAssetGrid> assets =  dbsAssetGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, DBSAssetGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             DBSAssetGrid.class
         );
