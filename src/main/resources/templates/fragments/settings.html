@@ -79,6 +79,30 @@
                         </div>
                     </div>
 
+                    <!--                    Register Settings-->
+                    <a class="btn btn-primary" data-bs-toggle="collapse" href="#registerPart" role="button"
+                       aria-expanded="false" aria-controls="registerPart">
+                        Fotegnelser
+                    </a>
+                    <div class="collapse" id="registerPart"
+                         th:classappend="${page} == 'register' ? 'show' : ''">
+                        <div class="card card-body gap-3">
+                            <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'register'" class="row">
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
+                                <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}" class="col-sm-12 col-form-label"
+                                       style="color: black;" th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.model.entity.enums.RegisterSetting).CUSTOMRESPONSIBLEUSERFIELDNAME.value ? 'Navn for redigerbart brugerfelt' : 'Ukendt indstilling'}"></label>
+                                <input style="color:black;" class="form-control"
+                                       th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                       th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+
+                            </div>
+                        </div>
+                    </div>
+
                     <a class="btn btn-primary" data-bs-toggle="collapse" href="#riskPart" role="button"
                        aria-expanded="false" aria-controls="riskPart">
                         Risiko

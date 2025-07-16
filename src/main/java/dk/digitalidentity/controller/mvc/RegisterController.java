@@ -18,6 +18,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -33,6 +34,7 @@ import dk.digitalidentity.service.RegisterAssetAssessmentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import jakarta.validation.Valid;
@@ -82,8 +84,9 @@ public class RegisterController {
     private final DataProcessingService dataProcessingService;
     private final TaskService taskService;
     private final UserService userService;
+	private final SettingsService settingsService;
 
-    @GetMapping
+	@GetMapping
     public String registerList(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
@@ -296,6 +299,8 @@ public class RegisterController {
         final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
 
         model.addAttribute("section", section);
 		model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()

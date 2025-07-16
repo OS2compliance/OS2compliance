@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
+import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.DPIAService;
@@ -93,12 +94,17 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(20, this::seedV20);
         incrementAndPerformIfVersion(21, this::seedV21);
         incrementAndPerformIfVersion(22, this::seedV22);
+        incrementAndPerformIfVersion(23, this::seedV23);
     }
 
     @SneakyThrows
     private void seedV20() {
 
     }
+
+	private void seedV23 () {
+		settingsService.createSetting(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse" , "register", true);
+	}
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
         final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
