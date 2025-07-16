@@ -88,6 +88,9 @@ public class Register extends Relatable {
     @Column
     private String registerRegarding;
 
+	@Column
+	private String securityPrecautions;
+
     @Column
     private String informationResponsible;
 

@@ -178,6 +178,7 @@ public class RegisterController {
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
                          @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
                          @RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
+                         @RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
                          @RequestParam(required = false) final String section,
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
         final Register register = registerService.findById(id)
@@ -222,6 +223,9 @@ public class RegisterController {
         if (registerRegarding != null) {
             register.setRegisterRegarding(registerRegarding);
         }
+		if (securityPrecautions != null) {
+			register.setSecurityPrecautions(securityPrecautions);
+		}
         if (criticality != null) {
             register.setCriticality(criticality);
         }
