@@ -43,11 +43,11 @@ public class ChoiceService {
         return choiceListDao.findByIdentifier(identifier);
     }
 
-    public List<ChoiceValue> getChoicesOrderedByIdentifier(final ChoiceList choiceList) {
-        return choiceList.getValues().stream()
-            .sorted(Comparator.comparing(ChoiceValue::getIdentifier))
-            .collect(Collectors.toList());
-    }
+	public List<ChoiceValue> getChoicesOrderedByIdentifier(final ChoiceList choiceList) {
+		return choiceList.getValues().stream()
+				.sorted(Comparator.comparing(ChoiceValue::getIdentifier))
+				.toList();
+	}
 
     public List<ChoiceList> getAllCustomizableChoiceLists() {
         return choiceListDao.findByCustomizableTrue();
@@ -84,5 +84,9 @@ public class ChoiceService {
         return choiceListDao.findByIdentifier("asset-type")
             .orElseThrow();
     }
+
+	public void saveChoiceList(ChoiceList choiceList) {
+		choiceListDao.save(choiceList);
+	}
 
 }

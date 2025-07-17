@@ -4,6 +4,7 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -11,12 +12,12 @@ import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
-import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -62,8 +63,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final PlatformTransactionManager transactionManager;
     private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
 	private final DPIAService dpiaService;
+	private final ChoiceService choiceService;
 
-    @Value("classpath:data/registers/*.json")
+	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
 
     @Override
@@ -95,16 +97,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(21, this::seedV21);
         incrementAndPerformIfVersion(22, this::seedV22);
         incrementAndPerformIfVersion(23, this::seedV23);
+        incrementAndPerformIfVersion(24, this::seedV24);
     }
 
     @SneakyThrows
     private void seedV20() {
 
     }
-
-	private void seedV23 () {
-		settingsService.createSetting(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse" , "register", true);
-	}
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
         final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
@@ -117,6 +116,19 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+	private void seedV24 () {
+		choiceService.saveChoiceList(ChoiceList.builder()
+						.identifier("record-of-processing-activity-regarding")
+						.name("Fortegnelse over behandlingsaktivitet angående")
+						.multiSelect(true)
+						.customizable(true)
+				.build());
+	}
+
+	private void seedV23 () {
+		settingsService.createSetting(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse" , "register", true);
+	}
 
 	private void seedV22() {
 		dpiaService.findAll()
@@ -161,7 +173,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void seedV17() {
-
+		// No longer needed
     }
 
     private void seedV14() {
