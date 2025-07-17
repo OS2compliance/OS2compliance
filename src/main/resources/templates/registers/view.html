@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
 <head th:replace="~{fragments/header :: head (sweetalerts = true)}"></head>
 <link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
 <script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
@@ -13,7 +13,7 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto">
+                    <div class="me-auto w-75">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/registers}">Fortegnelse</a></li>
@@ -22,7 +22,8 @@
                         </nav>
                         <div class="row mt-4 mb-3">
                             <div class="col-12">
-                                <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${register.name}"></h1>
+                                <!--suppress XmlInvalidId -->
+                                <input id="registerNameField" form="editDescId" name="name" class="page-title transparent-input mb-0 mt-2 col-12" th:field="${register.name}" disabled />
                             </div>
                         </div>
                     </div>
