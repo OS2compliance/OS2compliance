@@ -3,6 +3,7 @@ let userChoices;
 let customResponsibleUserChoices;
 let ouChoices;
 let departmentChoices;
+let registerRegardingChoices;
 
 /**
  * Functionality related to the "Generelt" page of the register detail view
@@ -24,6 +25,9 @@ function RegisterGeneralService() {
         userChoices = choiceService.initUserSelect('userSelect', false);
         customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
 
+        const registerRegardingElement = document.getElementById('registerRegarding');
+        registerRegardingChoices = initSelect(registerRegardingElement);
+
         form.addEventListener('reset', (ev) => {
             ouChoices.destroy();
             ouChoices.init();
@@ -33,6 +37,8 @@ function RegisterGeneralService() {
             customResponsibleUserChoices.init();
             departmentChoices.destroy();
             departmentChoices.init();
+            registerRegardingChoices.destroy();
+            registerRegardingChoices.init();
         })
     };
 
@@ -99,7 +105,6 @@ function RegisterGeneralService() {
         const criticality = document.querySelector('#criticality');
         const emergencyPlanLink = document.querySelector('#emergencyPlanLink');
         const informationResponsible = document.querySelector('#informationResponsible');
-        const registerRegarding = document.querySelector('#registerRegarding');
         const status = document.querySelector('#status');
         const securityPrecautions = document.getElementById('securityPrecautions')
 
@@ -109,7 +114,7 @@ function RegisterGeneralService() {
 
         editDesc.readOnly = !editable;
         emergencyPlanLink.readOnly = !editable;
-        registerRegarding.readOnly = !editable;
+
         informationResponsible.readOnly = !editable;
         criticality.disabled = !editable;
         status.disabled = !editable;
@@ -121,11 +126,13 @@ function RegisterGeneralService() {
             customResponsibleUserChoices.disable();
             ouChoices.disable();
             departmentChoices.disable();
+            registerRegardingChoices.disable();
         } else {
             userChoices.enable();
             customResponsibleUserChoices.enable();
             ouChoices.enable();
             departmentChoices.enable();
+            registerRegardingChoices.enable();
         }
     }
 

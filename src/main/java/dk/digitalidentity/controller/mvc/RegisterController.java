@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
+import dk.digitalidentity.model.dto.SelectionChoiceDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
@@ -177,7 +178,7 @@ public class RegisterController {
                          @RequestParam(value = "criticality", required = false) final Criticality criticality,
                          @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
                          @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
-                         @RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
+                         @RequestParam(value = "registerRegarding", required = false) final Set<ChoiceValue> registerRegarding,
                          @RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
                          @RequestParam(required = false) final String section,
                          @RequestParam(value = "status", required = false) final RegisterStatus status) {
@@ -220,9 +221,9 @@ public class RegisterController {
         if (informationResponsible != null) {
             register.setInformationResponsible(informationResponsible);
         }
-        if (registerRegarding != null) {
-            register.setRegisterRegarding(registerRegarding);
-        }
+
+		register.setRegisterRegarding(registerRegarding);
+
 		if (securityPrecautions != null) {
 			register.setSecurityPrecautions(securityPrecautions);
 		}
@@ -305,6 +306,9 @@ public class RegisterController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
+
+		model.addAttribute("recordOfProcessingActivityRegardingChoices", choiceService.findChoiceValuesForListIdentifier("record-of-processing-activity-regarding").stream()
+				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
 
         model.addAttribute("section", section);
 		model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()

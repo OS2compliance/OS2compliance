@@ -11,6 +11,7 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -26,6 +27,7 @@ import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -85,8 +87,13 @@ public class Register extends Relatable {
     @Column
     private String description;
 
-    @Column
-    private String registerRegarding;
+	@ManyToMany(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH }, fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "register_choice_value_registerregarding_mapping",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "choice_value_id")
+	)
+	private Set<ChoiceValue> registerRegarding = new LinkedHashSet<>();
 
 	@Column
 	private String securityPrecautions;
@@ -129,7 +136,7 @@ public class Register extends Relatable {
     @JoinColumn(name = "data_processing_id", referencedColumnName = "id")
     private DataProcessing dataProcessing;
 
-    @Override
+	@Override
     public RelationType getRelationType() {
         return RelationType.REGISTER;
     }

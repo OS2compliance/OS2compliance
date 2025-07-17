@@ -6,12 +6,12 @@ import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import org.springframework.stereotype.Service;
 
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 @Service
 public class ChoiceService {
@@ -22,10 +22,18 @@ public class ChoiceService {
         return choiceListDao.findById(id);
     }
 
+	public List<ChoiceValue> findAllByIds(Collection<Long> ids) {
+		return choiceValueDao.findAllById(ids);
+	}
+
     public ChoiceService(final ChoiceValueDao choiceValueDao, final ChoiceListDao choiceListDao) {
         this.choiceValueDao = choiceValueDao;
         this.choiceListDao = choiceListDao;
     }
+
+	public Set<ChoiceValue> findChoiceValuesForListIdentifier(String listIdentifier) {
+		return choiceValueDao.findByLists_Identifier(listIdentifier);
+	}
 
     public List<ChoiceValue> getValues(final Set<String> identifiers) {
         return choiceValueDao.findByIdentifierIn(identifiers);
