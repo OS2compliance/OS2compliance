@@ -93,8 +93,8 @@ public class ChoiceService {
             .orElseThrow();
     }
 
-	public void saveChoiceList(ChoiceList choiceList) {
-		choiceListDao.save(choiceList);
+	public ChoiceList saveChoiceList(ChoiceList choiceList) {
+		return choiceListDao.save(choiceList);
 	}
 
 }

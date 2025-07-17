@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -14,6 +15,7 @@ import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
@@ -37,6 +39,8 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -64,6 +68,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
 	private final DPIAService dpiaService;
 	private final ChoiceService choiceService;
+	private final RegisterService registerService;
 
 	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -118,12 +123,28 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
 	private void seedV24 () {
-		choiceService.saveChoiceList(ChoiceList.builder()
+		ChoiceList choiceList = choiceService.saveChoiceList(ChoiceList.builder()
 						.identifier("record-of-processing-activity-regarding")
 						.name("Fortegnelse over behandlingsaktivitet angående")
 						.multiSelect(true)
 						.customizable(true)
+						.values(new ArrayList<>())
 				.build());
+
+		// Migrate data from existing column to choicelists
+		registerService.findAll().stream()
+				.filter(r -> r.getOldRegisterRegarding() != null && !r.getOldRegisterRegarding().isEmpty())
+				.forEach(r -> {
+					String oldValue = r.getOldRegisterRegarding();
+					ChoiceValue oldValueChoice = ChoiceValue.builder()
+							.caption(oldValue)
+							.description(oldValue)
+							.identifier(UUID.randomUUID().toString())
+							.build();
+
+					choiceList.getValues().add(oldValueChoice);
+					r.setRegisterRegarding(Set.of(oldValueChoice));
+				});
 	}
 
 	private void seedV23 () {

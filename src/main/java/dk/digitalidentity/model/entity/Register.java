@@ -95,6 +95,9 @@ public class Register extends Relatable {
 	)
 	private Set<ChoiceValue> registerRegarding = new LinkedHashSet<>();
 
+	@Column(name = "register_regarding")
+	private String oldRegisterRegarding; // TODO: This exists purely for backwards compatibility. Remove column when all users have been updated to new version
+
 	@Column
 	private String securityPrecautions;
 
