@@ -1,6 +1,9 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.AssetGridDao;
+import dk.digitalidentity.event.AssetDPIAKitosEvent;
+import dk.digitalidentity.event.AssetRiskKitosEvent;
+import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
@@ -11,8 +14,10 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
@@ -25,13 +30,17 @@ import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.simple_queue.QueueMessage;
+import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import dk.digitalidentity.util.ReflectionHelper;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.util.ReflectionHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -48,13 +57,17 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
@@ -72,6 +85,7 @@ public class AssetsRestController {
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final AssetOversightService assetOversightService;
 	private final DPIAService dPIAService;
+	private final ApplicationEventPublisher eventPublisher;
 
 	@PostMapping("list")
     public PageDTO<AssetDTO> list(
@@ -238,7 +252,53 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	@PostMapping("{assetId}/dpia/kitos")
+	public ResponseEntity<?> syncDPIAToKitos(@PathVariable("assetId") final long assetId, HttpServletRequest request) {
+		final Asset asset = assetService.get(assetId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
+		List<DPIA> dpiaList = asset.getDpias();
+		if (dpiaList.isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+		}
+
+		DPIA latestDPIA = dpiaList.stream()
+				.max(Comparator.comparing(DPIA::getCreatedAt))
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+
+		// update last kitos dpia sync property
+		asset.getProperties().stream()
+				.filter(p -> p.getKey().equals(KITOS_DPIA_LAST_SYNC_PROPERTY_KEY))
+				.findFirst()
+				.ifPresentOrElse(
+						p -> p.setValue(LocalDateTime.now().toString()),
+						() -> asset.getProperties().add(Property.builder()
+								.key(KITOS_DPIA_LAST_SYNC_PROPERTY_KEY)
+								.value(LocalDateTime.now().toString())
+								.entity(asset)
+								.build())
+				);
+
+		// create event
+		String kitosUsageId = asset.getProperties().stream().filter(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY)).map(p -> p.getValue()).findFirst().orElse(null);
+		LocalDateTime createdAt = latestDPIA.getCreatedAt();
+		ZoneId zoneId = ZoneId.systemDefault(); // eller en specifik zone fx ZoneId.of("Europe/Copenhagen")
+		Date createdAtDate = Date.from(createdAt.atZone(zoneId).toInstant());
+		AssetDPIAKitosEvent assetDpiaKitosEvent = AssetDPIAKitosEvent.builder()
+				.assetId(assetId)
+				.assetKitosItSystemUsageId(kitosUsageId)
+				.dpiaDate(createdAtDate)
+				.dpiaUrl(request.getScheme() + "://" + request.getServerName() + "/dpia/" + latestDPIA.getId())
+				.dpiaName(latestDPIA.getName())
+				.build();
+
+		eventPublisher.publishEvent(QueueMessage.builder()
+				.queue(KITOS_ASSET_DPIA_CHANGED_QUEUE)
+				.priority(1L)
+				.body(JsonSimpleMessage.toJson(assetDpiaKitosEvent))
+				.build());
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
 
     private void reorderQuestions(final long id, final boolean backwards) {

@@ -17,12 +17,12 @@
                 <tr th:classappend="'sectionRow' + ${section.id}" style="border: 0.5px solid #E8E8E8;">
                     <td style="padding: 30px;">
                         <p th:utext="${section.explainer}"></p>
-                        <table class="table">
+                        <table class="table" style="table-layout: fixed; width: 100%;">
                             <thead>
                                 <tr>
-                                    <th class="col-lg-3">Spørgsmål</th>
-                                    <th class="col-lg-4">Vejledning</th>
-                                    <th class="col-lg-5">Besvarelse</th>
+                                    <th class="col-lg-2">Spørgsmål</th>
+                                    <th class="col-lg-3">Vejledning</th>
+                                    <th class="col-lg-7">Besvarelse</th>
                                 </tr>
                             </thead>
                             <tbody>
