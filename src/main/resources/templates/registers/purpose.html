@@ -44,6 +44,18 @@
                             </div>
                         </div>
                     </div>
+                    <div id="consentGroup" class="row mt-4" hidden>
+                        <label for="consent" class="col-form-label col-lg-3 col-sm-12">Beskriv hvor samtykken opbevares, hvis relevant</label>
+                        <div class="col-lg-9 col-sm-12">
+                            <textarea name="consent" th:field="*{consent}" id="consent" class="p-2 form-control" th:text="${register.consent}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                    <div id="supplementingLegalGroup" class="row mt-4" hidden>
+                        <label for="supplementingLegalBasis" class="col-form-label col-lg-3 col-sm-12">Supplerende retsgrundlag</label>
+                        <div class="col-lg-9 col-sm-12">
+                            <textarea name="supplementingLegalBasis" th:field="*{supplementingLegalBasis}" id="supplementingLegalBasis" class="p-2 form-control" th:text="${register.consent}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
                     <div class="row mt-4">
                         <label for="informationObligation" class="col-form-label col-lg-3 col-sm-12">Opfyldes oplysningspligten</label>
                         <div class="col-lg-3 col-sm-6">
@@ -58,12 +70,6 @@
                         <label for="informationObligationDesc" class="col-form-label col-lg-3 col-sm-12">Beskriv hvordan oplysningspligten opfyldes</label>
                         <div class="col-lg-9 col-sm-12">
                             <textarea name="informationObligationDesc" th:field="*{informationObligationDesc}" id="informationObligationDesc" class="p-2 form-control" th:text="${register.informationObligationDesc}" rows="3" readonly></textarea>
-                        </div>
-                    </div>
-                    <div class="row mt-4">
-                        <label for="consent" class="col-form-label col-lg-3 col-sm-12">Beskriv hvor samtykken opbevares, hvis relevant</label>
-                        <div class="col-lg-9 col-sm-12">
-                            <textarea name="consent" th:field="*{consent}" id="consent" class="p-2 form-control" th:text="${register.consent}" rows="3" readonly></textarea>
                         </div>
                     </div>
                     <div class="row mt-4">
