@@ -39,7 +39,7 @@ public class KLEController {
 
 		if (mainGroupNumbers == null || mainGroupNumbers.isEmpty()) {
 			model.addAttribute("mainGroupNumbers", new ArrayList<>());
-			return "kle/fragment/kleGroupOptions :: kleGroupOptions";
+			return VIEW.KLEGROUPOPTIONS.name;
 		}
 
 		Set<String> selectedGroupNumbers = selectedGroups == null ? new HashSet<>() : selectedGroups;
