@@ -5,12 +5,15 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -128,6 +131,22 @@ public class Register extends Relatable {
     @OneToOne(cascade = CascadeType.ALL, orphanRemoval = true)
     @JoinColumn(name = "data_processing_id", referencedColumnName = "id")
     private DataProcessing dataProcessing;
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@JoinTable(
+			name = "register_kle_main_group",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "kle_main_group_number")
+	)
+	private Set<KLEMainGroup> kleMainGroups = new HashSet<>();
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@JoinTable(
+			name = "register_kle_group",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "kle_group_number")
+	)
+	private Set<KLEGroup> kleGroups = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {
