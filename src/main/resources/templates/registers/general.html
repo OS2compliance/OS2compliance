@@ -19,7 +19,24 @@
                         <label for="description" class="col-form-label">Beskrivelse</label>
                         <textarea name="description" th:field="*{description}" id="description" class="p-2 form-control" th:text="${register.description}" rows="6" readonly></textarea>
                     </div>
+
                     <div class="col-sm-12 col-lg-6">
+                        <div class="form-group row">
+                            <div class="col-sm-12">
+                                <label for="mainGroupSelector" class="col-form-label">KLE Hovedgrupper</label>
+                                <select class="form-control form-select" multiple="multiple" id="mainGroupSelector" name="mainGroups" th:attr="data-register-id=${register.id}" disabled>
+                                    <option th:each="group : ${mainGroups}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
+                                </select>
+                            </div>
+
+                            <div class="col-sm-12">
+                                <label for="groupSelector" class="col-form-label">KLE Grupper</label>
+                                <select class="form-control form-select" multiple="multiple" id="groupSelector" name="groups"  disabled>
+                                    <option th:each="group : ${kleGroups}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
+                                </select>
+                            </div>
+                        </div>
+
                         <div class="form-group row">
                             <label for="status" class="col-form-label">Status</label>
                             <select class="form-control form-select" th:field="*{status}" name="status" id="status" tabindex="-1" disabled>

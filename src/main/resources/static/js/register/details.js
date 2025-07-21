@@ -1,21 +1,24 @@
-
 let userChoices;
 let customResponsibleUserChoices;
 let ouChoices;
 let departmentChoices;
 let registerRegardingChoices;
 
+let kleService
+
 /**
  * Functionality related to the "Generelt" page of the register detail view
  */
 let registerGeneralService = new RegisterGeneralService();
+
 function RegisterGeneralService() {
-    this.init = function() {
+    this.init = function () {
         this.generalFormLoaded();
         this.initAssetRelationSelect();
         this.initDocumentRelationSelectPrivate();
         this.initTaskRelationSelectPrivate();
     }
+
 
     this.generalFormLoaded = function () {
         const form = document.getElementById('editDescId');
@@ -40,20 +43,24 @@ function RegisterGeneralService() {
             registerRegardingChoices.destroy();
             registerRegardingChoices.init();
         })
+
+        kleService = new KLESelectionService()
+        kleService.initKLEMainGroupSelect()
     };
 
-    this.initAssetRelationSelect = function() {
+
+    this.initAssetRelationSelect = function () {
         const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
         choiceService.updateRelationsAssetsOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsAssetsOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsAssetsOnly(relationsChoice, "");
             },
             false,
@@ -61,43 +68,43 @@ function RegisterGeneralService() {
     }
 
 
-    this.initDocumentRelationSelectPrivate = function() {
+    this.initDocumentRelationSelectPrivate = function () {
         const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
         choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
             },
             false,
         );
     }
 
-    this.initTaskRelationSelectPrivate = function() {
+    this.initTaskRelationSelectPrivate = function () {
         const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
         choiceService.updateRelationsTasksOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsTasksOnly(relationsChoice, "");
             },
             false,
         );
     }
 
-    this.setGenereltEditState = function(editable) {
+    this.setGenereltEditState = function (editable) {
         const editBtn = document.querySelector('#editBtn');
         const cancelBtn = document.querySelector('#cancelBtn');
         const saveBtn = document.querySelector('#saveBtn');
@@ -127,16 +134,20 @@ function RegisterGeneralService() {
             ouChoices.disable();
             departmentChoices.disable();
             registerRegardingChoices.disable();
+            kleService.mainGroupSelectorInstance.disable();
+            kleService.groupSelectorInstance.disable();
         } else {
             userChoices.enable();
             customResponsibleUserChoices.enable();
             ouChoices.enable();
             departmentChoices.enable();
             registerRegardingChoices.enable();
+            kleService.mainGroupSelectorInstance.enable();
+            kleService.groupSelectorInstance.enable();
         }
     }
 
-    this.showEditRelationDialog = function(elem) {
+    this.showEditRelationDialog = function (elem) {
         const registerId = elem.getAttribute('data-relatableid');
         const relationId = elem.getAttribute('data-relationid');
         const relationType = elem.getAttribute('data-relationtype');
@@ -166,9 +177,11 @@ function RegisterGeneralService() {
  * Functionality related to the "Formål og lovhjemmel" page of the register detail view
  */
 let registerPurposeService = new RegisterPurposeService();
+
 function RegisterPurposeService() {
 
-    this.init = function() {};
+    this.init = function () {
+    };
 
     this.setPurposeEditState = function (editable) {
         const editBtn = document.querySelector('#editPurposeBtn');
@@ -185,7 +198,7 @@ function RegisterPurposeService() {
         saveBtn.style = !editable ? 'display: none' : 'display: block';
         cancelBtn.style = !editable ? 'display: none' : 'display: block';
 
-        for (let i=0; i<checkboxes.length;++i) {
+        for (let i = 0; i < checkboxes.length; ++i) {
             checkboxes[i].disabled = !editable;
         }
         informationObligationDesc.readOnly = !editable;
@@ -204,15 +217,16 @@ function RegisterPurposeService() {
  * Functionality related to the "Konsekvens- og risikovurdering" page of the register detail view
  */
 let registerAssessmentService = new RegisterAssessmentService();
+
 function RegisterAssessmentService() {
-    this.init = function() {
+    this.init = function () {
         this.updateAssessmentTitles();
         this.updateAssessmentColors();
         this.updateOrganisationAssessmentAvg();
         this.updateAssessmentTotalMax();
     }
 
-    this.setAssessmentEditState = function(editable) {
+    this.setAssessmentEditState = function (editable) {
         const editBtn = document.querySelector('#editAssessmentBtn');
         const cancelBtn = document.querySelector('#cancelAssessmentBtn');
         const saveBtn = document.querySelector('#saveAssessmentBtn');
@@ -251,14 +265,15 @@ function RegisterAssessmentService() {
     }
 
 
-
     this.updateAssessmentTitles = function () {
         let self = this;
+
         function updateFor(elemId) {
             const elemBtn = document.getElementById(elemId + 'Btn');
             const elem = document.getElementById(elemId);
             self.updateTitleFor(elemBtn, elem.value);
         }
+
         updateFor('confidentialityRegistered');
         updateFor('confidentialityOrganisation');
         updateFor('confidentialityOrganisationRep');
@@ -273,13 +288,15 @@ function RegisterAssessmentService() {
         updateFor('availabilityOrganisationEco');
     }
 
-    this.updateAssessmentColors = function() {
+    this.updateAssessmentColors = function () {
         let self = this;
+
         function updateFor(elemId) {
             const elemBtn = document.getElementById(elemId + 'Btn');
             const elem = document.getElementById(elemId);
             self.updateColorFor(elemBtn, scaleMap[elem.value]);
         }
+
         updateFor('confidentialityRegistered');
         updateFor('confidentialityOrganisation');
         updateFor('confidentialityOrganisationRep');
@@ -294,7 +311,7 @@ function RegisterAssessmentService() {
         updateFor('availabilityOrganisationEco');
     }
 
-    this.enumColorToBtn = function(color) {
+    this.enumColorToBtn = function (color) {
         if (color === 'GRØN') {
             return 'btn-success';
         } else if (color === 'GUL') {
@@ -308,12 +325,12 @@ function RegisterAssessmentService() {
         }
     }
 
-    this.updateColorFor = function(btnElement, value) {
+    this.updateColorFor = function (btnElement, value) {
         this.clearColors(btnElement);
         btnElement.classList.add(this.enumColorToBtn(value));
     }
 
-    this.clearColors = function(element) {
+    this.clearColors = function (element) {
         element.classList.remove('btn-danger');
         element.classList.remove('btn-success');
         element.classList.remove('btn-yellow');
@@ -324,12 +341,12 @@ function RegisterAssessmentService() {
     }
 
 
-    this.clearTitle = function(btnElement) {
+    this.clearTitle = function (btnElement) {
         btnElement.removeAttribute('title');
     }
 
-    this.updateTitleFor = function(btnElement, value) {
-        let consequenceScaleElement = consequenceScale[value-1];
+    this.updateTitleFor = function (btnElement, value) {
+        let consequenceScaleElement = consequenceScale[value - 1];
         if (consequenceScaleElement !== undefined && consequenceScaleElement !== '-') {
             btnElement.setAttribute('title', consequenceScaleElement);
         }
@@ -337,6 +354,7 @@ function RegisterAssessmentService() {
 
     this.updateOrganisationAssessmentAvg = function () {
         let self = this;
+
         function orgMax(elem1, elem2) {
             const value1 = parseInt(elem1.value);
             const value2 = parseInt(elem2.value);
@@ -350,6 +368,7 @@ function RegisterAssessmentService() {
                 return Math.max(value1, value2);
             }
         }
+
         function updateForField(id) {
             const rep = document.getElementById(`${id}Rep`);
             const eco = document.getElementById(`${id}Eco`);
@@ -369,13 +388,14 @@ function RegisterAssessmentService() {
                 self.clearColors(targetBtn);
             }
         }
+
         updateForField('confidentialityOrganisation');
         updateForField('integrityOrganisation');
         updateForField('availabilityOrganisation');
     }
 
 
-    this.updateAssessmentTotalMax = function() {
+    this.updateAssessmentTotalMax = function () {
         let self = this;
         const maxOrganisation = document.getElementById('maxOrganisation');
         const maxRegistered = document.getElementById('maxRegistered');
@@ -392,6 +412,7 @@ function RegisterAssessmentService() {
             let value3 = asIntOrDefault(element3.value, 0);
             return Math.max(value1, value2, value3);
         }
+
         function updateTargets(element, value) {
             if (value !== undefined && value > 0 && value !== '-') {
                 element.innerText = "" + value;
@@ -430,7 +451,7 @@ function RegisterAssessmentService() {
         }
     };
 
-    this.updateConsequenceStatus = function(value) {
+    this.updateConsequenceStatus = function (value) {
         const assessmentBadge = document.getElementById('assessmentBadge');
         const assessmentElement = document.getElementById('assessment');
         this.clearColors(assessmentBadge);
@@ -441,7 +462,7 @@ function RegisterAssessmentService() {
     }
 
 
-    this.updatedAssessmentValue = function(value, property, color) {
+    this.updatedAssessmentValue = function (value, property, color) {
         const propertyElement = document.getElementById(property);
         const propertyBtnElement = document.getElementById(property + 'Btn');
         if (value !== '-') {
@@ -461,10 +482,12 @@ function RegisterAssessmentService() {
 }
 
 let registerDataprocessingService = new RegisterDataprocessingService();
-function RegisterDataprocessingService() {
-    this.init = function() {}
 
-    this.setDataprocessingEditState = function(editable) {
+function RegisterDataprocessingService() {
+    this.init = function () {
+    }
+
+    this.setDataprocessingEditState = function (editable) {
         const rootElement = document.getElementById('dataprocessingForm');
         document.getElementById('saveDataProcessingBtn').hidden = !editable;
         document.getElementById('cancelDataProcessingBtn').hidden = !editable;
@@ -484,9 +507,57 @@ function RegisterDataprocessingService() {
 
 }
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     registerGeneralService.init();
     registerPurposeService.init();
     registerAssessmentService.init();
     registerDataprocessingService.init();
 });
+
+class KLESelectionService {
+    mainGroupSelectId = 'mainGroupSelector'
+    groupSelectId = 'groupSelector'
+    mainGroupSelectorInstance = null
+    groupSelectorInstance = null
+
+    constructor() {
+    }
+
+    initKLEMainGroupSelect() {
+        if (this.mainGroupSelectorInstance) {
+            this.mainGroupSelectorInstance.destroy()
+        }
+
+        const mainGroupSelect = document.getElementById(this.mainGroupSelectId);
+        this.mainGroupSelectorInstance = initSelect(mainGroupSelect);
+
+        mainGroupSelect.addEventListener('change', async (e) => {
+            await this.#getGroupOptionsFragment()
+        })
+
+        this.#initGroupSelect()
+
+    }
+
+    async #getGroupOptionsFragment() {
+        if (this.groupSelectorInstance) {
+            this.groupSelectorInstance.destroy()
+        }
+
+        // Get selected maingroups and selected groups
+        const mainGroupSelector = document.getElementById(this.mainGroupSelectId);
+        const selectedMainGroups = [...mainGroupSelector.selectedOptions].map(o => o.value);
+        const groupSelector = document.getElementById(this.groupSelectId);
+        const selectedGroups = [...groupSelector.selectedOptions].map(o => o.value);
+
+        // fetch groupSelectOptions
+        const url = `/kle/maingroup/groups?mainGroupNumbers=${selectedMainGroups}&selectedGroups=${selectedGroups}`;
+        await fetchHtml(url, this.groupSelectId);
+        this.#initGroupSelect()
+    }
+
+    #initGroupSelect() {
+        const groupSelect = document.getElementById(this.groupSelectId)
+        this.groupSelectorInstance = initSelect(groupSelect);
+    }
+}
