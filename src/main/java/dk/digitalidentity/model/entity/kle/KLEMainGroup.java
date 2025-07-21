@@ -1,10 +1,12 @@
 package dk.digitalidentity.model.entity.kle;
 
+import dk.digitalidentity.model.entity.Register;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
@@ -51,4 +53,9 @@ public class KLEMainGroup {
 	@OneToMany(mappedBy = "mainGroup", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Set<KLEGroup> kleGroups = new HashSet<>();
 
+	@ManyToMany(mappedBy = "kleMainGroups",
+			cascade = {CascadeType.PERSIST, CascadeType.MERGE},
+			fetch = FetchType.LAZY
+	)
+	private Set<Register> registers = new HashSet<>();
 }

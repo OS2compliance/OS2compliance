@@ -1,3 +1,209 @@
+let userChoices;
+let customResponsibleUserChoices;
+let ouChoices;
+let departmentChoices;
+
+let kleService
+
+/**
+ * Functionality related to the "Generelt" page of the register detail view
+ */
+let registerGeneralService = new RegisterGeneralService();
+
+function RegisterGeneralService() {
+    this.init = function () {
+        this.generalFormLoaded();
+        this.initAssetRelationSelect();
+        this.initDocumentRelationSelectPrivate();
+        this.initTaskRelationSelectPrivate();
+    }
+
+
+    this.generalFormLoaded = function () {
+        const form = document.getElementById('editDescId');
+
+        departmentChoices = choiceService.initOUSelect('departmentSelect', false);
+        ouChoices = choiceService.initOUSelect('ouSelect', false);
+        userChoices = choiceService.initUserSelect('userSelect', false);
+        customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
+
+        form.addEventListener('reset', (ev) => {
+            ouChoices.destroy();
+            ouChoices.init();
+            userChoices.destroy();
+            userChoices.init();
+            customResponsibleUserChoices.destroy();
+            customResponsibleUserChoices.init();
+            departmentChoices.destroy();
+            departmentChoices.init();
+        })
+
+        kleService = new KLESelectionService()
+        kleService.initKLEMainGroupSelect()
+    };
+
+
+    this.initAssetRelationSelect = function () {
+        const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
+        let relationsChoice = initSelect(relationsSelect);
+        choiceService.updateRelationsAssetsOnly(relationsChoice, "");
+        relationsSelect.addEventListener("search",
+            function (event) {
+                choiceService.updateRelationsAssetsOnly(relationsChoice, event.detail.value);
+            },
+            false,
+        );
+        relationsSelect.addEventListener("change",
+            function (event) {
+                choiceService.updateRelationsAssetsOnly(relationsChoice, "");
+            },
+            false,
+        );
+    }
+
+
+    this.initDocumentRelationSelectPrivate = function () {
+        const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
+        let relationsChoice = initSelect(relationsSelect);
+        choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
+        relationsSelect.addEventListener("search",
+            function (event) {
+                choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
+            },
+            false,
+        );
+        relationsSelect.addEventListener("change",
+            function (event) {
+                choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
+            },
+            false,
+        );
+    }
+
+    this.initTaskRelationSelectPrivate = function () {
+        const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
+        let relationsChoice = initSelect(relationsSelect);
+        choiceService.updateRelationsTasksOnly(relationsChoice, "");
+        relationsSelect.addEventListener("search",
+            function (event) {
+                choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
+            },
+            false,
+        );
+        relationsSelect.addEventListener("change",
+            function (event) {
+                choiceService.updateRelationsTasksOnly(relationsChoice, "");
+            },
+            false,
+        );
+    }
+
+    this.setGenereltEditState = function (editable) {
+        const editBtn = document.querySelector('#editBtn');
+        const cancelBtn = document.querySelector('#cancelBtn');
+        const saveBtn = document.querySelector('#saveBtn');
+        const editDesc = document.querySelector('#description');
+        const criticality = document.querySelector('#criticality');
+        const emergencyPlanLink = document.querySelector('#emergencyPlanLink');
+        const informationResponsible = document.querySelector('#informationResponsible');
+        const registerRegarding = document.querySelector('#registerRegarding');
+        const status = document.querySelector('#status');
+
+        editBtn.style = editable ? 'display: none' : 'display: block';
+        saveBtn.style = !editable ? 'display: none' : 'display: block';
+        cancelBtn.style = !editable ? 'display: none' : 'display: block';
+
+        editDesc.readOnly = !editable;
+        emergencyPlanLink.readOnly = !editable;
+        registerRegarding.readOnly = !editable;
+        informationResponsible.readOnly = !editable;
+        criticality.disabled = !editable;
+        status.disabled = !editable;
+        if (!editable) {
+            const form = document.getElementById('editDescId');
+            form.reset();
+            userChoices.disable();
+            customResponsibleUserChoices.disable();
+            ouChoices.disable();
+            departmentChoices.disable();
+            kleService.mainGroupSelectorInstance.disable();
+            kleService.groupSelectorInstance.disable();
+        } else {
+            userChoices.enable();
+            customResponsibleUserChoices.enable();
+            ouChoices.enable();
+            departmentChoices.enable();
+            kleService.mainGroupSelectorInstance.enable();
+            kleService.groupSelectorInstance.enable();
+        }
+    }
+
+    this.showEditRelationDialog = function (elem) {
+        const registerId = elem.getAttribute('data-relatableid');
+        const relationId = elem.getAttribute('data-relationid');
+        const relationType = elem.getAttribute('data-relationtype');
+        fetch(`/registers/${registerId}/relations/${relationId}/${relationType}`)
+            .then(response => response.text()
+                .then(data => {
+                    let holder = document.getElementById('EditRelationModalHolder');
+                    holder.innerHTML = data;
+                    let editRelationModalDialog = document.getElementById('EditRelationModal');
+                    let relationsSelect = editRelationModalDialog.querySelector('#EditRelationModalrelationsSelect');
+                    let relationsChoice = initSelect(relationsSelect);
+
+                    const editRelationModal = new bootstrap.Modal(editRelationModalDialog);
+                    editRelationModal.show();
+                }))
+            .catch(error => toastService.error(error));
+    }
+
+    this.editRiskScaleUpdated = function (value) {
+        let percentElement = document.getElementById('EditRelationModalRiskScalePercent');
+        percentElement.value = value + "%";
+    }
+
+}
+
+/**
+ * Functionality related to the "Formål og lovhjemmel" page of the register detail view
+ */
+let registerPurposeService = new RegisterPurposeService();
+
+function RegisterPurposeService() {
+
+    this.init = function () {
+    };
+
+    this.setPurposeEditState = function (editable) {
+        const editBtn = document.querySelector('#editPurposeBtn');
+        const cancelBtn = document.querySelector('#cancelPurposeBtn');
+        const saveBtn = document.querySelector('#savePurposeBtn');
+        const purpose = document.querySelector('#purpose');
+        const purposeNotes = document.querySelector('#purposeNotes');
+        const informationObligationDesc = document.querySelector('#informationObligationDesc');
+        const informationObligation = document.querySelector('#informationObligation');
+        const checkboxes = document.getElementsByClassName("form-check-input");
+        const consent = document.querySelector('#consent');
+
+        editBtn.style = editable ? 'display: none' : 'display: block';
+        saveBtn.style = !editable ? 'display: none' : 'display: block';
+        cancelBtn.style = !editable ? 'display: none' : 'display: block';
+
+        for (let i = 0; i < checkboxes.length; ++i) {
+            checkboxes[i].disabled = !editable;
+        }
+        informationObligationDesc.readOnly = !editable;
+        consent.readOnly = !editable;
+        informationObligation.disabled = !editable;
+        purpose.readOnly = !editable;
+        purposeNotes.readOnly = !editable;
+        if (!editable) {
+            const form = document.querySelector('#editPurposeId');
+            form.reset();
+        }
+    }
+}
+
 /**
  * Functionality related to the "Konsekvens- og risikovurdering" page of the register detail view
  */
@@ -9,7 +215,7 @@ export default function RegisterAssessmentService() {
         this.updateAssessmentTotalMax();
     }
 
-    this.setAssessmentEditState = function(editable) {
+    this.setAssessmentEditState = function (editable) {
         const editBtn = document.querySelector('#editAssessmentBtn');
         const cancelBtn = document.querySelector('#cancelAssessmentBtn');
         const saveBtn = document.querySelector('#saveAssessmentBtn');
@@ -48,14 +254,15 @@ export default function RegisterAssessmentService() {
     }
 
 
-
     this.updateAssessmentTitles = function () {
         let self = this;
+
         function updateFor(elemId) {
             const elemBtn = document.getElementById(elemId + 'Btn');
             const elem = document.getElementById(elemId);
             self.updateTitleFor(elemBtn, elem.value);
         }
+
         updateFor('confidentialityRegistered');
         updateFor('confidentialityOrganisation');
         updateFor('confidentialityOrganisationRep');
@@ -70,13 +277,15 @@ export default function RegisterAssessmentService() {
         updateFor('availabilityOrganisationEco');
     }
 
-    this.updateAssessmentColors = function() {
+    this.updateAssessmentColors = function () {
         let self = this;
+
         function updateFor(elemId) {
             const elemBtn = document.getElementById(elemId + 'Btn');
             const elem = document.getElementById(elemId);
             self.updateColorFor(elemBtn, scaleMap[elem.value]);
         }
+
         updateFor('confidentialityRegistered');
         updateFor('confidentialityOrganisation');
         updateFor('confidentialityOrganisationRep');
@@ -91,7 +300,7 @@ export default function RegisterAssessmentService() {
         updateFor('availabilityOrganisationEco');
     }
 
-    this.enumColorToBtn = function(color) {
+    this.enumColorToBtn = function (color) {
         if (color === 'GRØN') {
             return 'btn-success';
         } else if (color === 'GUL') {
@@ -105,12 +314,12 @@ export default function RegisterAssessmentService() {
         }
     }
 
-    this.updateColorFor = function(btnElement, value) {
+    this.updateColorFor = function (btnElement, value) {
         this.clearColors(btnElement);
         btnElement.classList.add(this.enumColorToBtn(value));
     }
 
-    this.clearColors = function(element) {
+    this.clearColors = function (element) {
         element.classList.remove('btn-danger');
         element.classList.remove('btn-success');
         element.classList.remove('btn-yellow');
@@ -121,12 +330,12 @@ export default function RegisterAssessmentService() {
     }
 
 
-    this.clearTitle = function(btnElement) {
+    this.clearTitle = function (btnElement) {
         btnElement.removeAttribute('title');
     }
 
-    this.updateTitleFor = function(btnElement, value) {
-        let consequenceScaleElement = consequenceScale[value-1];
+    this.updateTitleFor = function (btnElement, value) {
+        let consequenceScaleElement = consequenceScale[value - 1];
         if (consequenceScaleElement !== undefined && consequenceScaleElement !== '-') {
             btnElement.setAttribute('title', consequenceScaleElement);
         }
@@ -134,6 +343,7 @@ export default function RegisterAssessmentService() {
 
     this.updateOrganisationAssessmentAvg = function () {
         let self = this;
+
         function orgMax(elem1, elem2) {
             const value1 = parseInt(elem1.value);
             const value2 = parseInt(elem2.value);
@@ -147,6 +357,7 @@ export default function RegisterAssessmentService() {
                 return Math.max(value1, value2);
             }
         }
+
         function updateForField(id) {
             const rep = document.getElementById(`${id}Rep`);
             const eco = document.getElementById(`${id}Eco`);
@@ -166,13 +377,14 @@ export default function RegisterAssessmentService() {
                 self.clearColors(targetBtn);
             }
         }
+
         updateForField('confidentialityOrganisation');
         updateForField('integrityOrganisation');
         updateForField('availabilityOrganisation');
     }
 
 
-    this.updateAssessmentTotalMax = function() {
+    this.updateAssessmentTotalMax = function () {
         let self = this;
         const maxOrganisation = document.getElementById('maxOrganisation');
         const maxRegistered = document.getElementById('maxRegistered');
@@ -189,6 +401,7 @@ export default function RegisterAssessmentService() {
             let value3 = asIntOrDefault(element3.value, 0);
             return Math.max(value1, value2, value3);
         }
+
         function updateTargets(element, value) {
             if (value !== undefined && value > 0 && value !== '-') {
                 element.innerText = "" + value;
@@ -227,7 +440,7 @@ export default function RegisterAssessmentService() {
         }
     };
 
-    this.updateConsequenceStatus = function(value) {
+    this.updateConsequenceStatus = function (value) {
         const assessmentBadge = document.getElementById('assessmentBadge');
         const assessmentElement = document.getElementById('assessment');
         this.clearColors(assessmentBadge);
@@ -238,7 +451,7 @@ export default function RegisterAssessmentService() {
     }
 
 
-    this.updatedAssessmentValue = function(value, property, color) {
+    this.updatedAssessmentValue = function (value, property, color) {
         const propertyElement = document.getElementById(property);
         const propertyBtnElement = document.getElementById(property + 'Btn');
         if (value !== '-') {
@@ -255,4 +468,85 @@ export default function RegisterAssessmentService() {
         this.updateAssessmentTotalMax();
     }
 
+}
+
+let registerDataprocessingService = new RegisterDataprocessingService();
+
+function RegisterDataprocessingService() {
+    this.init = function () {
+    }
+
+    this.setDataprocessingEditState = function (editable) {
+        const rootElement = document.getElementById('dataprocessingForm');
+        document.getElementById('saveDataProcessingBtn').hidden = !editable;
+        document.getElementById('cancelDataProcessingBtn').hidden = !editable;
+        document.getElementById('editDataProcessingBtn').hidden = editable;
+        rootElement.querySelectorAll('.editField').forEach(elem => {
+            elem.disabled = !editable;
+            if (elem.tagName === "A") {
+                elem.hidden = editable;
+                elem.nextElementSibling.hidden = !editable;
+            }
+        });
+        if (!editable) {
+            rootElement.reset();
+        }
+        editModeCategoryInformationEditable(editable);
+    }
+
+}
+
+document.addEventListener("DOMContentLoaded", function () {
+    registerGeneralService.init();
+    registerPurposeService.init();
+    registerAssessmentService.init();
+    registerDataprocessingService.init();
+});
+
+class KLESelectionService {
+    mainGroupSelectId = 'mainGroupSelector'
+    groupSelectId = 'groupSelector'
+    mainGroupSelectorInstance = null
+    groupSelectorInstance = null
+
+    constructor() {
+    }
+
+    initKLEMainGroupSelect() {
+        if (this.mainGroupSelectorInstance) {
+            this.mainGroupSelectorInstance.destroy()
+        }
+
+        const mainGroupSelect = document.getElementById(this.mainGroupSelectId);
+        this.mainGroupSelectorInstance = initSelect(mainGroupSelect);
+
+        mainGroupSelect.addEventListener('change', async (e) => {
+            await this.#getGroupOptionsFragment()
+        })
+
+        this.#initGroupSelect()
+
+    }
+
+    async #getGroupOptionsFragment() {
+        if (this.groupSelectorInstance) {
+            this.groupSelectorInstance.destroy()
+        }
+
+        // Get selected maingroups and selected groups
+        const mainGroupSelector = document.getElementById(this.mainGroupSelectId);
+        const selectedMainGroups = [...mainGroupSelector.selectedOptions].map(o => o.value);
+        const groupSelector = document.getElementById(this.groupSelectId);
+        const selectedGroups = [...groupSelector.selectedOptions].map(o => o.value);
+
+        // fetch groupSelectOptions
+        const url = `/kle/maingroup/groups?mainGroupNumbers=${selectedMainGroups}&selectedGroups=${selectedGroups}`;
+        await fetchHtml(url, this.groupSelectId);
+        this.#initGroupSelect()
+    }
+
+    #initGroupSelect() {
+        const groupSelect = document.getElementById(this.groupSelectId)
+        this.groupSelectorInstance = initSelect(groupSelect);
+    }
 }

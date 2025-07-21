@@ -8,14 +8,11 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.FilterService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -48,7 +45,6 @@ public class RegisterRestController {
     ) {
         Page<RegisterGrid> registers =  registerGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, RegisterGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             RegisterGrid.class
         );
@@ -67,12 +63,19 @@ public class RegisterRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        Page<RegisterGrid> registers = registerGridDao.findAllForResponsibleUser(validateSearchFilters(filters, RegisterGrid.class), buildPageable(page, limit, sortColumn, sortDirection), RegisterGrid.class, user);
+		Map<String, String> customSearchFilters = validateSearchFilters(filters, RegisterGrid.class);
+		Page<RegisterGrid> registers = registerGridDao.findAllForResponsibleUserOrCustomResponsibleUser(
+				customSearchFilters,
+				buildPageable(page, limit, sortColumn, sortDirection),
+				RegisterGrid.class,
+				user
+		);
+
 
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
