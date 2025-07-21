@@ -184,7 +184,19 @@
                                                     <!-- view mode -->
                                                     <div id="productLinksViewContainer" class="editField">
                                                         <div th:each="link : *{productLinks}" class="mb-1">
-                                                            <a th:href="${link.url}" th:text="${link.url}" class="form-control-link" target="_blank" rel="noopener noreferrer"></a>
+                                                            <a th:href="${link.url}"
+                                                               th:text="${link.url}"
+                                                               class="form-control-link"
+                                                               target="_blank"
+                                                               rel="noopener noreferrer"
+                                                               style="word-wrap: break-word;
+                                                                      overflow-wrap: break-word;
+                                                                      word-break: break-all;
+                                                                      display: inline-block;
+                                                                      max-width: 100%;
+                                                                      white-space: normal;"
+                                                            >
+                                                            </a>
                                                         </div>
                                                     </div>
 
