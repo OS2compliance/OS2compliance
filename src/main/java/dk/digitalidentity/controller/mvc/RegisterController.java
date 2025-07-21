@@ -19,6 +19,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -35,6 +36,7 @@ import dk.digitalidentity.service.RegisterAssetAssessmentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.kle.KLEGroupService;
@@ -59,6 +61,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -86,15 +89,16 @@ public class RegisterController {
     private final DataProcessingService dataProcessingService;
     private final TaskService taskService;
     private final UserService userService;
+	private final SettingsService settingsService;
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
 
 	@GetMapping
-    public String registerList(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
-        return "registers/index";
-    }
+	public String registerList(Model model) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+		return "registers/index";
+	}
 
 
     @GetMapping("form")
@@ -176,6 +180,7 @@ public class RegisterController {
 			@RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
 			@RequestParam(value = "departments", required = false) @Valid final Set<String> departmentUuids,
 			@RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids,
+			@RequestParam(value = "customResponsibleUsers", required = false) @Valid final Set<String> customResponsibleUserUuids,
 			@RequestParam(value = "criticality", required = false) final Criticality criticality,
 			@RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
 			@RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
@@ -212,6 +217,12 @@ public class RegisterController {
         } else {
             register.setResponsibleUsers(null);
         }
+		if (customResponsibleUserUuids != null && !customResponsibleUserUuids.isEmpty()) {
+			final List<User> customResponsibleUsers = userService.findAllByUuids(customResponsibleUserUuids);
+			register.setCustomResponsibleUsers(customResponsibleUsers);
+		} else {
+			register.setCustomResponsibleUsers(new ArrayList<>());
+		}
         if (emergencyPlanLink != null) {
             register.setEmergencyPlanLink(emergencyPlanLink);
         }
@@ -319,10 +330,14 @@ public class RegisterController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
+
         model.addAttribute("section", section);
-        model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
-            .anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR)) || register.getResponsibleUsers().stream()
-            .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))));
+		model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
+				.anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR))
+				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
+				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
+		);
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
         model.addAttribute("register", register);
@@ -405,7 +420,11 @@ public class RegisterController {
 
     private static void ensureEditingIsAllowed(final Register register) {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(authentication.getAuthorities().stream()
+				.noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))
+				&& !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+				&& !register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+		) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }

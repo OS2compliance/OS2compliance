@@ -51,6 +51,15 @@ public class Register extends Relatable {
     @ToString.Exclude
     private List<User> responsibleUsers = new ArrayList<>();
 
+	@ManyToMany
+    @JoinTable(
+        name = "register_custom_responsible_user_mapping",
+        joinColumns = { @JoinColumn(name = "register_id") },
+        inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
+    )
+    @ToString.Exclude
+    private List<User> customResponsibleUsers = new ArrayList<>();
+
     @ManyToMany
     @JoinTable(
         name = "registers_responsible_ous_mapping",
