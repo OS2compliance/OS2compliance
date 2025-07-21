@@ -104,7 +104,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
 	private void seedV24 () {
 		// Update each of these specific lists to be editable
-		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list","dp-person-categories-list",  "dp-person-storage-duration-list");
+		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list","dp-person-categories-list",  "dp-person-storage-duration-list", "dp-receiver-list");
 		for (String identifier : listIdentifiers) {
 			Optional<ChoiceList> list = choiceService.findChoiceList(identifier);
 			if (list.isEmpty()) {
