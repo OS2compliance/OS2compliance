@@ -7,8 +7,13 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.Set;
 
 public interface KLEMainGroupDao extends JpaRepository<KLEMainGroup, String> {
+
+	Set<KLEMainGroup> findAllByDeletedFalse();
+
+	Set<KLEMainGroup> findAllByDeletedFalseAndMainGroupNumberIn(Collection<String> mainGroupNumbers);
 
 	@Modifying
 	@Query("UPDATE KLEMainGroup k SET k.deleted = true WHERE k.mainGroupNumber NOT IN :mainGroupNumbers AND k.deleted = false")

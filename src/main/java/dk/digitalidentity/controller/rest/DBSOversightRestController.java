@@ -40,7 +40,6 @@ public class DBSOversightRestController {
     ) {
         Page<DBSOversightGrid> oversights =  dbsOversightGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, DBSOversightGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             DBSOversightGrid.class
         );

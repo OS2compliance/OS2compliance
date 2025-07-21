@@ -785,11 +785,11 @@
                 makeInactive(panes);
 
                 const activeTab = document.querySelector('button[data-bs-target="' + hash + '"]');
-                activeTab.classList.add("active");
+                activeTab?.classList.add("active");
 
                 const activePane = document.querySelector(hash);
-                activePane.classList.add("active");
-                activePane.classList.add("show");
+                activePane?.classList.add("active");
+                activePane?.classList.add("show");
             }
 
         }
