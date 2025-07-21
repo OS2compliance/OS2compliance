@@ -350,9 +350,25 @@ public class RegisterController {
         model.addAttribute("gdprP7Choices", gdprP7Choices);
         model.addAttribute("relatedDocuments", allRelatedTo.stream()
                 .filter(r -> r.getRelationType() == RelationType.DOCUMENT)
-                .toList());
-        model.addAttribute("relatedTasks", allRelatedTo.stream()
-                .filter(r -> r.getRelationType() == RelationType.TASK)
+				.toList());
+
+		record TaskListDTO(long id, String title, String responsibleUserName, String responsibleOuName, String taskType, String deadline, String repeats, String status, RelationType relationType){}
+		model.addAttribute("relatedTasks", allRelatedTo.stream()
+				.filter(r -> r.getRelationType() == RelationType.TASK)
+				.map(r -> {
+					Task task = ((Task) r);
+					return new TaskListDTO(
+							task.getId(),
+							task.getName(),
+							task.getResponsibleUser().getName(),
+							task.getResponsibleOu().getName(),
+							task.getTaskType().getMessage(),
+							task.getNextDeadline().toString(),
+							task.getRepetition().getMessage(),
+							taskService.findHtmlStatusBadgeForTask(task),
+							RelationType.TASK
+					);
+				})
 				.toList());
         model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("threatAssessments", allRelatedTo.stream()

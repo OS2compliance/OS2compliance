@@ -342,6 +342,9 @@ public class ThreatAssessmentService {
     }
 
     public Map<String, List<ThreatDTO>> buildThreatList(final ThreatAssessment threatAssessment) {
+		if (threatAssessment.isFromExternalSource()) {
+			return new HashMap<>();
+		}
         final Map<String, List<ThreatDTO>> threatMap = new LinkedHashMap<>();
         for (final ThreatCatalogThreat threat : threatAssessment.getThreatCatalog().getThreats()) {
             final ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
