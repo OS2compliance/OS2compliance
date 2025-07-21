@@ -41,6 +41,8 @@ public class DefaultController implements ErrorController {
                 model.addAttribute("user", user);
             }
 
+			model.addAttribute("isSystemOwner", true); // todo
+
             return "dashboard";
         }
         return "index";
