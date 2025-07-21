@@ -37,4 +37,6 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
 
     long countByAssetType_Id(Long id);
 
+	boolean existsByResponsibleUsers_UuidContains(String userUuid);
+
 }

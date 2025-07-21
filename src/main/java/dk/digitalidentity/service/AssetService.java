@@ -661,4 +661,8 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 		img.attr("style", builder.toString());
 		return img;
 	}
+
+	public boolean isSystemOwnerAnywhere(String userUuid) {
+		return assetDao.existsByResponsibleUsers_UuidContains(userUuid);
+	}
 }
