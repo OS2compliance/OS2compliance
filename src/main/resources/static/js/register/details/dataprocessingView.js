@@ -1,7 +1,8 @@
-export default function RegisterDataprocessingService() {
-    this.init = function() {}
+function RegisterDataprocessingService() {
+    this.init = function () {
+    }
 
-    this.setDataprocessingEditState = function(editable) {
+    this.setDataprocessingEditState = function (editable) {
         const rootElement = document.getElementById('dataprocessingForm');
         document.getElementById('saveDataProcessingBtn').hidden = !editable;
         document.getElementById('cancelDataProcessingBtn').hidden = !editable;

@@ -10,8 +10,7 @@ window.registerGeneralService = new RegisterGeneralService();
 window.registerAssessmentService = new RegisterAssessmentService();
 window.registerDataprocessingService = new RegisterDataprocessingService();
 
-
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     registerGeneralService.init();
     registerPurposeService.init();
     registerAssessmentService.init();

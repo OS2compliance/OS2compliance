@@ -1,17 +1,23 @@
+import KLESelectionService from "./kleSelectionService.js";
+
 let ouChoices;
 let departmentChoices;
 let userChoices;
+let customResponsibleUserChoices;
+
+let kleService
 
 /**
  * Functionality related to the "Generelt" page of the register detail view
  */
 export default function RegisterGeneralService() {
-    this.init = function() {
+    this.init = function () {
         this.generalFormLoaded();
         this.initAssetRelationSelect();
         this.initDocumentRelationSelectPrivate();
         this.initTaskRelationSelectPrivate();
     }
+
 
     this.generalFormLoaded = function () {
         const form = document.getElementById('editDescId');
@@ -19,29 +25,36 @@ export default function RegisterGeneralService() {
         departmentChoices = choiceService.initOUSelect('departmentSelect', false);
         ouChoices = choiceService.initOUSelect('ouSelect', false);
         userChoices = choiceService.initUserSelect('userSelect', false);
+        customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
 
         form.addEventListener('reset', (ev) => {
             ouChoices.destroy();
             ouChoices.init();
             userChoices.destroy();
             userChoices.init();
+            customResponsibleUserChoices.destroy();
+            customResponsibleUserChoices.init();
             departmentChoices.destroy();
             departmentChoices.init();
         })
+
+        kleService = new KLESelectionService()
+        kleService.initKLEMainGroupSelect()
     };
 
-    this.initAssetRelationSelect = function() {
+
+    this.initAssetRelationSelect = function () {
         const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
         choiceService.updateRelationsAssetsOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsAssetsOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsAssetsOnly(relationsChoice, "");
             },
             false,
@@ -49,43 +62,43 @@ export default function RegisterGeneralService() {
     }
 
 
-    this.initDocumentRelationSelectPrivate = function() {
+    this.initDocumentRelationSelectPrivate = function () {
         const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
         choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
             },
             false,
         );
     }
 
-    this.initTaskRelationSelectPrivate = function() {
+    this.initTaskRelationSelectPrivate = function () {
         const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
         let relationsChoice = initSelect(relationsSelect);
         choiceService.updateRelationsTasksOnly(relationsChoice, "");
         relationsSelect.addEventListener("search",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
             },
             false,
         );
         relationsSelect.addEventListener("change",
-            function(event) {
+            function (event) {
                 choiceService.updateRelationsTasksOnly(relationsChoice, "");
             },
             false,
         );
     }
 
-    this.setGenereltEditState = function(editable) {
+    this.setGenereltEditState = function (editable) {
         const editBtn = document.querySelector('#editBtn');
         const cancelBtn = document.querySelector('#cancelBtn');
         const saveBtn = document.querySelector('#saveBtn');
@@ -110,16 +123,22 @@ export default function RegisterGeneralService() {
             const form = document.getElementById('editDescId');
             form.reset();
             userChoices.disable();
+            customResponsibleUserChoices.disable();
             ouChoices.disable();
             departmentChoices.disable();
+            kleService.mainGroupSelectorInstance.disable();
+            kleService.groupSelectorInstance.disable();
         } else {
             userChoices.enable();
+            customResponsibleUserChoices.enable();
             ouChoices.enable();
             departmentChoices.enable();
+            kleService.mainGroupSelectorInstance.enable();
+            kleService.groupSelectorInstance.enable();
         }
     }
 
-    this.showEditRelationDialog = function(elem) {
+    this.showEditRelationDialog = function (elem) {
         const registerId = elem.getAttribute('data-relatableid');
         const relationId = elem.getAttribute('data-relationid');
         const relationType = elem.getAttribute('data-relationtype');
