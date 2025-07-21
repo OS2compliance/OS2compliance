@@ -28,7 +28,7 @@ public class KLEController {
 	private enum VIEW {
 		KLEGROUPOPTIONS("kle/fragment/kleGroupOptions :: kleGroupOptions");
 
-		private String name;
+		private final String name;
 		VIEW(String name) {
 			this.name = name;
 		}
