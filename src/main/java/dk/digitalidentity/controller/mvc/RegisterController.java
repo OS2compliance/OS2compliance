@@ -256,13 +256,16 @@ public class RegisterController {
 
     @Transactional
     @PostMapping("{id}/purpose")
-    public String purpose(@PathVariable final Long id,
-                          @RequestParam(value = "purpose", required = false) final String purpose,
-                          @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
-                          @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
-                          @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
-                          @RequestParam(value = "consent", required = false) final String consent,
-                          @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
+    public String purpose(
+			@PathVariable final Long id,
+			@RequestParam(value = "purpose", required = false) final String purpose,
+			@RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
+			@RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
+			@RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
+			@RequestParam(value = "consent", required = false) final String consent,
+			@RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
+			@RequestParam(value = "supplementalLegalBasis", required = false) final String supplementalLegalBasis
+	) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
@@ -278,12 +281,17 @@ public class RegisterController {
         if (consent != null) {
             register.setConsent(consent);
         }
+		if (supplementalLegalBasis != null) {
+			register.setSupplementalLegalBasis(supplementalLegalBasis);
+		}
         if (informationObligationStatus != null) {
             register.setInformationObligation(informationObligationStatus);
         }
         if (informationObligationDesc != null) {
             register.setInformationObligationDesc(informationObligationDesc);
         }
+
+		registerService.save(register);
         return "redirect:/registers/" + id + "?section=purpose";
     }
 

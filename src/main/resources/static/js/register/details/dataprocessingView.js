@@ -1,4 +1,4 @@
-function RegisterDataprocessingService() {
+export default function RegisterDataprocessingService() {
     this.init = function () {
     }
 

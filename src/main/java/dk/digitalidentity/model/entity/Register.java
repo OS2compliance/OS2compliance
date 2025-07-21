@@ -121,6 +121,9 @@ public class Register extends Relatable {
     @Convert(converter = StringSetNullSafeConverter.class)
     private Set<String> gdprChoices = new HashSet<>();
 
+	@Column
+	private String supplementalLegalBasis;
+
     @OneToOne(mappedBy = "register")
     @PrimaryKeyJoinColumn
     private ConsequenceAssessment consequenceAssessment;

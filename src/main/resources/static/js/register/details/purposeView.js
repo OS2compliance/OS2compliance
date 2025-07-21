@@ -9,6 +9,10 @@ export default class RegisterPurposeService {
 
     init() {
         this.initGDPRCheckboxChange()
+
+        // Check for conditional fields visibility
+        this.#consentFieldChange()
+        this.#supplementalLegalFieldChange()
     };
 
     setPurposeEditState(editable) {
@@ -21,6 +25,7 @@ export default class RegisterPurposeService {
         const informationObligation = document.querySelector('#informationObligation');
         const checkboxes = document.getElementsByClassName("form-check-input");
         const consent = document.querySelector('#consent');
+        const suplementalField = document.getElementById('supplementalLegalBasis')
 
         editBtn.style = editable ? 'display: none' : 'display: block';
         saveBtn.style = !editable ? 'display: none' : 'display: block';
@@ -34,6 +39,7 @@ export default class RegisterPurposeService {
         informationObligation.disabled = !editable;
         purpose.readOnly = !editable;
         purposeNotes.readOnly = !editable;
+        suplementalField.readOnly = !editable;
         if (!editable) {
             const form = document.querySelector('#editPurposeId');
             form.reset();
@@ -66,8 +72,7 @@ export default class RegisterPurposeService {
 
     #consentFieldChange() {
         // If either of these are true, show the field
-        const anyTrue = this.#consentTriggeringElements.get('register-gdpr-p6-a') || this.#consentTriggeringElements.get('register-gdpr-p7-a')
-        console.log(anyTrue);
+        const anyTrue = this.#consentTriggeringElements.get('register-gdpr-p6-a')?.checked || this.#consentTriggeringElements.get('register-gdpr-p7-a')?.checked
 
         const consentField = document.getElementById('consentGroup')
         consentField.hidden = !anyTrue;
@@ -77,12 +82,12 @@ export default class RegisterPurposeService {
 
     #supplementalLegalFieldChange() {
         // If either (6-c AND 6-e) is true OR (9-c AND 9-f) is true, show the field
-        const art6IsTrue = this.#supplementalLegalElements.get('register-gdpr-p6-c').checked && this.#supplementalLegalElements.get('register-gdpr-p6-e').checked
-        const art9IsTrue = this.#supplementalLegalElements.get('register-gdpr-p7-c').checked && this.#supplementalLegalElements.get('register-gdpr-p7-f').checked
+        const art6IsTrue = this.#supplementalLegalElements.get('register-gdpr-p6-c')?.checked && this.#supplementalLegalElements.get('register-gdpr-p6-e')?.checked
+        const art9IsTrue = this.#supplementalLegalElements.get('register-gdpr-p7-c')?.checked && this.#supplementalLegalElements.get('register-gdpr-p7-f')?.checked
 
+        const suplementalField = document.getElementById('supplementalLegalGroup')
 
-        const suplementalField = document.getElementById()
-        suplementalField.hidden = !art6IsTrue || art9IsTrue
+        suplementalField.hidden = !(art6IsTrue || art9IsTrue)
 
     }
 
