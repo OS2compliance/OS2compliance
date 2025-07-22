@@ -3,7 +3,8 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
-import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.dto.StatusCombination;
+import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -24,6 +25,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -236,6 +238,41 @@ public class TaskService {
 
         }
     }
+
+
+	public StatusCombination calculateStatus(final Task task) {
+		if (task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
+			return new StatusCombination("Udført", StatusColor.GREEN);
+		} else {
+			LocalDate deadline = task.getNextDeadline();
+			LocalDate today = LocalDate.now();
+			long diff = ChronoUnit.DAYS.between(today, deadline);
+
+			Optional<TaskLog> newestLogOptional = task.getLogs().stream().max(Comparator.comparingLong(Relatable::getId));
+			TaskLog newestLog = null;
+			if (newestLogOptional.isPresent()) {
+				newestLog = newestLogOptional.get();
+			}
+
+			String statusText = "Ikke udført";
+			if (newestLog != null) {
+				switch (newestLog.getTaskResult()) {
+					case NO_ERROR -> statusText = "Ingen fejl";
+					case NO_CRITICAL_ERROR -> statusText = "Ingen kritiske fejl";
+					case CRITICAL_ERROR -> statusText = "Kritiske fejl";
+				}
+			}
+
+			if (diff < 0) {
+				return new StatusCombination(statusText, StatusColor.RED);
+			} else if (diff < 31 && diff >= 0) {
+				return new StatusCombination(statusText, StatusColor.YELLOW);
+			} else {
+				return new StatusCombination(statusText, StatusColor.GREY);
+			}
+
+		}
+	}
 
 
     @Transactional

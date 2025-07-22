@@ -10,21 +10,19 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
 import dk.digitalidentity.report.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
+import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
@@ -88,6 +86,7 @@ public class ReportController {
     private final DPIAService dpiaService;
 	private final UserService userService;
 	private final RegisterService registerService;
+	private final SystemOwnerOverviewService systemOwnerOverviewService;
 
 	@GetMapping
     public String reportList(final Model model) {
@@ -97,10 +96,6 @@ public class ReportController {
 
 	@GetMapping("overview/systemowner")
 	public ModelAndView SystemOwnerOverview(final HttpServletResponse response) {
-		record TaskRow(String name, String type, String ouName, LocalDate deadline, String repeats, String status, String tags) {}
-		record AssetRow(String name, String supplier, String type, LocalDate updatedAt, String riskAssessment, String status){}
-		record RegisterRow(String name, String responsibleOuName, String updatedAt, String consequenceEstimate, String status){}
-		record DocumentRow(String name, String type, LocalDate nextRevision, String status, String tags) {}
 
 		// Validate user has access
 		User currentUser = userService.currentUser();
@@ -115,13 +110,10 @@ public class ReportController {
 		response.setHeader("Content-Disposition", "attachment; filename=\"systemejer_overblik.xls\"");
 
 		// Build content
-		//TODO -split into service methods
-		final Map<String, Object> model = new HashMap<>();
+		Set<Asset> systemOwnerAssets = assetService.getAllForSystemOwner(currentUser.getUuid());
 
 		Map<Asset, Set<Relatable>> assetRelations = new HashMap<>();
-		Set<Asset> assets = assetService.getAllForSystemOwner(currentUser.getUuid());
-
-		for (Asset asset : assets) {
+		for (Asset asset : systemOwnerAssets) {
 			assetRelations.put(asset, new HashSet<>(relationService.findAllRelatedTo(asset))); // Always true predicate to get all tasks
 		}
 
@@ -131,9 +123,11 @@ public class ReportController {
 		// Handle registers not related to assets, but with matching responsible user
 		Set<Register> assetUnrelatedRegisters = registerService.findAllUnrelatedRegistersForResponsibleUser(currentUser);
 
+		final Map<String, Object> model = systemOwnerOverviewService.mapToModel(assetRelations, assetUnrelatedTasks, assetUnrelatedRegisters);
+
+		log.info("Finished collecting data, building spreadsheet");
+
 		return new ModelAndView(new SystemOwnerOverviewView(), model);
-
-
 	}
 
     @GetMapping("incidents")
