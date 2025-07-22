@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -103,4 +105,7 @@ public class RegisterService {
         registerDao.delete(register);
     }
 
+	public Set<Register> findAllUnrelatedRegistersForResponsibleUser(User user) {
+		return registerDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(user);
+	}
 }
