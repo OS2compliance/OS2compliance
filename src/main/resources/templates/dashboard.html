@@ -21,9 +21,11 @@
                     </div>
                     <div class="align-self-center d-inline-flex"
                     th:if="${isSystemOwner != null && isSystemOwner}">
-                        <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Systemejer rapport
-                        </button>
+                        <a href="reports/overview/systemowner">
+                            <button type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                                <i class="ti-plus"></i> <span class="vr"></span> Systemejer rapport
+                            </button>
+                        </a>
                     </div>
                 </div>
             </div>

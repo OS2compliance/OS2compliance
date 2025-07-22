@@ -3,6 +3,7 @@ package dk.digitalidentity.dao;
 import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -38,5 +39,7 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
     long countByAssetType_Id(Long id);
 
 	boolean existsByResponsibleUsers_UuidContains(String userUuid);
+
+	Set<Asset> findByResponsibleUsers_Uuid(String uuid);
 
 }

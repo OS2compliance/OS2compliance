@@ -26,6 +26,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -283,4 +284,7 @@ public class TaskService {
         return taskLogDao.findByTaskIdIn(taskList.stream().map(Relatable::getId).toList());
     }
 
+	public Set<Task> findAllUnrelatedTasksForResponsibleUser (String userUuid) {
+		return taskDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(userUuid);
+	}
 }
