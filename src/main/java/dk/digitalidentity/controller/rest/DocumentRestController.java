@@ -48,7 +48,6 @@ public class DocumentRestController {
     ) {
         Page<DocumentGrid> documents =  documentGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, DocumentGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             DocumentGrid.class
         );

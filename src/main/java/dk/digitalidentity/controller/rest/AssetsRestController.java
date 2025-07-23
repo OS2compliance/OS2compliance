@@ -2,7 +2,6 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.AssetGridDao;
 import dk.digitalidentity.event.AssetDPIAKitosEvent;
-import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
@@ -17,14 +16,12 @@ import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
-import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetOversightService;
-import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -34,10 +31,6 @@ import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import dk.digitalidentity.util.ReflectionHelper;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
-import dk.digitalidentity.service.UserService;
-import dk.digitalidentity.util.ReflectionHelper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -59,7 +52,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.time.LocalDateTime;
 import java.time.ZoneId;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
@@ -97,7 +89,6 @@ public class AssetsRestController {
     ) {
         Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, AssetGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             AssetGrid.class
         );
@@ -122,12 +113,12 @@ public class AssetsRestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        Page<AssetGrid> assets = null;
-        assets = assetGridDao.findAllForResponsibleUser(
-            validateSearchFilters(filters,AssetGrid.class ),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            AssetGrid.class,
-            user);
+		Page<AssetGrid> assets = assetGridDao.findAllForResponsibleUser(
+				validateSearchFilters(filters,AssetGrid.class ),
+				buildPageable(page, limit, sortColumn, sortDirection),
+				AssetGrid.class,
+				user
+		);
 
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }

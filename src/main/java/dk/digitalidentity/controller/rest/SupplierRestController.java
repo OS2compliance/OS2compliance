@@ -51,7 +51,6 @@ public class SupplierRestController {
 	) {
         Page<SupplierGrid> suppliers =  supplierGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, SupplierGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             SupplierGrid.class
         );
