@@ -4,5 +4,7 @@ public enum StatusColor {
 	GREEN,
 	YELLOW,
 	RED,
+	ORANGE,
+	LIGHT_GREEN,
 	GREY
 }

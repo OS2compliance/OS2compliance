@@ -4,4 +4,11 @@ import dk.digitalidentity.model.dto.StatusCombination;
 
 import java.time.LocalDate;
 
-public record AssetRow(String name, String supplier, String type, LocalDate updatedAt, String riskAssessment, StatusCombination status){}
+public record AssetRow(
+		String name,
+		String supplier,
+		String type,
+		LocalDate updatedAt,
+		StatusCombination riskAssessment,
+		StatusCombination status
+){}

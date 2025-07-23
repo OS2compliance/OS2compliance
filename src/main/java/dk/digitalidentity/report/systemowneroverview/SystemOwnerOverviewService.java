@@ -7,15 +7,18 @@ import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.report.systemowneroverview.dto.AssetRow;
 import dk.digitalidentity.report.systemowneroverview.dto.DocumentRow;
 import dk.digitalidentity.report.systemowneroverview.dto.RegisterRow;
 import dk.digitalidentity.report.systemowneroverview.dto.TaskRow;
+import dk.digitalidentity.report.systemowneroverview.dto.ThreatAssessmentRow;
 import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -24,7 +27,6 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -40,9 +42,9 @@ public class SystemOwnerOverviewService {
 		Set<AssetRow> assets =  new HashSet<>();
 		Set<RegisterRow> registers =  new HashSet<>();
 		Set<DocumentRow> documents =  new HashSet<>();
+		Set<ThreatAssessmentRow> threatAssessments = new HashSet<>();
 		for (Map.Entry<Asset, Set<Relatable>> entry : assetRelations.entrySet()){
 			Asset asset = entry.getKey();
-			Set<ThreatAssessment> assetThreatAssessments = new HashSet<>();
 
 			for (Relatable assetRelatable : entry.getValue()){
 				if (assetRelatable instanceof Task task){
@@ -52,11 +54,11 @@ public class SystemOwnerOverviewService {
 				}else if (assetRelatable instanceof Document document){
 					documents.add(mapToRow(document, asset.getName()));
 				} else if( assetRelatable instanceof ThreatAssessment threatAssessment){
-					assetThreatAssessments.add(threatAssessment);
+					threatAssessments.add(mapToRow(threatAssessment, asset.getName()));
 				}
 			}
 
-			assets.add(mapToRow(asset, assetThreatAssessments));
+			assets.add(mapToRow(asset, threatAssessments));
 		}
 
 		for (Task task : assetUnrelatedTasks) {
@@ -71,6 +73,7 @@ public class SystemOwnerOverviewService {
 		model.put("assets", assets);
 		model.put("registers", registers);
 		model.put("documents", documents);
+		model.put("threatAssessments", threatAssessments);
 		return model;
 	}
 
@@ -84,7 +87,7 @@ public class SystemOwnerOverviewService {
 				task.getNextDeadline(),
 				task.getRepetition() != null ? task.getRepetition().getMessage() : "",
 				taskService.calculateStatus(task),
-				String.join(",", task.getTags().toString())
+				task.getTags().stream().map(Tag::getValue).collect(Collectors.joining(","))
 		);
 	}
 
@@ -106,7 +109,7 @@ public class SystemOwnerOverviewService {
 				document.getDocumentType() != null ? document.getDocumentType().getMessage() : "",
 				document.getNextRevision(),
 				statusCombination,
-				String.join(",", document.getTags().toString())
+				document.getTags().stream().map(Tag::getValue).collect(Collectors.joining(","))
 		);
 	}
 
@@ -122,17 +125,31 @@ public class SystemOwnerOverviewService {
 			statusCombination = new StatusCombination(status.getMessage(), statusColor);
 		}
 
+		RiskAssessment assessment = register.getConsequenceAssessment() != null ? register.getConsequenceAssessment().getAssessment() : null;
+		StatusCombination assessmentCombination = new StatusCombination("", StatusColor.GREY);
+		if (assessment != null) {
+			StatusColor statusColor = switch (assessment) {
+				case RED -> StatusColor.RED;
+				case YELLOW -> StatusColor.YELLOW;
+				case GREEN -> StatusColor.GREEN;
+				case ORANGE -> StatusColor.ORANGE;
+				case LIGHT_GREEN -> StatusColor.LIGHT_GREEN;
+				default -> StatusColor.GREY;
+			};
+			assessmentCombination = new StatusCombination(assessment.getMessage(), statusColor);
+		}
+
 		return new RegisterRow(
 				register.getName(),
 				assetName,
 				register.getResponsibleOus().stream().map(OrganisationUnit::getName).collect(Collectors.joining(",")),
 				LocalDate.of(register.getUpdatedAt().getYear(), register.getUpdatedAt().getMonth(), register.getUpdatedAt().getDayOfMonth()),
-				register.getConsequenceAssessment() != null && register.getConsequenceAssessment().getAssessment() != null ? register.getConsequenceAssessment().getAssessment().getMessage() : "",
+				assessmentCombination,
 				statusCombination
 		);
 	}
 
-	public AssetRow mapToRow(Asset asset, Set<ThreatAssessment> assetThreatAssessments) {
+	public AssetRow mapToRow(Asset asset, Set<ThreatAssessmentRow> assetThreatAssessments) {
 		AssetStatus status = asset.getAssetStatus();
 		StatusCombination statusCombination = new StatusCombination("", StatusColor.GREY);
 		if (status != null) {
@@ -145,16 +162,47 @@ public class SystemOwnerOverviewService {
 			statusCombination = new StatusCombination(status.getMessage(), statusColor);
 		}
 
+		StatusCombination assessment = assetThreatAssessments.stream()
+				.map(ThreatAssessmentRow::riskAssessment)
+				.findFirst()
+				.orElse(new StatusCombination("", StatusColor.GREY));
+
+
 		return new AssetRow(
 				asset.getName(),
 				asset.getSupplier() != null ? asset.getSupplier().getName() : "",
 				asset.getAssetType() != null ? asset.getAssetType().getCaption() : "",
 				LocalDate.of(asset.getUpdatedAt().getYear(), asset.getUpdatedAt().getMonth(), asset.getUpdatedAt().getDayOfMonth()),
-				assetThreatAssessments.stream()
-						.map(t -> t.getAssessment() != null ? t.getAssessment().getMessage() : null)
-						.filter(Objects::nonNull)
-						.collect(Collectors.joining(",")),
+				assessment,
 				statusCombination
+		);
+	}
+
+	public ThreatAssessmentRow mapToRow(ThreatAssessment threatAssessment, String assetName) {
+		RiskAssessment assessment = threatAssessment.getAssessment();
+		StatusCombination assessmentCombination = new StatusCombination("", StatusColor.GREY);
+		if (assessment != null) {
+			StatusColor statusColor = switch (assessment) {
+				case GREEN -> StatusColor.GREEN;
+				case YELLOW -> StatusColor.YELLOW;
+				case RED -> StatusColor.RED;
+				case ORANGE -> StatusColor.ORANGE;
+				case LIGHT_GREEN -> StatusColor.LIGHT_GREEN;
+				default -> StatusColor.GREY;
+			};
+			assessmentCombination = new StatusCombination(assessment.getMessage(), statusColor);
+		}
+
+
+		return new ThreatAssessmentRow(
+				threatAssessment.getName(),
+				assetName,
+				threatAssessment.getThreatAssessmentType() != null ? threatAssessment.getThreatAssessmentType().getMessage() : "",
+				threatAssessment.getResponsibleOu() != null ? threatAssessment.getResponsibleOu().getName() : "",
+				threatAssessment.getResponsibleUser() != null ? threatAssessment.getResponsibleUser().getName() : "",
+				threatAssessment.getUpdatedAt(),
+				threatAssessment.getThreatAssessmentReportApprovalStatus().getMessage(),
+				assessmentCombination
 		);
 	}
 }
