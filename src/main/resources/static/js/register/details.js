@@ -108,6 +108,7 @@ function RegisterGeneralService() {
         const informationResponsible = document.querySelector('#informationResponsible');
         const registerRegarding = document.querySelector('#registerRegarding');
         const status = document.querySelector('#status');
+        const nameField = document.getElementById('registerNameField');
 
         editBtn.style = editable ? 'display: none' : 'display: block';
         saveBtn.style = !editable ? 'display: none' : 'display: block';
@@ -117,6 +118,7 @@ function RegisterGeneralService() {
         emergencyPlanLink.readOnly = !editable;
         registerRegarding.readOnly = !editable;
         informationResponsible.readOnly = !editable;
+        nameField.disabled = !editable;
         criticality.disabled = !editable;
         status.disabled = !editable;
         if (!editable) {
