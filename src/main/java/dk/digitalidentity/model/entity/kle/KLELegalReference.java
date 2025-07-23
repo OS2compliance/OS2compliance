@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.kle;
 
+import dk.digitalidentity.model.entity.Register;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -45,4 +46,7 @@ public class KLELegalReference {
 
 	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
 	private Set<KLESubject> subjects = new HashSet<>();
+
+	@ManyToMany(mappedBy = "relevantKLELegalReferences", fetch = FetchType.LAZY)
+	private Set<Register> registers = new HashSet<>();
 }

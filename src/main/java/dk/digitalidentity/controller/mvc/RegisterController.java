@@ -23,6 +23,7 @@ import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
@@ -40,6 +41,7 @@ import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.kle.KLEGroupService;
+import dk.digitalidentity.service.kle.KLELegalReferenceService;
 import dk.digitalidentity.service.kle.KLEMainGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -92,6 +94,7 @@ public class RegisterController {
 	private final SettingsService settingsService;
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
+	private final KLELegalReferenceService kLELegalReferenceService;
 
 	@GetMapping
 	public String registerList(Model model) {
@@ -260,13 +263,16 @@ public class RegisterController {
 
     @Transactional
     @PostMapping("{id}/purpose")
-    public String purpose(@PathVariable final Long id,
-                          @RequestParam(value = "purpose", required = false) final String purpose,
-                          @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
-                          @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
-                          @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
-                          @RequestParam(value = "consent", required = false) final String consent,
-                          @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
+    public String purpose(
+			@PathVariable final Long id,
+			@RequestParam(value = "purpose", required = false) final String purpose,
+			@RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
+			@RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
+			@RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
+			@RequestParam(value = "consent", required = false) final String consent,
+			@RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
+			@RequestParam(value = "relevantLegalReferences", required = false) final Set<String> relevantLegalReferences
+	) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
@@ -288,6 +294,9 @@ public class RegisterController {
         if (informationObligationDesc != null) {
             register.setInformationObligationDesc(informationObligationDesc);
         }
+		if(relevantLegalReferences != null && !relevantLegalReferences.isEmpty()) {
+			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(relevantLegalReferences));
+		}
         return "redirect:/registers/" + id + "?section=purpose";
     }
 
@@ -330,7 +339,16 @@ public class RegisterController {
 				.toList();
 		model.addAttribute("mainGroups", mainGroups);
 
-		model.addAttribute("kleGroups", register.getKleGroups().stream().map(g -> new SelectionDTO(g.getGroupNumber(), g.getTitle(), true)));
+		final Set<KLEGroup> kleGroups = register.getKleGroups();
+		model.addAttribute("kleGroups", kleGroups.stream()
+				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
+				.map(g -> new SelectionDTO(g.getGroupNumber(), g.getTitle(), true)));
+
+		final Set<SelectionDTO> kleLegalReferences = kleGroups.stream()
+				.flatMap(g -> g.getLegalReferences().stream())
+				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), register.getRelevantKLELegalReferences().contains(lr)))
+				.collect(Collectors.toSet());
+		model.addAttribute("kleLegalReferences", kleLegalReferences);
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
