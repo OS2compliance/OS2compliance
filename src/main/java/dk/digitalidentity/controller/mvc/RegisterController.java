@@ -26,6 +26,7 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
@@ -66,7 +67,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.time.Duration;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -412,27 +412,38 @@ public class RegisterController {
 		return mainGroups.stream().map(mg ->
 						new SelectedKleMainGroupDTO(mg.getMainGroupNumber(), mg.getTitle(), mg.getKleGroups().stream()
 								.filter(groups::contains)
-								.map(g -> new SelectedKLEGroupDTO(
-										g.getGroupNumber(),
-										g.getTitle(),
-										g.getSubjects().stream()
-												.map(s -> new SelectedKLESubjectDTO(
-														s.getSubjectNumber(),
-														s.getTitle(),
-														s.getPreservationCode(),
-														durationToString(s.getDurationBeforeDeletion()),
-														s.getLegalReferences().stream()
-																.map(lr -> new SelectedLegalReferenceDTO(
-																		lr.getAccessionNumber(),
-																		lr.getTitle(),
-																		lr.getParagraph()))
-																.collect(Collectors.toSet())))
-												.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
-												.toList()))
+								.map(this::toSelectedKLEGroupDTO)
 								.sorted(Comparator.comparing(SelectedKLEGroupDTO::groupNumber))
 								.toList()))
 				.sorted(Comparator.comparing(SelectedKleMainGroupDTO::mainGroupNumber))
 				.toList();
+	}
+	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group) {
+		return new SelectedKLEGroupDTO(
+				group.getGroupNumber(),
+				group.getTitle(),
+				group.getSubjects().stream()
+						.map(this::toSelectedKLESubjectDTO )
+						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
+						.toList());
+	}
+
+	private SelectedKLESubjectDTO toSelectedKLESubjectDTO(KLESubject subject) {
+		return new SelectedKLESubjectDTO(
+				subject.getSubjectNumber(),
+				subject.getTitle(),
+				subject.getPreservationCode(),
+				durationToString(subject.getDurationBeforeDeletion()),
+				subject.getLegalReferences().stream()
+						.map(this::selectedLegalReferenceDTO)
+						.collect(Collectors.toSet()));
+	}
+
+	private SelectedLegalReferenceDTO selectedLegalReferenceDTO(KLELegalReference legalReference) {
+		return new SelectedLegalReferenceDTO(
+				legalReference.getAccessionNumber(),
+				legalReference.getTitle(),
+				legalReference.getParagraph());
 	}
 
     @RequireSuperuserOrAdministrator
