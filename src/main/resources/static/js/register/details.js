@@ -1,4 +1,5 @@
 let userChoices;
+let customResponsibleUserChoices;
 let ouChoices;
 let departmentChoices;
 
@@ -24,12 +25,15 @@ function RegisterGeneralService() {
         departmentChoices = choiceService.initOUSelect('departmentSelect', false);
         ouChoices = choiceService.initOUSelect('ouSelect', false);
         userChoices = choiceService.initUserSelect('userSelect', false);
+        customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
 
         form.addEventListener('reset', (ev) => {
             ouChoices.destroy();
             ouChoices.init();
             userChoices.destroy();
             userChoices.init();
+            customResponsibleUserChoices.destroy();
+            customResponsibleUserChoices.init();
             departmentChoices.destroy();
             departmentChoices.init();
         })
@@ -104,6 +108,7 @@ function RegisterGeneralService() {
         const informationResponsible = document.querySelector('#informationResponsible');
         const registerRegarding = document.querySelector('#registerRegarding');
         const status = document.querySelector('#status');
+        const nameField = document.getElementById('registerNameField');
 
         editBtn.style = editable ? 'display: none' : 'display: block';
         saveBtn.style = !editable ? 'display: none' : 'display: block';
@@ -113,18 +118,21 @@ function RegisterGeneralService() {
         emergencyPlanLink.readOnly = !editable;
         registerRegarding.readOnly = !editable;
         informationResponsible.readOnly = !editable;
+        nameField.disabled = !editable;
         criticality.disabled = !editable;
         status.disabled = !editable;
         if (!editable) {
             const form = document.getElementById('editDescId');
             form.reset();
             userChoices.disable();
+            customResponsibleUserChoices.disable();
             ouChoices.disable();
             departmentChoices.disable();
             kleService.mainGroupSelectorInstance.disable();
             kleService.groupSelectorInstance.disable();
         } else {
             userChoices.enable();
+            customResponsibleUserChoices.enable();
             ouChoices.enable();
             departmentChoices.enable();
             kleService.mainGroupSelectorInstance.enable();
