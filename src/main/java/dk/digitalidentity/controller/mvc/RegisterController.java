@@ -24,7 +24,9 @@ import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
@@ -64,6 +66,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.time.Duration;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -339,16 +342,19 @@ public class RegisterController {
 				.toList();
 		model.addAttribute("mainGroups", mainGroups);
 
-		final Set<KLEGroup> kleGroups = register.getKleGroups();
+		final Set<KLEGroup> kleGroups = kLEGroupService.getAllForMainGroups(register.getKleMainGroups());
 		model.addAttribute("kleGroups", kleGroups.stream()
 				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
-				.map(g -> new SelectionDTO(g.getGroupNumber(), g.getTitle(), true)));
+				.map(g -> new SelectionDTO(g.getGroupNumber() +" " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))));
 
-		final Set<SelectionDTO> kleLegalReferences = kleGroups.stream()
+		final Set<String> selectedLegalReferenceAccessionNumbers = register.getRelevantKLELegalReferences().stream().map(KLELegalReference::getAccessionNumber).collect(Collectors.toSet());
+		final Set<SelectionDTO> kleLegalReferences = register.getKleGroups().stream()
 				.flatMap(g -> g.getLegalReferences().stream())
-				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), register.getRelevantKLELegalReferences().contains(lr)))
+				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(lr.getAccessionNumber())))
 				.collect(Collectors.toSet());
 		model.addAttribute("kleLegalReferences", kleLegalReferences);
+
+		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups()));
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -400,6 +406,49 @@ public class RegisterController {
 
         return "registers/view";
     }
+
+	record SelectedLegalReferenceDTO(String accessionNumber, String title, String paragraph) {}
+	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, Set<SelectedLegalReferenceDTO> legalReferences){}
+	record SelectedKLEGroupDTO (String groupNumber, String title, List<SelectedKLESubjectDTO> subjects) {}
+	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
+
+	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
+		return mainGroups.stream().map(mg ->
+						new SelectedKleMainGroupDTO(mg.getMainGroupNumber(), mg.getTitle(), mg.getKleGroups().stream()
+								.filter(groups::contains)
+								.map(this::toSelectedKLEGroupDTO)
+								.sorted(Comparator.comparing(SelectedKLEGroupDTO::groupNumber))
+								.toList()))
+				.sorted(Comparator.comparing(SelectedKleMainGroupDTO::mainGroupNumber))
+				.toList();
+	}
+	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group) {
+		return new SelectedKLEGroupDTO(
+				group.getGroupNumber(),
+				group.getTitle(),
+				group.getSubjects().stream()
+						.map(this::toSelectedKLESubjectDTO )
+						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
+						.toList());
+	}
+
+	private SelectedKLESubjectDTO toSelectedKLESubjectDTO(KLESubject subject) {
+		return new SelectedKLESubjectDTO(
+				subject.getSubjectNumber(),
+				subject.getTitle(),
+				subject.getPreservationCode(),
+				durationToString(subject.getDurationBeforeDeletion()),
+				subject.getLegalReferences().stream()
+						.map(this::selectedLegalReferenceDTO)
+						.collect(Collectors.toSet()));
+	}
+
+	private SelectedLegalReferenceDTO selectedLegalReferenceDTO(KLELegalReference legalReference) {
+		return new SelectedLegalReferenceDTO(
+				legalReference.getAccessionNumber(),
+				legalReference.getTitle(),
+				legalReference.getParagraph());
+	}
 
     @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
@@ -463,4 +512,44 @@ public class RegisterController {
 				.toList();
     }
 
+	private String durationToString(final Duration duration) {
+		if (duration.isZero()) {
+			return "0 timer";
+		}
+
+		List<String> parts = new ArrayList<>();
+
+		// Convert duration to total days and remaining time
+		long totalDays = duration.toDays();
+		Duration remainingTime = duration.minusDays(totalDays);
+
+		// Calculate years, months, and days
+		long years = totalDays / 365;
+		long remainingDaysAfterYears = totalDays % 365;
+		long months = remainingDaysAfterYears / 30; // Approximate months
+		long days = remainingDaysAfterYears % 30;
+
+		// Get hours from remaining time
+		long hours = remainingTime.toHours();
+
+		// Add non-zero components to the result
+		if (years > 0) {
+			parts.add(years + " år");
+		}
+
+		if (months > 0) {
+			parts.add(months + " måneder");
+		}
+
+		if (days > 0) {
+			parts.add(days + " dage");
+		}
+
+		if (hours > 0) {
+			parts.add(hours + " timer");
+		}
+
+		// Join parts with commas
+		return String.join(", ", parts);
+	}
 }

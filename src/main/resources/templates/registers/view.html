@@ -47,6 +47,9 @@
                             <button class="nav-link" th:classappend="${section == 'purpose'} ? 'active' : ''" data-bs-toggle="tab" data-bs-target="#_dm-tabsPurpose" type="button" role="tab" aria-controls="purpose" th:aria-selected="${section == 'purpose'}">Formål & Lovhjemmel</button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" th:classappend="${section == 'kledetails'} ? 'active' : ''" data-bs-toggle="tab" data-bs-target="#_dm-tabsKLEDetails" type="button" role="tab" aria-controls="risk" th:aria-selected="${section == 'kledetails'}">KLE</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" th:classappend="${section == 'dataprocessing'} ? 'active' : ''" data-bs-toggle="tab" data-bs-target="#_dm-tabsDataProcessing" type="button" role="tab" aria-controls="dataprocessing" th:aria-selected="${section == 'dataprocessing'}">Databehandling</button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -60,6 +63,9 @@
                         </div>
                         <div id="_dm-tabsPurpose" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'purpose'} ? 'active show' : ''" aria-labelledby="purpose-tab">
                             <div th:replace="~{registers/purpose :: purpose(${register})}"></div>
+                        </div>
+                        <div id="_dm-tabsKLEDetails" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'kledetails'} ? 'active show' : ''" aria-labelledby="kleDetails-tab">
+                            <div th:replace="~{registers/fragments/kleDetailFragment :: kleDetailFragment(${register})}"></div>
                         </div>
                         <div id="_dm-tabsDataProcessing" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'dataprocessing'} ? 'active show' : ''" aria-labelledby="dataprocessing-tab">
                             <div th:replace="~{registers/dataprocessingFragment :: dataProcessing(${dpChoices}, ${register})}"></div>

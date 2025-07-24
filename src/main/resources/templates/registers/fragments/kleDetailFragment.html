@@ -1,0 +1,70 @@
+<div th:fragment="kleDetailFragment(register)">
+    <div class="accordion" id="mainGroupAccordion">
+        <div th:each="mainGroup, mainGroupStat : ${selectedKleMainGroups}" class="accordion-item">
+            <div class="accordion-header">
+                <button class="accordion-button bg-light shadow-none " type="button" data-bs-toggle="collapse" aria-expanded="true"
+                        th:attr="data-bs-target=${'#maingroup_'+mainGroupStat.index}, aria-controls=${'maingroup_'+mainGroupStat.index}"
+                        th:text="${mainGroup.mainGroupNumber + ' ' + mainGroup.title}"></button>
+            </div>
+            <div th:id="${'maingroup_'+mainGroupStat.index}" class="accordion-collapse collapse" data-bs-parent="#mainGroupAccordion">
+                <div class="accordion-body p-1 ps-3">
+
+                    <!--Group accordion-->
+                    <div class="accordion-flush" th:id="${'maingroup_accordion_'+mainGroupStat.index}">
+                        <div th:each="group, groupStat : ${mainGroup.groups}" class="accordion-item">
+                            <div class="accordion-header">
+                                <button class="accordion-button bg-light shadow-none " type="button" data-bs-toggle="collapse" aria-expanded="true"
+                                        th:attr="data-bs-target=${'#group_'+groupStat.index}, aria-controls=${'group_'+groupStat.index}"
+                                        th:text="${group.groupNumber + ' ' + group.title}"></button>
+                            </div>
+                            <div th:id="${'group_'+groupStat.index}" class="accordion-collapse collapse" th:attr="data-bs-parent=${'#maingroup_accordion_'+mainGroupStat.index}">
+                                <div class="accordion-body p-1 ps-3">
+
+                                    <!--subject accordion-->
+                                    <div class="accordion-flush" th:id="${'group_accordion_'+mainGroupStat.index+'_'+groupStat.index}">
+                                        <div th:each="subject, subjectStat : ${group.subjects}" class="accordion-item">
+                                            <div class="accordion-header">
+                                                <button class="accordion-button bg-light shadow-none " type="button" data-bs-toggle="collapse" aria-expanded="true"
+                                                        th:attr="data-bs-target=${'#subject_'+groupStat.index+'_'+subjectStat.index}, aria-controls=${'subject_'+subjectStat.index}"
+                                                        th:text="${subject.subjectNumber + ' ' + subject.title + ' [' + subject.preservationCode + ']'}"></button>
+                                            </div>
+                                            <div th:id="${'subject_'+groupStat.index+'_'+subjectStat.index}" class="accordion-collapse collapse" th:attr="data-bs-parent=${'#group_accordion_'+mainGroupStat.index+'_'+groupStat.index}">
+                                                <div class="accordion-body ps-3">
+                                                    <div class="row gap-1">
+
+                                                        <div class="col-lg card rounded border shadow-sm ">
+                                                            <div class="card-body h-100">
+                                                                <h5 class="card-title">Lovhenvisninger</h5>
+                                                                <ul class="card-text">
+                                                                    <li th:each="legalReference : ${subject.legalReferences}">
+                                                                        <a th:text="${legalReference.paragraph != null ? legalReference.title + ' '+legalReference.paragraph : legalReference.title}" th:href="${'https://www.retsinformation.dk/eli/accn/'+legalReference.accessionNumber}"></a>
+                                                                    </li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
+                                                        <div class="col-lg card rounded border shadow-sm">
+                                                            <div class="card-body h-100">
+                                                                <h5 class="card-title">Anbefalet Slettefrist</h5>
+                                                                <div class="card-text" th:text="${subject.durationBeforeDeletion}"></div>
+                                                            </div>
+                                                        </div>
+
+                                                    </div>
+
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
