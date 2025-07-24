@@ -87,6 +87,13 @@ public class KLEService {
 					.flatMap(g -> g.getSubjects().stream())
 					.map(KLESubject::getSubjectNumber)
 					.collect(Collectors.toSet()));
+			//Add legal refs from groups
+			legalRefNumbers.addAll(mainGroup.getKleGroups().stream()
+					.flatMap(g -> g.getLegalReferences().stream())
+					.map(KLELegalReference::getAccessionNumber)
+					.collect(Collectors.toSet()));
+
+			//add legal refs from subjects
 			legalRefNumbers.addAll(mainGroup.getKleGroups().stream()
 					.flatMap(g -> g.getSubjects().stream()
 							.flatMap(s -> s.getLegalReferences().stream()))

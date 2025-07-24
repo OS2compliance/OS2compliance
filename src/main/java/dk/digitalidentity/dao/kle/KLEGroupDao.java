@@ -1,6 +1,7 @@
 package dk.digitalidentity.dao.kle;
 
 import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
@@ -20,4 +21,5 @@ public interface KLEGroupDao extends JpaRepository<KLEGroup, String> {
 
 	Set<KLEGroup> findByMainGroup_MainGroupNumberIn(Collection<String> mainGroupNumbers);
 
+	Set<KLEGroup> findAllByMainGroupIn(Collection<KLEMainGroup> mainGroups);
 }
