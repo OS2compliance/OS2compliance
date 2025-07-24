@@ -274,7 +274,6 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
-//        Asset asset = dpia.getAssets();
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
             response.addHeader("Content-disposition", "attachment;filename=screening vedr " + dpia.getName() + ".pdf");
@@ -322,6 +321,16 @@ public class ReportController {
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
+	@GetMapping("riskimage")
+	public ModelAndView getRiskImageReport() {
+
+
+		final Map<String, Object> model = new HashMap<>();
+
+//		return new ModelAndView(new RiskImageView(), model);
+		return null;
+	}
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
                                   final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {
