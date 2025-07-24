@@ -483,9 +483,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
 function initSystemOwnerRapportButton() {
     const url = "reports/overview/systemowner"
     const button = document.getElementById("systemOwnerRapportButton");
-    const buttonTextElement = button.querySelector(".btn-text")
-    const originalText = buttonTextElement.textContent
-    button.addEventListener("click", async (e) => {
+    const buttonTextElement = button?.querySelector(".btn-text")
+    const originalText = buttonTextElement?.textContent
+    button?.addEventListener("click", async (e) => {
         button.disabled = true;
         button.classList.add("disabled");
         buttonTextElement.textContent = "Henter...";

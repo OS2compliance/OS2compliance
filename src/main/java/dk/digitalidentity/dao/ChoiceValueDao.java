@@ -15,4 +15,6 @@ public interface ChoiceValueDao extends JpaRepository<ChoiceValue, Long> {
 
     List<ChoiceValue> findByIdentifierIn(final Set<String> identifiers);
 
+	Set<ChoiceValue> findByLists_Identifier(String identifier);
+
 }
