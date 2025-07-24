@@ -323,7 +323,11 @@ public class ReportController {
     }
 
 	@GetMapping("riskimage")
-	public ModelAndView getRiskImageReport() {
+	public ModelAndView getRiskImageReport(
+			@RequestParam List<String> includedTypes,
+			@RequestParam(required = false) List<String> latestOnly,
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate fromDate,
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate) {
 
 
 		final Map<String, Object> model = new HashMap<>();
