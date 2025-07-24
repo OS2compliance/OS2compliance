@@ -60,7 +60,14 @@ public class SearchRepositoryImpl implements SearchRepository {
 		if (additionalORConditions != null && !additionalORConditions.isEmpty()) {
 			// If additional OR conditions is present, create predicate that matches at least one of them
 			final Predicate[] orArr = additionalORConditions.entrySet().stream()
-					.map(e -> criteriaBuilder.equal(root.get(e.getKey()), e.getValue()))
+					.map(e -> {
+						if (e.getValue() instanceof String) {
+							return criteriaBuilder.like(root.get(e.getKey()), "%" + e.getValue() + "%");
+						}
+						else {
+							return criteriaBuilder.equal(root.get(e.getKey()), e.getValue());
+						}
+					})
 					.toArray(Predicate[]::new);
 			predicates.add(criteriaBuilder.or(orArr));
 		}
