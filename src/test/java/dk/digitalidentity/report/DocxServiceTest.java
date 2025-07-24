@@ -72,6 +72,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -295,7 +296,7 @@ public class DocxServiceTest {
         register.setResponsibleOus(List.of(OrganisationUnit.builder().name("Enhed #" + num).build()));
         register.setDepartments(List.of(OrganisationUnit.builder().name("Afdeling #" + num).build()));
         register.setInformationResponsible("Kommunen er dataansvarlig for behandlingen af personoplysningerne");
-        register.setRegisterRegarding("Plappe");
+        register.setRegisterRegarding(new HashSet<>());
         register.setPurpose("Behandling af personoplysninger sker med henblik på at hjælpe ledige borgere i uddannelse eller job, hjælpe sygemeldte borgere tilbage på arbejdsmarkedet samt godkendelse af arbejdsmiljø mv. på private erhvervsvirksomheder, der beskæftiger ledige midlertidigt.");
         register.setInformationObligation(InformationObligationStatus.YES);
         register.setInformationObligationDesc("En beskrivelse her");

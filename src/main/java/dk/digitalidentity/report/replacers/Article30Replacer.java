@@ -131,7 +131,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
         insertStandard(document, cursor, "Hvem er ansvarlig for behandling af personoplysningerne: ",
             nullSafe(register::getInformationResponsible, "Ikke angivet"));
         insertStandard(document, cursor, "Fortegnelse over behandlingsaktivitet angående: ",
-            nullSafe(register::getRegisterRegarding, "Ikke angivet"));
+            nullSafe(() -> register.getRegisterRegarding().stream().map(v -> v.getCaption()).collect(Collectors.joining(", ")), "Ikke angivet"));
 		insertStandard(document, cursor, "Sikkerhedsforanstaltninger: ",
 				nullSafe(register::getSecurityPrecautions, "Ikke angivet"));
         insertStandard(document, cursor, "Beskriv formålet med behandlingsaktiviteten: ",
