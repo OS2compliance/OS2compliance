@@ -108,6 +108,7 @@ function RegisterGeneralService() {
         const informationResponsible = document.querySelector('#informationResponsible');
         const registerRegarding = document.querySelector('#registerRegarding');
         const status = document.querySelector('#status');
+        const securityPrecautions = document.getElementById('securityPrecautions')
         const nameField = document.getElementById('registerNameField');
 
         editBtn.style = editable ? 'display: none' : 'display: block';
@@ -121,6 +122,7 @@ function RegisterGeneralService() {
         nameField.disabled = !editable;
         criticality.disabled = !editable;
         status.disabled = !editable;
+        securityPrecautions.readOnly = !editable;
         if (!editable) {
             const form = document.getElementById('editDescId');
             form.reset();
