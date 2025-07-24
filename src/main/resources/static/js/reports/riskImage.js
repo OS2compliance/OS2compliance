@@ -7,7 +7,6 @@ export default class RiskImageRapportDialog {
     init() {
         this.#initHiddenCheckboxes()
         this.#initDatePickers()
-        // this.#initDownloadButton()
     }
 
     #initHiddenCheckboxes() {
@@ -40,7 +39,6 @@ export default class RiskImageRapportDialog {
             el: '#riskImageReportFromDate',
             autoClose: true,
             dateFormat: 'dd/mm-yyyy',
-            //minDate: new Date(),
             closeOnBlur: true,
             firstWeekday: 1,
             customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
@@ -55,7 +53,6 @@ export default class RiskImageRapportDialog {
             el: '#riskImageReportToDate',
             autoClose: true,
             dateFormat: 'dd/mm-yyyy',
-            //minDate: new Date(),
             closeOnBlur: true,
             firstWeekday: 1,
             customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
@@ -80,45 +77,6 @@ export default class RiskImageRapportDialog {
         toPicker.onSelect((date, formatedDate) => {
             this.toDate = javaFormatDate(date);
         });
-    }
-
-    // #initDownloadButton() {
-    //     const downloadButton = document.getElementById('riskImageDownloadButton');
-    //     downloadButton.addEventListener('click', (e) => {
-    //         const url =`/report/riskimage`
-    //         const form = document.getElementById('riskImageReportForm');
-    //         form.requestSubmit()
-    //
-    //         // this.#downloadFile(url)
-    //     })
-    // }
-
-    async #downloadFile(url) {
-        const response = await fetch(url);
-
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-
-        const blob = await response.blob();
-
-        // Extract filename from Content-Disposition header
-        let filename = 'Risikobillede'; // fallback
-        const contentDisposition = response.headers.get('Content-Disposition');
-        if (contentDisposition) {
-            const filenameMatch = RegExp(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/).exec(contentDisposition);
-            if (filenameMatch?.[1]) {
-                filename = filenameMatch[1].replace(/['"]/g, '');
-            }
-        }
-
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = filename;
-        a.click();
-
-        URL.revokeObjectURL(a.href);
-        a.remove();
     }
 
     #uiFormatDate(date) {
