@@ -129,11 +129,13 @@ public class Article30Replacer implements PlaceHolderReplacer {
         insertStandard(document, cursor, "Ansvarlig afdeling(er): ",
             nullSafe(() -> register.getResponsibleOus().stream().map(OrganisationUnit::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
         insertStandard(document, cursor, "Hvem er ansvarlig for behandling af personoplysningerne: ",
-            nullSafe(() -> register.getInformationResponsible(), "Ikke angivet"));
+            nullSafe(register::getInformationResponsible, "Ikke angivet"));
         insertStandard(document, cursor, "Fortegnelse over behandlingsaktivitet angående: ",
-            nullSafe(() -> register.getRegisterRegarding(), "Ikke angivet"));
+            nullSafe(register::getRegisterRegarding, "Ikke angivet"));
+		insertStandard(document, cursor, "Sikkerhedsforanstaltninger: ",
+				nullSafe(register::getSecurityPrecautions, "Ikke angivet"));
         insertStandard(document, cursor, "Beskriv formålet med behandlingsaktiviteten: ",
-            nullSafe(() -> register.getPurpose(), "Ikke angivet"));
+            nullSafe(register::getPurpose, "Ikke angivet"));
         insertBoldParagraph(document, cursor, "GDPR lovhjemmel");
 
         final Set<String> choiceIds = register.getGdprChoices();
