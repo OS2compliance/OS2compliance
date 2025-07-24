@@ -169,3 +169,15 @@ html {
   0%, 39%, 100% { opacity: 0; }
   40% { opacity: 1; }
 }
+
+.transparent-input {
+    line-height: 1.2;
+    background-color: transparent;
+    border-radius: 0.5rem;
+}
+
+.transparent-input:disabled {
+    background-color: transparent;
+    outline: transparent;
+    border-style: none;
+}
