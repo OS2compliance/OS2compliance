@@ -30,6 +30,7 @@ import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -89,8 +90,16 @@ public class Register extends Relatable {
     @Column
     private String description;
 
-    @Column
-    private String registerRegarding;
+	@ManyToMany(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH }, fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "register_choice_value_registerregarding_mapping",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "choice_value_id")
+	)
+	private Set<ChoiceValue> registerRegarding = new LinkedHashSet<>();
+
+	@Column(name = "register_regarding")
+	private String oldRegisterRegarding; // TODO: This exists purely for backwards compatibility. Remove column when all users have been updated to new version
 
 	@Column
 	private String securityPrecautions;
@@ -124,6 +133,9 @@ public class Register extends Relatable {
     @Column
     @Convert(converter = StringSetNullSafeConverter.class)
     private Set<String> gdprChoices = new HashSet<>();
+
+	@Column
+	private String supplementalLegalBasis;
 
     @OneToOne(mappedBy = "register")
     @PrimaryKeyJoinColumn

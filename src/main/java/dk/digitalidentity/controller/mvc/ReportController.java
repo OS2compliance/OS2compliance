@@ -5,25 +5,32 @@ import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
+import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
+import dk.digitalidentity.report.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
+import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,12 +84,51 @@ public class ReportController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
     private final DPIAService dpiaService;
+	private final UserService userService;
+	private final RegisterService registerService;
+	private final SystemOwnerOverviewService systemOwnerOverviewService;
 
-    @GetMapping
+	@GetMapping
     public String reportList(final Model model) {
         model.addAttribute("tags", tagDao.findAll());
         return "reports/index";
     }
+
+	@GetMapping("overview/systemowner")
+	public ModelAndView SystemOwnerOverview(final HttpServletResponse response) {
+
+		// Validate user has access
+		User currentUser = userService.currentUser();
+		if (currentUser == null || !assetService.isSystemOwnerAnywhere(currentUser.getUuid())){
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		log.info("Building system owner overview spreadsheet");
+
+		// Metadata
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"systemejer_overblik.xls\"");
+
+		// Build content
+		Set<Asset> systemOwnerAssets = assetService.getAllForSystemOwner(currentUser.getUuid());
+
+		Map<Asset, Set<Relatable>> assetRelations = new HashMap<>();
+		for (Asset asset : systemOwnerAssets) {
+			assetRelations.put(asset, new HashSet<>(relationService.findAllRelatedTo(asset))); // Always true predicate to get all tasks
+		}
+
+		// Handle tasks not related to assets, but with matching responsible user
+		Set<Task> assetUnrelatedTasks = taskService.findAllUnrelatedTasksForResponsibleUser(currentUser.getUuid());
+
+		// Handle registers not related to assets, but with matching responsible user
+		Set<Register> assetUnrelatedRegisters = registerService.findAllUnrelatedRegistersForResponsibleUser(currentUser);
+
+		final Map<String, Object> model = systemOwnerOverviewService.mapToModel(assetRelations, assetUnrelatedTasks, assetUnrelatedRegisters);
+
+		log.info("Finished collecting data, building spreadsheet");
+
+		return new ModelAndView(new SystemOwnerOverviewView(), model);
+	}
 
     @GetMapping("incidents")
     public String incidents(final Model model,
