@@ -1,3 +1,5 @@
+import KLESelectionService from "./kleSelectionService.js";
+
 /**
  * Functionality related to the "Formål og lovhjemmel" page of the register detail view
  */
@@ -6,9 +8,10 @@ export default class RegisterPurposeService {
     #supplementalLegalTriggeringIdentifiers = ['register-gdpr-p6-c', 'register-gdpr-p6-e', 'register-gdpr-p7-c', 'register-gdpr-p7-f']
     #consentTriggeringElements = new Map()
     #supplementalLegalElements = new Map()
+    kleService = new KLESelectionService()
 
     init() {
-        kleService.initLegalReferenceSelect()
+        this.kleService.initLegalReferenceSelect()
         this.initGDPRCheckboxChange()
 
         // Check for conditional fields visibility
@@ -42,12 +45,12 @@ export default class RegisterPurposeService {
         purposeNotes.readOnly = !editable;
         suplementalField.readOnly = !editable;
         if (!editable) {
-            kleService.legalReferenceSelectorInstance.disable();
+            this.kleService.legalReferenceSelectorInstance.disable();
             const form = document.querySelector('#editPurposeId');
             form.reset();
         }
         else {
-            kleService.legalReferenceSelectorInstance.enable();
+            this.kleService.legalReferenceSelectorInstance.enable();
         }
     }
 
