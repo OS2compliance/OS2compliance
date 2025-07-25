@@ -37,6 +37,8 @@ public class SystemOwnerOverviewService {
 
 	public Map<String, Object> mapToModel(Map<Asset, Set<Relatable>> assetRelations, Set<Task> assetUnrelatedTasks, Set<Register> assetUnrelatedRegisters) {
 		final Map<String, Object> model = new HashMap<>();
+		Map<Task, Set<String>> assetNamesByTask = new HashMap<>();
+		Map<Register, Set<String>> assetNamesByRegisters = new HashMap<>();
 
 		Set<TaskRow> tasks =  new HashSet<>();
 		Set<AssetRow> assets =  new HashSet<>();
@@ -45,28 +47,58 @@ public class SystemOwnerOverviewService {
 		Set<ThreatAssessmentRow> threatAssessments = new HashSet<>();
 		for (Map.Entry<Asset, Set<Relatable>> entry : assetRelations.entrySet()){
 			Asset asset = entry.getKey();
+			String assetName = asset.getName();
 
 			for (Relatable assetRelatable : entry.getValue()){
-				if (assetRelatable instanceof Task task){
-					tasks.add(mapToRow(task, asset.getName()));
+				if (assetRelatable instanceof Task task) {
+					if (assetNamesByTask.containsKey(task)) {
+						assetNamesByTask.get(task).add(assetName);
+					} else {
+						assetNamesByTask.put(task, new HashSet<>());
+						assetNamesByTask.get(task).add(assetName);
+					}
+
 				} else if (assetRelatable instanceof Register register){
-					registers.add(mapToRow(register, asset.getName()));
+					if (assetNamesByRegisters.containsKey(register)) {
+						assetNamesByRegisters.get(register).add(assetName);
+					} else {
+						assetNamesByRegisters.put(register, new HashSet<>());
+						assetNamesByRegisters.get(register).add(assetName);
+					}
 				}else if (assetRelatable instanceof Document document){
-					documents.add(mapToRow(document, asset.getName()));
+					documents.add(mapToRow(document, assetName));
 				} else if( assetRelatable instanceof ThreatAssessment threatAssessment){
-					threatAssessments.add(mapToRow(threatAssessment, asset.getName()));
+					threatAssessments.add(mapToRow(threatAssessment, assetName));
 				}
 			}
 
 			assets.add(mapToRow(asset, threatAssessments));
 		}
 
+		// Only add unrelated tasks and registers if they are not already present
 		for (Task task : assetUnrelatedTasks) {
-			tasks.add(mapToRow(task, ""));
+			if (!assetNamesByTask.containsKey(task)) {
+				assetNamesByTask.put(task, Set.of(""));
+			}
+		}
+		for (Register register : assetUnrelatedRegisters) {
+			if (!assetNamesByRegisters.containsKey(register)) {
+				assetNamesByRegisters.put(register, Set.of(""));
+			}
 		}
 
-		for (Register register : assetUnrelatedRegisters) {
-			registers.add(mapToRow(register, ""));
+		// Map tasks and registers
+		for (Map.Entry<Task,Set<String>> entry : assetNamesByTask.entrySet()) {
+			Task task = entry.getKey();
+			for (String assetName : entry.getValue()){
+				tasks.add(mapToRow(task, assetName));
+			}
+		}
+		for (Map.Entry<Register,Set<String>> entry : assetNamesByRegisters.entrySet()) {
+			Register register = entry.getKey();
+			for (String assetName : entry.getValue()){
+				registers.add(mapToRow(register, assetName));
+			}
 		}
 
 		model.put("tasks", tasks);
