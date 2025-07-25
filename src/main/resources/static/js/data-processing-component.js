@@ -1,4 +1,4 @@
-
+const CATEGORYMARKER = 'currentCategorySelector'
 let dataProcessingServices = [];
 let dataProcessingServicesLabelCounter = 0;
 /**
@@ -28,29 +28,30 @@ let DataProcessingComponent = function () {
         this.informationChoices2 = informationChoices2;
     }
 
-    this.addModalListeners = function(modalContainer) {
+    this.addModalListeners = function (modalContainer) {
         let self = this;
         modalContainer.addEventListener('hide.bs.modal', function (event) {
             const modal = event.target;
-            const categoryIdentifier = modal.querySelector('#categoryIdentifier').value;
             const checkBoxes = modal.querySelectorAll('input');
-            const allSelect = self.container.querySelectorAll('.categorySelect');
-            let selectedValues = [];
-            for (let i = 0; i < checkBoxes.length; i++) {
-                if (checkBoxes[i].checked) {
-                    selectedValues.push(checkBoxes[i].value);
-                }
-            }
+            let selectedValues = [...checkBoxes]
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
             let targetRow = null;
-            for (let i = 0; i < allSelect.length; i++) {
-                if (allSelect[i].value === categoryIdentifier) {
-                    targetRow = allSelect[i].parentElement.parentElement;
-                    const deleteButton = targetRow.querySelector('button');
-                    deleteButton.style.display = 'block';
-                    self.setPersonInformationCategories(targetRow, selectedValues);
-                    self.setInformationParsedOnCategories(targetRow, null);
-                }
+
+            const markedSelects = document.getElementsByClassName(CATEGORYMARKER)
+            if (markedSelects.length > 0) {
+                const select = document.getElementsByClassName(CATEGORYMARKER)[0]
+
+                // Remove marker for the category to ensure only one select is ever marked
+                select.classList.remove(CATEGORYMARKER);
+
+                targetRow = select.parentElement.parentElement;
+                const deleteButton = targetRow.querySelector('button');
+                deleteButton.style.display = 'block';
             }
+            self.setPersonInformationCategories(targetRow, selectedValues);
+            self.setInformationParsedOnCategories(targetRow, null);
+
             self.removeEmptyInformationCategories();
             self.addEmptyInformationCategory();
         });
@@ -58,8 +59,8 @@ let DataProcessingComponent = function () {
 
     this.resetCategorySelection = function() {
         this.targetElement.innerHTML = '';
-        for (let i = 0; i < this.registeredCategories.length; i++) {
-            this.loadInformationCategory(this.registeredCategories[i]);
+        for (const registeredCategory of this.registeredCategories) {
+            this.loadInformationCategory(registeredCategory);
         }
         this.updateCategorySelectionNamesOnForm();
     }
@@ -79,20 +80,20 @@ let DataProcessingComponent = function () {
         container.querySelector('.tagin-wrapper').classList.remove('disabledBox');
         let tagsValues = [];
         let selectedTags = container.querySelectorAll('.tagin-tag');
-        for (let i=0; i<selectedTags.length; ++i) {
-            tagsValues.push(selectedTags[i].textContent);
+        for (const selectedTag of selectedTags) {
+            tagsValues.push(selectedTag.textContent);
         }
         this.setPersonInformationCategories(container, tagsValues);
     }
 
     this.preselectValuesInModal = function(containerElem) {
         const checkBoxes = this.modalContainer.querySelectorAll('input');
-        for (let i = 0; i < checkBoxes.length; i++) {
-            checkBoxes[i].checked = false;
+        for (const checkBox of checkBoxes) {
+            checkBox.checked = false;
         }
         let selectedTags = containerElem.querySelectorAll('.tagin-tag');
-        for (let i=0; i<selectedTags.length; ++i) {
-            let element = this.modalContainer.querySelector(`input[id^='${selectedTags[i].dataset.id}']`);
+        for (const selectedTag of selectedTags) {
+            let element = this.modalContainer.querySelector(`input[id^='${selectedTag.dataset.id}']`);
             if (element != null) {
                 element.checked = true;
             }
@@ -107,6 +108,10 @@ let DataProcessingComponent = function () {
             elementById.value = categorySelectorElem.value;
 
             this.preselectValuesInModal(elem);
+
+            // Mark category selector with a class, to make it easy to find it once modal closes.
+            categorySelectorElem.classList.add(CATEGORYMARKER)
+
             const modal = bootstrap.Modal.getOrCreateInstance(this.modalContainer);
             modal.show();
         }
@@ -141,11 +146,11 @@ let DataProcessingComponent = function () {
         let selectedRegisteredCategory = categoryRow.querySelector('.selectedRegisteredCategory');
 
         tagWrapper.innerHTML = '';
-        for (let i = 0; i < tags.length; i++) {
+        for (const tag of tags) {
             const tagDiv = document.createElement("span");
-            tagDiv.dataset.id = tags[i];
+            tagDiv.dataset.id = tag;
             tagDiv.classList = ['tagin-tag'];
-            tagDiv.innerText = this.lookupInformationChoiceValue(tags[i]);
+            tagDiv.innerText = this.lookupInformationChoiceValue(tag);
             tagWrapper.appendChild(tagDiv);
         }
         tagWrapper.innerHTML += '&nbsp';
@@ -167,11 +172,10 @@ let DataProcessingComponent = function () {
             infoReceiversDiv.style.display = 'block';
         }
         if (receivers != null) {
-            for (let i = 0; i < receivers.length; i++) {
-                const rec = receivers[i];
-                for (let j = 0; j < receiverBoxes.length; j++) {
-                    if (receiverBoxes[j].value === rec) {
-                        receiverBoxes[j].checked = true;
+            for (const rec of receivers) {
+                for (const recieverbox of receiverBoxes) {
+                    if (recieverbox.value === rec) {
+                        recieverbox.checked = true;
                     }
                 }
             }
@@ -196,10 +200,10 @@ let DataProcessingComponent = function () {
 
     this.removeEmptyInformationCategories = function () {
         let rows = this.container.querySelectorAll('.categoryRow');
-        for (let i = 0; i < rows.length; i++) {
-            let select = rows[i].querySelector('.categorySelect');
+        for (const row of rows) {
+            let select = row.querySelector('.categorySelect');
             if (select.value === "") {
-                rows[i].remove();
+                row.remove();
             }
         }
     }
@@ -241,9 +245,9 @@ let DataProcessingComponent = function () {
 
     this.editModeRemoveCategoryButtons = function(enabled) {
         let rows = this.container.querySelectorAll('.categoryRow');
-        for (let i = 0; i < rows.length; i++) {
-            let select = rows[i].querySelector('.categorySelect');
-            let button = rows[i].querySelector('button');
+        for (const element of rows) {
+            let select = element.querySelector('.categorySelect');
+            let button = element.querySelector('button');
             if (select.value !== "") {
                 button.style.display = enabled ? 'block' : 'none !important';
             }
@@ -255,16 +259,16 @@ let DataProcessingComponent = function () {
         this.editModeRemoveCategoryButtons(enabled);
         // enable/disable category select
         const allSelect = this.container.querySelectorAll('.categorySelect');
-        for (let i = 0; i < allSelect.length; i++) {
-            allSelect[i].disabled = !enabled;
+        for (const select of allSelect) {
+            select.disabled = !enabled;
         }
         // enable/disable types tag box
         const allTypesBoxes = this.container.querySelectorAll('.tagin-wrapper');
-        for (let i = 0; i < allTypesBoxes.length; i++) {
+        for (const box of allTypesBoxes) {
             if (enabled) {
-                allTypesBoxes[i].classList.remove("disabledBox");
+                box.classList.remove("disabledBox");
             } else {
-                ensureElementHasClass(allTypesBoxes[i], "disabledBox");
+                ensureElementHasClass(box, "disabledBox");
             }
         }
 
