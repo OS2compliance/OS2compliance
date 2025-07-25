@@ -50,6 +50,7 @@ public class SystemOwnerOverviewView extends AbstractXlsView {
 			converterMap.put("Type", (t, c) -> c.setCellValue(t.type()));
 			converterMap.put("Afdeling", (t, c) -> c.setCellValue(t.ouName()));
 			converterMap.put("Deadline", (t, c) -> setCellValueForLocalDate(t.deadline(), c));
+			converterMap.put("Gentages", (t, c) -> c.setCellValue(t.repeats()));
 			converterMap.put("Status", (t, c) -> setCellValueWithColor(t.status().text(), t.status().color(), c));
 			converterMap.put("Tags", (t, c) -> c.setCellValue(t.tags()));
 
