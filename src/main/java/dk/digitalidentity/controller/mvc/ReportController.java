@@ -19,7 +19,8 @@ import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
-import dk.digitalidentity.report.SystemOwnerOverviewView;
+import dk.digitalidentity.report.riskimage.RiskImageView;
+import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.RequireUser;
@@ -95,7 +96,7 @@ public class ReportController {
     }
 
 	@GetMapping("overview/systemowner")
-	public ModelAndView SystemOwnerOverview(final HttpServletResponse response) {
+	public ModelAndView systemOwnerOverview(final HttpServletResponse response) {
 
 		// Validate user has access
 		User currentUser = userService.currentUser();
@@ -370,16 +371,18 @@ public class ReportController {
 
 	@GetMapping("riskimage")
 	public ModelAndView getRiskImageReport(
+			final HttpServletResponse response,
 			@RequestParam List<String> includedTypes,
 			@RequestParam(required = false) List<String> latestOnly,
 			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate fromDate,
 			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate) {
-
+		// Metadata
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xls\"");
 
 		final Map<String, Object> model = new HashMap<>();
 
-//		return new ModelAndView(new RiskImageView(), model);
-		return null;
+		return new ModelAndView(new RiskImageView(), model);
 	}
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
