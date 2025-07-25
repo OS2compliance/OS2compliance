@@ -275,7 +275,8 @@ public class RegisterController {
 			@RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
 			@RequestParam(value = "consent", required = false) final String consent,
 			@RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
-			@RequestParam(value = "relevantLegalReferences", required = false) final Set<String> relevantLegalReferences
+			@RequestParam(value = "relevantLegalReferences", required = false) final Set<String> relevantLegalReferences,
+			@RequestParam(value = "supplementalLegalBasis", required = false) final String supplementalLegalBasis
 	) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -292,6 +293,9 @@ public class RegisterController {
         if (consent != null) {
             register.setConsent(consent);
         }
+		if (supplementalLegalBasis != null) {
+			register.setSupplementalLegalBasis(supplementalLegalBasis);
+		}
         if (informationObligationStatus != null) {
             register.setInformationObligation(informationObligationStatus);
         }
@@ -301,6 +305,8 @@ public class RegisterController {
 		if(relevantLegalReferences != null && !relevantLegalReferences.isEmpty()) {
 			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(relevantLegalReferences));
 		}
+
+		registerService.save(register);
         return "redirect:/registers/" + id + "?section=purpose";
     }
 
