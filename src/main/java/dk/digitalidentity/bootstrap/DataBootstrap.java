@@ -104,7 +104,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(22, this::seedV22);
         incrementAndPerformIfVersion(23, this::seedV23);
         incrementAndPerformIfVersion(24, this::seedV24);
-        incrementAndPerformIfVersion(24, this::seedV25);
+        incrementAndPerformIfVersion(25, this::seedV25);
     }
 
 	private void seedV25 () {
