@@ -95,7 +95,14 @@
                         </div>
                         <div class="form-group row">
                             <label for="registerRegarding" class="col-form-label">Fortegnelse over behandlingsaktivitet angående</label>
-                            <input class="form-control" id="registerRegarding" name="registerRegarding" th:field="*{registerRegarding}" type="text" readonly>
+                            <select class="form-select choices__input" id="registerRegarding" name="registerRegarding" multiple disabled>
+                                <option th:each="option : ${recordOfProcessingActivityRegardingChoices}"
+                                        th:text="${option.label}" th:value="${option.value}" th:selected="${option.selected}"></option>
+                            </select>
+                        </div>
+                        <div class="form-group row">
+                            <label for="securityPrecautions" class="col-form-label">Sikkerhedsforanstaltninger</label>
+                            <input class="form-control" id="securityPrecautions" name="securityPrecautions" th:field="*{securityPrecautions}" type="text" readonly>
                         </div>
                     </div>
                 </div>

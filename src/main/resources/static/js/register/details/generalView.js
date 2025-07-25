@@ -4,7 +4,7 @@ let ouChoices;
 let departmentChoices;
 let userChoices;
 let customResponsibleUserChoices;
-
+let registerRegardingChoices;
 let kleService
 
 /**
@@ -27,6 +27,9 @@ export default function RegisterGeneralService() {
         userChoices = choiceService.initUserSelect('userSelect', false);
         customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
 
+        const registerRegardingElement = document.getElementById('registerRegarding');
+        registerRegardingChoices = initSelect(registerRegardingElement);
+
         form.addEventListener('reset', (ev) => {
             ouChoices.destroy();
             ouChoices.init();
@@ -36,6 +39,8 @@ export default function RegisterGeneralService() {
             customResponsibleUserChoices.init();
             departmentChoices.destroy();
             departmentChoices.init();
+            registerRegardingChoices.destroy();
+            registerRegardingChoices.init();
         })
 
         kleService = new KLESelectionService()
@@ -108,6 +113,8 @@ export default function RegisterGeneralService() {
         const informationResponsible = document.querySelector('#informationResponsible');
         const registerRegarding = document.querySelector('#registerRegarding');
         const status = document.querySelector('#status');
+        const securityPrecautions = document.getElementById('securityPrecautions')
+        const nameField = document.getElementById('registerNameField');
 
         editBtn.style = editable ? 'display: none' : 'display: block';
         saveBtn.style = !editable ? 'display: none' : 'display: block';
@@ -117,8 +124,12 @@ export default function RegisterGeneralService() {
         emergencyPlanLink.readOnly = !editable;
         registerRegarding.readOnly = !editable;
         informationResponsible.readOnly = !editable;
+        nameField.disabled = !editable;
+        registerRegarding.readOnly = !editable;
+        informationResponsible.readOnly = !editable;
         criticality.disabled = !editable;
         status.disabled = !editable;
+        securityPrecautions.readOnly = !editable;
         if (!editable) {
             const form = document.getElementById('editDescId');
             form.reset();
@@ -126,6 +137,7 @@ export default function RegisterGeneralService() {
             customResponsibleUserChoices.disable();
             ouChoices.disable();
             departmentChoices.disable();
+            registerRegardingChoices.disable();
             kleService.mainGroupSelectorInstance.disable();
             kleService.groupSelectorInstance.disable();
         } else {
@@ -133,6 +145,7 @@ export default function RegisterGeneralService() {
             customResponsibleUserChoices.enable();
             ouChoices.enable();
             departmentChoices.enable();
+            registerRegardingChoices.enable();
             kleService.mainGroupSelectorInstance.enable();
             kleService.groupSelectorInstance.enable();
         }

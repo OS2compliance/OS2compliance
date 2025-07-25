@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -29,6 +30,7 @@ import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -88,8 +90,19 @@ public class Register extends Relatable {
     @Column
     private String description;
 
-    @Column
-    private String registerRegarding;
+	@ManyToMany(cascade = { CascadeType.DETACH, CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH }, fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "register_choice_value_registerregarding_mapping",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "choice_value_id")
+	)
+	private Set<ChoiceValue> registerRegarding = new LinkedHashSet<>();
+
+	@Column(name = "register_regarding")
+	private String oldRegisterRegarding; // TODO: This exists purely for backwards compatibility. Remove column when all users have been updated to new version
+
+	@Column
+	private String securityPrecautions;
 
     @Column
     private String informationResponsible;
@@ -147,6 +160,14 @@ public class Register extends Relatable {
 			inverseJoinColumns = @JoinColumn(name = "kle_group_number")
 	)
 	private Set<KLEGroup> kleGroups = new HashSet<>();
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@JoinTable(
+			name = "register_kle_legal_reference",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "accession_number")
+	)
+	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {

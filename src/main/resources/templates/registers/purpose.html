@@ -21,6 +21,14 @@
                         </div>
                     </div>
                     <div class="row mt-4">
+                        <label for="relevantLegalReferencesSelector" class="col-form-label col-lg-3">Relevante Lovhenvisninger</label>
+                        <div class="col-lg-9">
+                            <select name="relevantLegalReferences" id="relevantLegalReferencesSelector" class="form-control" disabled multiple>
+                                <option th:each="legalRef : ${kleLegalReferences}" th:text="${legalRef.display}" th:value="${legalRef.value}" th:selected="${legalRef.selected}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
                         <label class="col-form-label col-lg-3 col-sm-12">GDPR lovhjemmel</label>
                         <div class="col-sm-12 col-lg-9 mt-2">
                             <div class="form-check" th:each="choice: ${gdprChoices}">

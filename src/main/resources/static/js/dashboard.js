@@ -11,6 +11,10 @@ const updateUrl = (prev, query) => {
 };
 
 document.addEventListener("DOMContentLoaded", function (event) {
+
+    initSystemOwnerRapportButton()
+
+
     const today = new Date();
     let gridConfigTasks = {
         className: defaultClassName,
@@ -475,3 +479,54 @@ document.addEventListener("DOMContentLoaded", function (event) {
     new CustomGridFunctions(gridDocuments, gridDocumentsUrl + "/" + userId, 'documentsDatatable')
 
 });
+
+function initSystemOwnerRapportButton() {
+    const url = "reports/overview/systemowner"
+    const button = document.getElementById("systemOwnerRapportButton");
+    const buttonTextElement = button?.querySelector(".btn-text")
+    const originalText = buttonTextElement?.textContent
+    button?.addEventListener("click", async (e) => {
+        button.disabled = true;
+        button.classList.add("disabled");
+        buttonTextElement.textContent = "Henter...";
+
+        await downloadFile(url)
+
+        button.disabled = false;
+        button.classList.remove("disabled");
+        buttonTextElement.textContent = originalText;
+    })
+
+    /**
+     * Emulates a normal browser download
+     * @param url url
+     * @returns {Promise<void>}
+     */
+    async function downloadFile(url) {
+        const response = await fetch(url);
+
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const blob = await response.blob();
+
+        // Extract filename from Content-Disposition header
+        let filename = 'System Ejer Rapport'; // fallback
+        const contentDisposition = response.headers.get('Content-Disposition');
+        if (contentDisposition) {
+            const filenameMatch = RegExp(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/).exec(contentDisposition);
+            if (filenameMatch?.[1]) {
+                filename = filenameMatch[1].replace(/['"]/g, '');
+            }
+        }
+
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(blob);
+        a.download = filename;
+        a.click();
+
+        URL.revokeObjectURL(a.href);
+        a.remove();
+    }
+}

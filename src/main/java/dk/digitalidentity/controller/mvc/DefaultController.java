@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -29,8 +30,9 @@ import java.util.Map;
 public class DefaultController implements ErrorController {
 	private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
     private final UserService userService;
+	private final AssetService assetService;
 
-    @Transactional
+	@Transactional
     @GetMapping("/dashboard")
     @RequireUser
 	public String index(final Model model) {
@@ -40,6 +42,9 @@ public class DefaultController implements ErrorController {
                 final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 model.addAttribute("user", user);
             }
+
+
+			model.addAttribute("isSystemOwner", assetService.isSystemOwnerAnywhere(userUuid));
 
             return "dashboard";
         }

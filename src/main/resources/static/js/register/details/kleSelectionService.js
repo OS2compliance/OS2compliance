@@ -3,8 +3,10 @@
 export default class KLESelectionService {
     mainGroupSelectId = 'mainGroupSelector'
     groupSelectId = 'groupSelector'
+    legalReferenceSelectId = 'relevantLegalReferencesSelector'
     mainGroupSelectorInstance = null
     groupSelectorInstance = null
+    legalReferenceSelectorInstance = null
 
     constructor() {
     }
@@ -45,5 +47,15 @@ export default class KLESelectionService {
     #initGroupSelect() {
         const groupSelect = document.getElementById(this.groupSelectId)
         this.groupSelectorInstance = initSelect(groupSelect);
+    }
+
+
+    initLegalReferenceSelect() {
+        if (this.legalReferenceSelectorInstance) {
+            this.legalReferenceSelectorInstance.destroy()
+        }
+
+        const legalRefSelect = document.getElementById(this.legalReferenceSelectId);
+        this.legalReferenceSelectorInstance = initSelect(legalRefSelect);
     }
 }

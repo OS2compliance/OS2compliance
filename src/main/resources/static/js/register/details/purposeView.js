@@ -8,6 +8,7 @@ export default class RegisterPurposeService {
     #supplementalLegalElements = new Map()
 
     init() {
+        kleService.initLegalReferenceSelect()
         this.initGDPRCheckboxChange()
 
         // Check for conditional fields visibility
@@ -41,8 +42,12 @@ export default class RegisterPurposeService {
         purposeNotes.readOnly = !editable;
         suplementalField.readOnly = !editable;
         if (!editable) {
+            kleService.legalReferenceSelectorInstance.disable();
             const form = document.querySelector('#editPurposeId');
             form.reset();
+        }
+        else {
+            kleService.legalReferenceSelectorInstance.enable();
         }
     }
 
