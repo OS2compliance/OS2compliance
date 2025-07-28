@@ -384,7 +384,7 @@ public class ReportController {
 		response.setContentType("application/ms-excel");
 		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xls\"");
 
-		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly);
+		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate);
 
 		List<ThreatRow> threats = riskImageService.mapToRows(relevantThreatAssessments);
 

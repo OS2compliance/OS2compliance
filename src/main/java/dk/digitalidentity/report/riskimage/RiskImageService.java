@@ -12,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -30,7 +31,7 @@ public class RiskImageService {
 
 	private final ThreatAssessmentService threatAssessmentService;
 
-	public Set<ThreatAssessment> findRelevantThreatAssessments(List<String> includedTypes, List<String> latestOnlyTypes) {
+	public Set<ThreatAssessment> findRelevantThreatAssessments(List<String> includedTypes, List<String> latestOnlyTypes, LocalDate startDate, LocalDate endDate) {
 		String assetType = "asset";
 		String registerType = "register";
 		String scenarioType = "scenario";
@@ -67,20 +68,20 @@ public class RiskImageService {
 			}
 		}
 
-		Set<ThreatAssessment> threatAssessments = threatAssessmentService.findAllByTypes(getAllTypes);
-		threatAssessments.addAll(findRelevantThreatAssessmentsByLatest(getLatestTypes));
+		Set<ThreatAssessment> threatAssessments = threatAssessmentService.findAllByTypesAndFromDateToDate(getAllTypes, startDate, endDate);
+		threatAssessments.addAll(findRelevantThreatAssessmentsByLatest(getLatestTypes, startDate, endDate));
 
 		return threatAssessments;
 	}
 
-	private Set<ThreatAssessment> findRelevantThreatAssessmentsByLatest(Set<ThreatAssessmentType> getLatestTypes) {
+	private Set<ThreatAssessment> findRelevantThreatAssessmentsByLatest(Set<ThreatAssessmentType> getLatestTypes, LocalDate startDate, LocalDate endDate) {
 		Set<ThreatAssessment> threatAssessments = new HashSet<>();
 		for (ThreatAssessmentType type : getLatestTypes) {
 			if (type == ThreatAssessmentType.REGISTER) {
-				threatAssessments.addAll(threatAssessmentService.findLatestForAllRegisters());
+				threatAssessments.addAll(threatAssessmentService.findLatestForAllRegisters(startDate, endDate));
 			}
 			else if (type == ThreatAssessmentType.ASSET) {
-				threatAssessments.addAll(threatAssessmentService.findLatestForAllAssets());
+				threatAssessments.addAll(threatAssessmentService.findLatestForAllAssets(startDate, endDate));
 			}
 		}
 		return threatAssessments;
