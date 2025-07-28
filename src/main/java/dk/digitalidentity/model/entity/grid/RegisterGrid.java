@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class RegisterGrid {
+public class RegisterGrid implements HasMultipleResponsibleUsers {
     @Id
     private Long id;
 
@@ -32,6 +32,9 @@ public class RegisterGrid {
 
     @Column
     private String responsibleUserUuids;
+
+	@Column
+    private String customResponsibleUserUuids;
 
     @Column(name = "responsible_ou_names")
     private String responsibleOUNames;

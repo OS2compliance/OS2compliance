@@ -79,6 +79,30 @@
                         </div>
                     </div>
 
+                    <!--                    Register Settings-->
+                    <a class="btn btn-primary" data-bs-toggle="collapse" href="#registerPart" role="button"
+                       aria-expanded="false" aria-controls="registerPart">
+                        Fotegnelser
+                    </a>
+                    <div class="collapse" id="registerPart"
+                         th:classappend="${page} == 'register' ? 'show' : ''">
+                        <div class="card card-body gap-3">
+                            <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'register'" class="row">
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
+                                <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}" class="col-sm-12 col-form-label"
+                                       style="color: black;" th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.model.entity.enums.RegisterSetting).CUSTOMRESPONSIBLEUSERFIELDNAME.value ? 'Navn for redigerbart brugerfelt' : 'Ukendt indstilling'}"></label>
+                                <input style="color:black;" class="form-control"
+                                       th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                       th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+
+                            </div>
+                        </div>
+                    </div>
+
                     <a class="btn btn-primary" data-bs-toggle="collapse" href="#riskPart" role="button"
                        aria-expanded="false" aria-controls="riskPart">
                         Risiko
@@ -155,12 +179,56 @@
                                                         th:text="${role.name}"></option>
                                             </select>
                                         </div>
-                                        <div class="text-black-50 mt-2">Bemærk, at det kan tage op til et døgn, før
-                                            opdateringen af Kitos' opsætning er fuldt gennemført på alle steder.
+                                    </div>
+                                    <div
+                                        th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_FIELDS_ASSET_LINK_SOURCE}">
+                                        <div class="row mt-1" style="padding: 0px 8px;">
+                                            <label for="assetLinkSourceField" class="col-sm-10 col-form-label"
+                                                   style="color: black;padding: 10px 0px;">Aktiver -> kilde til links</label>
+                                            <select class="form-control form-select"
+                                                    id="assetLinkSourceField"
+                                                    th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                                <option th:each="role : ${kitosFieldsForAssetLinkSource}"
+                                                        th:value="${role}"
+                                                        th:text="${role.message}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div
+                                            th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_FIELDS_CONTRACT_DATE}">
+                                        <div class="row mt-1" style="padding: 0px 8px;">
+                                            <label for="contractDateSourceField" class="col-sm-10 col-form-label"
+                                                   style="color: black;padding: 10px 0px;">Kilde til kontraktdato</label>
+                                            <select class="form-control form-select"
+                                                    id="contractDateSourceField"
+                                                    th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                                <option th:each="role : ${kitosFieldsForContractDate}"
+                                                        th:value="${role}"
+                                                        th:text="${role.message}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div
+                                            th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_FIELDS_CONTRACT_END}">
+                                        <div class="row mt-1" style="padding: 0px 8px;">
+                                            <label for="contractEndSourceField" class="col-sm-10 col-form-label"
+                                                   style="color: black;padding: 10px 0px;">Kilde til kontraktophør</label>
+                                            <select class="form-control form-select"
+                                                    id="contractEndSourceField"
+                                                    th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                                <option th:each="role : ${kitosFieldsForContractEnd}"
+                                                        th:value="${role}"
+                                                        th:text="${role.message}"></option>
+                                            </select>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+
+                            <div class="text-black-50 mt-2">Bemærk, at det kan tage op til et døgn, før
+                                opdateringen af Kitos' opsætning er fuldt gennemført på alle steder.
+                            </div>
+
                         </div>
                     </div>
                 </form>

@@ -53,6 +53,7 @@ SELECT
     r.name,
     GROUP_CONCAT(DISTINCT u.name SEPARATOR ', ') as responsible_user_names,
     GROUP_CONCAT(DISTINCT u.uuid SEPARATOR ',') as responsible_user_uuids,
+    GROUP_CONCAT(DISTINCT cru.uuid SEPARATOR ',') as custom_responsible_user_uuids,
     GROUP_CONCAT(DISTINCT ou.name SEPARATOR ', ') as responsible_ou_names,
     GROUP_CONCAT(DISTINCT d.name SEPARATOR ', ') as department_names,
     r.updated_at,
@@ -92,6 +93,8 @@ LEFT JOIN threat_assessments ta ON ta.id = (
         WHERE rel.relation_b_id = tb.id OR rel.relation_a_id = tb.id)
 LEFT JOIN registers_responsible_users_mapping rum ON rum.register_id = r.id
 LEFT JOIN users u ON rum.user_uuid = u.uuid
+LEFT JOIN register_custom_responsible_user_mapping crum ON crum.register_id = r.id
+LEFT JOIN users cru ON crum.user_uuid = cru.uuid
 LEFT JOIN registers_responsible_ous_mapping roum ON roum.register_id = r.id
 LEFT JOIN ous ou ON roum.ou_uuid = ou.uuid
 LEFT JOIN registers_departments_mapping rdm ON rdm.register_id = r.id

@@ -19,6 +19,12 @@
                         <h1 class="page-title mb-0 mt-2" th:text="'Hej ' + ${user?.name}"></h1>
                         <p class="lead">Velkommen til OS2Compliance</p>
                     </div>
+                    <div class="align-self-center d-inline-flex"
+                    th:if="${isSystemOwner != null && isSystemOwner}">
+                        <button id="systemOwnerRapportButton" type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="pli-download-2"></i> <span class="vr"></span><span class="btn-text"> Systemejer rapport</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>

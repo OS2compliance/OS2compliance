@@ -114,7 +114,6 @@ public class DPIARestController {
 	) {
 		Page<DPIAGrid> dpiaGrids =  dpiaGridDao.findAllWithColumnSearch(
 				validateSearchFilters(filters, DPIAGrid.class),
-				null,
 				buildPageable(page, limit, sortColumn, sortDirection),
 				DPIAGrid.class
 		);
@@ -209,7 +208,7 @@ public class DPIARestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
-	public record CreateDPIAResponse(Long dpiaId) {};
+	public record CreateDPIAResponse(Long dpiaId) {}
     public record CreateDPIAFormDTO (String title, List<Long> assetIds, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid){}
     @PostMapping("create")
     public ResponseEntity<CreateDPIAResponse> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
@@ -431,10 +430,9 @@ public class DPIARestController {
 			s3Document = s3DocumentService.save(s3Document);
 			dpiaReport.setDpiaReportS3Document(s3Document);
 			dpia.getDpiaReports().add(dpiaReport);
-			assets.forEach(asset -> {
-				savedAssets.add(assetService.save(asset));
-
-			});
+			assets.forEach(asset ->
+				savedAssets.add(assetService.save(asset))
+			);
 		}
 
 		File pdfFile = File.createTempFile(uuid, ".pdf");

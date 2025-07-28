@@ -19,11 +19,11 @@ function ToastService() {
         })
     }
 
-    this.info = function(header, message) {
+    this.info = function(header, message, time = "1000") {
         const container = document.getElementById('toastContainer');
         const template = document.getElementById('toastTemplate');
         const toastElem = template.cloneNode(true);
-        toastElem.dataset.bsDelay = "1000";
+        toastElem.dataset.bsDelay = time;
         toastElem.querySelector("rect").setAttribute("fill", "#9FCC2E");
         toastElem.querySelector("strong").innerHTML = header;
         if (message) {

@@ -117,7 +117,6 @@ public class RiskRestController {
     ) {
         Page<RiskGrid> risks =  riskGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, RiskGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             RiskGrid.class
         );
@@ -147,7 +146,7 @@ public class RiskRestController {
         final List<Asset> assets = assetService.findAllById(assetIds);
         final ResponsibleUsersWithElementNameDTO users = !assets.isEmpty() ? getUser(assets.get(0)) : null;
         final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream()
-            .map(Relatable::getId).collect(Collectors.toList()));
+            .map(Relatable::getId).toList());
         final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
         return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), users);
     }
@@ -273,7 +272,14 @@ public class RiskRestController {
             case OT -> response.setAvailabilityOrganisation(Integer.parseInt(dto.value()));
             case PROBLEM -> response.setProblem(dto.value());
             case EXISTING_MEASURES -> response.setExistingMeasures(dto.value());
-            case METHOD -> response.setMethod(ThreatMethod.valueOf(dto.value()));
+            case METHOD -> {
+				ThreatMethod threatMethod = ThreatMethod.valueOf(dto.value());
+				response.setMethod(threatMethod);
+				if (threatMethod.equals(ThreatMethod.NONE) || threatMethod.equals(ThreatMethod.ACCEPT)) {
+					response.setResidualRiskProbability(null);
+					response.setResidualRiskConsequence(null);
+				}
+			}
             case ELABORATION -> response.setElaboration(dto.value());
             case RESIDUAL_RISK_PROBABILITY -> response.setResidualRiskProbability(Integer.parseInt(dto.value()));
             case RESIDUAL_RISK_CONSEQUENCE -> response.setResidualRiskConsequence(Integer.parseInt(dto.value()));
@@ -406,7 +412,7 @@ public class RiskRestController {
         if (asset.getResponsibleUsers() == null || asset.getResponsibleUsers().isEmpty()) {
             return new ResponsibleUsersWithElementNameDTO(asset.getName(), new ArrayList<>());
         }
-        final List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
+        final List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).toList();
         return new ResponsibleUsersWithElementNameDTO(asset.getName(), users);
     }
 
@@ -477,7 +483,7 @@ public class RiskRestController {
     }
 
     private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
-        final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
+        final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).toList());
         savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
         savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
         savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());

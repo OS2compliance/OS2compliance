@@ -4,18 +4,22 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
+import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
-import dk.digitalidentity.service.importer.ThreatCatalogImporter;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +39,9 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Optional;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -61,8 +68,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final PlatformTransactionManager transactionManager;
     private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
 	private final DPIAService dpiaService;
+	private final ChoiceService choiceService;
+	private final RegisterService registerService;
 
-    @Value("classpath:data/registers/*.json")
+	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
 
     @Override
@@ -93,7 +102,23 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(20, this::seedV20);
         incrementAndPerformIfVersion(21, this::seedV21);
         incrementAndPerformIfVersion(22, this::seedV22);
+        incrementAndPerformIfVersion(23, this::seedV23);
+        incrementAndPerformIfVersion(24, this::seedV24);
+        incrementAndPerformIfVersion(25, this::seedV25);
     }
+
+	private void seedV25 () {
+		// Update each of these specific lists to be editable
+		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list","dp-person-categories-list",  "dp-person-storage-duration-list", "dp-receiver-list");
+		for (String identifier : listIdentifiers) {
+			Optional<ChoiceList> list = choiceService.findChoiceList(identifier);
+			if (list.isEmpty()) {
+				continue;
+			}
+
+			list.get().setCustomizable(true);
+		}
+	}
 
     @SneakyThrows
     private void seedV20() {
@@ -111,6 +136,35 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+	private void seedV24 () {
+		ChoiceList choiceList = choiceService.saveChoiceList(ChoiceList.builder()
+						.identifier("record-of-processing-activity-regarding")
+						.name("Fortegnelse over behandlingsaktivitet angående")
+						.multiSelect(true)
+						.customizable(true)
+						.values(new ArrayList<>())
+				.build());
+
+		// Migrate data from existing column to choicelists
+		registerService.findAll().stream()
+				.filter(r -> r.getOldRegisterRegarding() != null && !r.getOldRegisterRegarding().isEmpty())
+				.forEach(r -> {
+					String oldValue = r.getOldRegisterRegarding();
+					ChoiceValue oldValueChoice = ChoiceValue.builder()
+							.caption(oldValue)
+							.description(oldValue)
+							.identifier(UUID.randomUUID().toString())
+							.build();
+
+					choiceList.getValues().add(oldValueChoice);
+					r.setRegisterRegarding(Set.of(oldValueChoice));
+				});
+	}
+
+	private void seedV23 () {
+		settingsService.createSetting(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse" , "register", true);
+	}
 
 	private void seedV22() {
 		dpiaService.findAll()
@@ -155,7 +209,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void seedV17() {
-
+		// No longer needed
     }
 
     private void seedV14() {

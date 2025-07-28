@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" xmlns:sec="http://www.w3.org/1999/xhtml">
 <head th:replace="~{fragments/header :: head (burgermenu = true)}"></head>
 <body class="jumping">
 
@@ -21,7 +21,6 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${task.name}"></li>
                             </ol>
                         </nav>
-<!--                        <h1 class="page-title mb-0 mt-2" th:text="${task.name}"></h1>-->
                         <input id="taskNameField" name="taskTitle" class="page-title transparent-input mb-0 mt-2" th:field="*{name}" disabled />
                         <p class="lead"></p>
                     </div>

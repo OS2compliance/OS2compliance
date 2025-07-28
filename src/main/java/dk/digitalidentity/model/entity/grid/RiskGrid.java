@@ -24,7 +24,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class RiskGrid {
+public class RiskGrid  implements HasSingleResponsibleUser {
     @Id
     private Long id;
 

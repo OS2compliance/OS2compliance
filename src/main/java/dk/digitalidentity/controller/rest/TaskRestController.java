@@ -5,12 +5,10 @@ import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.FilterService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -50,7 +48,6 @@ public class TaskRestController {
     ) {
         Page<TaskGrid> tasks =  taskGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, TaskGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             TaskGrid.class
         );
