@@ -10,11 +10,54 @@ document.addEventListener("DOMContentLoaded", function() {
     document.body.appendChild(backdrop);
 
     function isMobile() {
-        return window.innerWidth < 768;
+        return window.innerWidth < 993;
     }
 
     function isMiniMode() {
         return nav.classList.contains("mini");
+    }
+
+    // Save the state
+    function saveMenuState(state) {
+        localStorage.setItem('menuState', state);
+    }
+
+    // Get saved menu state from localStorage
+    function getSavedMenuState() {
+        return localStorage.getItem('menuState') || 'full';
+    }
+
+    function applyMenuState(state) {
+        if (isMobile()) {
+            // On mobile, always remove mini/full classes
+            nav.classList.remove('mini', 'full');
+            return;
+        }
+
+        if (state === 'mini') {
+            nav.classList.remove('full');
+            nav.classList.add('mini');
+
+            // Apply mini styling to links
+            for (let i = 0; i < links.length; i++) {
+                links[i].classList.add('active2');
+                links[i].classList.remove('inactive');
+            }
+        } else {
+            nav.classList.remove('mini');
+            nav.classList.add('full');
+
+            // Apply full styling to links
+            for (let i = 0; i < links.length; i++) {
+                links[i].classList.add('inactive');
+                links[i].classList.remove('active2');
+            }
+        }
+
+        // Close any open submenus when changing state
+        hasSubItems.forEach(function(item) {
+            item.querySelector('.mininav-content').classList.remove('show');
+        });
     }
 
     function setupSubMenus() {
@@ -68,28 +111,14 @@ document.addEventListener("DOMContentLoaded", function() {
             nav.classList.add("overlay");
             backdrop.classList.add("active");
         } else {
-            if (nav.classList.contains("mini")) {
-                nav.classList.remove("mini");
-                nav.classList.add("full");
+            const currentState = getSavedMenuState();
+            const newState = currentState === 'mini' ? 'full' : 'mini';
 
-                for (let i = 0; i < links.length; i++) {
-                    links[i].classList.add("inactive");
-                    links[i].classList.remove("active2");
-                }
+            // Save the new state
+            saveMenuState(newState);
 
-            } else {
-                nav.classList.remove("full");
-                nav.classList.add("mini");
-
-                for (let i = 0; i < links.length; i++) {
-                    links[i].classList.add("active2");
-                    links[i].classList.remove("inactive");
-                }
-            }
-
-            hasSubItems.forEach(function(item) {
-                item.querySelector('.mininav-content').classList.remove('show');
-            });
+            // Apply the new state
+            applyMenuState(newState);
         }
     });
 
@@ -98,16 +127,21 @@ document.addEventListener("DOMContentLoaded", function() {
         backdrop.classList.remove("active");
     });
 
-    window.addEventListener('load', function () {
-        const nav = document.getElementById('mainnav-container');
-        if (window.innerWidth < 768) {
+    function initializeMenuState() {
+        if (isMobile()) {
+            // On mobile, remove any mini/full classes
             nav.classList.remove('mini', 'full');
         } else {
-            nav.classList.add('full');
+            // On desktop, apply saved state
+            const savedState = getSavedMenuState();
+            applyMenuState(savedState);
         }
-
         setupSubMenus();
+    }
+
+    window.addEventListener('load', function () {
+        initializeMenuState();
     });
 
-    setupSubMenus();
+    initializeMenuState();
 });

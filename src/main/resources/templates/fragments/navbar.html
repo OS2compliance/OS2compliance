@@ -6,8 +6,8 @@
 <head th:replace="~{fragments/header :: head (burgermenu = true)}"></head>
 <body>
 <nav th:fragment="main" id="mainnav-container" class="mainnav">
-    <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner">
-        <div class="mainnav__top-content scrollable-content pb-2">
+    <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner" id="inner">
+        <div class="mainnav__top-content scrollable-content pb-2" id="top-content">
             <div class="mainnav__category py-3">
                 <ul class="mainnav__menu nav flex-column" id="mainnav-menu">
                     <li class="nav-item">
