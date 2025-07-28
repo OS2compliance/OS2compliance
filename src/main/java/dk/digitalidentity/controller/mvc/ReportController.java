@@ -380,9 +380,15 @@ public class ReportController {
 			@RequestParam(required = false) List<String> latestOnly,
 			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate fromDate,
 			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate) {
+
+		// Validate
+		if (fromDate == null && toDate == null) {
+			throw new IllegalArgumentException("fromDate and toDate must be provided");
+		}
+
 		// Metadata
 		response.setContentType("application/ms-excel");
-		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xls\"");
+		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xlsx\"");
 
 		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate);
 
