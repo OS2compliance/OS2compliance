@@ -19,7 +19,9 @@ import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
+import dk.digitalidentity.report.riskimage.RiskImageService;
 import dk.digitalidentity.report.riskimage.RiskImageView;
+import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
@@ -88,6 +90,7 @@ public class ReportController {
 	private final UserService userService;
 	private final RegisterService registerService;
 	private final SystemOwnerOverviewService systemOwnerOverviewService;
+	private final RiskImageService riskImageService;
 
 	@GetMapping
     public String reportList(final Model model) {
@@ -369,6 +372,7 @@ public class ReportController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+
 	@GetMapping("riskimage")
 	public ModelAndView getRiskImageReport(
 			final HttpServletResponse response,
@@ -380,10 +384,17 @@ public class ReportController {
 		response.setContentType("application/ms-excel");
 		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xls\"");
 
+		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly);
+
+		List<ThreatRow> threats = riskImageService.mapToRows(relevantThreatAssessments);
+
 		final Map<String, Object> model = new HashMap<>();
+		model.put("ThreatAssessments", threats);
 
 		return new ModelAndView(new RiskImageView(), model);
 	}
+
+
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
                                   final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {

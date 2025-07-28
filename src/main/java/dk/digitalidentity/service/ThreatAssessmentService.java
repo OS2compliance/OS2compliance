@@ -44,6 +44,7 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -52,6 +53,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
@@ -81,6 +83,18 @@ public class ThreatAssessmentService {
     public List<ThreatAssessment> findAll() {
         return threatAssessmentDao.findAll();
     }
+
+	public Set<ThreatAssessment> findAllByTypes(Collection<ThreatAssessmentType> types) {
+		return threatAssessmentDao.findByThreatAssessmentTypeIn(types);
+	}
+
+	public Set<ThreatAssessment> findLatestForAllAssets(){
+		return threatAssessmentDao.findLatestForAllAssets();
+	}
+
+	public Set<ThreatAssessment> findLatestForAllRegisters(){
+		return threatAssessmentDao.findLatestForAllRegisters();
+	}
 
     @Transactional
     public ThreatAssessment save(final ThreatAssessment assessment) {

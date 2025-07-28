@@ -1,6 +1,7 @@
 package dk.digitalidentity.report.riskimage;
 
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.report.XlsUtil;
 import dk.digitalidentity.report.systemowneroverview.dto.TaskRow;
 import jakarta.servlet.http.HttpServletRequest;
@@ -13,7 +14,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -24,11 +24,11 @@ public class RiskImageView extends AbstractXlsView {
 	protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) throws Exception {
 
 		Set<ThreatAssessment> threatAssessments = setFromModel(model, "threatAssessments");
-		createRiskImageSheet(workbook, threatAssessments);
+//		createRiskImageSheet(workbook, threatAssessments);
 
 	}
 
-	private void createRiskImageSheet(Workbook workbook, Set<ThreatAssessment> threatAssessments) {
+	private void createRiskImageSheet(Workbook workbook, Set<ThreatAssessment> threatAssessments, Set<ThreatCatalog> threatCatalogs) {
 		String sheetName = "Risikobillede";
 
 		Map<String, XlsUtil.CellValueSetter<ThreatAssessment, Cell>> converterMap = new LinkedHashMap<>();
