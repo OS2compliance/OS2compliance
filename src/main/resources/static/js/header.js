@@ -9,15 +9,12 @@ document.addEventListener("DOMContentLoaded", function() {
     backdrop.id = "nav-backdrop";
     document.body.appendChild(backdrop);
 
+    // Mobile version
     function isMobile() {
         return window.innerWidth < 993;
     }
 
-    function isMiniMode() {
-        return nav.classList.contains("mini");
-    }
-
-    // Save the state
+    // Save the state (993 because that's where the menu suddenly collapses)
     function saveMenuState(state) {
         localStorage.setItem('menuState', state);
     }
@@ -70,7 +67,7 @@ document.addEventListener("DOMContentLoaded", function() {
             navLink.addEventListener('click', handleSubMenuClick);
 
             function handleSubMenuClick(e) {
-                if (isMiniMode()) {
+                if (nav.classList.contains("mini")) {
                     e.preventDefault();
 
                     // Close all other sub-menus first
