@@ -87,63 +87,75 @@ public class RiskImageService {
 	}
 
 	public List<ThreatRow> mapToRows(Set<ThreatAssessment> threatAssessments) {
-		// Map responses average score to assessment name
-		Map<String, Double> threatAssessmentScoreMap = threatAssessments.stream()
-				.collect(Collectors.toMap(Relatable::getName, t -> getAverageScore(t.getThreatAssessmentResponses())));
-
 		// Construct maps of threatassessments for each threat
 		Map<ThreatCatalogThreat, Set<ThreatAssessment>> threatAssessmentByThreatMap = new HashMap<>();
 		Map<CustomThreat, Set<ThreatAssessment>> threatAssessmentByCustomThreatMap = new HashMap<>();
 
 		for (ThreatAssessment assessment : threatAssessments) {
-			List<ThreatCatalogThreat> threats = assessment.getThreatCatalog().getThreats();
-			List<CustomThreat> customThreats = assessment.getCustomThreats();
-			for (ThreatCatalogThreat threat : threats) {
-				threatAssessmentByThreatMap.computeIfAbsent(threat, k -> new HashSet<>());
-			}
+			if (assessment.getThreatCatalog() != null) {
+				List<ThreatCatalogThreat> threats = assessment.getThreatCatalog().getThreats();
 
-			for (CustomThreat threat : customThreats) {
-				threatAssessmentByCustomThreatMap.computeIfAbsent(threat, k -> new HashSet<>());
+				for (ThreatCatalogThreat threat : threats) {
+					threatAssessmentByThreatMap.computeIfAbsent(threat, k -> new HashSet<>());
+					threatAssessmentByThreatMap.get(threat).add(assessment);
+				}
+			}
+			if (assessment.getCustomThreats() != null) {
+				List<CustomThreat> customThreats = assessment.getCustomThreats();
+
+				for (CustomThreat threat : customThreats) {
+					threatAssessmentByCustomThreatMap.computeIfAbsent(threat, k -> new HashSet<>());
+					threatAssessmentByCustomThreatMap.get(threat).add(assessment);
+				}
 			}
 		}
 
 		// Construct ThreatRow DTO
 		Stream<ThreatRow> threatRows = threatAssessmentByThreatMap.entrySet().stream()
-				.map(entry -> fromThreatCatalogThreat(entry, threatAssessmentScoreMap));
+				.map(e -> fromThreatCatalogThreat(e.getKey(), e.getValue()));
 
 		Stream<ThreatRow> customThreatRows = threatAssessmentByCustomThreatMap.entrySet().stream()
-				.map(entry -> fromCustomThreat(entry, threatAssessmentScoreMap));
+				.map(e -> fromCustomThreat(e.getKey(), e.getValue()));
 
 		// Return combined results
 		return Stream.concat(threatRows, customThreatRows)
-				.sorted(Comparator
-						.comparing(ThreatRow::threatCatalogName)
-						.thenComparing(ThreatRow::name))
+				.sorted(Comparator.nullsLast(
+						Comparator.comparing(ThreatRow::threatCatalogName)
+								.thenComparing(ThreatRow::name)))
 				.toList();
 	}
 
-	private ThreatRow fromThreatCatalogThreat(Map.Entry<ThreatCatalogThreat, Set<ThreatAssessment>> entry, Map<String, Double> threatAssessmentScoreMap) {
-		Set<String> threatAssessmenmtNames = entry.getValue().stream().map(ThreatAssessment::getName).collect(Collectors.toSet());
-		Map<String, Double> assessmentScores = threatAssessmentScoreMap.entrySet().stream()
-				.filter(e -> threatAssessmenmtNames.contains(e.getKey()))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+	private ThreatRow fromThreatCatalogThreat(ThreatCatalogThreat threat, Set<ThreatAssessment> relevantAssessments) {
+
+		Map<String, Double> assessmentScores = relevantAssessments.stream()
+				.collect(Collectors.toMap(
+						Relatable::getName,
+						ta -> getAverageScore( // Get average score
+								ta.getThreatAssessmentResponses().stream() // ...For responses of this treatassessment
+										.filter(r -> r.getThreatCatalogThreat().equals(threat)).toList() // ...That matches the relevant threat
+						),
+						(ta1, ta2) -> ta1));
 
 		return new ThreatRow(
-				entry.getKey().getThreatType(),
-				entry.getKey().getThreatCatalog().getName(),
+				threat.getThreatType(),
+				threat.getThreatCatalog() != null ? threat.getThreatCatalog().getName() : "",
 				assessmentScores,
 				assessmentScores.values().stream().mapToDouble(Double::valueOf).sum()
 		);
 	}
 
-	private ThreatRow fromCustomThreat(Map.Entry<CustomThreat, Set<ThreatAssessment>> entry, Map<String, Double> threatAssessmentScoreMap) {
-		Set<String> threatAssessmenmtNames = entry.getValue().stream().map(ThreatAssessment::getName).collect(Collectors.toSet());
-		Map<String, Double> assessmentScores = threatAssessmentScoreMap.entrySet().stream()
-				.filter(e -> threatAssessmenmtNames.contains(e.getKey()))
-				.collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+	private ThreatRow fromCustomThreat(CustomThreat threat, Set<ThreatAssessment> relevantAssessments) {
+		Map<String, Double> assessmentScores = relevantAssessments.stream()
+				.collect(Collectors.toMap(
+						Relatable::getName,
+						ta -> getAverageScore( // Get average score
+								ta.getThreatAssessmentResponses().stream() // ...For responses of this treatassessment
+										.filter(r -> r.getCustomThreat().equals(threat)).toList()  // ...That matches the relevant threat
+						),
+						(ta1, ta2) -> ta1));
 
 		return new ThreatRow(
-				entry.getKey().getThreatType(),
+				threat.getThreatType(),
 				"",
 				assessmentScores,
 				assessmentScores.values().stream().mapToDouble(Double::valueOf).sum()
@@ -153,19 +165,22 @@ public class RiskImageService {
 	private Double getAverageScore(Collection<ThreatAssessmentResponse> threatAssessmentResponses) {
 		return threatAssessmentResponses.stream()
 				.map(tr -> {
+					if (tr.getProbability() == null || tr.getProbability() < 1) {
+						return 0;
+					}
 					Integer probability = tr.getProbability();
 					List<Integer> fieldValues = new ArrayList<>();
-					fieldValues.add(tr.getAvailabilityRegistered());
-					fieldValues.add(tr.getConfidentialityRegistered());
-					fieldValues.add(tr.getIntegrityRegistered());
-					fieldValues.add(tr.getAvailabilityOrganisation());
-					fieldValues.add(tr.getConfidentialityOrganisation());
-					fieldValues.add(tr.getIntegrityOrganisation());
+					fieldValues.add(tr.getAvailabilityRegistered() == null ? 0 : tr.getAvailabilityRegistered());
+					fieldValues.add(tr.getConfidentialityRegistered() == null ? 0 : tr.getConfidentialityRegistered());
+					fieldValues.add(tr.getIntegrityRegistered() == null ? 0 : tr.getIntegrityRegistered());
+					fieldValues.add(tr.getAvailabilityOrganisation() == null ? 0 : tr.getAvailabilityOrganisation());
+					fieldValues.add(tr.getConfidentialityOrganisation() == null ? 0 : tr.getConfidentialityOrganisation());
+					fieldValues.add(tr.getIntegrityOrganisation() == null ? 0 : tr.getIntegrityOrganisation());
 					Integer max = fieldValues.stream().max(Integer::compare).get();
-					return probability * max;
+					return (probability * max);
 				})
-				.mapToDouble(Double::valueOf)
+				.mapToInt(Integer::intValue)
 				.average()
-				.orElse(0);
+				.orElse(0.0);
 	}
 }

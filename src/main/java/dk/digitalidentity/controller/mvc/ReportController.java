@@ -389,7 +389,7 @@ public class ReportController {
 		List<ThreatRow> threats = riskImageService.mapToRows(relevantThreatAssessments);
 
 		final Map<String, Object> model = new HashMap<>();
-		model.put("ThreatAssessments", threats);
+		model.put("threats", threats);
 
 		return new ModelAndView(new RiskImageView(), model);
 	}
