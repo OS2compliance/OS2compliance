@@ -172,10 +172,6 @@ public class StandardController {
 
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
-		System.out.println("template.getStandardTemplateSections().size() = " + template.getStandardTemplateSections().size());
-		for (StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
-			System.out.println("standardTemplateSection = " + standardTemplateSection.getStandardTemplate().getIdentifier());
-		}
         return "standards/supporting_view";
     }
 
@@ -229,9 +225,15 @@ public class StandardController {
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
 	public String createHeader(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
-//		String name = standardSection.getTemplateSection().getSection() + standardSection.getName();
-		System.out.println("standardSection.getStatus() = " + standardSection.getTemplateSection());
-		standardSection.setName("test");
+		List<StandardSection> allByTemplateSection = standardSectionDao.findAllByTemplateSection(standardSection.getTemplateSection());
+
+		int version = 1;
+		if (allByTemplateSection != null && !allByTemplateSection.isEmpty()) {
+			version = allByTemplateSection.size();
+		}
+		String sectionPrefix = standardSection.getTemplateSection().getSection();
+		String name = sectionPrefix  + "."  + version + standardSection.getName();
+		standardSection.setName(name);
 		standardSectionService.save(standardSection);
 		return "redirect:/standards/supporting/" + identifier;
 	}
