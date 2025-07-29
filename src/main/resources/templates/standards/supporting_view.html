@@ -19,6 +19,12 @@
                         </nav>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button th:if="${template.standardTemplateSections != null || template.standardTemplateSections.isEmpty()}" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openRequirementModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny krav
+                        </button>
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openHeaderModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny gruppe
+                        </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>

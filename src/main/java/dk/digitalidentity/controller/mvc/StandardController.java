@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
+import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.model.dto.RelatedDTO;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
@@ -11,8 +12,10 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.StandardSectionService;
 import dk.digitalidentity.service.StandardsService;
 import dk.digitalidentity.service.SupportingStandardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -20,7 +23,9 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
@@ -47,8 +52,10 @@ public class StandardController {
     private final StandardSectionDao standardSectionDao;
     private final StandardTemplateDao standardTemplateDao;
     private final SupportingStandardService supportingStandardService;
+	private final StandardTemplateSectionDao standardTemplateSectionDao;
+	private final StandardSectionService standardSectionService;
 
-    record StandardSectionDTO(StandardSection standardSection,
+	record StandardSectionDTO(StandardSection standardSection,
                               List<Relatable> relatedDocuments,
                               List<Relatable> relatedSections) {}
     record StandardTemplateSectionDTO(StandardTemplateSection standardTemplateSection,
@@ -165,9 +172,84 @@ public class StandardController {
 
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
-
+		System.out.println("template.getStandardTemplateSections().size() = " + template.getStandardTemplateSections().size());
+		for (StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
+			System.out.println("standardTemplateSection = " + standardTemplateSection.getStandardTemplate().getIdentifier());
+		}
         return "standards/supporting_view";
     }
+
+	@Transactional
+	@PostMapping("/create")
+	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+		standard.setSupporting(true);
+		standardTemplateDao.save(standard);
+		return "redirect:/standards";
+	}
+
+	@GetMapping("/form")
+	public String standardForm(final Model model, @RequestParam(name = "id", required = false) final String id) {
+		if (id != null) {
+			// TODO: Fetch the existing one and insert the info needed
+		}
+		model.addAttribute("action", "standards/create");
+		model.addAttribute("standard", new StandardTemplate());
+		model.addAttribute("formTitle", "Ny standard");
+		model.addAttribute("formId", "standardCreateForm");
+
+		return "standards/form";
+	}
+
+	@GetMapping("/section/form/{id}")
+	public String sectionForm(final Model model, @PathVariable(name = "id") final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		model.addAttribute("standard", template);
+		model.addAttribute("action", "/standards/sections/create/" + id);
+		model.addAttribute("section", new StandardSection());
+		model.addAttribute("formTitle", "Ny krav");
+		model.addAttribute("formId", "sectionCreateForm");
+
+		return "standards/sections/create_section_form";
+	}
+
+	@GetMapping("/section/header/form/{id}")
+	public String headerForm(final Model model, @PathVariable(name = "id") final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		model.addAttribute("standard", template);
+		model.addAttribute("action", "/standards/sections/headers/create/" + id);
+		model.addAttribute("header", new StandardTemplateSection());
+		model.addAttribute("formTitle", "Ny gruppe");
+		model.addAttribute("formId", "headerForm");
+
+		return "standards/sections/create_header_form";
+	}
+
+	@Transactional
+	@PostMapping("/sections/create/{identifier}")
+	public String createHeader(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
+//		String name = standardSection.getTemplateSection().getSection() + standardSection.getName();
+		System.out.println("standardSection.getStatus() = " + standardSection.getTemplateSection());
+		standardSection.setName("test");
+		standardSectionService.save(standardSection);
+		return "redirect:/standards/supporting/" + identifier;
+	}
+
+	@Transactional
+	@PostMapping("/standards/headers/create/{id}")
+	public String createSection(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "id") final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();
+		String sortKey = standardTemplateSection.getSection().replace(".", "");
+		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
+		standardTemplateSection.setIdentifier(identifier);
+		standardTemplateSection.setStandardTemplate(template);
+		standardTemplateSectionDao.save(standardTemplateSection);
+		return "redirect:/standards/supporting/" + id;
+	}
+
 
     private Map<Long, List<RelatedDTO>> buildRelationsMap(final StandardTemplate template) {
         final Map<Long, List<RelatedDTO>> result = new HashMap<>();
