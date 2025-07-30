@@ -137,6 +137,9 @@ public class ThreatAssessment extends Relatable {
     @Column
     private String externalLink;
 
+    @Column
+    private String comment;
+
     @Override
     public RelationType getRelationType() {
         return RelationType.THREAT_ASSESSMENT;

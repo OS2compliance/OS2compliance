@@ -202,6 +202,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 			addGeneralInfoSection(document, cursor, context);
 
+			addComment(document, cursor, context);
             addPresentAddMeeting(document, cursor, context);
             addCriticality(document, cursor, context);
 			addAreas(document, cursor, context);
@@ -583,6 +584,34 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private void setCellBackgroundColor(final XWPFTableCell cell, final String color) {
         cell.getCTTc().addNewTcPr().addNewShd().setFill(StringUtils.removeStart(color, "#"));
     }
+
+	private void addTextWithBreaks(String text, XWPFParagraph paragraph) {
+		String[] lines = text.split("\n");
+		XWPFRun run = paragraph.createRun();
+
+		for (int i = 0; i < lines.length; i++) {
+			run.setText(lines[i]);
+			if (i < lines.length - 1) {
+				run.addBreak();
+			}
+		}
+
+		run.addBreak();
+	}
+
+	private void addComment(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+		final String comment = context.threatAssessment.getComment();
+		if (comment == null || comment.isBlank()) {
+			return;
+		}
+		final XWPFParagraph heading = document.insertNewParagraph(cursor);
+		heading.setStyle(HEADING3);
+		addTextRun("Kommentar", heading);
+		advanceCursor(cursor);
+		final XWPFParagraph plain = document.insertNewParagraph(cursor);
+		addTextWithBreaks(comment, plain);
+		advanceCursor(cursor);
+	}
 
     private void addPresentAddMeeting(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
         final List<User> present = context.threatAssessment.getPresentAtMeeting();

@@ -601,6 +601,7 @@ public class ThreatAssessmentService {
 
         var context = new Context();
         context.setVariable("title", threatAssessment.getName());
+        context.setVariable("comment", getComment(threatAssessment.getComment()));
         context.setVariable("subHeader", getSubHeading(threatAssessment, riskAsset, riskRegister));
         context.setVariable("present", getPresent(threatAssessment));
         context.setVariable("criticality", getCriticality(riskAsset, riskRegister));
@@ -858,6 +859,14 @@ public class ThreatAssessmentService {
         }
         return stringBuilder.toString();
     }
+
+	private String getComment(final String comment) {
+		if (comment == null || comment.isBlank()) {
+			return null;
+		}
+
+		return comment.replace("\n", "<br/>");
+	}
 
     private String getPresent(final ThreatAssessment threatAssessment) {
         if (threatAssessment.getPresentAtMeeting() == null || threatAssessment.getPresentAtMeeting().isEmpty()) {
