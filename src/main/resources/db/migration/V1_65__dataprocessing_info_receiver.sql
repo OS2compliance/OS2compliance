@@ -12,4 +12,4 @@ ALTER TABLE data_processing_categories_registered
     RENAME COLUMN information_receivers TO information_receivers_old;
 
 ALTER TABLE data_processing_categories_registered
-    ADD COLUMN receiver_comment VARCHAR(255);
+    ADD COLUMN receiver_comment TEXT;

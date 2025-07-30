@@ -17,5 +17,4 @@ import lombok.ToString;
 public class DataProcessingInformationReceiverDTO {
 	String choiceValueIdentifier;
 	ReceiverLocation receiverLocation;
-	boolean selected;
 }
