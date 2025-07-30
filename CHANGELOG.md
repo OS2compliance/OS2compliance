@@ -12,6 +12,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Løsningsbeksrivelse 16.04.2025) Udvidelse af OS2kitos integration
 - (https://os2web.atlassian.net/browse/COMPLY-65) Standarder: Ændring af nuværende forside
 - (https://os2web.atlassian.net/browse/COMPLY-124) (Rapporter) Samlet rapport til systemejer vedr. alle systemer
+- (https://os2web.atlassian.net/browse/COMPLY-320) (Risikostyring) OS2Compliance skal understøtte NIS2 risikovurderinger
 
 ### Fixed
 - (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke
