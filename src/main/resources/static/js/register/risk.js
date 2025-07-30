@@ -5,23 +5,6 @@ const preselect = new Preselect();
 document.addEventListener("DOMContentLoaded", function(event) {
     createRiskService.init();
     preselect.init();
-
-    // Preselect the "behandlingsaktivitet"
-    let activity = document.getElementById("registerSelect");
-    const currentRegisterName = document.getElementById("breadcrump-register-name");
-    const regiName = currentRegisterName.getAttribute("data-register-name");
-
-    function tryPreselect() {
-        for (let option of activity.options) {
-            console.log(option.value);
-            if (option.value === regiName) {
-                activity.value = option.value;
-                activity.dispatchEvent(new Event("change"));
-                break;
-            }
-        }
-    }
-    tryPreselect();
 });
 
 function formReset() {
@@ -215,7 +198,9 @@ function CreateRiskService() {
 
 function initRegisterSelect(registerSelectElement) {
     const registerChoices = initSelect(registerSelectElement);
-    updateTypeSelect(registerChoices, "", "REGISTER");
+    const regi = document.getElementById("breadcrump-register-name");
+    const initialName = regi.getAttribute("data-register-name");
+    updateTypeSelect(registerChoices, "", "REGISTER", initialName);
     registerSelectElement.addEventListener("search",
         function(event) {
             updateTypeSelect(registerChoices, event.detail.value, "REGISTER");
@@ -237,16 +222,60 @@ function initAssetSelectRisk(assetSelectElement) {
     return assetChoices;
 }
 
-function updateTypeSelect(choices, search, types) {
+function updateTypeSelect(choices, search, types, preselectName = null) {
     fetch( `/rest/relatable/autocomplete?types=${types}&search=${search}`)
         .then(response => response.json()
             .then(data => {
-                choices.setChoices(data.content.map(reg => {
+                const choiceItems = data.content.map(reg => {
                     return {
                         id: reg.id,
-                        name: truncateString(reg.typeMessage + ": " + reg.name, 60)
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60),
+                        fullName: reg.name,
+                    };
+                })
+
+                choices.setChoices(choiceItems, 'id', 'name', true);
+
+                if (preselectName) {
+                    const normalizedInitial = normalizeNumberPrefix(preselectName);
+
+                    const registerTitle = document.getElementById("name");
+
+                    const match = choiceItems.find(item => {
+                        const normalizedFull = normalizeNumberPrefix(item.fullName);
+                        return normalizedFull === normalizedInitial;
+                    });
+                    if (match) {
+                        choices.setChoiceByValue(match.id);
+                        registerTitle.value = match.fullName;
+
                     }
-                }), 'id', 'name', true);
+                }
             }))
         .catch(error => toastService.error(error));
+}
+
+function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
+    let selectedRegister = selectedRegisterElement.value;
+    fetch( `/rest/risks/register?registerId=${selectedRegister}`)
+        .then(response => response.json()
+            .then(data => {
+                var user = data.users[0];
+                if (user != null) {
+                    userChoicesSelect.setChoiceByValue(user.uuid);
+                } else {
+                    userChoicesSelect.removeActiveItems();
+                }
+
+                if (data.elementName != null) {
+                    document.getElementById('name').value = data.elementName;
+                } else {
+                    document.getElementById('name').value = "";
+                }
+            }))
+        .catch(error => toastService.error(error));
+}
+
+function normalizeNumberPrefix(str) {
+    return str.replace(/^0*(\d+)\./, (_, num) => `${parseInt(num, 10)}.`).trim();
 }
