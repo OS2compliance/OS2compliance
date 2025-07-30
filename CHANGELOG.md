@@ -18,6 +18,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Tekstfelt i konsekvensanalyserne (DPIA)
 - (Ad-hoc) Konsekvensvurdering kolonne bredder
 - (Ad-hoc) Bug i "Tilknyt ekstern risikovurdering" Aktiv-fane
+- (Ad-hoc) Bug - Navigation forsvinder - implementeret burger menu
 
 ## [2.2.1]
 ### Fixed
