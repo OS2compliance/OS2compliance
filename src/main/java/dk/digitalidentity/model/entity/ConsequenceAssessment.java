@@ -41,6 +41,8 @@ public class ConsequenceAssessment {
     private Integer confidentialityOrganisationEco;
     @Column
     private Integer confidentialityOrganisation;
+	@Column
+	private Integer confidentialitySociety;
     @Column
     private String confidentialityReason;
     @Column
@@ -51,6 +53,8 @@ public class ConsequenceAssessment {
     private Integer integrityOrganisationEco;
     @Column
     private Integer integrityOrganisation;
+	@Column
+	private Integer integritySociety;
     @Column
     private String integrityReason;
     @Column
@@ -61,8 +65,11 @@ public class ConsequenceAssessment {
     private Integer availabilityOrganisationEco;
     @Column
     private Integer availabilityOrganisation;
+	@Column
+	private Integer availabilitySociety;
     @Column
     private String availabilityReason;
+
     @Column
     @Enumerated(EnumType.STRING)
     private RiskAssessment assessment;

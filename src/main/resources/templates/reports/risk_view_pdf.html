@@ -132,6 +132,7 @@
             <tr><td  class="generalInfoFirstColumn" th:if="${dataAccessCount != null}">Hvor mange har adgang til personoplysningerne?: </td><td th:text="${dataAccessCount}"></td></tr>
             <tr><td  class="generalInfoFirstColumn" th:if="${deletionProcedureCreated != null}">Sletteprocedure udarbejdet: </td><td th:text="${deletionProcedureCreated}"></td></tr>
             <tr><td  class="generalInfoFirstColumn" th:if="${deletionProcedureLink != null}">Link til Sletteprocedure: </td><td th:text="${deletionProcedureLink}"></td></tr>
+            <tr><td  class="generalInfoFirstColumn" th:if="${sociallyCritical != null}">Samfundskritisk: </td><td th:text="${sociallyCritical ? 'Ja' : 'Nej'}"></td></tr>
             <tr><td  class="generalInfoFirstColumn" th:if="${dataCategories != null}" style="vertical-align:top; padding-top:12px;">Kategorier af registrerede og typer af personoplysninger: </td><td style="padding-top:12px;">
                 <table>
                     <tbody>
@@ -152,6 +153,13 @@
     <h3>Kritikalitet</h3>
     <p th:utext="${criticality}"></p>
     <br/>
+
+    <h3>Medtagne konsekvensområder</h3>
+    <ul>
+        <li th:each="area : ${areas}" th:text="${area}"></li>
+    </ul>
+    <br/>
+
     <h3 th:text="'Risikoprofil for ' + ${title}"></h3>
 
     <!-- tables for risk profile -->
