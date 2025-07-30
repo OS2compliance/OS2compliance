@@ -448,6 +448,20 @@ function CreateRiskService() {
             this.presentSelect = choiceService.initUserSelect('presentAtMeetingSelect');
         }
 
+        let societyCheckbox = this.getScopedElementById("society");
+        let authenticityCheckbox = this.getScopedElementById("authenticity");
+        let authenticitySection = this.getScopedElementById("authenticitySection");
+        societyCheckbox.addEventListener('change', function() {
+            if (societyCheckbox.checked) {
+                // show authenticity checkbox
+                authenticitySection.hidden = false;
+            } else {
+                // hide authenticity checkbox and reset
+                authenticitySection.hidden = true;
+                authenticityCheckbox.checked = false;
+            }
+        });
+
         initFormValidationForForm("createRiskModal",
             () => {
                 return this.validateEntitySelection() &&
@@ -528,7 +542,8 @@ function CreateRiskService() {
         }
         let registered = this.getScopedElementById("registered");
         let organisation = this.getScopedElementById("organisation");
-        if (!registered.checked && !organisation.checked) {
+        let society = this.getScopedElementById("society");
+        if (!registered.checked && !organisation.checked && !society.checked) {
             registered.classList.add('is-invalid');
             organisation.classList.add('is-invalid');
             this.getScopedElementById("checkboxError").classList.add('show');
@@ -562,10 +577,13 @@ function CreateRiskService() {
                     // set text in table
                     this.getScopedElementById("RF").innerHTML = data.rf === 0 ? "" : data.rf;
                     this.getScopedElementById("OF").innerHTML = data.of === 0 ? "" : data.of;
+                    this.getScopedElementById("SF").innerHTML = data.sf === 0 ? "" : data.sf;
                     this.getScopedElementById("RI").innerHTML = data.ri === 0 ? "" : data.ri;
                     this.getScopedElementById("OI").innerHTML = data.oi === 0 ? "" : data.oi;
+                    this.getScopedElementById("SI").innerHTML = data.si === 0 ? "" : data.si;
                     this.getScopedElementById("RT").innerHTML = data.rt === 0 ? "" : data.rt;
                     this.getScopedElementById("OT").innerHTML = data.ot === 0 ? "" : data.ot;
+                    this.getScopedElementById("ST").innerHTML = data.st === 0 ? "" : data.st;
 
                     this.getScopedElementById("inheritRow").style.display = '';
                 }))

@@ -63,9 +63,24 @@
                         <div class="col-sm-8">
                             <input id="organisation" th:field="*{organisation}" class="form-check-input" type="checkbox">
                             <label for="organisation" class="form-check-label">Vurdering for organisationen</label>
-                            <div class="invalid-feedback" id="checkboxError">Der skal vælges minimum en af de to vurderinger</div>
                         </div>
                     </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="society"  th:field="*{society}" class="form-check-input" type="checkbox">
+                            <label for="society" class="form-check-label">Vurdering for samfundet</label>
+                            <div class="invalid-feedback" id="checkboxError">Der skal vælges minimum en af de tre vurderinger</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="authenticitySection" hidden="hidden">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="authenticity"  th:field="*{authenticity}" class="form-check-input" type="checkbox">
+                            <label for="authenticity" class="form-check-label">Vurdering for autenticitet</label>
+                        </div>
+                    </div>
+
                     <div class="row mt-3" id="inheritRow">
                         <div class="col-sm-4 col-form-label">
                             <p>Højeste konsekvens fra koblede behandlingsaktiviteter:</p>
@@ -74,21 +89,25 @@
                                     <th></th>
                                     <th style="font-weight: normal;">Registreret</th>
                                     <th style="font-weight: normal;">Organisationen</th>
+                                    <th style="font-weight: normal;">Samfundet</th>
                                 </tr>
                                 <tr>
                                     <td>Fortrolighed</td>
                                     <td style="text-align: center;" id="RF">1</td>
                                     <td style="text-align: center;" id="OF">2</td>
+                                    <td style="text-align: center;" id="SF">2</td>
                                 </tr>
                                 <tr>
                                     <td>Integritet</td>
                                     <td style="text-align: center;" id="RI">3</td>
                                     <td style="text-align: center;" id="OI">3</td>
+                                    <td style="text-align: center;" id="SI">3</td>
                                 </tr>
                                 <tr>
                                     <td>Tilgængelighed</td>
                                     <td style="text-align: center;" id="RT">4</td>
                                     <td style="text-align: center;" id="OT">3</td>
+                                    <td style="text-align: center;" id="ST">3</td>
                                 </tr>
                             </table>
                         </div>

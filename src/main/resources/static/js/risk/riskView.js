@@ -194,6 +194,26 @@ function updateAverage() {
     var averageOT = document.getElementById('averageOT');
     calculateAverageForType(ots, averageOT);
 
+    // sfs
+    var sfs = document.querySelectorAll('.sfs');
+    var averageSF = document.getElementById('averageSF');
+    calculateAverageForType(sfs, averageSF);
+
+    // sis
+    var sis = document.querySelectorAll('.sis');
+    var averageSI = document.getElementById('averageSI');
+    calculateAverageForType(sis, averageSI);
+
+    // sts
+    var sts = document.querySelectorAll('.sts');
+    var averageST = document.getElementById('averageST');
+    calculateAverageForType(sts, averageST);
+
+    // sas
+    var sas = document.querySelectorAll('.sas');
+    var averageSA = document.getElementById('averageSA');
+    calculateAverageForType(sas, averageSA);
+
     // riskScores
     var riskScores = document.querySelectorAll('.riskScores');
     var averageRiskScore = document.getElementById('averageRiskScore');

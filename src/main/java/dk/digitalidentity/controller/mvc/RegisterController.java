@@ -151,18 +151,21 @@ public class RegisterController {
             existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
             existing.setConfidentialityOrganisationRep(assessment.getConfidentialityOrganisationRep());
             existing.setConfidentialityOrganisationEco(assessment.getConfidentialityOrganisationEco());
+            existing.setConfidentialitySociety(assessment.getConfidentialitySociety());
             existing.setConfidentialityReason(assessment.getConfidentialityReason());
 
             existing.setIntegrityRegistered(assessment.getIntegrityRegistered());
             existing.setIntegrityOrganisation(assessment.getIntegrityOrganisation());
             existing.setIntegrityOrganisationRep(assessment.getIntegrityOrganisationRep());
             existing.setIntegrityOrganisationEco(assessment.getIntegrityOrganisationEco());
+            existing.setIntegritySociety(assessment.getIntegritySociety());
             existing.setIntegrityReason(assessment.getIntegrityReason());
 
             existing.setAvailabilityRegistered(assessment.getAvailabilityRegistered());
             existing.setAvailabilityOrganisation(assessment.getAvailabilityOrganisation());
             existing.setAvailabilityOrganisationRep(assessment.getAvailabilityOrganisationRep());
             existing.setAvailabilityOrganisationEco(assessment.getAvailabilityOrganisationEco());
+            existing.setAvailabilitySociety(assessment.getAvailabilitySociety());
             existing.setAvailabilityReason(assessment.getAvailabilityReason());
         } else {
             assessment.setId(null);

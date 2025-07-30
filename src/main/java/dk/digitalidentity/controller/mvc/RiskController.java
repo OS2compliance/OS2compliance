@@ -43,6 +43,7 @@ import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.TaskDTO;
+import dk.digitalidentity.service.model.ThreatDTO;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -114,7 +115,7 @@ public class RiskController {
             @RequestParam(name = "selectedRegister", required = false) final Long selectedRegister,
             @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
             @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
-        if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation()) {
+        if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation() && !threatAssessment.isSociety()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
         }
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
@@ -237,6 +238,10 @@ public class RiskController {
 			int of,
 			int oi,
 			int ot,
+			int sf,
+			int si,
+			int st,
+			int sa,
 			String problem,
 			String existingMeasures,
 			List<Precaution> relatedPrecautions,
@@ -271,6 +276,10 @@ public class RiskController {
 							threatDTO.getOf(),
 							threatDTO.getOi(),
 							threatDTO.getOt(),
+							threatDTO.getSf(),
+							threatDTO.getSi(),
+							threatDTO.getSt(),
+							threatDTO.getSa(),
 							threatDTO.getProblem(),
 							threatDTO.getExistingMeasures(),
 							(threatDTO.getRelatedPrecautions().stream().map(r -> (Precaution) r).toList()),
@@ -305,7 +314,7 @@ public class RiskController {
         return "risks/view";
     }
 
-    record RelatedRegisterDTO(long registerId, String registerName, Integer rf, Integer ri, Integer rt, Integer of, Integer oi, Integer ot) {}
+    record RelatedRegisterDTO(long registerId, String registerName, Integer rf, Integer ri, Integer rt, Integer of, Integer oi, Integer ot, Integer sf, Integer si, Integer st) {}
     private List<RelatedRegisterDTO> findRelatedRegisters(final ThreatAssessment threatAssessment) {
         final List<RelatedRegisterDTO> result = new ArrayList<>();
         if (threatAssessment.isInherit() && ThreatAssessmentType.ASSET.equals(threatAssessment.getThreatAssessmentType())) {
@@ -325,9 +334,9 @@ public class RiskController {
                     if (!addedIds.contains(register.getId())) {
                         final ConsequenceAssessment consequenceAssessment = register.getConsequenceAssessment();
                         if (consequenceAssessment != null) {
-                            result.add(new RelatedRegisterDTO(register.getId(), register.getName(), consequenceAssessment.getConfidentialityRegistered(), consequenceAssessment.getIntegrityRegistered(), consequenceAssessment.getAvailabilityRegistered(), consequenceAssessment.getConfidentialityOrganisation(), consequenceAssessment.getIntegrityOrganisation(), consequenceAssessment.getAvailabilityOrganisation()));
+                            result.add(new RelatedRegisterDTO(register.getId(), register.getName(), consequenceAssessment.getConfidentialityRegistered(), consequenceAssessment.getIntegrityRegistered(), consequenceAssessment.getAvailabilityRegistered(), consequenceAssessment.getConfidentialityOrganisation(), consequenceAssessment.getIntegrityOrganisation(), consequenceAssessment.getAvailabilityOrganisation(), consequenceAssessment.getConfidentialitySociety(), consequenceAssessment.getIntegritySociety(), consequenceAssessment.getAvailabilitySociety()));
                         } else {
-                            result.add(new RelatedRegisterDTO(register.getId(), register.getName(), null, null, null, null, null, null));
+                            result.add(new RelatedRegisterDTO(register.getId(), register.getName(), null, null, null, null, null, null, null, null, null));
                         }
 
                         addedIds.add(register.getId());
@@ -405,33 +414,7 @@ public class RiskController {
         return "redirect:/risks/" + id;
     }
 
-    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
-        final RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
-        savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
-        savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
-        savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
-        savedThreatAssesment.setInheritedConfidentialityOrganisation(riskDTO.getOf());
-        savedThreatAssesment.setInheritedIntegrityOrganisation(riskDTO.getOi());
-        savedThreatAssesment.setInheritedAvailabilityOrganisation(riskDTO.getOt());
-
-        for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
-            final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
-            response.setName(threat.getDescription());
-            response.setConfidentialityRegistered(riskDTO.getRf());
-            response.setIntegrityRegistered(riskDTO.getRi());
-            response.setAvailabilityRegistered(riskDTO.getRt());
-            response.setConfidentialityOrganisation(riskDTO.getOf());
-            response.setIntegrityOrganisation(riskDTO.getOi());
-            response.setAvailabilityOrganisation(riskDTO.getOt());
-            response.setMethod(ThreatMethod.NONE);
-            response.setThreatCatalogThreat(threat);
-            response.setThreatAssessment(savedThreatAssesment);
-            savedThreatAssesment.getThreatAssessmentResponses().add(response);
-        }
-        threatAssessmentService.save(savedThreatAssesment);
-    }
-
-    private String findElementName(final ThreatAssessment threatAssessment) {
+	private String findElementName(final ThreatAssessment threatAssessment) {
         final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();
         if (ThreatAssessmentType.ASSET.equals(threatAssessmentType)) {
             final List<Relation> relations = relationService.findRelatedToWithType(threatAssessment, RelationType.ASSET);
@@ -489,7 +472,7 @@ public class RiskController {
         final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
         relatedAssets.forEach(asset -> relationService.addRelation(savedThreatAssessment, asset));
         if (savedThreatAssessment.isInherit()) {
-            inheritRisk(savedThreatAssessment, relatedAssets);
+            threatAssessmentService.inheritRisk(savedThreatAssessment, relatedAssets);
         }
     }
 
