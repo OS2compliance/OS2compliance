@@ -214,7 +214,7 @@ public class StandardController {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		model.addAttribute("standard", template);
-		model.addAttribute("action", "/standards/sections/headers/create/" + id);
+		model.addAttribute("action", "/standards/headers/create/" + id);
 		model.addAttribute("header", new StandardTemplateSection());
 		model.addAttribute("formTitle", "Ny gruppe");
 		model.addAttribute("formId", "headerForm");
@@ -233,14 +233,27 @@ public class StandardController {
 		}
 		String sectionPrefix = standardSection.getTemplateSection().getSection();
 		String name = sectionPrefix  + "."  + version + standardSection.getName();
+		String templateSection = sectionPrefix + "." + version;
+
+		StandardTemplateSection newSection = new StandardTemplateSection();
+		newSection.setIdentifier(sectionPrefix);
+		newSection.setSection(templateSection);
+		newSection.setDescription(standardSection.getName());
+		newSection.setParent(standardSection.getTemplateSection());
+		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "")));
+
+		StandardTemplateSection save = standardTemplateSectionDao.save(newSection);
+
 		standardSection.setName(name);
+		standardSection.setTemplateSection(save);
 		standardSectionService.save(standardSection);
+
 		return "redirect:/standards/supporting/" + identifier;
 	}
 
 	@Transactional
-	@PostMapping("/standards/headers/create/{id}")
-	public String createSection(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "id") final String id) {
+	@PostMapping("/headers/create/{identifier}")
+	public String createSection(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();
