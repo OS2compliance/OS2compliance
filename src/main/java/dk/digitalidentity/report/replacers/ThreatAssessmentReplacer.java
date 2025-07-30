@@ -756,13 +756,6 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				setCellTextSmall(row9, 0, "Registrerede persondatakategorier:");
 			}
 
-//			// sociallyCritical
-//			if (isAsset) {
-//				final XWPFTableRow row9 = table.getRow(9);
-//				setCellTextSmall(row9, 0, "Samfundskritisk:");
-//				setCellTextSmall(row9, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
-//			}
-
 			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);
 			advanceCursor(cursor);
 			advanceCursor(cursor);

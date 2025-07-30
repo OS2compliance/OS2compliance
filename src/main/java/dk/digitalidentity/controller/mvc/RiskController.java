@@ -116,7 +116,7 @@ public class RiskController {
             @RequestParam(name = "presentAtMeeting", required = false) final Set<String> presentUserUuids,
             @RequestParam(name = "selectedAsset", required = false) final Set<Long> selectedAsset) {
         if (!threatAssessment.isRegistered() && !threatAssessment.isOrganisation() && !threatAssessment.isSociety()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de to vurderinger.");
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges minimum en af de tre vurderinger.");
         }
         if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAsset == null || selectedAsset.isEmpty())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges et aktiv, når typen aktiv er valgt.");
