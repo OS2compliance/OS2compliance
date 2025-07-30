@@ -26,6 +26,8 @@ let DataProcessingComponent = function () {
         this.registeredCategories = registeredCategories;
         this.informationChoices1 = informationChoices1;
         this.informationChoices2 = informationChoices2;
+
+        this.initInfoPassedOnFunctionality()
     }
 
     this.addModalListeners = function (modalContainer) {
@@ -118,12 +120,9 @@ let DataProcessingComponent = function () {
     }
 
     this.infoPassedOnSelectionChanged = function (elem) {
-        const infoReceiversDiv = elem.parentElement.parentElement.querySelector(".infoReceiversDiv");
-        if (elem.value === "YES") {
-            infoReceiversDiv.style.display = 'block';
-        } else {
-            infoReceiversDiv.setAttribute('style', 'display: none !important');
-        }
+        const parent = elem.closest('.extendedCategoryInfo')
+
+        this.showInfoRecieversElementFor(parent, elem?.value === "YES")
     }
 
     this.loadInformationCategory = function(category) {
@@ -162,14 +161,14 @@ let DataProcessingComponent = function () {
         const selector = categoryRow.querySelector(".infoPassedOnSelect");
         const extendedDiv = categoryRow.querySelector(".extendedCategoryInfo");
         const infoReceiversDiv = categoryRow.querySelector(".infoReceiversDiv");
-        const receiverBoxes = infoReceiversDiv.querySelectorAll("input[type='checkbox']");
-        const parsedOn = category ? category.informationPassedOn : null;
+        const receiverBoxes = infoReceiversDiv.querySelectorAll("input[type='checkbox'].passedOnCheck");
+        const passedOn = category ? category.informationPassedOn : null;
         const receivers = category ? category.informationReceivers : null;
 
         extendedDiv.style.display = 'block';
-        selector.value = parsedOn || "NO";
-        if (parsedOn === "YES") {
-            infoReceiversDiv.style.display = 'block';
+        selector.value = passedOn || "NO";
+        if (passedOn === "YES") {
+            this.showInfoRecieversElementFor(categoryRow ,true)
         }
         if (receivers != null) {
             for (const rec of receivers) {
@@ -215,7 +214,7 @@ let DataProcessingComponent = function () {
             const selectedRegisteredCategory = rows[i].querySelector('.selectedRegisteredCategory');
             const infoPassedOnSelect = rows[i].querySelector('.infoPassedOnSelect');
             const infoReceiversDiv = rows[i].querySelector('.infoReceiversDiv');
-            const infoReceiversInputs = infoReceiversDiv.querySelectorAll("input");
+            const infoReceiversInputs = infoReceiversDiv.querySelectorAll("input.passedOnCheck");
             const infoReceiversLabels = infoReceiversDiv.querySelectorAll("label");
             selectedRegisteredCategory.setAttribute('name', `personCategoriesRegistered[${i}].personCategoriesRegisteredIdentifier`);
             selectedPersonInformation.setAttribute('name', `personCategoriesRegistered[${i}].personCategoriesInformationIdentifiers`);
@@ -278,6 +277,26 @@ let DataProcessingComponent = function () {
             this.removeEmptyInformationCategories();
             this.resetCategorySelection();
         }
+    }
+
+    this.initInfoPassedOnFunctionality = function () {
+        // Add event delegation for info passed on select
+        const tableElement = document.querySelector('table.dataprocessingTable');
+        tableElement?.addEventListener('change', e => {
+            const target = e.target;
+            if (target.classList.contains('infoPassedOnSelect')) {
+                this.infoPassedOnSelectionChanged(target);
+            }
+        })
+    }
+
+    this.showInfoRecieversElementFor = function (container, show) {
+        const infoReceiversDiv = container?.querySelector(".infoReceiversDiv");
+        infoReceiversDiv.hidden = !show;
+    }
+
+    this.showInfoReceiverAdditionalOptions = function () {
+
     }
 
 }

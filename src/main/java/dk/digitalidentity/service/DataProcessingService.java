@@ -3,17 +3,10 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.ChoiceListDao;
 import dk.digitalidentity.model.dto.DataProcessingChoicesDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.Property;
-import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
-import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.data_processing.DataProcessingInfoReceiver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,10 +15,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service("dataProcessingService")
@@ -47,6 +38,8 @@ public class DataProcessingService {
         dataProcessing.setTypesOfPersonalInformationFreetext(body.getTypesOfPersonalInformationFreetext());
 
         if (body.getPersonCategoriesRegistered() != null) {
+			ChoiceList receiverList = choiceListDao.findByIdentifier("dp-receiver-list").orElseThrow();
+
             dataProcessing.getRegisteredCategories().clear();
             body.getPersonCategoriesRegistered().stream()
                     .filter(c -> !c.getPersonCategoriesRegisteredIdentifier().isEmpty())
@@ -56,7 +49,16 @@ public class DataProcessingService {
                                     .personCategoriesRegisteredIdentifier(c.getPersonCategoriesRegisteredIdentifier())
                                     .personCategoriesInformationIdentifiers(c.getPersonCategoriesInformationIdentifiers())
                                     .informationPassedOn(c.getInformationPassedOn())
-                                    .informationReceivers(c.getInformationReceivers())
+                                    .informationReceivers(c.getInformationReceivers().stream().map(ir ->
+											DataProcessingInfoReceiver.builder()
+													.choiceValue(receiverList.getValues().stream()
+															.filter(ch -> Objects.equals(ch.getIdentifier(), ir.getChoiceValueIdentifier()))
+															.findAny()
+															.orElseThrow()
+													)
+													.receiverLocation(ir.getReceiverLocation())
+													.build())
+											.collect(Collectors.toSet()))
                                     .build()));
         }
 
@@ -106,6 +108,5 @@ public class DataProcessingService {
                 .informationReceiversIdentifiers(informationReceiversIdentifiers)
                 .build();
     }
-
 
 }

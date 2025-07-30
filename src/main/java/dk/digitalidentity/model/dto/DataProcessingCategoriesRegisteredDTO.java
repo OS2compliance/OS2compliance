@@ -15,5 +15,5 @@ public class DataProcessingCategoriesRegisteredDTO {
     private String personCategoriesRegisteredIdentifier;
     private Set<String> personCategoriesInformationIdentifiers = new HashSet<>();
     private InformationPassedOn informationPassedOn;
-    private Set<String> informationReceivers = new HashSet<>();
+    private Set<DataProcessingInformationReceiverDTO> informationReceivers = new HashSet<>();
 }

@@ -1,0 +1,18 @@
+<th:block th:fragment="dataProcessingInfoPassedOn(allReceiversIdentifiers)">
+    <div class="col-sm-6 col-lg-4">
+        <p class="ms-2 fst-italic">Videregives personoplysningerne til andre som anvender oplysningerne til eget formål?</p>
+    </div>
+    <div class="col-sm-3 col-lg-2">
+        <select class="infoPassedOnSelect form-control form-select editField ms-1" disabled>
+            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationPassedOn).values()}"
+                    th:value="${status}" th:text="${status.message}"></option>
+        </select>
+    </div>
+    <div class="infoReceiversDiv col-sm-3 col-lg-6" hidden>
+        <div class="row">
+            <th:block th:each="opt : ${allReceiversIdentifiers}" >
+                <div th:replace="~{dataProcessing/infoReceiverComponent :: infoReceiverComponent(receiverOption=${opt})}"></div>
+            </th:block>
+        </div>
+    </div>
+</th:block>
