@@ -370,6 +370,10 @@
                                 </th:block>
                             </tbody>
                         </table>
+                        <div class="mb-4 mt-4">
+                            <h5>Kommentar</h5>
+                            <textarea id="riskCommentArea" th:value="${risk.comment}" class="form-control editField" placeholder="Indtast kommentarer til risikovurderingen" rows="3" th:text="${risk.comment}"></textarea>
+                        </div>
                         <div class="d-flex mb-2">
                             <div class="d-flex flex-fill align-items-start mb-3 p-1">
                                 <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-success mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">

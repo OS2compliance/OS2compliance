@@ -149,7 +149,14 @@
     </table>
 
 
+    <th:block th:if="${comment != null}">
+        <br/>
+        <h3>Kommentar</h3>
+        <p th:utext="${comment}"></p>
+    </th:block>
+
     <br/>
+
     <h3>Kritikalitet</h3>
     <p th:utext="${criticality}"></p>
     <br/>

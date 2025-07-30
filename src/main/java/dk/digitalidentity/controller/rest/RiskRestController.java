@@ -10,6 +10,7 @@ import dk.digitalidentity.model.dto.enums.ReportFormat;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Precaution;
@@ -475,6 +476,20 @@ public class RiskRestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+	public record CommentUpdateDTO(Long riskId, String comment){}
+	@PostMapping("comment/update")
+	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
+		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		threatAssessment.setComment(commentUpdateDTO.comment);
+		threatAssessmentService.save(threatAssessment);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
     private void relateAssets(final Set<Long> selectedAsset, final ThreatAssessment savedThreatAssessment) {
         final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
