@@ -10,29 +10,11 @@ function CreateSectionService() {
 
     this.openRequirementModal = function(element) {
         const id = element.dataset.id;
-        console.log(id);
         fetch(`/standards/section/form/` + id)
             .then(response => response.text()
                 .then(data => {
                     this.sectionModalDialog = document.getElementById('sectionFormDialog');
                     this.sectionModalDialog.innerHTML = data;
-                    // TODO: (Edit) create task modal - explainer and riskId
-                    // if elem != null it means that the method is called from the risk view page
-                    // if (elem != null) {
-                    //     var riskId = elem.dataset.riskid;
-                    //     var customId = elem.dataset.customid;
-                    //     var catalogIdentifier = elem.dataset.catalogidentifier;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = '';
-                    //     this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = riskId;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = customId;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = catalogIdentifier;
-                    // } else {
-                    //     this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = 'none';
-                    //     this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = null;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = null;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = null;
-                    // }
-
                     const createSectionModal = new bootstrap.Modal(this.sectionModalDialog);
                     createSectionModal.show();
                 }))
@@ -47,23 +29,6 @@ function CreateSectionService() {
                 .then(data => {
                     this.headerModalDialog = document.getElementById('headerFormDialog');
                     this.headerModalDialog.innerHTML = data;
-                    // TODO: (Edit) create task modal - explainer and riskId
-                    // if elem != null it means that the method is called from the risk view page
-                    // if (elem != null) {
-                    //     var riskId = elem.dataset.riskid;
-                    //     var customId = elem.dataset.customid;
-                    //     var catalogIdentifier = elem.dataset.catalogidentifier;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = '';
-                    //     this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = riskId;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = customId;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = catalogIdentifier;
-                    // } else {
-                    //     this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = 'none';
-                    //     this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = null;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = null;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = null;
-                    // }
-
                     const headerModal = new bootstrap.Modal(this.headerModalDialog);
                     headerModal.show();
                 }))

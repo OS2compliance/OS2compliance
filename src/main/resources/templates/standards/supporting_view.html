@@ -86,7 +86,7 @@
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT == section.standardSection.status} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                     </td>
-                                                    <td><span><button th:data-id="${section.identifier}" onclick="createSectionService.openRequirementModal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs me-1"><i class="pli-pen-5 fs-5"></i></button><button th:data-id="${section.identifier}" onclick="createSectionService.openDeleteSwal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
+                                                    <td><span><button th:data-id="${section.identifier}" onclick="createSectionService.openDeleteSwal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
                                                 </tr>
                                                 <tr class="hidden">
                                                     <td style="border-right: 1px solid black;"></td>

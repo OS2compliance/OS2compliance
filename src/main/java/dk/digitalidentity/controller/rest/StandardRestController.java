@@ -1,10 +1,12 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.StandardSectionDao;
+import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.enums.SetFieldStandardType;
 import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
@@ -12,6 +14,7 @@ import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.SupportingStandardService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -43,8 +46,9 @@ public class StandardRestController {
     private final UserDao userDao;
     private final RelationService relationService;
 	private final StandardTemplateSectionDao standardTemplateSectionDao;
+	private final StandardTemplateDao standardTemplateDao;
 
-    record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
+	record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
     public ResponseEntity<HttpStatus> setField(@PathVariable final String templateIdentifier, @PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final StandardSection standardSection = standardSectionDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -99,6 +103,23 @@ public class StandardRestController {
 		StandardSection relatedSection = standardSectionDao.findByTemplateSectionIdentifier(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		standardSectionDao.delete(relatedSection);
 		standardTemplateSectionDao.delete(template);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@Transactional
+	@PostMapping("/header/delete/{identifier}")
+	public ResponseEntity<?> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
+		StandardSection relatedSection = standardSectionDao.findByTemplateSectionIdentifier(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		standardSectionDao.delete(relatedSection);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@Transactional
+	@PostMapping("/delete/{id}")
+	public ResponseEntity<?> deleteStandard(@PathVariable(name = "id") final String id) {
+		log.info("hit!");
+		StandardTemplate template = standardTemplateDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		standardTemplateDao.delete(template);
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 

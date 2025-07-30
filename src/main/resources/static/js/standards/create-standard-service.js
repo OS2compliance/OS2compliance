@@ -1,34 +1,39 @@
 const createStandardService = new CreateStandardService();
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 function CreateStandardService() {
     this.standardModalDialog = null;
 
-    this.openStandardCreateModal = function() {
+    this.openStandardModal = function() {
         fetch(`/standards/form`)
             .then(response => response.text()
                 .then(data => {
                     this.standardModalDialog = document.getElementById('standardFormDialog');
                     this.standardModalDialog.innerHTML = data;
-                    // TODO: (Edit) create task modal - explainer and riskId
-                    // if elem != null it means that the method is called from the risk view page
-                    // if (elem != null) {
-                    //     var riskId = elem.dataset.riskid;
-                    //     var customId = elem.dataset.customid;
-                    //     var catalogIdentifier = elem.dataset.catalogidentifier;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = '';
-                    //     this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = riskId;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = customId;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = catalogIdentifier;
-                    // } else {
-                    //     this.taskModalDialog.querySelector('#taskCreateFormThreatAssessmentExplainer').style.display = 'none';
-                    //     this.taskModalDialog.querySelector('#taskCreateFormTaskRiskId').value = null;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCustomId').value = null;
-                    //     this.taskModalDialog.querySelector('#taskCreateFormRiskCatalogIdentifier').value = null;
-                    // }
-
                     const createTaskModal = new bootstrap.Modal(this.standardModalDialog);
                     createTaskModal.show();
                 }))
             .catch(error => toastService.error(error));
+    }
+
+    this.openDeleteSwal = function (id) {
+        if (id) {
+            Swal.fire({
+                text: "Er du sikker på du vil slette denne standard?",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#03a9f4',
+                cancelButtonColor: '#df5645',
+                confirmButtonText: 'Ja',
+                cancelButtonText: 'Nej'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    fetch("/rest/standards/delete/" + id, { method: 'POST', headers: { 'X-CSRF-TOKEN': token} })
+                        .then(() => {
+                            window.location.reload();
+                        });
+                }
+            })
+        }
     }
 }

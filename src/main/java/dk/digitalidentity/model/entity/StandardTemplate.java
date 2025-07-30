@@ -32,7 +32,7 @@ public class StandardTemplate {
     @Column
     private boolean supporting;
 
-    @OneToMany(mappedBy = "standardTemplate")
+    @OneToMany(mappedBy = "standardTemplate", orphanRemoval = true)
     private List<StandardTemplateSection> standardTemplateSections;
 
 }
