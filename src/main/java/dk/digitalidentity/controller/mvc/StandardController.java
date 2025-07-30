@@ -22,6 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -225,13 +226,14 @@ public class StandardController {
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
 	public String createHeader(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
-		List<StandardSection> allByTemplateSection = standardSectionDao.findAllByTemplateSection(standardSection.getTemplateSection());
+		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
+		List<StandardSection> allByTemplateSection = standardSectionDao.findAllByTemplateSection(parentsTemplateSection);
 
 		int version = 1;
 		if (allByTemplateSection != null && !allByTemplateSection.isEmpty()) {
-			version = allByTemplateSection.size();
+			version = allByTemplateSection.size() + 1;
 		}
-		String sectionPrefix = standardSection.getTemplateSection().getSection();
+		String sectionPrefix = parentsTemplateSection.getSection();
 		String name = sectionPrefix  + "."  + version + standardSection.getName();
 		String templateSection = sectionPrefix + "." + version;
 
@@ -239,7 +241,7 @@ public class StandardController {
 		newSection.setIdentifier(sectionPrefix);
 		newSection.setSection(templateSection);
 		newSection.setDescription(standardSection.getName());
-		newSection.setParent(standardSection.getTemplateSection());
+		newSection.setParent(parentsTemplateSection);
 		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "")));
 
 		StandardTemplateSection save = standardTemplateSectionDao.save(newSection);
@@ -264,7 +266,6 @@ public class StandardController {
 		standardTemplateSectionDao.save(standardTemplateSection);
 		return "redirect:/standards/supporting/" + id;
 	}
-
 
     private Map<Long, List<RelatedDTO>> buildRelationsMap(final StandardTemplate template) {
         final Map<Long, List<RelatedDTO>> result = new HashMap<>();

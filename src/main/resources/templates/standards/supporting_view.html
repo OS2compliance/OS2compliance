@@ -53,17 +53,19 @@
                                     <tr class="bg-light">
                                         <th class="col-lg-3" style="border-right: 1px solid black;">Foranstaltning</th>
                                         <th th:unless="${isNSIS}" class="col-lg-1">Tilvalgt /fravalgt</th>
-                                        <th th:if="${isNSIS}" class="col-lg-2">Sikkerhedsniveau</th>
+                                        <th th:if="${isNSIS}" class="col-lg-1">Sikkerhedsniveau</th>
                                         <th th:class="${isNSIS} ? 'col-lg-4' : 'col-lg-5'">Note</th>
                                         <th class="col-lg-1">Senest redigeret</th>
                                         <th class="col-lg-1">Ansvarlig</th>
                                         <th class="col-lg-1">Status</th>
+                                        <th class="col-lg-1">Handlinger</th>
                                     </tr>
                                     </thead>
                                     <tbody>
                                         <th:block th:each="sectionParent, stat : ${template.standardTemplateSections}">
                                             <tr class="bg-light">
                                                 <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${sectionParent.section} + ' ' + ${sectionParent.description}"></td>
+                                                <td></td>
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
@@ -84,6 +86,7 @@
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT == section.standardSection.status} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                     </td>
+                                                    <td><span><button th:data-id="${section.identifier}" onclick="createSectionService.openRequirementModal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs me-1"><i class="pli-pen-5 fs-5"></i></button><button th:data-id="${section.identifier}" onclick="createSectionService.openDeleteSwal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
                                                 </tr>
                                                 <tr class="hidden">
                                                     <td style="border-right: 1px solid black;"></td>
@@ -178,7 +181,7 @@
 <div th:replace="~{fragments/addRelation :: addRelation(customAddRelationBtn = true)}"></div>
 
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, textEditor = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, textEditor = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

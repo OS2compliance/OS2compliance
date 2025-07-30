@@ -10,6 +10,7 @@ function CreateSectionService() {
 
     this.openRequirementModal = function(element) {
         const id = element.dataset.id;
+        console.log(id);
         fetch(`/standards/section/form/` + id)
             .then(response => response.text()
                 .then(data => {
@@ -91,6 +92,28 @@ function CreateSectionService() {
             const elem = editors[i];
             window.CreateCkEditor(elem, editor => {});
         }
+    }
+
+    this.openDeleteSwal = function (element, isheader=true) {
+        const id = element.dataset.id;
+        const path = isheader === true ? "header/" : "section/";
+        const deleteText = isheader === true ? "Er du sikker på du vil slette denne gruppe? Alle underliggende krav vil også slettes" : "Er du sikker på du vil slette dette krav?";
+        Swal.fire({
+            text: deleteText,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#03a9f4',
+            cancelButtonColor: '#df5645',
+            confirmButtonText: 'Ja',
+            cancelButtonText: 'Nej'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                fetch("/rest/standards/" + path + "delete/" + id, { method: 'POST', headers: { 'X-CSRF-TOKEN': token} })
+                    .then(() => {
+                        window.location.reload();
+                    });
+            }
+        })
     }
 
 }

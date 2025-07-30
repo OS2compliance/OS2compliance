@@ -1,9 +1,11 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.StandardSectionDao;
+import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.enums.SetFieldStandardType;
 import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.RequireUser;
@@ -20,6 +22,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -39,6 +42,7 @@ public class StandardRestController {
     private final StandardSectionDao standardSectionDao;
     private final UserDao userDao;
     private final RelationService relationService;
+	private final StandardTemplateSectionDao standardTemplateSectionDao;
 
     record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
@@ -87,6 +91,16 @@ public class StandardRestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+	@Transactional
+	@PostMapping("/section/delete/{identifier}")
+	public ResponseEntity<?> deleteSection(@PathVariable(name = "identifier") final String identifier) {
+		StandardTemplateSection template = standardTemplateSectionDao.findById(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		StandardSection relatedSection = standardSectionDao.findByTemplateSectionIdentifier(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		standardSectionDao.delete(relatedSection);
+		standardTemplateSectionDao.delete(template);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
     private void handleResponsibleUser(final StandardSection standardSection, final String value) {
         if(value.isEmpty()) {
