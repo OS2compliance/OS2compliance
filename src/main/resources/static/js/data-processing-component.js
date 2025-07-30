@@ -253,10 +253,12 @@ let DataProcessingComponent = function () {
 
     this.updateNamesForInfoReceiversControls = function (categoryRow, categoryBaseName) {
         const infoReceiverContainers =  categoryRow.querySelectorAll('.infoReceiverContainer');
-        for (const receiverContainer of infoReceiverContainers) {
+        for (let i = 0; i < infoReceiverContainers.length; i++) {
+            const receiverContainer = infoReceiverContainers[i]
+            const receiverContainerBaseName = `informationReceivers[${i}]`
             // Set id, and name for the main receiver checkbox
             const receiverSelectedInput = receiverContainer.querySelector('input.receiverSelectedCheck');
-            receiverSelectedInput.setAttribute('name', `${categoryBaseName}.informationReceivers.choiceValueIdentifier`);
+            receiverSelectedInput.setAttribute('name', `${categoryBaseName}.${receiverContainerBaseName}.choiceValueIdentifier`);
             const id = `receiverLocationRadio_${dataProcessingServicesLabelCounter++}`
             receiverSelectedInput.id = id
             const receiverSelectedLabel = receiverSelectedInput.nextElementSibling;
@@ -265,7 +267,7 @@ let DataProcessingComponent = function () {
             // Set name and id for each location radiobutton
             const locationRadioButtons = receiverContainer.querySelectorAll('input.locationRadio');
             for (const locationRadioButton of locationRadioButtons) {
-                locationRadioButton.setAttribute('name', `${categoryBaseName}.informationReceivers.receiverLocation`);
+                locationRadioButton.setAttribute('name', `${categoryBaseName}.${receiverContainerBaseName}.receiverLocation`);
                 const locationId = `receiverLocationRadio_${dataProcessingServicesLabelCounter++}`
                 locationRadioButton.id = locationId;
                 const radioLabel = locationRadioButton.nextElementSibling;

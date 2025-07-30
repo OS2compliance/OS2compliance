@@ -1,22 +1,24 @@
 <th:block th:fragment="dataProcessingInfoPassedOn(allReceiversIdentifiers)">
-    <div class="col-sm-6 col-lg-4">
-        <p class="ms-2 fst-italic">Videregives personoplysningerne til andre som anvender oplysningerne til eget formål?</p>
+    <div class="col-12 row d-flex">
+        <div class="col-sm-8 col-lg-4">
+            <p class="ms-2 fst-italic">Videregives personoplysningerne til andre som anvender oplysningerne til eget formål?</p>
+        </div>
+        <div class="col-sm-4 col-lg-2">
+            <select class="infoPassedOnSelect form-control form-select editField ms-1" disabled>
+                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationPassedOn).values()}"
+                        th:value="${status}" th:text="${status.message}"></option>
+            </select>
+        </div>
     </div>
-    <div class="col-sm-3 col-lg-2">
-        <select class="infoPassedOnSelect form-control form-select editField ms-1" disabled>
-            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationPassedOn).values()}"
-                    th:value="${status}" th:text="${status.message}"></option>
-        </select>
-    </div>
-    <div class="infoReceiversDiv col-sm-3 col-lg-6" hidden>
-        <div class="row">
-            <th:block th:each="opt : ${allReceiversIdentifiers}" >
+    <div class="infoReceiversDiv col-12 row" hidden>
+        <div class="row col-sm-12 col-md-8 mb-2">
+            <th:block th:each="opt : ${allReceiversIdentifiers}">
                 <div th:replace="~{dataProcessing/infoReceiverComponent :: infoReceiverComponent(receiverOption=${opt})}"></div>
             </th:block>
         </div>
-        <div class="row">
-            <label>Uddybning</label>
-            <textarea class="editField form-control" ></textarea>
+        <div class="col-sm-12 col-md-4 d-flex flex-column">
+            <label class="form-label flex-shrink-0">Uddybning</label>
+            <textarea class="editField form-control flex-grow-1"></textarea>
         </div>
     </div>
 </th:block>

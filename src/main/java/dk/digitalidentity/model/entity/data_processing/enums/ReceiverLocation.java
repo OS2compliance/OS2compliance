@@ -4,8 +4,8 @@ import lombok.Getter;
 
 @Getter
 public enum ReceiverLocation {
-	INSIDE_EU("Indenfor EU"),
-	OUTSIDE_EU("Udenfor EU");
+	INSIDE_EU("Beliggende indenfor EU"),
+	OUTSIDE_EU("Beliggende udenfor EU");
 	
 	private String message;
 	
