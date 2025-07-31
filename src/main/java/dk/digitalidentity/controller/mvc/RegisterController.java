@@ -18,6 +18,7 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
@@ -470,6 +471,8 @@ public class RegisterController {
         model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
+		model.addAttribute("risk", new ThreatAssessment());
+		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
 
         model.addAttribute("organisationAssessmentColumnTypes", getOrganisationAssessmentColumnTypes());
         model.addAttribute("organisationAssessmentMap", getOrganisationAssessmentMap(assessment));
