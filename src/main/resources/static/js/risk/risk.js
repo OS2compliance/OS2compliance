@@ -66,16 +66,13 @@
                         const dbsAssetId = row.cells[0]['data'];
                         console.log(row);
 
-                        // Ensure cell is always an array of strings
                         let items = [];
                         if (typeof cell === "string" && cell.trim() !== "") {
                             items = cell.split(",").map(name => name.trim());
                         } else if (Array.isArray(cell)) {
-                            // If for some reason backend sends an array already
                             items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
                         }
 
-                        // Build <option> list (id can just be the name for now)
                         let options = '';
                         for (const name of items) {
                             options += `<option value="${name}" selected>${name}</option>`;
