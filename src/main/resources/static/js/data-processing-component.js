@@ -169,9 +169,17 @@ let DataProcessingComponent = function () {
         selector.value = passedOn || "NO";
         if (passedOn === "YES") {
             this.showInfoRecieversElementFor(categoryRow ,true)
+            this.setStateForPassedOnComment(categoryRow, category)
         }
         if (infoReceivers != null) {
             this.setStateForInfoReceivers(infoReceivers, receiverSelectedBoxes);
+        }
+    }
+
+    this.setStateForPassedOnComment = function (categoryRow, category) {
+        const commentTextfield = categoryRow.querySelector(".infoPassedOnComment");
+        if (commentTextfield) {
+            commentTextfield.value = category.receiverComment || "";
         }
     }
 

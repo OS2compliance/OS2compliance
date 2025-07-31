@@ -51,6 +51,7 @@ public class DataProcessingService {
 								.personCategoriesRegisteredIdentifier(c.getPersonCategoriesRegisteredIdentifier())
 								.personCategoriesInformationIdentifiers(c.getPersonCategoriesInformationIdentifiers())
 								.informationPassedOn(c.getInformationPassedOn())
+								.receiverComment(c.getInformationPassedOnComment())
 								.build();
 
 						// Set receivers on category
