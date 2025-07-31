@@ -47,11 +47,13 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
@@ -288,10 +290,13 @@ public class ThreatAssessmentService {
 
 		int highestRF = 0;
 		int highestOF = 0;
+		int highestSF = 0;
 		int highestRI = 0;
 		int highestOI = 0;
+		int highestSI = 0;
 		int highestRT = 0;
 		int highestOT = 0;
+		int highestST = 0;
 
 		for (final Register register : registers) {
 			final ConsequenceAssessment consequenceAssessment = register.getConsequenceAssessment();
@@ -305,11 +310,17 @@ public class ThreatAssessmentService {
 			if (consequenceAssessment.getConfidentialityOrganisation() != null && consequenceAssessment.getConfidentialityOrganisation() > highestOF) {
 				highestOF = consequenceAssessment.getConfidentialityOrganisation();
 			}
+			if (consequenceAssessment.getConfidentialitySociety() != null && consequenceAssessment.getConfidentialitySociety() > highestSF) {
+				highestSF = consequenceAssessment.getConfidentialitySociety();
+			}
 			if (consequenceAssessment.getIntegrityRegistered() != null && consequenceAssessment.getIntegrityRegistered() > highestRI) {
 				highestRI = consequenceAssessment.getIntegrityRegistered();
 			}
 			if (consequenceAssessment.getIntegrityOrganisation() != null && consequenceAssessment.getIntegrityOrganisation() > highestOI) {
 				highestOI = consequenceAssessment.getIntegrityOrganisation();
+			}
+			if (consequenceAssessment.getIntegritySociety() != null && consequenceAssessment.getIntegritySociety() > highestSI) {
+				highestSI = consequenceAssessment.getIntegritySociety();
 			}
 			if (consequenceAssessment.getAvailabilityRegistered() != null && consequenceAssessment.getAvailabilityRegistered() > highestRT) {
 				highestRT = consequenceAssessment.getAvailabilityRegistered();
@@ -317,9 +328,12 @@ public class ThreatAssessmentService {
 			if (consequenceAssessment.getAvailabilityOrganisation() != null && consequenceAssessment.getAvailabilityOrganisation() > highestOT) {
 				highestOT = consequenceAssessment.getAvailabilityOrganisation();
 			}
+			if (consequenceAssessment.getAvailabilitySociety() != null && consequenceAssessment.getAvailabilitySociety() > highestST) {
+				highestST = consequenceAssessment.getAvailabilitySociety();
+			}
 		}
 
-		return new RiskDTO(highestRF, highestOF, highestRI, highestOI, highestRT, highestOT);
+		return new RiskDTO(highestRF, highestOF, highestSF, highestRI, highestOI, highestSI, highestRT, highestOT, highestST);
 	}
 
     @Transactional
@@ -353,10 +367,10 @@ public class ThreatAssessmentService {
             final ThreatDTO dto;
             if (response != null) {
                 final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
-                dto = new ThreatDTO(0, response.getId(), threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
+                dto = new ThreatDTO(0, response.getId(), threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getConfidentialitySociety() != null ? response.getConfidentialitySociety() : -1, response.getIntegritySociety() != null ? response.getIntegritySociety() : -1, response.getAvailabilitySociety() != null ? response.getAvailabilitySociety() : -1,  response.getAuthenticitySociety() != null ? response.getAuthenticitySociety() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
                 addRelatedTasks(response, dto);
             } else {
-                dto = new ThreatDTO(0, 0, threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), false, -1, -1, -1, -1, -1, -1, -1, null, null, new ArrayList<>(), ThreatMethod.NONE, null, -1, -1);
+                dto = new ThreatDTO(0, 0, threat.getIdentifier(), ThreatDatabaseType.CATALOG, threat.getThreatType(), threat.getDescription(), false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, null, null, new ArrayList<>(), ThreatMethod.NONE, null, -1, -1);
             }
 
             if (!threatMap.containsKey(threat.getThreatType())) {
@@ -377,11 +391,11 @@ public class ThreatAssessmentService {
             final ThreatDTO dto;
             if (response != null) {
                 final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
-                dto = new ThreatDTO(threat.getId(), response.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
+                dto = new ThreatDTO(threat.getId(), response.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getConfidentialitySociety() != null ? response.getConfidentialitySociety() : -1, response.getIntegritySociety() != null ? response.getIntegritySociety() : -1, response.getAvailabilitySociety() != null ? response.getAvailabilitySociety() : -1,  response.getAuthenticitySociety() != null ? response.getAuthenticitySociety() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
                 dto.setIndex(index++);
                 addRelatedTasks(response, dto);
             } else {
-                dto = new ThreatDTO(threat.getId(), 0, null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), false, -1, -1, -1, -1, -1, -1, -1, null, null, new ArrayList<>(), ThreatMethod.NONE, null, -1, -1);
+                dto = new ThreatDTO(threat.getId(), 0, null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), false, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, null, null, new ArrayList<>(), ThreatMethod.NONE, null, -1, -1);
                 dto.setIndex(index++);
             }
 
@@ -406,7 +420,7 @@ public class ThreatAssessmentService {
     }
 
     private int findHighestConsequence(final ThreatDTO threat) {
-        return findHighestConsequence(threat.getRf(), threat.getRi(), threat.getRt(), threat.getOf(), threat.getOi(), threat.getOt());
+        return findHighestConsequence(threat.getRf(), threat.getRi(), threat.getRt(), threat.getOf(), threat.getOi(), threat.getOt(), threat.getSf(), threat.getSi(), threat.getSt(), threat.getSa());
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
@@ -414,7 +428,7 @@ public class ThreatAssessmentService {
         int globalHighestprobability = -1;
         int globalHighestConsequence = -1;
         for (final ThreatAssessmentResponse threatAssessmentResponse : savedThreatAssessment.getThreatAssessmentResponses()) {
-            final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation());
+            final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation(), threatAssessmentResponse.getConfidentialitySociety(), threatAssessmentResponse.getIntegritySociety(), threatAssessmentResponse.getAvailabilitySociety(), threatAssessmentResponse.getAuthenticitySociety());
             final int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
 
             if (probability < 1 || highestConsequence < 1) {
@@ -439,7 +453,7 @@ public class ThreatAssessmentService {
         threatAssessmentDao.save(savedThreatAssessment);
     }
 
-    private int findHighestConsequence(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot) {
+    private int findHighestConsequence(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot, final Integer sf, final Integer si, final Integer st, final Integer sa) {
         int highest = 0;
 
         if (rf != null && rf > highest) {
@@ -460,6 +474,18 @@ public class ThreatAssessmentService {
         if (ot != null && ot > highest) {
             highest = ot;
         }
+		if (sf != null && sf > highest) {
+			highest = sf;
+		}
+		if (si != null && si > highest) {
+			highest = si;
+		}
+		if (st != null && st > highest) {
+			highest = st;
+		}
+		if (sa != null && sa > highest) {
+			highest = sa;
+		}
 
         return highest;
     }
@@ -478,6 +504,57 @@ public class ThreatAssessmentService {
         threatAssessment.getThreatAssessmentResponses().add(response);
         return threatAssessmentResponseDao.save(response);
     }
+
+	public void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
+		final RiskDTO riskDTO = calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
+		if (savedThreatAssesment.isRegistered()) {
+			savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
+			savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
+			savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
+		}
+		if (savedThreatAssesment.isOrganisation()) {
+			savedThreatAssesment.setInheritedConfidentialityOrganisation(riskDTO.getOf());
+			savedThreatAssesment.setInheritedIntegrityOrganisation(riskDTO.getOi());
+			savedThreatAssesment.setInheritedAvailabilityOrganisation(riskDTO.getOt());
+		}
+		if (savedThreatAssesment.isSociety()) {
+			savedThreatAssesment.setInheritedConfidentialitySociety(riskDTO.getSf());
+			savedThreatAssesment.setInheritedIntegritySociety(riskDTO.getSi());
+			savedThreatAssesment.setInheritedAvailabilitySociety(riskDTO.getSt());
+		}
+
+		for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
+			final ThreatAssessmentResponse response = getThreatAssessmentResponse(savedThreatAssesment, threat, riskDTO);
+			savedThreatAssesment.getThreatAssessmentResponses().add(response);
+		}
+
+		threatAssessmentDao.save(savedThreatAssesment);
+	}
+
+	private static ThreatAssessmentResponse getThreatAssessmentResponse(ThreatAssessment savedThreatAssesment, ThreatCatalogThreat threat, RiskDTO riskDTO) {
+		final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
+		response.setName(threat.getDescription());
+		if (savedThreatAssesment.isRegistered()) {
+			response.setConfidentialityRegistered(riskDTO.getRf());
+			response.setIntegrityRegistered(riskDTO.getRi());
+			response.setAvailabilityRegistered(riskDTO.getRt());
+		}
+		if (savedThreatAssesment.isOrganisation()) {
+			response.setConfidentialityOrganisation(riskDTO.getOf());
+			response.setIntegrityOrganisation(riskDTO.getOi());
+			response.setAvailabilityOrganisation(riskDTO.getOt());
+		}
+		if (savedThreatAssesment.isSociety()) {
+			response.setConfidentialitySociety(riskDTO.getSf());
+			response.setIntegritySociety(riskDTO.getSi());
+			response.setAvailabilitySociety(riskDTO.getSt());
+		}
+
+		response.setMethod(ThreatMethod.NONE);
+		response.setThreatCatalogThreat(threat);
+		response.setThreatAssessment(savedThreatAssesment);
+		return response;
+	}
 
     public byte[] getThreatAssessmentPdf(ThreatAssessment threatAssessment) throws IOException {
         var html = getThreatAssessmentHtml(threatAssessment);
@@ -524,6 +601,7 @@ public class ThreatAssessmentService {
 
         var context = new Context();
         context.setVariable("title", threatAssessment.getName());
+        context.setVariable("comment", getComment(threatAssessment.getComment()));
         context.setVariable("subHeader", getSubHeading(threatAssessment, riskAsset, riskRegister));
         context.setVariable("present", getPresent(threatAssessment));
         context.setVariable("criticality", getCriticality(riskAsset, riskRegister));
@@ -554,11 +632,27 @@ public class ThreatAssessmentService {
         context.setVariable("tasksForPDF", buildTasks(riskAssessmentTasks));
         context.setVariable("otherTasksForPDF", buildTasks(otherTasks));
 
+		// risk areas
+		context.setVariable("areas", buildRiskAreas(threatAssessment));
 
         return templateEngine.process("reports/risk_view_pdf", context);
     }
 
-    public record PrecautionDTO (String name, String description) {}
+	private Set<String> buildRiskAreas(ThreatAssessment threatAssessment) {
+		Set<String> result = new HashSet<>();
+		if (threatAssessment.isOrganisation()) {
+			result.add("Organisationen");
+		}
+		if (threatAssessment.isRegistered()) {
+			result.add("Den registrerede");
+		}
+		if (threatAssessment.isSociety()) {
+			result.add("Samfundet");
+		}
+		return result;
+	}
+
+	public record PrecautionDTO (String name, String description) {}
     private List<PrecautionDTO> buildPrecautions (List<Precaution> precautions) {
         return precautions.stream().map(precaution ->
                 new PrecautionDTO(precaution.getName(), precaution  .getDescription()))
@@ -574,6 +668,7 @@ public class ThreatAssessmentService {
             context.setVariable("systemResponsible", riskAsset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")));
             context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
+            context.setVariable("sociallyCritical", riskAsset.isSociallyCritical());
             String dataAccessPersons = riskAsset.getDataProcessing().getAccessWhoIdentifiers().stream()
                 .map(identifier ->
                 {
@@ -764,6 +859,14 @@ public class ThreatAssessmentService {
         }
         return stringBuilder.toString();
     }
+
+	private String getComment(final String comment) {
+		if (comment == null || comment.isBlank()) {
+			return null;
+		}
+
+		return comment.replace("\n", "<br/>");
+	}
 
     private String getPresent(final ThreatAssessment threatAssessment) {
         if (threatAssessment.getPresentAtMeeting() == null || threatAssessment.getPresentAtMeeting().isEmpty()) {

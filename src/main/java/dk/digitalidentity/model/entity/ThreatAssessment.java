@@ -72,6 +72,12 @@ public class ThreatAssessment extends Relatable {
     @Column
     private boolean organisation;
 
+	@Column
+	private boolean society;
+
+	@Column
+	private boolean authenticity;
+
     @Column
     private boolean inherit;
 
@@ -81,17 +87,26 @@ public class ThreatAssessment extends Relatable {
     @Column
     private Integer inheritedConfidentialityOrganisation;
 
+	@Column
+    private Integer inheritedConfidentialitySociety;
+
     @Column
     private Integer inheritedIntegrityRegistered;
 
     @Column
     private Integer inheritedIntegrityOrganisation;
 
+	@Column
+    private Integer inheritedIntegritySociety;
+
     @Column
     private Integer inheritedAvailabilityRegistered;
 
     @Column
     private Integer inheritedAvailabilityOrganisation;
+
+	@Column
+    private Integer inheritedAvailabilitySociety;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -121,6 +136,9 @@ public class ThreatAssessment extends Relatable {
 
     @Column
     private String externalLink;
+
+    @Column
+    private String comment;
 
     @Override
     public RelationType getRelationType() {
