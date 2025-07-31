@@ -14,7 +14,6 @@ import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.RelationService;
-import dk.digitalidentity.service.SupportingStandardService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
@@ -25,7 +24,6 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -33,8 +31,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -96,6 +96,7 @@ public class StandardRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	// TODO: When deleting, make sure we update the children of the parent so that the version numbers match again :)
 	@Transactional
 	@PostMapping("/section/delete/{identifier}")
 	public ResponseEntity<?> deleteSection(@PathVariable(name = "identifier") final String identifier) {
@@ -103,6 +104,33 @@ public class StandardRestController {
 		StandardSection relatedSection = standardSectionDao.findByTemplateSectionIdentifier(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		standardSectionDao.delete(relatedSection);
 		standardTemplateSectionDao.delete(template);
+
+		StandardTemplateSection parent = template.getParent();
+		List<StandardTemplateSection> siblings = standardTemplateSectionDao.findByParentOrderBySortKey(parent);
+		List<StandardTemplateSection> toBeUpdatedstandardTemplateSection = new ArrayList<>();
+		List<StandardSection> toBeUpdatedStandardSection = new ArrayList<>();
+		int version = 1;
+		for (StandardTemplateSection sibling : siblings) {
+			StandardSection section = sibling.getStandardSection();
+			if (section == null) {
+				continue;
+			}
+
+			String baseSection = parent.getSection();
+			String newSectionName = baseSection + "." + version;
+
+			section.setName(newSectionName + section.getName().replaceFirst("^[^.]+", ""));
+			sibling.setSortKey(Integer.parseInt(baseSection.replace(".", "") + version));
+
+			sibling.setSection(newSectionName);
+			toBeUpdatedstandardTemplateSection.add(sibling);
+			toBeUpdatedStandardSection.add(section);
+
+			version++;
+		}
+
+		standardSectionDao.saveAll(toBeUpdatedStandardSection);
+		standardTemplateSectionDao.saveAll(toBeUpdatedstandardTemplateSection);
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 

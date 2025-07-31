@@ -22,7 +22,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,16 +30,20 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,6 +52,7 @@ import java.util.stream.Collectors;
 @RequireUser
 @RequiredArgsConstructor
 public class StandardController {
+	// TODO: Refactor to use service only instead of direct dao!
     private final StandardsService standardsService;
     private final RelationService relationService;
     private final StandardSectionDao standardSectionDao;
@@ -179,16 +184,14 @@ public class StandardController {
 	@Transactional
 	@PostMapping("/create")
 	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+		standard.setIdentifier(standard.getIdentifier()	.replaceAll("[.,\\s-]", "_"));
 		standard.setSupporting(true);
 		standardTemplateDao.save(standard);
 		return "redirect:/standards";
 	}
 
 	@GetMapping("/form")
-	public String standardForm(final Model model, @RequestParam(name = "id", required = false) final String id) {
-		if (id != null) {
-			// TODO: Fetch the existing one and insert the info needed
-		}
+	public String standardForm(final Model model) {
 		model.addAttribute("action", "standards/create");
 		model.addAttribute("standard", new StandardTemplate());
 		model.addAttribute("formTitle", "Ny standard");
@@ -225,21 +228,23 @@ public class StandardController {
 
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
-	public String createHeader(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
+	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
-		List<StandardSection> allByTemplateSection = standardSectionDao.findAllByTemplateSection(parentsTemplateSection);
+		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
-		int version = 1;
-		if (allByTemplateSection != null && !allByTemplateSection.isEmpty()) {
-			version = allByTemplateSection.size() + 1;
-		}
+		// TODO: Versioning is cooked, when a section already exists we need to increment the counter, if there is no underlying section already we take nr 1.
+		// TODO: When deleting we need to make sure all the other ones are updated properly so that we do not end up with 11.3, 11.5, 11.6
+		String version = getHighestVersionNumber(parentsTemplateSection.getSection(), existingChildren);
+		log.info("version: " + version);
 		String sectionPrefix = parentsTemplateSection.getSection();
-		String name = sectionPrefix  + "."  + version + standardSection.getName();
+		String name = sectionPrefix  + "."  + version + " " + standardSection.getName();
 		String templateSection = sectionPrefix + "." + version;
 
+		String standardTemplateSectionIdentifier = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+		log.info("standardTemplateSectionIdentifier: " + standardTemplateSectionIdentifier);
 		StandardTemplateSection newSection = new StandardTemplateSection();
-		newSection.setIdentifier(sectionPrefix);
-		newSection.setSection(templateSection);
+		newSection.setIdentifier(standardTemplateSectionIdentifier);
+		newSection.setSection(version);
 		newSection.setDescription(standardSection.getName());
 		newSection.setParent(parentsTemplateSection);
 		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "")));
@@ -253,11 +258,21 @@ public class StandardController {
 		return "redirect:/standards/supporting/" + identifier;
 	}
 
+	// TODO: Validate that no version already exists beforehand, make sure we error on it and that the user gets to see the error
 	@Transactional
 	@PostMapping("/headers/create/{identifier}")
-	public String createSection(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id) {
+	public String createHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		// TODO: There has to be a different way to properly display the errors
+		boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
+
+		if (existsAlready) {
+			result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
+			redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
+			return "redirect:/standards/supporting/" + id;
+		}
 		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();
 		String sortKey = standardTemplateSection.getSection().replace(".", "");
 		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
@@ -300,4 +315,34 @@ public class StandardController {
             .collect(Collectors.toList());
     }
 
+
+	// TODO: Make this one function and parameterize it?
+
+	private String getHighestVersionNumber(String parentSection, Set<StandardTemplateSection> allSections) {
+		String prefix = parentSection + ".";
+
+		int temp = 0;
+		for (StandardTemplateSection allSection : allSections) {
+			String[] split = allSection.getSection().split("\\.");
+			int value = Integer.parseInt(split[split.length - 1]);
+			if (value > temp) {
+				temp = value;
+			}
+		}
+		return prefix + (temp == 0 ? 1 : (temp + 1));
+	}
+
+	private String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
+		String prefix = parentSection + ".";
+
+		int temp = 0;
+		for (StandardTemplateSection allSection : allSections) {
+			String[] split = allSection.getIdentifier().split("\\.");
+			int value = Integer.parseInt(split[split.length - 1]);
+			if (value > temp) {
+				temp = value;
+			}
+		}
+		return prefix + (temp == 0 ? 1 : (temp + 1));
+	}
 }

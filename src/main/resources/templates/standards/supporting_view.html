@@ -19,10 +19,10 @@
                         </nav>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button th:if="${template.standardTemplateSections != null || template.standardTemplateSections.isEmpty()}" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openRequirementModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button st th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openRequirementModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny krav
                         </button>
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openHeaderModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button id="addHeaderButton" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openHeaderModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny gruppe
                         </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -190,11 +190,17 @@
         var today = [[${today}]];
         var templateIdentifier = [[${template.identifier}]];
         var testMap = [[${relationMap}]]
+        var modalError = [[${headerModalError}]]
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     document.addEventListener("DOMContentLoaded", function(event) {
         supportingStandartsViewLoaded();
         addRelationFormLoaded();
+        // TODO: Needs to be done better...
+        if (modalError) {
+            document.getElementById('addHeaderButton').click();
+            toastService.error(modalError);
+        }
     });
     /*]]>*/
 </script>

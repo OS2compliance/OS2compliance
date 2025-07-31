@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
@@ -32,7 +33,7 @@ public class StandardTemplate {
     @Column
     private boolean supporting;
 
-    @OneToMany(mappedBy = "standardTemplate", orphanRemoval = true)
+    @OneToMany(mappedBy = "standardTemplate", orphanRemoval = true, cascade = CascadeType.ALL)
     private List<StandardTemplateSection> standardTemplateSections;
 
 }
