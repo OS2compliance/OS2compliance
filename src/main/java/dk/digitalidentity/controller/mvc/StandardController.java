@@ -235,13 +235,11 @@ public class StandardController {
 		// TODO: Versioning is cooked, when a section already exists we need to increment the counter, if there is no underlying section already we take nr 1.
 		// TODO: When deleting we need to make sure all the other ones are updated properly so that we do not end up with 11.3, 11.5, 11.6
 		String version = getHighestVersionNumber(parentsTemplateSection.getSection(), existingChildren);
-		log.info("version: " + version);
 		String sectionPrefix = parentsTemplateSection.getSection();
-		String name = sectionPrefix  + "."  + version + " " + standardSection.getName();
+		String name = version + " " + standardSection.getName();
 		String templateSection = sectionPrefix + "." + version;
 
 		String standardTemplateSectionIdentifier = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
-		log.info("standardTemplateSectionIdentifier: " + standardTemplateSectionIdentifier);
 		StandardTemplateSection newSection = new StandardTemplateSection();
 		newSection.setIdentifier(standardTemplateSectionIdentifier);
 		newSection.setSection(version);

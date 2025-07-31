@@ -137,8 +137,8 @@ public class StandardRestController {
 	@Transactional
 	@PostMapping("/header/delete/{identifier}")
 	public ResponseEntity<?> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
-		StandardSection relatedSection = standardSectionDao.findByTemplateSectionIdentifier(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
-		standardSectionDao.delete(relatedSection);
+		StandardTemplateSection section =  standardTemplateSectionDao.findById(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		standardTemplateSectionDao.delete(section);
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 

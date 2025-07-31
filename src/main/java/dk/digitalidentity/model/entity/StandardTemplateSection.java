@@ -48,7 +48,7 @@ public class StandardTemplateSection {
     @JoinColumn(name = "parent_identifier")
     private StandardTemplateSection parent;
 
-    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL)
+    @OneToMany(mappedBy = "parent", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private Set<StandardTemplateSection> children = new HashSet<>();
 
