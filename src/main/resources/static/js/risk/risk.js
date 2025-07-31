@@ -6,6 +6,8 @@
     };
 
     document.addEventListener("DOMContentLoaded", function(event) {
+        const handleRemoveEvent = new HandleRemoveEvent();
+
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
@@ -54,6 +56,27 @@
                     searchable: {
                         searchKey: 'responsibleUser.name'
                     },
+                },
+                {
+                    name: "Entitet",
+                    searchable: {
+                        searchKey: 'relatedAssetsAndRegisters'
+                    },
+                    formatter: (cell, row) => {
+                        console.log(cell);
+                        const dbsAssetId = row.cells[0]['data'];
+
+                        let options = '';
+                        for (let index = 0; index < cell.length; ++index) {
+                            const assetOrRegister = cell[index];
+                            options += `<option value="${assetOrRegister.id}" selected>${assetOrRegister.name}</option>`;
+                        }
+
+                        return gridjs.html(
+                            `<select class="form-control form-select choices__input" data-assetid="${dbsAssetId}" name="assetsAndRegisters" id="assetsRegistersSelect${dbsAssetId}" hidden="" tabindex="-1" multiple="multiple">${options}</select>`
+                        );
+                    },
+                    width: '300px'
                 },
                 {
                     name: "Opgaver",
@@ -137,7 +160,7 @@
                         //delete & copy buttons
                         if (superuser) {
                             buttonHTML = buttonHTML +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
+                                `<bthreat_assessmentsutton type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></bthreat_assessmentsutton>`
                         }
                         return  gridjs.html(buttonHTML)
                     }
@@ -157,15 +180,12 @@
                 headers: {
                     'X-CSRF-TOKEN': token
                 },
-                then: data => data.content.map(risk =>
-                    [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.threatAssessmentReportApprovalStatus, risk.assessment, risk.changeable]
-                ),
                 then: data => data.content.map(obj => {
                         const result = []
                         for (const property of columnProperties) {
                             result.push(obj[property])
                         }
-                        return result;
+                    return result;
                     }
                 ),
                 total: data => data.totalCount
@@ -188,10 +208,45 @@
         };
         const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
 
+        grid.on('ready', function() {
+            // Ensure correct page load behavior
+            if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
+                document.getElementsByClassName("gridjs-pages")[0].children[1]?.click();
+            }
+
+            // Initialize all Entitet Choices.js selects
+            Array.from(document.querySelectorAll("[id^='assetsRegistersSelect']"))
+                .map(select => select.id)
+                .forEach(elementId => {
+                    let assetChoices = choiceService.initAssetSelect(elementId, false);
+
+                    assetChoices.passedElement.element.addEventListener(
+                        'removeItem', handleRemoveEvent.handleAddRemoveEvent, false
+                    );
+                    assetChoices.passedElement.element.addEventListener(
+                        'addItem', handleRemoveEvent.handleAddRemoveEvent, false
+                    );
+                });
+        });
+
         new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     });
+
+function HandleRemoveEvent () {
+    this.handleAddRemoveEvent = async function (event) {
+        const response = await fetch(gridDBSAssetsUpdateUrl, {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
+            body: JSON.stringify({
+                id: event.target.dataset.assetid,
+                assets: Array.from(event.target.selectedOptions).map(op => op.value)
+            }),
+        }).then(defaultResponseHandler)
+            .catch(defaultErrorHandler);
+    }
+}
 
 function deleteClicked(riskId, name) {
     Swal.fire({

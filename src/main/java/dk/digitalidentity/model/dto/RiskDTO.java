@@ -13,14 +13,16 @@ public class RiskDTO {
     private Long id;
     private String name;
     private String responsibleUser;
-    private String responsibleOU;
-    private String type;
-    private String date;
-    private Integer tasks;
-    private String assessment;
-    private Integer assessmentOrder;
-    private String threatAssessmentReportApprovalStatus;
-    private boolean changeable;
-    private boolean fromExternalSource;
+	private String relatedAssetsAndRegisters;
+	private String registersSearch;
+	private String responsibleOU;
+	private String type;
+	private String date;
+	private Integer tasks;
+	private String assessment;
+	private Integer assessmentOrder;
+	private String threatAssessmentReportApprovalStatus;
+	private boolean changeable;
+	private boolean fromExternalSource;
     private String externalLink;
 }
