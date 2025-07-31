@@ -5,6 +5,10 @@
         header: "d-flex justify-content-end"
     };
 
+    const createRiskService = new CreateRiskService();
+    const copyRiskService = new CopyRiskService();
+    const editRiskService = new EditRiskService();
+
     document.addEventListener("DOMContentLoaded", function(event) {
         const defaultClassName = {
             table: 'table table-striped',
@@ -191,6 +195,8 @@
         new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
+
+        createRiskService.init();
     });
 
 function deleteClicked(riskId, name) {
@@ -275,13 +281,6 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
             }))
         .catch(error => toastService.error(error));
 }
-
-const createRiskService = new CreateRiskService();
-const copyRiskService = new CopyRiskService();
-const editRiskService = new EditRiskService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    createRiskService.init();
-});
 
 function EditRiskService() {
     this.getScopedElementById = function(id) {
@@ -416,8 +415,8 @@ function CreateRiskService() {
         const assetSelect = this.getScopedElementById('assetSelect');
         this.registerChoicesSelect = initRegisterSelect(registerSelect);
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
-        this.userChoicesSelect = choiceService.initUserSelect("userSelect");
-        this.ouChoicesSelect = choiceService.initOUSelect("ouSelect");
+        this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
+        this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
 
         this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
              const userUuid = self.userChoicesSelect.passedElement.element.value;

@@ -119,16 +119,16 @@
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="userSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <label for="createRiskUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="createRiskUserSelect" hidden="" tabindex="-1" required></select>
                             <div class="invalid-feedback">Der skal vælges en risikoejer</div>
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="ouSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <label for="createRiskOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="ouSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="createRiskOuSelect" hidden="" tabindex="-1" required></select>
                             <div class="invalid-feedback">Der skal vælges et fagområde</div>
                         </div>
                     </div>
