@@ -63,17 +63,30 @@
                         searchKey: 'relatedAssetsAndRegisters'
                     },
                     formatter: (cell, row) => {
-                        console.log(cell);
                         const dbsAssetId = row.cells[0]['data'];
+                        console.log(row);
 
+                        // Ensure cell is always an array of strings
+                        let items = [];
+                        if (typeof cell === "string" && cell.trim() !== "") {
+                            items = cell.split(",").map(name => name.trim());
+                        } else if (Array.isArray(cell)) {
+                            // If for some reason backend sends an array already
+                            items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
+                        }
+
+                        // Build <option> list (id can just be the name for now)
                         let options = '';
-                        for (let index = 0; index < cell.length; ++index) {
-                            const assetOrRegister = cell[index];
-                            options += `<option value="${assetOrRegister.id}" selected>${assetOrRegister.name}</option>`;
+                        for (const name of items) {
+                            options += `<option value="${name}" selected>${name}</option>`;
                         }
 
                         return gridjs.html(
-                            `<select class="form-control form-select choices__input" data-assetid="${dbsAssetId}" name="assetsAndRegisters" id="assetsRegistersSelect${dbsAssetId}" hidden="" tabindex="-1" multiple="multiple">${options}</select>`
+                            `<select class="form-control form-select choices__input"
+                                data-assetid="${dbsAssetId}"
+                                name="assetsAndRegisters"
+                                id="assetsRegistersSelect${dbsAssetId}"
+                            hidden multiple>${options}</select>`
                         );
                     },
                     width: '300px'
