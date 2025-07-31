@@ -584,6 +584,7 @@ function CreateRiskService() {
                     this.getScopedElementById("RT").innerHTML = data.rt === 0 ? "" : data.rt;
                     this.getScopedElementById("OT").innerHTML = data.ot === 0 ? "" : data.ot;
                     this.getScopedElementById("ST").innerHTML = data.st === 0 ? "" : data.st;
+                    this.getScopedElementById("SA").innerHTML = data.sa === 0 ? "" : data.sa;
 
                     this.getScopedElementById("inheritRow").style.display = '';
                 }))
