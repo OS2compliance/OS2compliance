@@ -175,10 +175,13 @@ let DataProcessingComponent = function () {
         }
     }
 
-    this.setStateForInfoReceivers = function (infoReceivers, receiverSelectedBoxes){
+    this.setStateForInfoReceivers = function (infoReceivers, receiverSelectedBoxes) {
+        // For each infoReceiver object in all categories
         for (const infoReceiver of infoReceivers) {
+            // For each individual receiver
             for (const receiverSelectedCheckbox of receiverSelectedBoxes) {
-                if (receiverSelectedCheckbox.value === infoReceiver.choiceValue.value) {
+                // If the box identifier is one of the selected identifiers...
+                if (receiverSelectedCheckbox.value === infoReceiver.choiceValue.identifier) {
                     const infoReceiverContainer = receiverSelectedCheckbox.closest('.infoReceiverContainer');
 
                     // Check the box for this receiver
@@ -189,21 +192,25 @@ let DataProcessingComponent = function () {
                     additionalOptionsContainer.hidden = false;
 
                     // Check the radiobutton for selected location, default to 'inside EU'
-                    if (infoReceiver.receiverLocation === 'OUTSIDE_EU') {
-                        const insideEuRadioButton = additionalOptionsContainer.querySelector('.insideEuRadio')
-                        if (insideEuRadioButton) {
-                            insideEuRadioButton.checked = true;
-                        }
-                    } else {
-                        const outsideEURadioButton = additionalOptionsContainer.querySelector('.outsideEuRadio')
-                        if (outsideEURadioButton) {
-                            outsideEURadioButton.checked = true;
-                        }
-                    }
+                    this.checkSelectedRadioButton(infoReceiver.receiverLocation)
                 }
             }
         }
+    }
 
+
+    this.checkSelectedRadioButton = function (receiverLocation) {
+        if (receiverLocation === 'OUTSIDE_EU') {
+            const insideEuRadioButton = additionalOptionsContainer.querySelector('.insideEuRadio')
+            if (insideEuRadioButton) {
+                insideEuRadioButton.checked = true;
+            }
+        } else {
+            const outsideEURadioButton = additionalOptionsContainer.querySelector('.outsideEuRadio')
+            if (outsideEURadioButton) {
+                outsideEURadioButton.checked = true;
+            }
+        }
     }
 
     this.addEmptyInformationCategory = function() {
@@ -248,7 +255,18 @@ let DataProcessingComponent = function () {
             infoPassedOnSelect?.setAttribute('name', `${baseName}.informationPassedOn`);
 
             this.updateNamesForInfoReceiversControls(categoryRow, baseName)
+            this.updateNameForInfoPassedOnComment(categoryRow, baseName)
         }
+    }
+
+    this.updateNameForInfoPassedOnComment = function (categoryRow, categoryBaseName) {
+        // Set name and id for comment textbox
+        const commentInput = categoryRow.querySelector('.infoPassedOnComment');
+        const commentLabel = commentInput.parentElement.querySelector('label');
+            const id = `${categoryBaseName}_passedon_comment`
+        commentInput.id = id
+        commentLabel.setAttribute('for', `${id}`)
+        commentInput.setAttribute('name', `${categoryBaseName}.informationPassedOnComment`);
     }
 
     this.updateNamesForInfoReceiversControls = function (categoryRow, categoryBaseName) {
@@ -256,6 +274,7 @@ let DataProcessingComponent = function () {
         for (let i = 0; i < infoReceiverContainers.length; i++) {
             const receiverContainer = infoReceiverContainers[i]
             const receiverContainerBaseName = `informationReceivers[${i}]`
+
             // Set id, and name for the main receiver checkbox
             const receiverSelectedInput = receiverContainer.querySelector('input.receiverSelectedCheck');
             receiverSelectedInput.setAttribute('name', `${categoryBaseName}.${receiverContainerBaseName}.choiceValueIdentifier`);
@@ -332,8 +351,20 @@ let DataProcessingComponent = function () {
         const tableElement = document.querySelector('table.dataprocessingTable');
         tableElement?.addEventListener('change', e => {
             const target = e.target;
-            if (target.classList.contains('infoPassedOnSelect')) {
+            if (target?.classList.contains('infoPassedOnSelect')) {
                 this.infoPassedOnSelectionChanged(target);
+            }
+        })
+
+        // Add event delegation for showing receiver location radio buttons
+        tableElement?.addEventListener('change', e => {
+            const target = e.target;
+            if (target?.classList.contains('receiverSelectedCheck')) {
+                const parentContainer = target?.closest('.infoReceiverContainer');
+                const additionalOptionContainer = parentContainer?.querySelector('.passedOnAdditionalOptionsContainer');
+                if (additionalOptionContainer) {
+                    additionalOptionContainer.hidden = !target?.checked;
+                }
             }
         })
     }

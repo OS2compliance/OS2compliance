@@ -3,7 +3,9 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.ChoiceListDao;
 import dk.digitalidentity.model.dto.DataProcessingChoicesDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.dto.DataProcessingInformationReceiverDTO;
 import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.data_processing.DataProcessingInfoReceiver;
@@ -15,7 +17,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.Objects;
+import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DataProcessingService {
     private final ChoiceListDao choiceListDao;
+	private final ChoiceService choiceService;
     private final TaskService taskService;
     private final RelationService relationService;
 
@@ -38,28 +41,27 @@ public class DataProcessingService {
         dataProcessing.setTypesOfPersonalInformationFreetext(body.getTypesOfPersonalInformationFreetext());
 
         if (body.getPersonCategoriesRegistered() != null) {
-			ChoiceList receiverList = choiceListDao.findByIdentifier("dp-receiver-list").orElseThrow();
-
             dataProcessing.getRegisteredCategories().clear();
             body.getPersonCategoriesRegistered().stream()
                     .filter(c -> !c.getPersonCategoriesRegisteredIdentifier().isEmpty())
-                    .forEach(c -> dataProcessing.getRegisteredCategories()
-                            .add(DataProcessingCategoriesRegistered.builder()
-                                    .dataProcessing(dataProcessing)
-                                    .personCategoriesRegisteredIdentifier(c.getPersonCategoriesRegisteredIdentifier())
-                                    .personCategoriesInformationIdentifiers(c.getPersonCategoriesInformationIdentifiers())
-                                    .informationPassedOn(c.getInformationPassedOn())
-                                    .informationReceivers(c.getInformationReceivers().stream().map(ir ->
-											DataProcessingInfoReceiver.builder()
-													.choiceValue(receiverList.getValues().stream()
-															.filter(ch -> Objects.equals(ch.getIdentifier(), ir.getChoiceValueIdentifier()))
-															.findAny()
-															.orElseThrow()
-													)
-													.receiverLocation(ir.getReceiverLocation())
-													.build())
-											.collect(Collectors.toSet()))
-                                    .build()));
+                    .forEach(c -> {
+						// Map to category
+						DataProcessingCategoriesRegistered category = DataProcessingCategoriesRegistered.builder()
+								.dataProcessing(dataProcessing)
+								.personCategoriesRegisteredIdentifier(c.getPersonCategoriesRegisteredIdentifier())
+								.personCategoriesInformationIdentifiers(c.getPersonCategoriesInformationIdentifiers())
+								.informationPassedOn(c.getInformationPassedOn())
+								.build();
+
+						// Set receivers on category
+						category.setInformationReceivers(c.getInformationReceivers().stream()
+								.filter(ir -> ir.getChoiceValueIdentifier() != null)
+								.map(ir -> toDataProcessingInfoReceiver(ir, category))
+								.collect(Collectors.toSet()));
+
+						dataProcessing.getRegisteredCategories()
+								.add(category);
+					});
         }
 
     }
@@ -108,5 +110,15 @@ public class DataProcessingService {
                 .informationReceiversIdentifiers(informationReceiversIdentifiers)
                 .build();
     }
+
+	private DataProcessingInfoReceiver toDataProcessingInfoReceiver(DataProcessingInformationReceiverDTO receiverDTO, DataProcessingCategoriesRegistered categoriesRegistered) {
+		ChoiceValue choice = choiceService.getValue(receiverDTO.getChoiceValueIdentifier())
+				.orElseThrow();
+		return DataProcessingInfoReceiver.builder()
+				.choiceValue(choice)
+				.receiverLocation(receiverDTO.getReceiverLocation())
+				.dataProcessingCategoriesRegistered(categoriesRegistered)
+				.build();
+	}
 
 }

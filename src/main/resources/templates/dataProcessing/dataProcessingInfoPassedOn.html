@@ -1,7 +1,7 @@
 <th:block th:fragment="dataProcessingInfoPassedOn(allReceiversIdentifiers)">
-    <div class="col-12 row d-flex">
+    <div class="col-12 row d-flex mb-2">
         <div class="col-sm-8 col-lg-4">
-            <p class="ms-2 fst-italic">Videregives personoplysningerne til andre som anvender oplysningerne til eget formål?</p>
+            <p class="ms-2 fst-italic">Videregives personoplysningerne?</p>
         </div>
         <div class="col-sm-4 col-lg-2">
             <select class="infoPassedOnSelect form-control form-select editField ms-1" disabled>
@@ -18,7 +18,7 @@
         </div>
         <div class="col-sm-12 col-md-4 d-flex flex-column">
             <label class="form-label flex-shrink-0">Uddybning</label>
-            <textarea class="editField form-control flex-grow-1"></textarea>
+            <textarea class="infoPassedOnComment editField form-control flex-grow-1"></textarea>
         </div>
     </div>
 </th:block>
