@@ -165,7 +165,7 @@ let DataProcessingComponent = function () {
         const passedOn = category ? category.informationPassedOn : null;
         const infoReceivers = category ? category.informationReceivers : null;
 
-        extendedDiv.style.display = 'block';
+        extendedDiv.hidden = false;
         selector.value = passedOn || "NO";
         if (passedOn === "YES") {
             this.showInfoRecieversElementFor(categoryRow ,true)
@@ -192,14 +192,14 @@ let DataProcessingComponent = function () {
                     additionalOptionsContainer.hidden = false;
 
                     // Check the radiobutton for selected location, default to 'inside EU'
-                    this.checkSelectedRadioButton(infoReceiver.receiverLocation)
+                    this.checkSelectedRadioButton(infoReceiver.receiverLocation, additionalOptionsContainer)
                 }
             }
         }
     }
 
 
-    this.checkSelectedRadioButton = function (receiverLocation) {
+    this.checkSelectedRadioButton = function (receiverLocation, additionalOptionsContainer) {
         if (receiverLocation === 'OUTSIDE_EU') {
             const insideEuRadioButton = additionalOptionsContainer.querySelector('.insideEuRadio')
             if (insideEuRadioButton) {
