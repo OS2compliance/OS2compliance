@@ -40,13 +40,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
             {
                 name: "Fagområde",
                 searchable: {
-                    searchKey: 'responsibleOuUuid'
+                    searchKey: 'responsibleOuName'
                 },
             },
             {
                 name: "Risikoejer",
                 searchable: {
-                    searchKey: 'responsibleUserUuid'
+                    searchKey: 'responsibleUserName'
                 },
             },
             {
