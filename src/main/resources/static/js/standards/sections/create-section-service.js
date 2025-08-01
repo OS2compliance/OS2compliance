@@ -1,14 +1,19 @@
 const createSectionService = new CreateSectionService();
 
 document.addEventListener("shown.bs.modal", function(event) {
-    createSectionService.toggleTextAreas();
     const form = document.getElementById("headerForm");
     if (form) {
         form.addEventListener("submit", function(event) {
             event.preventDefault();
 
-            const headerInput = document.getElementById('headerForm');
-            console.log(headerInput.text);
+            const sectionValue = form.elements['section'].value;
+            // Validate section format, as we do not allow the sections to be versioned too deep
+            // TODO: Need proper alert
+            const parts = sectionValue.split('.');
+            if (parts.length > 3 || (parts.length === 1 && !/^\d+$/.test(sectionValue))) {
+                return;
+            }
+            form.submit();
         });
     }
 });
@@ -50,26 +55,7 @@ function CreateSectionService() {
 
     this.toggleNSIS = function () {
         const checkbox = document.getElementById('toggleNSIS');
-        if (checkbox.checked) {
-            // Toggle the two text fields
-            document.getElementById('nsisSmart').style.display = '';
-            document.getElementById('nsisPractice').style.display = '';
-            document.getElementById('description').style.display = 'none';
-        }
-        else {
-            // Toggle the single text field
-            document.getElementById('nsisSmart').style.display = 'none';
-            document.getElementById('nsisPractice').style.display = 'none';
-            document.getElementById('description').style.display = '';
-        }
-    }
-
-    this.toggleTextAreas = function () {
-        let editors = document.querySelectorAll(`.description`);
-        for (let i= 0; i< editors.length; ++i) {
-            const elem = editors[i];
-            window.CreateCkEditor(elem, editor => {});
-        }
+        const isChecked = checkbox.checked;
     }
 
     this.openDeleteSwal = function (element, isheader=true) {

@@ -273,10 +273,22 @@ public class StandardController {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		log.info("hello?");
+		StandardTemplateSection header = standardTemplateSectionDao.findByStandardTemplate(template).stream()
+				.filter(standardTemplateSection1 -> standardTemplateSection1.getParent() == null)
+				.findAny()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 
-		log.info("standardTemplateSection: " + standardTemplateSection.getSection());
-		log.info("standardTemplateSectionChildrenCount: " + standardTemplateSection.getChildren().size());
+		if (!Objects.equals(header.getSection(), standardTemplateSection.getSection())) {
+			// TODO: Renew the field after verifying that the section is available AND renew all children with proper section versioning/numbering
+			List<StandardTemplateSection> children = header.getChildren().stream().sorted(Comparator.comparing(StandardTemplateSection::getSortKey)).toList();
+			for (StandardTemplateSection child : children) {
+				System.out.println("child.getSection() = " + child.getSection());
+			}
+		}
+		if (!Objects.equals(header.getDescription(), standardTemplateSection.getDescription())) {
+			header.setDescription(standardTemplateSection.getDescription());
+		}
+
 		// TODO: There has to be a different way to properly display the errors
 //		boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
 //
@@ -289,10 +301,7 @@ public class StandardController {
 //		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
 
 		// TODO: Update all children to have the proper section number and sortkey
-		for (StandardTemplateSection child : standardTemplateSection.getChildren().stream().sorted(Comparator.comparing(StandardTemplateSection::getSortKey)).toList()) {
-			log.info("child: " + child.getSection());
-		}
-//		standardTemplateSectionDao.save(standardTemplateSection);
+		//standardTemplateSectionDao.save(standardTemplateSection);
 		return "redirect:/standards/supporting/" + id;
 	}
 
@@ -303,7 +312,6 @@ public class StandardController {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
-		// TODO: Some versions still fail, most importantly 10.1.1.1.X (I dont think we are even allowed to go that far, so maybe frontend validation is enough?)
 		String version = getHighestVersionNumber(parentsTemplateSection.getSection(), existingChildren);
 		String sectionPrefix = parentsTemplateSection.getSection();
 		String name = version + " " + standardSection.getName();
@@ -315,7 +323,7 @@ public class StandardController {
 		newSection.setSection(version);
 		newSection.setDescription(standardSection.getName());
 		newSection.setParent(parentsTemplateSection);
-		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "")));
+		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "").replaceAll("[^0-9]", "")));
 
 		StandardTemplateSection save = standardTemplateSectionDao.save(newSection);
 
@@ -342,7 +350,7 @@ public class StandardController {
 			return "redirect:/standards/supporting/" + id;
 		}
 		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();
-		String sortKey = standardTemplateSection.getSection().replace(".", "");
+		String sortKey = standardTemplateSection.getSection().replace(".", "").replaceAll("[^0-9]", "");;
 		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
 		standardTemplateSection.setIdentifier(identifier);
 		standardTemplateSection.setStandardTemplate(template);
