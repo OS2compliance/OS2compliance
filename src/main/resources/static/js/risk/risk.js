@@ -176,7 +176,7 @@
                         //delete & copy buttons
                         if (superuser) {
                             buttonHTML = buttonHTML +
-                                `<bthreat_assessmentsutton type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></bthreat_assessmentsutton>`
+                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
                         }
                         return  gridjs.html(buttonHTML)
                     }
