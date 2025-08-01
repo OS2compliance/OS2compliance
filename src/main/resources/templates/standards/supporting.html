@@ -19,7 +19,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createStandardService.openStandardModal()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createStandardService.openStandardModal()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny standard
                         </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
@@ -94,7 +94,7 @@
                     name: "Handlinger",
                     formatter: (cell, row) => {
                         let url = row.cells[0]['data'];
-                        return gridjs.html(`<button onclick="createStandardService.openDeleteSwal('${url}')" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>`);
+                        return gridjs.html(`<button onclick="createStandardService.openStandardModal('${url}', true)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button><button onclick="createStandardService.openDeleteSwal('${url}')" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>`);
                     }
                 }
             ],

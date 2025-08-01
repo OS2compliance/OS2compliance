@@ -190,20 +190,45 @@ public class StandardController {
 		return "redirect:/standards";
 	}
 
+	@Transactional
+	@PostMapping("/update")
+	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+		StandardTemplate template = supportingStandardService.lookup(standard.getIdentifier())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		template.setName(standard.getName());
+		standardTemplateDao.save(template);
+		return "redirect:/standards";
+	}
+
 	@GetMapping("/form")
-	public String standardForm(final Model model) {
+	public String createStandardForm(final Model model) {
 		model.addAttribute("action", "standards/create");
 		model.addAttribute("standard", new StandardTemplate());
 		model.addAttribute("formTitle", "Ny standard");
 		model.addAttribute("formId", "standardCreateForm");
+		model.addAttribute("edit", false);
 
 		return "standards/form";
 	}
 
+	@GetMapping("/form/{id}")
+	public String editStandardForm(final Model model, @PathVariable final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		model.addAttribute("action", "standards/update");
+		model.addAttribute("standard", template);
+		model.addAttribute("formTitle", "Rediger standard");
+		model.addAttribute("formId", "standardCreateForm");
+		model.addAttribute("edit", true);
+
+		return "standards/form";
+	}
+
+
 	@GetMapping("/section/form/{id}")
 	public String sectionForm(final Model model, @PathVariable(name = "id") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		model.addAttribute("standard", template);
 		model.addAttribute("action", "/standards/sections/create/" + id);
 		model.addAttribute("section", new StandardSection());

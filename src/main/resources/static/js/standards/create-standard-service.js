@@ -4,8 +4,13 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 function CreateStandardService() {
     this.standardModalDialog = null;
 
-    this.openStandardModal = function() {
-        fetch(`/standards/form`)
+    this.openStandardModal = function(id, edit=false) {
+        let url = "/standards/form"
+
+        if (edit) {
+            url += "/" + id;
+        }
+        fetch(url)
             .then(response => response.text()
                 .then(data => {
                     this.standardModalDialog = document.getElementById('standardFormDialog');
