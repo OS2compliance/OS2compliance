@@ -14,7 +14,6 @@ public class RiskDTO {
     private String name;
     private String responsibleUser;
 	private String relatedAssetsAndRegisters;
-	private String registersSearch;
 	private String responsibleOU;
 	private String type;
 	private String date;
