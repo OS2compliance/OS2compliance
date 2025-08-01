@@ -2,6 +2,7 @@
 <html xmlns="http://www.w3.org/1999/html">
 
 <head th:fragment="head">
+
 <meta http-equiv="content-type" content="text/html; charset=UTF-8">
 <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1">
 <meta th:if="${_csrf != null}" name="_csrf" th:content="${_csrf.token}" />
@@ -19,6 +20,7 @@
 <link th:if="${sweetalerts == true}" rel="stylesheet" th:href="@{/vendor/sweetalert2/sweetalert2.min.css}" />
 <link th:if="${textEditor == true}" rel="stylesheet" th:href="@{/vendor/ckeditor5/ckeditor5.css}" />
 
+<link th:if="${burgermenu == true}" rel="stylesheet" th:href="@{/css/navbar.css}" />
 <link rel="stylesheet" th:href="@{/css/global.css}" />
 <script th:if="${textEditor == true}" type="importmap">
     {
@@ -51,6 +53,13 @@
 		<!-- End - Brand -->
 
 		<div class="header__content">
+            <ul class="nav navbar-top-links">
+                <li class="tgl-menu-btn">
+                    <a class="mainnav-toggle" id="burger-menu">
+                        <i class="pli-list-view"></i>
+                    </a>
+                </li>
+            </ul>
 
 			<!-- Content Header - Left Side: -->
 			<div class="header__content-start">
@@ -69,5 +78,6 @@
 			</div>
 		</div>
 	</div>
+    <script th:src="@{/js/header.js}"></script>
 </header>
 </html>

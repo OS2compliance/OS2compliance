@@ -5,6 +5,10 @@
         header: "d-flex justify-content-end"
     };
 
+    const createRiskService = new CreateRiskService();
+    const copyRiskService = new CopyRiskService();
+    const editRiskService = new EditRiskService();
+
     document.addEventListener("DOMContentLoaded", function(event) {
         const defaultClassName = {
             table: 'table table-striped',
@@ -191,6 +195,8 @@
         new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
+
+        createRiskService.init();
     });
 
 function deleteClicked(riskId, name) {
@@ -275,13 +281,6 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
             }))
         .catch(error => toastService.error(error));
 }
-
-const createRiskService = new CreateRiskService();
-const copyRiskService = new CopyRiskService();
-const editRiskService = new EditRiskService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    createRiskService.init();
-});
 
 function EditRiskService() {
     this.getScopedElementById = function(id) {
@@ -416,8 +415,8 @@ function CreateRiskService() {
         const assetSelect = this.getScopedElementById('assetSelect');
         this.registerChoicesSelect = initRegisterSelect(registerSelect);
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
-        this.userChoicesSelect = choiceService.initUserSelect("userSelect");
-        this.ouChoicesSelect = choiceService.initOUSelect("ouSelect");
+        this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
+        this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
 
         this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
              const userUuid = self.userChoicesSelect.passedElement.element.value;
@@ -447,6 +446,20 @@ function CreateRiskService() {
         if (presentSelect !== null) {
             this.presentSelect = choiceService.initUserSelect('presentAtMeetingSelect');
         }
+
+        let societyCheckbox = this.getScopedElementById("society");
+        let authenticityCheckbox = this.getScopedElementById("authenticity");
+        let authenticitySection = this.getScopedElementById("authenticitySection");
+        societyCheckbox.addEventListener('change', function() {
+            if (societyCheckbox.checked) {
+                // show authenticity checkbox
+                authenticitySection.hidden = false;
+            } else {
+                // hide authenticity checkbox and reset
+                authenticitySection.hidden = true;
+                authenticityCheckbox.checked = false;
+            }
+        });
 
         initFormValidationForForm("createRiskModal",
             () => {
@@ -528,7 +541,8 @@ function CreateRiskService() {
         }
         let registered = this.getScopedElementById("registered");
         let organisation = this.getScopedElementById("organisation");
-        if (!registered.checked && !organisation.checked) {
+        let society = this.getScopedElementById("society");
+        if (!registered.checked && !organisation.checked && !society.checked) {
             registered.classList.add('is-invalid');
             organisation.classList.add('is-invalid');
             this.getScopedElementById("checkboxError").classList.add('show');
@@ -562,10 +576,13 @@ function CreateRiskService() {
                     // set text in table
                     this.getScopedElementById("RF").innerHTML = data.rf === 0 ? "" : data.rf;
                     this.getScopedElementById("OF").innerHTML = data.of === 0 ? "" : data.of;
+                    this.getScopedElementById("SF").innerHTML = data.sf === 0 ? "" : data.sf;
                     this.getScopedElementById("RI").innerHTML = data.ri === 0 ? "" : data.ri;
                     this.getScopedElementById("OI").innerHTML = data.oi === 0 ? "" : data.oi;
+                    this.getScopedElementById("SI").innerHTML = data.si === 0 ? "" : data.si;
                     this.getScopedElementById("RT").innerHTML = data.rt === 0 ? "" : data.rt;
                     this.getScopedElementById("OT").innerHTML = data.ot === 0 ? "" : data.ot;
+                    this.getScopedElementById("ST").innerHTML = data.st === 0 ? "" : data.st;
 
                     this.getScopedElementById("inheritRow").style.display = '';
                 }))
