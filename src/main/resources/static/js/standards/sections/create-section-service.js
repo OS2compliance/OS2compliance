@@ -2,6 +2,15 @@ const createSectionService = new CreateSectionService();
 
 document.addEventListener("shown.bs.modal", function(event) {
     createSectionService.toggleTextAreas();
+    const form = document.getElementById("headerForm");
+    if (form) {
+        form.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const headerInput = document.getElementById('headerForm');
+            console.log(headerInput.text);
+        });
+    }
 });
 
 function CreateSectionService() {
@@ -21,10 +30,14 @@ function CreateSectionService() {
             .catch(error => toastService.error(error));
     }
 
-    this.openHeaderModal = function(element) {
+    this.openHeaderModal = function(element, isEdit=false) {
         const id = element.dataset.id;
-
-        fetch(`/standards/section/header/form/` + id)
+        let url = "/standards/section/header/form/" + id;
+        if (isEdit) {
+            const headerId = element.dataset.header;
+            url = "/standards/section/header/form/" + id + "/" + headerId;
+        }
+        fetch(url)
             .then(response => response.text()
                 .then(data => {
                     this.headerModalDialog = document.getElementById('headerFormDialog');

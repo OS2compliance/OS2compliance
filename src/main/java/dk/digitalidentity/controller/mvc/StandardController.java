@@ -207,7 +207,6 @@ public class StandardController {
 		model.addAttribute("formTitle", "Ny standard");
 		model.addAttribute("formId", "standardCreateForm");
 		model.addAttribute("edit", false);
-
 		return "standards/form";
 	}
 
@@ -239,7 +238,7 @@ public class StandardController {
 	}
 
 	@GetMapping("/section/header/form/{id}")
-	public String headerForm(final Model model, @PathVariable(name = "id") final String id) {
+	public String createHeaderForm(final Model model, @PathVariable(name = "id") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		model.addAttribute("standard", template);
@@ -251,14 +250,60 @@ public class StandardController {
 		return "standards/sections/create_header_form";
 	}
 
+	@GetMapping("/section/header/form/{id}/{headerIdentifier}")
+	public String editHeaderForm(final Model model, @PathVariable(name = "id") final String headerIdentifier, @PathVariable(name = "headerIdentifier") final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		StandardTemplateSection header = standardTemplateSectionDao.findById(headerIdentifier)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		model.addAttribute("header", header);
+		model.addAttribute("standard", template);
+		model.addAttribute("action", "/standards/headers/update/" + id);
+		model.addAttribute("formTitle", "Ny gruppe");
+		model.addAttribute("formId", "headerForm");
+
+		return "standards/sections/create_header_form";
+	}
+
+	@Transactional
+	@PostMapping("/headers/update/{identifier}")
+	public String editHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		log.info("hello?");
+
+		log.info("standardTemplateSection: " + standardTemplateSection.getSection());
+		log.info("standardTemplateSectionChildrenCount: " + standardTemplateSection.getChildren().size());
+		// TODO: There has to be a different way to properly display the errors
+//		boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
+//
+//		if (existsAlready) {
+//			result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
+//			redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
+//			return "redirect:/standards/supporting/" + id;
+//		}
+//		String sortKey = standardTemplateSection.getSection().replace(".", "");
+//		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
+
+		// TODO: Update all children to have the proper section number and sortkey
+		for (StandardTemplateSection child : standardTemplateSection.getChildren().stream().sorted(Comparator.comparing(StandardTemplateSection::getSortKey)).toList()) {
+			log.info("child: " + child.getSection());
+		}
+//		standardTemplateSectionDao.save(standardTemplateSection);
+		return "redirect:/standards/supporting/" + id;
+	}
+
+
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
 	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
-		// TODO: Versioning is cooked, when a section already exists we need to increment the counter, if there is no underlying section already we take nr 1.
-		// TODO: When deleting we need to make sure all the other ones are updated properly so that we do not end up with 11.3, 11.5, 11.6
+		// TODO: Some versions still fail, most importantly 10.1.1.1.X (I dont think we are even allowed to go that far, so maybe frontend validation is enough?)
 		String version = getHighestVersionNumber(parentsTemplateSection.getSection(), existingChildren);
 		String sectionPrefix = parentsTemplateSection.getSection();
 		String name = version + " " + standardSection.getName();
@@ -309,7 +354,7 @@ public class StandardController {
         final Map<Long, List<RelatedDTO>> result = new HashMap<>();
 
         for (final StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
-            for(final StandardTemplateSection child : standardTemplateSection.getChildren()) {
+            for (final StandardTemplateSection child : standardTemplateSection.getChildren()) {
                 result.put(child.getStandardSection().getId(), relationService.findRelationsAsListDTO(child.getStandardSection(), false));
             }
         }

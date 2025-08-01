@@ -70,7 +70,7 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
-                                                <td><span><button th:data-id="${sectionParent.identifier}" onclick="createSectionService.openDeleteSwal(this)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
+                                                <td><span><button th:data-id="${sectionParent.identifier}" th:data-header="${template.identifier}" onclick="createSectionService.openHeaderModal(this, true)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button><button th:data-id="${sectionParent.identifier}" onclick="createSectionService.openDeleteSwal(this)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
                                             </tr>
                                             <th:block th:if="${statusFilter == null OR section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
                                                 <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
