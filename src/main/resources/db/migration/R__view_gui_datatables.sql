@@ -188,7 +188,7 @@ SELECT
                      WHEN a.name IS NOT NULL THEN a.name
                      WHEN rgs.name IS NOT NULL THEN rgs.name
                      END ASC
-                 SEPARATOR ', '
+                 SEPARATOR '||'
     ) AS related_assets_and_registers
 FROM
     threat_assessments t

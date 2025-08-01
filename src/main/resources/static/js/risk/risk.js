@@ -64,17 +64,21 @@
                     },
                     formatter: (cell, row) => {
                         const dbsAssetId = row.cells[0]['data'];
-                        console.log(row);
 
                         let items = [];
                         if (typeof cell === "string" && cell.trim() !== "") {
-                            items = cell.split(",").map(name => name.trim());
+                            items = cell.split("||").map(name => name.trim());
                         } else if (Array.isArray(cell)) {
                             items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
                         }
 
                         let options = '';
-                        for (const name of items) {
+                        for (const item of items) {
+                            let name = item.name || item;
+                            const commaIndex = name.indexOf(',');
+                            if (commaIndex > -1) {
+                                name = name.substring(0, commaIndex).trim();
+                            }
                             options += `<option value="${name}" selected>${name}</option>`;
                         }
 
@@ -82,8 +86,10 @@
                             `<select class="form-control form-select choices__input"
                                 data-assetid="${dbsAssetId}"
                                 name="assetsAndRegisters"
+                                readonly
                                 id="assetsRegistersSelect${dbsAssetId}"
-                            hidden multiple>${options}</select>`
+                                hidden multiple>${options}    
+                            </select>`
                         );
                     },
                     width: '300px'
