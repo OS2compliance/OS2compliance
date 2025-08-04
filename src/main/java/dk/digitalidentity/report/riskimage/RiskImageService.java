@@ -122,7 +122,8 @@ public class RiskImageService {
 		return Stream.concat(threatRows, customThreatRows)
 				.sorted(Comparator.nullsLast(
 						Comparator.comparing(ThreatRow::threatCatalogName)
-								.thenComparing(ThreatRow::name)))
+								.thenComparing(ThreatRow::name)
+								.thenComparing(ThreatRow::description)))
 				.toList();
 	}
 
@@ -139,6 +140,7 @@ public class RiskImageService {
 
 		return new ThreatRow(
 				threat.getThreatType(),
+				threat.getDescription(),
 				threat.getThreatCatalog() != null ? threat.getThreatCatalog().getName() : "",
 				assessmentScores,
 				assessmentScores.values().stream().mapToDouble(Double::valueOf).sum()
@@ -157,6 +159,7 @@ public class RiskImageService {
 
 		return new ThreatRow(
 				threat.getThreatType(),
+				threat.getDescription(),
 				"",
 				assessmentScores,
 				assessmentScores.values().stream().mapToDouble(Double::valueOf).sum()

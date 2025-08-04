@@ -29,10 +29,13 @@ public class RiskImageView extends AbstractXlsxView {
 	private void createRiskImageSheet(Workbook workbook, List<ThreatRow> threatRows) {
 		String sheetName = "Risikobillede";
 
+		// Create a map of the columns, with functions to set the corresponsing value in cell
 		Map<String, XlsUtil.CellValueSetter<ThreatRow, Cell>> converterMap = new LinkedHashMap<>();
-		converterMap.put("Trussel", (t, c) -> c.setCellValue(t.name()));
+		converterMap.put("Type", (t, c) -> c.setCellValue(t.name()));
+		converterMap.put("Trussel", (t, c) -> c.setCellValue(t.description()));
 		converterMap.put("Trusselskatalog", (t, c) -> c.setCellValue(t.threatCatalogName()));
 
+		// Map all threatassessments to columns
 		List<String> threatAssessmentNames = threatRows.stream()
 				.flatMap(tr -> tr.assetThreatScoresByThreatAssessmentName().keySet().stream())
 				.sorted()
