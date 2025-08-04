@@ -167,7 +167,9 @@ let DataProcessingComponent = function () {
 
         const noteField = categoryRow.querySelector(".categoryNoteField");
 
-        noteField.value = category.note
+        if (noteField) {
+            noteField.value = category?.note || ""
+        }
         extendedDiv.hidden = false;
         selector.value = passedOn || "NO";
         if (passedOn === "YES") {
