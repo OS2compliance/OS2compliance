@@ -3,9 +3,12 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.ChoiceListDao;
 import dk.digitalidentity.model.dto.DataProcessingChoicesDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
+import dk.digitalidentity.model.dto.DataProcessingInformationReceiverDTO;
 import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
+import dk.digitalidentity.model.entity.data_processing.DataProcessingInfoReceiver;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -14,11 +17,14 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.stream.Collectors;
+
 @Slf4j
 @Service("dataProcessingService")
 @RequiredArgsConstructor
 public class DataProcessingService {
     private final ChoiceListDao choiceListDao;
+	private final ChoiceService choiceService;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void update(final DataProcessing dataProcessing, final DataProcessingDTO body) {
@@ -36,14 +42,25 @@ public class DataProcessingService {
             dataProcessing.getRegisteredCategories().clear();
             body.getPersonCategoriesRegistered().stream()
                     .filter(c -> !c.getPersonCategoriesRegisteredIdentifier().isEmpty())
-                    .forEach(c -> dataProcessing.getRegisteredCategories()
-                            .add(DataProcessingCategoriesRegistered.builder()
-                                    .dataProcessing(dataProcessing)
-                                    .personCategoriesRegisteredIdentifier(c.getPersonCategoriesRegisteredIdentifier())
-                                    .personCategoriesInformationIdentifiers(c.getPersonCategoriesInformationIdentifiers())
-                                    .informationPassedOn(c.getInformationPassedOn())
-                                    .informationReceivers(c.getInformationReceivers())
-                                    .build()));
+                    .forEach(c -> {
+						// Map to category
+						DataProcessingCategoriesRegistered category = DataProcessingCategoriesRegistered.builder()
+								.dataProcessing(dataProcessing)
+								.personCategoriesRegisteredIdentifier(c.getPersonCategoriesRegisteredIdentifier())
+								.personCategoriesInformationIdentifiers(c.getPersonCategoriesInformationIdentifiers())
+								.informationPassedOn(c.getInformationPassedOn())
+								.receiverComment(c.getInformationPassedOnComment())
+								.build();
+
+						// Set receivers on category
+						category.setInformationReceivers(c.getInformationReceivers().stream()
+								.filter(ir -> ir.getChoiceValueIdentifier() != null)
+								.map(ir -> toDataProcessingInfoReceiver(ir, category))
+								.collect(Collectors.toSet()));
+
+						dataProcessing.getRegisteredCategories()
+								.add(category);
+					});
         }
 
     }
@@ -93,5 +110,14 @@ public class DataProcessingService {
                 .build();
     }
 
+	private DataProcessingInfoReceiver toDataProcessingInfoReceiver(DataProcessingInformationReceiverDTO receiverDTO, DataProcessingCategoriesRegistered categoriesRegistered) {
+		ChoiceValue choice = choiceService.getValue(receiverDTO.getChoiceValueIdentifier())
+				.orElseThrow();
+		return DataProcessingInfoReceiver.builder()
+				.choiceValue(choice)
+				.receiverLocation(receiverDTO.getReceiverLocation())
+				.dataProcessingCategoriesRegistered(categoriesRegistered)
+				.build();
+	}
 
 }
