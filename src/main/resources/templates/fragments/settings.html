@@ -39,6 +39,58 @@
                         </div>
                     </div>
 
+                    <!--                   Report Settings-->
+                    <a class="btn btn-primary" data-bs-toggle="collapse" href="#reportpart" role="button"
+                       aria-expanded="false" aria-controls="reportpart">
+                        Reporter
+                    </a>
+                    <div class="collapse" id="reportpart"
+                         th:classappend="${page} == 'reports' ? 'show' : ''">
+                        <div class="card card-body gap-3">
+                            <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'report'" class="row">
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
+                                <th:block th:switch="${setting.settingKey}">
+                                    <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).DATARESPONSIBLE.key}"
+                                           th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).DATARESPONSIBLE.label}"
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
+                                           style="color: black;"></label>
+                                    <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE.key}"
+                                           th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE.label}"
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
+                                           style="color: black;"></label>
+                                    <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_COMMON_DATARESPONSIBLE.key}"
+                                           th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_COMMON_DATARESPONSIBLE.label}"
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
+                                           style="color: black;"></label>
+                                    <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE_REPRESENTATIVE.key}"
+                                           th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATARESPONSIBLE_REPRESENTATIVE.label}"
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
+                                           style="color: black;"></label>
+                                    <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATA_PROTECTION_ADVISOR.key}"
+                                           th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).CONTACT_DATA_PROTECTION_ADVISOR.label}"
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
+                                           style="color: black;"></label>
+                                    <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).SECURITY_PRECAUTIONS.key}"
+                                           th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).SECURITY_PRECAUTIONS.label}"
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
+                                           style="color: black;"></label>
+                                    <label th:case="${T(dk.digitalidentity.model.entity.enums.ReportSetting).PERSONAL_DATA_RECEIVERS.key}"
+                                           th:text="${T(dk.digitalidentity.model.entity.enums.ReportSetting).PERSONAL_DATA_RECEIVERS.label}"
+                                           th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
+                                           style="color: black;"></label>
+                                </th:block>
+                                <input style="color:black;" class="form-control"
+                                       th:id="*{settingsList[__${itemStat.index}__].settingKey + '-id'}"
+                                       th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+
+                            </div>
+                        </div>
+                    </div>
+
                     <!--Email Notifications-->
                     <a class="btn btn-primary" data-bs-toggle="collapse" href="#notificationPart" role="button"
                        aria-expanded="false" aria-controls="notificationPart">
@@ -93,10 +145,10 @@
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
-                                <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}" class="col-sm-12 col-form-label"
+                                <label th:for="*{settingsList[__${itemStat.index}__].settingKey + '-id'}" class="col-sm-12 col-form-label"
                                        style="color: black;" th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.model.entity.enums.RegisterSetting).CUSTOMRESPONSIBLEUSERFIELDNAME.value ? 'Navn for redigerbart brugerfelt' : 'Ukendt indstilling'}"></label>
                                 <input style="color:black;" class="form-control"
-                                       th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                       th:id="*{settingsList[__${itemStat.index}__].settingKey + '-id'}"
                                        th:field="*{settingsList[__${itemStat.index}__].settingValue}">
 
                             </div>
