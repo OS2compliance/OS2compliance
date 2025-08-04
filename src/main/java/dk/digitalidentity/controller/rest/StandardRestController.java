@@ -96,7 +96,6 @@ public class StandardRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-	// TODO: When deleting, make sure we update the children of the parent so that the version numbers match again :)
 	@Transactional
 	@PostMapping("/section/delete/{identifier}")
 	public ResponseEntity<?> deleteSection(@PathVariable(name = "identifier") final String identifier) {

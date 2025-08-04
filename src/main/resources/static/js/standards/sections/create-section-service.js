@@ -8,7 +8,6 @@ document.addEventListener("shown.bs.modal", function(event) {
 
             const sectionValue = form.elements['section'].value;
             // Validate section format, as we do not allow the sections to be versioned too deep
-            // TODO: Need proper alert
             const parts = sectionValue.split('.');
             if (parts.length > 3 || (parts.length === 1 && !/^\d+$/.test(sectionValue))) {
                 return;

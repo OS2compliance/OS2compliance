@@ -196,7 +196,6 @@
     document.addEventListener("DOMContentLoaded", function(event) {
         supportingStandartsViewLoaded();
         addRelationFormLoaded();
-        // TODO: Needs to be done better...
         if (modalError) {
             document.getElementById('addHeaderButton').click();
             toastService.error(modalError);

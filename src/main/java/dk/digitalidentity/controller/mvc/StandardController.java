@@ -52,7 +52,6 @@ import java.util.stream.Collectors;
 @RequireUser
 @RequiredArgsConstructor
 public class StandardController {
-	// TODO: Refactor to use service only instead of direct dao!
     private final StandardsService standardsService;
     private final RelationService relationService;
     private final StandardSectionDao standardSectionDao;
