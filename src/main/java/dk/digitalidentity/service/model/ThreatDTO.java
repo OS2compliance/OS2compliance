@@ -38,6 +38,16 @@ public class ThreatDTO {
     // Tilgængelighed
     private final int ot;
 
+	// Consequence of society
+	// Fortrolighed
+	private final int sf;
+	// Integritet
+	private final int si;
+	// Tilgængelighed
+	private final int st;
+	// Autenticitet
+	private final int sa;
+
     private final String problem;
     private final String existingMeasures;
     private final List<Relatable> relatedPrecautions;

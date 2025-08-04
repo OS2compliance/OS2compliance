@@ -10,6 +10,7 @@ import dk.digitalidentity.model.dto.enums.ReportFormat;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Precaution;
@@ -140,7 +141,7 @@ public class RiskRestController {
         return new ResponsibleUsersWithElementNameDTO(register.getName(), users);
     }
 
-    record RiskUIDTO(String elementName, int rf, int of, int ri, int oi, int rt, int ot, ResponsibleUsersWithElementNameDTO users) {}
+    record RiskUIDTO(String elementName, int rf, int of, int sf, int ri, int oi, int si, int rt, int ot, int st, ResponsibleUsersWithElementNameDTO users) {}
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetService.findAllById(assetIds);
@@ -148,7 +149,7 @@ public class RiskRestController {
         final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream()
             .map(Relatable::getId).toList());
         final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
-        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), users);
+        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getSf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getSi(), riskDTO.getRt(), riskDTO.getOt(), riskDTO.getSt(), users);
     }
 
     record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
@@ -270,6 +271,10 @@ public class RiskRestController {
             case OF -> response.setConfidentialityOrganisation(Integer.parseInt(dto.value()));
             case OI -> response.setIntegrityOrganisation(Integer.parseInt(dto.value()));
             case OT -> response.setAvailabilityOrganisation(Integer.parseInt(dto.value()));
+			case SF -> response.setConfidentialitySociety(Integer.parseInt(dto.value()));
+			case SI -> response.setIntegritySociety(Integer.parseInt(dto.value()));
+			case ST -> response.setAvailabilitySociety(Integer.parseInt(dto.value()));
+			case SA -> response.setAuthenticitySociety(Integer.parseInt(dto.value()));
             case PROBLEM -> response.setProblem(dto.value());
             case EXISTING_MEASURES -> response.setExistingMeasures(dto.value());
             case METHOD -> {
@@ -405,6 +410,10 @@ public class RiskRestController {
             response.setConfidentialityOrganisation(null);
             response.setIntegrityOrganisation(null);
             response.setAvailabilityOrganisation(null);
+            response.setConfidentialitySociety(null);
+            response.setIntegritySociety(null);
+            response.setAvailabilitySociety(null);
+            response.setAuthenticitySociety(null);
         }
     }
 
@@ -468,11 +477,25 @@ public class RiskRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	public record CommentUpdateDTO(Long riskId, String comment){}
+	@PostMapping("comment/update")
+	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
+		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		threatAssessment.setComment(commentUpdateDTO.comment);
+		threatAssessmentService.save(threatAssessment);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
     private void relateAssets(final Set<Long> selectedAsset, final ThreatAssessment savedThreatAssessment) {
         final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
         relatedAssets.forEach(asset -> relationService.addRelation(savedThreatAssessment, asset));
         if (savedThreatAssessment.isInherit()) {
-            inheritRisk(savedThreatAssessment, relatedAssets);
+            threatAssessmentService.inheritRisk(savedThreatAssessment, relatedAssets);
         }
     }
 
@@ -480,31 +503,5 @@ public class RiskRestController {
         final Register register = registerService.findById(selectedRegister).orElseThrow(
             () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
         relationService.addRelation(savedThreatAssessment, register);
-    }
-
-    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
-        final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).toList());
-        savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
-        savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
-        savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
-        savedThreatAssesment.setInheritedConfidentialityOrganisation(riskDTO.getOf());
-        savedThreatAssesment.setInheritedIntegrityOrganisation(riskDTO.getOi());
-        savedThreatAssesment.setInheritedAvailabilityOrganisation(riskDTO.getOt());
-
-        for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
-            final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
-            response.setName(threat.getDescription());
-            response.setConfidentialityRegistered(riskDTO.getRf());
-            response.setIntegrityRegistered(riskDTO.getRi());
-            response.setAvailabilityRegistered(riskDTO.getRt());
-            response.setConfidentialityOrganisation(riskDTO.getOf());
-            response.setIntegrityOrganisation(riskDTO.getOi());
-            response.setAvailabilityOrganisation(riskDTO.getOt());
-            response.setMethod(ThreatMethod.NONE);
-            response.setThreatCatalogThreat(threat);
-            response.setThreatAssessment(savedThreatAssesment);
-            savedThreatAssesment.getThreatAssessmentResponses().add(response);
-        }
-        threatAssessmentService.save(savedThreatAssesment);
     }
 }
