@@ -37,6 +37,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
@@ -174,6 +175,7 @@ public class AssetsController {
             return "redirect:/assets";
         } else {
             asset.setAssetStatus(AssetStatus.NOT_STARTED);
+			asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
             asset.setCriticality(Criticality.NON_CRITICAL);
             asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
             final Asset newAsset = assetService.create(asset);
@@ -499,6 +501,7 @@ public class AssetsController {
         existingAsset.setArchive(asset.getArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setAssetCategory(asset.getAssetCategory());
+		existingAsset.setAiStatus(asset.getAiStatus());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {

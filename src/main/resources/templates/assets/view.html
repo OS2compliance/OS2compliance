@@ -175,6 +175,21 @@
                                                     </div>
                                                 </div>
                                             </div>
+
+                                            <div class="row mb-3">
+                                                <label for="aiStatus"
+                                                       class="col-sm-3 col-form-label">Anvender løsningen AI?</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:readonly="${isKitos}" th:field="*{aiStatus}" name="assetCategory" id="aiStatus"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
+                                                                th:value="${status}" th:text="${status.message}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
                                         </div>
                                         <!-- Column 2 -->
                                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 gx-4">

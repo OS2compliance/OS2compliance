@@ -1,0 +1,1 @@
+ALTER TABLE assets ADD ai_status VARCHAR(30) NOT NULL;

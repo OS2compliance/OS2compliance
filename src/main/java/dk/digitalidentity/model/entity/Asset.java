@@ -5,6 +5,7 @@ import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
@@ -59,6 +60,10 @@ public class Asset extends Relatable {
 
     @Column
     private String description;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ContainsAITechnologyEnum aiStatus;
 
     @ManyToOne
     @JoinColumn(name = "asset_type", nullable = false)
