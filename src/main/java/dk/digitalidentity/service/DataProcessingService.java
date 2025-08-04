@@ -3,17 +3,9 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.ChoiceListDao;
 import dk.digitalidentity.model.dto.DataProcessingChoicesDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
-import dk.digitalidentity.model.entity.Property;
-import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
-import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskType;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -22,18 +14,11 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.time.LocalDateTime;
-import java.util.List;
-
-import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
-
 @Slf4j
 @Service("dataProcessingService")
 @RequiredArgsConstructor
 public class DataProcessingService {
     private final ChoiceListDao choiceListDao;
-    private final TaskService taskService;
-    private final RelationService relationService;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void update(final DataProcessing dataProcessing, final DataProcessingDTO body) {
@@ -45,6 +30,7 @@ public class DataProcessingService {
         dataProcessing.setDeletionProcedureLink(body.getDeletionProcedureLink());
         dataProcessing.setElaboration(body.getElaboration());
         dataProcessing.setTypesOfPersonalInformationFreetext(body.getTypesOfPersonalInformationFreetext());
+		dataProcessing.setDeletionAppliesToAll(body.isDeletionAppliesToAll());
 
         if (body.getPersonCategoriesRegistered() != null) {
             dataProcessing.getRegisteredCategories().clear();

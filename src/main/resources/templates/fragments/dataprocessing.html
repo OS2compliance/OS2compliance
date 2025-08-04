@@ -79,6 +79,16 @@
                                     th:selected="${dataProcessing.storageTimeIdentifier == choice.identifier}"
                                     th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
                         </select>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td>Gælder de forventede slettefrister for hele behandlingen?</td>
+                    <td>
+                        <select id="deletionAppliesSelect" class="form-control form-select editField" name="deletionAppliesToAll" tabindex="-1" disabled>
+                            <option value="true" th:text="Ja" th:selected="${dataProcessing.deletionAppliesToAll}"></option>
+                            <option value="false" th:text="Nej" th:selected="${!dataProcessing.deletionAppliesToAll}"></option>
+                        </select>
                     </td>
                 </tr>
                 <tr>
