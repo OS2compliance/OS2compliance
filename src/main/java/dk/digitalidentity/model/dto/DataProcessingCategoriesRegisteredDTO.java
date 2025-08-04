@@ -19,4 +19,5 @@ public class DataProcessingCategoriesRegisteredDTO {
     private InformationPassedOn informationPassedOn;
     private List<DataProcessingInformationReceiverDTO> informationReceivers = new ArrayList<>();
 	private String informationPassedOnComment;
+	private String note;
 }

@@ -165,6 +165,9 @@ let DataProcessingComponent = function () {
         const passedOn = category ? category.informationPassedOn : null;
         const infoReceivers = category ? category.informationReceivers : null;
 
+        const noteField = categoryRow.querySelector(".categoryNoteField");
+
+        noteField.value = category.note
         extendedDiv.hidden = false;
         selector.value = passedOn || "NO";
         if (passedOn === "YES") {
@@ -257,10 +260,12 @@ let DataProcessingComponent = function () {
             const selectedPersonInformation = categoryRow?.querySelector('.selectedPersonInformation');
             const selectedRegisteredCategory = categoryRow?.querySelector('.selectedRegisteredCategory');
             const infoPassedOnSelect = categoryRow?.querySelector('.infoPassedOnSelect');
+            const noteField = categoryRow?.querySelector('.categoryNoteField');
 
             selectedRegisteredCategory?.setAttribute('name', `${baseName}.personCategoriesRegisteredIdentifier`);
             selectedPersonInformation?.setAttribute('name', `${baseName}.personCategoriesInformationIdentifiers`);
             infoPassedOnSelect?.setAttribute('name', `${baseName}.informationPassedOn`);
+            noteField?.setAttribute('name', `${baseName}.note`);
 
             this.updateNamesForInfoReceiversControls(categoryRow, baseName)
             this.updateNameForInfoPassedOnComment(categoryRow, baseName)

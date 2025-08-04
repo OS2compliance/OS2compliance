@@ -159,6 +159,12 @@
         <div class="extendedCategoryInfo mt-2 row" hidden="">
             <div th:replace="~{dataProcessing/dataProcessingInfoPassedOn :: dataProcessingInfoPassedOn(allReceiversIdentifiers=${dbChoices.informationReceiversIdentifiers.values})}"></div>
         </div>
+        <div class="col-12 row mt-2 border-top border-1">
+            <label class="form-label mt-2">Note</label>
+            <div class="col-12">
+                <textarea class="categoryNoteField editField form-control" disabled></textarea>
+            </div>
+        </div>
     </div>
     <script th:inline="javascript" th:if="${primary}">
         /*<![CDATA[*/
