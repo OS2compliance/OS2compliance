@@ -145,7 +145,6 @@ public class StandardRestController {
 	@Transactional
 	@PostMapping("/delete/{id}")
 	public ResponseEntity<?> deleteStandard(@PathVariable(name = "id") final String id) {
-		log.info("hit!");
 		StandardTemplate template = standardTemplateDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		standardTemplateDao.delete(template);
 		return new ResponseEntity<>(HttpStatus.OK);
