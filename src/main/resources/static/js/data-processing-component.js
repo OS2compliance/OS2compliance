@@ -209,14 +209,14 @@ let DataProcessingComponent = function () {
 
     this.checkSelectedRadioButton = function (receiverLocation, additionalOptionsContainer) {
         if (receiverLocation === 'OUTSIDE_EU') {
-            const insideEuRadioButton = additionalOptionsContainer.querySelector('.insideEuRadio')
-            if (insideEuRadioButton) {
-                insideEuRadioButton.checked = true;
-            }
-        } else {
-            const outsideEURadioButton = additionalOptionsContainer.querySelector('.outsideEuRadio')
+            const outsideEURadioButton = additionalOptionsContainer.querySelector('.outsideEURadio')
             if (outsideEURadioButton) {
                 outsideEURadioButton.checked = true;
+            }
+        } else {
+            const insideEuRadioButton = additionalOptionsContainer.querySelector('.insideEURadio')
+            if (insideEuRadioButton) {
+                insideEuRadioButton.checked = true;
             }
         }
     }
@@ -379,7 +379,9 @@ let DataProcessingComponent = function () {
 
     this.showInfoRecieversElementFor = function (container, show) {
         const infoReceiversDiv = container?.querySelector(".infoReceiversDiv");
+        const infoReceiversCommentDiv = container?.querySelector(".infoReceiverCommentDiv");
         infoReceiversDiv.hidden = !show;
+        infoReceiversCommentDiv.hidden = !show;
     }
 
 }

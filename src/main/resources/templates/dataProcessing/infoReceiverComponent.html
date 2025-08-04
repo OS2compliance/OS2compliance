@@ -13,7 +13,7 @@
                 <label class="form-check-label text-nowrap flex-grow-1" th:text="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).INSIDE_EU.message}"></label>
             </div>
             <div class="form-check d-flex align-items-center w-100">
-                <input class="locationRadio outsideEURadio form-check-input  editField" th:value="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).OUTSIDE_EU}" type="radio" disabled>
+                <input class="locationRadio outsideEURadio form-check-input flex-shrink-0 me-2 editField" th:value="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).OUTSIDE_EU}" type="radio" disabled>
                 <label class="form-check-label text-nowrap flex-grow-1" th:text="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).OUTSIDE_EU.message}"></label>
             </div>
         </div>

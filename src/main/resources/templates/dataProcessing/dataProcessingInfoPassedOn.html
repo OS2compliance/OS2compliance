@@ -12,15 +12,14 @@
                 </select>
             </div>
         </div>
-        <div class="col-sm-12 d-flex flex-column">
+        <div class="infoReceiverCommentDiv col-sm-12" hidden>
             <label class="form-label flex-shrink-0">Uddybning</label>
             <textarea class="infoPassedOnComment editField form-control flex-grow-1 col-10" disabled></textarea>
         </div>
     </div>
 
 
-    <div class="infoReceiversDiv col d-flex flex-wrap gap-1" hidden>
-
+    <div class="infoReceiversDiv col" hidden>
             <th:block th:each="opt : ${allReceiversIdentifiers}">
                 <div th:replace="~{dataProcessing/infoReceiverComponent :: infoReceiverComponent(receiverOption=${opt})}"></div>
             </th:block>
