@@ -34,6 +34,7 @@ import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
@@ -100,6 +101,7 @@ public class RegisterController {
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
 	private final KLELegalReferenceService kLELegalReferenceService;
+	private final CatalogService catalogService;
 
 	@GetMapping
 	public String registerList(Model model) {
@@ -417,6 +419,7 @@ public class RegisterController {
         model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
+		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
 		model.addAttribute("risk", new ThreatAssessment());
 		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
 

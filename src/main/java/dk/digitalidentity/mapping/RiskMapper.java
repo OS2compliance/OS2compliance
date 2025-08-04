@@ -1,9 +1,7 @@
 package dk.digitalidentity.mapping;
 
 
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
