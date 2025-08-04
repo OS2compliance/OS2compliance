@@ -270,41 +270,53 @@ public class StandardController {
 	@Transactional
 	@PostMapping("/headers/update/{identifier}")
 	public String editHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
+
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		StandardTemplateSection header = standardTemplateSectionDao.findByStandardTemplate(template).stream()
-				.filter(standardTemplateSection1 -> standardTemplateSection1.getParent() == null)
+				.filter(section -> section.getParent() == null)
 				.findAny()
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 
-		if (!Objects.equals(header.getSection(), standardTemplateSection.getSection())) {
-			// TODO: Renew the field after verifying that the section is available AND renew all children with proper section versioning/numbering
-			List<StandardTemplateSection> children = header.getChildren().stream().sorted(Comparator.comparing(StandardTemplateSection::getSortKey)).toList();
-			for (StandardTemplateSection child : children) {
-				System.out.println("child.getSection() = " + child.getSection());
+		String oldSection = header.getSection().trim();
+		String newSection = standardTemplateSection.getSection().trim();
+
+		if (!Objects.equals(oldSection, newSection)) {
+			boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
+
+			if (existsAlready) {
+				result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
+				redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
+				return "redirect:/standards/supporting/" + id;
 			}
+
+			String newSectionPrefix = newSection + ".";
+
+			header.setSection(newSection);
+			header.setSortKey(Integer.parseInt(newSection.replace(".", "")));
+
+			List<StandardTemplateSection> children = header.getChildren().stream()
+					.sorted(Comparator.comparing(StandardTemplateSection::getSortKey).reversed())
+					.collect(Collectors.toList());
+			for (StandardTemplateSection child : children) {
+				String childSection = child.getSection().trim();
+				String[] split = childSection.split("\\.");
+				child.setSection(newSectionPrefix + split[split.length - 1]);
+				child.setSortKey(Integer.parseInt(child.getSection().replace(".", "").replaceAll("[^0-9]", "")));
+			}
+
+			standardTemplateSectionDao.saveAll(children);
+			standardTemplateSectionDao.save(header);
 		}
+
 		if (!Objects.equals(header.getDescription(), standardTemplateSection.getDescription())) {
 			header.setDescription(standardTemplateSection.getDescription());
+			standardTemplateSectionDao.save(header);
 		}
 
-		// TODO: There has to be a different way to properly display the errors
-//		boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
-//
-//		if (existsAlready) {
-//			result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
-//			redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
-//			return "redirect:/standards/supporting/" + id;
-//		}
-//		String sortKey = standardTemplateSection.getSection().replace(".", "");
-//		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
-
-		// TODO: Update all children to have the proper section number and sortkey
-		//standardTemplateSectionDao.save(standardTemplateSection);
 		return "redirect:/standards/supporting/" + id;
 	}
-
 
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
@@ -334,14 +346,12 @@ public class StandardController {
 		return "redirect:/standards/supporting/" + identifier;
 	}
 
-	// TODO: Validate that no version already exists beforehand, make sure we error on it and that the user gets to see the error
 	@Transactional
 	@PostMapping("/headers/create/{identifier}")
 	public String createHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		// TODO: There has to be a different way to properly display the errors
 		boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
 
 		if (existsAlready) {
@@ -390,9 +400,6 @@ public class StandardController {
             .filter(r -> r.getRelationType().equals(relationType))
             .collect(Collectors.toList());
     }
-
-
-	// TODO: Make this one function and parameterize it?
 
 	private String getHighestVersionNumber(String parentSection, Set<StandardTemplateSection> allSections) {
 		String prefix = parentSection + ".";

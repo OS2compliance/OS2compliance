@@ -53,11 +53,6 @@ function CreateSectionService() {
             .catch(error => toastService.error(error));
     }
 
-    this.toggleNSIS = function () {
-        const checkbox = document.getElementById('toggleNSIS');
-        const isChecked = checkbox.checked;
-    }
-
     this.openDeleteSwal = function (element, isheader=true) {
         const id = element.dataset.id;
         const path = isheader === true ? "header/" : "section/";
