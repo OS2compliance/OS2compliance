@@ -133,7 +133,7 @@ public class RiskImageService {
 						Relatable::getName,
 						ta -> getAverageScore( // Get average score
 								ta.getThreatAssessmentResponses().stream() // ...For responses of this treatassessment
-										.filter(r -> r.getThreatCatalogThreat().equals(threat)).toList() // ...That matches the relevant threat
+										.filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().equals(threat)).toList() // ...That matches the relevant threat
 						),
 						(ta1, ta2) -> ta1));
 
@@ -151,7 +151,7 @@ public class RiskImageService {
 						Relatable::getName,
 						ta -> getAverageScore( // Get average score
 								ta.getThreatAssessmentResponses().stream() // ...For responses of this treatassessment
-										.filter(r -> r.getCustomThreat().equals(threat)).toList()  // ...That matches the relevant threat
+										.filter(r -> r.getCustomThreat() != null && r.getCustomThreat().equals(threat)).toList()  // ...That matches the relevant threat
 						),
 						(ta1, ta2) -> ta1));
 
