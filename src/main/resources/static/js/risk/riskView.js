@@ -14,6 +14,38 @@ function notRelevantSelectInit(elem) {
     setStyleNotRelevant(selected, rowId, 'rowId' + rowId);
 }
 
+this.initCommentField = ()=> {
+    const commentFieldElement = document.getElementById('riskCommentArea')
+    commentFieldElement.addEventListener('change', async (event)=> {
+        if (commentFieldElement !== null) {
+            this.onCommentEdit(commentFieldElement.value)
+        }
+    })
+}
+
+this.onCommentEdit = async (commentValue) => {
+
+    const data = {
+        riskId: riskId,
+        comment: commentValue
+    }
+    const url = `/rest/risks/comment/update`
+    const response = await fetch(url, {
+        method: "POST",
+        headers: {
+            'X-CSRF-TOKEN': token,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify(data)
+    })
+
+    if (!response.ok)  {
+        toastService.error(response.statusText)
+    }
+
+    toastService.info("Kommentar gemt")
+}
+
 function setStyleNotRelevant(selected, rowId, rowClassName) {
     const selectAndTextareaElements = findSelectAndTextareaElements(rowClassName);
     let rows = document.querySelectorAll('.rowId' + rowId);
@@ -193,6 +225,26 @@ function updateAverage() {
     var ots = document.querySelectorAll('.ots');
     var averageOT = document.getElementById('averageOT');
     calculateAverageForType(ots, averageOT);
+
+    // sfs
+    var sfs = document.querySelectorAll('.sfs');
+    var averageSF = document.getElementById('averageSF');
+    calculateAverageForType(sfs, averageSF);
+
+    // sis
+    var sis = document.querySelectorAll('.sis');
+    var averageSI = document.getElementById('averageSI');
+    calculateAverageForType(sis, averageSI);
+
+    // sts
+    var sts = document.querySelectorAll('.sts');
+    var averageST = document.getElementById('averageST');
+    calculateAverageForType(sts, averageST);
+
+    // sas
+    var sas = document.querySelectorAll('.sas');
+    var averageSA = document.getElementById('averageSA');
+    calculateAverageForType(sas, averageSA);
 
     // riskScores
     var riskScores = document.querySelectorAll('.riskScores');
@@ -603,4 +655,7 @@ function pageLoaded() {
             element.style.display = 'none';
         });
     }
+
+    // init comment field
+    initCommentField();
 }

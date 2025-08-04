@@ -16,12 +16,15 @@ export default function RegisterAssessmentService() {
         const confidentialityRegisteredBtn = document.querySelector('#confidentialityRegisteredBtn');
         const confidentialityOrganisationRepBtn = document.querySelector('#confidentialityOrganisationRepBtn');
         const confidentialityOrganisationEcoBtn = document.querySelector('#confidentialityOrganisationEcoBtn');
+        const confidentialitySocietyBtn = document.querySelector('#confidentialitySocietyBtn');
         const integrityRegisteredBtn = document.querySelector('#integrityRegisteredBtn');
         const integrityOrganisationRepBtn = document.querySelector('#integrityOrganisationRepBtn');
         const integrityOrganisationEcoBtn = document.querySelector('#integrityOrganisationEcoBtn');
+        const integritySocietyBtn = document.querySelector('#integritySocietyBtn');
         const availabilityRegisteredBtn = document.querySelector('#availabilityRegisteredBtn');
         const availabilityOrganisationRepBtn = document.querySelector('#availabilityOrganisationRepBtn');
         const availabilityOrganisationEcoBtn = document.querySelector('#availabilityOrganisationEcoBtn');
+        const availabilitySocietyBtn = document.querySelector('#availabilitySocietyBtn');
         const availabilityReason = document.querySelector('#availabilityReason');
         const integrityReason = document.querySelector('#integrityReason');
         const confidentialityReason = document.querySelector('#confidentialityReason');
@@ -31,12 +34,15 @@ export default function RegisterAssessmentService() {
         confidentialityRegisteredBtn.disabled = !editable;
         confidentialityOrganisationRepBtn.disabled = !editable;
         confidentialityOrganisationEcoBtn.disabled = !editable;
+        confidentialitySocietyBtn.disabled = !editable;
         integrityRegisteredBtn.disabled = !editable;
         integrityOrganisationRepBtn.disabled = !editable;
         integrityOrganisationEcoBtn.disabled = !editable;
+        integritySocietyBtn.disabled = !editable;
         availabilityRegisteredBtn.disabled = !editable;
         availabilityOrganisationRepBtn.disabled = !editable;
         availabilityOrganisationEcoBtn.disabled = !editable;
+        availabilitySocietyBtn.disabled = !editable;
         availabilityReason.readOnly = !editable;
         integrityReason.readOnly = !editable;
         confidentialityReason.readOnly = !editable;
@@ -58,14 +64,17 @@ export default function RegisterAssessmentService() {
         }
 
         updateFor('confidentialityRegistered');
+        updateFor('confidentialitySociety');
         updateFor('confidentialityOrganisation');
         updateFor('confidentialityOrganisationRep');
         updateFor('confidentialityOrganisationEco');
         updateFor('integrityRegistered');
+        updateFor('integritySociety');
         updateFor('integrityOrganisation');
         updateFor('integrityOrganisationRep');
         updateFor('integrityOrganisationEco');
         updateFor('availabilityRegistered');
+        updateFor('availabilitySociety');
         updateFor('availabilityOrganisation');
         updateFor('availabilityOrganisationRep');
         updateFor('availabilityOrganisationEco');
@@ -81,14 +90,17 @@ export default function RegisterAssessmentService() {
         }
 
         updateFor('confidentialityRegistered');
+        updateFor('confidentialitySociety');
         updateFor('confidentialityOrganisation');
         updateFor('confidentialityOrganisationRep');
         updateFor('confidentialityOrganisationEco');
         updateFor('integrityRegistered');
+        updateFor('integritySociety');
         updateFor('integrityOrganisation');
         updateFor('integrityOrganisationRep');
         updateFor('integrityOrganisationEco');
         updateFor('availabilityRegistered');
+        updateFor('availabilitySociety');
         updateFor('availabilityOrganisation');
         updateFor('availabilityOrganisationRep');
         updateFor('availabilityOrganisationEco');
@@ -182,12 +194,16 @@ export default function RegisterAssessmentService() {
         let self = this;
         const maxOrganisation = document.getElementById('maxOrganisation');
         const maxRegistered = document.getElementById('maxRegistered');
+        const maxSociety = document.getElementById('maxSociety');
         const confidentialityRegistered = document.getElementById('confidentialityRegistered');
         const integrityRegistered = document.getElementById('integrityRegistered');
         const availabilityRegistered = document.getElementById('availabilityRegistered');
         const confidentialityOrganisation = document.getElementById('confidentialityOrganisation');
         const integrityOrganisation = document.getElementById('integrityOrganisation');
         const availabilityOrganisation = document.getElementById('availabilityOrganisation');
+        const confidentialitySociety = document.getElementById('confidentialitySociety');
+        const integritySociety = document.getElementById('integritySociety');
+        const availabilitySociety = document.getElementById('availabilitySociety');
 
         function maxValue(element1, element2, element3) {
             let value1 = asIntOrDefault(element1.value, 0);
@@ -212,8 +228,10 @@ export default function RegisterAssessmentService() {
         updateTargets(maxRegistered, maxRegValue);
         let maxOrgValue = maxValue(confidentialityOrganisation, integrityOrganisation, availabilityOrganisation);
         updateTargets(maxOrganisation, maxOrgValue);
+        let maxSocValue = maxValue(confidentialitySociety, integritySociety, availabilitySociety);
+                updateTargets(maxSociety, maxSocValue);
 
-        let totalMax = Math.max(maxRegValue, maxOrgValue);
+        let totalMax = Math.max(maxRegValue, maxOrgValue, maxSocValue);
         if (totalMax > 0) {
             this.updateConsequenceStatus(totalMax);
         }

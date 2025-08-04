@@ -202,8 +202,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 			addGeneralInfoSection(document, cursor, context);
 
+			addComment(document, cursor, context);
             addPresentAddMeeting(document, cursor, context);
             addCriticality(document, cursor, context);
+			addAreas(document, cursor, context);
             addRiskProfile(document, cursor, context);
             addRiskExplanations(document, cursor);
 
@@ -583,6 +585,34 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         cell.getCTTc().addNewTcPr().addNewShd().setFill(StringUtils.removeStart(color, "#"));
     }
 
+	private void addTextWithBreaks(String text, XWPFParagraph paragraph) {
+		String[] lines = text.split("\n");
+		XWPFRun run = paragraph.createRun();
+
+		for (int i = 0; i < lines.length; i++) {
+			run.setText(lines[i]);
+			if (i < lines.length - 1) {
+				run.addBreak();
+			}
+		}
+
+		run.addBreak();
+	}
+
+	private void addComment(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+		final String comment = context.threatAssessment.getComment();
+		if (comment == null || comment.isBlank()) {
+			return;
+		}
+		final XWPFParagraph heading = document.insertNewParagraph(cursor);
+		heading.setStyle(HEADING3);
+		addTextRun("Kommentar", heading);
+		advanceCursor(cursor);
+		final XWPFParagraph plain = document.insertNewParagraph(cursor);
+		addTextWithBreaks(comment, plain);
+		advanceCursor(cursor);
+	}
+
     private void addPresentAddMeeting(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
         final List<User> present = context.threatAssessment.getPresentAtMeeting();
         if (present == null || present.isEmpty()) {
@@ -623,6 +653,26 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         }
     }
 
+	private void addAreas(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+		if (context.threatAssessment != null) {
+			final XWPFParagraph heading = document.insertNewParagraph(cursor);
+			heading.setStyle(HEADING3);
+			addTextRun("Medtagne konsekvensområder", heading);
+			advanceCursor(cursor);
+			final XWPFParagraph plain = document.insertNewParagraph(cursor);
+			if (context.threatAssessment.isOrganisation()) {
+				addTextRun("Organisationen", plain).addBreak();
+			}
+			if (context.threatAssessment.isRegistered()) {
+				addTextRun("Den registrerede", plain).addBreak();
+			}
+			if (context.threatAssessment.isSociety()) {
+				addTextRun("Samfundet", plain).addBreak();
+			}
+			advanceCursor(cursor);
+		}
+	}
+
 	public record registeredDataCategory(String title, List<String> types) {
 	}
 
@@ -657,7 +707,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
 			table.setTableAlignment(TableRowAlign.LEFT);
 
-			createTableCells(table, 8 + categories.size(), 3);
+			int extraRowsForAsset = isAsset ? 1 : 0;
+			createTableCells(table, 8 + categories.size() + extraRowsForAsset, 3);
 			final XWPFTableRow row = table.getRow(0);
 
 			//System type
@@ -704,9 +755,18 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			setCellTextSmall(row7, 0, "Link til sletteprocedure");
 			setCellTextSmall(row7, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
 
+			// sociallyCritical
+			int nextRowIndex = 8;
+			if (isAsset) {
+				final XWPFTableRow row8 = table.getRow(8);
+				setCellTextSmall(row8, 0, "Samfundskritisk:");
+				setCellTextSmall(row8, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
+				nextRowIndex = 9;
+			}
+
 			// Registered data categories
 			for (int i = 0; i < categories.size(); i++) {
-				final XWPFTableRow catRow = table.getRow(i + 8); // Add magic number of previous rows to start at the current row
+				final XWPFTableRow catRow = table.getRow(i + nextRowIndex); // Add magic number of previous rows to start at the current row
 				if (i == 0) {
 					setCellTextSmall(catRow, 0, "Registrerede persondatakategorier:");
 				}
@@ -721,8 +781,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				}
 			}
 			if (categories.isEmpty()) {
-				final XWPFTableRow row8 = table.createRow();
-				setCellTextSmall(row8, 0, "Registrerede persondatakategorier:");
+				final XWPFTableRow row9 = table.createRow();
+				setCellTextSmall(row9, 0, "Registrerede persondatakategorier:");
 			}
 
 			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);

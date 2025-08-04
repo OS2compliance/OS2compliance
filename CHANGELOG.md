@@ -7,6 +7,22 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- (Løsningsbeskrivelse 21.04.2025) KLE-integration
+- (Løsningsbeksrivelse 16.04.2025) Udvidelse af OS2kitos integration
+- (https://os2web.atlassian.net/browse/COMPLY-65) Standarder: Ændring af nuværende forside
+- (https://os2web.atlassian.net/browse/COMPLY-124) (Rapporter) Samlet rapport til systemejer vedr. alle systemer
+- (https://os2web.atlassian.net/browse/COMPLY-320) (Risikostyring) OS2Compliance skal understøtte NIS2 risikovurderinger
+- (https://os2web.atlassian.net/browse/COMPLY-283) (Risikostyring/Den enkelte risikovurdering) Fritekstfelt
+
+### Fixed
+- (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke
+- (Ad-hoc) Tekstfelt i konsekvensanalyserne (DPIA)
+- (Ad-hoc) Konsekvensvurdering kolonne bredder
+- (Ad-hoc) Bug i "Tilknyt ekstern risikovurdering" Aktiv-fane
+- (Ad-hoc) Bug - Navigation forsvinder - implementeret burger menu
+- (Ad-hoc) Søgning og sortering efter navn i konsekvensanalyser virkede ikke
+
 ## [2.2.1]
 ### Fixed
 - (Ad-hoc) Der var en fejl på konsekvensvurderingsoverblikssiden, der fjorde at den ikke kunne vises korrekt, det er retttet.
