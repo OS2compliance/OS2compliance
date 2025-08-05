@@ -195,6 +195,7 @@ public class RegisterController {
 			@RequestParam(value = "criticality", required = false) final Criticality criticality,
 			@RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
 			@RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
+			@RequestParam(value = "dataProtectionOfficer", required = false) final String dataProtectionOfficer,
 			@RequestParam(value = "registerRegarding", required = false) final Set<ChoiceValue> registerRegarding,
 			@RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
 			@RequestParam(required = false) final String section,
@@ -241,6 +242,9 @@ public class RegisterController {
         if (informationResponsible != null) {
             register.setInformationResponsible(informationResponsible);
         }
+		if (dataProtectionOfficer != null) {
+			register.setDataProtectionOfficer(dataProtectionOfficer);
+		}
 
 		register.setRegisterRegarding(registerRegarding);
 

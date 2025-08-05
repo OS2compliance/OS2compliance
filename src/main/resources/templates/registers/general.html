@@ -93,6 +93,12 @@
                             <label for="informationResponsible" class="col-form-label">Hvem er ansvarlig for behandling af personoplysningerne</label>
                             <input class="form-control" id="informationResponsible" name="informationResponsible" th:field="*{informationResponsible}" type="text" readonly>
                         </div>
+
+                        <div class="form-group row">
+                            <label for="informationResponsible" class="col-form-label">Navn på DPO</label>
+                            <input class="form-control" id="dataProtectionOfficer" name="dataProtectionOfficer" th:field="*{dataProtectionOfficer}" type="text" readonly>
+                        </div>
+
                         <div class="form-group row">
                             <label for="registerRegarding" class="col-form-label">Fortegnelse over behandlingsaktivitet angående</label>
                             <select class="form-select choices__input" id="registerRegarding" name="registerRegarding" multiple disabled>
