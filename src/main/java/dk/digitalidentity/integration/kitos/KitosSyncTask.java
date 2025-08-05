@@ -103,7 +103,6 @@ public class KitosSyncTask {
     }
 
     private boolean taskDisabled() {
-		System.out.println(configuration.isSchedulingEnabled());
         if (!configuration.isSchedulingEnabled()) {
             log.info("Scheduling disabled, not doing sync");
             return true;

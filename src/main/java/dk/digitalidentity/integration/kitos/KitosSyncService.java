@@ -199,12 +199,22 @@ public class KitosSyncService {
         }
 
 		// Map enum from integration to internal
-		ContainsAITechnologyEnum internalStatus = ContainsAITechnologyEnum.valueOf(Objects.requireNonNull(itSystemUsageResponseDTO.getGeneral().getContainsAITechnology()).getValue());
-
-        addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
-        setAssetOwner(asset, itSystemUsageResponseDTO);
-        setAssetManagers(asset, itSystemUsageResponseDTO);
+		ContainsAITechnologyEnum internalStatus;
+		try {
+			var dtoEnum = itSystemUsageResponseDTO.getGeneral().getContainsAITechnology();
+			if (dtoEnum == null) {
+				internalStatus = ContainsAITechnologyEnum.UNDECIDED;
+			} else {
+				internalStatus = ContainsAITechnologyEnum.valueOf(dtoEnum.name());
+			}
+		} catch (IllegalArgumentException e) {
+			internalStatus = ContainsAITechnologyEnum.UNDECIDED;
+		}
 		asset.setAiStatus(internalStatus);
+
+		addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
+		setAssetOwner(asset, itSystemUsageResponseDTO);
+		setAssetManagers(asset, itSystemUsageResponseDTO);
 		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
 
         final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
@@ -303,7 +313,7 @@ public class KitosSyncService {
         asset.setUpdatedAt(responseDTO.getLastModified().toLocalDateTime());
         asset.setName(responseDTO.getName());
         asset.setDescription(responseDTO.getDescription());
-		// TODO: Figure out how to receive the ai status from Kitos
+		asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
         asset.setAssetType(choiceService.getValue(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID).orElseThrow());
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
         asset.setSupplier(supplier);

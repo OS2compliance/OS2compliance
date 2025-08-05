@@ -502,6 +502,7 @@ public class AssetsController {
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setAssetCategory(asset.getAssetCategory());
 		existingAsset.setAiStatus(asset.getAiStatus());
+		existingAsset.setAiRisk(asset.getAiRisk());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {

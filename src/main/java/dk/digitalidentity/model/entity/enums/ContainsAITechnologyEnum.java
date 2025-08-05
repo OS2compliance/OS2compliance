@@ -4,12 +4,14 @@ import lombok.Getter;
 
 @Getter
 public enum ContainsAITechnologyEnum {
-	YES("Ja"),
-	NO("Nej"),
-	UNDECIDED("Uafklaret");
+	NO("No", "Nej"),
+	YES("Yes", "Ja"),
+	UNDECIDED("Undecided", "Uafklaret");
 	private final String message;
+	private final String danishName;
 
-	ContainsAITechnologyEnum(final String message) {
+	ContainsAITechnologyEnum(final String message, final String danishName) {
 		this.message = message;
+		this.danishName = danishName;
 	}
 }

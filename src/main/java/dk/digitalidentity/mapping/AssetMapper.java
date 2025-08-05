@@ -191,6 +191,7 @@ public interface AssetMapper {
 			@Mapping(target = "roles", ignore = true),
 			@Mapping(target = "assetType", ignore = true),
 			@Mapping(target = "aiStatus", ignore = true),
+			@Mapping(target = "aiRisk", ignore = true),
 			@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
 	})
 	Asset fromEO(AssetCreateEO assetCreateEO);
