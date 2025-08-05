@@ -84,6 +84,10 @@ public class ThreatAssessmentService {
         return threatAssessmentDao.findAll();
     }
 
+	public List<ThreatAssessment> findAllNotDeleted() {
+		return threatAssessmentDao.findAllByDeletedFalse();
+	}
+
     @Transactional
     public ThreatAssessment save(final ThreatAssessment assessment) {
         return threatAssessmentDao.save(assessment);
@@ -424,27 +428,11 @@ public class ThreatAssessmentService {
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
-        int highestRiskNotAcceptedRiskScore = -1;
-        int globalHighestprobability = -1;
-        int globalHighestConsequence = -1;
-        for (final ThreatAssessmentResponse threatAssessmentResponse : savedThreatAssessment.getThreatAssessmentResponses()) {
-            final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation(), threatAssessmentResponse.getConfidentialitySociety(), threatAssessmentResponse.getIntegritySociety(), threatAssessmentResponse.getAvailabilitySociety(), threatAssessmentResponse.getAuthenticitySociety());
-            final int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
+		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment);
 
-            if (probability < 1 || highestConsequence < 1) {
-                continue;
-            }
-            final int riskScore = probability * highestConsequence;
-            if (riskScore > highestRiskNotAcceptedRiskScore) {
-                highestRiskNotAcceptedRiskScore = riskScore;
-                globalHighestprobability = probability;
-                globalHighestConsequence = highestConsequence;
-            }
-        }
-
-        if (highestRiskNotAcceptedRiskScore != -1) {
+		if (result.highestRiskNotAcceptedRiskScore() != -1) {
             final RiskAssessment assessment =
-                scaleService.getRiskAssessmentForRisk(globalHighestprobability, globalHighestConsequence);
+                scaleService.getRiskAssessmentForRisk(result.globalHighestprobability(), result.globalHighestConsequence());
             savedThreatAssessment.setAssessment(assessment);
         } else {
             savedThreatAssessment.setAssessment(null);
@@ -453,7 +441,31 @@ public class ThreatAssessmentService {
         threatAssessmentDao.save(savedThreatAssessment);
     }
 
-    private int findHighestConsequence(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot, final Integer sf, final Integer si, final Integer st, final Integer sa) {
+	public RiskScoreDTO findHighestRiskScore(ThreatAssessment savedThreatAssessment) {
+		int highestRiskNotAcceptedRiskScore = -1;
+		int globalHighestprobability = -1;
+		int globalHighestConsequence = -1;
+		for (final ThreatAssessmentResponse threatAssessmentResponse : savedThreatAssessment.getThreatAssessmentResponses()) {
+			final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation(), threatAssessmentResponse.getConfidentialitySociety(), threatAssessmentResponse.getIntegritySociety(), threatAssessmentResponse.getAvailabilitySociety(), threatAssessmentResponse.getAuthenticitySociety());
+			final int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
+
+			if (probability < 1 || highestConsequence < 1) {
+				continue;
+			}
+			final int riskScore = probability * highestConsequence;
+			if (riskScore > highestRiskNotAcceptedRiskScore) {
+				highestRiskNotAcceptedRiskScore = riskScore;
+				globalHighestprobability = probability;
+				globalHighestConsequence = highestConsequence;
+			}
+		}
+		RiskScoreDTO result = new RiskScoreDTO(highestRiskNotAcceptedRiskScore, globalHighestprobability, globalHighestConsequence);
+		return result;
+	}
+
+	public record RiskScoreDTO(int highestRiskNotAcceptedRiskScore, int globalHighestprobability, int globalHighestConsequence) {}
+
+	public int findHighestConsequence(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot, final Integer sf, final Integer si, final Integer st, final Integer sa) {
         int highest = 0;
 
         if (rf != null && rf > highest) {
@@ -561,7 +573,11 @@ public class ThreatAssessmentService {
         return convertHtmlToPdf(html);
     }
 
-    public record registeredDataCategory (String title, List<String> types) {}
+	public List<ThreatAssessment> findByTypeInAndNotDeleted(List<ThreatAssessmentType> types) {
+		return threatAssessmentDao.findByDeletedFalseAndThreatAssessmentTypeIn(types);
+	}
+
+	public record registeredDataCategory (String title, List<String> types) {}
     private String getThreatAssessmentHtml(ThreatAssessment threatAssessment) {
         final List<Relatable> relations = relationService.findAllRelatedTo(threatAssessment);
         List<Task> riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
