@@ -4,6 +4,7 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
@@ -118,6 +119,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
 			list.get().setCustomizable(true);
 		}
+		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "systemejer" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "systemansvarlig" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_OPERATION_ROLE_SETTING_INPUT_FIELD_NAME, "driftsansvarlig" , "kitos", true);
 	}
 
     @SneakyThrows

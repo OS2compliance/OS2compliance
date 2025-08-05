@@ -41,7 +41,7 @@ public class SettingsController {
         final SettingsDTO settings = new SettingsDTO();
         settings.addList(settingsService.getByEditable());
         model.addAttribute("settings", settings);
-        model.addAttribute("page", getParentType(httpServletRequest.getHeader("Referer")));
+		model.addAttribute("page", getParentType(httpServletRequest.getHeader("Referer")));
 
 		boolean kitosEnabled = configuration.getIntegrations().getKitos().isEnabled();
 		model.addAttribute("kitosEnabled", kitosEnabled);
@@ -65,6 +65,7 @@ public class SettingsController {
         //For notifications, change null values to "false", to ensure changes are not dropped
         settings.getSettingsList()
             .forEach(setting -> {
+				log.info("setting: " + setting.getSettingKey());
                 if (setting.getSettingValue() == null && setting.getAssociation() != null && setting.getAssociation().equals("notification")) {
                     setting.setSettingValue("false");
                 }

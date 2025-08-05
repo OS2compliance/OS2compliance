@@ -19,6 +19,7 @@ function SettingsService() {
                     document.getElementById('settings').innerHTML = data;
                     this.initKitosSelect('ownerSelect');
                     this.initKitosSelect('responsibleSelect');
+                    this.initKitosSelect('otherSelect');
                 })
             ).catch(error => toastService.error(error));
     }
