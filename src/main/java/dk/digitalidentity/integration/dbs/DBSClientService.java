@@ -33,14 +33,14 @@ public class DBSClientService {
     public List<Supplier> getAllSuppliers() {
         int page = 0;
 
-        PageEOSupplier supplierPage = supplierResourceApi.list1(100, page);
+        PageEOSupplier supplierPage = supplierResourceApi.callList(100, page);
         if (supplierPage == null || supplierPage.getContent() == null || supplierPage.getContent().isEmpty()) {
             throw new DBSSynchronizationException("Could not fetch Suppliers from DBS");
         }
         List<Supplier> suppliers = new ArrayList<>(supplierPage.getContent());
         while (supplierPage != null && supplierPage.getTotalPages() != null && page < supplierPage.getTotalPages()) {
             page += 1;
-            supplierPage = supplierResourceApi.list1(100, page);
+            supplierPage = supplierResourceApi.callList(100, page);
             if (supplierPage != null && supplierPage.getContent() != null) {
                 suppliers.addAll(supplierPage.getContent());
             }
@@ -53,7 +53,7 @@ public class DBSClientService {
     public List<ItSystem> getAllItSystems() {
         int page = 0;
 
-        PageEOItSystem itSystemsPage = itSystemResourceApi.list4(100, page);
+        PageEOItSystem itSystemsPage = itSystemResourceApi.list1(100, page);
         if (itSystemsPage == null || itSystemsPage.getContent() == null || itSystemsPage.getContent().isEmpty()) {
             throw new DBSSynchronizationException("Could not fetch ItSystems from DBS");
         }
@@ -61,7 +61,7 @@ public class DBSClientService {
         final List<ItSystem> itSystems = new ArrayList<>(itSystemsPage.getContent());
         while (itSystemsPage != null && itSystemsPage.getTotalPages() != null && page < itSystemsPage.getTotalPages()) {
             page += 1;
-            itSystemsPage = itSystemResourceApi.list4(100, page);
+            itSystemsPage = itSystemResourceApi.list1(100, page);
             if (itSystemsPage != null && itSystemsPage.getContent() != null) {
                 itSystems.addAll(itSystemsPage.getContent());
             }
@@ -74,7 +74,7 @@ public class DBSClientService {
     public List<Document> getAllDocuments(LocalDateTime createdAfter) {
         int page = 0;
 
-        PageEODocument documentsPage = documentResourceApi.list5(100, page, "TILSYNSRAPPORTER", createdAfter);
+        PageEODocument documentsPage = documentResourceApi.list2(100, page, "TILSYNSRAPPORTER", createdAfter);
         if (documentsPage == null || documentsPage.getContent() == null) {
             throw new DBSSynchronizationException("Could not fetch ItSystems from DBS");
         }
@@ -83,7 +83,7 @@ public class DBSClientService {
 
         while (documentsPage != null && documentsPage.getTotalPages() != null && page < documentsPage.getTotalPages()) {
             page += 1;
-            documentsPage = documentResourceApi.list5(100, page, "TILSYNSRAPPORTER", createdAfter);
+            documentsPage = documentResourceApi.list2(100, page, "TILSYNSRAPPORTER", createdAfter);
             if (documentsPage != null && documentsPage.getContent() != null) {
                 documents.addAll(documentsPage.getContent());
             }
