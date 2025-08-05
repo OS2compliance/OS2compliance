@@ -15,9 +15,8 @@ import dk.digitalidentity.report.DocxUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.poi.xwpf.usermodel.BodyElementType;
-import org.apache.poi.xwpf.usermodel.BodyType;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -36,15 +35,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.report.DocxUtil.addBoldTextRun;
-import static dk.digitalidentity.report.DocxUtil.addBulletList;
-import static dk.digitalidentity.report.DocxUtil.addTextRun;
-import static dk.digitalidentity.report.DocxUtil.advanceCursor;
-import static dk.digitalidentity.report.DocxUtil.getCell;
-import static dk.digitalidentity.report.DocxUtil.setCursorToNextStartToken;
+import static dk.digitalidentity.report.DocxUtil.*;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @SuppressWarnings("Convert2MethodRef")
@@ -54,16 +47,23 @@ public class Article30Replacer implements PlaceHolderReplacer {
     private final RegisterService registerService;
     private final ChoiceService choiceService;
     private final AssetService assetService;
+	private final SettingsService settingsService;
 
-    public Article30Replacer(final RegisterService registerService, final ChoiceService choiceService, final AssetService assetService) {
+	public Article30Replacer(final RegisterService registerService, final ChoiceService choiceService, final AssetService assetService, SettingsService settingsService) {
         this.registerService = registerService;
         this.choiceService = choiceService;
         this.assetService = assetService;
-    }
+		this.settingsService = settingsService;
+	}
 
     @Override
     public boolean supports(final PlaceHolder placeHolder) {
-        return placeHolder == PlaceHolder.ACTIVITIES;
+        return switch (placeHolder) {
+			case PlaceHolder.ACTIVITIES,
+				 PlaceHolder.DATARESPONSIBLE_SETTINGS
+					-> true;
+			default -> false;
+		};
     }
 
     @Override
@@ -71,48 +71,71 @@ public class Article30Replacer implements PlaceHolderReplacer {
     public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
         final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
-            replaceParagraph(paragraph, placeHolder.getPlaceHolder());
+            replaceParagraph(paragraph, placeHolder);
         }
     }
 
-    private XWPFParagraph findParagraphToReplace(final XWPFDocument document, final String placeHolder) {
-        final AtomicReference<XWPFParagraph> result = new AtomicReference<>();
-        document.getBodyElementsIterator().forEachRemaining(
-            part -> {
-                if (result.get() == null) {
-                    if (part.getElementType() != BodyElementType.CONTENTCONTROL && part.getPartType() != BodyType.CONTENTCONTROL) {
-                        final List<XWPFParagraph> paragraphs = part.getBody().getParagraphs();
-                        for (final XWPFParagraph paragraph : paragraphs) {
-                            paragraph.getRuns().stream()
-                                .filter(r -> placeHolder.equalsIgnoreCase(r.getText(0)))
-                                .findFirst().ifPresent(p -> result.set(paragraph));
-                        }
-                    }
-                }
-            }
-        );
-        return result.get();
-    }
+	private XWPFParagraph findParagraphToReplace(final XWPFDocument document, final String placeholder) {
+		// Only searches paragraphs. For tables or other, extend method
+		for (XWPFParagraph paragraph : document.getParagraphs()) {
+			if (containsPlaceholder(paragraph, placeholder)) {
+				return paragraph;
+			}
+		}
 
-    private void replaceParagraph(final XWPFParagraph p, final String placeHolder) {
+		return null;
+	}
 
-        p.getRuns().stream()
-            .filter(r -> placeHolder.equalsIgnoreCase(r.getText(0)))
-            .findFirst()
-            .ifPresent(xwpfRun -> insertArticle30(p, xwpfRun));
-    }
+	private boolean containsPlaceholder(final XWPFParagraph paragraph, final String placeholder) {
+		String paragraphText = paragraph.getText();
+		return paragraphText != null && paragraphText.contains(placeholder);
+	}
 
-    private void insertArticle30(final XWPFParagraph p, final XWPFRun placeHolderRun) {
-        final List<Register> allArticle30 = registerService.findAllOrdered();
-        placeHolderRun.setText("", 0);
-        try (final XmlCursor cursor = setCursorToNextStartToken(p.getCTP())) {
-            boolean initial = true;
-            for (final Register register : allArticle30) {
-                insertRegister(p.getDocument(), cursor, register, initial);
-                initial = false;
-            }
-        }
-    }
+	private void replaceParagraph(final XWPFParagraph paragraph, final PlaceHolder placeHolder) {
+		clearAllRuns(paragraph);
+
+		switch (placeHolder) {
+			case ACTIVITIES -> insertArticle30(paragraph);
+			case DATARESPONSIBLE_SETTINGS -> insertDataresponsibleSettings(paragraph);
+			default -> throw new IllegalArgumentException("Unsupported placeholder: " + placeHolder);
+		}
+	}
+
+	private void clearAllRuns(final XWPFParagraph paragraph) {
+		for (int i = paragraph.getRuns().size() - 1; i >= 0; i--) {
+			paragraph.removeRun(i);
+		}
+	}
+
+	private void insertDataresponsibleSettings(final XWPFParagraph paragraph) {
+
+		// Create runs directly in the paragraph
+		XWPFRun titleRun = paragraph.createRun();
+		titleRun.setText("TEST");
+		titleRun.setBold(true);
+		titleRun.setFontSize(14);
+		titleRun.addBreak();
+		titleRun.addBreak();
+
+		XWPFRun contentRun = paragraph.createRun();
+		String activityDetails = "Test text";
+		contentRun.setText(activityDetails);
+
+	}
+
+	private void insertArticle30(final XWPFParagraph p) {
+		final List<Register> allArticle30 = registerService.findAllOrdered();
+
+		XWPFRun newRun = p.createRun();
+		newRun.setText("", 0);
+		try (final XmlCursor cursor = setCursorToNextStartToken(p.getCTP())) {
+			boolean initial = true;
+			for (final Register register : allArticle30) {
+				insertRegister(p.getDocument(), cursor, register, initial);
+				initial = false;
+			}
+		}
+	}
 
     private void insertRegister(final XWPFDocument document, final XmlCursor cursor,
                                 final Register register, final boolean initialBreak) {
