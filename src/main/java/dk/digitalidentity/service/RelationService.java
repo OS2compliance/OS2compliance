@@ -52,6 +52,10 @@ public class RelationService {
         return relationDao.findRelatedToWithType(relatable.getId(), relatedType);
     }
 
+	public List<Long> findAllIdsRelatedToWithType(final Collection<Long> relatedToIds, final RelationType relatedType) {
+		return relationDao.findAllIdsRelatedToWithType(relatedToIds, relatedType);
+	}
+
     public List<Relation> findRelatedToWithType(final Collection<Long> relatedToId, final RelationType relatedType) {
         return relationDao.findRelatedToWithType(relatedToId, relatedType);
     }
