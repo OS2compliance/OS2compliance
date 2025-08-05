@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
+import dk.digitalidentity.model.entity.enums.ReportSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.ChoiceService;
@@ -105,24 +106,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(23, this::seedV23);
         incrementAndPerformIfVersion(24, this::seedV24);
         incrementAndPerformIfVersion(25, this::seedV25);
-    }
-
-	private void seedV25 () {
-		// Update each of these specific lists to be editable
-		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list","dp-person-categories-list",  "dp-person-storage-duration-list", "dp-receiver-list");
-		for (String identifier : listIdentifiers) {
-			Optional<ChoiceList> list = choiceService.findChoiceList(identifier);
-			if (list.isEmpty()) {
-				continue;
-			}
-
-			list.get().setCustomizable(true);
-		}
-	}
-
-    @SneakyThrows
-    private void seedV20() {
-
+        incrementAndPerformIfVersion(26, this::seedV26);
     }
 
     private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -136,6 +120,25 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+	private void seedV26 () {
+		for (ReportSetting setting : ReportSetting.values()) {
+			settingsService.createSetting(setting.getKey(), "", "report", true);
+		}
+	}
+
+	private void seedV25 () {
+		// Update each of these specific lists to be editable
+		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list","dp-person-categories-list",  "dp-person-storage-duration-list", "dp-receiver-list");
+		for (String identifier : listIdentifiers) {
+			Optional<ChoiceList> list = choiceService.findChoiceList(identifier);
+			if (list.isEmpty()) {
+				continue;
+			}
+
+			list.get().setCustomizable(true);
+		}
+	}
 
 	private void seedV24 () {
 		ChoiceList choiceList = choiceService.saveChoiceList(ChoiceList.builder()
@@ -182,6 +185,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         settingsService.createSetting(NotificationSetting.ONDAY.getValue(), "false" , "notification", true);
         settingsService.createSetting(NotificationSetting.EVERYSEVENDAYSAFTER.getValue(), "false" , "notification", true);
     }
+
+	@SneakyThrows
+	private void seedV20() {
+
+	}
 
     private void seedV19() {
         try {

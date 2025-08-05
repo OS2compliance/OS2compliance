@@ -107,6 +107,9 @@ public class Register extends Relatable {
     @Column
     private String informationResponsible;
 
+	@Column
+	private String dataProtectionOfficer;
+
     @Column
     private String purpose;
 
