@@ -9,8 +9,10 @@ import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
+import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.ReportSetting;
 import dk.digitalidentity.report.DocxUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -107,21 +109,95 @@ public class Article30Replacer implements PlaceHolderReplacer {
 		}
 	}
 
-	private void insertDataresponsibleSettings(final XWPFParagraph paragraph) {
+	private void insertDataresponsibleSettings(final XWPFParagraph p) {
 
-		// Create runs directly in the paragraph
-		XWPFRun titleRun = paragraph.createRun();
-		titleRun.setText("TEST");
-		titleRun.setBold(true);
-		titleRun.setFontSize(14);
-		titleRun.addBreak();
-		titleRun.addBreak();
+		Map<String, String> settings = settingsService.getByAssociationAndEditable("report").stream()
+				.collect(Collectors.toMap(s -> s.getSettingKey(), s -> s.getSettingValue()));
 
-		XWPFRun contentRun = paragraph.createRun();
-		String activityDetails = "Test text";
-		contentRun.setText(activityDetails);
+		// Dataresponsible
+		String dataResponsibleLabel ="Dataansvarlig";
+		String dataResponsibleText = settings.get(ReportSetting.DATARESPONSIBLE.getKey());
+		XWPFRun dataResponsiblelabelRun = createTextRun(p, dataResponsibleLabel);
+		dataResponsiblelabelRun.setBold(true);
+		dataResponsiblelabelRun.addTab();
+		dataResponsiblelabelRun.addTab();
+		dataResponsiblelabelRun.addTab();
+		XWPFRun dataResponsibleTextRun = createTextRun(p, dataResponsibleText);
+		dataResponsibleTextRun.addBreak();
+
+		// SecurityPrecautions
+		String securityLabel ="Sikkerhedsforanstaltninger";
+		String securityText = settings.get(ReportSetting.SECURITY_PRECAUTIONS.getKey());
+		XWPFRun securitylabelRun =createTextRun(p, securityLabel);
+		securitylabelRun.setBold(true);
+		securitylabelRun.addTab();
+		securitylabelRun.addTab();
+		XWPFRun securityTextRun = createTextRun(p, securityText);
+		securityTextRun.addBreak();
+
+		// data receivers
+		String receiverLabel ="Modtagere af persondata";
+		String receiverText = settings.get(ReportSetting.PERSONAL_DATA_RECEIVERS.getKey());
+		XWPFRun receiverlabelRun =createTextRun(p, receiverLabel);
+		receiverlabelRun.setBold(true);
+		receiverlabelRun.addTab();
+		receiverlabelRun.addTab();
+		XWPFRun receiverTextRun =createTextRun(p, receiverText);
+		receiverTextRun.addBreak();
+
+		// Contact information section
+		XWPFRun contactHeaderRun =createTextRun(p, "Kontaktoplysninger");
+		contactHeaderRun.setBold(true);
+		contactHeaderRun.addBreak();
+
+		// contact data resp.
+		String conDataRespLabel ="Dataansvarlige";
+		String conDataRespText = settings.get(ReportSetting.CONTACT_DATARESPONSIBLE.getKey());
+		XWPFRun conDataResplabelRun = createTabbedTextRun(p, conDataRespLabel);
+		conDataResplabelRun.addTab();
+		conDataResplabelRun.addTab();
+		XWPFRun conDataTextRun =createTextRun(p, conDataRespText);
+		conDataTextRun.addBreak();
+
+		// contact commoon data resp
+		String conCommonLabel ="Fælles dataansvarlige";
+		String conCommonText = settings.get(ReportSetting.CONTACT_COMMON_DATARESPONSIBLE.getKey());
+		XWPFRun conCommonLabelRun = createTabbedTextRun(p, conCommonLabel);
+		conCommonLabelRun.addTab();
+		conCommonLabelRun.addTab();
+		XWPFRun conCommonTextRun =createTextRun(p, conCommonText);
+		conCommonTextRun.addBreak();
+
+		// contact representative
+		String conRepLabel ="Dataansvarliges repræsentant";
+		String conRepText = settings.get(ReportSetting.CONTACT_DATARESPONSIBLE_REPRESENTATIVE.getKey());
+		XWPFRun conRepRun = createTabbedTextRun(p, conRepLabel);
+		conRepRun.addTab();
+		XWPFRun conRepTextRun =createTextRun(p, conRepText);
+		conRepTextRun.addBreak();
+
+		// contact advisor
+		String conAdvisorLabel ="Databeskyttelsesrådgiver";
+		String conAdvisorText = settings.get(ReportSetting.CONTACT_DATA_PROTECTION_ADVISOR.getKey());
+		XWPFRun conAdvisorRun = createTabbedTextRun(p, conAdvisorLabel);
+		conAdvisorRun.addTab();
+		XWPFRun conAdvisorTextRun =createTextRun(p, conAdvisorText);
+		conAdvisorTextRun.addBreak();
 
 	}
+
+	private XWPFRun createTextRun(final XWPFParagraph paragraph, String text) {
+		XWPFRun run = paragraph.createRun();
+		run.setText(text);
+		return run;
+	}
+	private XWPFRun createTabbedTextRun(final XWPFParagraph paragraph, String text) {
+		XWPFRun run = paragraph.createRun();
+		run.addTab();
+		run.setText(text);
+		return run;
+	}
+
 
 	private void insertArticle30(final XWPFParagraph p) {
 		final List<Register> allArticle30 = registerService.findAllOrdered();
