@@ -35,6 +35,9 @@ public class RiskGrid  implements HasSingleResponsibleUser {
     @JoinColumn(name = "responsible_uuid")
     private User responsibleUser;
 
+	@Column
+	private String relatedAssetsAndRegisters;
+
     @ManyToOne
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOU;
