@@ -17,7 +17,6 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -26,8 +25,6 @@ import java.util.stream.Collectors;
 public class DataProcessingService {
     private final ChoiceListDao choiceListDao;
 	private final ChoiceService choiceService;
-    private final TaskService taskService;
-    private final RelationService relationService;
 
     @Transactional(propagation = Propagation.MANDATORY)
     public void update(final DataProcessing dataProcessing, final DataProcessingDTO body) {
@@ -39,6 +36,7 @@ public class DataProcessingService {
         dataProcessing.setDeletionProcedureLink(body.getDeletionProcedureLink());
         dataProcessing.setElaboration(body.getElaboration());
         dataProcessing.setTypesOfPersonalInformationFreetext(body.getTypesOfPersonalInformationFreetext());
+		dataProcessing.setDeletionAppliesToAll(body.isDeletionAppliesToAll());
 
         if (body.getPersonCategoriesRegistered() != null) {
             dataProcessing.getRegisteredCategories().clear();
