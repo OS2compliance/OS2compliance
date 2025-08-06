@@ -1,7 +1,7 @@
 -- INSERT THE EXISTING COLUMNS
 -- Insert into choice_lists
 INSERT INTO choice_lists (identifier, name, multi_select, customizable)
-VALUES ('organisation-assessment-columns', 'Organisations-vurderingskolonner', 0, 1);
+VALUES ('organisation-assessment-columns', 'Behandlingsaktiviteter - organisationskonsekvensvurderingskolonner', 0, 1);
 
 -- Get the ID of the inserted row
 SET @choice_list_id = LAST_INSERT_ID();
@@ -79,9 +79,9 @@ DROP COLUMN confidentiality_organisation_eco;
 ALTER TABLE consequence_assessments ADD authenticity_society INT NULL;
 
 -- Rename columns
-ALTER TABLE consequence_assessments CHANGE confidentiality_reason registered_reason VARCHAR(255);
-ALTER TABLE consequence_assessments CHANGE integrity_reason organisation_reason VARCHAR(255);
-ALTER TABLE consequence_assessments CHANGE availability_reason society_reason VARCHAR(255);
+ALTER TABLE consequence_assessments CHANGE confidentiality_reason registered_reason TEXT;
+ALTER TABLE consequence_assessments CHANGE integrity_reason organisation_reason TEXT;
+ALTER TABLE consequence_assessments CHANGE availability_reason society_reason TEXT;
 
 -- Add inherited_authenticity_society to threat_assessments
 ALTER TABLE threat_assessments ADD inherited_authenticity_society INT NULL;
