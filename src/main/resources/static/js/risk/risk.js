@@ -10,7 +10,6 @@
     const editRiskService = new EditRiskService();
 
     document.addEventListener("DOMContentLoaded", function(event) {
-        const handleRemoveEvent = new HandleRemoveEvent();
 
         const defaultClassName = {
             table: 'table table-striped',
@@ -31,8 +30,8 @@
                         searchKey: 'name'
                     },
                     formatter: (cell, row) => {
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
+                        const external = row.cells[11]['data']
+                        const externalLink = row.cells[12]['data']
                         const url = viewUrl + row.cells[0]['data'];
                         if(external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
@@ -90,7 +89,6 @@
                             `<select class="form-control form-select choices__input"
                                 data-assetid="${dbsAssetId}"
                                 name="assetsAndRegisters"
-                                readonly
                                 id="assetsRegistersSelect${dbsAssetId}"
                                 hidden multiple>${options}    
                             </select>`
@@ -163,9 +161,9 @@
                     formatter: (cell, row) => {
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
-                        const changeable = row.cells[9]['data']
+                        const external = row.cells[11]['data']
+                        const externalLink = row.cells[12]['data']
+                        const changeable = row.cells[10]['data']
                         let buttonHTML = ''
 
                         //edit button
@@ -238,14 +236,8 @@
             Array.from(document.querySelectorAll("[id^='assetsRegistersSelect']"))
                 .map(select => select.id)
                 .forEach(elementId => {
-                    let assetChoices = choiceService.initAssetSelect(elementId, false);
-
-                    assetChoices.passedElement.element.addEventListener(
-                        'removeItem', handleRemoveEvent.handleAddRemoveEvent, false
-                    );
-                    assetChoices.passedElement.element.addEventListener(
-                        'addItem', handleRemoveEvent.handleAddRemoveEvent, false
-                    );
+                    let elementById = document.getElementById(elementId);
+                    initSelect(elementById, 'form-control', { readOnly: true });
                 });
         });
 
@@ -255,20 +247,6 @@
 
         createRiskService.init();
     });
-
-function HandleRemoveEvent () {
-    this.handleAddRemoveEvent = async function (event) {
-        const response = await fetch(gridDBSAssetsUpdateUrl, {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json', 'X-CSRF-TOKEN': token},
-            body: JSON.stringify({
-                id: event.target.dataset.assetid,
-                assets: Array.from(event.target.selectedOptions).map(op => op.value)
-            }),
-        }).then(defaultResponseHandler)
-            .catch(defaultErrorHandler);
-    }
-}
 
 function deleteClicked(riskId, name) {
     Swal.fire({
