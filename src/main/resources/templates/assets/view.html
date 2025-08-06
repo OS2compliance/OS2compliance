@@ -84,7 +84,7 @@
 
                                             <div class="row mb-3">
                                                 <label for="responsibleUsers"
-                                                    class="col-sm-3 col-form-label">Systemejere</label>
+                                                    class="col-sm-3 col-form-label" th:text="${customSystemOwnerInput.settingValue}"></label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                             data-trigger="" id="responsibleUsers" th:field="*{responsibleUsers}" hidden=""
@@ -123,7 +123,7 @@
 
                                             <div class="row mb-3">
                                                 <label for="managers"
-                                                    class="col-sm-3 col-form-label">Systemansvarlig</label>
+                                                    class="col-sm-3 col-form-label" th:text="${customSystemResponsibleInput.settingValue}"></label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                         data-trigger="" id="managers" th:field="*{managers}" hidden=""
@@ -173,6 +173,20 @@
                                                         <textarea id="description" class="form-control editField"
                                                             placeholder="Indtast beskrivelse" th:field="*{description}" rows="3" disabled></textarea>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="managers"
+                                                       class="col-sm-3 col-form-label" th:text="${customSystemOperationResponsibleInput.settingValue}"></label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select choices__input"
+                                                            data-trigger="" id="operationResponsible" th:field="*{operationResponsibleUsers}" hidden=""
+                                                            tabindex="-1" multiple="multiple">
+                                                        <option th:each="user : *{operationResponsibleUsers}" th:value="${user.uuid}"
+                                                                th:text="'(' + ${user.userId} + ') ' + ${user.name}"
+                                                                selected></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>
@@ -631,6 +645,8 @@
             managersChoicesEditSelect.disable();
             responsibleChoicesEditSelect = choiceService.initUserSelect("responsibleUsers", false);
             responsibleChoicesEditSelect.disable();
+            operationResponsibleChoicesEditSelect = choiceService.initUserSelect("operationResponsible", false);
+            operationResponsibleChoicesEditSelect.disable();
             editMode(false);
             initDpia();
 

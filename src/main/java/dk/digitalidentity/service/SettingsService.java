@@ -110,4 +110,8 @@ public class SettingsService {
 		final Optional<Setting> setting = settingDao.findBySettingKey(key);
         setting.ifPresent(value -> settingDao.delete(value));
 	}
+
+	public Setting findBySettingKey(final String key) {
+		return settingDao.findBySettingKey(key).orElse(null);
+	}
 }

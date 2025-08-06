@@ -119,9 +119,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
 			list.get().setCustomizable(true);
 		}
-		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "systemejer" , "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "systemansvarlig" , "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_OPERATION_ROLE_SETTING_INPUT_FIELD_NAME, "driftsansvarlig" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "systemejer" , "alias", true);
+		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "systemansvarlig" , "alias", true);
+		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "driftsansvarlig" , "alias", true);
 	}
 
     @SneakyThrows

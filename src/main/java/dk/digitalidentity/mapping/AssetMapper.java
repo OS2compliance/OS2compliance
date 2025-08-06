@@ -180,6 +180,7 @@ public interface AssetMapper {
         @Mapping(target = "tia", ignore = true),
         @Mapping(target = "assetOversights", ignore = true),
         @Mapping(target = "responsibleUsers", source = "systemOwners"),
+        @Mapping(target = "operationResponsibleUsers", source = "systemOwners"),
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpias", ignore = true),

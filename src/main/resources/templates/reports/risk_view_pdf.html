@@ -125,8 +125,9 @@
     <table class="generalInfoTable">
         <tbody>
             <tr><td class="generalInfoFirstColumn" th:if="${systemType != null}">Systemtype:</td><td th:text="${systemType}"></td></tr>
-            <tr><td class="generalInfoFirstColumn" th:if="${systemOwners != null}">Systemejere:</td><td th:text="${systemOwners}"></td></tr>
-            <tr><td class="generalInfoFirstColumn" th:if="${systemResponsible != null}">Systemansvarlige: </td><td th:text="${systemResponsible}"></td></tr>
+            <tr><td class="generalInfoFirstColumn" th:if="${systemOwners != null}" th:text="${customSystemOwnerInput + ':'}"></td><td th:text="${systemOwners}"></td></tr>
+            <tr><td class="generalInfoFirstColumn" th:if="${systemResponsible != null}" th:text="${customSystemResponsibleInput + ':'}"></td><td th:text="${systemResponsible}"></td></tr>
+            <tr><td class="generalInfoFirstColumn" th:if="${operationResponsible != null}" th:text="${customSystemOperationResponsibleInput + ':'}"></td><td th:text="${systemResponsible}"></td></tr>
             <tr><td class="generalInfoFirstColumn" th:if="${supplier != null}">Leverandør: </td><td th:text="${supplier}"></td></tr>
             <tr><td class="generalInfoFirstColumn" style="padding-top:12px;" th:if="${dataAccessPersons != null}">Hvem har adgang til personoplysningerne?: </td><td style="padding-top:12px;" th:text="${dataAccessPersons}"></td></tr>
             <tr><td  class="generalInfoFirstColumn" th:if="${dataAccessCount != null}">Hvor mange har adgang til personoplysningerne?: </td><td th:text="${dataAccessCount}"></td></tr>
