@@ -21,6 +21,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Konsekvensvurdering kolonne bredder
 - (Ad-hoc) Bug i "Tilknyt ekstern risikovurdering" Aktiv-fane
 - (Ad-hoc) Bug - Navigation forsvinder - implementeret burger menu
+- (Ad-hoc) Søgning og sortering efter navn i konsekvensanalyser virkede ikke
 
 ## [2.2.1]
 ### Fixed
