@@ -11,7 +11,7 @@ import org.hibernate.annotations.Immutable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "mail_log")
+@Table(name = "view_mail_log_grid")
 @Getter
 @Setter
 @Immutable
@@ -24,10 +24,10 @@ public class MailLogGrid {
 	private LocalDateTime sentAt;
 
 	@Column
-	private String receiverName;
+	private String receiver;
 
 	@Column
-	private String templateType;
+	private String type;
 
 	@Column
 	private String subject;

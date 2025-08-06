@@ -371,6 +371,7 @@ public class TasksController {
                     .message(message)
                     .subject(title)
                     .email(task.getResponsibleUser().getEmail())
+					.templateType(template.getTemplateType())
                     .build());
             } else {
                 log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
