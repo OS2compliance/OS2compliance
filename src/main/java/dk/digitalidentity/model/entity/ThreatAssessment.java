@@ -108,6 +108,9 @@ public class ThreatAssessment extends Relatable {
 	@Column
     private Integer inheritedAvailabilitySociety;
 
+	@Column
+	private Integer inheritedAuthenticitySociety;
+
     @Column
     @Enumerated(EnumType.STRING)
     private RiskAssessment assessment;

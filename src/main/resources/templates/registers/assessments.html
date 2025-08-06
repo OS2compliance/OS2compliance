@@ -15,35 +15,46 @@
             <div class="table-responsive" style="overflow: visible">
                 <input type="hidden" name="confidentialityRegistered" th:field="*{confidentialityRegistered}" />
                 <input type="hidden" name="confidentialityOrganisation" th:field="*{confidentialityOrganisation}" />
-                <input type="hidden" name="confidentialityOrganisationRep" th:field="*{confidentialityOrganisationRep}" />
-                <input type="hidden" name="confidentialityOrganisationEco" th:field="*{confidentialityOrganisationEco}" />
                 <input type="hidden" name="confidentialitySociety" th:field="*{confidentialitySociety}" />
                 <input type="hidden" name="integrityRegistered" th:field="*{integrityRegistered}" />
                 <input type="hidden" name="integrityOrganisation" th:field="*{integrityOrganisation}" />
-                <input type="hidden" name="integrityOrganisationRep" th:field="*{integrityOrganisationRep}" />
-                <input type="hidden" name="integrityOrganisationEco" th:field="*{integrityOrganisationEco}" />
                 <input type="hidden" name="integritySociety" th:field="*{integritySociety}" />
                 <input type="hidden" name="availabilityRegistered" th:field="*{availabilityRegistered}" />
                 <input type="hidden" name="availabilityOrganisation" th:field="*{availabilityOrganisation}" />
-                <input type="hidden" name="availabilityOrganisationRep" th:field="*{availabilityOrganisationRep}" />
-                <input type="hidden" name="availabilityOrganisationEco" th:field="*{availabilityOrganisationEco}" />
                 <input type="hidden" name="availabilitySociety" th:field="*{availabilitySociety}" />
+                <input type="hidden" name="authenticitySociety" th:field="*{authenticitySociety}" />
                 <input type="hidden" name="assessment" th:field="*{assessment}" />
+
+                <div th:each="orgType, typeStat : ${organisationAssessmentColumnTypes}">
+                    <input type="hidden"
+                           th:name="'organisationAssessmentColumns[' + ${typeStat.index} + '].choiceValue.id'"
+                           th:value="${orgType.id}" />
+                    <input type="hidden"
+                           th:name="'organisationAssessmentColumns[' + ${typeStat.index} + '].availability'"
+                           th:value="${#maps.containsKey(organisationAssessmentMap, orgType.id) ? organisationAssessmentMap[orgType.id].availability : ''}" />
+                    <input type="hidden"
+                           th:name="'organisationAssessmentColumns[' + ${typeStat.index} + '].integrity'"
+                           th:value="${#maps.containsKey(organisationAssessmentMap, orgType.id) ? organisationAssessmentMap[orgType.id].integrity : ''}" />
+                    <input type="hidden"
+                           th:name="'organisationAssessmentColumns[' + ${typeStat.index} + '].confidentiality'"
+                           th:value="${#maps.containsKey(organisationAssessmentMap, orgType.id) ? organisationAssessmentMap[orgType.id].confidentiality : ''}" />
+                </div>
+
                 <table class="table table-bordered" style="overflow: visible">
                     <thead>
                     <tr>
                         <th style="width: 180px; vertical-align: top">Konsekvensvurdering</th>
-                        <th style="width: 120px; vertical-align: top">Vurdering for den registrerede</th>
-                        <th style="width: 140px; vertical-align: top">Vurdering for organisationen (Omdømme/tillid)</th>
-                        <th style="width: 145px; vertical-align: top">Vurdering for organisationen (Økonomi/jura/drift)</th>
-                        <th style="width: 120px; vertical-align: top">Samlet vurdering for organisationen</th>
-                        <th style="width: 120px; vertical-align: top">Vurdering for samfundet</th>
+                        <th style="width: 120px; vertical-align: top">Fortrolighed</th>
+                        <th style="width: 120px; vertical-align: top">Integritet</th>
+                        <th style="width: 120px; vertical-align: top">Tilgængelighed</th>
+                        <th style="width: 120px; vertical-align: top">Autenticitet</th>
+                        <th style="width: 120px; vertical-align: top">Maks. vurdering</th>
                         <th style="vertical-align: top">Begrundelse</th>
                     </tr>
                     </thead>
                     <tbody>
                     <tr>
-                        <td>Fortrolighed</td>
+                        <td>Vurdering for den registrerede</td>
                         <td>
                             <div class="btn-group">
                                 <button id="confidentialityRegisteredBtn" th:text="${assessment.confidentialityRegistered} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
@@ -55,48 +66,6 @@
                         </td>
                         <td>
                             <div class="btn-group">
-                                <button id="confidentialityOrganisationRepBtn" th:text="${assessment.confidentialityOrganisationRep} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityOrganisationRep', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <button id="confidentialityOrganisationEcoBtn" th:text="${assessment.confidentialityOrganisationEco} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityOrganisationEco', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <button id="confidentialityOrganisationBtn" th:text="${assessment.confidentialityOrganisation} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityOrganisation', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <button id="confidentialitySocietyBtn" th:text="${assessment.confidentialitySociety} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialitySociety', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialitySociety', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea name="purpose" th:field="*{confidentialityReason}" id="confidentialityReason" class="p-2 form-control" th:text="${assessment.confidentialityReason}" rows="2" readonly></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Integritet</td>
-                        <td>
-                            <div class="btn-group">
                                 <button id="integrityRegisteredBtn" th:text="${assessment.integrityRegistered} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
                                     <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integrityRegistered', 'RØD')">Ikke angivet</a></li>
@@ -106,19 +75,84 @@
                         </td>
                         <td>
                             <div class="btn-group">
-                                <button id="integrityOrganisationRepBtn" th:text="${assessment.integrityOrganisationRep} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
+                                <button id="availabilityRegisteredBtn" th:text="${assessment.availabilityRegistered} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integrityOrganisationRep', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integrityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityRegistered', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td></td>
+                        <td><button id="maxRegistered" type="button" class="btn" disabled style="pointer-events: auto;"></button></td>
+                        <td>
+                            <textarea name="purpose" th:field="*{registeredReason}" id="registeredReason" class="p-2 form-control" th:text="${assessment.registeredReason}" rows="2" readonly></textarea>
+                        </td>
+                    </tr>
+                    <tr th:each="orgColumn : ${organisationAssessmentColumnTypes}">
+                        <td th:text="${orgColumn.caption}"></td>
+                        <td>
+                            <div class="btn-group">
+                                <button th:id="'confidentiality' + ${orgColumn.identifier} + 'Btn'"
+                                        th:text="${#maps.containsKey(organisationAssessmentMap, orgColumn.id) ? organisationAssessmentMap[orgColumn.id].confidentiality : '-'}"
+                                        type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown"
+                                        aria-expanded="false" disabled style="pointer-events: auto;"></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="dropdown-item"
+                                           th:onclick="registerAssessmentService.updateOrganisationAssessmentValue('-', [[${orgColumn.id}]], 'confidentiality')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}">
+                                        <a href="#" class="dropdown-item"
+                                           th:onclick="registerAssessmentService.updateOrganisationAssessmentValue([[${entry.key}]], [[${orgColumn.id}]], 'confidentiality')"
+                                           th:text="${consequenceScale[(entry.key)-1]}"></a>
+                                    </li>
                                 </ul>
                             </div>
                         </td>
                         <td>
                             <div class="btn-group">
-                                <button id="integrityOrganisationEcoBtn" th:text="${assessment.integrityOrganisationEco} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
+                                <button th:id="'integrity' + ${orgColumn.identifier} + 'Btn'"
+                                        th:text="${#maps.containsKey(organisationAssessmentMap, orgColumn.id) ? organisationAssessmentMap[orgColumn.id].integrity : '-'}"
+                                        type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown"
+                                        aria-expanded="false" disabled style="pointer-events: auto;"></button>
                                 <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integrityOrganisationEco', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integrityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                    <li><a href="#" class="dropdown-item"
+                                           th:onclick="registerAssessmentService.updateOrganisationAssessmentValue('-', [[${orgColumn.id}]], 'integrity')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}">
+                                        <a href="#" class="dropdown-item"
+                                           th:onclick="registerAssessmentService.updateOrganisationAssessmentValue([[${entry.key}]], [[${orgColumn.id}]], 'integrity')"
+                                           th:text="${consequenceScale[(entry.key)-1]}"></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button th:id="'availability' + ${orgColumn.identifier} + 'Btn'"
+                                        th:text="${#maps.containsKey(organisationAssessmentMap, orgColumn.id) ? organisationAssessmentMap[orgColumn.id].availability : '-'}"
+                                        type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown"
+                                        aria-expanded="false" disabled style="pointer-events: auto;"></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="dropdown-item"
+                                           th:onclick="registerAssessmentService.updateOrganisationAssessmentValue('-', [[${orgColumn.id}]], 'availability')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}">
+                                        <a href="#" class="dropdown-item"
+                                           th:onclick="registerAssessmentService.updateOrganisationAssessmentValue([[${entry.key}]], [[${orgColumn.id}]], 'availability')"
+                                           th:text="${consequenceScale[(entry.key)-1]}"></a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td></td>
+                        <td></td>
+                        <td></td>
+                    </tr>
+                    <tr>
+                        <td>Samlet vurdering for organisationen</td>
+                        <td>
+                            <div class="btn-group">
+                                <button id="confidentialityOrganisationBtn" th:text="${assessment.confidentialityOrganisation} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialityOrganisation', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -133,52 +167,36 @@
                         </td>
                         <td>
                             <div class="btn-group">
-                                <button id="integritySocietyBtn" th:text="${assessment.integritySociety} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integritySociety', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integritySociety', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <textarea name="purpose" th:field="*{integrityReason}" id="integrityReason" class="p-2 form-control" th:text="${assessment.integrityReason}" rows="2" readonly></textarea>
-                        </td>
-                    </tr>
-                    <tr>
-                        <td>Tilgængelighed</td>
-                        <td>
-                            <div class="btn-group">
-                                <button id="availabilityRegisteredBtn" th:text="${assessment.availabilityRegistered} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityRegistered', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityRegistered', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <button id="availabilityOrganisationRepBtn" th:text="${assessment.availabilityOrganisationRep} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityOrganisationRep', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisationRep', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group">
-                                <button id="availabilityOrganisationEcoBtn" th:text="${assessment.availabilityOrganisationEco} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
-                                <ul class="dropdown-menu">
-                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityOrganisationEco', 'RØD')">Ikke angivet</a></li>
-                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisationEco', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
-                                </ul>
-                            </div>
-                        </td>
-                        <td>
-                            <div class="btn-group">
                                 <button id="availabilityOrganisationBtn" th:text="${assessment.availabilityOrganisation} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
                                 <ul class="dropdown-menu">
                                     <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'availabilityOrganisation', 'RØD')">Ikke angivet</a></li>
                                     <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'availabilityOrganisation', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td></td>
+                        <td><button id="maxOrganisation" type="button" class="btn" disabled style="pointer-events: auto;"></button></td>
+                        <td>
+                            <textarea name="purpose" th:field="*{organisationReason}" id="organisationReason" class="p-2 form-control" th:text="${assessment.organisationReason}" rows="2" readonly></textarea>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>Vurdering for samfundet</td>
+                        <td>
+                            <div class="btn-group">
+                                <button id="confidentialitySocietyBtn" th:text="${assessment.confidentialitySociety} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;"></button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'confidentialitySociety', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'confidentialitySociety', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                </ul>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="btn-group">
+                                <button id="integritySocietyBtn" th:text="${assessment.integritySociety} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'integritySociety', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'integritySociety', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
                                 </ul>
                             </div>
                         </td>
@@ -192,17 +210,18 @@
                             </div>
                         </td>
                         <td>
-                            <textarea name="purpose" th:field="*{availabilityReason}" id="availabilityReason" class="p-2 form-control" th:text="${assessment.availabilityReason}" rows="2" readonly></textarea>
+                            <div class="btn-group">
+                                <button id="authenticitySocietyBtn" th:text="${assessment.authenticitySociety} ?: '-'" type="button" class="btn dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" disabled style="pointer-events: auto;">1</button>
+                                <ul class="dropdown-menu">
+                                    <li><a href="#" class="dropdown-item" onclick="registerAssessmentService.updatedAssessmentValue('-', 'authenticitySociety', 'RØD')">Ikke angivet</a></li>
+                                    <li th:each="entry : ${scale}"><a href="#" class="dropdown-item" th:onclick="registerAssessmentService.updatedAssessmentValue([[${entry.key}]], 'authenticitySociety', [[${entry.value}]])" th:text="${consequenceScale[(entry.key)-1]}"></a></li>
+                                </ul>
+                            </div>
                         </td>
-                    </tr>
-                    <tr class="mb-5 pb-5">
-                        <td>Maks. vurdering</td>
-                        <td><button id="maxRegistered" type="button" class="btn" disabled style="pointer-events: auto;"></button></td>
-                        <td></td>
-                        <td></td>
-                        <td><button id="maxOrganisation" type="button" class="btn" disabled style="pointer-events: auto;"></button></td>
                         <td><button id="maxSociety" type="button" class="btn" disabled style="pointer-events: auto;"></button></td>
-                        <td></td>
+                        <td>
+                            <textarea name="purpose" th:field="*{societyReason}" id="societyReason" class="p-2 form-control" th:text="${assessment.societyReason}" rows="2" readonly></textarea>
+                        </td>
                     </tr>
                     </tbody>
                 </table>

@@ -1,0 +1,79 @@
+<div th:fragment="riskImageReportDialog" class="modal fade" tabindex="-1" id="riskImageReportDialog"
+     aria-hidden="true">
+
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="riskImageReportForm" th:action="@{/reports/riskimage}" method="get" novalidate>
+                <div class="modal-header">
+                    <h5 class="modal-title">Risikobillede Rapport</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="riskImageReportFromDate">Fra dato</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input id="riskImageReportFromDate" name="fromDate" type="text" class="form-control">
+                                <button id="riskImageReportFromDateBtn" class="btn btn-primary" type="button">
+                                    <i class="pli-calendar-4 fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="riskImageReportToDate">Til dato</label>
+                        <div class="col-sm-9">
+                            <div class="input-group">
+                                <input id="riskImageReportToDate" name="toDate" type="text" class="form-control">
+                                <button id="riskImageReportToDateBtn" class="btn btn-primary" type="button">
+                                    <i class="pli-calendar-4 fs-5"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row mt-4">
+                        <label class="col-sm-3 col-form-label" for="includedTypesList">Medtagne typer</label>
+                        <div id="includedTypesList" class="col-sm-9 d-flex flex-column gap-2 mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input reveals-hidden-on-change" name="includedTypes" type="checkbox" value="asset" id="assetIncluded">
+                                <label class="form-check-label" for="assetIncluded">
+                                    Aktiver
+                                </label>
+                                <div class="form-check revealed-on-change" hidden>
+                                    <input class="form-check-input" type="checkbox" name="latestOnly" value="asset" id="assetOnlyLatest">
+                                    <label class="form-check-label" for="assetOnlyLatest">
+                                        Medtag kun seneste risikovurdering
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input reveals-hidden-on-change" name="includedTypes" type="checkbox" value="register" id="registerIncluded">
+                                <label class="form-check-label" for="registerIncluded">
+                                    Behandlingsaktiviteter
+                                </label>
+                                <div class="form-check revealed-on-change" hidden>
+                                    <input class="form-check-input" type="checkbox" name="latestOnly" value="register" id="registerOnlyLatest">
+                                    <label class="form-check-label" for="registerOnlyLatest">
+                                        Medtag kun seneste risikovurdering
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="checkbox" name="includedTypes" value="scenario" id="scenarioIncluded">
+                                <label class="form-check-label" for="scenarioIncluded">
+                                    Scenarier
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                    <button id="riskImageDownloadButton" type="submit" class="btn btn-primary" data-bs-dismiss="modal">Hent</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
