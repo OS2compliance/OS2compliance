@@ -148,7 +148,11 @@ public class TasksController {
                 relationService.addRelation(savedTask, response);
 
             } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
-                final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(riskCatalogIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+				final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+						.flatMap(catalog -> catalog.getThreats().stream())
+						.filter(t -> t.getIdentifier().equals(riskCatalogIdentifier))
+						.findAny()
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
                     .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
                     .findAny().orElse(null);

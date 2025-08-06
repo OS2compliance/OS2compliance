@@ -401,7 +401,7 @@ public class DocxServiceTest {
         tct2.setDescription("There is no one who loves pain itself, who seeks after it and wants to have it, simply because it is pain..");
         catalog.setIdentifier("test");
         catalog.setThreats(Arrays.asList(tct1, tct2));
-        assessment.setThreatCatalog(catalog);
+        assessment.setThreatCatalogs(List.of(catalog));
         assessment.setThreatAssessmentResponses(
             List.of(createResponseWithResidual(tct1), createResponse(tct2))
         );
