@@ -1,10 +1,12 @@
 package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.security.RequireAdministrator;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.RegisterService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -25,6 +27,7 @@ public class CustomChoiceListController {
 
     private final ChoiceService choiceService;
     private final AssetService assetService;
+    private final RegisterService registerService;
 
     record CustomChoiceListDTO(Long id, String name, boolean multipleSelect) {}
     @GetMapping()
@@ -50,8 +53,12 @@ public class CustomChoiceListController {
             choiceList.getId(),
             choiceList.getName(),
             choiceList.getMultiSelect(),
-            choiceList.getValues().stream().map(choiceValue -> new ChoiceListValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), assetService.isInUseOnAssets(choiceValue.getId()))).toList()
+            choiceList.getValues().stream().map(choiceValue -> new ChoiceListValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), !isInUse(choiceValue))).toList()
         ));
         return "admin/fragments/custom_choice_list_edit :: customChoiceListEditModal";
     }
+
+	private boolean isInUse(ChoiceValue choiceValue) {
+		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId());
+	}
 }
