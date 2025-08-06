@@ -121,7 +121,7 @@
                     </li>
                     <li class="nav-item has-sub" sec:authorize="hasRole('ROLE_administrator')">
                         <a href="#" class="mininav-toggle nav-link collapsed"
-                           th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' || page == 'choicelists' ? 'active' : ''}">
+                           th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' || page == 'choicelists' || page == 'maillog' ? 'active' : ''}">
                             <i class="pli-stamp fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Administrativt</span>
                         </a>
                         <ul class="mininav-content nav collapse">
@@ -142,6 +142,12 @@
                             <li class="nav-item">
                                 <a th:href="@{/admin/choicelists}" class="nav-link"
                                    th:classappend="${page} == 'choicelists' ? 'active' : ''">Valglister</a>
+                            </li>
+
+                            <!-- Mail log-->
+                            <li class="nav-item">
+                                <a th:href="@{/admin/log/mail/list}" class="nav-link"
+                                   th:classappend="${page} == 'maillog' ? 'active' : ''">Mail logs</a>
                             </li>
                         </ul>
                     </li>

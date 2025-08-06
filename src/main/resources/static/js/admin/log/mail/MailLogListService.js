@@ -1,12 +1,12 @@
 export default class MailLogListService {
     /**Endpoint for grid data*/
-    #searchRestUrl = "rest/admin/log/mail/list";
+    #searchRestUrl = "/rest/admin/log/mail/list";
 
     /**Array specifying the property names and order of properties in the received dto*/
     #columnPropertyNames = [
         'sentAt',
         'receiver',
-        'templateType',
+        'type',
         'subject'
     ]
     /**ID of the containing element*/
@@ -23,8 +23,9 @@ export default class MailLogListService {
                 name: "Sendt",
                 searchable: {
                     searchKey: 'sentAt'
-                }
-                    // TODO - format to nice display date time
+                },
+                formatter: (cell, row) => this.#dateFormatter(cell),
+                sort: this.#sortByDate
             },
             {
                 name: "Modtager",
@@ -35,8 +36,8 @@ export default class MailLogListService {
             {
                 name: "Type",
                 searchable: {
-                    searchKey: 'templateType',
-                    //fieldId :'' // TODO - enum for types?
+                    searchKey: 'type',
+                    fieldId: 'mailLogTemplateTypeSearchSelector'
                 }
             },
             {
@@ -46,7 +47,7 @@ export default class MailLogListService {
                 }
             }
         ],
-        server:{
+        server: {
             url: this.#searchRestUrl,
             method: 'POST',
             headers: {
@@ -76,7 +77,8 @@ export default class MailLogListService {
                 'navigate': (page, pages) => `Side ${page} af ${pages}`,
                 'page': (page) => `Side ${page}`
             }
-        }
+        },
+
     }
 
     /**
@@ -84,9 +86,38 @@ export default class MailLogListService {
      */
     initGrid() {
         const grid = new gridjs.Grid(this.#gridConfig)
-            .render( document.getElementById( this.#tableIdentifier ));
+            .render(document.getElementById(this.#tableIdentifier));
 
         // Initialized search, pagination and so forth. Mutates specific parts of table config
-        new CustomGridFunctions(grid,  this.#searchRestUrl,  this.#tableIdentifier)
+        new CustomGridFunctions(grid, this.#searchRestUrl, this.#tableIdentifier)
+    }
+
+    #dateFormatter(rawDate) {
+        const date = new Date(rawDate)
+        if (date instanceof Date && !isNaN(date)) {
+            const day = String(date.getDate()).padStart(2, '0');
+            const month = String(date.getMonth() + 1).padStart(2, '0'); // Month is 0-indexed
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            const seconds = String(date.getSeconds()).padStart(2, '0');
+
+            return `${day}/${month}-${year} ${hours}:${minutes}:${seconds}`;
+        }
+        return ""
+    }
+
+    /**
+     * Returns sort configuration for Date sorting
+     * @returns {{compare: (function(*, *): boolean)}}
+     */
+    #sortByDate() {
+        return {
+            enabled: true,
+            direction: 'desc',
+            compare: (a, b) => {
+                return new Date(b) - new Date(a);
+            }
+        }
     }
 }

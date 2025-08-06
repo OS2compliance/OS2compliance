@@ -1,7 +1,10 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import lombok.Getter;
@@ -11,7 +14,7 @@ import org.hibernate.annotations.Immutable;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "view_mail_log_grid")
+@Table(name = "view_gridjs_mail_log")
 @Getter
 @Setter
 @Immutable
@@ -27,7 +30,8 @@ public class MailLogGrid {
 	private String receiver;
 
 	@Column
-	private String type;
+	@Enumerated(EnumType.STRING)
+	private EmailTemplateType type;
 
 	@Column
 	private String subject;
