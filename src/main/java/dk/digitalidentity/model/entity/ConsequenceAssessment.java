@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityListeners;
@@ -9,6 +10,7 @@ import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.MapsId;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.EqualsAndHashCode;
@@ -22,6 +24,8 @@ import org.springframework.data.annotation.LastModifiedBy;
 import org.springframework.data.jpa.domain.support.AuditingEntityListener;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 @Entity
 @Table(name = "consequence_assessments")
@@ -35,40 +39,31 @@ public class ConsequenceAssessment {
 
     @Column
     private Integer confidentialityRegistered;
-    @Column(name = "confidentiality_organisation_rep")
-    private Integer confidentialityOrganisationRep;
-    @Column(name = "confidentiality_organisation_eco")
-    private Integer confidentialityOrganisationEco;
     @Column
     private Integer confidentialityOrganisation;
 	@Column
 	private Integer confidentialitySociety;
     @Column
-    private String confidentialityReason;
-    @Column
     private Integer integrityRegistered;
-    @Column(name = "integrity_organisation_rep")
-    private Integer integrityOrganisationRep;
-    @Column(name = "integrity_organisation_eco")
-    private Integer integrityOrganisationEco;
     @Column
     private Integer integrityOrganisation;
 	@Column
 	private Integer integritySociety;
     @Column
-    private String integrityReason;
-    @Column
     private Integer availabilityRegistered;
-    @Column(name = "availability_organisation_rep")
-    private Integer availabilityOrganisationRep;
-    @Column(name = "availability_organisation_eco")
-    private Integer availabilityOrganisationEco;
     @Column
     private Integer availabilityOrganisation;
 	@Column
 	private Integer availabilitySociety;
-    @Column
-    private String availabilityReason;
+	@Column
+	private Integer authenticitySociety;
+
+	@Column
+	private String registeredReason;
+	@Column
+	private String organisationReason;
+	@Column
+	private String societyReason;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -96,4 +91,8 @@ public class ConsequenceAssessment {
     @Column
     @LastModifiedBy
     private String updatedBy;
+
+	// New relationship to the organisation assessment columns
+	@OneToMany(mappedBy = "consequenceAssessment", cascade = CascadeType.ALL, orphanRemoval = true)
+	private List<OrganisationAssessmentColumn> organisationAssessmentColumns = new ArrayList<>();
 }

@@ -141,7 +141,7 @@ public class RiskRestController {
         return new ResponsibleUsersWithElementNameDTO(register.getName(), users);
     }
 
-    record RiskUIDTO(String elementName, int rf, int of, int sf, int ri, int oi, int si, int rt, int ot, int st, ResponsibleUsersWithElementNameDTO users) {}
+    record RiskUIDTO(String elementName, int rf, int of, int sf, int ri, int oi, int si, int rt, int ot, int st, int sa, ResponsibleUsersWithElementNameDTO users) {}
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetService.findAllById(assetIds);
@@ -149,7 +149,7 @@ public class RiskRestController {
         final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream()
             .map(Relatable::getId).toList());
         final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
-        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getSf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getSi(), riskDTO.getRt(), riskDTO.getOt(), riskDTO.getSt(), users);
+        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getSf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getSi(), riskDTO.getRt(), riskDTO.getOt(), riskDTO.getSt(), riskDTO.getSa(), users);
     }
 
     record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}

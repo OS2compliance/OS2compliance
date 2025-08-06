@@ -64,4 +64,7 @@ public class DataProcessing {
     @Column
     private String elaboration;
 
+	@Column
+	private boolean deletionAppliesToAll;
+
 }
