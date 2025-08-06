@@ -434,6 +434,7 @@ public class RegisterController {
 				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
 				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
 		);
+
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
         model.addAttribute("register", register);
