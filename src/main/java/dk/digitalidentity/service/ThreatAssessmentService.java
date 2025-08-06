@@ -43,7 +43,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -83,6 +85,18 @@ public class ThreatAssessmentService {
     public List<ThreatAssessment> findAll() {
         return threatAssessmentDao.findAll();
     }
+
+	public Set<ThreatAssessment> findAllByTypesAndFromDateToDate(Collection<ThreatAssessmentType> types, LocalDate from, LocalDate to) {
+		return threatAssessmentDao.findByThreatAssessmentTypeInAndCreatedAtBetween(types, from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	}
+
+	public Set<ThreatAssessment> findLatestForAllAssets(LocalDate from, LocalDate to){
+		return threatAssessmentDao.findLatestForAllAssetsBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	}
+
+	public Set<ThreatAssessment> findLatestForAllRegisters(LocalDate from, LocalDate to){
+		return threatAssessmentDao.findLatestForAllRegistersBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	}
 
     @Transactional
     public ThreatAssessment save(final ThreatAssessment assessment) {
