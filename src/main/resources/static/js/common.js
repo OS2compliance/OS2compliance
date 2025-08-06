@@ -349,11 +349,9 @@ class NetworkService {
     * @returns response as JS object
     */
     async Put (url, data){
-
         if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
-
         const response = await fetch (url, {
             method: 'PUT',
             headers: {
@@ -362,12 +360,21 @@ class NetworkService {
             },
             body: JSON.stringify(data)
         })
-
         if (!response.ok) {
             throw new Error(`Error when posting to url: ${url}`)
         }
 
-        return await response.json()
+        const text = await response.text();
+        if (!text) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            console.error('Invalid JSON response:', text);
+            throw new Error(`Invalid JSON response from ${url}: ${text}`);
+        }
     }
 
     /**

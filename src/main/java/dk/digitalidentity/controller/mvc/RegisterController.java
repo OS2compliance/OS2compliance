@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
+import dk.digitalidentity.model.entity.OrganisationAssessmentColumn;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
@@ -69,9 +70,12 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.time.Duration;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -135,53 +139,103 @@ public class RegisterController {
         return "redirect:/registers/" + saved.getId();
     }
 
-    @Transactional
-    @PostMapping("{id}/assessment")
-    public String updateAssessment(@PathVariable final Long id,
-                                   @ModelAttribute @Valid final ConsequenceAssessment assessment,
-                                   @RequestParam(required = false) final String section) {
-        final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	@Transactional
+	@PostMapping("{id}/assessment")
+	public String updateAssessment(@PathVariable final Long id,
+			@ModelAttribute @Valid final ConsequenceAssessment assessment,
+			@RequestParam(required = false) final String section) {
+		final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (existingOptional.isPresent()) {
-            final ConsequenceAssessment existing = existingOptional.get();
-            ensureEditingIsAllowed(existing.getRegister());
+		if (existingOptional.isPresent()) {
+			final ConsequenceAssessment existing = existingOptional.get();
+			ensureEditingIsAllowed(existing.getRegister());
 
-            existing.setAssessment(assessment.getAssessment());
-            existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
-            existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
-            existing.setConfidentialityOrganisationRep(assessment.getConfidentialityOrganisationRep());
-            existing.setConfidentialityOrganisationEco(assessment.getConfidentialityOrganisationEco());
-            existing.setConfidentialitySociety(assessment.getConfidentialitySociety());
-            existing.setConfidentialityReason(assessment.getConfidentialityReason());
+			existing.setAssessment(assessment.getAssessment());
+			existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
+			existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
+			existing.setConfidentialitySociety(assessment.getConfidentialitySociety());
 
-            existing.setIntegrityRegistered(assessment.getIntegrityRegistered());
-            existing.setIntegrityOrganisation(assessment.getIntegrityOrganisation());
-            existing.setIntegrityOrganisationRep(assessment.getIntegrityOrganisationRep());
-            existing.setIntegrityOrganisationEco(assessment.getIntegrityOrganisationEco());
-            existing.setIntegritySociety(assessment.getIntegritySociety());
-            existing.setIntegrityReason(assessment.getIntegrityReason());
+			existing.setIntegrityRegistered(assessment.getIntegrityRegistered());
+			existing.setIntegrityOrganisation(assessment.getIntegrityOrganisation());
+			existing.setIntegritySociety(assessment.getIntegritySociety());
 
-            existing.setAvailabilityRegistered(assessment.getAvailabilityRegistered());
-            existing.setAvailabilityOrganisation(assessment.getAvailabilityOrganisation());
-            existing.setAvailabilityOrganisationRep(assessment.getAvailabilityOrganisationRep());
-            existing.setAvailabilityOrganisationEco(assessment.getAvailabilityOrganisationEco());
-            existing.setAvailabilitySociety(assessment.getAvailabilitySociety());
-            existing.setAvailabilityReason(assessment.getAvailabilityReason());
-        } else {
-            assessment.setId(null);
-            final Register register = registerService.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid()))) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
-            assessment.setRegister(register);
-            register.setConsequenceAssessment(assessment);
-            consequenceAssessmentDao.save(assessment);
-        }
+			existing.setAvailabilityRegistered(assessment.getAvailabilityRegistered());
+			existing.setAvailabilityOrganisation(assessment.getAvailabilityOrganisation());
+			existing.setAvailabilitySociety(assessment.getAvailabilitySociety());
 
-        return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
-    }
+			existing.setAuthenticitySociety(assessment.getAuthenticitySociety());
+
+			existing.setSocietyReason(assessment.getSocietyReason());
+			existing.setOrganisationReason(assessment.getOrganisationReason());
+			existing.setRegisteredReason(assessment.getRegisteredReason());
+
+			// Update organisation assessment columns from the incoming assessment
+			updateOrganisationAssessmentColumns(existing, assessment);
+
+		} else {
+			assessment.setId(null);
+			final Register register = registerService.findById(id)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid()))) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+			assessment.setRegister(register);
+			register.setConsequenceAssessment(assessment);
+			consequenceAssessmentDao.save(assessment);
+		}
+
+		return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+	}
+
+	private void updateOrganisationAssessmentColumns(ConsequenceAssessment existing, ConsequenceAssessment incoming) {
+		List<OrganisationAssessmentColumn> existingColumns = existing.getOrganisationAssessmentColumns();
+		List<OrganisationAssessmentColumn> incomingColumns = incoming.getOrganisationAssessmentColumns() != null ?
+				incoming.getOrganisationAssessmentColumns() : new ArrayList<>();
+
+		// Create maps for efficient lookup
+		Map<Long, OrganisationAssessmentColumn> existingByChoiceValueId = existingColumns.stream()
+				.collect(Collectors.toMap(col -> col.getChoiceValue().getId(), col -> col));
+
+		Map<Long, OrganisationAssessmentColumn> incomingByChoiceValueId = incomingColumns.stream()
+				.collect(Collectors.toMap(col -> col.getChoiceValue().getId(), col -> col));
+
+		// Find columns to remove (exist in current but not in incoming)
+		List<OrganisationAssessmentColumn> toRemove = existingColumns.stream()
+				.filter(col -> !incomingByChoiceValueId.containsKey(col.getChoiceValue().getId()))
+				.collect(Collectors.toList());
+
+		// Remove columns that are no longer present
+		existingColumns.removeAll(toRemove);
+
+		// Update existing columns and add new ones
+		for (OrganisationAssessmentColumn incomingColumn : incomingColumns) {
+			Long choiceValueId = incomingColumn.getChoiceValue().getId();
+			OrganisationAssessmentColumn existingColumn = existingByChoiceValueId.get(choiceValueId);
+
+			if (existingColumn != null) {
+				// Update existing column if values have changed
+				if (!Objects.equals(existingColumn.getAvailability(), incomingColumn.getAvailability()) ||
+						!Objects.equals(existingColumn.getIntegrity(), incomingColumn.getIntegrity()) ||
+						!Objects.equals(existingColumn.getConfidentiality(), incomingColumn.getConfidentiality())) {
+
+					existingColumn.setAvailability(incomingColumn.getAvailability());
+					existingColumn.setIntegrity(incomingColumn.getIntegrity());
+					existingColumn.setConfidentiality(incomingColumn.getConfidentiality());
+				}
+			} else {
+				// Add new column
+				OrganisationAssessmentColumn newColumn = OrganisationAssessmentColumn.builder()
+						.choiceValue(incomingColumn.getChoiceValue())
+						.availability(incomingColumn.getAvailability())
+						.integrity(incomingColumn.getIntegrity())
+						.confidentiality(incomingColumn.getConfidentiality())
+						.consequenceAssessment(existing)
+						.build();
+				existingColumns.add(newColumn);
+			}
+		}
+	}
 
     @PostMapping("{id}/update")
 	public String update(@PathVariable final Long id,
@@ -420,8 +474,25 @@ public class RegisterController {
 		model.addAttribute("risk", new ThreatAssessment());
 		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
 
+        model.addAttribute("organisationAssessmentColumnTypes", getOrganisationAssessmentColumnTypes());
+        model.addAttribute("organisationAssessmentMap", getOrganisationAssessmentMap(assessment));
+
         return "registers/view";
     }
+
+	private List<ChoiceValue> getOrganisationAssessmentColumnTypes() {
+		return choiceService.findChoiceList("organisation-assessment-columns")
+				.map(ChoiceList::getValues)
+				.orElse(Collections.emptyList());
+	}
+
+	public Map<Long, OrganisationAssessmentColumn> getOrganisationAssessmentMap(ConsequenceAssessment assessment) {
+		return assessment.getOrganisationAssessmentColumns().stream()
+				.collect(Collectors.toMap(
+						col -> col.getChoiceValue().getId(),
+						col -> col
+				));
+	}
 
 	record SelectedLegalReferenceDTO(String accessionNumber, String title, String paragraph) {}
 	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, Set<SelectedLegalReferenceDTO> legalReferences){}
