@@ -1,6 +1,7 @@
 package dk.digitalidentity.event;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.service.MailLogService;
 import dk.digitalidentity.service.TransportErrorHandler;
 import jakarta.mail.Message;
 import jakarta.mail.MessagingException;
@@ -28,6 +29,7 @@ import java.util.Properties;
 @RequiredArgsConstructor
 public class EmailEventHandler {
     private final OS2complianceConfiguration configuration;
+	private final MailLogService mailLogService;
 
     @Async
     @EventListener
@@ -84,6 +86,7 @@ public class EmailEventHandler {
             log.error("Failed to send email", ex);
         } finally {
             deleteAttachements(event);
+			mailLogService.logMail(event.getEmail(), event.getSubject(), event.getTemplateType());
             try {
                 if (transport != null) {
                     transport.close();
