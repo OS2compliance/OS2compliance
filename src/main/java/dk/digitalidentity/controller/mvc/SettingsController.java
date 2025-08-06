@@ -67,7 +67,6 @@ public class SettingsController {
         //For notifications, change null values to "false", to ensure changes are not dropped
         settings.getSettingsList()
             .forEach(setting -> {
-				log.info("setting: " + setting.getSettingKey());
                 if (setting.getSettingValue() == null && setting.getAssociation() != null && setting.getAssociation().equals("notification")) {
                     setting.setSettingValue("false");
                 }
