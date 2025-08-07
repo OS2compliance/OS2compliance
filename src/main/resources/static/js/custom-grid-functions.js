@@ -287,4 +287,30 @@ class CustomGridFunctions {
             this.state = retrievedState
         }
     }
+
+    /**
+     * Builds a custom export URL that uses current filters & sorting but disables pagination
+     */
+    getExportUrl() {
+        const params = new URLSearchParams()
+
+        if (this.state.sortColumn) {
+            params.append("order", this.state.sortColumn)
+        }
+        if (this.state.sortDirection) {
+            params.append("dir", this.state.sortDirection)
+        }
+
+        for (const [key, value] of Object.entries(this.state.searchValues)) {
+            if (value !== null && value !== undefined && value !== '') {
+                params.append(key, value)
+            }
+        }
+
+        // Important: override pagination
+        params.set("page", 0)
+        params.set("limit", 99999) // Use a very high number to get everything
+
+        return `${this.dataUrl}?${params.toString()}`
+    }
 }

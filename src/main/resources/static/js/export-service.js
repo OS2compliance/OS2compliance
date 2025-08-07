@@ -1,9 +1,13 @@
-async function exportGridToExcel(tableId, fileName = "export.xlsx") {
+ async function exportGridToExcel(gridInstance, fileName = "export.xlsx") {
     const table = document.getElementById(tableId);
     if (!table) {
         console.error(`Table with ID '${tableId}' not found.`);
         return;
     }
+
+    gridInstance.
+
+
 
     // Get column headers
     const columns = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
@@ -20,10 +24,13 @@ async function exportGridToExcel(tableId, fileName = "export.xlsx") {
             'X-CSRF-TOKEN': token,
             'Content-Type': 'application/json'
         },
-        body: JSON.stringify({ columns, rows })
+        body: JSON.stringify({
+            columns,
+            rows
+        })
     });
 
-    // 3. Receive file blob and trigger download
+    // Receive file blob and trigger download
     const blob = await response.blob();
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
