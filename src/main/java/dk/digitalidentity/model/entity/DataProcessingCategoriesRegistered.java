@@ -77,4 +77,7 @@ public class DataProcessingCategoriesRegistered {
 	@Column
 	private String receiverComment;
 
+	@Column
+	private String note;
+
 }
