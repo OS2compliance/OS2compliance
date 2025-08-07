@@ -26,10 +26,13 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatu
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.EmailTemplateService;
@@ -75,7 +78,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("risks")
-@RequireUser
+@RequireRisk
 @RequiredArgsConstructor
 public class RiskController {
     private final ApplicationEventPublisher eventPublisher;
@@ -93,6 +96,7 @@ public class RiskController {
     private final UserService userService;
     private final EmailTemplateService emailTemplateService;
 
+	@RequireReadOwnerOnly
     @GetMapping
     public String riskList(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -103,7 +107,7 @@ public class RiskController {
     }
 
     @Transactional
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final ThreatAssessment threatAssessment,
             @RequestParam(name = "sendEmail", required = false) final boolean sendEmail,
@@ -140,6 +144,7 @@ public class RiskController {
         return "redirect:/risks/" + savedThreatAssessment.getId();
     }
 
+	@RequireUpdateOwnerOnly
     @GetMapping("{id}/edit")
     public String riskEditDialog(final Model model, @PathVariable("id") final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -152,6 +157,7 @@ public class RiskController {
         return "risks/editForm";
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("{id}/edit")
     public String performEdit(@PathVariable("id") final long id,
@@ -178,6 +184,7 @@ public class RiskController {
         return "redirect:/risks";
     }
 
+	@RequireCreateOwnerOnly
     @GetMapping("{id}/copy")
     public String riskCopyDialog(final Model model, @PathVariable("id") final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -190,7 +197,7 @@ public class RiskController {
     }
 
     @Transactional
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @PostMapping("{id}/copy")
     public String performCopy(@PathVariable("id") final long sourceId,
                               @Valid @ModelAttribute final ThreatAssessment assessment,
@@ -248,6 +255,7 @@ public class RiskController {
 			List<TaskDTO> tasks
 	) {
 	}
+	@RequireReadOwnerOnly
     @GetMapping("{id}")
     public String risk(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -343,6 +351,7 @@ public class RiskController {
         return result;
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("{id}/profile")
     public String riskProfile(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -356,6 +365,7 @@ public class RiskController {
         return "risks/profile";
     }
 
+	@RequireUpdateOwnerOnly
     @GetMapping("{id}/revision")
     public String revisionForm(final Model model, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -364,6 +374,7 @@ public class RiskController {
         return "risks/revisionIntervalForm";
     }
 
+	@RequireCreateOwnerOnly
     @PostMapping("{id}/revision")
     @Transactional
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
@@ -378,10 +389,10 @@ public class RiskController {
         return "redirect:/risks/" + assessment.getId();
     }
 
-    @DeleteMapping("{id}")
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteOwnerOnly
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
+    @DeleteMapping("{id}")
     public void riskDelete(@PathVariable final Long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         // All related checks should be deleted along with the threatAssessment
@@ -394,7 +405,7 @@ public class RiskController {
 
 	public record CustomThreatDTO (Long id, String threatType, String description) {}
     @Transactional
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @PostMapping("{id}/customthreats/create")
     public String formCreateCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreatDTO customThreatDTO) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -518,6 +529,7 @@ public class RiskController {
 	record ResponsibleOUDTO (String uuid, String name ) {}
 	record SimpleEditRiskAsset(Long id, String name) {}
 	record ExternalThreatAssessmentEditDTO(Long id, String name, ThreatAssessmentType threatAssessmentType, ResponsibleOUDTO responsibleOu, ResponsibleUserDTO responsibleUser, List<SimpleEditRiskAsset> relatedAssets, String externalLink) {}
+	@RequireUpdateOwnerOnly
     @GetMapping("external/{riskId}/edit")
     public String riskId(final Model model, @PathVariable Long riskId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -541,6 +553,7 @@ public class RiskController {
     }
 
 	record ExternalThreatAssessmentCreateDTO(Long id, String name, ThreatAssessmentType threatAssessmentType, ResponsibleOUDTO responsibleOu, ResponsibleUserDTO responsibleUser, String externalLink) {}
+	@RequireCreateOwnerOnly
     @GetMapping("external/create")
     public String createExternalDPIA(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
