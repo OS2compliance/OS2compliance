@@ -6,8 +6,8 @@ function truncateString(str, num) {
     return str.slice(0, num) + '...'
 }
 
-const initSelect = (element, containerInner = 'form-control') => {
-    let choices = new Choices(element, {
+const initSelect = (element, containerInner = 'form-control', extraOptions = {}) => {
+    const defaultOptions = {
         searchChoices: false,
         removeItemButton: true,
         allowHTML: true,
@@ -19,7 +19,20 @@ const initSelect = (element, containerInner = 'form-control') => {
             containerInner: containerInner
         },
         duplicateItemsAllowed: false,
-    });
+    };
+    // Hvis readOnly er sat, så sæt de relevante defaults
+    if (extraOptions.readOnly) {
+        extraOptions = {
+            ...extraOptions,
+            removeItemButton: false
+        };
+        defaultOptions.classNames.disabledState = 'choices-readonly';
+    }
+    const options = { ...defaultOptions, ...extraOptions };
+    const choices = new Choices(element, options);
+    if (extraOptions.readOnly) {
+        choices.disable();
+    }
     element.addEventListener("change",
         function(event) {
             choices.hideDropdown();

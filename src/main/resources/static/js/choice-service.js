@@ -123,6 +123,11 @@ function ChoiceService() {
         return ouChoices;
     }
 
+    this.initHeaderSelect = (elementId) => {
+        const headerSelect = document.getElementById(elementId);
+        initSelect(headerSelect);
+    }
+
     this.initTagSelect = (id) => {
         console.log('initTagSelect ' + id)
         const tagsSelect = document.getElementById(id);

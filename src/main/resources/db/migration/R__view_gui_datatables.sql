@@ -180,10 +180,37 @@ SELECT
         END) as assessment_order,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks,
     t.from_external_source,
-    t.external_link
+    t.external_link,
+    GROUP_CONCAT(DISTINCT
+                 CASE
+                     WHEN a.name IS NOT NULL THEN a.name
+                     WHEN rgs.name IS NOT NULL THEN rgs.name
+                     END
+                 ORDER BY
+                 CASE
+                     WHEN a.name IS NOT NULL THEN a.name
+                     WHEN rgs.name IS NOT NULL THEN rgs.name
+                     END ASC
+                 SEPARATOR '||'
+    ) AS related_assets_and_registers
 FROM
     threat_assessments t
-WHERE t.deleted = false;
+        LEFT JOIN relations rel ON (
+        (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+            OR (rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
+        )
+        LEFT JOIN assets a ON (
+        (rel.relation_a_type = 'ASSET' AND rel.relation_a_id = a.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
+            OR (rel.relation_b_type = 'ASSET' AND rel.relation_b_id = a.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+        )
+        LEFT JOIN registers rgs ON (
+        (rel.relation_a_type = 'REGISTER' AND rel.relation_a_id = rgs.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
+            OR (rel.relation_b_type = 'REGISTER' AND rel.relation_b_id = rgs.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+        )
+WHERE
+    t.deleted = false
+GROUP BY
+    t.id;
 
 CREATE OR REPLACE
 VIEW view_gridjs_documents AS

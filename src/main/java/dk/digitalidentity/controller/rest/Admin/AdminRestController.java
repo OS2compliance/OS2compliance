@@ -78,6 +78,7 @@ public class AdminRestController {
                         .email(email)
                         .subject(emailTemplateDTO.getTitle())
                         .message(emailTemplateDTO.getMessage())
+						.templateType(null)
                         .build();
 
                     eventPublisher.publishEvent(emailEvent);

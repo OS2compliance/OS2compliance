@@ -39,6 +39,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
@@ -108,6 +109,7 @@ public class RegisterController {
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
 	private final KLELegalReferenceService kLELegalReferenceService;
+	private final CatalogService catalogService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -444,6 +446,7 @@ public class RegisterController {
 				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
 				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
 		);
+
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
         model.addAttribute("register", register);
@@ -481,6 +484,7 @@ public class RegisterController {
         model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
+		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
 		model.addAttribute("risk", new ThreatAssessment());
 		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
 

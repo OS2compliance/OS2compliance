@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
+import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.model.dto.RelatedDTO;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
@@ -12,29 +13,40 @@ import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireStandard;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.StandardSectionService;
 import dk.digitalidentity.service.StandardsService;
 import dk.digitalidentity.service.SupportingStandardService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.ModelAttribute;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -48,8 +60,10 @@ public class StandardController {
     private final StandardSectionDao standardSectionDao;
     private final StandardTemplateDao standardTemplateDao;
     private final SupportingStandardService supportingStandardService;
+	private final StandardTemplateSectionDao standardTemplateSectionDao;
+	private final StandardSectionService standardSectionService;
 
-    record StandardSectionDTO(StandardSection standardSection,
+	record StandardSectionDTO(StandardSection standardSection,
                               List<Relatable> relatedDocuments,
                               List<Relatable> relatedSections) {}
     record StandardTemplateSectionDTO(StandardTemplateSection standardTemplateSection,
@@ -173,15 +187,202 @@ public class StandardController {
 
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
-
         return "standards/supporting_view";
     }
+
+	@Transactional
+	@PostMapping("/create")
+	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+		standard.setIdentifier(standard.getIdentifier()	.replaceAll("[.,\\s-]", "_"));
+		standard.setSupporting(true);
+		standardTemplateDao.save(standard);
+		return "redirect:/standards";
+	}
+
+	@Transactional
+	@PostMapping("/update")
+	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+		StandardTemplate template = supportingStandardService.lookup(standard.getIdentifier())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		template.setName(standard.getName());
+		standardTemplateDao.save(template);
+		return "redirect:/standards";
+	}
+
+	@GetMapping("/form")
+	public String createStandardForm(final Model model) {
+		model.addAttribute("action", "standards/create");
+		model.addAttribute("standard", new StandardTemplate());
+		model.addAttribute("formTitle", "Ny standard");
+		model.addAttribute("formId", "standardCreateForm");
+		model.addAttribute("edit", false);
+		return "standards/form";
+	}
+
+	@GetMapping("/form/{id}")
+	public String editStandardForm(final Model model, @PathVariable final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		model.addAttribute("action", "standards/update");
+		model.addAttribute("standard", template);
+		model.addAttribute("formTitle", "Rediger standard");
+		model.addAttribute("formId", "standardCreateForm");
+		model.addAttribute("edit", true);
+
+		return "standards/form";
+	}
+
+
+	@GetMapping("/section/form/{id}")
+	public String sectionForm(final Model model, @PathVariable(name = "id") final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		model.addAttribute("standard", template);
+		model.addAttribute("action", "/standards/sections/create/" + id);
+		model.addAttribute("section", new StandardSection());
+		model.addAttribute("formTitle", "Ny krav");
+		model.addAttribute("formId", "sectionCreateForm");
+
+		return "standards/sections/create_section_form";
+	}
+
+	@GetMapping("/section/header/form/{id}")
+	public String createHeaderForm(final Model model, @PathVariable(name = "id") final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		model.addAttribute("standard", template);
+		model.addAttribute("action", "/standards/headers/create/" + id);
+		model.addAttribute("header", new StandardTemplateSection());
+		model.addAttribute("formTitle", "Ny gruppe");
+		model.addAttribute("formId", "headerForm");
+
+		return "standards/sections/create_header_form";
+	}
+
+	@GetMapping("/section/header/form/{id}/{headerIdentifier}")
+	public String editHeaderForm(final Model model, @PathVariable(name = "id") final String headerIdentifier, @PathVariable(name = "headerIdentifier") final String id) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		StandardTemplateSection header = standardTemplateSectionDao.findById(headerIdentifier)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		model.addAttribute("header", header);
+		model.addAttribute("standard", template);
+		model.addAttribute("action", "/standards/headers/update/" + id);
+		model.addAttribute("formTitle", "Ny gruppe");
+		model.addAttribute("formId", "headerForm");
+
+		return "standards/sections/create_header_form";
+	}
+
+	@Transactional
+	@PostMapping("/headers/update/{identifier}")
+	public String editHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
+
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		StandardTemplateSection header = standardTemplateSectionDao.findByStandardTemplate(template).stream()
+				.filter(section -> section.getParent() == null)
+				.findAny()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+
+		String oldSection = header.getSection().trim();
+		String newSection = standardTemplateSection.getSection().trim();
+
+		if (!Objects.equals(oldSection, newSection)) {
+			boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
+
+			if (existsAlready) {
+				result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
+				redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
+				return "redirect:/standards/supporting/" + id;
+			}
+
+			String newSectionPrefix = newSection + ".";
+
+			header.setSection(newSection);
+			header.setSortKey(Integer.parseInt(newSection.replace(".", "")));
+
+			List<StandardTemplateSection> children = header.getChildren().stream()
+					.sorted(Comparator.comparing(StandardTemplateSection::getSortKey).reversed())
+					.collect(Collectors.toList());
+			for (StandardTemplateSection child : children) {
+				String childSection = child.getSection().trim();
+				String[] split = childSection.split("\\.");
+				child.setSection(newSectionPrefix + split[split.length - 1]);
+				child.setSortKey(Integer.parseInt(child.getSection().replace(".", "").replaceAll("[^0-9]", "")));
+			}
+
+			standardTemplateSectionDao.saveAll(children);
+			standardTemplateSectionDao.save(header);
+		}
+
+		if (!Objects.equals(header.getDescription(), standardTemplateSection.getDescription())) {
+			header.setDescription(standardTemplateSection.getDescription());
+			standardTemplateSectionDao.save(header);
+		}
+
+		return "redirect:/standards/supporting/" + id;
+	}
+
+	@Transactional
+	@PostMapping("/sections/create/{identifier}")
+	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
+		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
+		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
+
+		String version = getHighestVersionNumber(parentsTemplateSection.getSection(), existingChildren);
+		String sectionPrefix = parentsTemplateSection.getSection();
+		String name = version + " " + standardSection.getName();
+		String templateSection = sectionPrefix + "." + version;
+		standardSection.setSelected(true);
+		standardSection.setStatus(StandardSectionStatus.IN_PROGRESS);
+		String standardTemplateSectionIdentifier = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
+		StandardTemplateSection newSection = new StandardTemplateSection();
+		newSection.setIdentifier(standardTemplateSectionIdentifier);
+		newSection.setSection(version);
+		newSection.setDescription(standardSection.getName());
+		newSection.setParent(parentsTemplateSection);
+		newSection.setSortKey(Integer.parseInt(templateSection.replace(".", "").replaceAll("[^0-9]", "")));
+
+		StandardTemplateSection save = standardTemplateSectionDao.save(newSection);
+
+		standardSection.setName(name);
+		standardSection.setTemplateSection(save);
+		standardSectionService.save(standardSection);
+
+		return "redirect:/standards/supporting/" + identifier;
+	}
+
+	@Transactional
+	@PostMapping("/headers/create/{identifier}")
+	public String createHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
+		StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		boolean existsAlready = template.getStandardTemplateSections().stream().anyMatch(section -> section.getSection().equals(standardTemplateSection.getSection()));
+
+		if (existsAlready) {
+			result.rejectValue("section", "section.duplicate", "Du skal angive et unikt sektionsnummer");
+			redirectAttributes.addFlashAttribute("headerModalError", result.getFieldErrors("section"));
+			return "redirect:/standards/supporting/" + id;
+		}
+		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();
+		String sortKey = standardTemplateSection.getSection().replace(".", "").replaceAll("[^0-9]", "");;
+		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
+		standardTemplateSection.setIdentifier(identifier);
+		standardTemplateSection.setStandardTemplate(template);
+		standardTemplateSectionDao.save(standardTemplateSection);
+		return "redirect:/standards/supporting/" + id;
+	}
 
     private Map<Long, List<RelatedDTO>> buildRelationsMap(final StandardTemplate template) {
         final Map<Long, List<RelatedDTO>> result = new HashMap<>();
 
         for (final StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
-            for(final StandardTemplateSection child : standardTemplateSection.getChildren()) {
+            for (final StandardTemplateSection child : standardTemplateSection.getChildren()) {
                 result.put(child.getStandardSection().getId(), relationService.findRelationsAsListDTO(child.getStandardSection(), false));
             }
         }
@@ -209,5 +410,44 @@ public class StandardController {
             .filter(r -> r.getRelationType().equals(relationType))
             .toList();
     }
+
+	private String getHighestVersionNumber(String parentSection, Set<StandardTemplateSection> allSections) {
+		String prefix = parentSection + ".";
+
+		int temp = 0;
+		for (StandardTemplateSection allSection : allSections) {
+			String[] split = allSection.getSection().split("\\.");
+			int value = Integer.parseInt(split[split.length - 1]);
+			if (value > temp) {
+				temp = value;
+			}
+		}
+		return prefix + (temp == 0 ? 1 : (temp + 1));
+	}
+
+	private String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
+		String prefix = parentSection + ".";
+		int max = 0;
+		// Matching the last number, to figure out the highest number we can take
+		Pattern numberPattern = Pattern.compile("(\\d+)$");
+
+		for (StandardTemplateSection section : allSections) {
+			String identifier = section.getIdentifier();
+
+			Matcher matcher = numberPattern.matcher(identifier);
+			if (matcher.find()) {
+				try {
+					int number = Integer.parseInt(matcher.group(1));
+					if (number > max) {
+						max = number;
+					}
+				} catch (NumberFormatException ignored) {
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+				}
+			}
+		}
+
+		return prefix + (max + 1);
+	}
 
 }

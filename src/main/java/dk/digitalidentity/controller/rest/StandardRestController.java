@@ -1,9 +1,13 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.StandardSectionDao;
+import dk.digitalidentity.dao.StandardTemplateDao;
+import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.model.dto.enums.SetFieldStandardType;
 import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.StandardTemplate;
+import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.Roles;
@@ -11,6 +15,8 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireStandard;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -29,8 +35,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Slf4j
 @RestController
@@ -41,8 +49,10 @@ public class StandardRestController {
     private final StandardSectionDao standardSectionDao;
     private final UserDao userDao;
     private final RelationService relationService;
+	private final StandardTemplateSectionDao standardTemplateSectionDao;
+	private final StandardTemplateDao standardTemplateDao;
 
-    record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
+	record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
 	@RequireUpdateOwnerOnly
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
     public ResponseEntity<HttpStatus> setField(@PathVariable final String templateIdentifier, @PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
@@ -91,6 +101,60 @@ public class StandardRestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
+
+	@RequireDeleteOwnerOnly
+	@Transactional
+	@PostMapping("/section/delete/{identifier}")
+	public ResponseEntity<?> deleteSection(@PathVariable(name = "identifier") final String identifier) {
+		StandardTemplateSection template = standardTemplateSectionDao.findById(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		StandardSection relatedSection = standardSectionDao.findByTemplateSectionIdentifier(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		standardSectionDao.delete(relatedSection);
+		standardTemplateSectionDao.delete(template);
+
+		StandardTemplateSection parent = template.getParent();
+		List<StandardTemplateSection> siblings = standardTemplateSectionDao.findByParentOrderBySortKey(parent);
+		List<StandardTemplateSection> toBeUpdatedstandardTemplateSection = new ArrayList<>();
+		List<StandardSection> toBeUpdatedStandardSection = new ArrayList<>();
+		int version = 1;
+		for (StandardTemplateSection sibling : siblings) {
+			StandardSection section = sibling.getStandardSection();
+			if (section == null) {
+				continue;
+			}
+
+			String baseSection = parent.getSection();
+			String newSectionName = baseSection + "." + version;
+
+			section.setName(newSectionName + section.getName().replaceFirst("^[^.]+", ""));
+			sibling.setSortKey(Integer.parseInt(baseSection.replace(".", "") + version));
+
+			sibling.setSection(newSectionName);
+			toBeUpdatedstandardTemplateSection.add(sibling);
+			toBeUpdatedStandardSection.add(section);
+
+			version++;
+		}
+
+		standardSectionDao.saveAll(toBeUpdatedStandardSection);
+		standardTemplateSectionDao.saveAll(toBeUpdatedstandardTemplateSection);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@Transactional
+	@PostMapping("/header/delete/{identifier}")
+	public ResponseEntity<?> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
+		StandardTemplateSection section =  standardTemplateSectionDao.findById(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		standardTemplateSectionDao.delete(section);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	@Transactional
+	@PostMapping("/delete/{id}")
+	public ResponseEntity<?> deleteStandard(@PathVariable(name = "id") final String id) {
+		StandardTemplate template = standardTemplateDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
+		standardTemplateDao.delete(template);
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
 
     private void handleResponsibleUser(final StandardSection standardSection, final String value) {
         if(value.isEmpty()) {

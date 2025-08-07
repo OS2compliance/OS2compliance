@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
@@ -74,7 +75,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -82,7 +86,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -234,6 +240,7 @@ public class RiskRestController {
 
             emailEvent.setMessage(message);
             emailEvent.setSubject(title);
+			emailEvent.setTemplateType(template.getTemplateType());
         } else {
             log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
         }
@@ -515,4 +522,175 @@ public class RiskRestController {
             () -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en behandlingsaktivitet, når typen behandlingsaktivitet er valgt."));
         relationService.addRelation(savedThreatAssessment, register);
     }
+
+	public record RiskMatrixItem(int probability, int consequence, int count) {}
+	@GetMapping("/dashboard/risk-matrix")
+	public ResponseEntity<List<RiskMatrixItem>> getRiskMatrixData(
+			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
+
+		if (types == null || types.isEmpty()) {
+			return ResponseEntity.ok(new ArrayList<RiskMatrixItem>());
+		}
+
+		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+
+		return ResponseEntity.ok(calculateRiskMatrix(threatAssessments));
+	}
+
+	public List<RiskMatrixItem> calculateRiskMatrix(List<ThreatAssessment> threatAssessments) {
+		Map<String, Integer> riskCounts = new HashMap<>();
+
+		for (ThreatAssessment assessment : threatAssessments) {
+			RiskLevel riskLevel = calculateRiskLevel(assessment);
+
+			if (riskLevel.probability() > 0 && riskLevel.consequence() > 0) {
+				String key = riskLevel.probability() + "," + riskLevel.consequence();
+				riskCounts.merge(key, 1, Integer::sum);
+			}
+		}
+
+		return riskCounts.entrySet().stream()
+				.map(entry -> {
+					String[] coords = entry.getKey().split(",");
+					int probability = Integer.parseInt(coords[0]);
+					int consequence = Integer.parseInt(coords[1]);
+					return new RiskMatrixItem(probability, consequence, entry.getValue());
+				})
+				.toList();
+	}
+
+	public record RiskLevel(int probability, int consequence) {}
+	public RiskLevel calculateRiskLevel(ThreatAssessment threatAssessment) {
+		List<ThreatAssessmentResponse> responses = threatAssessment.getThreatAssessmentResponses();
+
+		if (responses == null || responses.isEmpty()) {
+			return new RiskLevel(0, 0);
+		}
+
+		// calculate the highest scores the same way its calculated when setting the threatAssessment.assessment
+		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment);
+
+		return new RiskLevel(result.globalHighestprobability(), result.globalHighestConsequence());
+	}
+
+	public record RiskDetailItem(Long id, String name, String type, String assessment, String createdAt) {}
+	@GetMapping("/dashboard/risk-matrix/{probability}/{consequence}")
+	public ResponseEntity<List<RiskDetailItem>> getRiskDetails(
+			@PathVariable int probability,
+			@PathVariable int consequence,
+			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
+
+		if (types == null || types.isEmpty()) {
+			return ResponseEntity.ok(new ArrayList<RiskDetailItem>());
+		}
+
+		// Fetch threat assessments filtered by types
+		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+
+		// Filter assessments that match the requested probability and consequence
+		List<RiskDetailItem> details = threatAssessments.stream()
+				.filter(assessment -> {
+					RiskLevel riskLevel = calculateRiskLevel(assessment);
+					return riskLevel.probability() == probability && riskLevel.consequence() == consequence;
+				})
+				.map(assessment -> new RiskDetailItem(
+						assessment.getId(),
+						assessment.getName(),
+						assessment.getThreatAssessmentType().getMessage(),
+						assessment.getAssessment().getMessage(),
+						assessment.getCreatedAt().format(DK_DATE_FORMATTER)
+				))
+				.toList();
+
+		return ResponseEntity.ok(details);
+	}
+
+	public record RiskOverTimeData( int[] green, int[] lightGreen, int[] yellow, int[] orange, int[] red) {}
+	@GetMapping("/dashboard/risk-over-time/{year}")
+	public ResponseEntity<RiskOverTimeData> getRiskOverTime(@PathVariable int year) {
+
+		// Get ALL non-deleted threat assessments (not just from selected year)
+		List<ThreatAssessment> allAssessments = threatAssessmentService.findAllNotDeleted()
+				.stream()
+				.filter(assessment -> assessment.getCreatedAt() != null)
+				.toList();
+
+		// Initialize arrays for 12 months (0-indexed)
+		int[] green = new int[12];
+		int[] lightGreen = new int[12];
+		int[] yellow = new int[12];
+		int[] orange = new int[12];
+		int[] red = new int[12];
+
+		// For each month, get the latest assessment per asset/register up to that point
+		for (int month = 0; month < 12; month++) {
+			// Create cutoff date for end of this month in selected year
+			LocalDateTime cutoffDate = LocalDateTime.of(year, month + 1, 1, 0, 0)
+					.plusMonths(1).minusSeconds(1);
+
+			// Get latest assessment for each unique key up to this month (including all previous years)
+			Map<String, ThreatAssessment> latestAssessments = allAssessments.stream()
+					.filter(assessment -> assessment.getCreatedAt().isBefore(cutoffDate) ||
+							assessment.getCreatedAt().isEqual(cutoffDate))
+					.collect(Collectors.toMap(
+							assessment -> getAssessmentKey(assessment),
+							assessment -> assessment,
+							(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt()) ?
+									existing : replacement
+					));
+
+			// Count by risk assessment color
+			for (ThreatAssessment assessment : latestAssessments.values()) {
+				if (assessment.getAssessment() != null) {
+					switch (assessment.getAssessment()) {
+						case GREEN:
+							green[month]++;
+							break;
+						case LIGHT_GREEN:
+							lightGreen[month]++;
+							break;
+						case YELLOW:
+							yellow[month]++;
+							break;
+						case ORANGE:
+							orange[month]++;
+							break;
+						case RED:
+							red[month]++;
+							break;
+					}
+				}
+			}
+		}
+
+		return ResponseEntity.ok(new RiskOverTimeData(green, lightGreen, yellow, orange, red));
+	}
+
+	private String getAssessmentKey(ThreatAssessment assessment) {
+		// Create unique identifier based on assessment type and target
+		String key = assessment.getThreatAssessmentType().name() + "_";
+
+		final List<Relatable> relations = relationService.findAllRelatedTo(assessment);
+		switch (assessment.getThreatAssessmentType()) {
+			case ASSET:
+				final Optional<Asset> asset = relations.stream().filter(r -> r.getRelationType() == RelationType.ASSET)
+						.map(Asset.class::cast)
+						.findFirst();
+				key += asset.isPresent() ? asset.get().getId() : "unknown";
+				break;
+			case REGISTER:
+				final Optional<Register> register = relations.stream().filter(r -> r.getRelationType() == RelationType.REGISTER)
+						.map(Register.class::cast)
+						.findFirst();
+				key += register.isPresent() ? register.get().getId() : "unknown";
+				break;
+			case SCENARIO:
+				key += assessment.getId(); // Scenarios are unique per assessment
+				break;
+			default:
+				key += assessment.getId();
+		}
+
+		return key;
+	}
 }

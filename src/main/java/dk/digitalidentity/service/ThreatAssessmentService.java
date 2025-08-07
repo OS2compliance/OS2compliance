@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
@@ -73,6 +74,7 @@ public class ThreatAssessmentService {
     private final UserService userService;
     private final TemplateEngine templateEngine;
     private final ChoiceService choiceService;
+	private final SettingsService settingsService;
 	private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
 
 	public ThreatAssessment findByS3Document(S3Document s3Document) {
@@ -96,6 +98,10 @@ public class ThreatAssessmentService {
 
 	public Set<ThreatAssessment> findLatestForAllRegisters(LocalDate from, LocalDate to){
 		return threatAssessmentDao.findLatestForAllRegistersBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	}
+
+	public List<ThreatAssessment> findAllNotDeleted() {
+		return threatAssessmentDao.findAllByDeletedFalse();
 	}
 
     @Transactional
@@ -442,27 +448,11 @@ public class ThreatAssessmentService {
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
-        int highestRiskNotAcceptedRiskScore = -1;
-        int globalHighestprobability = -1;
-        int globalHighestConsequence = -1;
-        for (final ThreatAssessmentResponse threatAssessmentResponse : savedThreatAssessment.getThreatAssessmentResponses()) {
-            final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation(), threatAssessmentResponse.getConfidentialitySociety(), threatAssessmentResponse.getIntegritySociety(), threatAssessmentResponse.getAvailabilitySociety(), threatAssessmentResponse.getAuthenticitySociety());
-            final int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
+		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment);
 
-            if (probability < 1 || highestConsequence < 1) {
-                continue;
-            }
-            final int riskScore = probability * highestConsequence;
-            if (riskScore > highestRiskNotAcceptedRiskScore) {
-                highestRiskNotAcceptedRiskScore = riskScore;
-                globalHighestprobability = probability;
-                globalHighestConsequence = highestConsequence;
-            }
-        }
-
-        if (highestRiskNotAcceptedRiskScore != -1) {
+		if (result.highestRiskNotAcceptedRiskScore() != -1) {
             final RiskAssessment assessment =
-                scaleService.getRiskAssessmentForRisk(globalHighestprobability, globalHighestConsequence);
+                scaleService.getRiskAssessmentForRisk(result.globalHighestprobability(), result.globalHighestConsequence());
             savedThreatAssessment.setAssessment(assessment);
         } else {
             savedThreatAssessment.setAssessment(null);
@@ -471,7 +461,31 @@ public class ThreatAssessmentService {
         threatAssessmentDao.save(savedThreatAssessment);
     }
 
-    private int findHighestConsequence(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot, final Integer sf, final Integer si, final Integer st, final Integer sa) {
+	public RiskScoreDTO findHighestRiskScore(ThreatAssessment savedThreatAssessment) {
+		int highestRiskNotAcceptedRiskScore = -1;
+		int globalHighestprobability = -1;
+		int globalHighestConsequence = -1;
+		for (final ThreatAssessmentResponse threatAssessmentResponse : savedThreatAssessment.getThreatAssessmentResponses()) {
+			final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation(), threatAssessmentResponse.getConfidentialitySociety(), threatAssessmentResponse.getIntegritySociety(), threatAssessmentResponse.getAvailabilitySociety(), threatAssessmentResponse.getAuthenticitySociety());
+			final int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
+
+			if (probability < 1 || highestConsequence < 1) {
+				continue;
+			}
+			final int riskScore = probability * highestConsequence;
+			if (riskScore > highestRiskNotAcceptedRiskScore) {
+				highestRiskNotAcceptedRiskScore = riskScore;
+				globalHighestprobability = probability;
+				globalHighestConsequence = highestConsequence;
+			}
+		}
+		RiskScoreDTO result = new RiskScoreDTO(highestRiskNotAcceptedRiskScore, globalHighestprobability, globalHighestConsequence);
+		return result;
+	}
+
+	public record RiskScoreDTO(int highestRiskNotAcceptedRiskScore, int globalHighestprobability, int globalHighestConsequence) {}
+
+	public int findHighestConsequence(final Integer rf, final Integer ri, final Integer rt, final Integer of, final Integer oi, final Integer ot, final Integer sf, final Integer si, final Integer st, final Integer sa) {
         int highest = 0;
 
         if (rf != null && rf > highest) {
@@ -587,7 +601,11 @@ public class ThreatAssessmentService {
         return convertHtmlToPdf(html);
     }
 
-    public record registeredDataCategory (String title, List<String> types) {}
+	public List<ThreatAssessment> findByTypeInAndNotDeleted(List<ThreatAssessmentType> types) {
+		return threatAssessmentDao.findByDeletedFalseAndThreatAssessmentTypeIn(types);
+	}
+
+	public record registeredDataCategory (String title, List<String> types) {}
     private String getThreatAssessmentHtml(ThreatAssessment threatAssessment) {
         final List<Relatable> relations = relationService.findAllRelatedTo(threatAssessment);
         List<Task> riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
@@ -687,11 +705,15 @@ public class ThreatAssessmentService {
 
     private Context addGeneralInfoToContext (Context context, Asset riskAsset, Register riskRegister) {
         if (riskAsset != null) {
+			context.setVariable("customSystemOwnerInput", settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME).getSettingValue());
+			context.setVariable("customSystemResponsibleInput", settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME).getSettingValue());
+			context.setVariable("customSystemOperationResponsibleInput", settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME).getSettingValue());
             context.setVariable("systemType", riskAsset.getAssetType().getCaption());
             String systemOwners = riskAsset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
             context.setVariable("supplier", riskAsset.getSupplier() != null ?  riskAsset.getSupplier().getName() : "Ukendt");
             context.setVariable("systemResponsible", riskAsset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")));
+            context.setVariable("operationResponsible", riskAsset.getOperationResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")));
             context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
             context.setVariable("sociallyCritical", riskAsset.isSociallyCritical());
@@ -903,6 +925,7 @@ public class ThreatAssessmentService {
 
     private String getSubHeading(final ThreatAssessment threatAssessment, final Asset asset, final Register register) {
         if (asset != null && asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
+
             return "Systemejere: " + asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
         } else if (register != null && register.getResponsibleUsers() != null && !register.getResponsibleUsers().isEmpty()) {
             return "Behandlingsansvarlige: " + register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));

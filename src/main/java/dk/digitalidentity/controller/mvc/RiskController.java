@@ -466,6 +466,7 @@ public class RiskController {
                         .message(message)
                         .subject(title)
                         .email(task.getResponsibleUser().getEmail())
+						.templateType(template.getTemplateType())
                         .build());
                 }
             } else {
@@ -561,4 +562,32 @@ public class RiskController {
         model.addAttribute("risk", new ExternalThreatAssessmentCreateDTO(null, "", ThreatAssessmentType.ASSET, new ResponsibleOUDTO("", ""), new ResponsibleUserDTO("", ""), "")); // emppty dto
         return "risks/fragments/create_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
+
+	@GetMapping("dashboard")
+	public String riskDashboard(final Model model) {
+		model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream()
+				.sorted(Collections.reverseOrder())
+				.collect(Collectors.toList()));
+
+		model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
+
+		// Add available years for development over time chart
+		List<Integer> availableYears = getAvailableYearsForRiskAssessments();
+		model.addAttribute("availableYears", availableYears);
+
+		return "risks/dashboard";
+	}
+
+	private List<Integer> getAvailableYearsForRiskAssessments() {
+		// Get all non-deleted threat assessments
+		List<ThreatAssessment> allAssessments = threatAssessmentService.findAllNotDeleted();
+
+		// Extract years from createdAt dates and return sorted unique years
+		return allAssessments.stream()
+				.filter(assessment -> assessment.getCreatedAt() != null)
+				.map(assessment -> assessment.getCreatedAt().getYear())
+				.distinct()
+				.sorted()
+				.collect(Collectors.toList());
+	}
 }

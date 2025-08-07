@@ -23,7 +23,9 @@
                     <div class="row mt-3" id="registerSelectRow">
                         <label for="registerSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1"></select>
+                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1">
+                                <option th:if="${register != null}" th:value="${register?.id}" th:text="${register?.name}" selected="selected"></option>
+                            </select>
                             <div class="invalid-feedback" id="registerError">Der skal vælges mindst en behandlingsaktivitet</div>
                         </div>
                     </div>
