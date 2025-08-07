@@ -164,38 +164,40 @@ public interface AssetMapper {
         return supplier;
     }
 
+	@Mappings({
+			@Mapping(target = "id", ignore = true),
+			@Mapping(target = "version", ignore = true),
+			@Mapping(target = "relationType", ignore = true),
+			@Mapping(target = "createdAt", ignore = true),
+			@Mapping(target = "createdBy", ignore = true),
+			@Mapping(target = "updatedAt", ignore = true),
+			@Mapping(target = "updatedBy", ignore = true),
+			@Mapping(target = "dataProcessing", ignore = true),
+			@Mapping(target = "tia", ignore = true),
+			@Mapping(target = "assetOversights", ignore = true),
+			@Mapping(target = "responsibleUsers", source = "systemOwners"),
+			@Mapping(target = "suppliers", ignore = true),
+			@Mapping(target = "measures", ignore = true),
+			@Mapping(target = "dpias", ignore = true),
+			@Mapping(target = "managers", source = "responsibleUsers"),
+			@Mapping(target = "deleted", ignore = true),
+			@Mapping(target = "localizedEnums", ignore = true),
+			@Mapping(target = "threatAssessmentOptOut", ignore = true),
+			@Mapping(target = "threatAssessmentOptOutReason", ignore = true),
+			@Mapping(target = "dpiaOptOut", ignore = true),
+			@Mapping(target = "dpiaOptOutReason", ignore = true),
+			@Mapping(target = "oversightResponsibleUser", ignore = true),
+			@Mapping(target = "assetCategory", ignore = true),
+			@Mapping(target = "roles", ignore = true),
+			@Mapping(target = "assetType", ignore = true),
+			@Mapping(target = "aiStatus", ignore = true),
+			@Mapping(target = "aiRisk", ignore = true),
+			@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
+	})
+	Asset fromEO(AssetCreateEO assetCreateEO);
+
     default User fromEO(final UserWriteEO eo) {
         return User.builder().uuid(eo.getUuid()).build();
     }
-
-    @Mappings({
-        @Mapping(target = "id", ignore = true),
-        @Mapping(target = "version", ignore = true),
-        @Mapping(target = "relationType", ignore = true),
-        @Mapping(target = "createdAt", ignore = true),
-        @Mapping(target = "createdBy", ignore = true),
-        @Mapping(target = "updatedAt", ignore = true),
-        @Mapping(target = "updatedBy", ignore = true),
-        @Mapping(target = "dataProcessing", ignore = true),
-        @Mapping(target = "tia", ignore = true),
-        @Mapping(target = "assetOversights", ignore = true),
-        @Mapping(target = "responsibleUsers", source = "systemOwners"),
-        @Mapping(target = "suppliers", ignore = true),
-        @Mapping(target = "measures", ignore = true),
-        @Mapping(target = "dpias", ignore = true),
-        @Mapping(target = "managers", source = "responsibleUsers"),
-        @Mapping(target = "deleted", ignore = true),
-        @Mapping(target = "localizedEnums", ignore = true),
-        @Mapping(target = "threatAssessmentOptOut", ignore = true),
-        @Mapping(target = "threatAssessmentOptOutReason", ignore = true),
-        @Mapping(target = "dpiaOptOut", ignore = true),
-        @Mapping(target = "dpiaOptOutReason", ignore = true),
-        @Mapping(target = "oversightResponsibleUser", ignore = true),
-        @Mapping(target = "assetCategory", ignore = true),
-        @Mapping(target = "roles", ignore = true),
-        @Mapping(target = "assetType", ignore = true),
-		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
-	})
-    Asset fromEO(AssetCreateEO assetCreateEO);
 
 }
