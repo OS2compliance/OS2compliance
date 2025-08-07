@@ -53,8 +53,8 @@ function CreateTable() {
                         searchKey: 'name'
                     },
                     formatter: (cell, row) => {
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
+                        const external = row.cells[11]['data']
+                        const externalLink = row.cells[12]['data']
                         const url = viewUrl + row.cells[0]['data'];
                         if(external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
@@ -82,6 +82,42 @@ function CreateTable() {
                     searchable: {
                         searchKey: 'responsibleUser.name'
                     },
+                },
+                {
+                    name: "Entitet",
+                    searchable: {
+                        searchKey: 'relatedAssetsAndRegisters'
+                    },
+                    formatter: (cell, row) => {
+                        const dbsAssetId = row.cells[0]['data'];
+
+                        let items = [];
+                        if (typeof cell === "string" && cell.trim() !== "") {
+                            items = cell.split("||").map(name => name.trim());
+                        } else if (Array.isArray(cell)) {
+                            items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
+                        }
+
+                        let options = '';
+                        for (const item of items) {
+                            let name = item.name || item;
+                            const commaIndex = name.indexOf(',');
+                            if (commaIndex > -1) {
+                                name = name.substring(0, commaIndex).trim();
+                            }
+                            options += `<option value="${name}" selected>${name}</option>`;
+                        }
+
+                        return gridjs.html(
+                            `<select class="form-control form-select choices__input"
+                                data-assetid="${dbsAssetId}"
+                                name="assetsAndRegisters"
+                                id="assetsRegistersSelect${dbsAssetId}"
+                                hidden multiple>${options}    
+                            </select>`
+                        );
+                    },
+                    width: '300px'
                 },
                 {
                     name: "Opgaver",
@@ -148,9 +184,9 @@ function CreateTable() {
                     formatter: (cell, row) => {
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
-                        const changeable = row.cells[9]['data']
+                        const external = row.cells[11]['data']
+                        const externalLink = row.cells[12]['data']
+                        const changeable = row.cells[10]['data']
                         let buttonHTML = ''
 
                         //edit button
@@ -185,15 +221,12 @@ function CreateTable() {
                 headers: {
                     'X-CSRF-TOKEN': token
                 },
-                then: data => data.content.map(risk =>
-                    [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.threatAssessmentReportApprovalStatus, risk.assessment, risk.changeable]
-                ),
                 then: data => data.content.map(obj => {
                         const result = []
                         for (const property of columnProperties) {
                             result.push(obj[property])
                         }
-                        return result;
+                    return result;
                     }
                 ),
                 total: data => data.totalCount
@@ -215,6 +248,21 @@ function CreateTable() {
             }
         };
         const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
+
+        grid.on('ready', function() {
+            // Ensure correct page load behavior
+            if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
+                document.getElementsByClassName("gridjs-pages")[0].children[1]?.click();
+            }
+
+            // Initialize all Entitet Choices.js selects
+            Array.from(document.querySelectorAll("[id^='assetsRegistersSelect']"))
+                .map(select => select.id)
+                .forEach(elementId => {
+                    let elementById = document.getElementById(elementId);
+                    initSelect(elementById, 'form-control', { readOnly: true });
+                });
+        });
 
         new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
 
@@ -610,6 +658,7 @@ function CreateRiskService() {
                     this.getScopedElementById("RT").innerHTML = data.rt === 0 ? "" : data.rt;
                     this.getScopedElementById("OT").innerHTML = data.ot === 0 ? "" : data.ot;
                     this.getScopedElementById("ST").innerHTML = data.st === 0 ? "" : data.st;
+                    this.getScopedElementById("SA").innerHTML = data.sa === 0 ? "" : data.sa;
 
                     this.getScopedElementById("inheritRow").style.display = '';
                 }))

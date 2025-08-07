@@ -22,6 +22,7 @@ public interface RiskMapper {
                 .assessmentOrder(riskGrid.getAssessmentOrder())
                 .responsibleOU(nullSafe(() -> riskGrid.getResponsibleOU().getName()))
                 .responsibleUser(nullSafe(() -> riskGrid.getResponsibleUser().getName()))
+				.relatedAssetsAndRegisters(nullSafe(riskGrid::getRelatedAssetsAndRegisters))
                 .date(riskGrid.getDate().format(DK_DATE_FORMATTER))
                 .tasks(riskGrid.getTasks())
                 .name(riskGrid.getName())

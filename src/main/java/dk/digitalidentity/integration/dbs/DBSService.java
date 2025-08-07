@@ -11,15 +11,19 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DBSOversight;
 import dk.digitalidentity.model.entity.DBSSupplier;
+import dk.digitalidentity.model.entity.Property;
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import jakarta.transaction.Transactional;
+import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -41,6 +45,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 
 @Slf4j
 @Service
@@ -52,8 +57,9 @@ public class DBSService {
     private final RelationService relationService;
     private final AssetService assetService;
     private final TaskService taskService;
+	private final AssetOversightService assetOversightService;
 
-    @Transactional
+	@Transactional
     public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
         //Filter only itSystems related to this cvr
         final List<ItSystem> relevantItSystems = allItSystems.stream()
@@ -83,7 +89,8 @@ public class DBSService {
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
                 asset.setStatus(itSystem.getStatus().getValue());
-                if (itSystem.getNextRevision() != null) {
+				mapKitosAssetsToDBS(itSystem, asset);
+				if (itSystem.getNextRevision() != null) {
                     asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
                 }
                 dbsAssetDao.save(asset);
@@ -105,6 +112,12 @@ public class DBSService {
                         if (itSystem.getNextRevision() != null) {
                             dbsAsset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
                         }
+						// Finding EVERYTHING related to the DB-Asset might be a bit too much, there could be things related that do not matter in our case, blocking the auto mapping
+						List<Relatable> allRelatedTo = relationService.findAllRelatedTo(dbsAsset);
+						// If no relations exist, we map
+						if (allRelatedTo == null || allRelatedTo.isEmpty()) {
+							mapKitosAssetsToDBS(itSystem, dbsAsset);
+						}
                         dbsAsset.setLastSync(lastSync);
                     });
             })
@@ -119,7 +132,15 @@ public class DBSService {
         log.info("Created {}, updated {} and deleted {} DBS assets", created, updated, deleted);
     }
 
-    @SuppressWarnings("MappingBeforeCount")
+	private void mapKitosAssetsToDBS(ItSystem itSystem, @NotNull DBSAsset dbsAsset) {
+		Set<Long> assetIds = assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, itSystem.getKitosUuid()).stream().map(Asset::getId).collect(Collectors.toSet());
+		if (assetIds != null && !assetIds.isEmpty()) {
+			relationService.setRelationsAbsolute(dbsAsset, assetIds);
+			assetOversightService.setAssetsToDbsOversight(assetService.findAllById(assetIds));
+		}
+	}
+
+	@SuppressWarnings("MappingBeforeCount")
     private void synchronizeAllSuppliers(List<Supplier> allDbsSuppliers) {
         final List<Long> existingDbsSupplierIds = dbsSupplierDao.findAllDbsIds();
 
