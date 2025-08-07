@@ -460,6 +460,7 @@ public class RiskController {
                         .message(message)
                         .subject(title)
                         .email(task.getResponsibleUser().getEmail())
+						.templateType(template.getTemplateType())
                         .build());
                 }
             } else {

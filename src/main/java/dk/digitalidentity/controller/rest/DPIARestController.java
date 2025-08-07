@@ -461,6 +461,7 @@ public class DPIARestController {
 
 			emailEvent.setMessage(message);
 			emailEvent.setSubject(title);
+			emailEvent.setTemplateType(template.getTemplateType());
 		} else {
 			log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
 		}
