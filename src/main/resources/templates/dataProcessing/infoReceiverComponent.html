@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+<div th:fragment="infoReceiverComponent(receiverOption)" class="infoReceiverContainer flex-grow-1 flex-shrink-0">
+    <div class="border rounded p-1">
+        <div class="form-check d-flex align-items-center w-100">
+            <input class="receiverSelectedCheck form-check-input flex-shrink-0 me-2 editField" th:value="${receiverOption.identifier}" type="checkbox" disabled>
+            <label class="form-check-label text-nowrap flex-grow-1" th:text="${receiverOption.caption}"></label>
+        </div>
+        <div class="passedOnAdditionalOptionsContainer mt-1 ms-3" hidden>
+            <div class="form-check d-flex align-items-center w-100">
+                <input class="locationRadio insideEURadio form-check-input flex-shrink-0 me-2 editField" th:value="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).INSIDE_EU}" type="radio" disabled checked>
+                <label class="form-check-label text-nowrap flex-grow-1" th:text="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).INSIDE_EU.message}"></label>
+            </div>
+            <div class="form-check d-flex align-items-center w-100">
+                <input class="locationRadio outsideEURadio form-check-input flex-shrink-0 me-2 editField" th:value="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).OUTSIDE_EU}" type="radio" disabled>
+                <label class="form-check-label text-nowrap flex-grow-1" th:text="${T(dk.digitalidentity.model.entity.data_processing.enums.ReceiverLocation).OUTSIDE_EU.message}"></label>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>

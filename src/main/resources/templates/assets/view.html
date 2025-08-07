@@ -12,6 +12,7 @@
 <body class="jumping">
     <script th:src="@{/js/tabs.js}" defer></script>
 
+    <link rel="stylesheet" th:href="@{/css/dataProcessing.css}" />
     <link rel="stylesheet" th:href="@{/css/assets.css}" />
     <link rel="stylesheet" th:href="@{/css/dpia_schema.css}" />
     <link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
@@ -173,6 +174,36 @@
                                                         <textarea id="description" class="form-control editField"
                                                             placeholder="Indtast beskrivelse" th:field="*{description}" rows="3" disabled></textarea>
                                                     </div>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="aiStatus"
+                                                       class="col-sm-3 col-form-label">Anvender løsningen AI?</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{aiStatus}" name="assetCategory" id="aiStatus"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
+                                                                th:value="${status}" th:text="${status.danishName}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3" id="riskFactorContainer">
+                                                <label for="riskFactor"
+                                                       class="col-sm-3 col-form-label">Vurdering af risiko ved AI-brug</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
+                                                                th:value="${risk}" th:text="${risk.message}"></option>
+                                                    </select>
                                                 </div>
                                             </div>
                                         </div>
@@ -641,6 +672,19 @@
             if (threatExists) {
                 profilePageLoaded();
             }
+
+            const aiStatusSelect = document.getElementById('aiStatus');
+            const riskFactorContainer = document.getElementById('riskFactorContainer');
+
+            function toggleRiskFactorContainer() {
+                if (aiStatusSelect.value === 'YES') {
+                    riskFactorContainer.style.display = '';
+                } else {
+                    riskFactorContainer.style.display = 'none';
+                }
+            }
+            toggleRiskFactorContainer();
+            aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
         });
 
 
@@ -884,6 +928,8 @@
 
         function editMode(enabled) {
             const rootElement = document.getElementById('editForm');
+            const aiStatus = document.getElementById('aiStatus');
+            const aiRiskFactor = document.getElementById('riskFactor');
             if (enabled) {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                     elem.disabled = false;
@@ -944,6 +990,10 @@
                     document.getElementById("productLinksEditContainer").hidden = true;
                     document.getElementById("addProductLinkBtn").hidden = true;
                 }
+            }
+            if (isKitos) {
+                aiStatus.disabled = true;
+                aiRiskFactor.disabled = true;
             }
         }
 

@@ -6,7 +6,7 @@
     <!--@thymesVar id="dataProcessing" type="dk.digitalidentity.model.entity.DataProcessing"-->
     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
         <div class="row mb-3">
-            <table class="table table-striped">
+            <table class="dataprocessingTable table table-striped">
                 <thead>
                 <tr>
                     <th colspan="2"></th>
@@ -71,13 +71,23 @@
                 </tr>
                 <tr><td colspan="2"><b>Opbevaring</b></td></tr>
                 <tr>
-                    <td>Hvor længe opbevares personoplysningerne</td>
+                    <td>Forventede slettefrister</td>
                     <td>
                         <select class="form-control form-select editField" name="storageTimeIdentifier" tabindex="-1" disabled>
                             <option value=""></option>
                             <option th:each="choice: ${dbChoices.storageTimeIdentifier.values}" th:value="${choice.identifier}"
                                     th:selected="${dataProcessing.storageTimeIdentifier == choice.identifier}"
                                     th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
+                        </select>
+
+                    </td>
+                </tr>
+                <tr>
+                    <td>Gælder de forventede slettefrister for hele behandlingen?</td>
+                    <td>
+                        <select id="deletionAppliesSelect" class="form-control form-select editField" name="deletionAppliesToAll" tabindex="-1" disabled>
+                            <option value="true" th:text="Ja" th:selected="${dataProcessing.deletionAppliesToAll}"></option>
+                            <option value="false" th:text="Nej" th:selected="${!dataProcessing.deletionAppliesToAll}"></option>
                         </select>
                     </td>
                 </tr>
@@ -156,23 +166,13 @@
         <div class="col-sm-6 col-lg-8">
             <div class="tagin-wrapper form-control disabledBox" onclick="informationTypesClicked(this)">&nbsp</div>
         </div>
-        <div class="extendedCategoryInfo row d-flex mt-2" style="display: none !important;">
-            <div class="col-sm-6 col-lg-4">
-                <p class="ms-2 fst-italic">Videregives personoplysningerne til andre som anvender oplysningerne til eget formål?</p>
-            </div>
-            <div class="col-sm-3 col-lg-2">
-                <select class="infoPassedOnSelect form-control form-select editField ms-1" onchange="infoPassedOnSelectionChanged(this)" disabled>
-                    <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationPassedOn).values()}"
-                            th:value="${status}" th:text="${status.message}"></option>
-                </select>
-            </div>
-            <div class="infoReceiversDiv col-sm-3 col-lg-6" style="display: none !important;">
-                <div class="row">
-                    <div th:each="opt : ${dbChoices.informationReceiversIdentifiers.values}" class="col-sm-12 col-lg-12 col-xl-6">
-                        <input class="form-check-input editField" th:value="${opt.identifier}" type="checkbox" disabled>
-                        <label th:text="${opt.caption}"></label>
-                    </div>
-                </div>
+        <div class="extendedCategoryInfo mt-2 row" hidden="">
+            <div th:replace="~{dataProcessing/dataProcessingInfoPassedOn :: dataProcessingInfoPassedOn(allReceiversIdentifiers=${dbChoices.informationReceiversIdentifiers.values})}"></div>
+        </div>
+        <div class="col-12 row mt-2 border-top border-1">
+            <label class="form-label mt-2">Note</label>
+            <div class="col-12">
+                <textarea class="categoryNoteField editField form-control" disabled></textarea>
             </div>
         </div>
     </div>
