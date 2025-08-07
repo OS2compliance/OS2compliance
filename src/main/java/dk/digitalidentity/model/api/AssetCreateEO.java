@@ -28,6 +28,8 @@ public class AssetCreateEO {
     private List<UserWriteEO> systemOwners;
     @Schema(description = "Asset description", example = ASSET_DESCRIPTION_EXAMPLE)
     private String description;
+	@Schema(description = "Usage of AI in the asset")
+	private AssetEO.AiStatus aiStatus;
     @Schema(description = "Type of the asset")
     private AssetTypeUpdateEO assetType;
     @Schema(description = "Status of the data processing agreement", example = ASSET_DPA_EXAMPLE)
