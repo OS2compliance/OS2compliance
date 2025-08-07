@@ -128,7 +128,7 @@ class CustomChoiceListService {
         }
 
         async onChoiceListValuesSubmission(listId){
-            //find all input fields, map to id-value object and filter empty values
+            // find all input fields, map to id-value object and filter empty values
             const values = Array.from(document.querySelectorAll('.choice-value-field'))
             .map(input => {
                 const id = input.id.split('-')[0]
@@ -139,7 +139,7 @@ class CustomChoiceListService {
             })
             .filter(choiceValue => choiceValue.value)
 
-            //Send objects to rest endpoint
+            // send objects to rest endpoint
             const url = `${restUrl}/${listId}/update`
 
             const resultOK = networkService.Put(url, values)
@@ -147,7 +147,16 @@ class CustomChoiceListService {
                 toastService.error("De ændrede værdier blev ikke accepteret af serveren, og er ikke gemt")
             }
 
-            //dismiss modal
+            // remove focus from all elements before closing modal (created warning in the console - annoying)
+            const modalElement = document.querySelector('#choiceListEditModalContainer');
+            if (modalElement) {
+                const focusedElement = modalElement.querySelector(':focus');
+                if (focusedElement) {
+                    focusedElement.blur();
+                }
+            }
+
+            // dismiss modal
             this.#modal.hide()
         }
     }
