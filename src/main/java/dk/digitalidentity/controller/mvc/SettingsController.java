@@ -4,8 +4,9 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.model.dto.enums.KitosField;
-import dk.digitalidentity.security.annotations.RequireAdministrator;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.KitosService;
 import dk.digitalidentity.service.SettingsService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +28,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("settings")
-@RequireAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 public class SettingsController {
     private final SettingsService settingsService;
@@ -35,6 +36,7 @@ public class SettingsController {
     private final KitosService kitosService;
     private final OS2complianceConfiguration configuration;
 
+	@RequireReadAll
     @Transactional
     @GetMapping("form")
     public String form(final Model model) {
@@ -58,7 +60,7 @@ public class SettingsController {
         return "fragments/settings";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateAll
     @Transactional
     @PostMapping("update")
     public String update(@ModelAttribute final SettingsDTO settings) {

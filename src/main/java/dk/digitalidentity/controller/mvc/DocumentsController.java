@@ -3,10 +3,13 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireDocument;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
@@ -34,7 +37,7 @@ import java.util.Set;
 
 @Slf4j
 @Controller
-@RequireUser
+@RequireDocument
 @RequestMapping("documents")
 @RequiredArgsConstructor
 public class DocumentsController {
@@ -46,12 +49,12 @@ public class DocumentsController {
     public String documentsList(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", new Document());
-        model.addAttribute("isSuperuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+        model.addAttribute("isSuperuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
         return "documents/index";
     }
 
     @Transactional
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Document document,
             @RequestParam(name = "relations", required = false) final Set<Long> relations) {
@@ -62,6 +65,7 @@ public class DocumentsController {
         return "redirect:/documents/" + savedDocument.getId();
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("{id}")
     public String documentView(final Model model, @PathVariable final long id) {
         final Document document = documentService.get(id)
@@ -69,12 +73,12 @@ public class DocumentsController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
-        model.addAttribute("changeableDocument", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (document.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid()))));
+        model.addAttribute("changeableDocument", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) || (document.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteOwnerOnly
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -89,13 +93,14 @@ public class DocumentsController {
         documentService.deleteById(id);
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Document document) {
         final Document excistingDocument = documentService.get(document.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !excistingDocument.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !excistingDocument.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {

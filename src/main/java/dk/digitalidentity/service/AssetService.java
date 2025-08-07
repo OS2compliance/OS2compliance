@@ -173,7 +173,7 @@ public class AssetService {
     public boolean isEditable(final Asset asset) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getAuthorities().stream()
-            .anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)
+            .anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)
                 || r.getAuthority().equals(Roles.ADMINISTRATOR))
                 || asset.getResponsibleUsers().stream()
             .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
@@ -182,7 +182,7 @@ public class AssetService {
 	public boolean isEditable(final List<Asset> assets) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		return authentication.getAuthorities().stream()
-				.anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)
+				.anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)
 						|| r.getAuthority().equals(Roles.ADMINISTRATOR))
 				|| assets.stream().flatMap(a->a.getResponsibleUsers().stream())
 				.anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));

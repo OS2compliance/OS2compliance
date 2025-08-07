@@ -9,7 +9,8 @@ import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireStandard;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardsService;
 import dk.digitalidentity.service.SupportingStandardService;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("standards")
-@RequireUser
+@RequireStandard
 @RequiredArgsConstructor
 public class StandardController {
     private final StandardsService standardsService;
@@ -54,6 +55,7 @@ public class StandardController {
     record StandardTemplateSectionDTO(StandardTemplateSection standardTemplateSection,
                                       List<StandardSectionDTO> standardSectionDTOs) {}
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("section/{sectionId}")
     public String lookup(@PathVariable final Long sectionId) {
@@ -79,6 +81,7 @@ public class StandardController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("plan")
     public String planPage(final Model model) {
@@ -93,6 +96,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("act")
     public String actPage(final Model model) {
@@ -104,6 +108,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("do")
     public String doPage(final Model model) {
@@ -115,6 +120,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("check")
     public String checkPage(final Model model) {
@@ -127,6 +133,7 @@ public class StandardController {
     }
 
     record StandardTemplateListDTO(String identifier, String name, String compliance) {}
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping
     public String supportingPage(final Model model) {
@@ -152,6 +159,7 @@ public class StandardController {
         return "standards/supporting";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("supporting/{id}")
     public String supportingPage(final Model model, @PathVariable final String id, @RequestParam(required = false) final StandardSectionStatus status) {
@@ -199,7 +207,7 @@ public class StandardController {
     private static List<Relatable> filterRelations(final List<Relatable> relatables, final RelationType relationType) {
         return relatables.stream()
             .filter(r -> r.getRelationType().equals(relationType))
-            .collect(Collectors.toList());
+            .toList();
     }
 
 }

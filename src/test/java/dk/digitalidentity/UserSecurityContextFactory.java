@@ -10,7 +10,7 @@ import org.springframework.security.test.context.support.WithSecurityContextFact
 import java.util.Arrays;
 
 import static dk.digitalidentity.security.Roles.ADMINISTRATOR;
-import static dk.digitalidentity.security.Roles.SUPERUSER;
+import static dk.digitalidentity.security.Roles.SUPER_USER;
 import static dk.digitalidentity.security.Roles.USER;
 
 public class UserSecurityContextFactory implements WithSecurityContextFactory<TestUser> {
@@ -19,7 +19,7 @@ public class UserSecurityContextFactory implements WithSecurityContextFactory<Te
         final SecurityContext context = SecurityContextHolder.createEmptyContext();
 
         final UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(annotation.uuid(), null,
-            Arrays.asList(new SamlGrantedAuthority(ADMINISTRATOR), new SamlGrantedAuthority(SUPERUSER), new SamlGrantedAuthority(USER)));
+            Arrays.asList(new SamlGrantedAuthority(ADMINISTRATOR), new SamlGrantedAuthority(SUPER_USER), new SamlGrantedAuthority(USER)));
         auth.setDetails(TokenUser.builder()
             .cvr("1234556")
             .username(annotation.uuid())

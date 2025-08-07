@@ -26,6 +26,7 @@ public class OS2complianceConfiguration {
     private String authoritySuperuser;
     private String authorityAdministrator;
     private String authorityLimitedUser;
+    private String authorityReadOnlyUser;
     @NestedConfigurationProperty
     private Municipal municipal = new Municipal();
 	@NestedConfigurationProperty

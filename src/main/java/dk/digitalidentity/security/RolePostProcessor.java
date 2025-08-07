@@ -59,6 +59,9 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 //				// Limited users can read very limited parts of the app.
 //				// They can Create, Delete and Update ONLY if they are responsible for the entity
 //				authorities.addAll(grantLimitedUserAuthorities());
+//			} else if (configuration.getAuthorityReadOnlyUser().equals(a.getAuthority())) {
+//				// Read only users can see everything in a subsection of the system, but has no rights to modify
+//				authorities.addAll(grantReadOnlyUserAuthorities());
 //			}
 //		}
 		authorities.add(new SamlGrantedAuthority(Roles.AUTHENTICATED));
@@ -76,6 +79,8 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 
 	private Set<SamlGrantedAuthority> grantAdminAuthorities() {
 		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SamlGrantedAuthority(Roles.ADMINISTRATOR));
+
 		authorities.add(new SamlGrantedAuthority(Roles.CREATE_ALL));
 		authorities.add(new SamlGrantedAuthority(Roles.READ_ALL));
 		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_ALL));
@@ -96,6 +101,8 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 
 	private Set<SamlGrantedAuthority> grantSuperUserAuthorities() {
 		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SamlGrantedAuthority(Roles.SUPER_USER));
+
 		authorities.add(new SamlGrantedAuthority(Roles.CREATE_ALL));
 		authorities.add(new SamlGrantedAuthority(Roles.READ_ALL));
 		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_ALL));
@@ -114,6 +121,8 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 
 	private Set<SamlGrantedAuthority> grantUserAuthorities() {
 		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SamlGrantedAuthority(Roles.USER));
+
 		authorities.add(new SamlGrantedAuthority(Roles.CREATE_OWNER_ONLY));
 		authorities.add(new SamlGrantedAuthority(Roles.READ_OWNER_ONLY));
 		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_OWNER_ONLY));
@@ -132,6 +141,8 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 
 	private Set<SamlGrantedAuthority> grantLimitedUserAuthorities() {
 		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SamlGrantedAuthority(Roles.LIMITED_USER));
+
 		authorities.add(new SamlGrantedAuthority(Roles.CREATE_OWNER_ONLY));
 		authorities.add(new SamlGrantedAuthority(Roles.READ_OWNER_ONLY));
 		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_OWNER_ONLY));
@@ -140,6 +151,23 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ASSET));
 		authorities.add(new SamlGrantedAuthority(Roles.SECTION_TASK));
 		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REGISTER));
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REPORT));
+		return authorities;
+	}
+
+	private Set<SamlGrantedAuthority> grantReadOnlyUserAuthorities() {
+		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
+		authorities.add(new SamlGrantedAuthority(Roles.READ_ONLY_USER));
+
+		authorities.add(new SamlGrantedAuthority(Roles.READ_ALL));
+
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ASSET));
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_STANDARD));
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REGISTER));
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_SUPPLIER));
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_RISK_ASSESSMENT));
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_DOCUMENT));
+		authorities.add(new SamlGrantedAuthority(Roles.SECTION_TASK));
 		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REPORT));
 		return authorities;
 	}

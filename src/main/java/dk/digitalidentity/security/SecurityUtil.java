@@ -68,7 +68,7 @@ public class SecurityUtil {
         if(!isLoggedIn()) {
             return false;
         }
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch( a -> a.getAuthority().equals(Roles.SUPERUSER));
+        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch( a -> a.getAuthority().equals(Roles.SUPER_USER));
     }
 
     public static boolean isAdministrator() {

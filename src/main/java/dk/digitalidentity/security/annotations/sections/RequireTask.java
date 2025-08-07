@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_task')")
+@PreAuthorize("hasRole('ROLE_s_task')")
 public @interface RequireTask {
 }

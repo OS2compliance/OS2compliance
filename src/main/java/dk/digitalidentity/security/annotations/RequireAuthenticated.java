@@ -1,4 +1,4 @@
-package dk.digitalidentity.security.annotations.sections;
+package dk.digitalidentity.security.annotations;
 
 import org.springframework.security.access.prepost.PreAuthorize;
 
@@ -7,8 +7,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_s_asset')")
-public @interface RequireAsset {
+@PreAuthorize("hasRole('ROLE_authenticated')")
+public @interface RequireAuthenticated {
 }

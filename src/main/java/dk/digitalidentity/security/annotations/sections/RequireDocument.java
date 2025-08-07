@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_document')")
+@PreAuthorize("hasRole('ROLE_s_document')")
 public @interface RequireDocument {
 }

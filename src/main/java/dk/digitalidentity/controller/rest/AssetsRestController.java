@@ -117,7 +117,7 @@ public class AssetsRestController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(),
-            authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+            authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
     }
 
 	@RequireUser
@@ -143,7 +143,7 @@ public class AssetsRestController {
 				user
 		);
 
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
     }
 
 	@RequireUser
@@ -153,7 +153,7 @@ public class AssetsRestController {
         canSetFieldGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
@@ -167,7 +167,7 @@ public class AssetsRestController {
         canSetFieldDPIAScreeningGuard(fieldName);
 		DPIA dpia = dPIAService.find(id);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !isResponsibleForAsset(dpia.getAssets())) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(dpia.getAssets())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -250,7 +250,7 @@ public class AssetsRestController {
         final AssetOversight assetOversight = assetService.getOversight(oversightId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && assetOversight.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()))) {
+        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER) && assetOversight.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         assetOversightService.delete(assetOversight);

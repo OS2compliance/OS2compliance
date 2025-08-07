@@ -11,10 +11,10 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
@@ -46,7 +46,6 @@ import java.util.stream.Collectors;
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @Controller
-@RequireUser
 @RequestMapping("relatables")
 @RequiredArgsConstructor
 public class RelatableController {
@@ -63,7 +62,7 @@ public class RelatableController {
         }
     }
 
-    @RequireUser
+    @RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("relations/add")
 	public String addRelations(@ModelAttribute final AddRelationDTO dto) {
@@ -98,7 +97,7 @@ public class RelatableController {
         }
     }
 
-    @RequireUser
+    @RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("{id}/relations/{relatedId}/{relatedType}/update")
     public String updateRelation(@ModelAttribute final UpdateRelationDTO dto,
@@ -111,7 +110,7 @@ public class RelatableController {
         return getReturnPath(id, relatedTo);
     }
 
-    @RequireUser
+    @RequireDeleteOwnerOnly
     @DeleteMapping("{id}/relations/{relatedId}/{relatedType}/remove")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
@@ -124,7 +123,7 @@ public class RelatableController {
 	}
 
     record AddTagsDTO(long id, List<Long> tags) {}
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("tags/add")
     public String addTags(@ModelAttribute final AddTagsDTO dto) {
@@ -167,7 +166,7 @@ public class RelatableController {
         return getReturnPath(dto.id(), relateTo);
     }
 
-    @RequireUser
+    @RequireDeleteOwnerOnly
     @DeleteMapping("{id}/tags/{tagId}/remove")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -214,7 +213,7 @@ public class RelatableController {
     private void ensureModificationIsAllowed(final Relatable relateTo) {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (authentication.getAuthorities().stream()
-            .noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR))) {
+            .noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER) || r.getAuthority().equals(Roles.ADMINISTRATOR))) {
             final List<User> responsibleUsers = relatableService.findResponsibleUsers(relateTo);
             final String principalUuid = SecurityUtil.getPrincipalUuid();
             if (responsibleUsers.stream()

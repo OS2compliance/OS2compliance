@@ -16,10 +16,13 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RelatableService;
@@ -64,7 +67,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Slf4j
 @Controller
 @RequestMapping("tasks")
-@RequireUser
+@RequireTask
 @RequiredArgsConstructor
 public class TasksController {
     private final RelatableService relatableService;
@@ -78,14 +81,15 @@ public class TasksController {
     private final EmailTemplateService emailTemplateService;
 
 
+	@RequireReadOwnerOnly
     @GetMapping
     public String tasksList(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
         return "tasks/index";
     }
 
-
+	@RequireCreateOwnerOnly
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
         if (id == null) {
@@ -107,7 +111,7 @@ public class TasksController {
         return "tasks/form";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
@@ -175,13 +179,14 @@ public class TasksController {
         }
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
         final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !existingTask.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !existingTask.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (calculateCompleted(task)) {
@@ -213,7 +218,8 @@ public class TasksController {
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
     record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
-    @GetMapping("{id}")
+    @RequireReadOwnerOnly
+	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -222,7 +228,7 @@ public class TasksController {
 
         model.addAttribute("task", task);
         model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
-        model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid()))));
+        model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) || (task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
 
@@ -263,6 +269,7 @@ public class TasksController {
         return "tasks/view";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("{id}/timeline")
     public String taskTimeline(final Model model, @PathVariable final long id,
                                @RequestParam(value = "from", required = false) final LocalDate from,
@@ -274,7 +281,7 @@ public class TasksController {
         return "tasks/viewTimeline";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteAll
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -285,12 +292,13 @@ public class TasksController {
     }
 
     @SuppressWarnings("ClassEscapesDefinedScope")
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !task.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !task.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         if (calculateCompleted(task)) {
@@ -331,6 +339,7 @@ public class TasksController {
         return "redirect:/tasks";
     }
 
+	@RequireCreateOwnerOnly
     @GetMapping("{id}/copy")
     public String taskCopyDialog(final Model model, @PathVariable("id") final long id) {
         final Task task = taskService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -341,7 +350,7 @@ public class TasksController {
         return "tasks/copyForm";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @Transactional
     @PostMapping("{id}/copy")
     public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,

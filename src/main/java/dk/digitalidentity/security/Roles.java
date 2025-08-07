@@ -4,6 +4,12 @@ public interface Roles {
 	String AUTHENTICATED = "AUTHENTICATED";
 	String API_ACCESS = "API_ACCESS";
 
+	String ADMINISTRATOR = "ROLE_administrator";
+	String SUPER_USER = "ROLE_super_user";
+	String USER = "ROLE_user";
+	String LIMITED_USER = "ROLE_limited_user";
+	String READ_ONLY_USER = "ROLE_read_only";
+
 	String CREATE_OWNER_ONLY = "ROLE_create_owner";// Limits permissions to entities that they own/are responsible for
 	String DELETE_OWNER_ONLY = "ROLE_delete_owner";// Limits permissions to entities that they own/are responsible for
 	String UPDATE_OWNER_ONLY = "ROLE_update_owner";// Limits permissions to entities that they own/are responsible for
@@ -14,16 +20,16 @@ public interface Roles {
 	String UPDATE_ALL = "ROLE_update_all";
 	String READ_ALL = "ROLE_read_all";
 
-	String SECTION_CONFIGURATION = "ROLE_configuration";
-	String SECTION_ADMIN = "ROLE_admin";
-	String SECTION_ASSET = "ROLE_asset";
-	String SECTION_STANDARD = "ROLE_standard";
-	String SECTION_REGISTER = "ROLE_register";
-	String SECTION_SUPPLIER = "ROLE_supplier";
-	String SECTION_RISK_ASSESSMENT = "ROLE_risk_assessment";
-	String SECTION_DOCUMENT = "ROLE_document";
-	String SECTION_TASK = "ROLE_task";
-	String SECTION_REPORT = "ROLE_report";
+	String SECTION_CONFIGURATION = "ROLE_s_configuration";
+	String SECTION_ADMIN = "ROLE_s_admin";
+	String SECTION_ASSET = "ROLE_s_asset";
+	String SECTION_STANDARD = "ROLE_s_standard";
+	String SECTION_REGISTER = "ROLE_s_register";
+	String SECTION_SUPPLIER = "ROLE_s_supplier";
+	String SECTION_RISK_ASSESSMENT = "ROLE_s_risk_assessment";
+	String SECTION_DOCUMENT = "ROLE_s_document";
+	String SECTION_TASK = "ROLE_s_task";
+	String SECTION_REPORT = "ROLE_s_report";
 
 
 
