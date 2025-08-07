@@ -1,2 +1,0 @@
-ALTER TABLE assets ADD ai_status VARCHAR(30) NOT NULL;
-ALTER TABLE assets ADD ai_risk VARCHAR(30) NULL;
