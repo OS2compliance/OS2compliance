@@ -19,7 +19,10 @@ import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
-import dk.digitalidentity.report.SystemOwnerOverviewView;
+import dk.digitalidentity.report.riskimage.RiskImageService;
+import dk.digitalidentity.report.riskimage.RiskImageView;
+import dk.digitalidentity.report.riskimage.dto.ThreatRow;
+import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.RequireUser;
@@ -87,6 +90,7 @@ public class ReportController {
 	private final UserService userService;
 	private final RegisterService registerService;
 	private final SystemOwnerOverviewService systemOwnerOverviewService;
+	private final RiskImageService riskImageService;
 
 	@GetMapping
     public String reportList(final Model model) {
@@ -95,7 +99,7 @@ public class ReportController {
     }
 
 	@GetMapping("overview/systemowner")
-	public ModelAndView SystemOwnerOverview(final HttpServletResponse response) {
+	public ModelAndView systemOwnerOverview(final HttpServletResponse response) {
 
 		// Validate user has access
 		User currentUser = userService.currentUser();
@@ -320,7 +324,6 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
-//        Asset asset = dpia.getAssets();
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
             response.addHeader("Content-disposition", "attachment;filename=screening vedr " + dpia.getName() + ".pdf");
@@ -368,6 +371,36 @@ public class ReportController {
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
+
+	@GetMapping("riskimage")
+	public ModelAndView getRiskImageReport(
+			final HttpServletResponse response,
+			@RequestParam List<String> includedTypes,
+			@RequestParam(required = false) List<String> latestOnly,
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate fromDate,
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate) {
+
+		// Validate
+		if (fromDate == null && toDate == null) {
+			throw new IllegalArgumentException("fromDate and toDate must be provided");
+		}
+
+		// Metadata
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xlsx\"");
+
+		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate);
+
+		List<ThreatRow> threats = riskImageService.mapToRows(relevantThreatAssessments);
+
+		final Map<String, Object> model = new HashMap<>();
+		model.put("threats", threats);
+
+		return new ModelAndView(new RiskImageView(), model);
+	}
+
+
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
                                   final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {

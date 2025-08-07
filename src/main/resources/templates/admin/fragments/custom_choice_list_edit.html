@@ -17,7 +17,7 @@
                        th:value="${value.caption}">
                 <button type="button" class="btn btn-icon btn-outline-light btn-s align-middle bg-danger"
                         th:attr="onclick='customChoiceListService.onRemoveChoiceValueField(event)'"
-                        th:style="${value.removable == true ? 'visibility:hidden;' : ''}"
+                        th:style="${value.removable == false ? 'visibility:hidden;' : ''}"
                 >
                     <i class="pli-remove fs-5"></i></button>
             </div>

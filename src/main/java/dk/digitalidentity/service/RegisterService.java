@@ -108,4 +108,8 @@ public class RegisterService {
 	public Set<Register> findAllUnrelatedRegistersForResponsibleUser(User user) {
 		return registerDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(user);
 	}
+
+	public boolean isInUseOnConsequenceAssessment(Long existingId) {
+		return consequenceAssessmentDao.existsByOrganisationAssessmentColumnsChoiceValueId(existingId);
+	}
 }
