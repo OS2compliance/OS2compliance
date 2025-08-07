@@ -117,6 +117,11 @@ input[type=number]{
     background-color: #f3f5f9 !important;
 }
 
+.choices-readonly {
+    background-color: #fff;
+    cursor: default;
+}
+
 select[aria-readonly="true"] {
     pointer-events: none;
 }

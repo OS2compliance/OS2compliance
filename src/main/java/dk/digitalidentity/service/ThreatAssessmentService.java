@@ -43,7 +43,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -83,6 +85,18 @@ public class ThreatAssessmentService {
     public List<ThreatAssessment> findAll() {
         return threatAssessmentDao.findAll();
     }
+
+	public Set<ThreatAssessment> findAllByTypesAndFromDateToDate(Collection<ThreatAssessmentType> types, LocalDate from, LocalDate to) {
+		return threatAssessmentDao.findByThreatAssessmentTypeInAndCreatedAtBetween(types, from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	}
+
+	public Set<ThreatAssessment> findLatestForAllAssets(LocalDate from, LocalDate to){
+		return threatAssessmentDao.findLatestForAllAssetsBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	}
+
+	public Set<ThreatAssessment> findLatestForAllRegisters(LocalDate from, LocalDate to){
+		return threatAssessmentDao.findLatestForAllRegistersBetweenDates(from.atStartOfDay(), to.atTime(LocalTime.MAX));
+	}
 
 	public List<ThreatAssessment> findAllNotDeleted() {
 		return threatAssessmentDao.findAllByDeletedFalse();
@@ -301,6 +315,7 @@ public class ThreatAssessmentService {
 		int highestRT = 0;
 		int highestOT = 0;
 		int highestST = 0;
+		int highestSA = 0;
 
 		for (final Register register : registers) {
 			final ConsequenceAssessment consequenceAssessment = register.getConsequenceAssessment();
@@ -335,9 +350,12 @@ public class ThreatAssessmentService {
 			if (consequenceAssessment.getAvailabilitySociety() != null && consequenceAssessment.getAvailabilitySociety() > highestST) {
 				highestST = consequenceAssessment.getAvailabilitySociety();
 			}
+			if (consequenceAssessment.getAuthenticitySociety() != null && consequenceAssessment.getAuthenticitySociety() > highestSA) {
+				highestSA = consequenceAssessment.getAuthenticitySociety();
+			}
 		}
 
-		return new RiskDTO(highestRF, highestOF, highestSF, highestRI, highestOI, highestSI, highestRT, highestOT, highestST);
+		return new RiskDTO(highestRF, highestOF, highestSF, highestRI, highestOI, highestSI, highestRT, highestOT, highestST, highestSA);
 	}
 
     @Transactional
@@ -533,6 +551,10 @@ public class ThreatAssessmentService {
 			savedThreatAssesment.setInheritedConfidentialitySociety(riskDTO.getSf());
 			savedThreatAssesment.setInheritedIntegritySociety(riskDTO.getSi());
 			savedThreatAssesment.setInheritedAvailabilitySociety(riskDTO.getSt());
+
+			if (savedThreatAssesment.isAuthenticity()) {
+				savedThreatAssesment.setInheritedAuthenticitySociety(riskDTO.getSa());
+			}
 		}
 
 		for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
@@ -560,6 +582,10 @@ public class ThreatAssessmentService {
 			response.setConfidentialitySociety(riskDTO.getSf());
 			response.setIntegritySociety(riskDTO.getSi());
 			response.setAvailabilitySociety(riskDTO.getSt());
+
+			if (savedThreatAssesment.isAuthenticity()) {
+				response.setAuthenticitySociety(riskDTO.getSa());
+			}
 		}
 
 		response.setMethod(ThreatMethod.NONE);
