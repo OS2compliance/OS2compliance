@@ -60,6 +60,7 @@ import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_THREAT_ASSESSMENT_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
@@ -73,6 +74,7 @@ public class ThreatAssessmentService {
     private final UserService userService;
     private final TemplateEngine templateEngine;
     private final ChoiceService choiceService;
+	private final SettingsService settingsService;
 	private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
 
 	public ThreatAssessment findByS3Document(S3Document s3Document) {
@@ -703,11 +705,15 @@ public class ThreatAssessmentService {
 
     private Context addGeneralInfoToContext (Context context, Asset riskAsset, Register riskRegister) {
         if (riskAsset != null) {
+			context.setVariable("customSystemOwnerInput", settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME).getSettingValue());
+			context.setVariable("customSystemResponsibleInput", settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME).getSettingValue());
+			context.setVariable("customSystemOperationResponsibleInput", settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME).getSettingValue());
             context.setVariable("systemType", riskAsset.getAssetType().getCaption());
             String systemOwners = riskAsset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
             context.setVariable("supplier", riskAsset.getSupplier() != null ?  riskAsset.getSupplier().getName() : "Ukendt");
             context.setVariable("systemResponsible", riskAsset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")));
+            context.setVariable("operationResponsible", riskAsset.getOperationResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")));
             context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
             context.setVariable("sociallyCritical", riskAsset.isSociallyCritical());
@@ -919,6 +925,7 @@ public class ThreatAssessmentService {
 
     private String getSubHeading(final ThreatAssessment threatAssessment, final Asset asset, final Register register) {
         if (asset != null && asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
+
             return "Systemejere: " + asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
         } else if (register != null && register.getResponsibleUsers() != null && !register.getResponsibleUsers().isEmpty()) {
             return "Behandlingsansvarlige: " + register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));

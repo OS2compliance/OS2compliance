@@ -216,4 +216,16 @@ public class Asset extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	private List<AssetProductLink> productLinks = new ArrayList<>();
+
+	@ManyToMany
+	@JoinTable(
+			name = "assets_operation_responsible_users_mapping",
+			joinColumns = { @JoinColumn(name = "asset_id") },
+			inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
+	)
+	@ToString.Exclude
+	@JsonIgnore
+	private List<User> operationResponsibleUsers = new ArrayList<>();
+
+
 }

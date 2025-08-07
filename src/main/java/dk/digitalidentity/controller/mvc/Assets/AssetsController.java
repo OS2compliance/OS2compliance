@@ -58,6 +58,7 @@ import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -127,6 +128,7 @@ public class AssetsController {
     private final ThreatAssessmentService threatAssessmentService;
     private final AssetOversightService assetOversightService;
     private final AssetService assetService;
+	private final SettingsService settingsService;
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
@@ -312,6 +314,9 @@ public class AssetsController {
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
 
+		model.addAttribute("customSystemOwnerInput", settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME));
+		model.addAttribute("customSystemResponsibleInput", settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
+		model.addAttribute("customSystemOperationResponsibleInput", settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
         model.addAttribute("allAssetTypes", choiceService.getAssetTypeChoiceList().getValues());
 		return "assets/view";
 	}

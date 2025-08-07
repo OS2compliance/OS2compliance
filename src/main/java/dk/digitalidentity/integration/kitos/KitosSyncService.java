@@ -44,10 +44,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.NEEDS_CVR_UPDATE_PROPERTY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Slf4j
@@ -215,6 +212,7 @@ public class KitosSyncService {
 		addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
 		setAssetOwner(asset, itSystemUsageResponseDTO);
 		setAssetManagers(asset, itSystemUsageResponseDTO);
+		setAssetOperationResponsible(asset,  itSystemUsageResponseDTO);
 		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
 
         final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
@@ -272,7 +270,7 @@ public class KitosSyncService {
         if (ownerUuid != null) {
             final List<User> userEntities = userService.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, ownerUuid.toString());
             if (userEntities.size() == 1) {
-                asset.setResponsibleUsers(List.of(userEntities.get(0)));
+                asset.setResponsibleUsers(List.of(userEntities.getFirst()));
             } else if (userEntities.isEmpty()) {
                 log.warn("User not found kitos uuid {}", ownerUuid);
             } else {
@@ -280,6 +278,22 @@ public class KitosSyncService {
             }
         }
     }
+	// TODO: Refactor when eliminating mapping tables in the future
+	private void setAssetOperationResponsible(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
+		final String operationResponsibleRoleUuid = settingsService.getString(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY, "");
+		itSystemUsageResponseDTO.getRoles().stream()
+				.filter(r -> operationResponsibleRoleUuid.equalsIgnoreCase(r.getRole().getUuid().toString()))
+				.map(r -> r.getUser().getUuid())
+				.forEach(r -> {
+					final Optional<User> user = findUser(r.toString());
+					user.ifPresent(value -> {
+						// Make sure to only add managers once
+						if (asset.getManagers().stream().noneMatch(u -> value.getUuid().equals(u.getUuid()))) {
+							asset.getOperationResponsibleUsers().add(value);
+						}
+					});
+				});
+	}
 
     private void updateAsset(final Asset asset, final ItSystemResponseDTO responseDTO) {
         asset.setName(responseDTO.getName());
