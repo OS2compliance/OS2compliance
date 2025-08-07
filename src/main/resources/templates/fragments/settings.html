@@ -137,7 +137,7 @@
                         Fotegnelser
                     </a>
                     <div class="collapse" id="registerPart"
-                         th:classappend="${page} == 'register' ? 'show' : ''">
+                         th:classappend="${page} == 'registers' ? 'show' : ''">
                         <div class="card card-body gap-3">
                             <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'register'" class="row">
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
@@ -189,14 +189,14 @@
                             </div>
                         </div>
                     </div>
-                    <a th:if="${kitosEnabled}" class="btn btn-primary" data-bs-toggle="collapse" href="#aliasPart" role="button"
-                       aria-expanded="false" aria-controls="aliasPart">
-                        Alias
+                    <a class="btn btn-primary" data-bs-toggle="collapse" href="#assetPart" role="button"
+                       aria-expanded="false" aria-controls="assetPart">
+                        Aktiver
                     </a>
-                    <div class="collapse" id="aliasPart"
-                         th:classappend="${page} == 'alias' ? 'show' : ''">
+                    <div class="collapse" id="assetPart"
+                         th:classappend="${page} == 'assets' ? 'show' : ''">
                         <div class="card card-body gap-3">
-                            <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'alias'" class="row">
+                            <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'asset'" class="row">
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
