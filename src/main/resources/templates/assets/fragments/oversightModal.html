@@ -82,6 +82,7 @@
                     <label for="oversightConclusion" class="col-sm-4 col-form-label">Konklusion</label>
                     <div class="col-sm-8">
                         <textarea class="form-control" th:field="*{conclusion}" id="oversightConclusion"></textarea>
+                        <div class="invalid-feedback" id="conclusionAmountExceeded">Der må maks angives 4096 tegn</div>
                     </div>
                 </div>
 
