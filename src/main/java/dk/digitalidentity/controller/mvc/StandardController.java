@@ -420,8 +420,8 @@ public class StandardController {
 	private String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
 		String prefix = parentSection + ".";
 		int max = 0;
-
-		Pattern numberPattern = Pattern.compile("(\\d+)$"); // Match trailing number
+		// Matching the last number, to figure out the highest number we can take
+		Pattern numberPattern = Pattern.compile("(\\d+)$");
 
 		for (StandardTemplateSection section : allSections) {
 			String identifier = section.getIdentifier();
