@@ -30,10 +30,14 @@ import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.OrganisationService;
@@ -88,7 +92,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/risks")
-@RequireUser
+@RequireRisk
 @RequiredArgsConstructor
 public class RiskRestController {
     private final ApplicationEventPublisher eventPublisher;
@@ -107,6 +111,7 @@ public class RiskRestController {
     private final EmailTemplateService emailTemplateService;
 	private final OrganisationService organisationService;
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
     public PageDTO<RiskDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
@@ -128,6 +133,7 @@ public class RiskRestController {
 
     record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}
+	@RequireReadOwnerOnly
     @GetMapping("register")
     public ResponsibleUsersWithElementNameDTO getRegisterResponsibleUserAndName(@RequestParam final long registerId) {
         final Register register = registerService.findById(registerId)
@@ -141,6 +147,7 @@ public class RiskRestController {
     }
 
     record RiskUIDTO(String elementName, int rf, int of, int sf, int ri, int oi, int si, int rt, int ot, int st, int sa, ResponsibleUsersWithElementNameDTO users) {}
+	@RequireReadOwnerOnly
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetService.findAllById(assetIds);
@@ -152,6 +159,7 @@ public class RiskRestController {
     }
 
     record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
+	@RequireCreateAll
     @Transactional
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
@@ -244,6 +252,7 @@ public class RiskRestController {
     }
 
     record SetFieldDTO(@NotNull SetFieldType setFieldType, @NotNull ThreatDatabaseType dbType, Long id, String identifier, @NotNull String value) {}
+	@RequireUpdateOwnerOnly
     @PostMapping("{id}/threats/setfield")
     public ResponseEntity<HttpStatus> setField(@PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -296,6 +305,7 @@ public class RiskRestController {
     }
 
     record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
+	@RequireUpdateOwnerOnly
     @PostMapping("{id}/threats/setPrecautions")
     public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -377,7 +387,7 @@ public class RiskRestController {
         return response;
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteOwnerOnly
     @Transactional
     @DeleteMapping("{id}/threats/{threatId}")
     public ResponseEntity<HttpStatus> deleteCustomThread(@PathVariable final long id, @PathVariable final long threatId) {
@@ -426,6 +436,7 @@ public class RiskRestController {
 
     public record CreateExternalRiskassessmentDTO(Long riskId, Set<Long> assetIds, String link, String name, ThreatAssessmentType type, Long registerId, String responsibleUserUuid, String responsibleOuUuid) {
     }
+	@RequireCreateOwnerOnly
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalRiskassessmentDTO createExternalDTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -477,6 +488,7 @@ public class RiskRestController {
     }
 
 	public record CommentUpdateDTO(Long riskId, String comment){}
+	@RequireUpdateOwnerOnly
 	@PostMapping("comment/update")
 	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

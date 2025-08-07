@@ -2,7 +2,8 @@ package dk.digitalidentity.controller.rest;
 
 import java.util.Map;
 
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -24,12 +25,13 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/oversight")
-@RequireUser
+@RequireAsset
 @RequiredArgsConstructor
 public class DBSOversightRestController {
 	private final DBSOversightGridDao dbsOversightGridDao;
 	private final DBSOversightMapper mapper;
 
+	@RequireReadOwnerOnly
 	@PostMapping("list")
 	@Transactional
 	public PageDTO<DBSOversightDTO> list(@RequestParam(value = "page", defaultValue = "0") int page,

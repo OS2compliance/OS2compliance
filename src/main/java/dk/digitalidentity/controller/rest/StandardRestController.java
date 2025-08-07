@@ -6,9 +6,11 @@ import dk.digitalidentity.model.dto.enums.SetFieldStandardType;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireStandard;
 import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -33,7 +35,7 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/standards")
-@RequireUser
+@RequireStandard
 @RequiredArgsConstructor
 public class StandardRestController {
     private final StandardSectionDao standardSectionDao;
@@ -41,6 +43,7 @@ public class StandardRestController {
     private final RelationService relationService;
 
     record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
+	@RequireUpdateOwnerOnly
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
     public ResponseEntity<HttpStatus> setField(@PathVariable final String templateIdentifier, @PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final StandardSection standardSection = standardSectionDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -65,6 +68,7 @@ public class StandardRestController {
     }
     record StandardSectionRecord(Long id, String description, Long[] documents, Long[] relations, StandardSectionStatus status){}
 
+	@RequireCreateOwnerOnly
     @Transactional
     @PostMapping(value = "save", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> save(@RequestBody StandardSectionRecord record) {

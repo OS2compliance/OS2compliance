@@ -6,9 +6,10 @@ import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.security.annotations.RequireAdministrator;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -38,18 +39,19 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/incidents")
-@RequireSuperuserOrAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 public class IncidentRestController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
 
-    @RequireAdministrator
+    @RequireReadAll
     @GetMapping("questions")
     public List<IncidentFieldDTO> list() {
         return incidentMapper.toFieldDTOs(incidentService.getAllFields());
     }
 
+	@RequireDeleteAll
     @DeleteMapping("questions/{id}")
     @Transactional
     public ResponseEntity<?> deleteQuestion(@PathVariable final Long id) {
@@ -59,6 +61,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("questions/{id}/up")
     public ResponseEntity<?> questionReorderUp(@PathVariable("id") final Long id) {
@@ -68,6 +71,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("questions/{id}/down")
     public ResponseEntity<?> questionReorderDown(@PathVariable("id") final Long id) {
@@ -77,6 +81,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireDeleteAll
     @DeleteMapping("{id}")
     @Transactional
     public ResponseEntity<?> deleteIncident(@PathVariable final Long id) {
@@ -86,7 +91,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @RequireUser
+    @RequireReadAll
     @PostMapping("list")
     public PageDTO<IncidentDTO> list(
         @RequestParam(name = "search", required = false) final String search,
@@ -114,7 +119,7 @@ public class IncidentRestController {
         return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
     }
 
-    @RequireUser
+    @RequireReadAll
     @GetMapping("columns")
     public List<String> visibleColumns() {
         return incidentService.getAllFields().stream()

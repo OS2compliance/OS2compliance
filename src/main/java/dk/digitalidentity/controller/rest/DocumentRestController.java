@@ -6,9 +6,10 @@ import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireDocument;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +32,14 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/documents")
-@RequireUser
+@RequireDocument
 @RequiredArgsConstructor
 public class DocumentRestController {
     private final DocumentGridDao documentGridDao;
     private final DocumentMapper mapper;
     private final UserService userService;
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
     public PageDTO<DocumentDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
@@ -57,6 +59,7 @@ public class DocumentRestController {
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
     }
 
+	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
     public PageDTO<DocumentDTO> list(
         @PathVariable(name = "id") final String uuid,

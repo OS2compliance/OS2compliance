@@ -7,8 +7,9 @@ import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
@@ -37,7 +38,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/assets")
-@RequireUser
+@RequireAsset
 @RequiredArgsConstructor
 public class DBSAssetsRestController {
 	private final DBSAssetGridDao dbsAssetGridDao;
@@ -47,6 +48,7 @@ public class DBSAssetsRestController {
     private final AssetOversightService assetOversightService;
     private final RelationService relationService;
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
 	@Transactional
 	public PageDTO<DBSAssetDTO> list(@RequestParam(value = "page", defaultValue = "0") int page,
@@ -66,7 +68,7 @@ public class DBSAssetsRestController {
 
     record UpdateDBSAssetDTO(long id, List<Long> assets) {}
 
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateOwnerOnly
     @PostMapping("update")
     @Transactional
     public ResponseEntity<?> update(@RequestBody UpdateDBSAssetDTO body) {

@@ -2,7 +2,8 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.integration.cvr.CvrService;
 import dk.digitalidentity.integration.cvr.dto.CvrSearchResultDTO;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
@@ -15,11 +16,12 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @RestController
 @RequestMapping("rest/cvr")
-@RequireUser
+@RequireAuthenticated
 @RequiredArgsConstructor
 public class CvrRestController {
     private final CvrService cvrService;
 
+	@RequireReadOwnerOnly
     @GetMapping
     public CvrSearchResultDTO findCompany(@RequestParam final String cvr) {
         return cvrService.getSearchResultByCvr(cvr)

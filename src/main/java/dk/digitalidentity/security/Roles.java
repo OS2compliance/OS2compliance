@@ -26,7 +26,7 @@ public interface Roles {
 	String SECTION_STANDARD = "ROLE_s_standard";
 	String SECTION_REGISTER = "ROLE_s_register";
 	String SECTION_SUPPLIER = "ROLE_s_supplier";
-	String SECTION_RISK_ASSESSMENT = "ROLE_s_risk_assessment";
+	String SECTION_RISK_ASSESSMENT = "ROLE_s_risk";
 	String SECTION_DOCUMENT = "ROLE_s_document";
 	String SECTION_TASK = "ROLE_s_task";
 	String SECTION_REPORT = "ROLE_s_report";

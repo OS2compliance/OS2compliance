@@ -17,11 +17,15 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.annotations.RequireLimitedUser;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
@@ -67,7 +71,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/assets")
-@RequireLimitedUser
+@RequireAsset
 @RequiredArgsConstructor
 public class AssetsRestController {
     private final AssetService assetService;
@@ -80,7 +84,7 @@ public class AssetsRestController {
 	private final DPIAService dPIAService;
 	private final ApplicationEventPublisher eventPublisher;
 
-	@RequireLimitedUser
+	@RequireReadOwnerOnly
 	@PostMapping("list")
     public PageDTO<AssetDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
@@ -120,7 +124,7 @@ public class AssetsRestController {
             authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
     }
 
-	@RequireUser
+	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
     public PageDTO<AssetDTO> list(
         @PathVariable(name = "id") final String uuid,
@@ -146,7 +150,7 @@ public class AssetsRestController {
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
     }
 
-	@RequireUser
+	@RequireUpdateOwnerOnly
     @PutMapping("{id}/setfield")
     public void setAssetField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                               @RequestParam(value = "value", required = false) final String value) {
@@ -160,7 +164,7 @@ public class AssetsRestController {
         assetService.save(asset);
     }
 
-	@RequireUser
+	@RequireUpdateOwnerOnly
     @PutMapping("{id}/dpiascreening/setfield")
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                                       @RequestParam(value = "value", required = false) final String value) {
@@ -174,7 +178,7 @@ public class AssetsRestController {
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, dpia.getDpiaScreening(), fieldName, value);
     }
 
-	@RequireUser
+	@RequireUpdateOwnerOnly
     @Transactional
     @PutMapping("{id}/oversightresponsible")
     public void setOversightResponsible(@PathVariable("id") final Long id, @RequestParam("userUuid") final String userUuid) {
@@ -189,7 +193,7 @@ public class AssetsRestController {
     }
 
     @Transactional
-    @RequireSuperuserOrAdministrator
+   	@RequireDeleteOwnerOnly
     @DeleteMapping("{id}/oversightresponsible")
     public void removeOversightResponsibl(@PathVariable("id") final Long id) {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -197,7 +201,7 @@ public class AssetsRestController {
     }
 
     record DPIASetFieldDTO(long id, String fieldName, String value) {}
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateAll
     @PutMapping("dpia/schema/section/setfield")
     public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto) {
         canSetDPIASectionFieldGuard(dto.fieldName);
@@ -206,35 +210,35 @@ public class AssetsRestController {
         dpiaTemplateSectionService.save(dpiaTemplateSection);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateAll
     @PostMapping("dpia/schema/section/{id}/up")
     public ResponseEntity<?> reorderUp(@PathVariable("id") final long id) {
         reorderSections(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+	@RequireUpdateAll
     @PostMapping("dpia/schema/section/{id}/down")
     public ResponseEntity<?> reorderDown(@PathVariable("id") final long id) {
         reorderSections(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+	@RequireUpdateAll
     @PostMapping("dpia/schema/question/{id}/up")
     public ResponseEntity<?> reorderQuestionUp(@PathVariable("id") final long id) {
         reorderQuestions(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+	@RequireUpdateAll
     @PostMapping("dpia/schema/question/{id}/down")
     public ResponseEntity<?> reorderQuestionDown(@PathVariable("id") final long id) {
         reorderQuestions(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteOwnerOnly
     @DeleteMapping("dpia/schema/question/{id}/delete")
     public ResponseEntity<?> deleteQuestion(@PathVariable("id") final long id) {
         final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -243,7 +247,7 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-	@RequireSuperuserOrAdministrator
+	@RequireDeleteAll
     @Transactional
     @DeleteMapping("oversight/{oversightId}")
     public ResponseEntity<?> deleteOversight(@PathVariable("oversightId") Long oversightId) {
@@ -257,7 +261,7 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteAll
     @Transactional
     @DeleteMapping("{assetId}/subsupplier/{subSupplierId}")
     public ResponseEntity<?> subSupplierDelete(@PathVariable("subSupplierId") final Long subSupplierId,
@@ -270,7 +274,7 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-	@RequireSuperuserOrAdministrator
+	@RequireCreateAll
 	@PostMapping("{assetId}/dpia/kitos")
 	public ResponseEntity<?> syncDPIAToKitos(@PathVariable("assetId") final long assetId, HttpServletRequest request) {
 		final Asset asset = assetService.get(assetId)

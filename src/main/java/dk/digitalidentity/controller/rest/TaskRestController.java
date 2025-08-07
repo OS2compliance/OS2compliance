@@ -6,9 +6,10 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,13 +32,14 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/tasks")
-@RequireUser
+@RequireTask
 @RequiredArgsConstructor
 public class TaskRestController {
     private final UserService userService;
     private final TaskGridDao taskGridDao;
     private final TaskMapper mapper;
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
     public PageDTO<TaskDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
@@ -57,6 +59,7 @@ public class TaskRestController {
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
     }
 
+	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
     public PageDTO<TaskDTO> list(
         @PathVariable(name = "id") final String userUuid,

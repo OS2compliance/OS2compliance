@@ -24,11 +24,13 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
-import dk.digitalidentity.security.annotations.RequireLimitedUser;
-import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAResponseSectionAnswerService;
 import dk.digitalidentity.service.DPIAResponseSectionService;
@@ -83,7 +85,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/dpia")
-@RequireLimitedUser
+@RequireConfiguration
 @RequiredArgsConstructor
 public class DPIARestController {
 	private final DPIAGridDao dpiaGridDao;
@@ -105,6 +107,7 @@ public class DPIARestController {
 	public record DPIAListDTO(long id, String name, String responsibleUserName, String responsibleOUName, LocalDate userUpdatedDate, int taskCount, ThreatAssessmentReportApprovalStatus status, DPIAScreeningConclusion screeningConclusion, Boolean isExternal) {
 	}
 
+	@RequireReadAll
 	@PostMapping("list")
 	public PageDTO<DPIAListDTO> list(
 			@RequestParam(value = "page", defaultValue = "0") int page,
@@ -135,8 +138,8 @@ public class DPIARestController {
 				.toList());
 	}
 
+	@RequireDeleteAll
 	@DeleteMapping("delete/{id}")
-	@RequireSuperuserOrAdministrator
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
 	public void delete(@PathVariable final Long id) {
@@ -146,7 +149,7 @@ public class DPIARestController {
 	public record DPIAScreeningUpdateDTO(Long dpiaId, String answer, String choiceIdentifier) {
 	}
 
-	@RequireUser
+	@RequireUpdateAll
 	@Transactional
 	@PostMapping("screening/update")
 	public ResponseEntity<HttpStatus> dpia(@RequestBody final DPIAScreeningUpdateDTO dpiaScreeningUpdateDTO) {
@@ -178,7 +181,7 @@ public class DPIARestController {
 	}
 
     public record CommentUpdateDTO(Long dpiaId, String comment){}
-	@RequireUser
+	@RequireUpdateAll
     @PostMapping("comment/update")
     public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
         final DPIA dpia = dpiaService.find(commentUpdateDTO.dpiaId);
@@ -196,7 +199,7 @@ public class DPIARestController {
     }
 
     public record QualityAssuranceUpdateDTO (Long dpiaId, Set<String> dpiaQualityCheckValues) {}
-	@RequireUser
+	@RequireUpdateAll
     @Transactional
 	@PostMapping("qualityassurance/update")
 	public ResponseEntity<HttpStatus> dpia(@RequestBody final QualityAssuranceUpdateDTO qualityAssuranceUpdateDTO) {
@@ -214,7 +217,7 @@ public class DPIARestController {
 
 	public record CreateDPIAResponse(Long dpiaId) {}
     public record CreateDPIAFormDTO (String title, List<Long> assetIds, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid){}
-	@RequireUser
+	@RequireCreateAll
     @PostMapping("create")
     public ResponseEntity<CreateDPIAResponse> createDpia (@RequestBody final  CreateDPIAFormDTO createDPIAFormDTO) throws IOException {
 	        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -231,7 +234,7 @@ public class DPIARestController {
 
 	public record EditDPIADTO(String title, List<Long> assetIds, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid){}
 	@Transactional
-	@RequireSuperuserOrAdministrator
+	@RequireCreateAll
 	@PostMapping("{dpiaId}/edit")
 	public ResponseEntity<HttpStatus> createExternalDpia(@PathVariable Long dpiaId,  @RequestBody final EditDPIADTO editDPIADTO) {
 		List<Asset> assets	= assetService.findAllById(editDPIADTO.assetIds);
@@ -259,7 +262,7 @@ public class DPIARestController {
 
     public record CreateExternalDPIADTO(Long dpiaId, String title, List<Long> assetIds, String link, @JsonFormat(pattern="dd/MM-yyyy") LocalDate userUpdatedDate, String responsibleUserUuid, String responsibleOuUuid) {
     }
-	@RequireUser
+	@RequireCreateAll
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalDPIADTO createExternalDPIADTO) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
@@ -309,7 +312,7 @@ public class DPIARestController {
     }
 
 	record DPIASetFieldDTO(long id, String fieldName, String value) {}
-	@RequireUser
+	@RequireUpdateAll
 	@PutMapping("{dpiaId}/response/setfield")
 	public void setDPIAResponseField(@RequestBody final DPIASetFieldDTO dto, @PathVariable final long dpiaId) throws IOException {
 		final DPIA dpia = dpiaService.find(dpiaId);
@@ -367,7 +370,7 @@ public class DPIARestController {
 		assets.forEach(assetService::save);
 	}
 
-	@RequireUser
+	@RequireUpdateAll
 	@PutMapping("{dpiaId}/setfield")
 	public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto, @PathVariable long dpiaId) {
 		final DPIA dpia = dpiaService.find(dpiaId);
@@ -401,7 +404,7 @@ public class DPIARestController {
 
 	public record MailReportDTO(String message, String sendTo, boolean sign) {
 	}
-	@RequireUser
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("{dpiaId}/mailReport")
 	public ResponseEntity<?> mailReport(@PathVariable final long dpiaId, @RequestBody final MailReportDTO dto) throws IOException {

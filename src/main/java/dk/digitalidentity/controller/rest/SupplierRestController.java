@@ -6,7 +6,8 @@ import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -32,7 +33,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/suppliers")
-@RequireUser
+@RequireSupplier
 @RequiredArgsConstructor
 public class SupplierRestController {
 	private final SupplierGridDao supplierGridDao;
@@ -41,6 +42,7 @@ public class SupplierRestController {
 
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
 	public PageDTO<SupplierGridDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
@@ -66,6 +68,7 @@ public class SupplierRestController {
 		return new PageDTO<>(suppliers.getTotalElements(), supplierDTOs);
 	}
 
+	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
     public PageDTO<SupplierDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());

@@ -6,8 +6,9 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -28,13 +29,14 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/registers")
-@RequireUser
+@RequireRegister
 @RequiredArgsConstructor
 public class RegisterRestController {
     private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -53,6 +55,7 @@ public class RegisterRestController {
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
     }
 
+	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
     public PageDTO<RegisterDTO> list(
         @PathVariable(name = "id") final String uuid,

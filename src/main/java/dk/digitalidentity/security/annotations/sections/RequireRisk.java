@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('ROLE_s_risk_assessment')")
-public @interface RequireRiskAssessment {
+@PreAuthorize("hasRole('ROLE_s_risk')")
+public @interface RequireRisk {
 }

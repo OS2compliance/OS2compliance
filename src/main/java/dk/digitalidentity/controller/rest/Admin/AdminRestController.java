@@ -13,7 +13,8 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
-import dk.digitalidentity.security.annotations.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
@@ -45,7 +46,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @RestController
 @RequestMapping("rest/admin")
-@RequireAdministrator
+@RequireAdmin
 @RequiredArgsConstructor
 public class AdminRestController {
     private final UserService userService;
@@ -62,6 +63,7 @@ public class AdminRestController {
     private final ApplicationEventPublisher eventPublisher;
 
 
+	@RequireUpdateAll
     @PostMapping(value = "mailtemplate/save")
     @ResponseBody
     public ResponseEntity<String> updateTemplate(@RequestBody EmailTemplateDTO emailTemplateDTO, @RequestParam("tryEmail") boolean tryEmail) {
@@ -102,6 +104,7 @@ public class AdminRestController {
     }
 
     public record TransferResponsibilityDTO(String transferFrom, String transferTo) {}
+	@RequireUpdateAll
     @Transactional
     @PostMapping("transferresponsibility")
     public ResponseEntity<?> mailReportToSystemOwner(@RequestBody final TransferResponsibilityDTO dto) {
