@@ -13,43 +13,118 @@ export default function RegisterAssessmentService() {
         const editBtn = document.querySelector('#editAssessmentBtn');
         const cancelBtn = document.querySelector('#cancelAssessmentBtn');
         const saveBtn = document.querySelector('#saveAssessmentBtn');
+
+        // Basic assessment buttons
         const confidentialityRegisteredBtn = document.querySelector('#confidentialityRegisteredBtn');
-        const confidentialityOrganisationRepBtn = document.querySelector('#confidentialityOrganisationRepBtn');
-        const confidentialityOrganisationEcoBtn = document.querySelector('#confidentialityOrganisationEcoBtn');
-        const confidentialitySocietyBtn = document.querySelector('#confidentialitySocietyBtn');
         const integrityRegisteredBtn = document.querySelector('#integrityRegisteredBtn');
-        const integrityOrganisationRepBtn = document.querySelector('#integrityOrganisationRepBtn');
-        const integrityOrganisationEcoBtn = document.querySelector('#integrityOrganisationEcoBtn');
-        const integritySocietyBtn = document.querySelector('#integritySocietyBtn');
         const availabilityRegisteredBtn = document.querySelector('#availabilityRegisteredBtn');
-        const availabilityOrganisationRepBtn = document.querySelector('#availabilityOrganisationRepBtn');
-        const availabilityOrganisationEcoBtn = document.querySelector('#availabilityOrganisationEcoBtn');
+        const confidentialityOrganisationBtn = document.querySelector('#confidentialityOrganisationBtn');
+        const integrityOrganisationBtn = document.querySelector('#integrityOrganisationBtn');
+        const availabilityOrganisationBtn = document.querySelector('#availabilityOrganisationBtn');
+        const confidentialitySocietyBtn = document.querySelector('#confidentialitySocietyBtn');
+        const integritySocietyBtn = document.querySelector('#integritySocietyBtn');
         const availabilitySocietyBtn = document.querySelector('#availabilitySocietyBtn');
-        const availabilityReason = document.querySelector('#availabilityReason');
-        const integrityReason = document.querySelector('#integrityReason');
-        const confidentialityReason = document.querySelector('#confidentialityReason');
+        const authenticitySocietyBtn = document.querySelector('#authenticitySocietyBtn');
+
+        // Reason text areas
+        const registeredReason = document.querySelector('#registeredReason');
+        const organisationReason = document.querySelector('#organisationReason');
+        const societyReason = document.querySelector('#societyReason');
+
         editBtn.style = editable ? 'display: none' : 'display: block';
         saveBtn.style = !editable ? 'display: none' : 'display: block';
         cancelBtn.style = !editable ? 'display: none' : 'display: block';
+
+        // Enable/disable basic buttons
         confidentialityRegisteredBtn.disabled = !editable;
-        confidentialityOrganisationRepBtn.disabled = !editable;
-        confidentialityOrganisationEcoBtn.disabled = !editable;
-        confidentialitySocietyBtn.disabled = !editable;
         integrityRegisteredBtn.disabled = !editable;
-        integrityOrganisationRepBtn.disabled = !editable;
-        integrityOrganisationEcoBtn.disabled = !editable;
-        integritySocietyBtn.disabled = !editable;
         availabilityRegisteredBtn.disabled = !editable;
-        availabilityOrganisationRepBtn.disabled = !editable;
-        availabilityOrganisationEcoBtn.disabled = !editable;
+        confidentialitySocietyBtn.disabled = !editable;
+        integritySocietyBtn.disabled = !editable;
         availabilitySocietyBtn.disabled = !editable;
-        availabilityReason.readOnly = !editable;
-        integrityReason.readOnly = !editable;
-        confidentialityReason.readOnly = !editable;
+        if (authenticitySocietyBtn) authenticitySocietyBtn.disabled = !editable;
+
+        // Enable/disable reason text areas
+        if (registeredReason) registeredReason.readOnly = !editable;
+        if (organisationReason) organisationReason.readOnly = !editable;
+        if (societyReason) societyReason.readOnly = !editable;
+
+        // Enable/disable dynamic organisation assessment buttons
+        this.setOrganisationAssessmentButtonsState(editable);
 
         if (!editable) {
             const form = document.querySelector('#editAssessmentId');
             form.reset();
+        }
+    }
+
+    this.setOrganisationAssessmentButtonsState = function(editable) {
+        // Find all organisation assessment buttons dynamically
+        const orgButtons = document.querySelectorAll('[id*="confidentiality"][id$="Btn"], [id*="integrity"][id$="Btn"], [id*="availability"][id$="Btn"]');
+        orgButtons.forEach(button => {
+            // Skip the main organisation and society buttons (they're handled separately)
+            if (!button.id.includes('Organisation') && !button.id.includes('Society') && !button.id.includes('Registered')) {
+                button.disabled = !editable;
+            }
+        });
+    }
+
+    this.updateOrganisationAssessmentValue = function (value, choiceValueId, assessmentType) {
+        let color = 'RØD'; // Default red for "Ikke angivet"
+        if (value !== '-') {
+            color = scaleMap[value]; // Get color from scale map for actual values
+        }
+
+        let button = null;
+        const allButtons = document.querySelectorAll(`[id*="${assessmentType}"][id$="Btn"]`);
+        allButtons.forEach(btn => {
+            const dropdownItems = btn.parentElement.querySelectorAll('.dropdown-item');
+            dropdownItems.forEach(item => {
+                const itemOnclick = item.getAttribute('onclick') || '';
+                if (itemOnclick.includes(choiceValueId)) {
+                    button = btn;
+                }
+            });
+        });
+
+        if (button) {
+            if (value !== '-') {
+                button.innerText = value;
+                this.updateColorFor(button, color);
+                this.updateTitleFor(button, value);
+            } else {
+                button.innerText = '-';
+                this.updateColorFor(button, color);
+                this.clearTitle(button);
+            }
+
+            // Update hidden form field
+            this.updateOrganisationAssessmentHiddenField(choiceValueId, assessmentType, value);
+
+            // Recalculate organisation totals and max values
+            this.updateOrganisationAssessmentAvg();
+            this.updateAssessmentTotalMax();
+        }
+    }
+
+    this.updateOrganisationAssessmentHiddenField = function(choiceValueId, assessmentType, value) {
+        const hiddenField = document.querySelector(`input[name*="organisationAssessmentColumns"][name*="${assessmentType}"][value="${choiceValueId}"]`);
+
+        if (!hiddenField) {
+            const choiceValueFields = document.querySelectorAll('input[name*="choiceValue.id"]');
+            choiceValueFields.forEach(field => {
+                if (field.value == choiceValueId) {
+                    const indexMatch = field.name.match(/organisationAssessmentColumns\[(\d+)\]/);
+                    if (indexMatch) {
+                        const index = indexMatch[1];
+                        const targetFieldName = `organisationAssessmentColumns[${index}].${assessmentType}`;
+                        const targetField = document.querySelector(`input[name="${targetFieldName}"]`);
+                        if (targetField) {
+                            targetField.value = value === '-' ? '' : value;
+                        }
+                    }
+                }
+            });
         }
     }
 
@@ -60,24 +135,22 @@ export default function RegisterAssessmentService() {
         function updateFor(elemId) {
             const elemBtn = document.getElementById(elemId + 'Btn');
             const elem = document.getElementById(elemId);
-            self.updateTitleFor(elemBtn, elem.value);
+            if (elemBtn && elem) {
+                self.updateTitleFor(elemBtn, elem.value);
+            }
         }
 
+        // Update basic assessment titles
         updateFor('confidentialityRegistered');
         updateFor('confidentialitySociety');
         updateFor('confidentialityOrganisation');
-        updateFor('confidentialityOrganisationRep');
-        updateFor('confidentialityOrganisationEco');
         updateFor('integrityRegistered');
         updateFor('integritySociety');
         updateFor('integrityOrganisation');
-        updateFor('integrityOrganisationRep');
-        updateFor('integrityOrganisationEco');
         updateFor('availabilityRegistered');
         updateFor('availabilitySociety');
         updateFor('availabilityOrganisation');
-        updateFor('availabilityOrganisationRep');
-        updateFor('availabilityOrganisationEco');
+        updateFor('authenticitySociety');
     }
 
     this.updateAssessmentColors = function () {
@@ -86,24 +159,38 @@ export default function RegisterAssessmentService() {
         function updateFor(elemId) {
             const elemBtn = document.getElementById(elemId + 'Btn');
             const elem = document.getElementById(elemId);
-            self.updateColorFor(elemBtn, scaleMap[elem.value]);
+            if (elemBtn && elem && elem.value) {
+                self.updateColorFor(elemBtn, scaleMap[elem.value]);
+            }
         }
 
+        // Update basic assessment colors
         updateFor('confidentialityRegistered');
         updateFor('confidentialitySociety');
         updateFor('confidentialityOrganisation');
-        updateFor('confidentialityOrganisationRep');
-        updateFor('confidentialityOrganisationEco');
         updateFor('integrityRegistered');
         updateFor('integritySociety');
         updateFor('integrityOrganisation');
-        updateFor('integrityOrganisationRep');
-        updateFor('integrityOrganisationEco');
         updateFor('availabilityRegistered');
         updateFor('availabilitySociety');
         updateFor('availabilityOrganisation');
-        updateFor('availabilityOrganisationRep');
-        updateFor('availabilityOrganisationEco');
+        updateFor('authenticitySociety');
+
+        // Update colors for dynamic organisation assessment buttons
+        const orgButtons = document.querySelectorAll('[id*="confidentiality"][id$="Btn"], [id*="integrity"][id$="Btn"], [id*="availability"][id$="Btn"]');
+        orgButtons.forEach(button => {
+            // Skip registered, organisation total, and society buttons
+            if (!button.id.includes('Registered') && !button.id.includes('Organisation') && !button.id.includes('Society')) {
+                const buttonText = button.innerText || button.textContent;
+                if (buttonText && buttonText !== '-') {
+                    const value = parseInt(buttonText);
+                    if (!isNaN(value) && value > 0) {
+                        this.updateColorFor(button, scaleMap[value]);
+                        this.updateTitleFor(button, value);
+                    }
+                }
+            }
+        });
     }
 
     this.enumColorToBtn = function (color) {
@@ -150,43 +237,53 @@ export default function RegisterAssessmentService() {
     this.updateOrganisationAssessmentAvg = function () {
         let self = this;
 
-        function orgMax(elem1, elem2) {
-            const value1 = parseInt(elem1.value);
-            const value2 = parseInt(elem2.value);
-            if (isNaN(value1) && isNaN(value2)) {
-                return undefined;
-            } else if (isNaN(value1)) {
-                return value2;
-            } else if (isNaN(value2)) {
-                return value1
-            } else {
-                return Math.max(value1, value2);
+        // Get all organisation assessment values and calculate max for each assessment type
+        function calculateOrgAssessmentMax(assessmentType) {
+            const buttons = document.querySelectorAll(`[id*="${assessmentType}"][id$="Btn"]`);
+            let maxValue = 0;
+            let hasValue = false;
+
+            buttons.forEach(button => {
+                // Skip registered, organisation total, and society buttons
+                if (!button.id.includes('Registered') && !button.id.includes('Organisation') && !button.id.includes('Society')) {
+                    const buttonText = button.innerText || button.textContent;
+                    if (buttonText && buttonText !== '-') {
+                        const value = parseInt(buttonText);
+                        if (!isNaN(value)) {
+                            maxValue = Math.max(maxValue, value);
+                            hasValue = true;
+                        }
+                    }
+                }
+            });
+
+            return hasValue ? maxValue : undefined;
+        }
+
+        // Update organisation totals based on max values from dynamic organisation types
+        function updateOrganisationTotal(assessmentType) {
+            const maxValue = calculateOrgAssessmentMax(assessmentType);
+            const targetBtn = document.getElementById(`${assessmentType}OrganisationBtn`);
+            const targetInput = document.getElementById(`${assessmentType}Organisation`);
+
+            if (targetBtn && targetInput) {
+                if (maxValue !== undefined) {
+                    targetBtn.innerText = "" + maxValue;
+                    targetInput.value = maxValue;
+                    self.updateColorFor(targetBtn, scaleMap[maxValue]);
+                    self.updateTitleFor(targetBtn, maxValue);
+                } else {
+                    targetBtn.innerText = "-";
+                    targetInput.value = '';
+                    self.clearTitle(targetBtn);
+                    self.clearColors(targetBtn);
+                }
             }
         }
 
-        function updateForField(id) {
-            const rep = document.getElementById(`${id}Rep`);
-            const eco = document.getElementById(`${id}Eco`);
-            const targetBtn = document.getElementById(`${id}Btn`);
-            const targetInput = document.getElementById(id);
-            let avg = orgMax(rep, eco);
-            if (avg !== undefined) {
-                targetBtn.innerText = "" + avg;
-                targetInput.value = avg;
-                let value = asIntOrDefault(avg, 0);
-                self.updateColorFor(targetBtn, scaleMap[value]);
-                self.updateTitleFor(targetBtn, value);
-            } else {
-                targetBtn.innerText = "-";
-                targetInput.value = '';
-                self.clearTitle(targetBtn);
-                self.clearColors(targetBtn);
-            }
-        }
-
-        updateForField('confidentialityOrganisation');
-        updateForField('integrityOrganisation');
-        updateForField('availabilityOrganisation');
+        updateOrganisationTotal('confidentiality');
+        updateOrganisationTotal('integrity');
+        updateOrganisationTotal('availability');
     }
 
 
@@ -204,12 +301,14 @@ export default function RegisterAssessmentService() {
         const confidentialitySociety = document.getElementById('confidentialitySociety');
         const integritySociety = document.getElementById('integritySociety');
         const availabilitySociety = document.getElementById('availabilitySociety');
+        const authenticitySociety = document.getElementById('authenticitySociety');
 
-        function maxValue(element1, element2, element3) {
+        function maxValue(element1, element2, element3, element4 = null) {
             let value1 = asIntOrDefault(element1.value, 0);
             let value2 = asIntOrDefault(element2.value, 0);
             let value3 = asIntOrDefault(element3.value, 0);
-            return Math.max(value1, value2, value3);
+            let value4 = element4 == null ? 0 : asIntOrDefault(element4.value, 0);
+            return Math.max(value1, value2, value3, value4);
         }
 
         function updateTargets(element, value) {
@@ -228,7 +327,7 @@ export default function RegisterAssessmentService() {
         updateTargets(maxRegistered, maxRegValue);
         let maxOrgValue = maxValue(confidentialityOrganisation, integrityOrganisation, availabilityOrganisation);
         updateTargets(maxOrganisation, maxOrgValue);
-        let maxSocValue = maxValue(confidentialitySociety, integritySociety, availabilitySociety);
+        let maxSocValue = maxValue(confidentialitySociety, integritySociety, availabilitySociety, authenticitySociety);
                 updateTargets(maxSociety, maxSocValue);
 
         let totalMax = Math.max(maxRegValue, maxOrgValue, maxSocValue);
