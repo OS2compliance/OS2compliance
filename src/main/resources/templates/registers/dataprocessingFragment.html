@@ -21,7 +21,7 @@
                         <div class="row">
                             <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
                                 <input th:field="${register.id}" type="hidden">
-                                <div th:replace="~{fragments/dataprocessing :: dataProcessing(dbChoices=${dpChoices}, dataProcessing=${register.dataProcessing}, primary='true')}"></div>
+                                <div th:replace="~{dataProcessing/dataprocessing :: dataProcessing(dbChoices=${dpChoices}, dataProcessing=${register.dataProcessing}, primary='true')}"></div>
                             </div>
                         </div>
                     </form>
@@ -35,7 +35,7 @@
             </div>
             <div th:id="'asset' + ${asset.id}" class="accordion-collapse collapse" th:aria-labelledby="'accHeader' + ${asset.id}" data-bs-parent="#_dm-defaultAccordion">
                 <div class="accordion-body">
-                    <div th:replace="~{fragments/dataprocessing :: dataProcessing(dbChoices=${dpChoices}, dataProcessing=${asset.dataProcessing}, primary='false')}"></div>
+                    <div th:replace="~{dataProcessing/dataprocessing :: dataProcessing(dbChoices=${dpChoices}, dataProcessing=${asset.dataProcessing}, primary='false')}"></div>
                 </div>
             </div>
         </div>

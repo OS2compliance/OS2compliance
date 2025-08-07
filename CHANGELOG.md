@@ -14,6 +14,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-124) (Rapporter) Samlet rapport til systemejer vedr. alle systemer
 - (https://os2web.atlassian.net/browse/COMPLY-320) (Risikostyring) OS2Compliance skal understøtte NIS2 risikovurderinger
 - (https://os2web.atlassian.net/browse/COMPLY-283) (Risikostyring/Den enkelte risikovurdering) Fritekstfelt
+- (https://os2web.atlassian.net/browse/COMPLY-182) (Risikostyring/Opsætning) Mulighed for at ændre konsekvenstyper
+- (https://os2web.atlassian.net/browse/COMPLY-282) (Risikostyring/Forside) Risikovurderingens tilknytning til systemer/behandlingsaktiviteter
+- (https://os2web.atlassian.net/browse/COMPLY-260) (Aktiver/Generelt) Løsninger der imødekommer AI-forordningen
 
 ### Fixed
 - (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke
@@ -22,6 +25,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Bug i "Tilknyt ekstern risikovurdering" Aktiv-fane
 - (Ad-hoc) Bug - Navigation forsvinder - implementeret burger menu
 - (Ad-hoc) Søgning og sortering efter navn i konsekvensanalyser virkede ikke
+- (Ad-hoc) Sæt max længde på tilsyns konklusion op, og tilføje validering
 
 ## [2.2.1]
 ### Fixed

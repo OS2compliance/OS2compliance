@@ -485,10 +485,11 @@ public class Article30Replacer implements PlaceHolderReplacer {
             paragraph = getCell(row, 3).getParagraphs().getFirst();
             try (final XmlCursor cellCursor = paragraph.getCTP().newCursor()) {
                 final List<String> values = registeredCategory.getInformationReceivers().stream()
-                    .map(choiceService::getValue)
-                    .filter(c -> c.isPresent())
-                    .map(c -> c.get().getCaption())
-                    .toList();
+						.map(ir -> ir.getChoiceValue().getIdentifier())
+						.map(choiceService::getValue)
+						.filter(c -> c.isPresent())
+						.map(c -> c.get().getCaption())
+						.toList();
                 addBulletList(paragraph.getDocument(), cellCursor, new ArrayList<>(values));
             }
         }
