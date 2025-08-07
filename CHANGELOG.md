@@ -19,6 +19,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-260) (Aktiver/Generelt) Løsninger der imødekommer AI-forordningen
 - (https://os2web.atlassian.net/browse/COMPLY-321) (Risikostyring) Risikostyring med visuel risikomatrix
 - (https://os2web.atlassian.net/browse/COMPLY-101) (Administrativt) Overblik over hvilke mails systemet har sendt
+- (https://os2web.atlassian.net/browse/COMPLY-66)  (Standarder/Understøttende standarder) Oprettelse af ny standard
 
 ### Fixed
 - (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke
