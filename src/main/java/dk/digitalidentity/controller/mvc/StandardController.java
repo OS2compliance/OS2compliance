@@ -44,6 +44,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -327,7 +329,8 @@ public class StandardController {
 		String sectionPrefix = parentsTemplateSection.getSection();
 		String name = version + " " + standardSection.getName();
 		String templateSection = sectionPrefix + "." + version;
-
+		standardSection.setSelected(true);
+		standardSection.setStatus(StandardSectionStatus.IN_PROGRESS);
 		String standardTemplateSectionIdentifier = getHighestVersionNumberBasedOnIds(parentsTemplateSection.getSection(), existingChildren);
 		StandardTemplateSection newSection = new StandardTemplateSection();
 		newSection.setIdentifier(standardTemplateSectionIdentifier);
@@ -416,15 +419,27 @@ public class StandardController {
 
 	private String getHighestVersionNumberBasedOnIds(String parentSection, Set<StandardTemplateSection> allSections) {
 		String prefix = parentSection + ".";
+		int max = 0;
+		// Matching the last number, to figure out the highest number we can take
+		Pattern numberPattern = Pattern.compile("(\\d+)$");
 
-		int temp = 0;
-		for (StandardTemplateSection allSection : allSections) {
-			String[] split = allSection.getIdentifier().split("\\.");
-			int value = Integer.parseInt(split[split.length - 1]);
-			if (value > temp) {
-				temp = value;
+		for (StandardTemplateSection section : allSections) {
+			String identifier = section.getIdentifier();
+
+			Matcher matcher = numberPattern.matcher(identifier);
+			if (matcher.find()) {
+				try {
+					int number = Integer.parseInt(matcher.group(1));
+					if (number > max) {
+						max = number;
+					}
+				} catch (NumberFormatException ignored) {
+					throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+				}
 			}
 		}
-		return prefix + (temp == 0 ? 1 : (temp + 1));
+
+		return prefix + (max + 1);
 	}
+
 }

@@ -1,10 +1,12 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
@@ -36,6 +38,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -59,6 +62,14 @@ public class Asset extends Relatable {
 
     @Column
     private String description;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ContainsAITechnologyEnum aiStatus;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private AiRiskFactor aiRisk;
 
     @ManyToOne
     @JoinColumn(name = "asset_type", nullable = false)
@@ -205,5 +216,4 @@ public class Asset extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	private List<AssetProductLink> productLinks = new ArrayList<>();
-
 }

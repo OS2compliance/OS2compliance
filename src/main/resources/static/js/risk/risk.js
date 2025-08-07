@@ -8,9 +8,32 @@
     const createRiskService = new CreateRiskService();
     const copyRiskService = new CopyRiskService();
     const editRiskService = new EditRiskService();
+    const createTable = new CreateTable();
+    const preselect = new Preselect();
+    let registerView = true;
 
     document.addEventListener("DOMContentLoaded", function(event) {
+        const table = document.getElementById("risksDatatable");
+        if (table) {
+            registerView = false;
+            createTable.init();
+        } else {
+            preselect.init();
+        }
+        createRiskService.init();
+    });
 
+function Preselect() {
+    this.init = function () {
+        // Preselect the type
+        let type = document.getElementById("threatAssessmentType");
+        type.value = "REGISTER";
+        type.dispatchEvent(new Event("change"));
+    }
+}
+
+function CreateTable() {
+    this.init = function () {
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
@@ -122,7 +145,7 @@
                     name: "Risikovurdering",
                     searchable: {
                         searchKey: 'assessment',
-                       fieldId: 'riskAssessmentSearchSelector'
+                        fieldId: 'riskAssessmentSearchSelector'
                     },
                     width: '120px',
                     formatter: (cell, row) => {
@@ -244,9 +267,8 @@
         new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
-
-        createRiskService.init();
-    });
+    }
+}
 
 function deleteClicked(riskId, name) {
     Swal.fire({
@@ -462,7 +484,11 @@ function CreateRiskService() {
 
         const registerSelect = this.getScopedElementById('registerSelect');
         const assetSelect = this.getScopedElementById('assetSelect');
-        this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        if (registerView) {
+            this.registerChoicesSelect = initRegisterSelectWithPreselect(registerSelect);
+        } else {
+            this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        }
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
         this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
@@ -646,6 +672,60 @@ function CreateRiskService() {
     this.getScopedElementById = function(id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
+}
 
+function updateTypeSelectWithPreselect(choices, search, types, preselectName = null) {
+    fetch(`/rest/relatable/autocomplete?types=${types}&search=${search}`)
+        .then(response => response.json()
+            .then(data => {
+                const choiceItems = data.content.map(reg => {
+                    return {
+                        id: reg.id,
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60),
+                        fullName: reg.name,
+                    };
+                })
 
+                if (search === "" && preselectName) {
+                    const preselectedId = getPreselectedRegisterId();
+
+                    // Add the preselected option at the beginning
+                    choiceItems.unshift({
+                        id: preselectedId,
+                        name: truncateString("Fortegnelse: " + preselectName, 60),
+                        fullName: preselectName,
+                    });
+                }
+
+                choices.setChoices(choiceItems, 'id', 'name', true);
+
+                const registerTitle = document.getElementById("name");
+
+                // Now set the selection
+                if (search === "" && preselectName) {
+                    const preselectedId = getPreselectedRegisterId();
+                    choices.setChoiceByValue(preselectedId);
+                    registerTitle.value = preselectName;
+                }
+            }))
+        .catch(error => toastService.error(error));
+}
+
+function initRegisterSelectWithPreselect(registerSelectElement) {
+    const registerChoices = initSelect(registerSelectElement);
+    const regi = document.getElementById("breadcrump-register-name");
+    const initialName = regi.getAttribute("data-register-name");
+    updateTypeSelectWithPreselect(registerChoices, "", "REGISTER", initialName);
+    registerSelectElement.addEventListener("search",
+        function(event) {
+            updateTypeSelectWithPreselect(registerChoices, event.detail.value, "REGISTER");
+        },
+        false,
+    );
+    return registerChoices;
+}
+
+function getPreselectedRegisterId() {
+    const breadcrumb = document.getElementById("breadcrump-register-name");
+    return breadcrumb.getAttribute("data-register-id");
 }
