@@ -3,7 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.event.IncidentFieldsUpdatedEvent;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.RequireAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;

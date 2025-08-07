@@ -57,6 +57,13 @@ public class SecurityUtil {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.USER));
     }
 
+	public static boolean isLimitedUser() {
+		if (!isLoggedIn()) {
+			return false;
+		}
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.LIMITED_USER));
+	}
+
     public static boolean isSuperUser() {
         if(!isLoggedIn()) {
             return false;

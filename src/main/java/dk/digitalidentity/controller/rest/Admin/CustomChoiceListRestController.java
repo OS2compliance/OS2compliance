@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.RequireAdministrator;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;

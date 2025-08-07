@@ -45,10 +45,11 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -110,7 +111,7 @@ import static dk.digitalidentity.util.LinkHelper.linkify;
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @Controller
-@RequireUser
+@RequireAsset
 @RequestMapping("assets")
 @RequiredArgsConstructor
 public class AssetsController {
@@ -137,7 +138,6 @@ public class AssetsController {
 		return "assets/index";
 	}
 
-    @RequireSuperuserOrAdministrator
 	@GetMapping("form")
 	public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
 		if (id == null) {
@@ -157,7 +157,6 @@ public class AssetsController {
 		return "assets/form";
 	}
 
-    @RequireSuperuserOrAdministrator
 	@Transactional
 	@PostMapping("form")
 	public String formCreate(@ModelAttribute final Asset asset) {
@@ -369,7 +368,6 @@ public class AssetsController {
 		return "redirect:/assets/" + body.assetId;
 	}
 
-    @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional

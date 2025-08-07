@@ -113,6 +113,7 @@ SELECT
     cv.caption as asset_type,
     GROUP_CONCAT(u.name SEPARATOR ', ') as responsible_user_names,
     GROUP_CONCAT(u.uuid SEPARATOR ',') as responsible_user_uuids,
+    GROUP_CONCAT(mu.uuid SEPARATOR ',') as manager_uuids,
     a.updated_at,
     a.asset_status,
     (CASE WHEN a.asset_status = 'NOT_STARTED' THEN 1
@@ -153,6 +154,8 @@ FROM assets a
     LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
     LEFT JOIN users u ON ru.user_uuid = u.uuid
     LEFT JOIN choice_values cv ON a.asset_type = cv.id
+    LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
+    LEFT JOIN users mu ON aum.user_uuid = mu.uuid
 WHERE a.deleted = false
 GROUP BY a.id;
 

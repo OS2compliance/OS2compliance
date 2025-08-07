@@ -30,7 +30,7 @@ import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import dk.digitalidentity.model.entity.kle.KLESubject;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;

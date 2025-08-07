@@ -3,7 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;

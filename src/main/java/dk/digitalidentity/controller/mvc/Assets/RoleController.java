@@ -3,7 +3,7 @@ package dk.digitalidentity.controller.mvc.Assets;
 import dk.digitalidentity.mapping.RoleMapper;
 import dk.digitalidentity.model.dto.RoleDTO;
 import dk.digitalidentity.model.entity.Role;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RoleService;
 import lombok.RequiredArgsConstructor;

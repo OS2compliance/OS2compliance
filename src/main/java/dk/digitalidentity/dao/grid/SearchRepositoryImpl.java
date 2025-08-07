@@ -1,6 +1,8 @@
 package dk.digitalidentity.dao.grid;
 
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.grid.HasManagers;
 import dk.digitalidentity.model.entity.grid.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.grid.HasSingleResponsibleUser;
 import jakarta.persistence.EntityManager;
@@ -178,6 +180,31 @@ public class SearchRepositoryImpl implements SearchRepository {
 			throw new IllegalArgumentException("Entity class must implement either HasSingleResponsibleUser or HasMultipleResponsibleUsers");
 		}
 		orMap.put("customResponsibleUserUuids", user.getUuid());
+
+		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
+	}
+
+	@Override
+	public <T> Page<T> findAllWithAssignedUser(final Map<String, String> searchableProperties, final User user, final Pageable page, final Class<T> entityClass) {
+		Map<String, Object> orMap = new HashMap<>();
+		if (HasMultipleResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			orMap.put("responsibleUserUuids", user.getUuid());
+		}
+		if (HasSingleResponsibleUser.class.isAssignableFrom(entityClass)) {
+			orMap.put("responsibleUser", user);
+		}
+		if (HasManagers.class.isAssignableFrom(entityClass)) {
+			orMap.put("managerUuids", user.getUuid());
+		}
+		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			orMap.put("customResponsibleUserUuids", user.getUuid());
+		}
+
+		if (orMap.isEmpty()) {
+			// Entity does not have any fields with assigned users
+			throw new IllegalArgumentException("Searched entity does not have any fields for assigned users");
+		}
+
 
 		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
 	}

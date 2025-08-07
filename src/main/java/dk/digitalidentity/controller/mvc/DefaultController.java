@@ -1,7 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireLimitedUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
@@ -34,7 +34,7 @@ public class DefaultController implements ErrorController {
 
 	@Transactional
     @GetMapping("/dashboard")
-    @RequireUser
+    @RequireLimitedUser
 	public String index(final Model model) {
         if (SecurityUtil.isLoggedIn()) {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();

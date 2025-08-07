@@ -17,7 +17,8 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.RequireLimitedUser;
+import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -66,7 +67,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/assets")
-@RequireUser
+@RequireLimitedUser
 @RequiredArgsConstructor
 public class AssetsRestController {
     private final AssetService assetService;
@@ -79,6 +80,7 @@ public class AssetsRestController {
 	private final DPIAService dPIAService;
 	private final ApplicationEventPublisher eventPublisher;
 
+	@RequireLimitedUser
 	@PostMapping("list")
     public PageDTO<AssetDTO> list(
         @RequestParam(value = "page", defaultValue = "0") int page,
@@ -87,17 +89,38 @@ public class AssetsRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, AssetGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            AssetGrid.class
-        );
+
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		Page<AssetGrid> assets = null;
+		if (SecurityUtil.isUser()) {
+			// Logged in user is User or higher role
+			assets =  assetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, AssetGrid.class),
+					buildPageable(page, limit, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+		}else {
+			// Logged in user is a limited user
+			assets =  assetGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, AssetGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+		}
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(),
             authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
 
+	@RequireUser
     @PostMapping("list/{id}")
     public PageDTO<AssetDTO> list(
         @PathVariable(name = "id") final String uuid,
@@ -123,6 +146,7 @@ public class AssetsRestController {
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
     }
 
+	@RequireUser
     @PutMapping("{id}/setfield")
     public void setAssetField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                               @RequestParam(value = "value", required = false) final String value) {
@@ -136,6 +160,7 @@ public class AssetsRestController {
         assetService.save(asset);
     }
 
+	@RequireUser
     @PutMapping("{id}/dpiascreening/setfield")
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                                       @RequestParam(value = "value", required = false) final String value) {
@@ -149,6 +174,7 @@ public class AssetsRestController {
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, dpia.getDpiaScreening(), fieldName, value);
     }
 
+	@RequireUser
     @Transactional
     @PutMapping("{id}/oversightresponsible")
     public void setOversightResponsible(@PathVariable("id") final Long id, @RequestParam("userUuid") final String userUuid) {
@@ -217,6 +243,7 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	@RequireSuperuserOrAdministrator
     @Transactional
     @DeleteMapping("oversight/{oversightId}")
     public ResponseEntity<?> deleteOversight(@PathVariable("oversightId") Long oversightId) {
@@ -243,6 +270,7 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	@RequireSuperuserOrAdministrator
 	@PostMapping("{assetId}/dpia/kitos")
 	public ResponseEntity<?> syncDPIAToKitos(@PathVariable("assetId") final long assetId, HttpServletRequest request) {
 		final Asset asset = assetService.get(assetId)

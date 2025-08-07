@@ -48,6 +48,7 @@ import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -165,13 +166,27 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 ishoj.setName("Ishøj Kommune");
                 ishoj = organisationUnitDao.save(ishoj);
 
-                User user1 = new User();
-                user1.setActive(true);
-                user1.setUserId("user1");
-                user1.setName("Test User 1");
-                user1.setEmail("user1@digital-identity.dk");
-                user1.setRoles(Set.of(Roles.ADMINISTRATOR, Roles.SUPERUSER, Roles.USER));
-                user1.setPositions(Set.of(
+                User testAdmin = new User();
+				testAdmin.setActive(true);
+				testAdmin.setUserId("tstAdmn");
+				testAdmin.setName("Test Admin");
+				testAdmin.setEmail("testAdmin@digital-identity.dk");
+				testAdmin.setRoles(Set.of(
+						Roles.CREATE_ALL,
+						Roles.READ_ALL,
+						Roles.UPDATE_ALL,
+						Roles.DELETE_ALL,
+						Roles.SECTION_CONFIGURATION,
+						Roles.SECTION_ADMIN,
+						Roles.SECTION_ASSET,
+						Roles.SECTION_STANDARD,
+						Roles.SECTION_REGISTER,
+						Roles.SECTION_SUPPLIER,
+						Roles.SECTION_RISK_ASSESSMENT,
+						Roles.SECTION_DOCUMENT,
+						Roles.SECTION_TASK,
+						Roles.SECTION_REPORT));
+				testAdmin.setPositions(Set.of(
                     Position.builder()
                         .name("Tester")
                         .ouUuid(plejeOu.getUuid())
@@ -181,7 +196,42 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                         .ouUuid(itOu.getUuid())
                         .build()
                 ));
-                user1 = userDao.save(user1);
+				testAdmin = userDao.save(testAdmin);
+
+
+				User testUser = new User();
+				testUser.setActive(true);
+				testUser.setUserId("tstUser");
+				testUser.setName("Test User");
+				testUser.setEmail("testUser@digital-identity.dk");
+				testUser.setRoles(Set.of(
+						Roles.CREATE_OWNER_ONLY,
+						Roles.READ_OWNER_ONLY,
+						Roles.UPDATE_OWNER_ONLY,
+						Roles.DELETE_OWNER_ONLY,
+						Roles.SECTION_ASSET,
+						Roles.SECTION_STANDARD,
+						Roles.SECTION_REGISTER,
+						Roles.SECTION_SUPPLIER,
+						Roles.SECTION_RISK_ASSESSMENT,
+						Roles.SECTION_DOCUMENT,
+						Roles.SECTION_TASK,
+						Roles.SECTION_REPORT));
+
+				User testLimitedUser = new User();
+				testLimitedUser.setActive(true);
+				testLimitedUser.setUserId("tstLim");
+				testLimitedUser.setName("Test Limited User");
+				testLimitedUser.setEmail("testLimited@digital-identity.dk");
+				testLimitedUser.setRoles(Set.of(
+						Roles.CREATE_OWNER_ONLY,
+						Roles.READ_OWNER_ONLY,
+						Roles.UPDATE_OWNER_ONLY,
+						Roles.DELETE_OWNER_ONLY,
+						Roles.SECTION_ASSET,
+						Roles.SECTION_REGISTER,
+						Roles.SECTION_TASK,
+						Roles.SECTION_REPORT));
 
                 ///////////////////////////////////
                 // Suppliers
@@ -240,7 +290,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 doc1.setStatus(DocumentStatus.NOT_STARTED);
                 doc1.setRevisionInterval(DocumentRevisionInterval.EVERY_SECOND_YEAR);
                 doc1.setNextRevision(LocalDate.now());
-                doc1.setResponsibleUser(user1);
+                doc1.setResponsibleUser(testAdmin);
                 doc1 = documentDao.save(doc1);
 
                 Document doc2 = new Document();
@@ -250,7 +300,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 doc2.setDocumentType(DocumentType.GUIDE);
                 doc2.setStatus(DocumentStatus.READY);
                 doc2.setRevisionInterval(DocumentRevisionInterval.NONE);
-                doc2.setResponsibleUser(user1);
+                doc2.setResponsibleUser(testAdmin);
                 doc2 = documentDao.save(doc2);
 
 
@@ -263,7 +313,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t1.setNextDeadline(LocalDate.now().plusDays(10));
                 t1.setTaskType(TaskType.TASK);
                 t1.setResponsibleOu(nibisOu);
-                t1.setResponsibleUser(user1);
+                t1.setResponsibleUser(testAdmin);
                 t1.setNotifyResponsible(false);
                 t1.setName("Regndans");
                 t1.setIncludeInReport(false);
@@ -275,7 +325,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t2.setNextDeadline(LocalDate.now().plusDays(1));
                 t2.setTaskType(TaskType.TASK);
                 t2.setResponsibleOu(diOu);
-                t2.setResponsibleUser(user1);
+                t2.setResponsibleUser(testAdmin);
                 t2.setName("Kageordning");
                 t2.setNotifyResponsible(false);
                 t2.setIncludeInReport(false);
@@ -288,7 +338,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t3.setTaskType(TaskType.CHECK);
                 t3.setName("Opdater dokument");
                 t3.setResponsibleOu(hjelmOu);
-                t3.setResponsibleUser(user1);
+                t3.setResponsibleUser(testAdmin);
                 t3.setNotifyResponsible(false);
                 t3.setIncludeInReport(false);
                 taskDao.save(t3);
@@ -331,7 +381,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r3.setInformationObligation(InformationObligationStatus.YES);
                 r3.setResponsibleOus(List.of(hjelmOu));
                 r3.setCreatedBy("");
-                r3.setResponsibleUsers(List.of(user1));
+                r3.setResponsibleUsers(List.of(testAdmin));
                 r3.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-a", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-a", "register-gdpr-p6-e"));
                 r3.setDataProcessing(new DataProcessing());
                 r3.setStatus(RegisterStatus.NOT_STARTED);
@@ -383,7 +433,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 os2Compliance.setAssetType(itsystemAssetType);
                 os2Compliance.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.ON_GOING);
                 os2Compliance.setDescription("En beskrivelse");
-                os2Compliance.setResponsibleUsers(List.of(user1));
+                os2Compliance.setResponsibleUsers(List.of(testAdmin));
                 os2Compliance.setName("OS2compliance");
                 os2Compliance.setAssetStatus(AssetStatus.NOT_STARTED);
                 os2Compliance.setCriticality(Criticality.CRITICAL);
@@ -411,7 +461,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset1.setAssetType(itsystemAssetType);
                 asset1.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NOT_RELEVANT);
                 asset1.setDescription("En beskrivelse");
-                asset1.setResponsibleUsers(List.of(user1));
+                asset1.setResponsibleUsers(List.of(testAdmin));
                 asset1.setName("Asset 1");
                 asset1.setAssetStatus(AssetStatus.NOT_STARTED);
                 asset1.setCriticality(Criticality.CRITICAL);
@@ -439,7 +489,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset2.setAssetType(itsystemAssetType);
                 asset2.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.YES);
                 asset2.setDescription("En beskrivelse");
-                asset2.setResponsibleUsers(List.of(user1));
+                asset2.setResponsibleUsers(List.of(testAdmin));
                 asset2.setName("Asset 2");
                 asset2.setAssetStatus(AssetStatus.ON_GOING);
                 asset2.setCriticality(Criticality.CRITICAL);
@@ -460,7 +510,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset3.setAssetType(itsystemAssetType);
                 asset3.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.YES);
                 asset3.setDescription("En beskrivelse");
-                asset3.setResponsibleUsers(List.of(user1));
+                asset3.setResponsibleUsers(List.of(testAdmin));
                 asset3.setName("Asset 3");
                 asset3.setAssetStatus(AssetStatus.READY);
                 asset3.setCriticality(Criticality.NON_CRITICAL);

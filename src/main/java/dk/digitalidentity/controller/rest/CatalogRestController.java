@@ -4,7 +4,7 @@ import dk.digitalidentity.mapping.ThreatMapper;
 import dk.digitalidentity.model.dto.ThreatCatalogThreatDTO;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.RequireAdministrator;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

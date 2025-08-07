@@ -3,7 +3,7 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;

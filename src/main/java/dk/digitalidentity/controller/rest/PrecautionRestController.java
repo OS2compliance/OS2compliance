@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.mapping.ThreatMapper;
 import dk.digitalidentity.model.entity.Precaution;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.RequireAdministrator;
 import dk.digitalidentity.service.PrecautionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

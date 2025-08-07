@@ -1,7 +1,7 @@
 package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.RequireAdministrator;
 import dk.digitalidentity.service.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;

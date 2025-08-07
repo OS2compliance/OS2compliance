@@ -7,7 +7,7 @@ import dk.digitalidentity.model.dto.ChoiceListDTO;
 import dk.digitalidentity.model.dto.ChoiceValueDTO;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

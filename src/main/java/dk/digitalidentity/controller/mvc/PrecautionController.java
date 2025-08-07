@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.RequireAdministrator;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RelationService;
 import lombok.RequiredArgsConstructor;

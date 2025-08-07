@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -14,13 +14,12 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
 
 @Controller
-@RequireAdministrator
+@RequireAdmin
 @RequestMapping("admin/choicelists")
 @RequiredArgsConstructor
 public class CustomChoiceListController {
