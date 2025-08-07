@@ -42,6 +42,7 @@
 	<script th:if="${sweetalerts == true}" th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.js}" defer></script>
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.worker.js}" defer></script>
+    <script th:if="${chart == true}" th:src="@{/vendor/chartjs/chart.min.js}"></script>
 
     <script type="module" th:if="${textEditor == true}" th:src="@{/js/create-ckeditor.js}" defer></script>
     <script type="module" th:if="${imageTextEditor == true}" th:src="@{/js/create-image-ckeditor.js}" defer></script>

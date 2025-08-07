@@ -67,7 +67,7 @@
 
 
                 <input th:field="${asset.id}" type="hidden">
-                <div th:replace="~{fragments/dataprocessing :: dataProcessing(${dpChoices}, ${asset.dataProcessing}, 'true')}"></div>
+                <div th:replace="~{dataProcessing/dataprocessing :: dataProcessing(${dpChoices}, ${asset.dataProcessing}, 'true')}"></div>
 
             </div>
         </div>

@@ -11,6 +11,8 @@ import java.time.LocalDateTime;
 import java.util.Collection;
 import java.util.Set;
 
+import java.util.List;
+
 public interface ThreatAssessmentDao extends JpaRepository<ThreatAssessment, Long> {
 
     long countByThreatCatalog(final ThreatCatalog threatCatalog);
@@ -75,4 +77,6 @@ public interface ThreatAssessmentDao extends JpaRepository<ThreatAssessment, Lon
 			LocalDateTime startDate,
 			LocalDateTime endDate
 	);
+	List<ThreatAssessment> findByDeletedFalseAndThreatAssessmentTypeIn(List<ThreatAssessmentType> types);
+	List<ThreatAssessment> findAllByDeletedFalse();
 }

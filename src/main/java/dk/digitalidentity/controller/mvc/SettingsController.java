@@ -64,6 +64,7 @@ public class SettingsController {
     @Transactional
     @PostMapping("update")
     public String update(@ModelAttribute final SettingsDTO settings) {
+        if (!settings.settingsList.isEmpty()) {
         //For notifications, change null values to "false", to ensure changes are not dropped
         settings.getSettingsList()
             .forEach(setting -> {
@@ -72,7 +73,6 @@ public class SettingsController {
                 }
             });
 
-        if (!settings.settingsList.isEmpty()) {
             settings.settingsList.removeIf(x -> Objects.isNull(x.getSettingValue()) || x.getSettingValue().isEmpty());
             final var res = settingsService.saveAll(settings.settingsList);
         }
@@ -87,7 +87,7 @@ public class SettingsController {
         if (url.contains("risks")) return "risks";
         if (url.contains("documents")) return "documents";
         if (url.contains("tasks")) return "tasks";
-        if (url.contains("reports")) return "tasks";
+        if (url.contains("reports")) return "reports";
 
         return "";
     }

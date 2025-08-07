@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.UserProperty;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.service.AssetService;
@@ -37,6 +38,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -192,9 +194,24 @@ public class KitosSyncService {
         if (!valid) {
             return;
         }
-        addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
-        setAssetOwner(asset, itSystemUsageResponseDTO);
-        setAssetManagers(asset, itSystemUsageResponseDTO);
+
+		// Map enum from integration to internal
+		ContainsAITechnologyEnum internalStatus;
+		try {
+			var dtoEnum = itSystemUsageResponseDTO.getGeneral().getContainsAITechnology();
+			if (dtoEnum == null) {
+				internalStatus = ContainsAITechnologyEnum.UNDECIDED;
+			} else {
+				internalStatus = ContainsAITechnologyEnum.valueOf(dtoEnum.name());
+			}
+		} catch (IllegalArgumentException e) {
+			internalStatus = ContainsAITechnologyEnum.UNDECIDED;
+		}
+		asset.setAiStatus(internalStatus);
+
+		addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
+		setAssetOwner(asset, itSystemUsageResponseDTO);
+		setAssetManagers(asset, itSystemUsageResponseDTO);
 		setAssetOperationResponsible(asset,  itSystemUsageResponseDTO);
 		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
 
@@ -310,6 +327,7 @@ public class KitosSyncService {
         asset.setUpdatedAt(responseDTO.getLastModified().toLocalDateTime());
         asset.setName(responseDTO.getName());
         asset.setDescription(responseDTO.getDescription());
+		asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
         asset.setAssetType(choiceService.getValue(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID).orElseThrow());
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
         asset.setSupplier(supplier);

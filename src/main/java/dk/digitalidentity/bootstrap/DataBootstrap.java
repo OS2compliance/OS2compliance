@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
+import dk.digitalidentity.model.entity.enums.ReportSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
 import dk.digitalidentity.service.ChoiceService;
@@ -106,7 +107,26 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(23, this::seedV23);
         incrementAndPerformIfVersion(24, this::seedV24);
         incrementAndPerformIfVersion(25, this::seedV25);
+        incrementAndPerformIfVersion(26, this::seedV26);
     }
+
+    private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
+        final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+        transactionTemplate.execute(status -> {
+            final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
+            if (currentVersion == version) {
+                applier.run();
+                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
+            }
+            return 0;
+        });
+    }
+
+	private void seedV26 () {
+		for (ReportSetting setting : ReportSetting.values()) {
+			settingsService.createSetting(setting.getKey(), "", "report", true);
+		}
+	}
 
 	private void seedV25 () {
 		// Update each of these specific lists to be editable
@@ -123,23 +143,6 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "systemansvarlig" , "alias", true);
 		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "driftsansvarlig" , "alias", true);
 	}
-
-    @SneakyThrows
-    private void seedV20() {
-
-    }
-
-    private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
-        final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-        transactionTemplate.execute(status -> {
-            final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
-            if (currentVersion == version) {
-                applier.run();
-                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
-            }
-            return 0;
-        });
-    }
 
 	private void seedV24 () {
 		ChoiceList choiceList = choiceService.saveChoiceList(ChoiceList.builder()
@@ -186,6 +189,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         settingsService.createSetting(NotificationSetting.ONDAY.getValue(), "false" , "notification", true);
         settingsService.createSetting(NotificationSetting.EVERYSEVENDAYSAFTER.getValue(), "false" , "notification", true);
     }
+
+	@SneakyThrows
+	private void seedV20() {
+
+	}
 
     private void seedV19() {
         try {
