@@ -80,12 +80,11 @@ function downloadBlob(blob, fileName) {
 
 /**
  * Helper function to get current filters from a grid
- * You'll need to implement this based on your Grid.js setup
+ * TODO: Implement the rest
  */
 function getCurrentGridFilters(gridId) {
     const filters = {};
 
-    // Example implementation - adapt to your specific setup
     const gridContainer = document.getElementById(gridId);
     if (gridContainer) {
         // Get from search inputs
@@ -112,13 +111,9 @@ function getCurrentGridFilters(gridId) {
 
 /**
  * Helper function to get current sort from a grid
- * You'll need to implement this based on your Grid.js setup
+ * TODO: Complete implementation
  */
 function getCurrentGridSort(gridId) {
-    // This depends on how you track sorting state
-    // You might store it in data attributes, variables, or extract from Grid.js instance
-
-    // Example - you might store sort state in data attributes
     const gridContainer = document.getElementById(gridId);
     if (gridContainer) {
         return {
