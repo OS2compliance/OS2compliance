@@ -5,8 +5,7 @@ import dk.digitalidentity.mapping.UserMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.UserDTO;
 import dk.digitalidentity.security.annotations.RequireAuthenticated;
-import dk.digitalidentity.security.annotations.crud.RequireReadAll;
-import dk.digitalidentity.security.annotations.sections.RequireAdmin;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +27,7 @@ public class UserRestController {
     private final UserMapper userMapper;
 
 
+	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
     public PageDTO<UserDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());
