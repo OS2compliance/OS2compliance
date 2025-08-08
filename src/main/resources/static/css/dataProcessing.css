@@ -1,0 +1,10 @@
+.infoReceiversDiv {
+    gap: .25rem;
+    flex-wrap: wrap;
+    display: flex;
+}
+
+.infoReceiverCommentDiv {
+    display: flex;
+    flex-direction: column;
+}

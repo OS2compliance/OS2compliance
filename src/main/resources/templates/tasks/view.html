@@ -25,6 +25,11 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createStandardService.openStandardModal()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny Standard
+                        </button>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
                         <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>

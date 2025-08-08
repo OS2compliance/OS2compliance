@@ -17,4 +17,5 @@ public class RiskDTO {
 	private int rt;
 	private int ot;
 	private int st;
+	private int sa;
 }

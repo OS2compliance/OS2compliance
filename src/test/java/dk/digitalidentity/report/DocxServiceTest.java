@@ -24,6 +24,7 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.data_processing.DataProcessingInfoReceiver;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
@@ -314,12 +315,25 @@ public class DocxServiceTest {
     }
 
     private List<DataProcessingCategoriesRegistered> createRegisteredCategories() {
+
+        DataProcessingInfoReceiver rec1 = DataProcessingInfoReceiver.builder()
+                .choiceValue(ChoiceValue.builder()
+                        .identifier("dp-receiver-lawyers")
+                        .build())
+                .build();
+        DataProcessingInfoReceiver rec2 = DataProcessingInfoReceiver.builder()
+                .choiceValue(ChoiceValue.builder()
+                        .identifier("dp-receiver-citizens")
+                        .build())
+                .build();
+
+
         return List.of(
             DataProcessingCategoriesRegistered.builder()
                 .personCategoriesInformationIdentifiers(Set.of("dp-person-categories-sensitive","dp-person-categories-offences","dp-person-categories-classified","dp-person-categories-sensitive-etnicity"))
                 .personCategoriesRegisteredIdentifier("dp-categories-registered-adult")
                 .informationPassedOn(InformationPassedOn.YES)
-                .informationReceivers(Set.of("dp-receiver-lawyers","dp-receiver-citizens"))
+                .informationReceivers(Set.of(rec1, rec2))
                 .build(),
             DataProcessingCategoriesRegistered.builder()
                 .personCategoriesInformationIdentifiers(Set.of("dp-person-categories-sensitive","dp-person-categories-sensitive-religion","dp-person-categories-sensitive-union","dp-person-categories-regular"))

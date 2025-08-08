@@ -80,6 +80,24 @@ function OversightService() {
                 oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
                     checkInputField(oversightResponsibleUserChoices);
                 });
+
+                const form = document.getElementById("createEditOversightForm");
+                if (form) {
+                    form.addEventListener("submit", function(event) {
+                        event.preventDefault();
+
+                        const textField = document.getElementById("oversightConclusion");
+                        const message = document.getElementById("conclusionAmountExceeded");
+
+                        if (textField.value.length > 4096) {
+                            textField.classList.add('is-invalid');
+                        }
+                        else {
+                            textField.classList.remove('is-invalid');
+                            form.submit();
+                        }
+                    });
+                }
             })
             .catch(defaultErrorHandler)
     }

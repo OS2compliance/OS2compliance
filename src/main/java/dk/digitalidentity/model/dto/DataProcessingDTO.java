@@ -22,4 +22,5 @@ public class DataProcessingDTO {
     private String deletionProcedureLink;
     private String elaboration;
     private String typesOfPersonalInformationFreetext;
+	private boolean deletionAppliesToAll;
 }

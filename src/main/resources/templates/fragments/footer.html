@@ -18,7 +18,12 @@
     <script th:src="@{/js/toast-service.js}" defer></script>
 
     <div th:if="${taskDialog == true}" class="modal fade" id="taskFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
+    <div th:if="${taskDialog == true}" class="modal fade" id="standardFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
+    <div th:if="${taskDialog == true}" class="modal fade" id="sectionFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
+    <div th:if="${taskDialog == true}" class="modal fade" id="headerFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <script th:if="${taskDialog == true}" th:src="@{/js/task/create-task-service.js}" defer></script>
+    <script th:if="${taskDialog == true}" th:src="@{/js/standards/create-standard-service.js}" defer></script>
+    <script th:if="${taskDialog == true}" th:src="@{/js/standards/sections/create-section-service.js}" defer></script>
     <script th:src="@{/js/settings/settings-service.js}" defer></script>
 
 	<script th:src="@{/js/common.js}" defer></script>
@@ -42,6 +47,7 @@
 	<script th:if="${sweetalerts == true}" th:src="@{/vendor/sweetalert2/sweetalert2.all.min.js}" defer></script>
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.js}" defer></script>
     <script th:if="${pdf == true}" th:src="@{/vendor/pdfjs/pdf.worker.js}" defer></script>
+    <script th:if="${chart == true}" th:src="@{/vendor/chartjs/chart.min.js}"></script>
 
     <script type="module" th:if="${textEditor == true}" th:src="@{/js/create-ckeditor.js}" defer></script>
     <script type="module" th:if="${imageTextEditor == true}" th:src="@{/js/create-image-ckeditor.js}" defer></script>
