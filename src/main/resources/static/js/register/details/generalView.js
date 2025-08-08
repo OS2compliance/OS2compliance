@@ -6,6 +6,7 @@ let userChoices;
 let customResponsibleUserChoices;
 let registerRegardingChoices;
 let kleService
+let dataProtectionOfficerChoice;
 
 /**
  * Functionality related to the "Generelt" page of the register detail view
@@ -26,6 +27,7 @@ export default function RegisterGeneralService() {
         ouChoices = choiceService.initOUSelect('ouSelect', false);
         userChoices = choiceService.initUserSelect('userSelect', false);
         customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
+        dataProtectionOfficerChoice = choiceService.initUserSelect('dataProtectionOfficer', false);
 
         const registerRegardingElement = document.getElementById('registerRegarding');
         registerRegardingChoices = initSelect(registerRegardingElement);
@@ -111,7 +113,6 @@ export default function RegisterGeneralService() {
         const criticality = document.querySelector('#criticality');
         const emergencyPlanLink = document.querySelector('#emergencyPlanLink');
         const informationResponsible = document.querySelector('#informationResponsible');
-        const dataProtectionOfficer = document.querySelector('#dataProtectionOfficer');
         const registerRegarding = document.querySelector('#registerRegarding');
         const status = document.querySelector('#status');
         const securityPrecautions = document.getElementById('securityPrecautions')
@@ -128,7 +129,6 @@ export default function RegisterGeneralService() {
         nameField.disabled = !editable;
         registerRegarding.readOnly = !editable;
         informationResponsible.readOnly = !editable;
-        dataProtectionOfficer.readOnly = !editable;
         criticality.disabled = !editable;
         status.disabled = !editable;
         securityPrecautions.readOnly = !editable;
@@ -142,6 +142,7 @@ export default function RegisterGeneralService() {
             registerRegardingChoices.disable();
             kleService.mainGroupSelectorInstance.disable();
             kleService.groupSelectorInstance.disable();
+            dataProtectionOfficerChoice.disable()
         } else {
             userChoices.enable();
             customResponsibleUserChoices.enable();
@@ -150,6 +151,7 @@ export default function RegisterGeneralService() {
             registerRegardingChoices.enable();
             kleService.mainGroupSelectorInstance.enable();
             kleService.groupSelectorInstance.enable();
+            dataProtectionOfficerChoice.enable()
         }
     }
 
