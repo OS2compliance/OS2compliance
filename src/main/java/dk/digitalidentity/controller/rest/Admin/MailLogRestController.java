@@ -43,7 +43,7 @@ public class MailLogRestController {
 	public PageDTO<MailLogGridDTO> list(
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
-			@RequestParam(value = "order", required = false, defaultValue = "orderAt") String sortColumn,
+			@RequestParam(value = "order", required = false, defaultValue = "sentAt") String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "DESC") String sortDirection,
 			@RequestParam Map<String, String> filters // Dynamic filters for search fields
 	) {
