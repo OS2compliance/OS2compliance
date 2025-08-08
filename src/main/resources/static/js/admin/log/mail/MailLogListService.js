@@ -89,7 +89,10 @@ export default class MailLogListService {
             .render(document.getElementById(this.#tableIdentifier));
 
         // Initialized search, pagination and so forth. Mutates specific parts of table config
-        new CustomGridFunctions(grid, this.#searchRestUrl, this.#tableIdentifier)
+        new CustomGridFunctions(grid, this.#searchRestUrl, this.#tableIdentifier, {
+            sortDirection: 'DESC',
+            sortField: 'sentAt',
+        })
     }
 
     #dateFormatter(rawDate) {

@@ -1,7 +1,7 @@
 const createStandardService = new CreateStandardService();
-let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 function CreateStandardService() {
+    token = document.getElementsByName("_csrf")[0].getAttribute("content");
     this.standardModalDialog = null;
 
     this.openStandardModal = function(id, edit=false) {
