@@ -14,7 +14,6 @@
                 if (response.ok) {
                     response.text()
                         .then(data => {
-                            console.log(data)
                             document.getElementById('formDialog').innerHTML = data;
                             formLoaded();
                             //initFormValidationForForm('formDialog');

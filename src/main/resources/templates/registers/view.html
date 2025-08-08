@@ -6,7 +6,7 @@
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/js/data-processing-component.js}" defer></script>
-<script th:src="@{/js/register/risk.js}" defer></script>
+<script th:src="@{/js/risk/risk.js}" defer></script>
 
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <link rel="stylesheet" th:href="@{/css/dataProcessing.css}" />
@@ -24,7 +24,7 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/registers}">Fortegnelse</a></li>
-                                <li class="breadcrumb-item active" aria-current="page" id="breadcrump-register-name" th:data-register-name="${register.name}" th:text="${#strings.abbreviate(register.name, 25)}"></li>
+                                <li class="breadcrumb-item active" aria-current="page" id="breadcrump-register-name" th:data-register-id="${register.id}" th:data-register-name="${register.name}" th:text="${#strings.abbreviate(register.name, 25)}"></li>
                             </ol>
                         </nav>
                         <div class="row mt-4 mb-3">

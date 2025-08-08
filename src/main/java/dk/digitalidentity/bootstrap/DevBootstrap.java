@@ -30,10 +30,10 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
@@ -43,11 +43,9 @@ import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -385,6 +383,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 os2Compliance.setDescription("En beskrivelse");
                 os2Compliance.setResponsibleUsers(List.of(user1));
                 os2Compliance.setName("OS2compliance");
+				os2Compliance.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
                 os2Compliance.setAssetStatus(AssetStatus.NOT_STARTED);
                 os2Compliance.setCriticality(Criticality.CRITICAL);
                 os2Compliance.setEmergencyPlanLink("https://google.com");
@@ -414,6 +413,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset1.setResponsibleUsers(List.of(user1));
                 asset1.setName("Asset 1");
                 asset1.setAssetStatus(AssetStatus.NOT_STARTED);
+				asset1.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
                 asset1.setCriticality(Criticality.CRITICAL);
                 asset1.setEmergencyPlanLink("https://google.com");
                 asset1.setReEstablishmentPlanLink("https://os2compliance.dk/reboot");
@@ -441,6 +441,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset2.setDescription("En beskrivelse");
                 asset2.setResponsibleUsers(List.of(user1));
                 asset2.setName("Asset 2");
+				asset2.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
                 asset2.setAssetStatus(AssetStatus.ON_GOING);
                 asset2.setCriticality(Criticality.CRITICAL);
                 asset2.setEmergencyPlanLink("https://google.com");
@@ -462,6 +463,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 asset3.setDescription("En beskrivelse");
                 asset3.setResponsibleUsers(List.of(user1));
                 asset3.setName("Asset 3");
+				asset3.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
                 asset3.setAssetStatus(AssetStatus.READY);
                 asset3.setCriticality(Criticality.NON_CRITICAL);
                 asset3.setEmergencyPlanLink("https://google.com");

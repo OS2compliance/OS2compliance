@@ -37,6 +37,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
@@ -57,6 +58,7 @@ import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -64,6 +66,7 @@ import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
@@ -79,6 +82,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
+import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -124,6 +128,7 @@ public class AssetsController {
     private final ThreatAssessmentService threatAssessmentService;
     private final AssetOversightService assetOversightService;
     private final AssetService assetService;
+	private final SettingsService settingsService;
     private final TaskService taskService;
     private final DPIATemplateSectionService dpiaTemplateSectionService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
@@ -174,6 +179,7 @@ public class AssetsController {
             return "redirect:/assets";
         } else {
             asset.setAssetStatus(AssetStatus.NOT_STARTED);
+			asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
             asset.setCriticality(Criticality.NON_CRITICAL);
             asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
             final Asset newAsset = assetService.create(asset);
@@ -308,6 +314,9 @@ public class AssetsController {
             model.addAttribute("unfinishedTasks", taskService.buildRelatedTasks(threatAssessments, false));
         }
 
+		model.addAttribute("customSystemOwnerInput", settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME));
+		model.addAttribute("customSystemResponsibleInput", settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
+		model.addAttribute("customSystemOperationResponsibleInput", settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
         model.addAttribute("allAssetTypes", choiceService.getAssetTypeChoiceList().getValues());
 		return "assets/view";
 	}
@@ -499,6 +508,8 @@ public class AssetsController {
         existingAsset.setArchive(asset.getArchive());
         existingAsset.setAssetStatus(asset.getAssetStatus());
         existingAsset.setAssetCategory(asset.getAssetCategory());
+		existingAsset.setAiStatus(asset.getAiStatus());
+		existingAsset.setAiRisk(asset.getAiRisk());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
@@ -618,7 +629,7 @@ public class AssetsController {
         return "redirect:/assets/" + asset.getId();
     }
 
-    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
+    record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
     }
     @Transactional
     @PostMapping("oversight/edit")
