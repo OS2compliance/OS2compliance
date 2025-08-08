@@ -561,6 +561,43 @@ public class ThreatAssessmentService {
 		return response;
 	}
 
+	public void handleThreatCatalogChanges(ThreatAssessment assessment, List<ThreatCatalog> newCatalogs) {
+		if (newCatalogs == null) {
+			newCatalogs = new ArrayList<>();
+		}
+
+		List<ThreatCatalog> currentCatalogs = assessment.getThreatCatalogs();
+		if (currentCatalogs == null) {
+			assessment.setThreatCatalogs(newCatalogs);
+			return;
+		}
+
+		Set<String> newCatalogIds = newCatalogs.stream()
+				.map(ThreatCatalog::getIdentifier)
+				.collect(Collectors.toSet());
+
+		Set<String> catalogIdsToRemove = currentCatalogs.stream()
+				.map(ThreatCatalog::getIdentifier)
+				.filter(id -> !newCatalogIds.contains(id))
+				.collect(Collectors.toSet());
+
+		// remove catalogs and responses
+		if (!catalogIdsToRemove.isEmpty()) {
+			threatAssessmentResponseDao.deleteResponsesByAssessmentAndCatalogIdentifiers(
+					assessment.getId(), catalogIdsToRemove);
+			currentCatalogs.removeIf(catalog -> catalogIdsToRemove.contains(catalog.getIdentifier()));
+		}
+
+		// add new catalogs
+		Set<String> currentCatalogIds = currentCatalogs.stream()
+				.map(ThreatCatalog::getIdentifier)
+				.collect(Collectors.toSet());
+
+		newCatalogs.stream()
+				.filter(catalog -> !currentCatalogIds.contains(catalog.getIdentifier()))
+				.forEach(currentCatalogs::add);
+	}
+
     public byte[] getThreatAssessmentPdf(ThreatAssessment threatAssessment) throws IOException {
         var html = getThreatAssessmentHtml(threatAssessment);
         return convertHtmlToPdf(html);

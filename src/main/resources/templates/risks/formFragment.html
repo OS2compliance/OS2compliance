@@ -43,9 +43,9 @@
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="threatCatalog" class="col-sm-4 col-form-label">Trusselskatalog</label>
+                        <label for="threatCatalogSelect" class="col-sm-4 col-form-label">Trusselskatalog</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select" th:field="*{threatCatalog}" id="threatCatalog" required>
+                            <select class="choices__input form-select" data-type="select-multiple" data-trigger="" th:field="*{threatCatalogs}" id="threatCatalogSelect" multiple>
                                 <option th:each="catalog : ${threatCatalogs}"
                                         th:value="${catalog.identifier}" th:text="${catalog.name}"></option>
                             </select>
@@ -133,7 +133,7 @@
                         </div>
                     </div>
                     <div class="row mt-3" id="presentSelectRow">
-                        <label for="assetSelect" class="col-sm-4 col-form-label">Tilstede på møde</label>
+                        <label for="presentAtMeetingSelect" class="col-sm-4 col-form-label">Tilstede på møde</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="presentAtMeeting" data-type="select-multiple"
                                     data-trigger="" id="presentAtMeetingSelect" hidden="" tabindex="-1" multiple></select>

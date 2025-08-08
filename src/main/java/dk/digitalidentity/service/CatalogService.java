@@ -56,7 +56,7 @@ public class CatalogService {
     }
 
     public boolean inUse(final ThreatCatalog threatCatalog) {
-        return threatAssessmentDao.countByThreatCatalog(threatCatalog) > 0;
+        return threatAssessmentDao.countByThreatCatalogsContains(threatCatalog) > 0;
     }
 
     @Transactional

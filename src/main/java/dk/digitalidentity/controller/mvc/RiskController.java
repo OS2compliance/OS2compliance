@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentType;
@@ -153,6 +154,7 @@ public class RiskController {
 			model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
 		}
 
+		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
         return "risks/editForm";
     }
@@ -180,6 +182,10 @@ public class RiskController {
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
         editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
+
+		// Handle threatCatalog changes
+		threatAssessmentService.handleThreatCatalogChanges(editedAssessment, assessment.getThreatCatalogs());
+
         return "redirect:/risks";
     }
 

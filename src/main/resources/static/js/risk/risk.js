@@ -282,6 +282,54 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
         .catch(error => toastService.error(error));
 }
 
+function initSelectWithConfirmation(element, containerInner = 'form-control') {
+    let choices = new Choices(element, {
+        searchChoices: false,
+        removeItemButton: true,
+        allowHTML: true,
+        searchFloor: 0,
+        searchPlaceholderValue: 'Søg...',
+        itemSelectText: 'Vælg',
+        noChoicesText: 'Søg...',
+        classNames: {
+            containerInner: containerInner
+        },
+        duplicateItemsAllowed: false,
+    });
+
+    element.addEventListener("removeItem", function(event) {
+        event.preventDefault(); // Stop the removal temporarily
+
+        const removedItem = event.detail;
+        const removedCatalogName = removedItem.label;
+
+        Swal.fire({
+            title: 'Bekræft fjernelse',
+            text: `Er du sikker på at du vil fjerne trusselskataloget "${removedCatalogName}"? Alle besvarelser relateret til dette katalog vil blive slettet.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ja, fjern det!',
+            cancelButtonText: 'Annuller'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // User confirmed - actually remove the item
+                choices.removeActiveItemsByValue(removedItem.value);
+            } else {
+                // User cancelled - restore the item by re-adding it
+                choices.setChoiceByValue(removedItem.value);
+            }
+        });
+    }, false);
+
+    element.addEventListener("change", function(event) {
+        choices.hideDropdown();
+    }, false);
+
+    return choices;
+}
+
 function EditRiskService() {
     this.getScopedElementById = function(id) {
         return this.modalContainer.querySelector(`#${id}`);
@@ -323,6 +371,9 @@ function EditRiskService() {
         if (assetSelect !== null) {
             this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         }
+
+        const catalogSelect = this.getScopedElementById('editThreatCatalogSelect');
+        initSelectWithConfirmation(catalogSelect);
 
         this.editAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.editAssessmentModal.show();
@@ -446,6 +497,9 @@ function CreateRiskService() {
         if (presentSelect !== null) {
             this.presentSelect = choiceService.initUserSelect('presentAtMeetingSelect');
         }
+
+        const catalogSelect = this.getScopedElementById('threatCatalogSelect');
+        initSelect(catalogSelect);
 
         let societyCheckbox = this.getScopedElementById("society");
         let authenticityCheckbox = this.getScopedElementById("authenticity");
