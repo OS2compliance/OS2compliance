@@ -171,6 +171,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				testAdmin.setName("Test Admin");
 				testAdmin.setEmail("testAdmin@digital-identity.dk");
 				testAdmin.setRoles(Set.of(
+						Roles.ADMINISTRATOR,
 						Roles.CREATE_ALL,
 						Roles.READ_ALL,
 						Roles.UPDATE_ALL,
@@ -204,6 +205,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				testUser.setName("Test User");
 				testUser.setEmail("testUser@digital-identity.dk");
 				testUser.setRoles(Set.of(
+						Roles.USER,
 						Roles.CREATE_OWNER_ONLY,
 						Roles.READ_OWNER_ONLY,
 						Roles.UPDATE_OWNER_ONLY,
@@ -216,6 +218,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 						Roles.SECTION_DOCUMENT,
 						Roles.SECTION_TASK,
 						Roles.SECTION_REPORT));
+				testUser = userDao.save(testUser);
 
 				User testLimitedUser = new User();
 				testLimitedUser.setActive(true);
@@ -223,6 +226,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				testLimitedUser.setName("Test Limited User");
 				testLimitedUser.setEmail("testLimited@digital-identity.dk");
 				testLimitedUser.setRoles(Set.of(
+						Roles.LIMITED_USER,
 						Roles.CREATE_OWNER_ONLY,
 						Roles.READ_OWNER_ONLY,
 						Roles.UPDATE_OWNER_ONLY,
@@ -231,6 +235,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 						Roles.SECTION_REGISTER,
 						Roles.SECTION_TASK,
 						Roles.SECTION_REPORT));
+				testLimitedUser = userDao.save(testLimitedUser);
 
                 ///////////////////////////////////
                 // Suppliers

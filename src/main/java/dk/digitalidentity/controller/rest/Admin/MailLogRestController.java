@@ -4,7 +4,8 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.dao.grid.MailLogGridDao;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.grid.MailLogGrid;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,7 +24,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/admin/log/mail")
-@RequireAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 public class MailLogRestController {
 	private final MailLogGridDao mailLogGridDao;
@@ -37,6 +38,7 @@ public class MailLogRestController {
 	) {
 	}
 
+	@RequireReadAll
 	@PostMapping("list")
 	public PageDTO<MailLogGridDTO> list(
 			@RequestParam(value = "page", defaultValue = "0") int page,
