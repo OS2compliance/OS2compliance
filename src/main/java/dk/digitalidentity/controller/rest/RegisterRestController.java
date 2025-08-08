@@ -8,7 +8,9 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -20,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -34,6 +38,7 @@ public class RegisterRestController {
     private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
+	private final ExcelExportService excelExportService;
 
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
@@ -41,7 +46,7 @@ public class RegisterRestController {
             @RequestParam(value = "limit", defaultValue = "50") int limit,
             @RequestParam(value = "order", required = false) String sortColumn,
             @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-            @RequestParam Map<String, String> filters // Dynamic filters for search fields
+            @RequestParam Map<String, String> filters
     ) {
         Page<RegisterGrid> registers =  registerGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, RegisterGrid.class),
@@ -52,6 +57,42 @@ public class RegisterRestController {
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
     }
+
+	@PostMapping("/export/list")
+	public Object list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
+			HttpServletResponse response
+	) throws IOException {
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<RegisterGrid> allRegisters = registerGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RegisterGrid.class),
+					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection), // Get ALL records
+					RegisterGrid.class
+			);
+
+			List<RegisterDTO> allData = mapper.toDTO(allRegisters.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null; // Response is handled by exportToExcel
+		}
+
+		// Normal mode - return paginated JSON
+		Page<RegisterGrid> registers = registerGridDao.findAllWithColumnSearch(
+				validateSearchFilters(filters, RegisterGrid.class),
+				buildPageable(page, limit, sortColumn, sortDirection),
+				RegisterGrid.class
+		);
+
+		assert registers != null;
+		return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
+	}
 
     @PostMapping("list/{id}")
     public PageDTO<RegisterDTO> list(
