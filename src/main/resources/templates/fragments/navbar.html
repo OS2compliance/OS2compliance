@@ -6,7 +6,7 @@
 <head th:replace="~{fragments/header :: head (burgermenu = true)}"></head>
 <body>
 <nav th:fragment="main" id="mainnav-container" class="mainnav">
-    <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="mainnav__inner" id="inner">
+    <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" class="mainnav__inner" id="inner">
         <div class="mainnav__top-content scrollable-content pb-2" id="top-content">
             <div class="mainnav__category py-3">
                 <ul class="mainnav__menu nav flex-column" id="mainnav-menu">
@@ -17,20 +17,20 @@
                             class="nav-label mininav-content ms-1">Dashboard</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" sec:authorize="@accessEvaluator.standard()">
                         <a th:href="@{/standards}" class="nav-link mininav-toggle collapsed"
                            th:classappend="${page} == 'standarder' ? 'active' : ''">
                             <i class="pli-globe fs-5 me-2 nav-icons"></i> <span
                             class="nav-label mininav-content ms-1">Standarder</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" sec:authorize="@accessEvaluator.register()">
                         <a th:href="@{/registers}" class="nav-link mininav-toggle collapsed"
                            th:classappend="${page} == 'fortegnelse' ? 'active' : ''">
                             <i class="pli-address-book-2 fs-5 me-2 nav-icons"></i> <span class="nav-label mininav-content ms-1">Fortegnelse</span>
                         </a>
                     </li>
-                    <li class="nav-item has-sub">
+                    <li class="nav-item has-sub" sec:authorize="@accessEvaluator.asset()">
                         <a href="#" class="nav-link mininav-toggle collapsed"
                            th:classappend="${page == 'aktiver' || page == 'dbs_oversight' || page == 'dbs_aktiver'  ? 'active' : ''}">
                             <i class="pli-crane fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Aktiver</span>
@@ -50,13 +50,13 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" sec:authorize="@accessEvaluator.supplier()">
                         <a th:href="@{/suppliers}" class="nav-link mininav-toggle collapsed"
                            th:classappend="${page} == 'leverandører' ? 'active' : ''">
                             <i class="pli-office fs-5 me-2 nav-icons"></i> <span class="nav-label mininav-content ms-1">Leverandører</span>
                         </a>
                     </li>
-                    <li class="nav-item has-sub">
+                    <li class="nav-item has-sub" sec:authorize="@accessEvaluator.risk()">
                         <a href="#" class="mininav-toggle nav-link collapsed"
                            th:classappend="${page == 'risikovurderinger' || page == 'catalogs' || page == 'dpia_template' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
                             <i class="pli-flashlight fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Risikostyring</span>
@@ -70,38 +70,38 @@
                                 <a th:href="@{/risks/dashboard}" class="nav-link"
                                    th:classappend="${page} == 'riskDashboard' ? 'active' : ''">Trusselsbillede</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
                                 <a th:href="@{/dpia}" class="nav-link"
                                    th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyser</a>
                             </li>
-                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
                                 <a th:href="@{/precautions}" class="nav-link"
                                    th:classappend="${page} == 'precautions' ? 'active' : ''">Foranstaltninger</a>
                             </li>
-                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
                                 <a th:href="@{/catalogs}" class="nav-link"
                                    th:classappend="${page} == 'catalogs' ? 'active' : ''">Trusselskataloger</a>
                             </li>
-                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator')">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
                                 <a th:href="@{/assets/dpia/schema}" class="nav-link"
                                    th:classappend="${page} == 'dpia_template' ? 'active' : ''">Skabelon til konsekvensanalyse</a>
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" sec:authorize="@accessEvaluator.document()">
                         <a th:href="@{/documents}" class="nav-link mininav-toggle collapsed"
                            th:classappend="${page} == 'dokumenter' ? 'active' : ''">
                             <i class="pli-files fs-5 me-2 nav-icons"></i> <span
                             class="nav-label mininav-content ms-1">Dokumenter</span>
                         </a>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" sec:authorize="@accessEvaluator.task()">
                         <a th:href="@{/tasks}" class="nav-link mininav-toggle collapsed"
                            th:classappend="${page} == 'opgavecenter' ? 'active' : ''">
                             <i class="pli-check fs-5 me-2 nav-icons"></i> <span class="nav-label mininav-content ms-1">Opgavecenter</span>
                         </a>
                     </li>
-                    <li class="nav-item has-sub">
+                    <li class="nav-item has-sub" sec:authorize="@accessEvaluator.configuration()">
                         <a href="#" class="mininav-toggle nav-link collapsed"
                            th:classappend="${page == 'incidentlogs' || page == 'incidentquestions'} ? 'active' : ''">
                             <i class="pli-exclamation fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Hændelser</span>
@@ -117,13 +117,13 @@
                             </li>
                         </ul>
                     </li>
-                    <li class="nav-item">
+                    <li class="nav-item" sec:authorize="@accessEvaluator.report()">
                         <a th:href="@{/reports}" class="nav-link mininav-toggle collapsed"
                            th:classappend="${page} == 'rapporter' ? 'active' : ''">
                             <i class="pli-newspaper fs-5 me-2 nav-icons"></i> <span class="nav-label mininav-content ms-1">Rapporter</span>
                         </a>
                     </li>
-                    <li class="nav-item has-sub" sec:authorize="hasRole('ROLE_administrator')">
+                    <li class="nav-item has-sub" sec:authorize="@accessEvaluator.admin()">
                         <a href="#" class="mininav-toggle nav-link collapsed"
                            th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' || page == 'choicelists' || page == 'maillog' ? 'active' : ''}">
                             <i class="pli-stamp fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Administrativt</span>

@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 import java.util.HashSet;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Component
@@ -78,97 +79,22 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 	}
 
 	private Set<SamlGrantedAuthority> grantAdminAuthorities() {
-		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
-		authorities.add(new SamlGrantedAuthority(Roles.ADMINISTRATOR));
-
-		authorities.add(new SamlGrantedAuthority(Roles.CREATE_ALL));
-		authorities.add(new SamlGrantedAuthority(Roles.READ_ALL));
-		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_ALL));
-		authorities.add(new SamlGrantedAuthority(Roles.DELETE_ALL));
-
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_CONFIGURATION));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ADMIN));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ASSET));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_STANDARD));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REGISTER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_SUPPLIER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_RISK_ASSESSMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_DOCUMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_TASK));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REPORT));
-		return authorities;
+		return SecurityUtil.getAdminRoles().stream().map(SamlGrantedAuthority::new).collect(Collectors.toSet());
 	}
 
 	private Set<SamlGrantedAuthority> grantSuperUserAuthorities() {
-		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
-		authorities.add(new SamlGrantedAuthority(Roles.SUPER_USER));
-
-		authorities.add(new SamlGrantedAuthority(Roles.CREATE_ALL));
-		authorities.add(new SamlGrantedAuthority(Roles.READ_ALL));
-		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_ALL));
-		authorities.add(new SamlGrantedAuthority(Roles.DELETE_ALL));
-
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ASSET));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_STANDARD));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REGISTER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_SUPPLIER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_RISK_ASSESSMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_DOCUMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_TASK));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REPORT));
-		return authorities;
+		return SecurityUtil.getSuperUserRoles().stream().map(SamlGrantedAuthority::new).collect(Collectors.toSet());
 	}
 
 	private Set<SamlGrantedAuthority> grantUserAuthorities() {
-		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
-		authorities.add(new SamlGrantedAuthority(Roles.USER));
-
-		authorities.add(new SamlGrantedAuthority(Roles.CREATE_OWNER_ONLY));
-		authorities.add(new SamlGrantedAuthority(Roles.READ_OWNER_ONLY));
-		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_OWNER_ONLY));
-		authorities.add(new SamlGrantedAuthority(Roles.DELETE_OWNER_ONLY));
-
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ASSET));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_STANDARD));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REGISTER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_SUPPLIER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_RISK_ASSESSMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_DOCUMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_TASK));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REPORT));
-		return authorities;
+		return SecurityUtil.getUserRoles().stream().map(SamlGrantedAuthority::new).collect(Collectors.toSet());
 	}
 
 	private Set<SamlGrantedAuthority> grantLimitedUserAuthorities() {
-		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
-		authorities.add(new SamlGrantedAuthority(Roles.LIMITED_USER));
-
-		authorities.add(new SamlGrantedAuthority(Roles.CREATE_OWNER_ONLY));
-		authorities.add(new SamlGrantedAuthority(Roles.READ_OWNER_ONLY));
-		authorities.add(new SamlGrantedAuthority(Roles.UPDATE_OWNER_ONLY));
-		authorities.add(new SamlGrantedAuthority(Roles.DELETE_OWNER_ONLY));
-
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ASSET));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_TASK));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REGISTER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REPORT));
-		return authorities;
+		return SecurityUtil.getLimitedUserRoles().stream().map(SamlGrantedAuthority::new).collect(Collectors.toSet());
 	}
 
 	private Set<SamlGrantedAuthority> grantReadOnlyUserAuthorities() {
-		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
-		authorities.add(new SamlGrantedAuthority(Roles.READ_ONLY_USER));
-
-		authorities.add(new SamlGrantedAuthority(Roles.READ_ALL));
-
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_ASSET));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_STANDARD));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REGISTER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_SUPPLIER));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_RISK_ASSESSMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_DOCUMENT));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_TASK));
-		authorities.add(new SamlGrantedAuthority(Roles.SECTION_REPORT));
-		return authorities;
+		return SecurityUtil.getReadOnlyUserRoles().stream().map(SamlGrantedAuthority::new).collect(Collectors.toSet());
 	}
 }

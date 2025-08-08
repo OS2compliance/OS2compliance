@@ -102,18 +102,18 @@ public class AssetsRestController {
 		}
 
 		Page<AssetGrid> assets = null;
-		if (SecurityUtil.isUser()) {
-			// Logged in user is User or higher role
-			assets =  assetGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, AssetGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		}else {
+		if (SecurityUtil.isLimitedUser()) {
 			// Logged in user is a limited user
 			assets =  assetGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, AssetGrid.class),
 					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+		}else {
+			// Logged in user is User or higher role
+			assets =  assetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, AssetGrid.class),
 					buildPageable(page, limit, sortColumn, sortDirection),
 					AssetGrid.class
 			);

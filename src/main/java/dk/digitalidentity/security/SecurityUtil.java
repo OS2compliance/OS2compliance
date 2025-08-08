@@ -10,7 +10,9 @@ import org.springframework.security.saml2.provider.service.authentication.Saml2A
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.SYSTEM_USERID;
 
@@ -78,6 +80,13 @@ public class SecurityUtil {
         return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.ADMINISTRATOR));
     }
 
+	public static boolean isAuthenticated() {
+		if (!isLoggedIn()) {
+			return false;
+		}
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.AUTHENTICATED));
+	}
+
     public static String getPrincipalUuid () {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         Object principal = authentication.getPrincipal();
@@ -90,5 +99,87 @@ public class SecurityUtil {
             throw new UsernameNotFoundException("instance of principal is of unknown type, when checking for super or own user");
         }
     }
+
+	public static Set<String> getAdminRoles () {
+		return Set.of(
+				Roles.ADMINISTRATOR,
+				Roles.CREATE_ALL,
+				Roles.READ_ALL,
+				Roles.UPDATE_ALL,
+				Roles.DELETE_ALL,
+				Roles.SECTION_CONFIGURATION,
+				Roles.SECTION_ADMIN,
+				Roles.SECTION_ASSET,
+				Roles.SECTION_STANDARD,
+				Roles.SECTION_REGISTER,
+				Roles.SECTION_SUPPLIER,
+				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DOCUMENT,
+				Roles.SECTION_TASK,
+				Roles.SECTION_REPORT);
+	}
+
+	public static Set<String> getSuperUserRoles () {
+		return Set.of(
+				Roles.SUPER_USER,
+				Roles.CREATE_ALL,
+				Roles.READ_ALL,
+				Roles.UPDATE_ALL,
+				Roles.DELETE_ALL,
+				Roles.SECTION_ASSET,
+				Roles.SECTION_STANDARD,
+				Roles.SECTION_REGISTER,
+				Roles.SECTION_SUPPLIER,
+				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DOCUMENT,
+				Roles.SECTION_TASK,
+				Roles.SECTION_REPORT);
+	}
+
+	public static Set<String> getUserRoles () {
+		return Set.of(
+				Roles.USER,
+				Roles.CREATE_OWNER_ONLY,
+				Roles.READ_ALL,
+				Roles.UPDATE_OWNER_ONLY,
+				Roles.DELETE_OWNER_ONLY,
+				Roles.SECTION_ASSET,
+				Roles.SECTION_STANDARD,
+				Roles.SECTION_REGISTER,
+				Roles.SECTION_SUPPLIER,
+				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DOCUMENT,
+				Roles.SECTION_TASK,
+				Roles.SECTION_REPORT);
+	}
+
+	public static Set<String> getLimitedUserRoles () {
+		return Set.of(
+				Roles.LIMITED_USER,
+				Roles.CREATE_OWNER_ONLY,
+				Roles.READ_OWNER_ONLY,
+				Roles.UPDATE_OWNER_ONLY,
+				Roles.DELETE_OWNER_ONLY,
+				Roles.SECTION_ASSET,
+				Roles.SECTION_REGISTER,
+				Roles.SECTION_TASK,
+				Roles.SECTION_REPORT);
+	}
+
+	public static Set<String> getReadOnlyUserRoles () {
+		return Set.of(
+				Roles.READ_ONLY_USER,
+				Roles.READ_ALL,
+				Roles.SECTION_ASSET,
+				Roles.SECTION_STANDARD,
+				Roles.SECTION_REGISTER,
+				Roles.SECTION_SUPPLIER,
+				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DOCUMENT,
+				Roles.SECTION_TASK,
+				Roles.SECTION_REPORT);
+	}
+
+
 
 }

@@ -49,6 +49,7 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.SettingsService;
@@ -170,22 +171,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				testAdmin.setUserId("tstAdmn");
 				testAdmin.setName("Test Admin");
 				testAdmin.setEmail("testAdmin@digital-identity.dk");
-				testAdmin.setRoles(Set.of(
-						Roles.ADMINISTRATOR,
-						Roles.CREATE_ALL,
-						Roles.READ_ALL,
-						Roles.UPDATE_ALL,
-						Roles.DELETE_ALL,
-						Roles.SECTION_CONFIGURATION,
-						Roles.SECTION_ADMIN,
-						Roles.SECTION_ASSET,
-						Roles.SECTION_STANDARD,
-						Roles.SECTION_REGISTER,
-						Roles.SECTION_SUPPLIER,
-						Roles.SECTION_RISK_ASSESSMENT,
-						Roles.SECTION_DOCUMENT,
-						Roles.SECTION_TASK,
-						Roles.SECTION_REPORT));
+				testAdmin.setRoles(SecurityUtil.getAdminRoles());
 				testAdmin.setPositions(Set.of(
                     Position.builder()
                         .name("Tester")
@@ -198,26 +184,21 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 ));
 				testAdmin = userDao.save(testAdmin);
 
+				User testSuperUser = new User();
+				testSuperUser.setActive(true);
+				testSuperUser.setUserId("tstSuper");
+				testSuperUser.setName("Test Super User");
+				testSuperUser.setEmail("testSuperd@digital-identity.dk");
+				testSuperUser.setRoles(SecurityUtil.getSuperUserRoles());
+				testSuperUser = userDao.save(testSuperUser);
+
 
 				User testUser = new User();
 				testUser.setActive(true);
 				testUser.setUserId("tstUser");
 				testUser.setName("Test User");
 				testUser.setEmail("testUser@digital-identity.dk");
-				testUser.setRoles(Set.of(
-						Roles.USER,
-						Roles.CREATE_OWNER_ONLY,
-						Roles.READ_OWNER_ONLY,
-						Roles.UPDATE_OWNER_ONLY,
-						Roles.DELETE_OWNER_ONLY,
-						Roles.SECTION_ASSET,
-						Roles.SECTION_STANDARD,
-						Roles.SECTION_REGISTER,
-						Roles.SECTION_SUPPLIER,
-						Roles.SECTION_RISK_ASSESSMENT,
-						Roles.SECTION_DOCUMENT,
-						Roles.SECTION_TASK,
-						Roles.SECTION_REPORT));
+				testUser.setRoles(SecurityUtil.getUserRoles());
 				testUser = userDao.save(testUser);
 
 				User testLimitedUser = new User();
@@ -225,17 +206,16 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
 				testLimitedUser.setUserId("tstLim");
 				testLimitedUser.setName("Test Limited User");
 				testLimitedUser.setEmail("testLimited@digital-identity.dk");
-				testLimitedUser.setRoles(Set.of(
-						Roles.LIMITED_USER,
-						Roles.CREATE_OWNER_ONLY,
-						Roles.READ_OWNER_ONLY,
-						Roles.UPDATE_OWNER_ONLY,
-						Roles.DELETE_OWNER_ONLY,
-						Roles.SECTION_ASSET,
-						Roles.SECTION_REGISTER,
-						Roles.SECTION_TASK,
-						Roles.SECTION_REPORT));
+				testLimitedUser.setRoles(SecurityUtil.getLimitedUserRoles());
 				testLimitedUser = userDao.save(testLimitedUser);
+
+				User testReadOnlyUser = new User();
+				testReadOnlyUser.setActive(true);
+				testReadOnlyUser.setUserId("tstReadOnly");
+				testReadOnlyUser.setName("Test Read Only User");
+				testReadOnlyUser.setEmail("testReadOnly@digital-identity.dk");
+				testReadOnlyUser.setRoles(SecurityUtil.getReadOnlyUserRoles());
+				testReadOnlyUser = userDao.save(testReadOnlyUser);
 
                 ///////////////////////////////////
                 // Suppliers
