@@ -5,12 +5,21 @@ document.addEventListener("shown.bs.modal", function(event) {
     if (form) {
         form.addEventListener("submit", function(event) {
             event.preventDefault();
-
+            const inputField = document.getElementById("sectionNumberInput");
+            const maxLength = 10;
+            const maxInteger = 2147483647;
             const sectionValue = form.elements['section'].value;
             // Validate section format, as we do not allow the sections to be versioned too deep
             const parts = sectionValue.split('.');
             if (parts.length > 3 || (parts.length === 1 && !/^\d+$/.test(sectionValue))) {
                 return;
+            }
+
+            if (sectionValue.length > maxLength || isNaN(sectionValue) || parseInt(sectionValue) > maxInteger) {
+                inputField.classList.add('is-invalid');
+                return;
+            } else {
+                inputField.classList.remove('is-invalid');
             }
             form.submit();
         });
@@ -34,7 +43,7 @@ function CreateSectionService() {
             .catch(error => toastService.error(error));
     }
 
-    this.openHeaderModal = function(element, isEdit=false) {
+    this.openHeaderModal = function(element, isEdit = false) {
         const id = element.dataset.id;
         let url = "/standards/section/header/form/" + id;
         if (isEdit) {
