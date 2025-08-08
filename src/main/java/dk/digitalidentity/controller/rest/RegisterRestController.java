@@ -58,6 +58,7 @@ public class RegisterRestController {
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
     }
 
+	// TODO: Consider either replacing the above list completely or making two different endpoints
 	@PostMapping("/export/list")
 	public Object list(
 			@RequestParam(value = "page", defaultValue = "0") int page,
