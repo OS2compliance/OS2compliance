@@ -96,7 +96,10 @@
 
                         <div class="form-group row">
                             <label for="informationResponsible" class="col-form-label">Navn på DPO</label>
-                            <input class="form-control" id="dataProtectionOfficer" name="dataProtectionOfficer" th:field="*{dataProtectionOfficer}" type="text" readonly>
+                            <select class="form-select choices__input" th:field="*{dataProtectionOfficer}"
+                                    data-trigger="" id="dataProtectionOfficer" tabindex="-1" disabled>
+                                <option th:value="*{dataProtectionOfficer.uuid}" th:text="*{dataProtectionOfficer.name}" selected></option>
+                            </select>
                         </div>
 
                         <div class="form-group row">

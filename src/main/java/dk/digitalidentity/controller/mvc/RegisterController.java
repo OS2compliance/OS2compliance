@@ -299,7 +299,9 @@ public class RegisterController {
             register.setInformationResponsible(informationResponsible);
         }
 		if (dataProtectionOfficer != null) {
-			register.setDataProtectionOfficer(dataProtectionOfficer);
+			User dpoUser = userService.findByUuid(dataProtectionOfficer)
+					.orElseThrow();
+			register.setDataProtectionOfficer(dpoUser);
 		}
 
 		register.setRegisterRegarding(registerRegarding);
