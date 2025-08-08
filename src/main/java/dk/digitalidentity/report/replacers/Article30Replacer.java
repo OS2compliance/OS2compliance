@@ -10,15 +10,19 @@ import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Setting;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ReportSetting;
 import dk.digitalidentity.report.DocxUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.poi.xwpf.usermodel.BreakType;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
 import org.apache.poi.xwpf.usermodel.XWPFRun;
@@ -32,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -50,12 +55,14 @@ public class Article30Replacer implements PlaceHolderReplacer {
     private final ChoiceService choiceService;
     private final AssetService assetService;
 	private final SettingsService settingsService;
+	private final RelationService relationService;
 
-	public Article30Replacer(final RegisterService registerService, final ChoiceService choiceService, final AssetService assetService, SettingsService settingsService) {
+	public Article30Replacer(final RegisterService registerService, final ChoiceService choiceService, final AssetService assetService, SettingsService settingsService, RelationService relationService) {
         this.registerService = registerService;
         this.choiceService = choiceService;
         this.assetService = assetService;
 		this.settingsService = settingsService;
+		this.relationService = relationService;
 	}
 
     @Override
@@ -112,7 +119,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
 	private void insertDataresponsibleSettings(final XWPFParagraph p) {
 
 		Map<String, String> settings = settingsService.getByAssociationAndEditable("report").stream()
-				.collect(Collectors.toMap(s -> s.getSettingKey(), s -> s.getSettingValue()));
+				.collect(Collectors.toMap(Setting::getSettingKey, Setting::getSettingValue));
 
 		// Dataresponsible
 		String dataResponsibleLabel ="Dataansvarlig";
@@ -211,6 +218,124 @@ public class Article30Replacer implements PlaceHolderReplacer {
 				initial = false;
 			}
 		}
+
+		List<Long> relatedAssetIds = relationService.findAllIdsRelatedToWithType(allArticle30.stream().map(r -> r.getId()).toList(), RelationType.ASSET);
+		List<Asset> relatedAssets = assetService.findAllById(relatedAssetIds);
+		insertSupplierAdressSection(p, relatedAssets);
+	}
+
+	private void insertSupplierAdressSection(final XWPFParagraph p, List<Asset> relatedAssets) {
+		XWPFDocument document = p.getDocument();
+
+		// Add page break to end of file
+		XWPFParagraph pageBreakParagraph = document.createParagraph();
+		pageBreakParagraph.createRun().addBreak(BreakType.PAGE);
+
+		// Add a header to end of file
+		XWPFParagraph supplierAdressParagraph = document.createParagraph();
+		XWPFRun headerRun = createTextRun(supplierAdressParagraph, "Leverandøradresser");
+		headerRun.setBold(true);
+
+		// Add a table with supplier adresses to end of file
+		createSupplierAddressTable(document, relatedAssets);
+
+
+
+	}
+
+	private void createSupplierAddressTable(XWPFDocument doc, List<Asset> relatedAssets) {
+		// Map to records
+		Set<AssetSupplier> assetSuppliers = mapToAssetSuppliers(relatedAssets);
+
+		// Create table
+		List<String> headerTexts = new ArrayList<>() ;
+		headerTexts.add("Aktiv");
+		headerTexts.add("Leverandør");
+		headerTexts.add("Adresse");
+
+		XWPFTable table = doc.createTable(1, headerTexts.size());
+
+		// Create header
+		createSupplierAddressHeader(headerTexts, table);
+
+		// Create rows
+		createSupplierAddressRows(assetSuppliers, table);
+	}
+
+	private void createSupplierAddressHeader(List<String> headerTexts , XWPFTable table) {
+		XWPFTableRow header = table.getRow(0);
+
+		for (int i = 0; i < headerTexts.size() ; i++) {
+			XWPFRun run = header.getCell(i).getParagraphs().getFirst().createRun();
+			run.setText(headerTexts.get(i));
+			run.setBold(true);
+		}
+	}
+
+	private void createSupplierAddressRows(Set<AssetSupplier> assetSuppliers, XWPFTable table) {
+		for (AssetSupplier asset : assetSuppliers) {
+			XWPFTableRow row = table.createRow();
+			row.getCell(0).setText(asset.assetName);
+
+			if (asset.addresses.isEmpty()) {
+				// With no adresses, the rest of the cells is left empty and we continue
+				continue;
+			}
+
+			row.getCell(1).setText(asset.addresses.getFirst().supplierName);
+			row.getCell(2).setText(asset.addresses.getFirst().address);
+
+			// With more than one adress in list, we create a new row for each beyond the first, leaving first cell empty
+			for (int r = 1; r < asset.addresses.size(); r++) {
+				XWPFTableRow adressRow = table.createRow();
+				adressRow.getCell(1).setText(asset.addresses.get(r).supplierName);
+				adressRow.getCell(2).setText(asset.addresses.get(r).address);
+			}
+		}
+	}
+
+	private record SupplierAddress ( String supplierName, String address){}
+	private record AssetSupplier(String assetName, List<SupplierAddress> addresses) {}
+	private Set<AssetSupplier> mapToAssetSuppliers (List<Asset> relatedAssets) {
+		return relatedAssets.stream().map(a -> {
+			Supplier mainSupplier = a.getSupplier();
+			List<SupplierAddress> suppliers = new HashSet<>(a.getSuppliers())
+					.stream()
+					.map(m -> m.getSupplier())
+					.sorted((supA, supB) -> {
+						if (supA == mainSupplier) {
+							return 1;
+						}
+						if (supB == mainSupplier) {
+							return -1;
+						}
+						return supA.getName().compareTo(supB.getName());
+					})
+					.map(this::mapToSupplierAddress)
+					.toList();
+
+			return new AssetSupplier(a.getName(), suppliers);
+		}).collect(Collectors.toSet());
+	}
+
+	private SupplierAddress mapToSupplierAddress(Supplier s) {
+		StringBuilder builder = new StringBuilder();
+		if (s.getAddress() != null) {
+			builder.append(s.getAddress());
+			if (s.getZip() != null && s.getCity() != null) {
+				builder.append(", ");
+				builder.append(s.getZip());
+				builder.append(s.getCity());
+			}
+			if (s.getCountry() != null) {
+				builder.append(", ");
+				builder.append(s.getCountry());
+			}
+		}
+		return new SupplierAddress(
+				s.getName(),
+				builder.toString()
+		);
 	}
 
     private void insertRegister(final XWPFDocument document, final XmlCursor cursor,
@@ -330,16 +455,16 @@ public class Article30Replacer implements PlaceHolderReplacer {
         final XWPFTableRow headerRow = table.getRow(rowCounter++);
         final XWPFTableCell cell0 = getCell(headerRow, 0);
         cell0.setWidth("25%");
-        addBoldTextRun("Kategorier af registrerede", cell0.getParagraphs().get(0));
+        addBoldTextRun("Kategorier af registrerede", cell0.getParagraphs().getFirst());
         final XWPFTableCell cell1 = getCell(headerRow, 1);
         cell1.setWidth("25%");
-        addBoldTextRun("Typer af personoplysninger", cell1.getParagraphs().get(0));
+        addBoldTextRun("Typer af personoplysninger", cell1.getParagraphs().getFirst());
         final XWPFTableCell cell2 = getCell(headerRow, 2);
         cell2.setWidth("25%");
-        addBoldTextRun("Videregives personoplysningerne til andre som anvender oplysningerne til eget formål?", cell2.getParagraphs().get(0));
+        addBoldTextRun("Videregives personoplysningerne til andre som anvender oplysningerne til eget formål?", cell2.getParagraphs().getFirst());
         final XWPFTableCell cell3 = getCell(headerRow, 3);
         cell3.setWidth("25%");
-        addBoldTextRun("Modtager", cell3.getParagraphs().get(0));
+        addBoldTextRun("Modtager", cell3.getParagraphs().getFirst());
         for (final DataProcessingCategoriesRegistered registeredCategory : dataProcessing.getRegisteredCategories()) {
             XWPFTableRow row = table.getRow(rowCounter++);
             if (row == null) {
@@ -347,7 +472,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
             }
             getCell(row, 0).setText(getChoiceCaption(registeredCategory.getPersonCategoriesRegisteredIdentifier()));
 
-            XWPFParagraph paragraph = getCell(row, 1).getParagraphs().get(0);
+            XWPFParagraph paragraph = getCell(row, 1).getParagraphs().getFirst();
             try (final XmlCursor cellCursor = paragraph.getCTP().newCursor()) {
                 final List<String> values = registeredCategory.getPersonCategoriesInformationIdentifiers().stream()
                     .map(identifier -> choiceService.getValue(identifier))
@@ -359,13 +484,14 @@ public class Article30Replacer implements PlaceHolderReplacer {
 
             getCell(row, 2).setText(registeredCategory.getInformationPassedOn().getMessage());
 
-            paragraph = getCell(row, 3).getParagraphs().get(0);
+            paragraph = getCell(row, 3).getParagraphs().getFirst();
             try (final XmlCursor cellCursor = paragraph.getCTP().newCursor()) {
                 final List<String> values = registeredCategory.getInformationReceivers().stream()
-                    .map(choiceService::getValue)
-                    .filter(c -> c.isPresent())
-                    .map(c -> c.get().getCaption())
-                    .toList();
+						.map(ir -> ir.getChoiceValue().getIdentifier())
+						.map(choiceService::getValue)
+						.filter(c -> c.isPresent())
+						.map(c -> c.get().getCaption())
+						.toList();
                 addBulletList(paragraph.getDocument(), cellCursor, new ArrayList<>(values));
             }
         }
@@ -374,12 +500,12 @@ public class Article30Replacer implements PlaceHolderReplacer {
     private void insertAssetTable(final XWPFTable table, final List<Asset> assets) {
         int rowCounter = 0;
         final XWPFTableRow headerRow = table.getRow(rowCounter++);
-        addBoldTextRun("Navn", getCell(headerRow, 0).getParagraphs().get(0));
-        addBoldTextRun("Leverandør", getCell(headerRow, 1).getParagraphs().get(0));
-        addBoldTextRun("Er der indgået en databehandleraftale", getCell(headerRow, 2).getParagraphs().get(0));
-        addBoldTextRun("Land", getCell(headerRow, 3).getParagraphs().get(0));
-        addBoldTextRun("Tredjelands- overførsel", getCell(headerRow, 4).getParagraphs().get(0));
-        addBoldTextRun("Acceptgrundlag", getCell(headerRow, 5).getParagraphs().get(0));
+        addBoldTextRun("Navn", getCell(headerRow, 0).getParagraphs().getFirst());
+        addBoldTextRun("Leverandør", getCell(headerRow, 1).getParagraphs().getFirst());
+        addBoldTextRun("Er der indgået en databehandleraftale", getCell(headerRow, 2).getParagraphs().getFirst());
+        addBoldTextRun("Land", getCell(headerRow, 3).getParagraphs().getFirst());
+        addBoldTextRun("Tredjelands- overførsel", getCell(headerRow, 4).getParagraphs().getFirst());
+        addBoldTextRun("Acceptgrundlag", getCell(headerRow, 5).getParagraphs().getFirst());
 
         for (final Asset asset : assets) {
             XWPFTableRow row = table.getRow(rowCounter++);

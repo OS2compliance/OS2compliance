@@ -1,0 +1,1 @@
+ALTER TABLE assets_oversight MODIFY conclusion VARCHAR(4096);

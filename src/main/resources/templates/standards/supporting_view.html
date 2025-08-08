@@ -19,6 +19,12 @@
                         </nav>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button st th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openRequirementModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny krav
+                        </button>
+                        <button id="addHeaderButton" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openHeaderModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny gruppe
+                        </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
@@ -47,11 +53,12 @@
                                     <tr class="bg-light">
                                         <th class="col-lg-3" style="border-right: 1px solid black;">Foranstaltning</th>
                                         <th th:unless="${isNSIS}" class="col-lg-1">Tilvalgt /fravalgt</th>
-                                        <th th:if="${isNSIS}" class="col-lg-2">Sikkerhedsniveau</th>
+                                        <th th:if="${isNSIS}" class="col-lg-1">Sikkerhedsniveau</th>
                                         <th th:class="${isNSIS} ? 'col-lg-4' : 'col-lg-5'">Note</th>
                                         <th class="col-lg-1">Senest redigeret</th>
                                         <th class="col-lg-1">Ansvarlig</th>
                                         <th class="col-lg-1">Status</th>
+                                        <th class="col-lg-1">Handlinger</th>
                                     </tr>
                                     </thead>
                                     <tbody>
@@ -63,6 +70,7 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
+                                                <td><span><button th:data-id="${sectionParent.identifier}" th:data-header="${template.identifier}" onclick="createSectionService.openHeaderModal(this, true)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button><button th:data-id="${sectionParent.identifier}" onclick="createSectionService.openDeleteSwal(this)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
                                             </tr>
                                             <th:block th:if="${statusFilter == null OR section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
                                                 <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
@@ -78,6 +86,7 @@
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                         <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT == section.standardSection.status} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                     </td>
+                                                    <td><span><button th:data-id="${section.identifier}" onclick="createSectionService.openDeleteSwal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
                                                 </tr>
                                                 <tr class="hidden">
                                                     <td style="border-right: 1px solid black;"></td>
@@ -172,7 +181,7 @@
 <div th:replace="~{fragments/addRelation :: addRelation(customAddRelationBtn = true)}"></div>
 
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, textEditor = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, textEditor = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -181,11 +190,17 @@
         var today = [[${today}]];
         var templateIdentifier = [[${template.identifier}]];
         var testMap = [[${relationMap}]]
+        var modalError = [[${headerModalError}]]
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     document.addEventListener("DOMContentLoaded", function(event) {
         supportingStandartsViewLoaded();
         addRelationFormLoaded();
+        if (modalError) {
+            document.getElementById('addHeaderButton').click();
+            toastService.error(modalError);
+        }
+        choiceService.initHeaderSelect("headerSelect");
     });
     /*]]>*/
 </script>

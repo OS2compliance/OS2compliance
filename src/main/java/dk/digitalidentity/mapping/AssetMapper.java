@@ -180,6 +180,7 @@ public interface AssetMapper {
         @Mapping(target = "tia", ignore = true),
         @Mapping(target = "assetOversights", ignore = true),
         @Mapping(target = "responsibleUsers", source = "systemOwners"),
+        @Mapping(target = "operationResponsibleUsers", source = "systemOwners"),
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpias", ignore = true),
@@ -194,6 +195,8 @@ public interface AssetMapper {
         @Mapping(target = "assetCategory", ignore = true),
         @Mapping(target = "roles", ignore = true),
         @Mapping(target = "assetType", ignore = true),
+		@Mapping(target = "aiStatus", ignore = true),
+		@Mapping(target = "aiRisk", ignore = true),
 		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);

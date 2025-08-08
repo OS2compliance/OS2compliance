@@ -42,7 +42,7 @@
                     <!--                   Report Settings-->
                     <a class="btn btn-primary" data-bs-toggle="collapse" href="#reportpart" role="button"
                        aria-expanded="false" aria-controls="reportpart">
-                        Reporter
+                        Rapporter
                     </a>
                     <div class="collapse" id="reportpart"
                          th:classappend="${page} == 'reports' ? 'show' : ''">
@@ -137,7 +137,7 @@
                         Fotegnelser
                     </a>
                     <div class="collapse" id="registerPart"
-                         th:classappend="${page} == 'register' ? 'show' : ''">
+                         th:classappend="${page} == 'registers' ? 'show' : ''">
                         <div class="card card-body gap-3">
                             <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'register'" class="row">
                                 <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
@@ -189,6 +189,53 @@
                             </div>
                         </div>
                     </div>
+                    <a class="btn btn-primary" data-bs-toggle="collapse" href="#assetPart" role="button"
+                       aria-expanded="false" aria-controls="assetPart">
+                        Aktiver
+                    </a>
+                    <div class="collapse" id="assetPart"
+                         th:classappend="${page} == 'assets' ? 'show' : ''">
+                        <div class="card card-body gap-3">
+                            <div th:each="setting, itemStat :  *{settingsList}" th:if="${setting.association} == 'asset'" class="row">
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].editable}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].association}"/>
+                                <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
+                                <th:block th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME}">
+                                    <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                           class="col-sm-12 col-form-label"
+                                           style="color: black;"
+                                           th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME ? 'Navn for redigerbart brugerfelt systemejer': 'Ukendt indstilling'}">
+                                    </label>
+                                    <input style="color:black;" class="form-control"
+                                           th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                           th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                </th:block>
+                                <th:block th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME}">
+                                    <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                           class="col-sm-12 col-form-label"
+                                           style="color: black;"
+                                           th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME ? 'Navn for redigerbart brugerfelt systemansvarlig': 'Ukendt indstilling'}">
+                                    </label>
+                                    <input style="color:black;" class="form-control"
+                                           th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                           th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                </th:block>
+                                <th:block th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME}">
+                                    <label th:for="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                           class="col-sm-12 col-form-label"
+                                           style="color: black;"
+                                           th:text="*{settingsList[__${itemStat.index}__].settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME ? 'Navn for redigerbart brugerfelt driftsansvarlig': 'Ukendt indstilling'}">
+                                    </label>
+                                    <input style="color:black;" class="form-control"
+                                           th:id="*{settingsList[__${itemStat.index}__].settingValue + '-id'}"
+                                           th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                </th:block>
+                            </div>
+                        </div>
+                    </div>
+
                     <a th:if="${kitosEnabled}" class="btn btn-primary" data-bs-toggle="collapse" href="#kitosPart"
                        role="button" aria-expanded="false"
                        aria-controls="kitosPart">
@@ -208,7 +255,7 @@
                                         th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OWNER_ROLE_SETTING_KEY}">
                                         <div class="row mt-1">
                                             <label for="ownerSelect" class="col-sm-10 col-form-label"
-                                                   style="color: black;">Vælg systemejer rolle i Kitos</label>
+                                                   style="color: black;" th:text="${'Vælg ' + customSystemOwnerInput.settingValue + ' rolle i Kitos'}"></label>
                                             <select class="form-control form-select choices__input col-sm-8"
                                                     id="ownerSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
@@ -221,10 +268,24 @@
                                     <div
                                         th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_KEY}">
                                         <div class="row mt-1">
-                                            <label for="responsibleSelect" class="col-sm-10 col-form-label"
-                                                   style="color: black;">Vælg systemansvarlig rolle i Kitos</label>
+                                            <label for="ownerSelect" class="col-sm-10 col-form-label"
+                                                   style="color: black;" th:text="${'Vælg ' + customSystemOwnerInput.settingValue + ' rolle i Kitos'}"></label>
                                             <select class="form-control form-select choices__input"
                                                     id="responsibleSelect"
+                                                    th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                                <option th:each="role : ${kitosRoles}"
+                                                        th:value="${role.uuid}"
+                                                        th:text="${role.name}"></option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div
+                                            th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY}">
+                                        <div class="row mt-1">
+                                            <label for="ownerSelect" class="col-sm-10 col-form-label"
+                                                   style="color: black;" th:text="${'Vælg ' + customSystemOwnerInput.settingValue + ' rolle i Kitos'}"></label>
+                                            <select class="form-control form-select choices__input col-sm-8"
+                                                    id="otherSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
                                                 <option th:each="role : ${kitosRoles}"
                                                         th:value="${role.uuid}"
