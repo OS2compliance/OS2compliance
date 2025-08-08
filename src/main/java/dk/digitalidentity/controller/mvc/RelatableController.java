@@ -212,8 +212,7 @@ public class RelatableController {
      */
     private void ensureModificationIsAllowed(final Relatable relateTo) {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream()
-            .noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER) || r.getAuthority().equals(Roles.ADMINISTRATOR))) {
+        if (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)) {
             final List<User> responsibleUsers = relatableService.findResponsibleUsers(relateTo);
             final String principalUuid = SecurityUtil.getPrincipalUuid();
             if (responsibleUsers.stream()

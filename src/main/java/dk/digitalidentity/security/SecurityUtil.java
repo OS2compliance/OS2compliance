@@ -100,6 +100,10 @@ public class SecurityUtil {
         }
     }
 
+	public static boolean isOperationAllowed(String role) {
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+	}
+
 	public static Set<String> getAdminRoles () {
 		return Set.of(
 				Roles.ADMINISTRATOR,

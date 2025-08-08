@@ -115,7 +115,7 @@ public class RegisterController {
 	@GetMapping
 	public String registerList(Model model) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 		return "registers/index";
 	}
 
@@ -185,7 +185,7 @@ public class RegisterController {
 			assessment.setId(null);
 			final Register register = registerService.findById(id)
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid()))) {
+			if(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			assessment.setRegister(register);
@@ -447,8 +447,8 @@ public class RegisterController {
 				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
 
         model.addAttribute("section", section);
-		model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
-				.anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER) || r.getAuthority().equals(Roles.ADMINISTRATOR))
+		model.addAttribute("changeableRegister", (
+				SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
 				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
 				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
 		);
@@ -598,9 +598,8 @@ public class RegisterController {
     }
 
     private static void ensureEditingIsAllowed(final Register register) {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream()
-				.noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER))
+        if(
+				SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
 				&& !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
 				&& !register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
 		) {

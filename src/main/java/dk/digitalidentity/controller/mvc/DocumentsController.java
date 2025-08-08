@@ -49,7 +49,7 @@ public class DocumentsController {
     public String documentsList(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", new Document());
-        model.addAttribute("isSuperuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+        model.addAttribute("isSuperuser", SecurityUtil.isOperationAllowed(Roles.SUPER_USER));
         return "documents/index";
     }
 
@@ -73,7 +73,7 @@ public class DocumentsController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
-        model.addAttribute("changeableDocument", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) || (document.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid()))));
+        model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) || (document.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid()))));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }
@@ -100,7 +100,7 @@ public class DocumentsController {
         final Document excistingDocument = documentService.get(document.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !excistingDocument.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !excistingDocument.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {

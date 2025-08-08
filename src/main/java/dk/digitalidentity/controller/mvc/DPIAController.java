@@ -79,7 +79,7 @@ public class DPIAController {
     @GetMapping
     public String dpiaList(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "dpia/index";
     }
 
@@ -165,7 +165,7 @@ public class DPIAController {
     @GetMapping("external/{dpiaId}/edit")
     public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
 
         DPIA dpia = dpiaService.find(dpiaId);
 
@@ -187,7 +187,7 @@ public class DPIAController {
     @GetMapping("external/create")
     public String createExternalDPIA(final Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_ALL));
 
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
@@ -298,10 +298,6 @@ public class DPIAController {
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long dpiaId) {
         DPIA dpia = dpiaService.find(dpiaId);
         final List<Asset> assets = dpia.getAssets();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(assets)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 
         dpia.setRevisionInterval(revisionFormDTO.revisionInterval);
         dpia.setNextRevision(revisionFormDTO.nextRevision);

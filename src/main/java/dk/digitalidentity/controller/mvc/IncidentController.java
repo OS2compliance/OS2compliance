@@ -40,7 +40,7 @@ public class IncidentController {
     @GetMapping("logs")
     public String incidentLog(Model model) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "incidents/logs/index";
     }
 
@@ -88,7 +88,7 @@ public class IncidentController {
     @GetMapping("logForm")
     public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long incidentId) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_ALL));
         if (incidentId != null) {
             final Incident incident = incidentService.findById(incidentId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -119,7 +119,7 @@ public class IncidentController {
         model.addAttribute("incident", incident);
         // The incident responses only contains identifiers for the objects it points to, so we need to look up
         // the object to be able to show the names in the edit dialog.
-        model.addAttribute("changeableIncident", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) || (incident.getCreator() != null && SecurityUtil.getPrincipalUuid().equals(incident.getCreator().getUuid()))));
+        model.addAttribute("changeableIncident", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (incident.getCreator() != null && SecurityUtil.getPrincipalUuid().equals(incident.getCreator().getUuid()))));
         model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
         model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
         model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
