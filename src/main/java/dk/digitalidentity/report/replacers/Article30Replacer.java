@@ -305,10 +305,10 @@ public class Article30Replacer implements PlaceHolderReplacer {
 							.map(m -> m.getSupplier())
 							.sorted((supA, supB) -> {
 								if (supA == mainSupplier) {
-									return 1;
+									return -1;
 								}
 								if (supB == mainSupplier) {
-									return -1;
+									return 1;
 								}
 								return supA.getName().compareTo(supB.getName());
 							})
