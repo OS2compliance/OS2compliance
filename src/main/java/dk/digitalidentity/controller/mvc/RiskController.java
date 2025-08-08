@@ -189,6 +189,26 @@ public class RiskController {
         return "redirect:/risks";
     }
 
+	@Transactional
+	@PostMapping("{id}/update-catalogs")
+	public String updateThreatCatalogs(@PathVariable("id") final long id, @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers) {
+		final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		// Find selected catalogs
+		List<ThreatCatalog> selectedCatalogs = new ArrayList<>();
+		if (catalogIdentifiers != null && !catalogIdentifiers.isEmpty()) {
+			selectedCatalogs = catalogService.findByIdentifierIn(catalogIdentifiers);
+		}
+
+		threatAssessmentService.handleThreatCatalogChanges(editedAssessment, selectedCatalogs);
+
+		return "redirect:/risks/" + id;
+	}
+
     @GetMapping("{id}/copy")
     public String riskCopyDialog(final Model model, @PathVariable("id") final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -310,6 +330,7 @@ public class RiskController {
         model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
         model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         model.addAttribute("defaultSendReportTo", getFirstRelatedResponsible(threatAssessment));
+        model.addAttribute("threatCatalogs", catalogService.findAllVisible());
 
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);
