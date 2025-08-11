@@ -74,6 +74,7 @@ public class DocumentsController {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
         model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) || documentService.isResponsibleFor(document)));
+		model.addAttribute("responsibleFieldChangeable", !documentService.isResponsibleFor(document)); // Those responsible for an asset change change who is responsible
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }

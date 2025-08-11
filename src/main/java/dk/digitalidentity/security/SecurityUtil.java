@@ -151,9 +151,10 @@ public class SecurityUtil {
 				Roles.SECTION_REGISTER,
 				Roles.SECTION_SUPPLIER,
 				Roles.SECTION_RISK_ASSESSMENT,
-				Roles.SECTION_DOCUMENT,
 				Roles.SECTION_TASK,
-				Roles.SECTION_REPORT);
+				Roles.SECTION_REPORT,
+				Roles.SECTION_DOCUMENT
+				);
 	}
 
 	public static Set<String> getLimitedUserRoles () {
@@ -165,7 +166,9 @@ public class SecurityUtil {
 				Roles.DELETE_OWNER_ONLY,
 				Roles.SECTION_ASSET,
 				Roles.SECTION_REGISTER,
-				Roles.SECTION_TASK);
+				Roles.SECTION_TASK,
+				Roles.SECTION_DOCUMENT
+				);
 	}
 
 	public static Set<String> getReadOnlyUserRoles () {

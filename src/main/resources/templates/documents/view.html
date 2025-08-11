@@ -56,7 +56,7 @@
                                   method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button id="saveEditBtn" th:if="${changeableDocument}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button id="editBtn" th:if="${changeableDocument}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger</button>
+                                    <button id="editBtn" th:if="${changeableDocument}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right"  th:attr="data-responsible-changeable=${responsibleFieldChangeable}" onclick="editMode(true);">Rediger</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">
@@ -182,21 +182,6 @@
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${document.id})}"/>
 <div th:replace="~{fragments/addTags :: addTags(relatableId=${document.id})}"/>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"/>
-
-<script th:inline="javascript">
-    /*<![CDATA[*/
-
-    /*[+
-    +]*/
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        loadViewAndEditForm();
-        addRelationFormLoaded();
-        choiceService.initTagSelect("tagsSelect");
-    });
-
-    /*]]>*/
-</script>
 
 </body>
 

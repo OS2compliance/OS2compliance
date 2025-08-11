@@ -40,11 +40,11 @@
                                 <a th:href="@{/assets}" class="nav-link"
                                    th:classappend="${page} == 'aktiver' ? 'active' : ''">Aktiver</a>
                             </li>
-                            <li class="nav-item" sec:authorize="hasRole('ROLE_administrator') or hasRole('ROLE_forandre')">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
                                 <a th:href="@{/dbs/assets}" class="nav-link"
                                    th:classappend="${page} == 'dbs_aktiver' ? 'active' : ''">DBS Aktiver</a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
                                 <a th:href="@{/dbs/oversight}" class="nav-link"
                                    th:classappend="${page} == 'dbs_oversight' ? 'active' : ''">DBS tilsyn</a>
                             </li>
