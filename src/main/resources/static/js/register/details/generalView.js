@@ -17,6 +17,22 @@ export default function RegisterGeneralService() {
         this.initAssetRelationSelect();
         this.initDocumentRelationSelectPrivate();
         this.initTaskRelationSelectPrivate();
+        this.initGeneralEditButtons()
+    }
+
+    this.initGeneralEditButtons = function () {
+        const editButton = document.getElementById('editBtn');
+        const cancelButton = document.getElementById('cancelBtn');
+
+        editButton.addEventListener('click', (e) =>{
+            const isResponsibleChangeable = editButton.getAttribute('responsible-changeable');
+            this.setGenereltEditState(true, isResponsibleChangeable);
+        })
+
+        cancelButton.addEventListener('click', (e) =>{
+            const isResponsibleChangeable = cancelButton.getAttribute('responsible-changeable');
+            this.setGenereltEditState(true, isResponsibleChangeable);
+        })
     }
 
 
@@ -105,7 +121,7 @@ export default function RegisterGeneralService() {
         );
     }
 
-    this.setGenereltEditState = function (editable) {
+    this.setGenereltEditState = function (editable, isResponsibleFieldEditable) {
         const editBtn = document.querySelector('#editBtn');
         const cancelBtn = document.querySelector('#cancelBtn');
         const saveBtn = document.querySelector('#saveBtn');
@@ -135,8 +151,10 @@ export default function RegisterGeneralService() {
         if (!editable) {
             const form = document.getElementById('editDescId');
             form.reset();
-            userChoices.disable();
-            customResponsibleUserChoices.disable();
+            if (isResponsibleFieldEditable) {
+                userChoices.disable();
+                customResponsibleUserChoices.disable();
+            }
             ouChoices.disable();
             departmentChoices.disable();
             registerRegardingChoices.disable();
@@ -144,8 +162,10 @@ export default function RegisterGeneralService() {
             kleService.groupSelectorInstance.disable();
             dataProtectionOfficerChoice.disable()
         } else {
-            userChoices.enable();
-            customResponsibleUserChoices.enable();
+            if (isResponsibleFieldEditable) {
+                userChoices.enable();
+                customResponsibleUserChoices.enable();
+            }
             ouChoices.enable();
             departmentChoices.enable();
             registerRegardingChoices.enable();

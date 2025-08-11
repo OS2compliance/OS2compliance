@@ -20,7 +20,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class RegisterGrid implements HasMultipleResponsibleUsers {
+public class RegisterGrid implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers {
     @Id
     private Long id;
 

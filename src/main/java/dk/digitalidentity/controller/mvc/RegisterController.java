@@ -446,11 +446,8 @@ public class RegisterController {
 				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
 
         model.addAttribute("section", section);
-		model.addAttribute("changeableRegister", (
-				SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
-				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
-				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
-		);
+		model.addAttribute("changeableRegister", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)	|| registerService.isResponsibleFor(register)) );
+		model.addAttribute("responsibleFieldChangeable", !registerService.isResponsibleFor(register)); // Those responsible for an asset change change who is responsible
 
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());

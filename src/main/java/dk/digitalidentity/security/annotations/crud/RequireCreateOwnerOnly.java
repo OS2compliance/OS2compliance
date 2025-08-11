@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasAnyRole('ROLE_create_owner','ROLE_create_All')")
+@PreAuthorize("hasAnyRole('ROLE_create_owner','ROLE_create_all')")
 public @interface RequireCreateOwnerOnly {
 }
