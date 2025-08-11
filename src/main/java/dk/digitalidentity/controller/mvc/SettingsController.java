@@ -4,7 +4,6 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.model.dto.enums.KitosField;
-import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.KitosService;
@@ -36,7 +35,7 @@ public class SettingsController {
     private final KitosService kitosService;
     private final OS2complianceConfiguration configuration;
 
-	@RequireReadAll
+	@RequireUpdateAll
     @Transactional
     @GetMapping("form")
     public String form(final Model model) {

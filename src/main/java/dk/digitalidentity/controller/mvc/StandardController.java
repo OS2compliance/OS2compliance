@@ -10,7 +10,10 @@ import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireStandard;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardSectionService;
@@ -37,10 +40,8 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -69,7 +70,7 @@ public class StandardController {
     record StandardTemplateSectionDTO(StandardTemplateSection standardTemplateSection,
                                       List<StandardSectionDTO> standardSectionDTOs) {}
 
-	@RequireReadOwnerOnly
+	@RequireReadAll
     @Transactional
     @GetMapping("section/{sectionId}")
     public String lookup(@PathVariable final Long sectionId) {
@@ -95,7 +96,7 @@ public class StandardController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
-	@RequireReadOwnerOnly
+	@RequireReadAll
     @Transactional
     @GetMapping("plan")
     public String planPage(final Model model) {
@@ -110,7 +111,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
-	@RequireReadOwnerOnly
+	@RequireReadAll
     @Transactional
     @GetMapping("act")
     public String actPage(final Model model) {
@@ -122,7 +123,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
-	@RequireReadOwnerOnly
+	@RequireReadAll
     @Transactional
     @GetMapping("do")
     public String doPage(final Model model) {
@@ -147,7 +148,7 @@ public class StandardController {
     }
 
     record StandardTemplateListDTO(String identifier, String name, String compliance) {}
-	@RequireReadOwnerOnly
+	@RequireReadAll
     @Transactional
     @GetMapping
     public String supportingPage(final Model model) {
@@ -173,7 +174,7 @@ public class StandardController {
         return "standards/supporting";
     }
 
-	@RequireReadOwnerOnly
+	@RequireReadAll
     @Transactional
     @GetMapping("supporting/{id}")
     public String supportingPage(final Model model, @PathVariable final String id, @RequestParam(required = false) final StandardSectionStatus status) {
@@ -190,6 +191,7 @@ public class StandardController {
         return "standards/supporting_view";
     }
 
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("/create")
 	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard) {
@@ -199,6 +201,7 @@ public class StandardController {
 		return "redirect:/standards";
 	}
 
+	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/update")
 	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard) {
@@ -209,6 +212,7 @@ public class StandardController {
 		return "redirect:/standards";
 	}
 
+	@RequireCreateAll
 	@GetMapping("/form")
 	public String createStandardForm(final Model model) {
 		model.addAttribute("action", "standards/create");
@@ -219,6 +223,7 @@ public class StandardController {
 		return "standards/form";
 	}
 
+	@RequireUpdateAll
 	@GetMapping("/form/{id}")
 	public String editStandardForm(final Model model, @PathVariable final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -232,7 +237,7 @@ public class StandardController {
 		return "standards/form";
 	}
 
-
+	@RequireCreateAll
 	@GetMapping("/section/form/{id}")
 	public String sectionForm(final Model model, @PathVariable(name = "id") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -246,6 +251,7 @@ public class StandardController {
 		return "standards/sections/create_section_form";
 	}
 
+	@RequireCreateAll
 	@GetMapping("/section/header/form/{id}")
 	public String createHeaderForm(final Model model, @PathVariable(name = "id") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -259,6 +265,7 @@ public class StandardController {
 		return "standards/sections/create_header_form";
 	}
 
+	@RequireUpdateAll
 	@GetMapping("/section/header/form/{id}/{headerIdentifier}")
 	public String editHeaderForm(final Model model, @PathVariable(name = "id") final String headerIdentifier, @PathVariable(name = "headerIdentifier") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -276,6 +283,7 @@ public class StandardController {
 		return "standards/sections/create_header_form";
 	}
 
+	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/headers/update/{identifier}")
 	public String editHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
@@ -327,6 +335,7 @@ public class StandardController {
 		return "redirect:/standards/supporting/" + id;
 	}
 
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
 	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
@@ -356,6 +365,7 @@ public class StandardController {
 		return "redirect:/standards/supporting/" + identifier;
 	}
 
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("/headers/create/{identifier}")
 	public String createHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
@@ -370,7 +380,7 @@ public class StandardController {
 			return "redirect:/standards/supporting/" + id;
 		}
 		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();
-		String sortKey = standardTemplateSection.getSection().replace(".", "").replaceAll("[^0-9]", "");;
+		String sortKey = standardTemplateSection.getSection().replace(".", "").replaceAll("[^0-9]", "");
 		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
 		standardTemplateSection.setIdentifier(identifier);
 		standardTemplateSection.setStandardTemplate(template);
@@ -401,7 +411,7 @@ public class StandardController {
                     filterRelations(relatedTo, RelationType.DOCUMENT),
                     filterRelations(relatedTo, RelationType.STANDARD_SECTION));
             })
-            .collect(Collectors.toList());
+				.toList();
         return new StandardTemplateSectionDTO(parent, standardSectionDTOs);
     }
 
