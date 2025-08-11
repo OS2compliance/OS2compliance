@@ -37,6 +37,13 @@
                         <div class="card mb-3">
                             <div class="card-body">
                                 <div id="tablePlaceholder"></div>
+
+                                <template id="editListItemButtonTemplate">
+                                    <button type="button" class="editBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button>
+                                </template>
+                                <template id="deleteListItemButtonTemplate">
+                                    <button type="button" class="deleteBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>
+                                </template>
                             </div>
                         </div>
                     </div>
@@ -49,6 +56,7 @@
 </div>
 
 <script type="text/javascript" th:src="@{/js/standards/supporting.js}" defer></script>
+<script type="module" th:src="@{/js/standards/list.js}"></script>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
@@ -57,65 +65,6 @@
         var data = [[${templates}]];
         var viewUrl = [[@{/standards/supporting/}]];
     +]*/
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        const defaultClassName = {
-            table: 'table table-striped',
-            search: "form-control",
-            header: "d-flex justify-content-end"
-        };
-
-        new gridjs.Grid({
-          className: defaultClassName,
-            sort: {
-                enabled: true,
-                multiColumn: false
-            },
-            columns: [
-                {
-                    id: "identifier",
-                    name: "identifier",
-                    hidden: true
-                },
-                {
-                    id: "name",
-                    name: "Standard",
-                    formatter: (cell, row) => {
-                        const url = viewUrl + row.cells[0]['data'];
-                        return gridjs.html(`<a href="${url}">${cell}</a>`);
-                    }
-                },
-                {
-                    id: "compliance",
-                    name: "Efterlevelse"
-                },
-                {
-                    id: "actions",
-                    name: "Handlinger",
-                    formatter: (cell, row) => {
-                        let url = row.cells[0]['data'];
-                        return gridjs.html(`<button onclick="createStandardService.openStandardModal('${url}', true)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button><button onclick="createStandardService.openDeleteSwal('${url}')" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>`);
-                    }
-                }
-            ],
-            data: data,
-            language: {
-                'search': {
-                    'placeholder': 'Søg'
-                },
-                'pagination': {
-                    'previous': 'Forrige',
-                    'next': 'Næste',
-                    'showing': 'Viser',
-                    'results': 'Opgaver',
-                    'of': 'af',
-                    'to': 'til',
-                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
-                    'page': (page) => `Side ${page}`
-                }
-            }
-        }).render(document.getElementById("tablePlaceholder"));
-    });
     /*]]>*/
 </script>
 

@@ -10,6 +10,8 @@ import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
@@ -42,6 +44,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -147,7 +150,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
-    record StandardTemplateListDTO(String identifier, String name, String compliance) {}
+    record StandardTemplateListDTO(String identifier, String name, String compliance, Set<String> allowedActions) {}
 	@RequireReadAll
     @Transactional
     @GetMapping
@@ -163,11 +166,19 @@ public class StandardController {
             final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
 
+			Set<String> allowedActions = new HashSet<>();
+			if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+				allowedActions.add("editable");
+			}
+			if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
+				allowedActions.add("deletable");
+			}
+
             if (relevantCount == 0 ) {
-                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%"));
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%", allowedActions));
             } else {
                 final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / relevantCount);
-                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%",  allowedActions));
             }
         }
         model.addAttribute("templates", templates);
