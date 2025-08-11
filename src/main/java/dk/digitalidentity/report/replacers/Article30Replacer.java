@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -245,7 +246,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
 
 	private void createSupplierAddressTable(XWPFDocument doc, List<Asset> relatedAssets) {
 		// Map to records
-		Set<AssetSupplier> assetSuppliers = mapToAssetSuppliers(relatedAssets);
+		List<AssetSupplier> assetSuppliers = mapToAssetSuppliers(relatedAssets);
 
 		// Create table
 		List<String> headerTexts = new ArrayList<>() ;
@@ -272,7 +273,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
 		}
 	}
 
-	private void createSupplierAddressRows(Set<AssetSupplier> assetSuppliers, XWPFTable table) {
+	private void createSupplierAddressRows(List<AssetSupplier> assetSuppliers, XWPFTable table) {
 		for (AssetSupplier asset : assetSuppliers) {
 			XWPFTableRow row = table.createRow();
 			row.getCell(0).setText(asset.assetName);
@@ -296,26 +297,28 @@ public class Article30Replacer implements PlaceHolderReplacer {
 
 	private record SupplierAddress ( String supplierName, String address){}
 	private record AssetSupplier(String assetName, List<SupplierAddress> addresses) {}
-	private Set<AssetSupplier> mapToAssetSuppliers (List<Asset> relatedAssets) {
+	private List<AssetSupplier> mapToAssetSuppliers (List<Asset> relatedAssets) {
 		return relatedAssets.stream().map(a -> {
-			Supplier mainSupplier = a.getSupplier();
-			List<SupplierAddress> suppliers = new HashSet<>(a.getSuppliers())
-					.stream()
-					.map(m -> m.getSupplier())
-					.sorted((supA, supB) -> {
-						if (supA == mainSupplier) {
-							return 1;
-						}
-						if (supB == mainSupplier) {
-							return -1;
-						}
-						return supA.getName().compareTo(supB.getName());
-					})
-					.map(this::mapToSupplierAddress)
-					.toList();
+					Supplier mainSupplier = a.getSupplier();
+					List<SupplierAddress> suppliers = new HashSet<>(a.getSuppliers())
+							.stream()
+							.map(m -> m.getSupplier())
+							.sorted((supA, supB) -> {
+								if (supA == mainSupplier) {
+									return -1;
+								}
+								if (supB == mainSupplier) {
+									return 1;
+								}
+								return supA.getName().compareTo(supB.getName());
+							})
+							.map(this::mapToSupplierAddress)
+							.toList();
 
-			return new AssetSupplier(a.getName(), suppliers);
-		}).collect(Collectors.toSet());
+					return new AssetSupplier(a.getName(), suppliers);
+				})
+				.sorted(Comparator.comparing(AssetSupplier::assetName))
+				.toList();
 	}
 
 	private SupplierAddress mapToSupplierAddress(Supplier s) {
@@ -354,6 +357,8 @@ public class Article30Replacer implements PlaceHolderReplacer {
             nullSafe(() -> register.getResponsibleOus().stream().map(OrganisationUnit::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
         insertStandard(document, cursor, "Hvem er ansvarlig for behandling af personoplysningerne: ",
             nullSafe(register::getInformationResponsible, "Ikke angivet"));
+		insertStandard(document, cursor, "Navn på DPO: ",
+				nullSafe( () -> register.getDataProtectionOfficer().getName(), "Ikke angivet"));
         insertStandard(document, cursor, "Fortegnelse over behandlingsaktivitet angående: ",
             nullSafe(() -> register.getRegisterRegarding().stream().map(v -> v.getCaption()).collect(Collectors.joining(", ")), "Ikke angivet"));
 		insertStandard(document, cursor, "Sikkerhedsforanstaltninger: ",

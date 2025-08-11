@@ -11,9 +11,11 @@ import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -132,9 +134,10 @@ public class RiskImageService {
 
 	private ThreatRow fromThreatCatalogThreat(ThreatCatalogThreat threat, Set<ThreatAssessment> relevantAssessments) {
 
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy HH:mm");
 		Map<String, Double> assessmentScores = relevantAssessments.stream()
 				.collect(Collectors.toMap(
-						Relatable::getName,
+						ta -> StringUtils.truncate(ta.getName(), 50) + " " + ta.getCreatedAt().format(formatter), // Truncated name of the threatassessment with date appended
 						ta -> getAverageScore( // Get average score
 								ta.getThreatAssessmentResponses().stream() // ...For responses of this treatassessment
 										.filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().equals(threat)).toList() // ...That matches the relevant threat
