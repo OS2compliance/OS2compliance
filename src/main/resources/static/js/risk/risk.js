@@ -53,8 +53,8 @@ function CreateTable() {
                         searchKey: 'name'
                     },
                     formatter: (cell, row) => {
-                        const external = row.cells[11]['data']
-                        const externalLink = row.cells[12]['data']
+                        const external = row.cells[12]['data']
+                        const externalLink = row.cells[13]['data']
                         const url = viewUrl + row.cells[0]['data'];
                         if(external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
@@ -177,16 +177,36 @@ function CreateTable() {
                     },
                 },
                 {
+                    name: "Trusselskataloger",
+                    searchable: {
+                        searchKey: 'threatCatalogs',
+                    },
+                    width: '120px',
+                    formatter: (cell, row) => {
+                        if (!cell || cell.trim() === '') {
+                            return gridjs.html('<span class="text-muted">Ingen kataloger</span>');
+                        }
+
+                        const catalogs = cell.split(',').map(catalog => catalog.trim()).filter(catalog => catalog !== '');
+                        const badges = catalogs.map(catalog =>
+                            `<span class="badge bg-info me-1 mb-1">${catalog}</span>`
+                        );
+
+                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
+                    },
+                },
+                {
                     id: 'handlinger',
                     name: 'Handlinger',
                     sort: 0,
                     width: '100px',
                     formatter: (cell, row) => {
+                        console.log(row.cells);
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[11]['data']
-                        const externalLink = row.cells[12]['data']
-                        const changeable = row.cells[10]['data']
+                        const external = row.cells[12]['data']
+                        const externalLink = row.cells[13]['data']
+                        const changeable = row.cells[11]['data']
                         let buttonHTML = ''
 
                         //edit button

@@ -5,6 +5,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -24,4 +26,5 @@ public class RiskDTO {
 	private boolean changeable;
 	private boolean fromExternalSource;
     private String externalLink;
+	private String threatCatalogs;
 }

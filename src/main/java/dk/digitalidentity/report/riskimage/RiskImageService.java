@@ -4,6 +4,7 @@ import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.report.riskimage.dto.ThreatRow;
@@ -93,12 +94,14 @@ public class RiskImageService {
 		Map<CustomThreat, Set<ThreatAssessment>> threatAssessmentByCustomThreatMap = new HashMap<>();
 
 		for (ThreatAssessment assessment : threatAssessments) {
-			if (assessment.getThreatCatalog() != null) {
-				List<ThreatCatalogThreat> threats = assessment.getThreatCatalog().getThreats();
+			if (assessment.getThreatCatalogs() != null) {
+				for (ThreatCatalog threatCatalog : assessment.getThreatCatalogs()) {
+					List<ThreatCatalogThreat> threats = threatCatalog.getThreats();
 
-				for (ThreatCatalogThreat threat : threats) {
-					threatAssessmentByThreatMap.computeIfAbsent(threat, k -> new HashSet<>());
-					threatAssessmentByThreatMap.get(threat).add(assessment);
+					for (ThreatCatalogThreat threat : threats) {
+						threatAssessmentByThreatMap.computeIfAbsent(threat, k -> new HashSet<>());
+						threatAssessmentByThreatMap.get(threat).add(assessment);
+					}
 				}
 			}
 			if (assessment.getCustomThreats() != null) {
