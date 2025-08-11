@@ -84,13 +84,13 @@ public class AssetsRestController {
 
 	@RequireReadOwnerOnly
 	@PostMapping("list")
-    public PageDTO<AssetDTO> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
+	public PageDTO<AssetDTO> list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam Map<String, String> filters // Dynamic filters for search fields
+	) {
 
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
@@ -100,25 +100,26 @@ public class AssetsRestController {
 		}
 
 		Page<AssetGrid> assets = null;
-		if (SecurityUtil.isLimitedUser()) {
-			// Logged in user is a limited user
-			assets =  assetGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, AssetGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		}else {
-			// Logged in user is User or higher role
-			assets =  assetGridDao.findAllWithColumnSearch(
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			assets = assetGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, AssetGrid.class),
 					buildPageable(page, limit, sortColumn, sortDirection),
 					AssetGrid.class
 			);
 		}
+		else {
+			// Logged in user can see only own
+			assets = assetGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, AssetGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+		}
 
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
-    }
+		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
@@ -136,11 +137,11 @@ public class AssetsRestController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-		Page<AssetGrid> assets = assetGridDao.findAllForResponsibleUser(
-				validateSearchFilters(filters,AssetGrid.class ),
+		Page<AssetGrid> assets = assetGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, AssetGrid.class),
+				user,
 				buildPageable(page, limit, sortColumn, sortDirection),
-				AssetGrid.class,
-				user
+				AssetGrid.class
 		);
 
         return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));

@@ -50,7 +50,7 @@ public interface AssetMapper {
     }
 
     default AssetDTO toDTO(final AssetGrid assetGrid) {
-        return AssetDTO.builder()
+        AssetDTO assetDTO = AssetDTO.builder()
             .id(assetGrid.getId())
             .name(assetGrid.getName())
             .supplier(nullSafe(() -> assetGrid.getSupplier()))
@@ -68,26 +68,15 @@ public interface AssetMapper {
             .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
             .changeable(false)
             .build();
-    }
 
-    //provides a mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    default AssetDTO toDTO(final AssetGrid assetGrid) {
-        AssetDTO assetDTO = toDTO(assetGrid);
-        if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || SecurityUtil.getPrincipalUuid().equals(assetGrid.getResponsibleUserUuids())) {
-            assetDTO.setChangeable(true);
-        }
-        return assetDTO;
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || SecurityUtil.getPrincipalUuid().equals(assetGrid.getResponsibleUserUuids())) {
+			assetDTO.setChangeable(true);
+		}
+
+		return assetDTO;
     }
 
     default List<AssetDTO> toDTO(List<AssetGrid> assetGrids) {
-        List<AssetDTO> assetDTOS = new ArrayList<>();
-        assetGrids.forEach(a -> assetDTOS.add(toDTO(a)));
-        return assetDTOS;
-    }
-
-    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    //List<AssetDTO> toDTO(List<AssetGrid> assetGrids, boolean superuser, String principalUuid);
-    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids, String principalUuid) {
         List<AssetDTO> assetDTOS = new ArrayList<>();
         assetGrids.forEach(a -> assetDTOS.add(toDTO(a)));
         return assetDTOS;

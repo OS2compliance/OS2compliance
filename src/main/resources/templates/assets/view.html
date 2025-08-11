@@ -75,8 +75,8 @@
                                     <!-- buttons row -->
                                     <div class="row mb-3 gap-1">
                                         <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="editMode(false);" hidden>Annuller</button>
-                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" hidden>Annuller</button>
+                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger stamdata</button>
                                     </div>
                                     <div class="row mb-3">
                                         <!-- Column 1 -->
@@ -665,6 +665,7 @@
         let managersChoicesEditSelect = null;
         let suppliersChoicesEditSelect = null;
         let responsibleChoicesEditSelect = null;
+        let operationResponsibleChoicesEditSelect = null;
 
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -701,8 +702,23 @@
             }
             toggleRiskFactorContainer();
             aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
+
+            initEditButtons()
         });
 
+        function initEditButtons() {
+            const editButton = document.getElementById('editAssetBtn');
+            const cancelButton = document.getElementById('cancelBtn');
+
+            editButton.addEventListener('click', e => {
+                const responsibleFieldsCanBeChanged = editButton.getAttribute('responsible-changeable');
+                editMode(true, responsibleFieldsCanBeChanged)
+            })
+            cancelButton.addEventListener('click', e => {
+                const responsibleFieldsCanBeChanged = cancelButton.getAttribute('responsible-changeable');
+                editMode(false, responsibleFieldsCanBeChanged)
+            })
+        }
 
         function initTabs() {
             const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
@@ -942,7 +958,7 @@
             return supplierChoices;
         }
 
-        function editMode(enabled) {
+        function editMode(enabled, responsibleFieldChangeable) {
             const rootElement = document.getElementById('editForm');
             const aiStatus = document.getElementById('aiStatus');
             const aiRiskFactor = document.getElementById('riskFactor');
@@ -969,14 +985,18 @@
                 document.getElementById('editAssetBtn').hidden = true;
 
                 if (!isKitos) {
-                    managersChoicesEditSelect.enable();
+                    if (responsibleFieldChangeable) {
+                        managersChoicesEditSelect.enable();
+                    }
                     document.getElementById("productLinksViewContainer").hidden = true;
                     document.getElementById("productLinksEditContainer").hidden = false;
                     document.getElementById("addProductLinkBtn").hidden = false;
                 }
 
                 suppliersChoicesEditSelect.enable();
-                responsibleChoicesEditSelect.enable();
+                if (responsibleFieldChangeable) {
+                    responsibleChoicesEditSelect.enable();
+                }
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                     elem.disabled = true;
