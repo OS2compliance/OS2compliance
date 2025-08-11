@@ -48,15 +48,34 @@ public class TaskRestController {
         @RequestParam(value = "dir", defaultValue = "asc", required = false) String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<TaskGrid> tasks =  taskGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, TaskGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            TaskGrid.class
-        );
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		Page<TaskGrid> tasks;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			tasks = taskGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, TaskGrid.class),
+					buildPageable(page, limit, sortColumn, sortDirection),
+					TaskGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			tasks = taskGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, TaskGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					TaskGrid.class
+			);
+		}
+
         assert tasks != null;
-        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
     }
 
 	@RequireReadOwnerOnly
@@ -69,7 +88,6 @@ public class TaskRestController {
         @RequestParam(value = "dir", defaultValue = "asc") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         if (!SecurityUtil.getPrincipalUuid().equals(userUuid)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }

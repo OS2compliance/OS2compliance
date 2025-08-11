@@ -5,6 +5,7 @@ import dk.digitalidentity.mapping.DocumentMapper;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -48,11 +49,31 @@ public class DocumentRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<DocumentGrid> documents =  documentGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, DocumentGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            DocumentGrid.class
-        );
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+        Page<DocumentGrid> documents;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			documents = documentGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DocumentGrid.class),
+					buildPageable(page, limit, sortColumn, sortDirection),
+					DocumentGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			documents = documentGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, DocumentGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					DocumentGrid.class
+			);
+		}
 
         assert documents != null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

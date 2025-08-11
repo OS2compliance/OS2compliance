@@ -6,13 +6,17 @@ import dk.digitalidentity.mapping.DBSAssetMapper;
 import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.UserService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -47,6 +51,7 @@ public class DBSAssetsRestController {
     private final AssetService assetService;
     private final AssetOversightService assetOversightService;
     private final RelationService relationService;
+	private final UserService userService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -57,11 +62,32 @@ public class DBSAssetsRestController {
                                      @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
                                      @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<DBSAssetGrid> assets =  dbsAssetGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, DBSAssetGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            DBSAssetGrid.class
-        );
+        Page<DBSAssetGrid> assets = null;
+
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			assets = dbsAssetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DBSAssetGrid.class),
+					buildPageable(page, limit, sortColumn, sortDirection),
+					DBSAssetGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			assets = dbsAssetGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, DBSAssetGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					DBSAssetGrid.class
+			);
+		}
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
 	}

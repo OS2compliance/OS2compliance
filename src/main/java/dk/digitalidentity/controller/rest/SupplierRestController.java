@@ -5,9 +5,13 @@ import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
+import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -15,11 +19,13 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,6 +45,7 @@ public class SupplierRestController {
 	private final SupplierGridDao supplierGridDao;
 	private final SupplierMapper supplierMapper;
 	private final SupplierDao supplierDao;
+	private final UserService userService;
 
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}
 
@@ -51,11 +58,31 @@ public class SupplierRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
 	) {
-        Page<SupplierGrid> suppliers =  supplierGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, SupplierGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            SupplierGrid.class
-        );
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+
+		Page<SupplierGrid> suppliers;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			suppliers = supplierGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, SupplierGrid.class),
+					buildPageable(page, limit, sortColumn, sortDirection),
+					SupplierGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			suppliers = supplierGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, SupplierGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					SupplierGrid.class
+			);
+		}
 
 		// Convert to DTO
 		final List<SupplierGridDTO> supplierDTOs = new ArrayList<>();

@@ -5,7 +5,9 @@ import dk.digitalidentity.mapping.RegisterMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRegister;
@@ -45,11 +47,31 @@ public class RegisterRestController {
             @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
             @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<RegisterGrid> registers =  registerGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, RegisterGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            RegisterGrid.class
-        );
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		Page<RegisterGrid> registers;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			registers = registerGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RegisterGrid.class),
+					buildPageable(page, limit, sortColumn, sortDirection),
+					RegisterGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			registers = registerGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, RegisterGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					RegisterGrid.class
+			);
+		}
 
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
