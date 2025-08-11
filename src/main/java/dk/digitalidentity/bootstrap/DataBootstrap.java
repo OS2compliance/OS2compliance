@@ -139,9 +139,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
 			list.get().setCustomizable(true);
 		}
-		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "systemejer" , "asset", true);
-		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "systemansvarlig" , "asset", true);
-		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "driftsansvarlig" , "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "Systemejer" , "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Systemansvarlig" , "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Driftsansvarlig" , "asset", true);
 	}
 
 	private void seedV24 () {

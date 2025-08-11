@@ -45,8 +45,8 @@ public class SettingsController {
         model.addAttribute("settings", settings);
 		model.addAttribute("page", getParentType(httpServletRequest.getHeader("Referer")));
 		model.addAttribute("customSystemOwnerInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
-		model.addAttribute("customSystemResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
-		model.addAttribute("customSystemOperationResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
+		model.addAttribute("customSystemResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
+		model.addAttribute("customSystemOperationResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
 		boolean kitosEnabled = configuration.getIntegrations().getKitos().isEnabled();
 		model.addAttribute("kitosEnabled", kitosEnabled);
 		if (kitosEnabled) {
