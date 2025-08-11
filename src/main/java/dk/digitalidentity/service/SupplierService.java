@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -13,6 +14,11 @@ import java.util.Optional;
 @Service
 @Transactional
 public class SupplierService {
+
+	public boolean isResponsibleFor(Supplier supplier) {
+		return  supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid());
+	}
+
     private final SupplierDao supplierDao;
 
     public SupplierService(final SupplierDao supplierDao) {

@@ -45,11 +45,11 @@ public class DocumentsController {
     private final RelationService relationService;
     private final TaskService taskService;
 
+	@RequireReadOwnerOnly
     @GetMapping
     public String documentsList(final Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", new Document());
-        model.addAttribute("isSuperuser", SecurityUtil.isOperationAllowed(Roles.SUPER_USER));
+        model.addAttribute("isSuperuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
         return "documents/index";
     }
 
@@ -73,7 +73,7 @@ public class DocumentsController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
-        model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) || (document.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid()))));
+        model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) || documentService.isResponsibleFor(document)));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }
@@ -99,8 +99,8 @@ public class DocumentsController {
     public String formEdit(@ModelAttribute final Document document) {
         final Document excistingDocument = documentService.get(document.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !excistingDocument.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+
+        if(!documentService.isResponsibleFor(excistingDocument)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {

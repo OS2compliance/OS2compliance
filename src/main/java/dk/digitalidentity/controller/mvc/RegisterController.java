@@ -114,7 +114,7 @@ public class RegisterController {
 	@RequireReadOwnerOnly
 	@GetMapping
 	public String registerList(Model model) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
 		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 		return "registers/index";
 	}
@@ -153,7 +153,6 @@ public class RegisterController {
 			@ModelAttribute @Valid final ConsequenceAssessment assessment,
 			@RequestParam(required = false) final String section) {
 		final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (existingOptional.isPresent()) {
 			final ConsequenceAssessment existing = existingOptional.get();
@@ -439,7 +438,7 @@ public class RegisterController {
 
 		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups()));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
 
 		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
 
@@ -492,7 +491,7 @@ public class RegisterController {
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
 		model.addAttribute("risk", new ThreatAssessment());
-		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 
         model.addAttribute("organisationAssessmentColumnTypes", getOrganisationAssessmentColumnTypes());
         model.addAttribute("organisationAssessmentMap", getOrganisationAssessmentMap(assessment));

@@ -10,7 +10,6 @@ import org.springframework.security.saml2.provider.service.authentication.Saml2A
 import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -56,35 +55,35 @@ public class SecurityUtil {
         if (!isLoggedIn()) {
             return false;
         }
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.USER));
+        return isOperationAllowed(Roles.USER);
     }
 
 	public static boolean isLimitedUser() {
 		if (!isLoggedIn()) {
 			return false;
 		}
-		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.LIMITED_USER));
+		return isOperationAllowed(Roles.LIMITED_USER);
 	}
 
     public static boolean isSuperUser() {
         if(!isLoggedIn()) {
             return false;
         }
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch( a -> a.getAuthority().equals(Roles.SUPER_USER));
+        return isOperationAllowed(Roles.SUPER_USER);
     }
 
     public static boolean isAdministrator() {
         if (!isLoggedIn()) {
             return false;
         }
-        return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.ADMINISTRATOR));
+        return isOperationAllowed(Roles.ADMINISTRATOR);
     }
 
 	public static boolean isAuthenticated() {
 		if (!isLoggedIn()) {
 			return false;
 		}
-		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.AUTHENTICATED));
+		return isOperationAllowed(Roles.AUTHENTICATED);
 	}
 
     public static String getPrincipalUuid () {

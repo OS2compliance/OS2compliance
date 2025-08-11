@@ -48,6 +48,10 @@ public class TaskService {
     private final RelationService relationService;
     private final RelatableService relatableService;
 
+	public boolean isResponsibleFor(Task task) {
+		return task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid());
+	}
+
     public List<Task> findAll() {
         return taskDao.findAll();
     }

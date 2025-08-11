@@ -99,7 +99,7 @@ public class RiskController {
 	@RequireReadOwnerOnly
     @GetMapping
     public String riskList(final Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("risk", new ThreatAssessment());
         model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
@@ -378,8 +378,8 @@ public class RiskController {
     @Transactional
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+
+        if(!threatAssessmentService.isResponsibleFor(threatAssessment)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         threatAssessment.setRevisionInterval(assessment.getRevisionInterval());
@@ -532,7 +532,7 @@ public class RiskController {
 	@RequireUpdateOwnerOnly
     @GetMapping("external/{riskId}/edit")
     public String riskId(final Model model, @PathVariable Long riskId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 
 		ThreatAssessment riskassessment = threatAssessmentService.findById(riskId)
@@ -556,7 +556,7 @@ public class RiskController {
 	@RequireCreateOwnerOnly
     @GetMapping("external/create")
     public String createExternalDPIA(final Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY));
         model.addAttribute("risk", new ExternalThreatAssessmentCreateDTO(null, "", ThreatAssessmentType.ASSET, new ResponsibleOUDTO("", ""), new ResponsibleUserDTO("", ""), "")); // emppty dto
         return "risks/fragments/create_external_riskassessment_modal :: create_external_riskassessment_modal";
@@ -566,7 +566,7 @@ public class RiskController {
 	public String riskDashboard(final Model model) {
 		model.addAttribute("reversedScale", scaleService.getConsequenceScale().keySet().stream()
 				.sorted(Collections.reverseOrder())
-				.collect(Collectors.toList()));
+				.toList());
 
 		model.addAttribute("riskScoreColorMap", scaleService.getScaleRiskScoreColorMap());
 
@@ -587,6 +587,6 @@ public class RiskController {
 				.map(assessment -> assessment.getCreatedAt().getYear())
 				.distinct()
 				.sorted()
-				.collect(Collectors.toList());
+				.toList();
 	}
 }

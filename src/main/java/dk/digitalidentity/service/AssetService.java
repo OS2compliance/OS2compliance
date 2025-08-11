@@ -27,6 +27,7 @@ import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.TransferImpactAssessment;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.EstimationDTO;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
@@ -101,6 +102,10 @@ public class AssetService {
     private final ChoiceDPIADao choiceDPIADao;
 	private final S3Service s3Service;
 
+	public boolean isResponsibleFor(Asset asset) {
+		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid());
+	}
+
 	public Optional<AssetOversight> getOversight(final Long oversightId) {
         return assetOversightDao.findById(oversightId);
     }
@@ -173,19 +178,16 @@ public class AssetService {
     public boolean isEditable(final Asset asset) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return authentication.getAuthorities().stream()
-            .anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)
-                || r.getAuthority().equals(Roles.ADMINISTRATOR))
-                || asset.getResponsibleUsers().stream()
-            .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
+            .anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)
+                || isResponsibleFor(asset));
     }
 
 	public boolean isEditable(final List<Asset> assets) {
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 		return authentication.getAuthorities().stream()
-				.anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)
-						|| r.getAuthority().equals(Roles.ADMINISTRATOR))
+				.anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)
 				|| assets.stream().flatMap(a->a.getResponsibleUsers().stream())
-				.anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
+				.anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())));
 	}
 
     /**

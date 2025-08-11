@@ -2,14 +2,15 @@ package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -28,20 +29,21 @@ public class CustomChoiceListController {
     private final AssetService assetService;
     private final RegisterService registerService;
 
-    record CustomChoiceListDTO(Long id, String name, boolean multipleSelect) {}
+	record CustomChoiceListDTO(Long id, String name, boolean multipleSelect) {}
+	@RequireReadAll
     @GetMapping()
     public String customChoiceListsIndex(Model model) {
 
         List<ChoiceList> customChoiceLists = choiceService.getAllCustomizableChoiceLists();
         model.addAttribute("choiceLists", customChoiceLists.stream().map(choiceList -> new CustomChoiceListDTO(choiceList.getId(), choiceList.getName(), choiceList.getMultiSelect())).toList() );
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("isSuperuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)));
+        model.addAttribute("isSuperuser",SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "admin/custom_choice_lists";
     }
 
     record ChoiceListValueDTO(long id, String caption, String description, boolean removable){}
     record EditableCustomChoiceList(long id, String name, boolean multiSelectable, List<ChoiceListValueDTO> values){}
+	@RequireUpdateAll
     @GetMapping("{id}/edit")
     public String editChoiceListFragment (Model model, @PathVariable long id) {
         ChoiceList choiceList = choiceService.findChoiceList(id)

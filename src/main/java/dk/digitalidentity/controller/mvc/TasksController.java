@@ -84,7 +84,7 @@ public class TasksController {
 	@RequireReadOwnerOnly
     @GetMapping
     public String tasksList(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
         return "tasks/index";
     }
@@ -185,7 +185,7 @@ public class TasksController {
     public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
         final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if(!existingTask.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
@@ -224,11 +224,9 @@ public class TasksController {
         final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
         model.addAttribute("task", task);
         model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
-        model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) || (task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid()))));
+        model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
 

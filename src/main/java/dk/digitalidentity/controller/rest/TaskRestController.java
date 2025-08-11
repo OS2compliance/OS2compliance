@@ -56,7 +56,7 @@ public class TaskRestController {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         assert tasks != null;
-        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)), SecurityUtil.getPrincipalUuid()));
     }
 
 	@RequireReadOwnerOnly
@@ -70,7 +70,7 @@ public class TaskRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !SecurityUtil.getPrincipalUuid().equals(userUuid)) {
+        if (!SecurityUtil.getPrincipalUuid().equals(userUuid)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 

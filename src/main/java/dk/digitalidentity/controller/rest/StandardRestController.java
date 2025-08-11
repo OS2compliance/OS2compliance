@@ -37,7 +37,6 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @RestController
@@ -75,8 +74,8 @@ public class StandardRestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
-    record StandardSectionRecord(Long id, String description, Long[] documents, Long[] relations, StandardSectionStatus status){}
 
+    record StandardSectionRecord(Long id, String description, Long[] documents, Long[] relations, StandardSectionStatus status){}
 	@RequireCreateOwnerOnly
     @Transactional
     @PostMapping(value = "save", consumes = MediaType.APPLICATION_JSON_VALUE)
@@ -84,7 +83,7 @@ public class StandardRestController {
         final StandardSection section = standardSectionDao.findById(record.id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && section.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if( section.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final HashSet<Long> combinedRelations = new HashSet<>();
@@ -141,7 +140,7 @@ public class StandardRestController {
 
 	@Transactional
 	@PostMapping("/header/delete/{identifier}")
-	public ResponseEntity<?> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
+	public ResponseEntity<HttpStatus> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
 		StandardTemplateSection section =  standardTemplateSectionDao.findById(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		standardTemplateSectionDao.delete(section);
 		return new ResponseEntity<>(HttpStatus.OK);
@@ -149,7 +148,7 @@ public class StandardRestController {
 
 	@Transactional
 	@PostMapping("/delete/{id}")
-	public ResponseEntity<?> deleteStandard(@PathVariable(name = "id") final String id) {
+	public ResponseEntity<HttpStatus> deleteStandard(@PathVariable(name = "id") final String id) {
 		StandardTemplate template = standardTemplateDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		standardTemplateDao.delete(template);
 		return new ResponseEntity<>(HttpStatus.OK);

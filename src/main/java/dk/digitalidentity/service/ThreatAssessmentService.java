@@ -26,6 +26,7 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.TaskDTO;
@@ -76,6 +77,10 @@ public class ThreatAssessmentService {
     private final ChoiceService choiceService;
 	private final SettingsService settingsService;
 	private final ThreatAssessmentResponseDao threatAssessmentResponseDao;
+
+	public boolean isResponsibleFor(ThreatAssessment threatAssessment) {
+		return threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid());
+	}
 
 	public ThreatAssessment findByS3Document(S3Document s3Document) {
         return threatAssessmentDao.findByThreatAssessmentReportS3DocumentId(s3Document.getId());
@@ -414,7 +419,7 @@ public class ThreatAssessmentService {
             final ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream().filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(threat.getId())).findAny().orElse(null);
             final ThreatDTO dto;
             if (response != null) {
-                final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).collect(Collectors.toList());
+                final List<Relatable> relatedPrecautions = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType().equals(RelationType.PRECAUTION)).toList();
                 dto = new ThreatDTO(threat.getId(), response.getId(), null, ThreatDatabaseType.CUSTOM, threat.getThreatType(), threat.getDescription(), response.isNotRelevant(), response.getProbability() != null ? response.getProbability() : -1, response.getConfidentialityRegistered() != null ? response.getConfidentialityRegistered() : -1, response.getIntegrityRegistered() != null ? response.getIntegrityRegistered() : -1, response.getAvailabilityRegistered() != null ? response.getAvailabilityRegistered() : -1, response.getConfidentialityOrganisation() != null ? response.getConfidentialityOrganisation() : -1, response.getIntegrityOrganisation() != null ? response.getIntegrityOrganisation() : -1, response.getAvailabilityOrganisation() != null ? response.getAvailabilityOrganisation() : -1, response.getConfidentialitySociety() != null ? response.getConfidentialitySociety() : -1, response.getIntegritySociety() != null ? response.getIntegritySociety() : -1, response.getAvailabilitySociety() != null ? response.getAvailabilitySociety() : -1,  response.getAuthenticitySociety() != null ? response.getAuthenticitySociety() : -1, response.getProblem(), response.getExistingMeasures(), relatedPrecautions, response.getMethod() == null ? ThreatMethod.NONE : response.getMethod(), response.getElaboration(), response.getResidualRiskConsequence() != null ? response.getResidualRiskConsequence() : -1, response.getResidualRiskProbability() != null ? response.getResidualRiskProbability() : -1);
                 dto.setIndex(index++);
                 addRelatedTasks(response, dto);
@@ -479,8 +484,7 @@ public class ThreatAssessmentService {
 				globalHighestConsequence = highestConsequence;
 			}
 		}
-		RiskScoreDTO result = new RiskScoreDTO(highestRiskNotAcceptedRiskScore, globalHighestprobability, globalHighestConsequence);
-		return result;
+		return new RiskScoreDTO(highestRiskNotAcceptedRiskScore, globalHighestprobability, globalHighestConsequence);
 	}
 
 	public record RiskScoreDTO(int highestRiskNotAcceptedRiskScore, int globalHighestprobability, int globalHighestConsequence) {}

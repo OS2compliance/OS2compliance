@@ -211,7 +211,7 @@ public class RelatableController {
      * Check if the current user is responsible for the given relatable, if not an exception is thrown
      */
     private void ensureModificationIsAllowed(final Relatable relateTo) {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         if (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)) {
             final List<User> responsibleUsers = relatableService.findResponsibleUsers(relateTo);
             final String principalUuid = SecurityUtil.getPrincipalUuid();

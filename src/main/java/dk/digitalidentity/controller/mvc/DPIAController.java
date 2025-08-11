@@ -78,7 +78,6 @@ public class DPIAController {
 	@RequireReadAll
     @GetMapping
     public String dpiaList(final Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "dpia/index";
     }
@@ -164,7 +163,7 @@ public class DPIAController {
 	@RequireUpdateAll
     @GetMapping("external/{dpiaId}/edit")
     public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
 
         DPIA dpia = dpiaService.find(dpiaId);
@@ -186,7 +185,7 @@ public class DPIAController {
 	@RequireCreateAll
     @GetMapping("external/create")
     public String createExternalDPIA(final Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_ALL));
 
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";

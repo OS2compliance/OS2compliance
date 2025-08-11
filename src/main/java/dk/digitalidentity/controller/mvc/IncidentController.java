@@ -39,7 +39,7 @@ public class IncidentController {
 	@RequireReadAll
     @GetMapping("logs")
     public String incidentLog(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "incidents/logs/index";
     }
@@ -87,7 +87,7 @@ public class IncidentController {
 	@RequireCreateAll
     @GetMapping("logForm")
     public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long incidentId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_ALL));
         if (incidentId != null) {
             final Incident incident = incidentService.findById(incidentId).orElseThrow(
@@ -115,7 +115,7 @@ public class IncidentController {
     public String viewIncident(final Model model, @PathVariable final Long id) {
         final Incident incident = incidentService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("incident", incident);
         // The incident responses only contains identifiers for the objects it points to, so we need to look up
         // the object to be able to show the names in the edit dialog.

@@ -155,7 +155,7 @@ public class DPIARestController {
 	public ResponseEntity<HttpStatus> dpia(@RequestBody final DPIAScreeningUpdateDTO dpiaScreeningUpdateDTO) {
 		final DPIA dpia = dpiaService.find(dpiaScreeningUpdateDTO.dpiaId);
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(dpia.getAssets())) {
+		if (!isResponsibleForAsset(dpia.getAssets())) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -188,7 +188,7 @@ public class DPIARestController {
         final List<Asset> assets = dpia.getAssets();
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(assets)) {
+        if (!isResponsibleForAsset(assets)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -206,7 +206,7 @@ public class DPIARestController {
 		final DPIA dpia = dpiaService.find(qualityAssuranceUpdateDTO.dpiaId);
 		final List<Asset> assets = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(assets)) {
+		if ( !isResponsibleForAsset(assets)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -223,7 +223,7 @@ public class DPIARestController {
 	        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         final List<Asset> assets = assetService.findAllById(createDPIAFormDTO.assetIds);
 		if (assets.isEmpty()) {throw new IllegalArgumentException("Must choose at least one asset");}
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(assets)) {
+        if ( !isResponsibleForAsset(assets)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -276,8 +276,7 @@ public class DPIARestController {
             assets = dpia.getAssets();
         }
 
-		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER))
-				&& !assets.stream()
+		if (!assets.stream()
 				.flatMap(a -> a.getResponsibleUsers().stream()
 						.map(User::getUuid)).toList()
 				.contains(SecurityUtil.getPrincipalUuid())) {
@@ -318,7 +317,7 @@ public class DPIARestController {
 		final DPIA dpia = dpiaService.find(dpiaId);
 		final List<Asset> assets = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(assets)) {
+		if (!isResponsibleForAsset(assets)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
@@ -376,7 +375,7 @@ public class DPIARestController {
 		final DPIA dpia = dpiaService.find(dpiaId);
 		final List<Asset> assets = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(assets)) {
+		if (!isResponsibleForAsset(assets)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 		if (dto.fieldName.equals("conclusion")) {
@@ -411,7 +410,7 @@ public class DPIARestController {
 		final DPIA dpia = dpiaService.find(dpiaId);
 		List<Asset> assets = dpia.getAssets();
 		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !isResponsibleForAsset(assets)) {
+		if (!isResponsibleForAsset(assets)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 		final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));

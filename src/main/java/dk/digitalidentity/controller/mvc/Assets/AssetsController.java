@@ -405,8 +405,8 @@ public class AssetsController {
 	@PostMapping("dataprocessing")
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         dataProcessingService.update(asset.getDataProcessing(), body);
@@ -429,8 +429,7 @@ public class AssetsController {
     @PostMapping("measures")
     public String measures(@ModelAttribute final SaveMeasuresDTO measuresForm) {
         final Asset asset = assetService.get(measuresForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         for (final SaveMeasureDTO answer : measuresForm.getMeasures()) {
@@ -453,8 +452,7 @@ public class AssetsController {
     @PostMapping("dpia")
     public String dpia(@ModelAttribute final AssetDPIAPageDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
@@ -494,10 +492,8 @@ public class AssetsController {
     public String formEdit(@ModelAttribute final Asset asset) {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.UPDATE_ALL))
-				&& !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -582,8 +578,7 @@ public class AssetsController {
 	public String subsupplierCreateOrEdit(@Valid @ModelAttribute final AssetSupplierDTO body) {
 		final Asset asset = assetService.get(body.assetId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		final Optional<AssetSupplierMapping> subSupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), body.id)).findAny();
@@ -625,8 +620,8 @@ public class AssetsController {
     @PostMapping("oversight")
     public String oversightSettings(@Valid @ModelAttribute final DataProcessingOversightDTO body) {
         final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
@@ -652,8 +647,7 @@ public class AssetsController {
     @PostMapping("oversight/edit")
     public String oversightCreateOrEdit(@Valid @ModelAttribute final AssetOversightDTO dto) {
         final Asset asset = assetService.get(dto.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
@@ -764,8 +758,8 @@ public class AssetsController {
     public String tia(@ModelAttribute final Asset asset) {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 

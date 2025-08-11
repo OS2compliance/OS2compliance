@@ -62,7 +62,6 @@ public class SupplierController {
 	@RequireReadOwnerOnly
 	@GetMapping
 	public String suppliersList(Model model) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
         return "suppliers/index";
 	}
@@ -88,10 +87,9 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("oversights", assetOversights);
-        model.addAttribute("changeableSupplier", (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) || (supplier.getResponsibleUser() != null && supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()))));
+        model.addAttribute("changeableSupplier", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || supplierService.isResponsibleFor(supplier)));
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);

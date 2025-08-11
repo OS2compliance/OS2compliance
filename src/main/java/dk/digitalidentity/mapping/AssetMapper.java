@@ -17,6 +17,8 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import org.apache.commons.lang3.BooleanUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -69,9 +71,9 @@ public interface AssetMapper {
     }
 
     //provides a mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    default AssetDTO toDTO(final AssetGrid assetGrid, boolean superuser, String principalUuid) {
+    default AssetDTO toDTO(final AssetGrid assetGrid) {
         AssetDTO assetDTO = toDTO(assetGrid);
-        if (superuser || principalUuid.equals(assetGrid.getResponsibleUserUuids())) {
+        if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || SecurityUtil.getPrincipalUuid().equals(assetGrid.getResponsibleUserUuids())) {
             assetDTO.setChangeable(true);
         }
         return assetDTO;
@@ -85,9 +87,9 @@ public interface AssetMapper {
 
     //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
     //List<AssetDTO> toDTO(List<AssetGrid> assetGrids, boolean superuser, String principalUuid);
-    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids, boolean superuser, String principalUuid) {
+    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids, String principalUuid) {
         List<AssetDTO> assetDTOS = new ArrayList<>();
-        assetGrids.forEach(a -> assetDTOS.add(toDTO(a, superuser, principalUuid)));
+        assetGrids.forEach(a -> assetDTOS.add(toDTO(a)));
         return assetDTOS;
     }
 

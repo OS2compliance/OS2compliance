@@ -56,7 +56,7 @@ public class DocumentRestController {
 
         assert documents != null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)), SecurityUtil.getPrincipalUuid()));
     }
 
 	@RequireReadOwnerOnly
@@ -82,7 +82,7 @@ public class DocumentRestController {
             DocumentGrid.class, user);
 
         assert documents != null;
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)), SecurityUtil.getPrincipalUuid()));
     }
 
 }
