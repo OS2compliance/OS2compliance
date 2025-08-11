@@ -165,8 +165,7 @@ public class SecurityUtil {
 				Roles.DELETE_OWNER_ONLY,
 				Roles.SECTION_ASSET,
 				Roles.SECTION_REGISTER,
-				Roles.SECTION_TASK,
-				Roles.SECTION_REPORT);
+				Roles.SECTION_TASK);
 	}
 
 	public static Set<String> getReadOnlyUserRoles () {
