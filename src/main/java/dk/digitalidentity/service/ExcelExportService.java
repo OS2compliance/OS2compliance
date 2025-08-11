@@ -1,5 +1,6 @@
 package dk.digitalidentity.service;
 
+import dk.digitalidentity.model.ExcelColumn;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -15,12 +16,12 @@ import org.springframework.stereotype.Service;
 
 import java.io.IOException;
 import java.lang.reflect.Field;
-import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
 public class ExcelExportService {
-
 	public void exportToExcel(List<?> data, String fileName, HttpServletResponse response) throws IOException {
 		if (data == null || data.isEmpty()) {
 			throw new IllegalArgumentException("No data to export");
@@ -59,39 +60,32 @@ public class ExcelExportService {
 	}
 
 	private List<Field> getExportableFields(Class<?> dtoClass) {
-		List<Field> exportableFields = new ArrayList<>();
-		Field[] allFields = dtoClass.getDeclaredFields();
-
-		for (Field field : allFields) {
-			// Skip action columns and other non-exportable fields
-			if (!isActionField(field.getName())) {
-				field.setAccessible(true);
-				exportableFields.add(field);
-			}
-		}
-
-		return exportableFields;
-	}
-
-	private List<String> getColumnHeaders(List<Field> fields) {
-		List<String> headers = new ArrayList<>();
-		for (Field field : fields) {
-			headers.add(formatFieldNameToHeader(field.getName()));
-		}
-		return headers;
-	}
-
-	private String formatFieldNameToHeader(String fieldName) {
-		return fieldName.replaceAll("([a-z])([A-Z])", "$1 $2")
-				.substring(0, 1).toUpperCase() +
-				fieldName.replaceAll("([a-z])([A-Z])", "$1 $2").substring(1);
+		return Arrays.stream(dtoClass.getDeclaredFields())
+				.filter(f -> f.isAnnotationPresent(ExcelColumn.class))
+				.sorted(Comparator.comparingInt(f -> f.getAnnotation(ExcelColumn.class).order()))
+				.peek(f -> f.setAccessible(true))
+				.toList();
 	}
 
 	private boolean isActionField(String fieldName) {
 		String lowerName = fieldName.toLowerCase();
 		return lowerName.equals("handlinger") ||
 				lowerName.equals("actions") ||
-				lowerName.equals("action");
+				lowerName.equals("action") ||
+				lowerName.equals("id");
+	}
+
+
+	private List<String> getColumnHeaders(List<Field> fields) {
+		return fields.stream()
+				.map(f -> f.getAnnotation(ExcelColumn.class).headerName())
+				.toList();
+	}
+
+	private String formatFieldNameToHeader(String fieldName) {
+		return fieldName.replaceAll("([a-z])([A-Z])", "$1 $2")
+				.substring(0, 1).toUpperCase() +
+				fieldName.replaceAll("([a-z])([A-Z])", "$1 $2").substring(1);
 	}
 
 	private CellStyle createHeaderStyle(Workbook workbook) {
@@ -163,3 +157,7 @@ public class ExcelExportService {
 		}
 	}
 }
+
+
+
+

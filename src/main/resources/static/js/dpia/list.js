@@ -172,7 +172,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     };
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "dpiaDatatable" ));
-    new CustomGridFunctions(grid, listDataUrl, 'dpiaDatatable')
+    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, 'dpiaDatatable');
+    window.customGridFunctions = customGridFunctions;
     gridOptions.init(grid, document.getElementById("gridOptions"));
 });
 

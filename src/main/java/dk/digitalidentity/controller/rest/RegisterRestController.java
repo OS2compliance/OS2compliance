@@ -35,31 +35,12 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @RequireUser
 @RequiredArgsConstructor
 public class RegisterRestController {
-    private final RegisterGridDao registerGridDao;
+	private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
 	private final ExcelExportService excelExportService;
 
-    @PostMapping("list")
-    public PageDTO<RegisterDTO> list(
-            @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "limit", defaultValue = "50") int limit,
-            @RequestParam(value = "order", required = false) String sortColumn,
-            @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-            @RequestParam Map<String, String> filters
-    ) {
-        Page<RegisterGrid> registers =  registerGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, RegisterGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            RegisterGrid.class
-        );
-
-        assert registers != null;
-        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
-    }
-
-	// TODO: Consider either replacing the above list completely or making two different endpoints
-	@PostMapping("/export/list")
+	@PostMapping("list")
 	public Object list(
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
@@ -67,7 +48,7 @@ public class RegisterRestController {
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
 			@RequestParam(value = "export", defaultValue = "false") boolean export,
 			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
+			@RequestParam Map<String, String> filters,
 			HttpServletResponse response
 	) throws IOException {
 
@@ -75,13 +56,13 @@ public class RegisterRestController {
 		if (export) {
 			Page<RegisterGrid> allRegisters = registerGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, RegisterGrid.class),
-					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection), // Get ALL records
+					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
 					RegisterGrid.class
 			);
 
 			List<RegisterDTO> allData = mapper.toDTO(allRegisters.getContent());
 			excelExportService.exportToExcel(allData, fileName, response);
-			return null; // Response is handled by exportToExcel
+			return null;
 		}
 
 		// Normal mode - return paginated JSON

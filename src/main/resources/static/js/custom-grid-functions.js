@@ -307,9 +307,8 @@ class CustomGridFunctions {
             }
         }
 
-        // Important: override pagination
         params.set("page", 0)
-        params.set("limit", 99999) // Use a very high number to get everything
+        params.set("limit", 99999)
 
         return `${this.dataUrl}?${params.toString()}`
     }

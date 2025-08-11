@@ -14,7 +14,6 @@
                 if (response.ok) {
                     response.text()
                         .then(data => {
-                            console.log(data)
                             document.getElementById('formDialog').innerHTML = data;
                             formLoaded();
                             //initFormValidationForForm('formDialog');
@@ -195,7 +194,8 @@
         };
         const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
 
-        new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable')
+        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable');
+        window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     });

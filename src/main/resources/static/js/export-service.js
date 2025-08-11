@@ -1,43 +1,29 @@
 /**
- * Export grid data to Excel by calling the existing list endpoint with export=true
- * @param {string} listEndpoint - The existing list endpoint URL (e.g., '/register/list')
- * @param {Object} currentFilters - Current filters applied to the grid
- * @param {string} sortColumn - Current sort column
- * @param {string} sortDirection - Current sort direction ('ASC' or 'DESC')
+ * Export grid data to Excel using CustomGridFunctions instance
+ * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
  * @param {string} fileName - Optional filename for the export
  */
-async function exportGridToExcel(listEndpoint, currentFilters = {}, sortColumn = null,
-                                 sortDirection = 'ASC', fileName = 'export.xlsx') {
+async function exportGridToExcelSimple(customGridInstance, fileName = 'export.xlsx') {
+    if (!customGridInstance) {
+        console.error('CustomGridFunctions instance is required');
+        return;
+    }
+
     try {
-        // Build form data with all current parameters plus export=true
-        const formData = new FormData();
+        // Build the export URL using the existing getExportUrl method
+        const exportUrl = customGridInstance.getExportUrl();
 
-        // Add export flag
-        formData.append('export', 'true');
-        formData.append('fileName', fileName);
+        // Add export flag and filename to the URL
+        const url = new URL(exportUrl, window.location.origin);
+        url.searchParams.set('export', 'true');
+        url.searchParams.set('fileName', fileName);
 
-        // Add filters
-        Object.keys(currentFilters).forEach(key => {
-            if (currentFilters[key] !== null && currentFilters[key] !== undefined && currentFilters[key] !== '') {
-                formData.append(key, currentFilters[key]);
-            }
-        });
-
-        // Add sorting
-        if (sortColumn) {
-            formData.append('order', sortColumn);
-        }
-        formData.append('dir', sortDirection);
-
-        console.log(formData);
-
-        // Make request to the SAME endpoint that feeds the grid
-        const response = await fetch(listEndpoint, {
+        // Make request to the endpoint
+        const response = await fetch(url.toString(), {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': token
-            },
-            body: formData
+            }
         });
 
         if (!response.ok) {
@@ -47,17 +33,13 @@ async function exportGridToExcel(listEndpoint, currentFilters = {}, sortColumn =
         // Check if response is Excel file or JSON error
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
-            // It's JSON, probably an error
             const errorData = await response.json();
             throw new Error(errorData.message || 'Export failed');
         }
 
-        // It's an Excel file, download it
+        // Download the Excel file
         const blob = await response.blob();
         downloadBlob(blob, fileName);
-
-        console.log('Export completed successfully');
-
     } catch (error) {
         console.error('Export failed:', error);
         alert('Export failed. Please try again.');
@@ -79,90 +61,51 @@ function downloadBlob(blob, fileName) {
 }
 
 /**
- * Helper function to get current filters from a grid
- * TODO: Implement the rest
+ * Helper function to get current filters from a CustomGridFunctions instance
+ * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
  */
-function getCurrentGridFilters(gridId) {
-    const filters = {};
-
-    const gridContainer = document.getElementById(gridId);
-    if (gridContainer) {
-        // Get from search inputs
-        const searchInputs = gridContainer.querySelectorAll('[data-filter], .grid-filter');
-        searchInputs.forEach(input => {
-            const filterName = input.dataset.filter || input.name;
-            if (input.value && filterName) {
-                filters[filterName] = input.value;
-            }
-        });
-
-        // Get from select dropdowns
-        const selectFilters = gridContainer.querySelectorAll('select[data-filter]');
-        selectFilters.forEach(select => {
-            const filterName = select.dataset.filter;
-            if (select.value && filterName) {
-                filters[filterName] = select.value;
-            }
-        });
+function getCurrentGridFilters(customGridInstance) {
+    if (!customGridInstance || !customGridInstance.state) {
+        return {};
     }
 
-    return filters;
+    return customGridInstance.state.searchValues || {};
 }
 
 /**
- * Helper function to get current sort from a grid
- * TODO: Complete implementation
+ * Helper function to get current sort from a CustomGridFunctions instance
+ * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
  */
-function getCurrentGridSort(gridId) {
-    const gridContainer = document.getElementById(gridId);
-    if (gridContainer) {
+function getCurrentGridSort(customGridInstance) {
+    if (!customGridInstance || !customGridInstance.state) {
         return {
-            column: gridContainer.dataset.sortColumn || null,
-            direction: gridContainer.dataset.sortDirection || 'ASC'
+            column: null,
+            direction: 'ASC'
         };
     }
 
     return {
-        column: null,
-        direction: 'ASC'
+        column: customGridInstance.state.sortColumn || null,
+        direction: customGridInstance.state.sortDirection || 'ASC'
     };
 }
 
 /**
- * Convenience functions for specific tables
+ * Generic export function that works with any CustomGridFunctions instance
+ * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
+ * @param {string} fileName - Optional filename override
  */
-function exportRegistersToExcel() {
-    const filters = getCurrentGridFilters('register-grid');
-    const sort = getCurrentGridSort('register-grid');
-
-    exportGridToExcel(
-        '/register/list',
-        filters,
-        sort.column,
-        sort.direction,
-        'registers_export.xlsx'
-    );
-}
-
-function exportUsersToExcel() {
-    const filters = getCurrentGridFilters('users-grid');
-    const sort = getCurrentGridSort('users-grid');
-
-    exportGridToExcel(
-        '/users/list',
-        filters,
-        sort.column,
-        sort.direction,
-        'users_export.xlsx'
-    );
+function exportGrid(customGridInstance, fileName = 'export.xlsx') {
+    exportGridToExcelSimple(customGridInstance, fileName);
 }
 
 /**
- * Generic export function that can be used with any grid
+ * Convenience functions for specific tables using CustomGridFunctions
  */
-function exportAnyGrid(listEndpoint, gridId, fileName) {
-    const filters = getCurrentGridFilters(gridId);
-    const sort = getCurrentGridSort(gridId);
+function exportRegistersToExcel(customGridInstance) {
+    exportGrid(customGridInstance, 'registers_export.xlsx');
+}
 
-    exportGridToExcel(listEndpoint, filters, sort.column, sort.direction, fileName);
+function exportUsersToExcel(customGridInstance) {
+    exportGrid(customGridInstance, 'users_export.xlsx');
 }
