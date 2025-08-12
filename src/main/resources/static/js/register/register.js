@@ -195,25 +195,9 @@ function initGrid() {
                 sort: 0,
                 width: '90px',
                 formatter: (cell, row) => {
-                    const registerId = row.cells[0]['data'];
+                    const rowId = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    const container = document.createElement('span');
-
-                    if (cell?.includes("UPDATE")) {
-                        const buttonFragment = editTemplate.content.cloneNode(true);
-                        const button = buttonFragment.firstElementChild;
-                        button.dataset.identifier = registerId;
-                        container.appendChild(button);
-                    }
-                    if (cell?.includes("DELETE")) {
-                        const buttonFragment = deleteTemplate.content.cloneNode(true);
-                        const button = buttonFragment.firstElementChild;
-                        button.dataset.identifier = registerId;
-                        button.dataset.name = name;
-                        container.appendChild(button);
-                    }
-
-                    return gridjs.html(container.innerHTML); // Ugly hack because grid.js sucks
+                    return formatAllowedActions(cell, row, rowId, name);
                 }
             }
         ],

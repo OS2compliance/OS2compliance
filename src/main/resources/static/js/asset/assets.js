@@ -205,24 +205,9 @@
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        const container = document.createElement('span');
                         const rowId = row.cells[0]['data'];
-
-                        if (cell?.includes("UPDATE")) {
-                            const buttonFragment = editTemplate.content.cloneNode(true);
-                            const button = buttonFragment.firstElementChild;
-                            button.dataset.identifier = rowId;
-                            container.appendChild(button);
-                        }
-                        if (cell?.includes("DELETE")) {
-                            const buttonFragment = deleteTemplate.content.cloneNode(true);
-                            const button = buttonFragment.firstElementChild;
-                            button.dataset.identifier = rowId;
-                            button.dataset.name = name;
-                            container.appendChild(button);
-                        }
-
-                        return gridjs.html(container.innerHTML); // Ugly hack because grid.js sucks
+                        const name = row.cells[2]['data'];
+                        return formatAllowedActions(cell, row, rowId, name);
                     }
                 }
             ],
