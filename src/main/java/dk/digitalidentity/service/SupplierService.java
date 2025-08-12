@@ -16,7 +16,7 @@ import java.util.Optional;
 public class SupplierService {
 
 	public boolean isResponsibleFor(Supplier supplier) {
-		return  supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid());
+		return supplier.getResponsibleUser() != null && supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid());
 	}
 
     private final SupplierDao supplierDao;

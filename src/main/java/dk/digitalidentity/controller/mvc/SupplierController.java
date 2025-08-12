@@ -89,7 +89,7 @@ public class SupplierController {
 
 
         model.addAttribute("oversights", assetOversights);
-        model.addAttribute("changeableSupplier", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || supplierService.isResponsibleFor(supplier)));
+        model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);

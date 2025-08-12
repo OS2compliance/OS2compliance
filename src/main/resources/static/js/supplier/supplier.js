@@ -1,10 +1,14 @@
 let editDialog;
 
-document.addEventListener("DOMContentLoaded", function (event) {
-    fetch(formUrl)
-        .then(response => response.text()
-            .then(data => document.getElementById('formDialog').innerHTML = data))
-        .catch(error => toastService.error(error));
+document.addEventListener("DOMContentLoaded", async function (event) {
+    const form = document.getElementById('formDialog')
+    if (form) {
+        await fetch(formUrl).then(response => response.text()
+            .then(data => {
+                form.innerHTML = data
+            }))
+            .catch(error => toastService.error(error));
+    }
 
     initGrid()
 
@@ -36,17 +40,18 @@ function deleteClicked(supplierId, name) {
 }
 
 function editClicked(supplierId) {
-    fetch(`${formUrl}?id=${supplierId}`)
-        .then(response => response.text()
-            .then(data => {
-                let dialog = document.getElementById('formEditDialog');
-                dialog.innerHTML = data;
-                editDialog = new bootstrap.Modal(document.getElementById('formEditDialog'));
-                editDialog.show();
-            }))
-        .catch(error => toastService.error(error));
+    let dialog = document.getElementById('formEditDialog');
+    if (dialog) {
+        fetch(`${formUrl}?id=${supplierId}`)
+            .then(response => response.text()
+                .then(data => {
+                    dialog.innerHTML = data;
+                    editDialog = new bootstrap.Modal(document.getElementById('formEditDialog'));
+                    editDialog.show();
+                }))
+            .catch(error => toastService.error(error));
+    }
 }
-
 
 
 function initAllowedActions() {

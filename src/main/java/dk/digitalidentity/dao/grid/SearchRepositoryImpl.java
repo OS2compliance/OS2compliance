@@ -199,13 +199,6 @@ public class SearchRepositoryImpl implements SearchRepository {
 		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
 			orMap.put("customResponsibleUserUuids", user.getUuid());
 		}
-
-		if (orMap.isEmpty()) {
-			// Entity does not have any fields with assigned users
-			throw new IllegalArgumentException("Searched entity does not have any fields for assigned users");
-		}
-
-
 		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
 	}
 
