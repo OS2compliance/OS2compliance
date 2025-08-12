@@ -20,14 +20,25 @@ class CustomGridFunctions {
      * Enabled custom sort, search and pagination for an existing GridJS object
      * @param {Grid} grid GridJS grid element
      * @param {string} dataUrl Server endpoint handling data request
+     * @param gridId
+     * @param initialSortConfig config object for the initial sorting of columns
      */
-    constructor(grid, dataUrl, gridId) {
+    constructor(
+        grid,
+        dataUrl,
+        gridId,
+        initialSortConfig  = {
+            sortDirection: 'ASC',
+            sortColumn: '',
+    }) {
         this.dataUrl = dataUrl
         this.grid = grid
         this.state.page = 0
         this.state.limit = 50
         this.gridId = gridId
         this.#INPUTCLASSNAME = `${this.gridId}_grid_columnSearchInput}`
+        this.state.sortDirection = initialSortConfig.sortDirection || 'ASC'
+        this.state.sortColumn = initialSortConfig.sortColumn || ''
 
         this.loadState()
 

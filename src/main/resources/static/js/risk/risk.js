@@ -8,8 +8,32 @@
     const createRiskService = new CreateRiskService();
     const copyRiskService = new CopyRiskService();
     const editRiskService = new EditRiskService();
+    const createTable = new CreateTable();
+    const preselect = new Preselect();
+    let registerView = true;
 
     document.addEventListener("DOMContentLoaded", function(event) {
+        const table = document.getElementById("risksDatatable");
+        if (table) {
+            registerView = false;
+            createTable.init();
+        } else {
+            preselect.init();
+        }
+        createRiskService.init();
+    });
+
+function Preselect() {
+    this.init = function () {
+        // Preselect the type
+        let type = document.getElementById("threatAssessmentType");
+        type.value = "REGISTER";
+        type.dispatchEvent(new Event("change"));
+    }
+}
+
+function CreateTable() {
+    this.init = function () {
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
@@ -29,8 +53,8 @@
                         searchKey: 'name'
                     },
                     formatter: (cell, row) => {
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
+                        const external = row.cells[11]['data']
+                        const externalLink = row.cells[12]['data']
                         const url = viewUrl + row.cells[0]['data'];
                         if(external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
@@ -60,6 +84,42 @@
                     },
                 },
                 {
+                    name: "Entitet",
+                    searchable: {
+                        searchKey: 'relatedAssetsAndRegisters'
+                    },
+                    formatter: (cell, row) => {
+                        const dbsAssetId = row.cells[0]['data'];
+
+                        let items = [];
+                        if (typeof cell === "string" && cell.trim() !== "") {
+                            items = cell.split("||").map(name => name.trim());
+                        } else if (Array.isArray(cell)) {
+                            items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
+                        }
+
+                        let options = '';
+                        for (const item of items) {
+                            let name = item.name || item;
+                            const commaIndex = name.indexOf(',');
+                            if (commaIndex > -1) {
+                                name = name.substring(0, commaIndex).trim();
+                            }
+                            options += `<option value="${name}" selected>${name}</option>`;
+                        }
+
+                        return gridjs.html(
+                            `<select class="form-control form-select choices__input"
+                                data-assetid="${dbsAssetId}"
+                                name="assetsAndRegisters"
+                                id="assetsRegistersSelect${dbsAssetId}"
+                                hidden multiple>${options}    
+                            </select>`
+                        );
+                    },
+                    width: '300px'
+                },
+                {
                     name: "Opgaver",
                     searchable: {
                         sortKey: 'tasks'
@@ -85,7 +145,7 @@
                     name: "Risikovurdering",
                     searchable: {
                         searchKey: 'assessment',
-                       fieldId: 'riskAssessmentSearchSelector'
+                        fieldId: 'riskAssessmentSearchSelector'
                     },
                     width: '120px',
                     formatter: (cell, row) => {
@@ -124,9 +184,9 @@
                     formatter: (cell, row) => {
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
-                        const changeable = row.cells[9]['data']
+                        const external = row.cells[11]['data']
+                        const externalLink = row.cells[12]['data']
+                        const changeable = row.cells[10]['data']
                         let buttonHTML = ''
 
                         //edit button
@@ -161,15 +221,12 @@
                 headers: {
                     'X-CSRF-TOKEN': token
                 },
-                then: data => data.content.map(risk =>
-                    [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.threatAssessmentReportApprovalStatus, risk.assessment, risk.changeable]
-                ),
                 then: data => data.content.map(obj => {
                         const result = []
                         for (const property of columnProperties) {
                             result.push(obj[property])
                         }
-                        return result;
+                    return result;
                     }
                 ),
                 total: data => data.totalCount
@@ -192,14 +249,28 @@
         };
         const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
 
+        grid.on('ready', function() {
+            // Ensure correct page load behavior
+            if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
+                document.getElementsByClassName("gridjs-pages")[0].children[1]?.click();
+            }
+
+            // Initialize all Entitet Choices.js selects
+            Array.from(document.querySelectorAll("[id^='assetsRegistersSelect']"))
+                .map(select => select.id)
+                .forEach(elementId => {
+                    let elementById = document.getElementById(elementId);
+                    initSelect(elementById, 'form-control', { readOnly: true });
+                });
+        });
+
         const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable');
 
         window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
-
-        createRiskService.init();
-    });
+    }
+}
 
 function deleteClicked(riskId, name) {
     Swal.fire({
@@ -415,7 +486,11 @@ function CreateRiskService() {
 
         const registerSelect = this.getScopedElementById('registerSelect');
         const assetSelect = this.getScopedElementById('assetSelect');
-        this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        if (registerView) {
+            this.registerChoicesSelect = initRegisterSelectWithPreselect(registerSelect);
+        } else {
+            this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        }
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
         this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
@@ -585,6 +660,7 @@ function CreateRiskService() {
                     this.getScopedElementById("RT").innerHTML = data.rt === 0 ? "" : data.rt;
                     this.getScopedElementById("OT").innerHTML = data.ot === 0 ? "" : data.ot;
                     this.getScopedElementById("ST").innerHTML = data.st === 0 ? "" : data.st;
+                    this.getScopedElementById("SA").innerHTML = data.sa === 0 ? "" : data.sa;
 
                     this.getScopedElementById("inheritRow").style.display = '';
                 }))
@@ -598,6 +674,60 @@ function CreateRiskService() {
     this.getScopedElementById = function(id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
+}
 
+function updateTypeSelectWithPreselect(choices, search, types, preselectName = null) {
+    fetch(`/rest/relatable/autocomplete?types=${types}&search=${search}`)
+        .then(response => response.json()
+            .then(data => {
+                const choiceItems = data.content.map(reg => {
+                    return {
+                        id: reg.id,
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60),
+                        fullName: reg.name,
+                    };
+                })
 
+                if (search === "" && preselectName) {
+                    const preselectedId = getPreselectedRegisterId();
+
+                    // Add the preselected option at the beginning
+                    choiceItems.unshift({
+                        id: preselectedId,
+                        name: truncateString("Fortegnelse: " + preselectName, 60),
+                        fullName: preselectName,
+                    });
+                }
+
+                choices.setChoices(choiceItems, 'id', 'name', true);
+
+                const registerTitle = document.getElementById("name");
+
+                // Now set the selection
+                if (search === "" && preselectName) {
+                    const preselectedId = getPreselectedRegisterId();
+                    choices.setChoiceByValue(preselectedId);
+                    registerTitle.value = preselectName;
+                }
+            }))
+        .catch(error => toastService.error(error));
+}
+
+function initRegisterSelectWithPreselect(registerSelectElement) {
+    const registerChoices = initSelect(registerSelectElement);
+    const regi = document.getElementById("breadcrump-register-name");
+    const initialName = regi.getAttribute("data-register-name");
+    updateTypeSelectWithPreselect(registerChoices, "", "REGISTER", initialName);
+    registerSelectElement.addEventListener("search",
+        function(event) {
+            updateTypeSelectWithPreselect(registerChoices, event.detail.value, "REGISTER");
+        },
+        false,
+    );
+    return registerChoices;
+}
+
+function getPreselectedRegisterId() {
+    const breadcrumb = document.getElementById("breadcrump-register-name");
+    return breadcrumb.getAttribute("data-register-id");
 }

@@ -36,4 +36,5 @@ public class RiskDTO {
     private boolean fromExternalSource;
 	@ExcludeFromExport
     private String externalLink;
+	private String relatedAssetsAndRegisters;
 }

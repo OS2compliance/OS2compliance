@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.UserProperty;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.service.AssetService;
@@ -37,15 +38,13 @@ import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.NEEDS_CVR_UPDATE_PROPERTY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY;
-import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Slf4j
@@ -195,9 +194,25 @@ public class KitosSyncService {
         if (!valid) {
             return;
         }
-        addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
-        setAssetOwner(asset, itSystemUsageResponseDTO);
-        setAssetManagers(asset, itSystemUsageResponseDTO);
+
+		// Map enum from integration to internal
+		ContainsAITechnologyEnum internalStatus;
+		try {
+			var dtoEnum = itSystemUsageResponseDTO.getGeneral().getContainsAITechnology();
+			if (dtoEnum == null) {
+				internalStatus = ContainsAITechnologyEnum.UNDECIDED;
+			} else {
+				internalStatus = ContainsAITechnologyEnum.valueOf(dtoEnum.name());
+			}
+		} catch (IllegalArgumentException e) {
+			internalStatus = ContainsAITechnologyEnum.UNDECIDED;
+		}
+		asset.setAiStatus(internalStatus);
+
+		addKitosUsageUuid(asset, itSystemUsageResponseDTO.getUuid().toString());
+		setAssetOwner(asset, itSystemUsageResponseDTO);
+		setAssetManagers(asset, itSystemUsageResponseDTO);
+		setAssetOperationResponsible(asset,  itSystemUsageResponseDTO);
 		asset.setArchive(ArchiveDuty.fromApiEnum(itSystemUsageResponseDTO.getArchiving().getArchiveDuty()));
 
         final GDPRRegistrationsResponseDTO.BusinessCriticalEnum businessCritical = nullSafe(() -> itSystemUsageResponseDTO.getGdpr().getBusinessCritical());
@@ -255,7 +270,7 @@ public class KitosSyncService {
         if (ownerUuid != null) {
             final List<User> userEntities = userService.findByPropertyKeyValue(KITOS_UUID_PROPERTY_KEY, ownerUuid.toString());
             if (userEntities.size() == 1) {
-                asset.setResponsibleUsers(List.of(userEntities.get(0)));
+                asset.setResponsibleUsers(List.of(userEntities.getFirst()));
             } else if (userEntities.isEmpty()) {
                 log.warn("User not found kitos uuid {}", ownerUuid);
             } else {
@@ -263,6 +278,22 @@ public class KitosSyncService {
             }
         }
     }
+	// TODO: Refactor when eliminating mapping tables in the future
+	private void setAssetOperationResponsible(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
+		final String operationResponsibleRoleUuid = settingsService.getString(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY, "");
+		itSystemUsageResponseDTO.getRoles().stream()
+				.filter(r -> operationResponsibleRoleUuid.equalsIgnoreCase(r.getRole().getUuid().toString()))
+				.map(r -> r.getUser().getUuid())
+				.forEach(r -> {
+					final Optional<User> user = findUser(r.toString());
+					user.ifPresent(value -> {
+						// Make sure to only add managers once
+						if (asset.getManagers().stream().noneMatch(u -> value.getUuid().equals(u.getUuid()))) {
+							asset.getOperationResponsibleUsers().add(value);
+						}
+					});
+				});
+	}
 
     private void updateAsset(final Asset asset, final ItSystemResponseDTO responseDTO) {
         asset.setName(responseDTO.getName());
@@ -296,6 +327,7 @@ public class KitosSyncService {
         asset.setUpdatedAt(responseDTO.getLastModified().toLocalDateTime());
         asset.setName(responseDTO.getName());
         asset.setDescription(responseDTO.getDescription());
+		asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
         asset.setAssetType(choiceService.getValue(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID).orElseThrow());
         asset.setAssetStatus(AssetStatus.NOT_STARTED);
         asset.setSupplier(supplier);

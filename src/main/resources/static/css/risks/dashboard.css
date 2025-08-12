@@ -1,0 +1,80 @@
+/* Risk Matrix Filter Styles */
+.risk-matrix-filters {
+    padding-bottom: 1rem;
+    margin-bottom: 1.5rem;
+}
+
+.risk-matrix-filters .form-check-label {
+    cursor: pointer;
+    font-weight: 500;
+    color: #495057;
+    transition: color 0.2s ease;
+}
+
+.risk-matrix-filters .form-check-label:hover {
+    color: black;
+}
+
+.risk-matrix-filters .form-check-input:checked + .form-check-label {
+    color: black;
+}
+
+/* Risk Matrix Bubbles */
+.risk-bubble {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 123, 255, 0.8);
+    color: white;
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    z-index: 10;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    user-select: none;
+}
+
+.risk-bubble:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    background-color: rgba(0, 123, 255, 0.9);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+}
+
+/* Risk Matrix Cells */
+.riskScoreField {
+    position: relative;
+    min-height: 60px;
+    min-width: 80px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .risk-matrix-filters .d-flex {
+        flex-direction: column;
+        gap: 0.5rem !important;
+    }
+
+    .risk-matrix-filters .form-check {
+        margin-right: 0;
+        margin-bottom: 0.5rem;
+    }
+
+    .risk-bubble {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
+    }
+
+    .riskScoreField {
+        min-height: 45px;
+        min-width: 60px;
+    }
+}

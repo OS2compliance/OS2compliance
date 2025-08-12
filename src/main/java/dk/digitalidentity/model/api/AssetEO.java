@@ -35,6 +35,9 @@ public class AssetEO {
     public enum AssetStatus {
         READY, ON_GOING, NOT_STARTED
     }
+	public enum AiStatus {
+		YES, NO, UNDECIDED
+	}
     public enum Criticality {
         CRITICAL, NON_CRITICAL
     }

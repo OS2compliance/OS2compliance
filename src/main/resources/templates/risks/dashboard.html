@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="da" xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
+<body class="jumping">
+<script th:src="@{/js/risk/dashboard.js}" defer></script>
+<link rel="stylesheet" th:href="@{/css/risks/dashboard.css}" />
+<link rel="stylesheet" th:href="@{/css/risks/risk_profile.css}" />
+
+<div id="root" class="root mn--max hd--expanded">
+    <section id="content" class="content">
+        <div class="content__header content__boxed overlapping">
+            <div class="content__wrap">
+                <div class="d-md-flex">
+                    <div class="me-auto">
+                        <nav aria-label="breadcrumb">
+                            <ol class="breadcrumb mb-0">
+                                <li class="breadcrumb-item"><a th:href="@{/dashboard}">Hjem</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/risks}">Risikovurderinger</a></li>
+                                <li class="breadcrumb-item active" aria-current="page">Trusselsbillede</li>
+                            </ol>
+                        </nav>
+                        <h1 class="page-title mb-0 mt-2">Trusselsbillede</h1>
+                        <p class="lead"></p>
+                    </div>
+                    <div class="align-self-center d-inline-flex">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="content__boxed">
+            <div class="content__wrap">
+                <!-- Risk matrix section -->
+                <article class="mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">Risikomatrix</h4>
+                        </div>
+                        <div class="card-body">
+                            <!-- Filter options -->
+                            <div class="risk-matrix-filters offset-lg-3">
+                                <div style="margin-left: 20px;">
+                                    <label class="form-label fw-bold mb-3">Vælg typer:</label>
+                                    <div class="d-flex gap-3 flex-wrap">
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="filter-aktiv" value="aktiv" checked onchange="riskMatrixService.onRiskMatrixFilterChange()">
+                                            <label class="form-check-label" for="filter-aktiv">
+                                                Aktiv
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="filter-behandling" value="behandling" checked onchange="riskMatrixService.onRiskMatrixFilterChange()">
+                                            <label class="form-check-label" for="filter-behandling">
+                                                Behandlingsaktivitet
+                                            </label>
+                                        </div>
+                                        <div class="form-check form-check-inline">
+                                            <input class="form-check-input" type="checkbox" id="filter-scenarie" value="scenarie" checked onchange="riskMatrixService.onRiskMatrixFilterChange()">
+                                            <label class="form-check-label" for="filter-scenarie">
+                                                Scenarie
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="risk-matrix-container">
+                                <div class="risk-matrix-wrapper">
+                                    <div class="col-lg-12 row">
+                                        <div class="offset-lg-3 col-lg-6">
+                                            <div class="col-lg-12">
+                                                <div class="vertical-axis-label">Konsekvens</div>
+                                                <div class="table-container-profile">
+                                                    <table class="table-bordered table-profile" style="width:100%; height: 500px;">
+                                                        <tr th:each="consequence : ${reversedScale}" class="tr-profile">
+                                                            <td th:text="${consequence}" class="headerStyle verticalHeader td-profile"></td>
+                                                            <td th:each="probability : ${#lists.sort(reversedScale)}" class="td-profile riskScoreField" th:attr="data-consequence=${consequence}, data-probability=${probability}"></td>
+                                                        </tr>
+                                                        <tr class="tr-profile">
+                                                            <td class="headerStyle verticalHeader horizontalHeader td-profile"></td>
+                                                            <td th:each="probability : ${#lists.sort(reversedScale)}" th:text="${probability}" class="headerStyle horizontalHeader td-profile"></td>
+                                                        </tr>
+                                                    </table>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-lg-12 row">
+                                        <div class="offset-lg-3 col-lg-6" style="font-weight: bold; padding-left: 28px;">
+                                            <div class="center" style="width: 100%;">
+                                                <span>Sandsynlighed</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div id="riskDetailsSection" class="mt-4" style="display: none;">
+                                <h5 id="riskDetailsTitle">Risikovurderinger</h5>
+                                <div class="table-responsive">
+                                    <table class="table table-striped" id="riskDetailsTable">
+                                        <thead>
+                                        <tr>
+                                            <th class="col-lg-8">Navn</th>
+                                            <th class="col-lg-2">Type</th>
+                                            <th class="col-lg-2">Dato</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody id="riskDetailsTableBody">
+                                        <!-- Rows will be populated dynamically via riskMatrixService.showRiskDetails -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div id="riskDetailsEmpty" class="alert alert-info" style="display: none;">
+                                    Ingen risikovurderinger fundet for denne celle.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+
+                <article class="mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h4 class="card-title mb-0">Udvikling over tid</h4>
+                        </div>
+                        <div class="card-body">
+                            <div class="mb-4">
+                                <label for="yearSelector" class="form-label fw-bold">Vælg år:</label>
+                                <select id="yearSelector" class="form-select" style="width: 200px;" onchange="riskChangeOverTimeService.onYearChange()">
+                                    <option value="" th:if="${#lists.isEmpty(availableYears)}">Ingen data tilgængelig</option>
+                                    <option th:each="year : ${availableYears}"
+                                            th:value="${year}"
+                                            th:text="${year}"
+                                            th:selected="${year == #dates.year(#dates.createNow())}">
+                                    </option>
+                                </select>
+                            </div>
+
+                            <div class="chart-container" style="position: relative; height: 400px;">
+                                <canvas id="riskOverTimeChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </article>
+            </div>
+        </div>
+    </section>
+    <header th:replace="~{fragments/header :: header}"></header>
+    <nav th:replace="~{fragments/navbar :: main (page='riskDashboard')}"></nav>
+</div>
+
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, chart = true)}"></div>
+
+<script th:inline="javascript">
+    /*<![CDATA[*/
+
+    /*[+
+        var scaleColorMap = [[${riskScoreColorMap}]];
+        var availableYears = [[${availableYears}]];
+    +]*/
+
+    /*]]>*/
+</script>
+</body>
+
+</html>

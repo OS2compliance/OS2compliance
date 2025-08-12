@@ -6,6 +6,7 @@ let userChoices;
 let customResponsibleUserChoices;
 let registerRegardingChoices;
 let kleService
+let dataProtectionOfficerChoice;
 
 /**
  * Functionality related to the "Generelt" page of the register detail view
@@ -26,6 +27,7 @@ export default function RegisterGeneralService() {
         ouChoices = choiceService.initOUSelect('ouSelect', false);
         userChoices = choiceService.initUserSelect('userSelect', false);
         customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
+        dataProtectionOfficerChoice = choiceService.initUserSelect('dataProtectionOfficer', false);
 
         const registerRegardingElement = document.getElementById('registerRegarding');
         registerRegardingChoices = initSelect(registerRegardingElement);
@@ -140,6 +142,7 @@ export default function RegisterGeneralService() {
             registerRegardingChoices.disable();
             kleService.mainGroupSelectorInstance.disable();
             kleService.groupSelectorInstance.disable();
+            dataProtectionOfficerChoice.disable()
         } else {
             userChoices.enable();
             customResponsibleUserChoices.enable();
@@ -148,6 +151,7 @@ export default function RegisterGeneralService() {
             registerRegardingChoices.enable();
             kleService.mainGroupSelectorInstance.enable();
             kleService.groupSelectorInstance.enable();
+            dataProtectionOfficerChoice.enable()
         }
     }
 

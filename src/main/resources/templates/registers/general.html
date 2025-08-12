@@ -93,6 +93,15 @@
                             <label for="informationResponsible" class="col-form-label">Hvem er ansvarlig for behandling af personoplysningerne</label>
                             <input class="form-control" id="informationResponsible" name="informationResponsible" th:field="*{informationResponsible}" type="text" readonly>
                         </div>
+
+                        <div class="form-group row">
+                            <label for="informationResponsible" class="col-form-label">Navn på DPO</label>
+                            <select class="form-select choices__input" th:field="*{dataProtectionOfficer}"
+                                    data-trigger="" id="dataProtectionOfficer" tabindex="-1" disabled>
+                                <option th:value="*{dataProtectionOfficer.uuid}" th:text="*{dataProtectionOfficer.name}" selected></option>
+                            </select>
+                        </div>
+
                         <div class="form-group row">
                             <label for="registerRegarding" class="col-form-label">Fortegnelse over behandlingsaktivitet angående</label>
                             <select class="form-select choices__input" id="registerRegarding" name="registerRegarding" multiple disabled>

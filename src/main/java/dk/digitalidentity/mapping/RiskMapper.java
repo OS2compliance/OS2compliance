@@ -1,9 +1,7 @@
 package dk.digitalidentity.mapping;
 
 
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
@@ -24,6 +22,7 @@ public interface RiskMapper {
                 .assessmentOrder(riskGrid.getAssessmentOrder())
                 .responsibleOU(nullSafe(() -> riskGrid.getResponsibleOU().getName()))
                 .responsibleUser(nullSafe(() -> riskGrid.getResponsibleUser().getName()))
+				.relatedAssetsAndRegisters(nullSafe(riskGrid::getRelatedAssetsAndRegisters))
                 .date(riskGrid.getDate().format(DK_DATE_FORMATTER))
                 .tasks(riskGrid.getTasks())
                 .name(riskGrid.getName())
