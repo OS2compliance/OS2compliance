@@ -88,17 +88,15 @@ public class TaskRestController {
         @RequestParam(value = "dir", defaultValue = "asc") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        if (!SecurityUtil.getPrincipalUuid().equals(userUuid)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<TaskGrid> tasks = taskGridDao.findAllForResponsibleUser(
-            validateSearchFilters(filters, TaskGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            TaskGrid.class, user
-        );
+        Page<TaskGrid> tasks = taskGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, TaskGrid.class),
+				user,
+				buildPageable(page, limit, sortColumn, sortDirection),
+				TaskGrid.class
+		);
 
         assert tasks != null;
 

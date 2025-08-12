@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
 <head th:replace="~{fragments/header :: head (gridjs = true, burgermenu = true)}"></head>
 
@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" class="content__boxed">
+        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" sec:authorize="hasAnyRole('ROLE_administrator', 'ROLE_super_user', 'ROLE_user', 'ROLE_limited_user')" class="content__boxed">
             <div class="content__wrap">
 
                 <div class="tab-base">

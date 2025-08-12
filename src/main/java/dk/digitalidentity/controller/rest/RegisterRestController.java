@@ -90,27 +90,14 @@ public class RegisterRestController {
     ) {
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
-		Map<String, String> customSearchFilters = validateSearchFilters(filters, RegisterGrid.class);
-		Page<RegisterGrid> registers = registerGridDao.findAllForResponsibleUserOrCustomResponsibleUser(
-				customSearchFilters,
+		Page<RegisterGrid> registers = registerGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, RegisterGrid.class),
+				user,
 				buildPageable(page, limit, sortColumn, sortDirection),
-				RegisterGrid.class,
-				user
+				RegisterGrid.class
 		);
-
 
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
-    }
-
-
-    private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("responsibleUserNames") || fieldName.equals("responsibleOUNames")
-                || fieldName.equals("updatedAt") || fieldName.equals("consequenceOrder") || fieldName.equals("riskOrder") || fieldName.equals("departmentNames") || fieldName.equals("assetAssessmentOrder")
-                || fieldName.equals("statusOrder") || fieldName.equals("assetCount");
     }
 }

@@ -20,16 +20,22 @@ public interface Roles {
 	String UPDATE_ALL = "ROLE_update_all";
 	String READ_ALL = "ROLE_read_all";
 
-	String SECTION_CONFIGURATION = "ROLE_s_configuration";
-	String SECTION_ADMIN = "ROLE_s_admin";
-	String SECTION_ASSET = "ROLE_s_asset";
+	String SECTION_DASHBOARD = "ROLE_s_dashboard";
 	String SECTION_STANDARD = "ROLE_s_standard";
 	String SECTION_REGISTER = "ROLE_s_register";
+	String SECTION_ASSET = "ROLE_s_asset";
+	String SECTION_DBS = "ROLE_s_dbs";
 	String SECTION_SUPPLIER = "ROLE_s_supplier";
 	String SECTION_RISK_ASSESSMENT = "ROLE_s_risk";
+	String SECTION_DPIA = "ROLE_s_dpia";
 	String SECTION_DOCUMENT = "ROLE_s_document";
 	String SECTION_TASK = "ROLE_s_task";
+	String SECTION_CONFIGURATION = "ROLE_s_configuration";
 	String SECTION_REPORT = "ROLE_s_report";
+	String SECTION_ADMIN = "ROLE_s_admin";
+	String SECTION_SETTINGS = "ROLE_s_settings";
+
+
 
 
 

@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.model.dto.RelatedDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.StandardTemplate;
@@ -150,7 +151,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
-    record StandardTemplateListDTO(String identifier, String name, String compliance, Set<String> allowedActions) {}
+    record StandardTemplateListDTO(String identifier, String name, String compliance, Set<AllowedAction> allowedActions) {}
 	@RequireReadAll
     @Transactional
     @GetMapping
@@ -166,12 +167,12 @@ public class StandardController {
             final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
 
-			Set<String> allowedActions = new HashSet<>();
+			Set<AllowedAction> allowedActions = new HashSet<>();
 			if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
-				allowedActions.add("editable");
+				allowedActions.add(AllowedAction.UPDATE);
 			}
 			if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
-				allowedActions.add("deletable");
+				allowedActions.add(AllowedAction.DELETE);
 			}
 
             if (relevantCount == 0 ) {

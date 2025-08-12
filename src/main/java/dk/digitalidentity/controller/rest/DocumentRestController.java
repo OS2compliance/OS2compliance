@@ -75,7 +75,6 @@ public class DocumentRestController {
 		}
 
         assert documents != null;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
     }
 
@@ -89,17 +88,14 @@ public class DocumentRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<DocumentGrid> documents = documentGridDao.findAllForResponsibleUser(
-            validateSearchFilters(filters, DocumentGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            DocumentGrid.class, user);
+		Page<DocumentGrid> documents = documentGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, DocumentGrid.class),
+				user,
+				buildPageable(page, limit, sortColumn, sortDirection),
+				DocumentGrid.class
+		);
 
         assert documents != null;
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));

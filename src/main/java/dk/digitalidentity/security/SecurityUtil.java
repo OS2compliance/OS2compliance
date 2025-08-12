@@ -117,16 +117,22 @@ public class SecurityUtil {
 				Roles.READ_ALL,
 				Roles.UPDATE_ALL,
 				Roles.DELETE_ALL,
-				Roles.SECTION_CONFIGURATION,
-				Roles.SECTION_ADMIN,
-				Roles.SECTION_ASSET,
+
+				Roles.SECTION_DASHBOARD,
 				Roles.SECTION_STANDARD,
 				Roles.SECTION_REGISTER,
+				Roles.SECTION_ASSET,
+				Roles.SECTION_DBS,
 				Roles.SECTION_SUPPLIER,
 				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DPIA,
+				Roles.SECTION_CONFIGURATION,
 				Roles.SECTION_DOCUMENT,
 				Roles.SECTION_TASK,
-				Roles.SECTION_REPORT);
+				Roles.SECTION_REPORT,
+				Roles.SECTION_ADMIN,
+				Roles.SECTION_SETTINGS
+		);
 	}
 
 	public static Set<String> getSuperUserRoles () {
@@ -136,60 +142,77 @@ public class SecurityUtil {
 				Roles.READ_ALL,
 				Roles.UPDATE_ALL,
 				Roles.DELETE_ALL,
-				Roles.SECTION_ASSET,
+
+				Roles.SECTION_DASHBOARD,
 				Roles.SECTION_STANDARD,
 				Roles.SECTION_REGISTER,
+				Roles.SECTION_ASSET,
+				Roles.SECTION_DBS,
 				Roles.SECTION_SUPPLIER,
 				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DPIA,
+				Roles.SECTION_CONFIGURATION,
 				Roles.SECTION_DOCUMENT,
 				Roles.SECTION_TASK,
-				Roles.SECTION_REPORT);
+				Roles.SECTION_REPORT
+		);
+
 	}
 
 	public static Set<String> getUserRoles () {
 		return Set.of(
 				Roles.USER,
+
 				Roles.CREATE_OWNER_ONLY,
-				Roles.READ_ALL,
+				Roles.READ_OWNER_ONLY,
 				Roles.UPDATE_OWNER_ONLY,
 				Roles.DELETE_OWNER_ONLY,
-				Roles.SECTION_ASSET,
-				Roles.SECTION_STANDARD,
+
+				Roles.SECTION_DASHBOARD,
 				Roles.SECTION_REGISTER,
+				Roles.SECTION_ASSET,
 				Roles.SECTION_SUPPLIER,
 				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DPIA,
+				Roles.SECTION_DOCUMENT,
 				Roles.SECTION_TASK,
-				Roles.SECTION_REPORT,
-				Roles.SECTION_DOCUMENT
+				Roles.SECTION_REPORT
 				);
 	}
 
 	public static Set<String> getLimitedUserRoles () {
 		return Set.of(
 				Roles.LIMITED_USER,
+
 				Roles.CREATE_OWNER_ONLY,
 				Roles.READ_OWNER_ONLY,
 				Roles.UPDATE_OWNER_ONLY,
 				Roles.DELETE_OWNER_ONLY,
-				Roles.SECTION_ASSET,
+
+				Roles.SECTION_DASHBOARD,
 				Roles.SECTION_REGISTER,
-				Roles.SECTION_TASK,
-				Roles.SECTION_DOCUMENT
+				Roles.SECTION_ASSET,
+				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DPIA,
+				Roles.SECTION_TASK
 				);
 	}
 
 	public static Set<String> getReadOnlyUserRoles () {
 		return Set.of(
 				Roles.READ_ONLY_USER,
+
 				Roles.READ_ALL,
-				Roles.SECTION_ASSET,
+
 				Roles.SECTION_STANDARD,
 				Roles.SECTION_REGISTER,
+				Roles.SECTION_ASSET,
 				Roles.SECTION_SUPPLIER,
 				Roles.SECTION_RISK_ASSESSMENT,
+				Roles.SECTION_DPIA,
 				Roles.SECTION_DOCUMENT,
-				Roles.SECTION_TASK,
-				Roles.SECTION_REPORT);
+				Roles.SECTION_TASK
+		);
 	}
 
 

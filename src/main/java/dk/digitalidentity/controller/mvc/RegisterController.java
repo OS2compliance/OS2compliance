@@ -594,11 +594,10 @@ public class RegisterController {
     }
 
     private static void ensureEditingIsAllowed(final Register register) {
-        if(
-				SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
-				&& !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
-				&& !register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
-		) {
+		boolean isResponsible = register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+				|| register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid());
+
+		if (!isResponsible && !SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }

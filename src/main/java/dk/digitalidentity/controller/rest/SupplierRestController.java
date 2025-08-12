@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
@@ -28,8 +29,10 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -47,7 +50,7 @@ public class SupplierRestController {
 	private final SupplierDao supplierDao;
 	private final UserService userService;
 
-	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}
+	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status, Set<AllowedAction> allowedActions) {}
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -85,10 +88,24 @@ public class SupplierRestController {
 		}
 
 		// Convert to DTO
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+
 		final List<SupplierGridDTO> supplierDTOs = new ArrayList<>();
 		for (final SupplierGrid supplier : suppliers) {
-			final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
-					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage());
+			final SupplierGridDTO dto = new SupplierGridDTO(
+					supplier.getId(),
+					supplier.getName(),
+					supplier.getSolutionCount(),
+					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER),
+					supplier.getStatus().getMessage(),
+					allowedActions
+			);
 			supplierDTOs.add(dto);
 		}
 
