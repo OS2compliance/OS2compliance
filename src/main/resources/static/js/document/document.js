@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 function initEditButton() {
     const editButton = document.getElementById("editBtn");
-    editButton.addEventListener("click", function () {
+    editButton?.addEventListener("click", function () {
         const responsibleFieldsChangeable = editButton.getAttribute('responsible-changeable')
         editMode(true, responsibleFieldsChangeable)
     })

@@ -71,10 +71,9 @@ public class DocumentsController {
         final Document document = documentService.get(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         model.addAttribute("document", document);
-        model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) || documentService.isResponsibleFor(document)));
-		model.addAttribute("responsibleFieldChangeable", !documentService.isResponsibleFor(document)); // Those responsible for an asset change change who is responsible
+        model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || documentService.isResponsibleFor(document)));
+		model.addAttribute("responsibleFieldChangeable", !documentService.isResponsibleFor(document)); // Those responsible for an asset cannot change who is responsible
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
         return "documents/view";
     }
