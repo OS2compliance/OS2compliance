@@ -20,10 +20,10 @@
 							<p class="lead"></p>
 						</div>
 						<div class="align-self-center d-inline-flex">
-							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createRegisterService.show()" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
+							<button type="button" sec:authorize="hasAnyRole('ROLE_create_all, ROLE_create_owner_only')" onclick="createRegisterService.show()" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
 								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny behandlingsaktivitet
 							</button>
-							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
+							<button type="button" sec:authorize="hasAnyRole('ROLE_create_all, ROLE_create_owner_only')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
 								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
 							</button>
 						</div>
@@ -64,6 +64,14 @@
                                         <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
                                                 th:value="${option}" th:text="${option.message}"></option>
                                     </select>
+
+<!--                                    Templates for list action buttons-->
+                                    <template id="editListItemButtonTemplate">
+                                        <button type="button" class="editBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button>
+                                    </template>
+                                    <template id="deleteListItemButtonTemplate">
+                                        <button type="button" class="deleteBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>
+                                    </template>
 								</div>
 							</div>
 						</div>

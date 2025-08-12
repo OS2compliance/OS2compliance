@@ -711,12 +711,11 @@
             const cancelButton = document.getElementById('cancelBtn');
 
             editButton.addEventListener('click', e => {
-                const responsibleFieldsCanBeChanged = editButton.getAttribute('responsible-changeable');
+                const responsibleFieldsCanBeChanged = editButton.dataset.responsibleChangeable;
                 editMode(true, responsibleFieldsCanBeChanged)
             })
             cancelButton.addEventListener('click', e => {
-                const responsibleFieldsCanBeChanged = cancelButton.getAttribute('responsible-changeable');
-                editMode(false, responsibleFieldsCanBeChanged)
+                editMode(false, false)
             })
         }
 

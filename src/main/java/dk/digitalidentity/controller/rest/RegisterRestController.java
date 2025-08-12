@@ -5,12 +5,12 @@ import dk.digitalidentity.mapping.RegisterMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRegister;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -37,6 +37,7 @@ public class RegisterRestController {
     private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
+	private final RegisterService registerService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -74,7 +75,7 @@ public class RegisterRestController {
 		}
 
         assert registers != null;
-        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
+        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
     }
 
 	@RequireReadOwnerOnly
@@ -103,7 +104,7 @@ public class RegisterRestController {
 
 
         assert registers != null;
-        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
+        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
     }
 
 

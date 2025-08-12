@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -31,4 +32,5 @@ public class RegisterDTO {
     private int assetCount;
     private String assetAssessment;
     private Integer assetAssessmentOrder;
+	private Set<String> allowedActions = new HashSet<>();
 }

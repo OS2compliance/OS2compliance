@@ -25,13 +25,13 @@ export default function RegisterGeneralService() {
         const cancelButton = document.getElementById('cancelBtn');
 
         editButton.addEventListener('click', (e) =>{
-            const isResponsibleChangeable = editButton.getAttribute('responsible-changeable');
+            const isResponsibleChangeable = editButton.dataset.responsibleChangeable;
+            console.log(isResponsibleChangeable);
             this.setGenereltEditState(true, isResponsibleChangeable);
         })
 
         cancelButton.addEventListener('click', (e) =>{
-            const isResponsibleChangeable = cancelButton.getAttribute('responsible-changeable');
-            this.setGenereltEditState(true, isResponsibleChangeable);
+            this.setGenereltEditState(false, false);
         })
     }
 
@@ -151,10 +151,8 @@ export default function RegisterGeneralService() {
         if (!editable) {
             const form = document.getElementById('editDescId');
             form.reset();
-            if (isResponsibleFieldEditable) {
-                userChoices.disable();
-                customResponsibleUserChoices.disable();
-            }
+            userChoices.disable();
+            customResponsibleUserChoices.disable();
             ouChoices.disable();
             departmentChoices.disable();
             registerRegardingChoices.disable();
