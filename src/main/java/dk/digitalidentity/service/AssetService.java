@@ -176,10 +176,8 @@ public class AssetService {
     }
 
     public boolean isEditable(final Asset asset) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return authentication.getAuthorities().stream()
-            .anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)
-                || isResponsibleFor(asset));
+        return SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
+                || isResponsibleFor(asset);
     }
 
 	public boolean isEditable(final List<Asset> assets) {

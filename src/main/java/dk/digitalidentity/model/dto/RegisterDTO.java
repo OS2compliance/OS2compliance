@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -32,5 +33,5 @@ public class RegisterDTO {
     private int assetCount;
     private String assetAssessment;
     private Integer assetAssessmentOrder;
-	private Set<String> allowedActions = new HashSet<>();
+	private Set<AllowedAction> allowedActions = new HashSet<>();
 }

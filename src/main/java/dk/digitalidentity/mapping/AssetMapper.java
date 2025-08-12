@@ -9,6 +9,7 @@ import dk.digitalidentity.model.api.SupplierShallowEO;
 import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -30,6 +31,7 @@ import org.springframework.data.domain.Page;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -53,26 +55,34 @@ public interface AssetMapper {
         AssetDTO assetDTO = AssetDTO.builder()
             .id(assetGrid.getId())
             .name(assetGrid.getName())
-            .supplier(nullSafe(() -> assetGrid.getSupplier()))
+            .supplier(nullSafe(assetGrid::getSupplier))
             .assetType(assetGrid.getAssetType())
-            .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
+            .responsibleUsers(nullSafe(assetGrid::getResponsibleUserNames))
             .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
             .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
             .assessmentOrder(assetGrid.getAssessmentOrder())
             .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
             .assetCategory(nullSafe(() -> assetGrid.getAssetCategory().getMessage()))
-            .assetCategoryOrder(nullSafe(() -> assetGrid.getAssetCategoryOrder()))
+            .assetCategoryOrder(nullSafe(assetGrid::getAssetCategoryOrder))
 
             .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
-            .registers(nullSafe(() -> assetGrid.getRegisters()))
+            .registers(nullSafe(assetGrid::getRegisters))
             .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
-            .changeable(false)
             .build();
 
-		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || SecurityUtil.getPrincipalUuid().equals(assetGrid.getResponsibleUserUuids())) {
-			assetDTO.setChangeable(true);
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		boolean isResponsible =	(assetGrid.getResponsibleUserNames() != null && assetGrid.getResponsibleUserUuids().contains(SecurityUtil.getPrincipalUuid()))
+				|| (assetGrid.getManagerUuids() != null && assetGrid.getManagerUuids().contains(SecurityUtil.getPrincipalUuid()));
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| isResponsible) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
+				|| isResponsible) {
+			allowedActions.add(AllowedAction.DELETE);
 		}
 
+		assetDTO.setAllowedActions(allowedActions);
 		return assetDTO;
     }
 

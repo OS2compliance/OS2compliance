@@ -6,12 +6,8 @@ import lombok.RequiredArgsConstructor;
 @Getter
 @RequiredArgsConstructor
 public enum AllowedAction {
-	UPDATE("editable"),
-	CREATE("createable"),
-	DELETE("deleteable");
+	UPDATE,
+	CREATE,
+	DELETE;
 
-	private String action;
-	AllowedAction(String action) {
-		this.action = action;
-	}
 }

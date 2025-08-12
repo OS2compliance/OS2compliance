@@ -710,6 +710,8 @@
             const editButton = document.getElementById('editAssetBtn');
             const cancelButton = document.getElementById('cancelBtn');
 
+            console.log(editButton);
+
             editButton.addEventListener('click', e => {
                 const responsibleFieldsCanBeChanged = editButton.dataset.responsibleChangeable;
                 editMode(true, responsibleFieldsCanBeChanged)

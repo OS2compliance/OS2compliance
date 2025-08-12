@@ -4,6 +4,9 @@
         header: "d-flex justify-content-end"
     };
 
+    const editTemplate = document.getElementById('editListItemButtonTemplate')
+    const deleteTemplate = document.getElementById('deleteListItemButtonTemplate')
+
     const updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
@@ -24,6 +27,53 @@
                 toastService.error(error)
             })
 
+        initGrid()
+
+        initGridActionButtons()
+
+    });
+
+    function deleteClicked(assetId, name) {
+        Swal.fire({
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#03a9f4',
+          cancelButtonColor: '#df5645',
+          confirmButtonText: 'Ja',
+          cancelButtonText: 'Nej'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                    .then(() => {
+                        window.location.reload();
+                    });
+          }
+        })
+    }
+
+    async function onEditclicked(assetId) {
+        const response = await fetch(`${formUrl}?id=${assetId}`, {
+            headers: {
+                'X-CSRF-TOKEN': token
+            }
+        })
+
+        if (!response.ok) {
+            toastService.error(response.error)
+            console.error("Could not load edit fragment for asset")
+        }
+
+        const responseText = await response.text()
+
+        let dialog = document.getElementById('formDialog');
+        dialog.innerHTML = responseText;
+        editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
+        editDialog.show();
+
+    }
+
+    function initGrid() {
         let assetGridConfig = {
             className: defaultClassName,
             columns: [
@@ -52,15 +102,15 @@
                 {
                     name: "Leverandør",
                     searchable: {
-                          searchKey: 'supplier'
+                        searchKey: 'supplier'
                     }
                 },
                 {
                     name: "Tredjelandsoverførsel",
-                     searchable: {
-                         searchKey: 'hasThirdCountryTransfer',
-                         fieldId : 'assetThirdCountrySelector'
-                     },
+                    searchable: {
+                        searchKey: 'hasThirdCountryTransfer',
+                        fieldId : 'assetThirdCountrySelector'
+                    },
                     width: '150px',
                     formatter: (cell, row) => {
                         if (cell) {
@@ -150,18 +200,29 @@
                     },
                 },
                 {
-                    id: 'handlinger',
+                    id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        if(row.cells[11]['data']) {
-                            const assetId = row.cells[0]['data'];
-                            const name = row.cells[2]['data'].replaceAll("'", "\\'");
-                            return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="onEditclicked('${assetId}')"><i class="pli-pen-5 fs-5"></i></button>` +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
+                        const container = document.createElement('span');
+                        const rowId = row.cells[0]['data'];
+
+                        if (cell?.includes("UPDATE")) {
+                            const buttonFragment = editTemplate.content.cloneNode(true);
+                            const button = buttonFragment.firstElementChild;
+                            button.dataset.identifier = rowId;
+                            container.appendChild(button);
                         }
+                        if (cell?.includes("DELETE")) {
+                            const buttonFragment = deleteTemplate.content.cloneNode(true);
+                            const button = buttonFragment.firstElementChild;
+                            button.dataset.identifier = rowId;
+                            button.dataset.name = name;
+                            container.appendChild(button);
+                        }
+
+                        return gridjs.html(container.innerHTML); // Ugly hack because grid.js sucks
                     }
                 }
             ],
@@ -172,7 +233,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.changeable ],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions ],
                 ),
                 total: data => data.totalCount
             },
@@ -197,44 +258,20 @@
         new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable')
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
-    });
-
-    function deleteClicked(assetId, name) {
-        Swal.fire({
-          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#03a9f4',
-          cancelButtonColor: '#df5645',
-          confirmButtonText: 'Ja',
-          cancelButtonText: 'Nej'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                    .then(() => {
-                        window.location.reload();
-                    });
-          }
-        })
     }
 
-    async function onEditclicked(assetId) {
-        const response = await fetch(`${formUrl}?id=${assetId}`, {
-            headers: {
-                'X-CSRF-TOKEN': token
+    function initGridActionButtons() {
+        const table = document.getElementById("assetsDatatable");
+
+        table.addEventListener("click", (e) => {
+            const target = e.target;
+            if (target?.classList.contains('editBtn')) {
+                const id = target.dataset.identifier;
+                onEditclicked(id)
+            } else if (target?.classList.contains('deleteBtn')) {
+                const id = target.dataset.identifier;
+                const name = target.dataset.name;
+                deleteClicked(id, name)
             }
         })
-
-        if (!response.ok) {
-            toastService.error(response.error)
-            console.error("Could not load edit fragment for asset")
-        }
-
-        const responseText = await response.text()
-
-        let dialog = document.getElementById('formDialog');
-        dialog.innerHTML = responseText;
-        editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
-        editDialog.show();
-
     }

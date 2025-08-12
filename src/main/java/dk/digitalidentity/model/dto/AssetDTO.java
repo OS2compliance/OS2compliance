@@ -1,9 +1,12 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -24,5 +27,5 @@ public class AssetDTO {
     private String kitos;
     private boolean hasThirdCountryTransfer;
     private int registers;
-    private boolean changeable;
+    private Set<AllowedAction> allowedActions;
 }

@@ -100,7 +100,14 @@ public class SecurityUtil {
     }
 
 	public static boolean isOperationAllowed(String role) {
-		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(role));
+		var authorities = SecurityContextHolder.getContext().getAuthentication().getAuthorities();
+		return switch (role) {
+			case Roles.UPDATE_OWNER_ONLY -> authorities.stream().anyMatch(a -> a.getAuthority().equals(Roles.UPDATE_OWNER_ONLY) || a.getAuthority().equals(Roles.UPDATE_ALL));
+			case Roles.CREATE_OWNER_ONLY ->authorities.stream().anyMatch(a -> a.getAuthority().equals(Roles.CREATE_OWNER_ONLY) || a.getAuthority().equals(Roles.CREATE_ALL));
+			case Roles.DELETE_OWNER_ONLY -> authorities.stream().anyMatch(a -> a.getAuthority().equals(Roles.DELETE_OWNER_ONLY) || a.getAuthority().equals(Roles.DELETE_ALL));
+			case Roles.READ_OWNER_ONLY -> authorities.stream().anyMatch(a -> a.getAuthority().equals(Roles.READ_OWNER_ONLY) || a.getAuthority().equals(Roles.READ_ALL));
+			default -> authorities.stream().anyMatch(a -> a.getAuthority().equals(role));
+		};
 	}
 
 	public static Set<String> getAdminRoles () {

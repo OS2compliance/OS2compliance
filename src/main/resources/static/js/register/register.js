@@ -199,13 +199,13 @@ function initGrid() {
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
                     const container = document.createElement('span');
 
-                    if (cell?.includes('editable')) {
+                    if (cell?.includes("UPDATE")) {
                         const buttonFragment = editTemplate.content.cloneNode(true);
                         const button = buttonFragment.firstElementChild;
                         button.dataset.identifier = registerId;
                         container.appendChild(button);
                     }
-                    if (cell?.includes('deleteable')) {
+                    if (cell?.includes("DELETE")) {
                         const buttonFragment = deleteTemplate.content.cloneNode(true);
                         const button = buttonFragment.firstElementChild;
                         button.dataset.identifier = registerId;

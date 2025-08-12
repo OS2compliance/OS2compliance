@@ -24,18 +24,18 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public interface RegisterMapper {
 
     default RegisterDTO toDTO(final RegisterGrid registerGrid, @Context RegisterService registerService) {
-		Set<String> allowedActions = new HashSet<>();
+		Set<AllowedAction> allowedActions = new HashSet<>();
 		String userUuid = SecurityUtil.getPrincipalUuid();
 		boolean isResponsible = registerGrid != null &&
 				((registerGrid.getResponsibleUserUuids() != null && registerGrid.getResponsibleUserUuids().contains(userUuid))
 				|| ( registerGrid.getCustomResponsibleUserUuids() != null && registerGrid.getCustomResponsibleUserUuids().contains(userUuid)));
 		boolean editAllowed = isResponsible || SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL);
 		if (editAllowed) {
-			allowedActions.add(AllowedAction.UPDATE.getAction());
+			allowedActions.add(AllowedAction.UPDATE);
 		}
 		boolean deleteAllowed = isResponsible || SecurityUtil.isOperationAllowed(Roles.DELETE_ALL);
 		if (deleteAllowed) {
-			allowedActions.add(AllowedAction.DELETE.getAction());
+			allowedActions.add(AllowedAction.DELETE);
 		}
 
         //noinspection Convert2MethodRef
