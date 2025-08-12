@@ -31,6 +31,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Bug - Navigation forsvinder - implementeret burger menu
 - (Ad-hoc) Søgning og sortering efter navn i konsekvensanalyser virkede ikke
 - (Ad-hoc) Sæt max længde på tilsyns konklusion op, og tilføje validering
+- (Ad-hoc) Gør det muligt at slette dokumenter, som er anvendt som dokumentation for opgave udførsel
 
 ## [2.2.1]
 ### Fixed
