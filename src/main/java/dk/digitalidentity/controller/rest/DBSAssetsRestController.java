@@ -11,7 +11,9 @@ import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.RelationService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -46,15 +49,35 @@ public class DBSAssetsRestController {
     private final AssetService assetService;
     private final AssetOversightService assetOversightService;
     private final RelationService relationService;
+	private final ExcelExportService excelExportService;
 
     @PostMapping("list")
 	@Transactional
-	public PageDTO<DBSAssetDTO> list(@RequestParam(value = "page", defaultValue = "0") int page,
-                                     @RequestParam(value = "limit", defaultValue = "50") int limit,
-                                     @RequestParam(value = "order", required = false) String sortColumn,
-                                     @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-                                     @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
+	public Object list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<DBSAssetGrid> allDBSAssets = dbsAssetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DBSAssetGrid.class),
+					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+					DBSAssetGrid.class
+			);
+
+			List<DBSAssetDTO> allData = mapper.toDTO(allDBSAssets.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
+
+		// Normal mode - return paginated JSON
         Page<DBSAssetGrid> assets =  dbsAssetGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, DBSAssetGrid.class),
             buildPageable(page, limit, sortColumn, sortDirection),

@@ -284,7 +284,9 @@ function CreateTable() {
                 });
         });
 
-        new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable');
+
+        window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }

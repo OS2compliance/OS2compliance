@@ -37,6 +37,7 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
@@ -45,6 +46,7 @@ import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -112,15 +114,34 @@ public class RiskRestController {
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
 	private final OrganisationService organisationService;
+	private final ExcelExportService excelExportService;
 
     @PostMapping("list")
-    public PageDTO<RiskDTO> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
+    public Object list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+    ) throws IOException {
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<RiskGrid> allRisks = riskGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RiskGrid.class),
+					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+
+			List<RiskDTO> allData = mapper.toDTO(allRisks.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
+
+		// Normal mode - return paginated JSON
         Page<RiskGrid> risks =  riskGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, RiskGrid.class),
             buildPageable(page, limit, sortColumn, sortDirection),
