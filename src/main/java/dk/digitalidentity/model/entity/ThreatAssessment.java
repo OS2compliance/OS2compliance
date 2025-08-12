@@ -46,9 +46,13 @@ public class ThreatAssessment extends Relatable {
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOu;
 
-    @ManyToOne
-    @JoinColumn(name = "threat_catalog_identifier")
-    private ThreatCatalog threatCatalog;
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "threat_assessment_catalogs",
+			joinColumns = { @JoinColumn(name = "threat_assessment_id") },
+			inverseJoinColumns = { @JoinColumn(name = "threat_catalog_identifier") }
+	)
+	private List<ThreatCatalog> threatCatalogs;
 
     @ManyToOne
     @JoinColumn(name = "threat_assessment_report_s3_document_id")
