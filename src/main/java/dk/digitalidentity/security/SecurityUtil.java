@@ -169,6 +169,7 @@ public class SecurityUtil {
 				Roles.DELETE_OWNER_ONLY,
 
 				Roles.SECTION_DASHBOARD,
+				Roles.SECTION_STANDARD,
 				Roles.SECTION_REGISTER,
 				Roles.SECTION_ASSET,
 				Roles.SECTION_SUPPLIER,

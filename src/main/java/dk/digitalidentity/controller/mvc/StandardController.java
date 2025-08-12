@@ -74,7 +74,7 @@ public class StandardController {
     record StandardTemplateSectionDTO(StandardTemplateSection standardTemplateSection,
                                       List<StandardSectionDTO> standardSectionDTOs) {}
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("section/{sectionId}")
     public String lookup(@PathVariable final Long sectionId) {
@@ -100,7 +100,7 @@ public class StandardController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("plan")
     public String planPage(final Model model) {
@@ -115,7 +115,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("act")
     public String actPage(final Model model) {
@@ -127,7 +127,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("do")
     public String doPage(final Model model) {
@@ -152,7 +152,7 @@ public class StandardController {
     }
 
     record StandardTemplateListDTO(String identifier, String name, String compliance, Set<AllowedAction> allowedActions) {}
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping
     public String supportingPage(final Model model) {
@@ -186,7 +186,7 @@ public class StandardController {
         return "standards/supporting";
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("supporting/{id}")
     public String supportingPage(final Model model, @PathVariable final String id, @RequestParam(required = false) final StandardSectionStatus status) {
