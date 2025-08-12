@@ -185,10 +185,8 @@ public class SecurityUtil {
 		return Set.of(
 				Roles.LIMITED_USER,
 
-				Roles.CREATE_OWNER_ONLY,
 				Roles.READ_OWNER_ONLY,
 				Roles.UPDATE_OWNER_ONLY,
-				Roles.DELETE_OWNER_ONLY,
 
 				Roles.SECTION_DASHBOARD,
 				Roles.SECTION_REGISTER,
