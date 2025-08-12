@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireStandard;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
@@ -51,7 +52,7 @@ public class StandardRestController {
 	private final StandardTemplateDao standardTemplateDao;
 
 	record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
-	@RequireUpdateOwnerOnly
+	@RequireUpdateAll
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
     public ResponseEntity<HttpStatus> setField(@PathVariable final String templateIdentifier, @PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final StandardSection standardSection = standardSectionDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
