@@ -64,14 +64,6 @@
                                         <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
                                                 th:value="${option}" th:text="${option.message}"></option>
                                     </select>
-
-                                    <!-- Templates for list action buttons-->
-                                    <template id="editListItemButtonTemplate">
-                                        <button type="button" class="editBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button>
-                                    </template>
-                                    <template id="deleteListItemButtonTemplate">
-                                        <button type="button" class="deleteBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>
-                                    </template>
 								</div>
 							</div>
 						</div>

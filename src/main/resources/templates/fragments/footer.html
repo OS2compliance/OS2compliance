@@ -3,6 +3,14 @@
 <body>
 
 <div th:fragment="footer">
+    <!-- Templates for grid list action buttons-->
+    <template id="editListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="editBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button>
+    </template>
+    <template id="deleteListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="deleteBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>
+    </template>
+
     <div class="toast" id="toastTemplate">
         <div class="toast-header">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">

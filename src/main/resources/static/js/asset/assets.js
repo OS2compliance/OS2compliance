@@ -246,17 +246,9 @@
     }
 
     function initGridActionButtons() {
-        const table = document.getElementById("assetsDatatable");
-
-        table.addEventListener("click", (e) => {
-            const target = e.target;
-            if (target?.classList.contains('editBtn')) {
-                const id = target.dataset.identifier;
-                onEditclicked(id)
-            } else if (target?.classList.contains('deleteBtn')) {
-                const id = target.dataset.identifier;
-                const name = target.dataset.name;
-                deleteClicked(id, name)
-            }
-        })
+        delegateListItemActions(
+            "assetsDatatable",
+            (id) => onEditclicked(id),
+            (id, name)=> deleteClicked(id, name)
+        )
     }

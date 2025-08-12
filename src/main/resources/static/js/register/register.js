@@ -20,19 +20,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
 });
 
 function initGridActionButtons() {
-    const table = document.getElementById("registersDatatable");
-
-    table.addEventListener("click", (e) => {
-        const target = e.target;
-        if (target?.classList.contains('editBtn')) {
-            const id = target.dataset.identifier;
-            editRegisterService.show(id)
-        } else if (target?.classList.contains('deleteBtn')) {
-            const id = target.dataset.identifier;
-            const name = target.dataset.name;
-            deleteClicked(id, name)
-        }
-    })
+    delegateListItemActions(
+        "registersDatatable",
+        (id) => editRegisterService.show(id),
+        (id, name)=> deleteClicked(id, name)
+    )
 }
 
 function deleteClicked(registerId, name) {
