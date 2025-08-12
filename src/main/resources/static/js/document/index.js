@@ -24,6 +24,40 @@ function createDocumentFormLoaded() {
 document.addEventListener("DOMContentLoaded", function(event) {
     createDocumentFormLoaded();
 
+    initGrid()
+
+    initGridActions()
+
+});
+
+function deleteClicked(documentId, name) {
+    Swal.fire({
+        text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra DOCUMENT slettes også.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#03a9f4',
+        cancelButtonColor: '#df5645',
+        confirmButtonText: 'Ja',
+        cancelButtonText: 'Nej'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`${deleteUrl}${documentId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+        }
+    })
+}
+
+function initGridActions() {
+    delegateListItemActions(
+        'documentsDatatable',
+        (id)=>{}, // No editing..?
+        (id, name) => deleteClicked(id, name)
+        )
+}
+
+function initGrid() {
     let gridConfig = {
         className: defaultClassName,
         columns: [
@@ -83,17 +117,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 },
             },
             {
-                id: 'handlinger',
+                id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
                 width: '120px',
                 formatter: (cell, row) => {
-                    if(isSuperuser) {
-                        const documentId = row.cells[0]['data'];
-                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${documentId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                    }
+                    const documentId = row.cells[0]['data'];
+                    const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                    return formatAllowedActions(cell, row, documentId, name);
                 }
             }
         ],
@@ -104,7 +135,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(document =>
-                [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status ]
+                [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status, document.allowedActions ]
             ),
             total: data => data.totalCount
         },
@@ -130,23 +161,4 @@ document.addEventListener("DOMContentLoaded", function(event) {
     new CustomGridFunctions(grid, gridDocumentsUrl, 'documentsDatatable')
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
-});
-
-function deleteClicked(documentId, name) {
-    Swal.fire({
-        text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra DOCUMENT slettes også.`,
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#03a9f4',
-        cancelButtonColor: '#df5645',
-        confirmButtonText: 'Ja',
-        cancelButtonText: 'Nej'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            fetch(`${deleteUrl}${documentId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                .then(() => {
-                    window.location.reload();
-                });
-        }
-    })
 }

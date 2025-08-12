@@ -4,9 +4,6 @@
         header: "d-flex justify-content-end"
     };
 
-    const editTemplate = document.getElementById('editListItemButtonTemplate')
-    const deleteTemplate = document.getElementById('deleteListItemButtonTemplate')
-
     const updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };

@@ -1,9 +1,12 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -19,5 +22,5 @@ public class DocumentDTO {
     private String status;
     private Integer statusOrder;
     private String tags;
-    private boolean changeable;
+    private Set<AllowedAction> allowedActions;
 }

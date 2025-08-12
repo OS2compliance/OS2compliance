@@ -1,3 +1,5 @@
+let editTemplate, deleteTemplate;
+
 /**
  * Used to format the "Actions" column of a grid. Assumes there are editbutton and deletebutton templates in the HTML
  * Will assume the "cell" parameter holds an array of AllowedActions, which determines update and delete permissions for the user
@@ -12,20 +14,34 @@ function formatAllowedActions(cell, row, rowId, rowName = '') {
     const container = document.createElement('span');
 
     if (cell?.includes("UPDATE")) {
-        const buttonFragment = editTemplate.content.cloneNode(true);
+        const buttonFragment = getEditTemplate()?.content.cloneNode(true);
         const button = buttonFragment.firstElementChild;
         button.dataset.identifier = rowId;
         container.appendChild(button);
     }
     if (cell?.includes("DELETE")) {
-        const buttonFragment = deleteTemplate.content.cloneNode(true);
+        const buttonFragment = getDeleteTemplate()?.content.cloneNode(true);
         const button = buttonFragment.firstElementChild;
         button.dataset.identifier = rowId;
-        button.dataset.name = name;
+        button.dataset.name = rowName;
         container.appendChild(button);
     }
 
     return gridjs.html(container.innerHTML); // Ugly hack because grid.js sucks
+}
+
+function getEditTemplate() {
+    if (!editTemplate) {
+        editTemplate = document.getElementById('editListItemButtonTemplate')
+    }
+    return editTemplate;
+}
+
+function getDeleteTemplate() {
+    if (!deleteTemplate) {
+        deleteTemplate = document.getElementById('deleteListItemButtonTemplate')
+    }
+    return deleteTemplate;
 }
 
 /**

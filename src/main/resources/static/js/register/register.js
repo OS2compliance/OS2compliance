@@ -1,8 +1,5 @@
 let grid = null;
 
-const editTemplate = document.getElementById('editListItemButtonTemplate')
-const deleteTemplate = document.getElementById('deleteListItemButtonTemplate')
-
 const defaultClassName = {
     table: 'table table-striped',
     search: "form-control",

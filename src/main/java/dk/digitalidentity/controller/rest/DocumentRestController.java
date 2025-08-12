@@ -5,7 +5,6 @@ import dk.digitalidentity.mapping.DocumentMapper;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -77,7 +76,7 @@ public class DocumentRestController {
 
         assert documents != null;
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
     }
 
 	@RequireReadOwnerOnly
@@ -103,7 +102,7 @@ public class DocumentRestController {
             DocumentGrid.class, user);
 
         assert documents != null;
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
     }
 
 }
