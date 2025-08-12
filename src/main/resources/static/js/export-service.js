@@ -50,10 +50,13 @@ async function exportGridToExcelSimple(customGridInstance, fileName = 'export.xl
  * Download a blob as a file
  */
 function downloadBlob(blob, fileName) {
+    const today = new Date();
+
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = fileName;
+    a.download = fileName + '_' + today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate().toString()
+        + '.xlsx';
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -95,7 +98,7 @@ function getCurrentGridSort(customGridInstance) {
  * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
  * @param {string} fileName - Optional filename override
  */
-function exportGrid(customGridInstance, fileName = 'export.xlsx') {
+function exportGridServerSide(customGridInstance, fileName = 'export.xlsx') {
     exportGridToExcelSimple(customGridInstance, fileName);
 }
 
@@ -103,9 +106,48 @@ function exportGrid(customGridInstance, fileName = 'export.xlsx') {
  * Convenience functions for specific tables using CustomGridFunctions
  */
 function exportRegistersToExcel(customGridInstance) {
-    exportGrid(customGridInstance, 'registers_export.xlsx');
+    exportGridServerSide(customGridInstance, 'registers_export.xlsx');
 }
 
 function exportUsersToExcel(customGridInstance) {
-    exportGrid(customGridInstance, 'users_export.xlsx');
+    exportGridServerSide(customGridInstance, 'users_export.xlsx');
+}
+
+async function exportHtmlTableToExcel(tableId, fileName = "export.xlsx") {
+    const table = document.getElementById(tableId);
+    if (!table) {
+        console.error(`Table with ID '${tableId}' not found.`);
+        return;
+    }
+
+    // Get column headers
+    const columns = Array.from(table.querySelectorAll("thead th")).map(th => th.textContent.trim());
+
+    // Get table rows
+    const rows = Array.from(table.querySelectorAll("tbody tr")).map(tr => {
+        return Array.from(tr.querySelectorAll("td")).map(td => td.textContent.trim());
+    });
+
+    // Send to backend
+    const response = await fetch('/export-excel', {
+        method: 'POST',
+        headers: {
+            'X-CSRF-TOKEN': token,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ columns, rows })
+    });
+
+    const today = new Date();
+
+    // Receive file blob and trigger download
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName + '_' + today.getFullYear() + '-' + (today.getMonth()+1) + '-' + today.getDate().toString()
+        + '.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
 }

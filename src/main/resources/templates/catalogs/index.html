@@ -21,8 +21,8 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="exportGrid(customGridFunctions, 'Trusselskataloger')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
-                            <i class="ti-plus fs-4"></i> <span class="vr"></span>Gem som Excel
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="exportHtmlTableToExcel('catalogsDatatable', 'Trusselskataloger')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
+                            <i class="ti-bookmark"></i> <span class="vr"></span>Gem som Excel
                         </button>
                         <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createCatalogDialog">
                             <i class="ti-plus"></i> <span class="vr"></span> Nyt trusselskatalog
