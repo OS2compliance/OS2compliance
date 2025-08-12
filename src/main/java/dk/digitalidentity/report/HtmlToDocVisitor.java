@@ -173,6 +173,7 @@ public class HtmlToDocVisitor implements NodeVisitor {
 
     private void startNewRun() {
         paragraph = document.insertNewParagraph(cursor);
+		paragraph.setSpacingAfter(240);
         run = paragraph.createRun();
         advanceCursor(cursor);
     }
