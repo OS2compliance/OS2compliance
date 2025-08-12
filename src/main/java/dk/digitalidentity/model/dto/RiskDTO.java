@@ -21,11 +21,11 @@ public class RiskDTO {
     private String responsibleOU;
 	@ExcelColumn(headerName = "Type", order = 2)
     private String type;
-	@ExcelColumn(headerName = "Dato", order = 6)
+	@ExcelColumn(headerName = "Dato", order = 7)
     private String date;
-	@ExcelColumn(headerName = "Opgaver", order = 5)
+	@ExcelColumn(headerName = "Opgaver", order = 6)
     private Integer tasks;
-	@ExcelColumn(headerName = "Risikovurdering", order = 7)
+	@ExcelColumn(headerName = "Risikovurdering", order = 8)
     private String assessment;
 	@ExcludeFromExport
     private Integer assessmentOrder;
@@ -36,5 +36,6 @@ public class RiskDTO {
     private boolean fromExternalSource;
 	@ExcludeFromExport
     private String externalLink;
+	@ExcelColumn(headerName = "Entitet", order = 5)
 	private String relatedAssetsAndRegisters;
 }
