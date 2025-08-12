@@ -383,7 +383,11 @@ public class RiskRestController {
     private ThreatAssessmentResponse getRelevantResponse(final ThreatAssessment threatAssessment, final ThreatDatabaseType threatType, final Long threatId, final String threatIdentifier) {
         ThreatAssessmentResponse response = null;
         if (threatType.equals(ThreatDatabaseType.CATALOG)) {
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+					.flatMap(catalog -> catalog.getThreats().stream())
+					.filter(t -> t.getIdentifier().equals(threatIdentifier))
+					.findAny()
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream()
                 .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
                 .findAny()

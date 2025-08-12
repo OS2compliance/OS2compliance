@@ -7,6 +7,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -30,6 +31,7 @@ public interface RiskMapper {
                 .changeable(false)
                 .fromExternalSource(riskGrid.isFromExternalSource())
                 .externalLink(riskGrid.getExternalLink() != null ? riskGrid.getExternalLink() : "")
+				.threatCatalogs(riskGrid.getThreatCatalogs())
                 .build();
     }
 

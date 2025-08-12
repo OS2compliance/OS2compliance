@@ -114,8 +114,9 @@ public class RelatableRestController {
 		if (threatAssessment.isFromExternalSource()) {
 			return new PageDTO<>(0L, new ArrayList<>());
 		} else if (threatType.equals(ThreatDatabaseType.CATALOG)) {
-			//find the relevant threat in the catalog
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream()
+			// Find the relevant threat across all catalogs
+			final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+					.flatMap(catalog -> catalog.getThreats().stream())
 					.filter(t -> t.getIdentifier().equals(threatIdentifier))
 					.findAny()
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

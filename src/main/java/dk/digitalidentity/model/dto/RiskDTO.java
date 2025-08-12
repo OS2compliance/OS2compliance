@@ -7,6 +7,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
+
 @Data
 @Builder
 @NoArgsConstructor
@@ -38,4 +40,6 @@ public class RiskDTO {
     private String externalLink;
 	@ExcelColumn(headerName = "Entitet", order = 5)
 	private String relatedAssetsAndRegisters;
+	@ExcelColumn(headerName = "Trusselskataloger", order = 9)
+	private String threatCatalogs;
 }
