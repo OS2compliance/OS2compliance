@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.grid.DPIAGridDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.RiskDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAReport;
@@ -24,6 +25,7 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
+import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
@@ -35,10 +37,12 @@ import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
@@ -100,18 +104,49 @@ public class DPIARestController {
 	private final Environment environment;
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrganisationService organisationService;
+	private final ExcelExportService excelExportService;
 
 	public record DPIAListDTO(long id, String name, String responsibleUserName, String responsibleOUName, LocalDate userUpdatedDate, int taskCount, ThreatAssessmentReportApprovalStatus status, DPIAScreeningConclusion screeningConclusion, Boolean isExternal) {
 	}
 
 	@PostMapping("list")
-	public PageDTO<DPIAListDTO> list(
+	public Object list(
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam Map<String, String> filters // Dynamic filters for search fields
-	) {
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<DPIAGrid> allDPIAs = dpiaGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DPIAGrid.class),
+					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+					DPIAGrid.class
+			);
+
+			List<DPIAListDTO> allData = allDPIAs.getContent().stream().map(dpiaGrid ->
+				new DPIAListDTO(
+						dpiaGrid.getId(),
+						dpiaGrid.getName(),
+						dpiaGrid.getResponsibleUserName()	,
+						dpiaGrid.getResponsibleOuName(),
+						dpiaGrid.getUserUpdatedDate(),
+						dpiaGrid.getTaskCount(),
+						dpiaGrid.getReportApprovalStatus(),
+						dpiaGrid.getScreeningConclusion(),
+						dpiaGrid.isExternal()
+				))
+				.toList();
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
+
+		// Normal mode - return paginated JSON
 		Page<DPIAGrid> dpiaGrids =  dpiaGridDao.findAllWithColumnSearch(
 				validateSearchFilters(filters, DPIAGrid.class),
 				buildPageable(page, limit, sortColumn, sortDirection),

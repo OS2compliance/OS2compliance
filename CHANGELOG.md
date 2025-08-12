@@ -22,6 +22,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-66)  (Standarder/Understøttende standarder) Oprettelse af ny standard
 - (https://os2web.atlassian.net/browse/COMPLY-262) (Aktiver/Generelt) Nyt felt på aktivets forside så der er 4 forskellige roller.
 - (https://os2web.atlassian.net/browse/COMPLY-289) (Risikostyring/Risikovurderinger) Mulighed for at vælge flere trusselskataloger
+- (https://os2web.atlassian.net/browse/COMPLY-255) (Rapporter/overblikssiderne) Mulighed for at eksportere alle sider med visninger til Excel
 
 ### Fixed
 - (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke
@@ -31,6 +32,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Bug - Navigation forsvinder - implementeret burger menu
 - (Ad-hoc) Søgning og sortering efter navn i konsekvensanalyser virkede ikke
 - (Ad-hoc) Sæt max længde på tilsyns konklusion op, og tilføje validering
+- (Ad-hoc) Gør det muligt at slette dokumenter, som er anvendt som dokumentation for opgave udførsel
 
 ## [2.2.1]
 ### Fixed
