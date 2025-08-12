@@ -47,7 +47,7 @@ public interface DocumentMapper {
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		boolean isResponsible =	(documentGrid.getResponsibleUser() != null && documentGrid.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()));
 		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
-				|| isResponsible) {
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
 			allowedActions.add(AllowedAction.DELETE);
 		}
 

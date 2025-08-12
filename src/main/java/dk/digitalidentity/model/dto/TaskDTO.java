@@ -1,10 +1,13 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -23,5 +26,5 @@ public class TaskDTO {
     private String taskResult;
     private Integer taskResultOrder;
     private String tags;
-    private boolean changeable;
+    private Set<AllowedAction> allowedActions;
 }

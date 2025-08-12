@@ -29,11 +29,11 @@ public interface RegisterMapper {
 		boolean isResponsible = registerGrid != null &&
 				((registerGrid.getResponsibleUserUuids() != null && registerGrid.getResponsibleUserUuids().contains(userUuid))
 				|| ( registerGrid.getCustomResponsibleUserUuids() != null && registerGrid.getCustomResponsibleUserUuids().contains(userUuid)));
-		boolean editAllowed = isResponsible || SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL);
+		boolean editAllowed = SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 		if (editAllowed) {
 			allowedActions.add(AllowedAction.UPDATE);
 		}
-		boolean deleteAllowed = isResponsible || SecurityUtil.isOperationAllowed(Roles.DELETE_ALL);
+		boolean deleteAllowed = SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) || (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY));
 		if (deleteAllowed) {
 			allowedActions.add(AllowedAction.DELETE);
 		}

@@ -2,6 +2,7 @@ package dk.digitalidentity.mapping;
 
 import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.Roles;
@@ -12,7 +13,9 @@ import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -35,10 +38,21 @@ public interface TaskMapper {
                 .taskResultOrder(taskGrid.getTaskResultOrder())
                 .completed(nullSafe(taskGrid::isCompleted))
                 .tags(nullSafe(() -> taskGrid.getTags()))
-                .changeable(false)
                 .build();
 
-		taskDTO.setChangeable(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || SecurityUtil.getPrincipalUuid().equals(taskGrid.getResponsibleUser().getUuid()));
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		boolean isResponsible =	(taskGrid.getResponsibleUser() != null && taskGrid.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()));
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+
+		taskDTO.setAllowedActions(allowedActions);
+
 		return taskDTO;
     }
 
