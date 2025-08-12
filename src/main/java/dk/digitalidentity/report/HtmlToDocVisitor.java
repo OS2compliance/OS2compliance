@@ -179,7 +179,7 @@ public class HtmlToDocVisitor implements NodeVisitor {
     }
     private void startNewHyperlinkRun(final String url) {
         paragraph = document.insertNewParagraph(cursor);
-		paragraph.setSpacingAfter(240);g
+		paragraph.setSpacingAfter(240);
         run = paragraph.createHyperlinkRun(url);
         run.setStyle("Hyperlink");
         advanceCursor(cursor);
