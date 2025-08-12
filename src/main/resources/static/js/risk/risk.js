@@ -76,12 +76,14 @@ function CreateTable() {
                     searchable: {
                         searchKey: 'responsibleOU.name'
                     },
+                    width: '250px',
                 },
                 {
                     name: "Risikoejer",
                     searchable: {
                         searchKey: 'responsibleUser.name'
                     },
+                    width: '250px',
                 },
                 {
                     name: "Entitet",
@@ -89,8 +91,7 @@ function CreateTable() {
                         searchKey: 'relatedAssetsAndRegisters'
                     },
                     formatter: (cell, row) => {
-                        const dbsAssetId = row.cells[0]['data'];
-
+                        console.log(cell);
                         let items = [];
                         if (typeof cell === "string" && cell.trim() !== "") {
                             items = cell.split("||").map(name => name.trim());
@@ -98,24 +99,11 @@ function CreateTable() {
                             items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
                         }
 
-                        let options = '';
-                        for (const item of items) {
-                            let name = item.name || item;
-                            const commaIndex = name.indexOf(',');
-                            if (commaIndex > -1) {
-                                name = name.substring(0, commaIndex).trim();
-                            }
-                            options += `<option value="${name}" selected>${name}</option>`;
-                        }
-
-                        return gridjs.html(
-                            `<select class="form-control form-select choices__input"
-                                data-assetid="${dbsAssetId}"
-                                name="assetsAndRegisters"
-                                id="assetsRegistersSelect${dbsAssetId}"
-                                hidden multiple>${options}    
-                            </select>`
+                        const badges = items.map(option =>
+                            `<div class="badge bg-info me-1 mb-1" style="white-space: normal; word-break: break-word; overflow-wrap: break-word; text-align: left">${option}</div>`
                         );
+
+                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
                     },
                     width: '300px'
                 },
@@ -181,7 +169,7 @@ function CreateTable() {
                     searchable: {
                         searchKey: 'threatCatalogs',
                     },
-                    width: '120px',
+                    width: '150px',
                     formatter: (cell, row) => {
                         if (!cell || cell.trim() === '') {
                             return gridjs.html('<span class="text-muted">Ingen kataloger</span>');
@@ -201,7 +189,6 @@ function CreateTable() {
                     sort: 0,
                     width: '100px',
                     formatter: (cell, row) => {
-                        console.log(row.cells);
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         const external = row.cells[12]['data']
