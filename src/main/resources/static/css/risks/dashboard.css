@@ -55,6 +55,10 @@
     min-width: 80px;
 }
 
+.risk-matrix-wrapper {
+    position: relative;
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
     .risk-matrix-filters .d-flex {

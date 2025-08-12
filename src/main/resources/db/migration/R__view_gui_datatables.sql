@@ -189,7 +189,13 @@ SELECT
                      WHEN rgs.name IS NOT NULL THEN rgs.name
                      END ASC
                  SEPARATOR '||'
-    ) AS related_assets_and_registers
+    ) AS related_assets_and_registers,
+    (SELECT GROUP_CONCAT(DISTINCT tc.name ORDER BY tc.name ASC SEPARATOR ',')
+         FROM threat_assessment_catalogs tac
+         LEFT JOIN threat_catalogs tc ON tac.threat_catalog_identifier = tc.identifier
+         WHERE tac.threat_assessment_id = t.id
+           AND tc.deleted = false
+        ) AS threat_catalogs
 FROM
     threat_assessments t
         LEFT JOIN relations rel ON (
