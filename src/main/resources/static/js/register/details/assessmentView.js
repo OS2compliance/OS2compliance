@@ -75,17 +75,38 @@ export default function RegisterAssessmentService() {
             color = scaleMap[value]; // Get color from scale map for actual values
         }
 
+        // Find the correct button by looking for the one that has the choiceValueId in its dropdown onclick
         let button = null;
         const allButtons = document.querySelectorAll(`[id*="${assessmentType}"][id$="Btn"]`);
-        allButtons.forEach(btn => {
+
+        // Use for loop so we can break when we find the right button
+        for (let i = 0; i < allButtons.length; i++) {
+            const btn = allButtons[i];
+
+            // Skip registered, organisation total, and society buttons
+            if (btn.id.includes('Registered') || btn.id.includes('Organisation') || btn.id.includes('Society')) {
+                continue;
+            }
+
             const dropdownItems = btn.parentElement.querySelectorAll('.dropdown-item');
-            dropdownItems.forEach(item => {
+            let foundMatch = false;
+
+            for (let j = 0; j < dropdownItems.length; j++) {
+                const item = dropdownItems[j];
                 const itemOnclick = item.getAttribute('onclick') || '';
-                if (itemOnclick.includes(choiceValueId)) {
+                // Check if this dropdown item's onclick contains the specific choiceValueId
+                if (itemOnclick.includes(`updateOrganisationAssessmentValue`) &&
+                    itemOnclick.includes(choiceValueId)) {
                     button = btn;
+                    foundMatch = true;
+                    break; // Break out of dropdown items loop
                 }
-            });
-        });
+            }
+
+            if (foundMatch) {
+                break; // Break out of buttons loop
+            }
+        }
 
         if (button) {
             if (value !== '-') {
@@ -104,6 +125,8 @@ export default function RegisterAssessmentService() {
             // Recalculate organisation totals and max values
             this.updateOrganisationAssessmentAvg();
             this.updateAssessmentTotalMax();
+        } else {
+            console.error(`Could not find button for choiceValueId: ${choiceValueId}, assessmentType: ${assessmentType}`);
         }
     }
 
