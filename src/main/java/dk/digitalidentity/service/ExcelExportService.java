@@ -20,8 +20,19 @@ import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 
+
+/**
+ * This class exports server side grid tables to excel.
+ */
 @Service
 public class ExcelExportService {
+
+	/**
+	 * @param data - The data we provide when calling this method in each of the rest controllers. It contains the columns and rows.
+	 * @param fileName - The file name of the exported Excel sheet.
+	 * @param response - The reponse we send back.
+	 * @throws IOException - An exception we throw when an error happens.
+	 */
 	public void exportToExcel(List<?> data, String fileName, HttpServletResponse response) throws IOException {
 		if (data == null || data.isEmpty()) {
 			throw new IllegalArgumentException("No data to export");
@@ -80,12 +91,6 @@ public class ExcelExportService {
 		return fields.stream()
 				.map(f -> f.getAnnotation(ExcelColumn.class).headerName())
 				.toList();
-	}
-
-	private String formatFieldNameToHeader(String fieldName) {
-		return fieldName.replaceAll("([a-z])([A-Z])", "$1 $2")
-				.substring(0, 1).toUpperCase() +
-				fieldName.replaceAll("([a-z])([A-Z])", "$1 $2").substring(1);
 	}
 
 	private CellStyle createHeaderStyle(Workbook workbook) {

@@ -18,12 +18,11 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.util.List;
 
-// TODO: Remove this as soon as ExcelExportService works
 @RestController
 public class GenericExcelExportRestController {
 
 	@PostMapping("/export-excel")
-	public void exportExcel(@RequestBody GridTableData tableData,
+	public void exportHtmlTableToExcel(@RequestBody GridTableData tableData,
 			HttpServletResponse response) throws IOException {
 
 		// Create workbook

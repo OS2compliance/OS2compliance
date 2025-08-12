@@ -1,16 +1,16 @@
 /**
- * Export grid data to Excel using CustomGridFunctions instance
+ * Exports a serverside grid table to excel, i.e., finds the filters, sortings etc. and then calls an endpoint that retrieves the data from the DB
  * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
  * @param {string} fileName - Optional filename for the export
  */
-async function exportGridToExcelSimple(customGridInstance, fileName = 'export.xlsx') {
+async function exportGridToExcelSheet(customGridInstance, fileName = 'export.xlsx') {
     if (!customGridInstance) {
         console.error('CustomGridFunctions instance is required');
         return;
     }
 
     try {
-        // Build the export URL using the existing getExportUrl method
+        // Build the export URL
         const exportUrl = customGridInstance.getExportUrl();
 
         // Add export flag and filename to the URL
@@ -64,55 +64,20 @@ function downloadBlob(blob, fileName) {
 }
 
 /**
- * Helper function to get current filters from a CustomGridFunctions instance
- * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
- */
-function getCurrentGridFilters(customGridInstance) {
-    if (!customGridInstance || !customGridInstance.state) {
-        return {};
-    }
-
-    return customGridInstance.state.searchValues || {};
-}
-
-/**
- * Helper function to get current sort from a CustomGridFunctions instance
- * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
- */
-function getCurrentGridSort(customGridInstance) {
-    if (!customGridInstance || !customGridInstance.state) {
-        return {
-            column: null,
-            direction: 'ASC'
-        };
-    }
-
-    return {
-        column: customGridInstance.state.sortColumn || null,
-        direction: customGridInstance.state.sortDirection || 'ASC'
-    };
-}
-
-/**
  * Generic export function that works with any CustomGridFunctions instance
  * @param {CustomGridFunctions} customGridInstance - The CustomGridFunctions instance
  * @param {string} fileName - Optional filename override
  */
 function exportGridServerSide(customGridInstance, fileName = 'export.xlsx') {
-    exportGridToExcelSimple(customGridInstance, fileName);
+    exportGridToExcelSheet(customGridInstance, fileName);
 }
 
 /**
- * Convenience functions for specific tables using CustomGridFunctions
+ * Generic export function that works for frontend tables, i.e., tables where we simply export what's shown in the html page.
+ * @param tableId - The id of the grid table we want to export.
+ * @param fileName - The file name we want the exported sheet to have.
+ * @returns {Promise<void>}
  */
-function exportRegistersToExcel(customGridInstance) {
-    exportGridServerSide(customGridInstance, 'registers_export.xlsx');
-}
-
-function exportUsersToExcel(customGridInstance) {
-    exportGridServerSide(customGridInstance, 'users_export.xlsx');
-}
-
 async function exportHtmlTableToExcel(tableId, fileName = "export.xlsx") {
     const table = document.getElementById(tableId);
     if (!table) {
