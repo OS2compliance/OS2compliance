@@ -202,9 +202,12 @@
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        const rowId = row.cells[0]['data'];
+                        const attributeMap = new Map();
+                        const identifier = row.cells[0]['data'];
+                        attributeMap.set('identifier', identifier);
                         const name = row.cells[2]['data'];
-                        return formatAllowedActions(cell, row, rowId, name);
+                        attributeMap.set('name', name);
+                        return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                     }
                 }
             ],

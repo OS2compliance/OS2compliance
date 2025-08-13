@@ -122,9 +122,12 @@ function initGrid() {
                 sort: 0,
                 width: '120px',
                 formatter: (cell, row) => {
-                    const documentId = row.cells[0]['data'];
+                    const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    return formatAllowedActions(cell, row, documentId, name);
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    attributeMap.set('name', name);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
             }
         ],

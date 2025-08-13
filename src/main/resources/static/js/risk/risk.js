@@ -1,3 +1,17 @@
+const columnProperties = [
+    'id',
+    'name',
+    'type',
+    'responsibleOU',
+    'responsibleUser',
+    'relatedAssetsAndRegisters',
+    'tasks',
+    'date',
+    'threatAssessmentReportApprovalStatus',
+    'assessment',
+    'allowedActions',
+    'fromExternalSource',
+    'externalLink']
 
     const defaultClassName = {
         table: 'table table-striped',
@@ -17,6 +31,7 @@
         if (table) {
             registerView = false;
             createTable.init();
+            initTableActions()
         } else {
             preselect.init();
         }
@@ -30,6 +45,20 @@ function Preselect() {
         type.value = "REGISTER";
         type.dispatchEvent(new Event("change"));
     }
+}
+
+function initTableActions() {
+    delegateListItemActions('risksDatatable',
+        (id, elem)=> {
+            if (elem.dataset.external) {
+                createExternalRiskassessmentService.editExternalClicked(id)
+            } else {
+                editRiskService.showEditDialog(id)
+            }
+        },
+        (id, name, elem)=> editRiskService.showEditDialog(id),
+        (id, elem)=> copyRiskService.showCopyDialog(id),
+        )
 }
 
 function CreateTable() {
@@ -177,33 +206,19 @@ function CreateTable() {
                     },
                 },
                 {
-                    id: 'handlinger',
+                    id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
                     width: '100px',
                     formatter: (cell, row) => {
-                        const riskId = row.cells[0]['data'];
+                        const identifier = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         const external = row.cells[11]['data']
-                        const externalLink = row.cells[12]['data']
-                        const changeable = row.cells[10]['data']
-                        let buttonHTML = ''
-
-                        //edit button
-                        if ((superuser || changeable)
-                            && external) {
-                            buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalRiskassessmentService.editExternalClicked('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
-                        } else if(superuser || changeable) {
-                            buttonHTML = buttonHTML +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
-                                +`<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                        }
-                        //delete & copy buttons
-                        if (superuser) {
-                            buttonHTML = buttonHTML +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
-                        }
-                        return  gridjs.html(buttonHTML)
+                        const attributeMap = new Map();
+                        attributeMap.set('identifier', identifier);
+                        attributeMap.set('name', name);
+                        attributeMap.set('external', external);
+                        return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                     }
                 },
                 {

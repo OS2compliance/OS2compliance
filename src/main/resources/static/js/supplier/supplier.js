@@ -128,9 +128,13 @@ function initGrid() {
                 sort: 0,
                 width: '90px',
                 formatter: (cell, row) => {
-                    const supplierId = row.cells[0]['data'];
+                    const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    return formatAllowedActions(cell, row, supplierId, name);
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    attributeMap.set('name', name);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
+
                 }
             }
         ],

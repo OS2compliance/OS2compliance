@@ -8,6 +8,6 @@ import lombok.RequiredArgsConstructor;
 public enum AllowedAction {
 	UPDATE,
 	CREATE,
-	DELETE;
-
+	DELETE,
+	COPY;
 }

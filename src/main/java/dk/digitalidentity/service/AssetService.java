@@ -669,4 +669,8 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 	public Set<Asset> getAllForSystemOwner (String userUuid) {
 		return assetDao.findByResponsibleUsers_Uuid(userUuid);
 	}
+
+	public Set<Asset> findAssetsByOwnerUuid(String userUuid) {
+		return assetDao.findByResponsibleUsers_UuidContainsOrManagers_UuidContains(userUuid, userUuid);
+	}
 }

@@ -6,6 +6,7 @@ import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.mapping.RiskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.dto.enums.ReportFormat;
 import dk.digitalidentity.model.dto.enums.SetFieldType;
 import dk.digitalidentity.model.entity.Asset;
@@ -29,6 +30,7 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatu
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.Roles;
@@ -79,6 +81,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -126,16 +129,43 @@ public class RiskRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<RiskGrid> risks =  riskGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, RiskGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            RiskGrid.class
-        );
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 
-        assert risks != null;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)), SecurityUtil.getPrincipalUuid()));
+		Page<RiskGrid> risks = null;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			risks = riskGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RiskGrid.class),
+					buildPageable(page, limit, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			risks = riskGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, RiskGrid.class),
+					user,
+					buildPageable(page, limit, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+		}
+
+		assert risks != null;
+
+		// Assets user is responsible for
+		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(userUuid).stream()
+				.map(Relatable::getName)
+				.collect(Collectors.toSet());
+
+		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, userUuid));
     }
+
+
 
     record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}

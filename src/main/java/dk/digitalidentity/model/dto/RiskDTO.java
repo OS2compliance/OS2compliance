@@ -1,9 +1,12 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -24,4 +27,5 @@ public class RiskDTO {
 	private boolean changeable;
 	private boolean fromExternalSource;
     private String externalLink;
+	private Set<AllowedAction> allowedActions;
 }

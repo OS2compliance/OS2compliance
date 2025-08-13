@@ -46,7 +46,9 @@ function initTable() {
                 name: "Handlinger",
                 formatter: (cell, row) => {
                     const identifier = row.cells[0]['data'];
-                    formatAllowedActions(cell, row, identifier);
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
             }
         ],

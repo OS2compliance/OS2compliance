@@ -10,6 +10,9 @@
     <template id="deleteListItemButtonTemplate" th:if="${gridjs == true}">
         <button type="button" class="deleteBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>
     </template>
+    <template id="copyListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="copyBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-data-copy fs-5"></i></button>
+    </template>
 
     <div class="toast" id="toastTemplate">
         <div class="toast-header">
