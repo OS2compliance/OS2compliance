@@ -1,14 +1,52 @@
-const defaultClassName = {
-    table: 'table table-striped',
-    search: "form-control",
-    header: "d-flex justify-content-end"
-};
+const columnProperties = [
+    'id',
+    'name',
+    'responsibleOUName',
+    'responsibleUserName',
+    'userUpdatedDate',
+    'taskCount',
+    'reportApprovalStatus',
+    'screeningConclusion',
+    'isExternal',
+    'allowedActions'
+];
+let createDPIAService, createExternalDPIAService, editDPIAService;
 
 const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
 
 document.addEventListener("DOMContentLoaded", function(event) {
+    createDPIAService = new CreateDPIAService()
+    createDPIAService.init()
+    editDPIAService = new EditDPIAService()
+
+    createExternalDPIAService = new CreateExternalDPIAService()
+
+    initGrid()
+
+});
+
+function deleteClicked(dpiaId, name) {
+    Swal.fire({
+      text: `Er du sikker på du vil slette "${name}"?\nReferencer afhængige af konsekvensvurderingen slettes også.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#03a9f4',
+      cancelButtonColor: '#df5645',
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${deleteUrl}/${dpiaId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+      }
+    })
+}
+
+function initGrid() {
     const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
@@ -115,27 +153,25 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 },
             },
             {
-                id: 'handlinger',
+                id: 'isExternal',
+                hidden: true,
+            },
+            {
+                id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
                 width: '100px',
                 formatter: (cell, row) => {
-                    const dpiaId = row.cells[0]['data'];
+                    console.log(cell)
+                    console.log(row)
+                    const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    const isExternal = row.cells[8]['data'];
-                    let buttonHTML = ""
-                    if(superuser) {
-                        buttonHTML = buttonHTML
-                        + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${dpiaId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
-                        if(!isExternal) {
-                            buttonHTML = buttonHTML
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="editDPIAService.openModal('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
-                        } else {
-                            buttonHTML = buttonHTML
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalDPIAService.editExternalClicked('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
-                        }
-                    }
-                    return gridjs.html(buttonHTML);
+                    const external = row.cells[8]['data']
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    attributeMap.set('name', name);
+                    attributeMap.set('external', external);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
             }
         ],
@@ -175,23 +211,19 @@ document.addEventListener("DOMContentLoaded", function(event) {
     const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, 'dpiaDatatable');
     window.customGridFunctions = customGridFunctions;
     gridOptions.init(grid, document.getElementById("gridOptions"));
-});
 
-function deleteClicked(dpiaId, name) {
-    Swal.fire({
-      text: `Er du sikker på du vil slette "${name}"?\nReferencer afhængige af konsekvensvurderingen slettes også.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#03a9f4',
-      cancelButtonColor: '#df5645',
-      confirmButtonText: 'Ja',
-      cancelButtonText: 'Nej'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${deleteUrl}/${dpiaId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                .then(() => {
-                    window.location.reload();
-                });
-      }
-    })
+    initGridListItemButtons()
+}
+
+function initGridListItemButtons() {
+    delegateListItemActions('dpiaDatatable',
+        (id, elem) => {
+            if (elem.dataset.external) {
+                createExternalDPIAService.editExternalClicked(uid)
+            } else {
+                editDPIAService.openModal(id)
+            }
+        },
+        (id, name, elem) => deleteClicked(id, name)
+        )
 }

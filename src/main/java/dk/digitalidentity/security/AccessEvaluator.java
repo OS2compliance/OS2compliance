@@ -22,6 +22,18 @@ public class AccessEvaluator {
 		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_CONFIGURATION));
 	}
 
+	public boolean dbs() {
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_DBS));
+	}
+
+	public boolean dpia() {
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_DPIA));
+	}
+
+	public boolean settings() {
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_SETTINGS));
+	}
+
 	public boolean document() {
 		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_DOCUMENT));
 	}

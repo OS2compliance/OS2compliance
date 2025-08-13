@@ -24,8 +24,8 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatu
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
-import dk.digitalidentity.security.annotations.crud.RequireReadAll;
-import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -38,8 +38,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -75,7 +73,7 @@ public class DPIAController {
     private final AssetService assetService;
     private final RelationService relationService;
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping
     public String dpiaList(final Model model) {
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
@@ -85,7 +83,7 @@ public class DPIAController {
 	public record DPIAScreeningDTO(List<DataProtectionImpactScreeningAnswerDTO> questions){}
 	public record DPIADetailAssetDTO(long id, String name) {}
     public record DPIADetailDTO (long id, String name, List<DPIADetailAssetDTO> assets, String comment) {}
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("{id}")
     public String dpiaDetails(final Model model, @PathVariable Long id) {
 
@@ -160,7 +158,7 @@ public class DPIAController {
 	public record ExternalDPIAOptionDTO(Long id, String name) {}
 	public record ExternalDPIAUserOptionDTO(String uuid, String name) {}
     public record ExternalDPIADTO (Long dpiaId, String externalLink, List<ExternalDPIAOptionDTO> assets, LocalDate userUpdatedDate, String title, ExternalDPIAUserOptionDTO responsibleUser, ExternalDPIAUserOptionDTO responsibleOu ) {}
-	@RequireUpdateAll
+	@RequireUpdateOwnerOnly
     @GetMapping("external/{dpiaId}/edit")
     public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
 
@@ -194,7 +192,7 @@ public class DPIAController {
 	public record DPIAResponsibleUser(String uuid, String name){}
 	public record DPIAResponsibleOu(String uuid, String name){}
 	public record DPIAAssetDTO(long id, String name){}
-	@RequireUpdateAll
+	@RequireUpdateOwnerOnly
 	@GetMapping("{dpiaId}/edit")
 	public String getEditFragment(final Model model, @PathVariable Long dpiaId) {
 		final DPIA dpia = dpiaService.find(dpiaId);
@@ -281,7 +279,7 @@ public class DPIAController {
     }
 
     public record RevisionFormDTO(@DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextRevision, RevisionInterval revisionInterval) {}
-	@RequireUpdateAll
+	@RequireUpdateOwnerOnly
     @GetMapping("{dpiaId}/revision")
     public String revisionForm(final Model model, @PathVariable final long dpiaId) {
          DPIA dpia = dpiaService.find(dpiaId);
@@ -291,7 +289,7 @@ public class DPIAController {
         return "dpia/fragments/revisionIntervalForm";
     }
 
-	@RequireUpdateAll
+	@RequireUpdateOwnerOnly
     @PostMapping("{dpiaId}/revision")
     @Transactional
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long dpiaId) {

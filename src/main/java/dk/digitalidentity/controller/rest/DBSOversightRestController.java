@@ -5,8 +5,8 @@ import java.util.List;
 import java.util.Map;
 
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
-import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
+import dk.digitalidentity.security.annotations.sections.RequireDBS;
 import dk.digitalidentity.service.ExcelExportService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.domain.Page;
@@ -29,7 +29,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/oversight")
-@RequireAsset
+@RequireDBS
 @RequiredArgsConstructor
 public class DBSOversightRestController {
 	private final DBSOversightGridDao dbsOversightGridDao;

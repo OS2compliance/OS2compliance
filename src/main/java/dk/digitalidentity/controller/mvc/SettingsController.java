@@ -5,7 +5,7 @@ import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.model.dto.enums.KitosField;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
-import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
+import dk.digitalidentity.security.annotations.sections.RequireSettings;
 import dk.digitalidentity.service.KitosService;
 import dk.digitalidentity.service.SettingsService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("settings")
-@RequireConfiguration
+@RequireSettings
 @RequiredArgsConstructor
 public class SettingsController {
     private final SettingsService settingsService;

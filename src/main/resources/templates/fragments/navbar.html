@@ -40,11 +40,11 @@
                                 <a th:href="@{/assets}" class="nav-link"
                                    th:classappend="${page} == 'aktiver' ? 'active' : ''">Aktiver</a>
                             </li>
-                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.dbs()">
                                 <a th:href="@{/dbs/assets}" class="nav-link"
                                    th:classappend="${page} == 'dbs_aktiver' ? 'active' : ''">DBS Aktiver</a>
                             </li>
-                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.dbs()">
                                 <a th:href="@{/dbs/oversight}" class="nav-link"
                                    th:classappend="${page} == 'dbs_oversight' ? 'active' : ''">DBS tilsyn</a>
                             </li>
@@ -67,10 +67,10 @@
                                    th:classappend="${page} == 'risikovurderinger' ? 'active' : ''">Risikovurderinger</a>
                             </li>
                             <li class="nav-item">
-                                <a th:href="@{/risks/dashboard}" class="nav-link"
+                                <a th:href="@{/risks/dashboard}" sec:authorize="@accessEvaluator.configuration()" class="nav-link"
                                    th:classappend="${page} == 'riskDashboard' ? 'active' : ''">Trusselsbillede</a>
                             </li>
-                            <li class="nav-item" sec:authorize="@accessEvaluator.configuration()">
+                            <li class="nav-item" sec:authorize="@accessEvaluator.dpia()">
                                 <a th:href="@{/dpia}" class="nav-link"
                                    th:classappend="${page} == 'dpia' ? 'active' : ''">Konsekvensanalyser</a>
                             </li>

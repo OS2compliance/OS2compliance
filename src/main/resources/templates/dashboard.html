@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" sec:authorize="hasAnyRole('ROLE_administrator', 'ROLE_super_user', 'ROLE_user', 'ROLE_limited_user')" class="content__boxed">
+        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" sec:authorize="hasRole('ROLE_dashboard')" class="content__boxed">
             <div class="content__wrap">
 
                 <div class="tab-base">

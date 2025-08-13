@@ -13,6 +13,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireAsset;
+import dk.digitalidentity.security.annotations.sections.RequireDBS;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ExcelExportService;
@@ -45,7 +46,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/assets")
-@RequireAsset
+@RequireDBS
 @RequiredArgsConstructor
 public class DBSAssetsRestController {
 	private final DBSAssetGridDao dbsAssetGridDao;

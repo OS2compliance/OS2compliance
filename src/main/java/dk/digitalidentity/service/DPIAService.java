@@ -237,4 +237,8 @@ public class DPIAService {
 		}
 		return DPIAScreeningConclusion.GREEN;
 	}
+
+	public Set<DPIA> findByOwnedAsset(String userUuid) {
+		return dpiaDao.findByAssets_ResponsibleUsers_UuidContainsOrAssets_Managers_UuidContains(userUuid, userUuid);
+	}
 }
