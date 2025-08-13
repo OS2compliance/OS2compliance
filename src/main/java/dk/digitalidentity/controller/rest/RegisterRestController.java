@@ -11,7 +11,9 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -23,6 +25,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -34,10 +38,11 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @RequireRegister
 @RequiredArgsConstructor
 public class RegisterRestController {
-    private final RegisterGridDao registerGridDao;
+	private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
 	private final RegisterService registerService;
+	private final ExcelExportService excelExportService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -46,13 +51,40 @@ public class RegisterRestController {
             @RequestParam(value = "limit", defaultValue = "50") int limit,
             @RequestParam(value = "order", required = false) String sortColumn,
             @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
             @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
+    ) throws IOException {
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
 		if (userUuid == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<RegisterGrid> allRegisters;
+			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+				allRegisters = registerGridDao.findAllWithColumnSearch(
+						validateSearchFilters(filters, RegisterGrid.class),
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						RegisterGrid.class
+				);
+			}
+			else {
+				// Logged in user can see only own
+				allRegisters = registerGridDao.findAllWithAssignedUser(
+						validateSearchFilters(filters, RegisterGrid.class),
+						user,
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						RegisterGrid.class
+				);
+			}
+
+			List<RegisterDTO> allData = mapper.toDTO(allRegisters.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
 		}
 
 		Page<RegisterGrid> registers;

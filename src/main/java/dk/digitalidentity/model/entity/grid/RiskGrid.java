@@ -74,4 +74,7 @@ public class RiskGrid  implements HasSingleResponsibleUser {
 
     @Column
     private String externalLink;
+
+	@Column
+	private String threatCatalogs;
 }

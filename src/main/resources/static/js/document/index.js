@@ -161,7 +161,8 @@ function initGrid() {
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "documentsDatatable" ));
 
     //Enables custom column search, serverside sorting and pagination
-    new CustomGridFunctions(grid, gridDocumentsUrl, 'documentsDatatable')
+    const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, 'documentsDatatable');
+    window.customGridFunctions = customGridFunctions;
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 }

@@ -82,8 +82,8 @@ function CreateTable() {
                         searchKey: 'name'
                     },
                     formatter: (cell, row) => {
-                        const external = row.cells[11]['data']
-                        const externalLink = row.cells[12]['data']
+                        const external = row.cells[12]['data']
+                        const externalLink = row.cells[13]['data']
                         const url = viewUrl + row.cells[0]['data'];
                         if(external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
@@ -105,12 +105,14 @@ function CreateTable() {
                     searchable: {
                         searchKey: 'responsibleOU.name'
                     },
+                    width: '250px',
                 },
                 {
                     name: "Risikoejer",
                     searchable: {
                         searchKey: 'responsibleUser.name'
                     },
+                    width: '250px',
                 },
                 {
                     name: "Entitet",
@@ -127,24 +129,11 @@ function CreateTable() {
                             items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
                         }
 
-                        let options = '';
-                        for (const item of items) {
-                            let name = item.name || item;
-                            const commaIndex = name.indexOf(',');
-                            if (commaIndex > -1) {
-                                name = name.substring(0, commaIndex).trim();
-                            }
-                            options += `<option value="${name}" selected>${name}</option>`;
-                        }
-
-                        return gridjs.html(
-                            `<select class="form-control form-select choices__input"
-                                data-assetid="${dbsAssetId}"
-                                name="assetsAndRegisters"
-                                id="assetsRegistersSelect${dbsAssetId}"
-                                hidden multiple>${options}    
-                            </select>`
+                        const badges = items.map(option =>
+                            `<div class="badge bg-info me-1 mb-1" style="white-space: normal; word-break: break-word; overflow-wrap: break-word; text-align: left">${option}</div>`
                         );
+
+                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
                     },
                     width: '300px'
                 },
@@ -206,6 +195,25 @@ function CreateTable() {
                     },
                 },
                 {
+                    name: "Trusselskataloger",
+                    searchable: {
+                        searchKey: 'threatCatalogs',
+                    },
+                    width: '150px',
+                    formatter: (cell, row) => {
+                        if (!cell || cell.trim() === '') {
+                            return gridjs.html('<span class="text-muted">Ingen kataloger</span>');
+                        }
+
+                        const catalogs = cell.split(',').map(catalog => catalog.trim()).filter(catalog => catalog !== '');
+                        const badges = catalogs.map(catalog =>
+                            `<span class="badge bg-info me-1 mb-1">${catalog}</span>`
+                        );
+
+                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
+                    },
+                },
+                {
                     id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
@@ -213,7 +221,7 @@ function CreateTable() {
                     formatter: (cell, row) => {
                         const identifier = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[11]['data']
+                        const external = row.cells[12]['data']
                         const attributeMap = new Map();
                         attributeMap.set('identifier', identifier);
                         attributeMap.set('name', name);
@@ -279,7 +287,9 @@ function CreateTable() {
                 });
         });
 
-        new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable');
+
+        window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }
@@ -410,6 +420,9 @@ function EditRiskService() {
             this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         }
 
+        const catalogSelect = this.getScopedElementById('editThreatCatalogSelect');
+        initSelectWithConfirmation(catalogSelect);
+
         this.editAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.editAssessmentModal.show();
     }
@@ -536,6 +549,9 @@ function CreateRiskService() {
         if (presentSelect !== null) {
             this.presentSelect = choiceService.initUserSelect('presentAtMeetingSelect');
         }
+
+        const catalogSelect = this.getScopedElementById('threatCatalogSelect');
+        initSelect(catalogSelect);
 
         let societyCheckbox = this.getScopedElementById("society");
         let authenticityCheckbox = this.getScopedElementById("authenticity");

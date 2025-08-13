@@ -15,8 +15,10 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +32,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,6 +54,7 @@ public class DBSAssetsRestController {
     private final AssetService assetService;
     private final AssetOversightService assetOversightService;
     private final RelationService relationService;
+	private final ExcelExportService excelExportService;
 	private final UserService userService;
 
 	@RequireReadOwnerOnly
@@ -60,16 +64,46 @@ public class DBSAssetsRestController {
                                      @RequestParam(value = "limit", defaultValue = "50") int limit,
                                      @RequestParam(value = "order", required = false) String sortColumn,
                                      @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+									@RequestParam(value = "export", defaultValue = "false") boolean export,
+									@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
                                      @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<DBSAssetGrid> assets = null;
-
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
 		if (userUuid == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<DBSAssetGrid> allDBSAssets;
+			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+				allDBSAssets = dbsAssetGridDao.findAllWithColumnSearch(
+						validateSearchFilters(filters, DBSAssetGrid.class),
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						DBSAssetGrid.class
+				);
+			}
+			else {
+				allDBSAssets = dbsAssetGridDao.findAllWithAssignedUser(
+						validateSearchFilters(filters, DBSAssetGrid.class),
+						user,
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						DBSAssetGrid.class
+				);
+			}
+
+			List<DBSAssetDTO> allData = mapper.toDTO(allDBSAssets.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
+
+
+
+        Page<DBSAssetGrid> assets = null;
+
+
 
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			// Logged in user can see all

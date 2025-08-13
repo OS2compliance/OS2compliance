@@ -222,7 +222,9 @@ function initGrid() {
     };
     grid = new gridjs.Grid(gridConfig).render(document.getElementById("registersDatatable"));
 
-    new CustomGridFunctions(grid, gridRegistersUrl, 'registersDatatable')
+            const customGridFunctions = new CustomGridFunctions(grid ,gridRegistersUrl, 'registersDatatable');
+
+            window.customGridFunctions = customGridFunctions; // TODO - why this?
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 }

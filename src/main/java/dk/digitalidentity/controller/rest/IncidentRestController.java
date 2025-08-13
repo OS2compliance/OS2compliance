@@ -1,16 +1,23 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.mapping.IncidentMapper;
+import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
+import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.IncidentService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,10 +38,15 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -44,6 +56,7 @@ import java.util.List;
 public class IncidentRestController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
+	private final ExcelExportService excelExportService;
 
     @RequireReadAll
     @GetMapping("questions")
@@ -99,8 +112,12 @@ public class IncidentRestController {
         @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir,
+		@RequestParam(value = "export", defaultValue = "false") boolean export,
+		@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+		@RequestParam Map<String, String> filters,
         @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
-        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam) {
+        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam,
+			HttpServletResponse response) throws IOException {
         Sort sort = null;
         if (StringUtils.isNotEmpty(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
@@ -114,6 +131,12 @@ public class IncidentRestController {
         final Page<Incident> incidents = StringUtils.isNotEmpty(search)
             ? incidentService.search(search, fromDate, toDate, sortAndPage)
             : incidentService.listIncidents(fromDate, toDate, sortAndPage);
+
+		if (export) {
+			List<IncidentDTO> allData = incidentMapper.toDTOs(incidents.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
 
         assert incidents != null;
         return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));

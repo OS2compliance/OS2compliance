@@ -240,7 +240,8 @@
         };
         const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
 
-        new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable')
+        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable');
+        window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }

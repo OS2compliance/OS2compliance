@@ -43,6 +43,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
@@ -51,6 +52,8 @@ import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -119,21 +122,50 @@ public class RiskRestController {
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
 	private final OrganisationService organisationService;
+	private final ExcelExportService excelExportService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
-    public PageDTO<RiskDTO> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
+	public PageDTO<RiskDTO> list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
+			HttpServletResponse response
+	) {
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
 		if (userUuid == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<RiskGrid> allRisks;
+			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+				allRisks = riskGridDao.findAllWithColumnSearch(
+						validateSearchFilters(filters, RiskGrid.class),
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						RiskGrid.class
+				);
+			}
+			else {
+				// Logged in user can see only own
+				allRisks = riskGridDao.findAllWithAssignedUser(
+						validateSearchFilters(filters, RiskGrid.class),
+						user,
+						buildPageable(page,  Integer.MAX_VALUE, sortColumn, sortDirection),
+						RiskGrid.class
+				);
+			}
+
+			List<RiskDTO> allData = mapper.toDTO(allRisks.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
 		}
 
 		Page<RiskGrid> risks = null;
@@ -402,7 +434,11 @@ public class RiskRestController {
     private ThreatAssessmentResponse getRelevantResponse(final ThreatAssessment threatAssessment, final ThreatDatabaseType threatType, final Long threatId, final String threatIdentifier) {
         ThreatAssessmentResponse response = null;
         if (threatType.equals(ThreatDatabaseType.CATALOG)) {
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+					.flatMap(catalog -> catalog.getThreats().stream())
+					.filter(t -> t.getIdentifier().equals(threatIdentifier))
+					.findAny()
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream()
                 .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
                 .findAny()

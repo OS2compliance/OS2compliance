@@ -167,7 +167,9 @@ function initGrid() {
     };
     const grid = new gridjs.Grid(gridConfig).render(document.getElementById("suppliersDatatable"));
 
-    new CustomGridFunctions(grid, gridSuppliersUrl, 'suppliersDatatable')
+            const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, 'suppliersDatatable');
+
+            window.customGridFunctions = customGridFunctions; // TODO - why this?
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 }

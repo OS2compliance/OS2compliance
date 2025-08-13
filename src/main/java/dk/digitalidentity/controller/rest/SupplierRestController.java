@@ -3,16 +3,22 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.mapping.SupplierMapper;
+import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.ExcelExportService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -28,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -48,6 +55,7 @@ public class SupplierRestController {
 	private final SupplierGridDao supplierGridDao;
 	private final SupplierMapper supplierMapper;
 	private final SupplierDao supplierDao;
+	private final ExcelExportService excelExportService;
 	private final UserService userService;
 
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status, Set<AllowedAction> allowedActions) {}
@@ -55,11 +63,14 @@ public class SupplierRestController {
 	@RequireReadOwnerOnly
     @PostMapping("list")
 	public PageDTO<SupplierGridDTO> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
+			HttpServletResponse response
 	) {
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		if (userUuid == null) {
@@ -67,6 +78,38 @@ public class SupplierRestController {
 		}
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<SupplierGrid> allSuppliers;
+			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+				allSuppliers = supplierGridDao.findAllWithColumnSearch(
+						validateSearchFilters(filters, SupplierGrid.class),
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						SupplierGrid.class
+				);
+			}
+			else {
+				// Logged in user can see only own
+				allSuppliers = supplierGridDao.findAllWithAssignedUser(
+						validateSearchFilters(filters, SupplierGrid.class),
+						user,
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						SupplierGrid.class
+				);
+			}
+
+			final List<SupplierGridDTO> allData = new ArrayList<>();
+			for (final SupplierGrid supplier : allSuppliers.getContent()) {
+				final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
+						supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage());
+				allData.add(dto);
+			}
+
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
+
 
 		Page<SupplierGrid> suppliers;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {

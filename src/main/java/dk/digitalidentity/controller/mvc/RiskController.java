@@ -16,6 +16,9 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
+import dk.digitalidentity.model.entity.ThreatCatalog;
+import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
@@ -28,6 +31,7 @@ import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
@@ -151,6 +155,7 @@ public class RiskController {
 			model.addAttribute("relatedAssets", assetService.findAllByRelations(assetRelations));
 		}
 
+		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
         return "risks/editForm";
     }
@@ -178,8 +183,33 @@ public class RiskController {
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
         editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
+
+		// Handle threatCatalog changes
+		threatAssessmentService.handleThreatCatalogChanges(editedAssessment, assessment.getThreatCatalogs());
+
         return "redirect:/risks";
     }
+
+	@RequireCreateAll
+	@Transactional
+	@PostMapping("{id}/update-catalogs")
+	public String updateThreatCatalogs(@PathVariable("id") final long id, @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers) {
+		final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		// Find selected catalogs
+		List<ThreatCatalog> selectedCatalogs = new ArrayList<>();
+		if (catalogIdentifiers != null && !catalogIdentifiers.isEmpty()) {
+			selectedCatalogs = catalogService.findByIdentifierIn(catalogIdentifiers);
+		}
+
+		threatAssessmentService.handleThreatCatalogChanges(editedAssessment, selectedCatalogs);
+
+		return "redirect:/risks/" + id;
+	}
 
 	@RequireCreateOwnerOnly
     @GetMapping("{id}/copy")
@@ -304,6 +334,7 @@ public class RiskController {
         model.addAttribute("relatedRegisters", findRelatedRegisters(threatAssessment));
         model.addAttribute("presentAtMeetingName", threatAssessment.getPresentAtMeeting().stream().map(User::getName).collect(Collectors.joining(", ")));
         model.addAttribute("defaultSendReportTo", getFirstRelatedResponsible(threatAssessment));
+        model.addAttribute("threatCatalogs", catalogService.findAllVisible());
 
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);

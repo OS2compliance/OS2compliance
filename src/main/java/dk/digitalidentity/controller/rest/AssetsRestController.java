@@ -5,6 +5,7 @@ import dk.digitalidentity.event.AssetDPIAKitosEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
@@ -17,6 +18,9 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
+import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -31,11 +35,13 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
 import dk.digitalidentity.util.ReflectionHelper;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
@@ -53,6 +59,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Collections;
@@ -81,22 +88,49 @@ public class AssetsRestController {
     private final AssetOversightService assetOversightService;
 	private final DPIAService dPIAService;
 	private final ApplicationEventPublisher eventPublisher;
+	private final ExcelExportService excelExportService;
 
 	@RequireReadOwnerOnly
 	@PostMapping("list")
-	public PageDTO<AssetDTO> list(
-			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "limit", defaultValue = "50") int limit,
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam Map<String, String> filters // Dynamic filters for search fields
-	) {
+    public PageDTO<AssetDTO> list(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+		@RequestParam(value = "export", defaultValue = "false") boolean export,
+		@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) throws IOException {
 
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
 		if (userUuid == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<AssetGrid> allAssets;
+			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			 allAssets = assetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, AssetGrid.class),
+					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+
+			} else {
+				// Logged in user can see only own
+				allAssets = assetGridDao.findAllWithAssignedUser(
+						validateSearchFilters(filters, AssetGrid.class),
+						user,
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+						AssetGrid.class
+				);
+			}
+				List<AssetDTO> allData = mapper.toDTO(allAssets.getContent());
+				excelExportService.exportToExcel(allData, fileName, response);
+				return null;
 		}
 
 		Page<AssetGrid> assets = null;
@@ -119,7 +153,7 @@ public class AssetsRestController {
 		}
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
-	}
+    }
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")

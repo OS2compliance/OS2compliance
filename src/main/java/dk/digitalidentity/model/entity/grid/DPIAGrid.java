@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.ExcludeFromExport;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import jakarta.persistence.Column;
@@ -47,6 +48,7 @@ public class DPIAGrid {
 	@Enumerated(EnumType.STRING)
 	private DPIAScreeningConclusion screeningConclusion;
 
+	@ExcludeFromExport
     @Column
     private boolean isExternal;
 }
