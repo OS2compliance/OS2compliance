@@ -76,41 +76,18 @@ public class DBSAssetsRestController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<DBSAssetGrid> allDBSAssets;
-			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-				allDBSAssets = dbsAssetGridDao.findAllWithColumnSearch(
-						validateSearchFilters(filters, DBSAssetGrid.class),
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						DBSAssetGrid.class
-				);
-			}
-			else {
-				allDBSAssets = dbsAssetGridDao.findAllWithAssignedUser(
-						validateSearchFilters(filters, DBSAssetGrid.class),
-						user,
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						DBSAssetGrid.class
-				);
-			}
-
-			List<DBSAssetDTO> allData = mapper.toDTO(allDBSAssets.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
 		}
 
-
-
         Page<DBSAssetGrid> assets = null;
-
-
-
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			// Logged in user can see all
 			assets = dbsAssetGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, DBSAssetGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					DBSAssetGrid.class
 			);
 		}
@@ -119,9 +96,16 @@ public class DBSAssetsRestController {
 			assets = dbsAssetGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, DBSAssetGrid.class),
 					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					DBSAssetGrid.class
 			);
+		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			List<DBSAssetDTO> allData = mapper.toDTO(assets.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
 		}
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));

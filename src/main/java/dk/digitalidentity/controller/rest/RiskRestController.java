@@ -53,7 +53,6 @@ import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -143,42 +142,23 @@ public class RiskRestController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
+		}
+
 		// Assets user is responsible for
 		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(userUuid).stream()
 				.map(Relatable::getName)
 				.collect(Collectors.toSet());
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<RiskGrid> allRisks;
-			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-				allRisks = riskGridDao.findAllWithColumnSearch(
-						validateSearchFilters(filters, RiskGrid.class),
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						RiskGrid.class
-				);
-			}
-			else {
-				// Logged in user can see only own
-				allRisks = riskGridDao.findAllWithAssignedUser(
-						validateSearchFilters(filters, RiskGrid.class),
-						user,
-						buildPageable(page,  Integer.MAX_VALUE, sortColumn, sortDirection),
-						RiskGrid.class
-				);
-			}
-
-			List<RiskDTO> allData = mapper.toDTO(allRisks.getContent(), responsibleAssetNames, userUuid);
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
-		}
 
 		Page<RiskGrid> risks = null;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			// Logged in user can see all
 			risks = riskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, RiskGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					RiskGrid.class
 			);
 		}
@@ -187,12 +167,19 @@ public class RiskRestController {
 			risks = riskGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, RiskGrid.class),
 					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					RiskGrid.class
 			);
 		}
 
 		assert risks != null;
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, userUuid);
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
 
 		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, userUuid));
     }

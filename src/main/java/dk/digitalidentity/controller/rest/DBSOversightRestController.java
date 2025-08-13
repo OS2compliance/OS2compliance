@@ -50,25 +50,25 @@ public class DBSOversightRestController {
 			HttpServletResponse response
 	) throws IOException {
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<DBSOversightGrid> allOversights = dbsOversightGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DBSOversightGrid.class),
-					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-					DBSOversightGrid.class
-			);
-
-			List<DBSOversightDTO> allData = mapper.toDTO(allOversights.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
 		}
 
 		// Normal mode - return paginated JSON
         Page<DBSOversightGrid> oversights =  dbsOversightGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, DBSOversightGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
+            buildPageable(page, pageLimit, sortColumn, sortDirection),
             DBSOversightGrid.class
         );
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			List<DBSOversightDTO> allData = mapper.toDTO(oversights.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
 
         return new PageDTO<>(oversights.getTotalElements(), mapper.toDTO(oversights.getContent()));
 	}

@@ -122,41 +122,20 @@ public class DPIARestController {
 			@RequestParam Map<String, String> filters,
 			HttpServletResponse response
 	) throws IOException {
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<DPIAGrid> allDPIAs = dpiaGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DPIAGrid.class),
-					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-					DPIAGrid.class
-			);
-
-			List<DPIAListDTO> allData = allDPIAs.getContent().stream().map(dpiaGrid ->
-				new DPIAListDTO(
-						dpiaGrid.getId(),
-						dpiaGrid.getName(),
-						dpiaGrid.getResponsibleUserName()	,
-						dpiaGrid.getResponsibleOuName(),
-						dpiaGrid.getUserUpdatedDate(),
-						dpiaGrid.getTaskCount(),
-						dpiaGrid.getReportApprovalStatus(),
-						dpiaGrid.getScreeningConclusion(),
-						dpiaGrid.isExternal()
-				))
-				.toList();
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
 		}
 
 		// Normal mode - return paginated JSON
 		Page<DPIAGrid> dpiaGrids =  dpiaGridDao.findAllWithColumnSearch(
 				validateSearchFilters(filters, DPIAGrid.class),
-				buildPageable(page, limit, sortColumn, sortDirection),
+				buildPageable(page, pageLimit, sortColumn, sortDirection),
 				DPIAGrid.class
 		);
 
-		assert dpiaGrids != null;
-		return new PageDTO<>(dpiaGrids.getTotalElements(), dpiaGrids.stream().map(dpia ->
+		List<DPIAListDTO> dtos = dpiaGrids.stream().map(dpia ->
 						new DPIAListDTO(
 								dpia.getId(),
 								dpia.getName(),
@@ -168,7 +147,16 @@ public class DPIARestController {
 								dpia.getScreeningConclusion(),
 								dpia.isExternal()
 						))
-				.toList());
+				.toList();
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			excelExportService.exportToExcel(dtos, fileName, response);
+			return null;
+		}
+
+		assert dpiaGrids != null;
+		return new PageDTO<>(dpiaGrids.getTotalElements(),dtos);
 	}
 
 	@RequireDeleteAll

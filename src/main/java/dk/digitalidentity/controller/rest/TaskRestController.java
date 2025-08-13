@@ -13,13 +13,10 @@ import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,8 +24,6 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.io.IOException;
-import java.util.List;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
@@ -66,29 +61,10 @@ public class TaskRestController {
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<TaskGrid> allTasks;
-			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-				allTasks = taskGridDao.findAllWithColumnSearch(
-						validateSearchFilters(filters, TaskGrid.class),
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						TaskGrid.class
-				);
-			}
-			else {
-				// Logged in user can see only own
-				allTasks = taskGridDao.findAllWithAssignedUser(
-						validateSearchFilters(filters, TaskGrid.class),
-						user,
-						buildPageable(page, limit, sortColumn, sortDirection),
-						TaskGrid.class
-				);
-			}
-
-			List<TaskDTO> allData = mapper.toDTO(allTasks.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
 		}
 
 		Page<TaskGrid> tasks;
@@ -96,7 +72,7 @@ public class TaskRestController {
 			// Logged in user can see all
 			tasks = taskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, TaskGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					TaskGrid.class
 			);
 		}
@@ -105,9 +81,16 @@ public class TaskRestController {
 			tasks = taskGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, TaskGrid.class),
 					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					TaskGrid.class
 			);
+		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			List<TaskDTO> allData = mapper.toDTO(tasks.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
 		}
 
         assert tasks != null;

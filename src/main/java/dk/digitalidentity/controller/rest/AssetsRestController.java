@@ -5,7 +5,6 @@ import dk.digitalidentity.event.AssetDPIAKitosEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
-import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
@@ -43,6 +42,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -107,28 +107,10 @@ public class AssetsRestController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<AssetGrid> allAssets;
-			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-				allAssets = assetGridDao.findAllWithColumnSearch(
-						validateSearchFilters(filters, AssetGrid.class),
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-
-			} else {
-				// Logged in user can see only own
-				allAssets = assetGridDao.findAllWithAssignedUser(
-						validateSearchFilters(filters, AssetGrid.class),
-						user,
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						AssetGrid.class
-				);
-			}
-				List<AssetDTO> allData = mapper.toDTO(allAssets.getContent());
-				excelExportService.exportToExcel(allData, fileName, response);
-				return null;
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
 		}
 
 		Page<AssetGrid> assets = null;
@@ -136,7 +118,7 @@ public class AssetsRestController {
 			// Logged in user can see all
 			assets = assetGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, AssetGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					AssetGrid.class
 			);
 		}
@@ -145,9 +127,15 @@ public class AssetsRestController {
 			assets = assetGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, AssetGrid.class),
 					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					AssetGrid.class
 			);
+		}
+
+		if (export) {
+			List<AssetDTO> allData = mapper.toDTO(assets.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
 		}
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));

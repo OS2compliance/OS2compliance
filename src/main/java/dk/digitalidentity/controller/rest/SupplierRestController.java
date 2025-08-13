@@ -3,7 +3,6 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.mapping.SupplierMapper;
-import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
@@ -76,6 +75,12 @@ public class SupplierRestController {
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
 
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
+		}
+
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
 			allowedActions.add(AllowedAction.UPDATE);
@@ -84,28 +89,29 @@ public class SupplierRestController {
 			allowedActions.add(AllowedAction.DELETE);
 		}
 
+		Page<SupplierGrid> suppliers;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			suppliers = supplierGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, SupplierGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					SupplierGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			suppliers = supplierGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, SupplierGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					SupplierGrid.class
+			);
+		}
+
 		// For export mode, get ALL records (no pagination)
 		if (export) {
-			Page<SupplierGrid> allSuppliers;
-			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-				allSuppliers = supplierGridDao.findAllWithColumnSearch(
-						validateSearchFilters(filters, SupplierGrid.class),
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						SupplierGrid.class
-				);
-			}
-			else {
-				// Logged in user can see only own
-				allSuppliers = supplierGridDao.findAllWithAssignedUser(
-						validateSearchFilters(filters, SupplierGrid.class),
-						user,
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						SupplierGrid.class
-				);
-			}
-
 			final List<SupplierGridDTO> allData = new ArrayList<>();
-			for (final SupplierGrid supplier : allSuppliers.getContent()) {
+			for (final SupplierGrid supplier : suppliers.getContent()) {
 				final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
 						supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), allowedActions);
 				allData.add(dto);
@@ -115,28 +121,7 @@ public class SupplierRestController {
 			return null;
 		}
 
-
-		Page<SupplierGrid> suppliers;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
-			suppliers = supplierGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, SupplierGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					SupplierGrid.class
-			);
-		}
-		else {
-			// Logged in user can see only own
-			suppliers = supplierGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, SupplierGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					SupplierGrid.class
-			);
-		}
-
 		// Convert to DTO
-
 		final List<SupplierGridDTO> supplierDTOs = new ArrayList<>();
 		for (final SupplierGrid supplier : suppliers) {
 			final SupplierGridDTO dto = new SupplierGridDTO(

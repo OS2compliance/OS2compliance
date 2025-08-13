@@ -63,29 +63,10 @@ public class RegisterRestController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<RegisterGrid> allRegisters;
-			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-				allRegisters = registerGridDao.findAllWithColumnSearch(
-						validateSearchFilters(filters, RegisterGrid.class),
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						RegisterGrid.class
-				);
-			}
-			else {
-				// Logged in user can see only own
-				allRegisters = registerGridDao.findAllWithAssignedUser(
-						validateSearchFilters(filters, RegisterGrid.class),
-						user,
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						RegisterGrid.class
-				);
-			}
-
-			List<RegisterDTO> allData = mapper.toDTO(allRegisters.getContent(), registerService);
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
 		}
 
 		Page<RegisterGrid> registers;
@@ -93,7 +74,7 @@ public class RegisterRestController {
 			// Logged in user can see all
 			registers = registerGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, RegisterGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					RegisterGrid.class
 			);
 		}
@@ -102,9 +83,16 @@ public class RegisterRestController {
 			registers = registerGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, RegisterGrid.class),
 					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					RegisterGrid.class
 			);
+		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), registerService);
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
 		}
 
         assert registers != null;

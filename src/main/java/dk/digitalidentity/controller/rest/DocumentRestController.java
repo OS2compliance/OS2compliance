@@ -61,27 +61,10 @@ public class DocumentRestController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<DocumentGrid> allDocuments;
-			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			allDocuments = documentGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DocumentGrid.class),
-					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-			} else {
-				allDocuments = documentGridDao.findAllWithAssignedUser(
-						validateSearchFilters(filters, DocumentGrid.class),
-						user,
-						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-						DocumentGrid.class
-				);
-			}
-
-			List<DocumentDTO> allData = mapper.toDTO(allDocuments.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
 		}
 
         Page<DocumentGrid> documents;
@@ -89,7 +72,7 @@ public class DocumentRestController {
 			// Logged in user can see all
 			documents = documentGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, DocumentGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					DocumentGrid.class
 			);
 		}
@@ -98,9 +81,16 @@ public class DocumentRestController {
 			documents = documentGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, DocumentGrid.class),
 					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					DocumentGrid.class
 			);
+		}
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			List<DocumentDTO> allData = mapper.toDTO(documents.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
 		}
 
         assert documents != null;
