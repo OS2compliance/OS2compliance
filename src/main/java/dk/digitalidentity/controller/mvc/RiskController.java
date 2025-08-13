@@ -195,10 +195,6 @@ public class RiskController {
 	@PostMapping("{id}/update-catalogs")
 	public String updateThreatCatalogs(@PathVariable("id") final long id, @RequestParam(name = "threatCatalogs", required = false) final Set<String> catalogIdentifiers) {
 		final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
 
 		// Find selected catalogs
 		List<ThreatCatalog> selectedCatalogs = new ArrayList<>();

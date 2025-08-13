@@ -53,7 +53,8 @@ public class RegisterRestController {
             @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
 			@RequestParam(value = "export", defaultValue = "false") boolean export,
 			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-            @RequestParam Map<String, String> filters // Dynamic filters for search fields
+            @RequestParam Map<String, String> filters, // Dynamic filters for search fields
+			HttpServletResponse response
     ) throws IOException {
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
@@ -82,7 +83,7 @@ public class RegisterRestController {
 				);
 			}
 
-			List<RegisterDTO> allData = mapper.toDTO(allRegisters.getContent());
+			List<RegisterDTO> allData = mapper.toDTO(allRegisters.getContent(), registerService);
 			excelExportService.exportToExcel(allData, fileName, response);
 			return null;
 		}

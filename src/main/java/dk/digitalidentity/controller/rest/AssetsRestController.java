@@ -18,9 +18,6 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -99,7 +96,8 @@ public class AssetsRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
 		@RequestParam(value = "export", defaultValue = "false") boolean export,
 		@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+        @RequestParam Map<String, String> filters, // Dynamic filters for search fields
+			HttpServletResponse response
     ) throws IOException {
 
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
@@ -113,9 +111,9 @@ public class AssetsRestController {
 		if (export) {
 			Page<AssetGrid> allAssets;
 			if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			 allAssets = assetGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, AssetGrid.class),
-					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+				allAssets = assetGridDao.findAllWithColumnSearch(
+						validateSearchFilters(filters, AssetGrid.class),
+						buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
 					AssetGrid.class
 			);
 

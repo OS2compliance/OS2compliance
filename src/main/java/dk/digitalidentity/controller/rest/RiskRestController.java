@@ -135,13 +135,18 @@ public class RiskRestController {
 			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
 			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
 			HttpServletResponse response
-	) {
+	) throws IOException {
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
 		if (userUuid == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
+
+		// Assets user is responsible for
+		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(userUuid).stream()
+				.map(Relatable::getName)
+				.collect(Collectors.toSet());
 
 		// For export mode, get ALL records (no pagination)
 		if (export) {
@@ -163,7 +168,7 @@ public class RiskRestController {
 				);
 			}
 
-			List<RiskDTO> allData = mapper.toDTO(allRisks.getContent());
+			List<RiskDTO> allData = mapper.toDTO(allRisks.getContent(), responsibleAssetNames, userUuid);
 			excelExportService.exportToExcel(allData, fileName, response);
 			return null;
 		}
@@ -188,11 +193,6 @@ public class RiskRestController {
 		}
 
 		assert risks != null;
-
-		// Assets user is responsible for
-		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(userUuid).stream()
-				.map(Relatable::getName)
-				.collect(Collectors.toSet());
 
 		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, userUuid));
     }

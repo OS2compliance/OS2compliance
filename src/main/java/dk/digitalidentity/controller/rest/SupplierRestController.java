@@ -8,17 +8,14 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.UserService;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.ExcelExportService;
 import jakarta.servlet.http.HttpServletResponse;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -71,13 +68,21 @@ public class SupplierRestController {
 			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
 			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
 			HttpServletResponse response
-	) {
+	) throws IOException {
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		if (userUuid == null) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
+
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
 
 		// For export mode, get ALL records (no pagination)
 		if (export) {
@@ -102,7 +107,7 @@ public class SupplierRestController {
 			final List<SupplierGridDTO> allData = new ArrayList<>();
 			for (final SupplierGrid supplier : allSuppliers.getContent()) {
 				final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
-						supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage());
+						supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), allowedActions);
 				allData.add(dto);
 			}
 
@@ -131,13 +136,6 @@ public class SupplierRestController {
 		}
 
 		// Convert to DTO
-		Set<AllowedAction> allowedActions = new HashSet<>();
-		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
-			allowedActions.add(AllowedAction.UPDATE);
-		}
-		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
-			allowedActions.add(AllowedAction.DELETE);
-		}
 
 		final List<SupplierGridDTO> supplierDTOs = new ArrayList<>();
 		for (final SupplierGrid supplier : suppliers) {

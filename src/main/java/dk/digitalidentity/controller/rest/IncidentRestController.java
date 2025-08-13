@@ -1,16 +1,11 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.mapping.IncidentMapper;
-import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
-import dk.digitalidentity.security.RequireAdministrator;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
@@ -44,9 +39,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
-
-import static dk.digitalidentity.service.FilterService.buildPageable;
-import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController

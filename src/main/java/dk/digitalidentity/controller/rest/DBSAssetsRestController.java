@@ -61,13 +61,14 @@ public class DBSAssetsRestController {
     @PostMapping("list")
 	@Transactional
 	public PageDTO<DBSAssetDTO> list(@RequestParam(value = "page", defaultValue = "0") int page,
-                                     @RequestParam(value = "limit", defaultValue = "50") int limit,
-                                     @RequestParam(value = "order", required = false) String sortColumn,
-                                     @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-									@RequestParam(value = "export", defaultValue = "false") boolean export,
-									@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-                                     @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
+			HttpServletResponse response
+	) throws IOException {
 		final String userUuid = SecurityUtil.getLoggedInUserUuid();
 		final User user = userService.findByUuid(userUuid)
 				.orElseThrow();
