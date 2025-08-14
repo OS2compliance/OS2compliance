@@ -1,5 +1,16 @@
 let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, transferResponsibilityModal;
 
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    pageLoaded()
+});
+
+function initSaveAsExcelButton() {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton.addEventListener("click",  () => exportHtmlTableToExcel('inactiveUsersDatatable', 'Inaktive_ansvarlige'))
+}
+
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;
     let transferTo = transferToSelect.value;
@@ -152,4 +163,6 @@ function pageLoaded() {
             }
         }
     }).render(document.getElementById("inactiveUsersDatatable"));
+
+    initSaveAsExcelButton()
 }

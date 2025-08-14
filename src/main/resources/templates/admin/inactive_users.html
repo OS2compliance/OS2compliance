@@ -20,13 +20,9 @@
                         <h1 class="page-title mb-0 mt-2">Inaktive ansvarlige</h1>
                         <p class="lead"></p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="exportHtmlTableToExcel('inactiveUsersDatatable', 'Inaktive_ansvarlige')">
-                            <i class="ti-bookmark"></i> <span class="vr"></span> Gem som Excel
-                        </button>
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#transferResponsibilityModal">
-                            <i class="ti-angle-double-right"></i> <span class="vr"></span> Overfør ansvar
-                        </button>
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='saveAsExcelButton', text='Gem som Excel', iconClass='ti-bookmark')}"></div>
+                        <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='transferResponsibilityButton', text='Overfør ansvar', iconClass='ti-plus', target='#transferResponsibilityModal')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
@@ -91,12 +87,6 @@
     /*[+
         const data = [[${users}]];
     +]*/
-    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        pageLoaded()
-    });
-
     /*]]>*/
 </script>
 
