@@ -188,7 +188,8 @@ function DBSOversightService() {
         searchService.initSearch(grid, gridConfig);
 
         const customGridFunctions = new CustomGridFunctions(grid, gridDBSOversightUrl, 'assetsDatatable');
-        window.customGridFunctions = customGridFunctions;
+
+        this.initSaveAsExcelButton(customGridFunctions);
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }
@@ -211,4 +212,10 @@ function DBSOversightService() {
     this.updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
+
+    this.initSaveAsExcelButton = (customGridFunctionsObject) => {
+        const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+
+        saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctionsObject, 'DBS_tilsyn'))
+    }
 }
