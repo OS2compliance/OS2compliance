@@ -25,7 +25,7 @@ function initPageTopButtons() {
 
 function initSaveAsExcelButton(customGridFunctions) {
     const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Fortegnelse.xlsx'))
+    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Fortegnelse'))
 }
 
 function initGridActionButtons() {

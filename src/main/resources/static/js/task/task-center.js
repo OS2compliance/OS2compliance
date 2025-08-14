@@ -227,11 +227,12 @@ function initGrid() {
 
     //Enables custom column search, serverside sorting and pagination
     const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, 'tasksDatatable');
-    window.customGridFunctions = customGridFunctions;
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 
     initGridActions()
+
+    initSaveAsExcelButton(customGridFunctions)
 }
 
 function initGridActions() {
@@ -240,4 +241,9 @@ function initGridActions() {
         (id, name, elem) => deleteClicked(id, name),
         (id, elem) =>copyTaskService.showCopyDialog(id) ,
     )
+}
+
+function initSaveAsExcelButton(customGridFunctions) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Opgavecenter'))
 }
