@@ -130,10 +130,12 @@ function IncidentGridService() {
         this.incidentGrid.render(document.getElementById("incidentsTable"));
         searchService.initSearch(this.incidentGrid, this.currentConfig);
         const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', incidentsTable);
-        window.customGridFunctions = customGridFunctions;
+
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
 
         initGridActions()
+
+        initSaveAsExcelButton(customGridFunctions)
     }
 
     this.mapRow = (field) => {
@@ -216,4 +218,9 @@ function initGridActions() {
         (id, elem) => incidentService.editIncident('editIncidentDialog', id),
         (id, name, elem) => incidentService.deleteIncident(incidentGridService.incidentGrid, id, name),
         )
+}
+
+function initSaveAsExcelButton(customGridFunctions) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Hændelseslog'))
 }

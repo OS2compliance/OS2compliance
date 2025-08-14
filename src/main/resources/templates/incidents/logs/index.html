@@ -22,13 +22,9 @@
                         <h1 class="page-title mb-0 mt-2">Hændelseslog</h1>
                         <p class="lead"></p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="exportGridServerSide(customGridFunctions, 'Hændelseslog.xlsx')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
-                            <i class="ti-bookmark"></i> <span class="vr"></span> Gem som Excel
-                        </button>
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createIncidentDialog">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny hændelse
-                        </button>
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='saveAsExcelButton', text='Gem som Excel', iconClass='ti-bookmark')}"></div>
+                        <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createIncidentButton', text='Ny hændelse', iconClass='ti-plus', target='#createIncidentDialog')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
@@ -62,8 +58,8 @@
                                         </div>
                                     </div>
                                     <div class="col-lg-2 col-md-2 col-sm-2">
-                                        <button class="btn btn-success" type="button" onclick="incidentGridService.generateReport()" style="z-index: 2; position: relative">Print rapport</button>
-                                        <a class="btn btn-success" onclick="incidentGridService.generateExcel()" type="button" style="z-index: 2; position: relative">Hent excel fil</a>
+                                        <button sec:authorize="hasRole('ROLE_read_all')" class="btn btn-success" type="button" onclick="incidentGridService.generateReport()" style="z-index: 2; position: relative">Print rapport</button>
+                                        <a sec:authorize="hasRole('ROLE_read_all')" class="btn btn-success" onclick="incidentGridService.generateExcel()" type="button" style="z-index: 2; position: relative">Hent excel fil</a>
                                     </div>
                                     <div class="col-lg-3 col-md-1"></div>
                                 </div>
