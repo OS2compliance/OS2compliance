@@ -25,7 +25,21 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
     initGrid()
 
+    initPageTopButtons()
 });
+
+function initPageTopButtons() {
+    const createExternalButton = document.getElementById("createExternalDPIAButton");
+    createExternalButton.addEventListener("click",  () => createExternalDPIAService.createExternalClicked())
+
+    const createButton = document.getElementById("createDPIAButton");
+    createButton.addEventListener("click",  () => createDPIAService.formReset())
+}
+
+function initSaveAsExcelButton(customGridFunctions) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Konsekvensanalyser'))
+}
 
 function deleteClicked(dpiaId, name) {
     Swal.fire({
@@ -209,8 +223,10 @@ function initGrid() {
     };
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "dpiaDatatable" ));
     const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, 'dpiaDatatable');
-    window.customGridFunctions = customGridFunctions;
+
     gridOptions.init(grid, document.getElementById("gridOptions"));
+
+    initSaveAsExcelButton(customGridFunctions)
 
     initGridListItemButtons()
 }
