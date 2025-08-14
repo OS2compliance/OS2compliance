@@ -735,8 +735,6 @@
         let suppliersChoicesEditSelect = null;
         let responsibleChoicesEditSelect = null;
 
-        let networkService;
-
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
         document.addEventListener("DOMContentLoaded", function (event) {
@@ -772,8 +770,6 @@
             }
             toggleRiskFactorContainer();
             aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
-
-            networkService = new NetworkService(token);
         });
 
 
