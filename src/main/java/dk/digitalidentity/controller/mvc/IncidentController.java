@@ -84,12 +84,17 @@ public class IncidentController {
         return "redirect:/incidents/questions";
     }
 
-	@RequireCreateAll
+	@RequireUpdateAll
     @GetMapping("logForm")
     public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long incidentId) {
 
-        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_ALL));
         if (incidentId != null) {
+
+			if (!SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+        	model.addAttribute("superuser", true);
+
             final Incident incident = incidentService.findById(incidentId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             model.addAttribute("formTitle", "Rediger hændelse");
@@ -101,6 +106,12 @@ public class IncidentController {
             model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
             model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
         } else {
+
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+        	model.addAttribute("superuser", true);
+
             final Incident incident = new Incident();
             incidentService.addDefaultFieldResponses(incident);
             model.addAttribute("formTitle", "Ny hændelse");

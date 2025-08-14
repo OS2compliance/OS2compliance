@@ -5,7 +5,9 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 function IncidentService() {
     this.init = () => {
-        this.fetchDialog(formUrl, "createIncidentDialog");
+        if (document.getElementById('createIncidentDialog')) {
+            this.fetchDialog(formUrl, "createIncidentDialog");
+        }
     }
 
     this.fetchDialog = (url, targetId) => {
@@ -30,13 +32,16 @@ function IncidentService() {
     }
 
     this.editIncident = (targetId, incidentId) => {
-        document.getElementById(targetId).innerText = '';
-        this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
-            .then(() => {
-                let dialog = document.getElementById(targetId);
-                let editDialog = new bootstrap.Modal(dialog);
-                editDialog.show();
-            })
+        const container = document.getElementById(targetId)
+        if (container) {
+            container.innerText = '';
+            this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
+                .then(() => {
+                    let dialog = document.getElementById(targetId);
+                    let editDialog = new bootstrap.Modal(dialog);
+                    editDialog.show();
+                })
+        }
     }
 
     this.deleteIncident = (grid, targetId, name) => {
