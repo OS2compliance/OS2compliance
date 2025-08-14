@@ -547,9 +547,6 @@ public class DPIARestController {
 									|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
 								allowedActions.add(AllowedAction.DELETE);
 							}
-							if (SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)) {
-								allowedActions.add(AllowedAction.COPY);
-							}
 
 							return new DPIAListDTO(
 									dpia.getId(),

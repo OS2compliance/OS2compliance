@@ -218,8 +218,9 @@ function initGrid() {
 function initGridListItemButtons() {
     delegateListItemActions('dpiaDatatable',
         (id, elem) => {
-            if (elem.dataset.external) {
-                createExternalDPIAService.editExternalClicked(uid)
+        console.log(elem.dataset.external)
+            if (elem.dataset.external === 'true') {
+                createExternalDPIAService.editExternalClicked(id)
             } else {
                 editDPIAService.openModal(id)
             }
