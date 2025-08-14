@@ -15,15 +15,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
     initGridActionButtons()
 
-    initPageTopButtonActions()
+    initPageTopButtons()
 });
 
-function initPageTopButtonActions() {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+function initPageTopButtons() {
     const createRegisterButton = document.getElementById("createRegisterButton");
-
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Fortegnelse.xlsx'))
     createRegisterButton.addEventListener("click",  () => createRegisterService.show())
+}
+
+function initSaveAsExcelButton(customGridFunctions) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Fortegnelse.xlsx'))
 }
 
 function initGridActionButtons() {
@@ -232,7 +234,9 @@ function initGrid() {
     };
     grid = new gridjs.Grid(gridConfig).render(document.getElementById("registersDatatable"));
 
-    window.customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, 'registersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, 'registersDatatable');
+
+    initSaveAsExcelButton(customGridFunctions)
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 }

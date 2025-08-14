@@ -13,6 +13,8 @@ document.addEventListener("DOMContentLoaded", async function (event) {
     initGrid()
 
     initAllowedActions()
+
+    initPageTopButtons()
 });
 
 const updateUrl = (prev, query) => {
@@ -167,9 +169,19 @@ function initGrid() {
     };
     const grid = new gridjs.Grid(gridConfig).render(document.getElementById("suppliersDatatable"));
 
-            const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, 'suppliersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, 'suppliersDatatable');
 
-            window.customGridFunctions = customGridFunctions; // TODO - why this?
+    initSaveAsExcelButton(customGridFunctions)
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
+}
+
+function initPageTopButtons() {
+    const createRegisterButton = document.getElementById("createRegisterButton");
+    createRegisterButton.addEventListener("click",  () => createRegisterService.show())
+}
+
+function initSaveAsExcelButton(customGridFunctions) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Leverandører'))
 }
