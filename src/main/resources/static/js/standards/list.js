@@ -1,7 +1,13 @@
 document.addEventListener("DOMContentLoaded", function (event) {
     initTable()
     initListItemActions()
+    initCreateStandardButton()
 });
+
+function initCreateStandardButton() {
+    const button = document.getElementById("createStandardButton");
+    button.addEventListener("click", () => createStandardService.openStandardModal(null, false))
+}
 
 function initListItemActions() {
     delegateListItemActions('tablePlaceholder',
