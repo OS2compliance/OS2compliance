@@ -7,6 +7,7 @@
 <script th:src="@{/js/data-processing-component.js}" defer></script>
 <script th:src="@{/js/asset/details.js}" defer></script>
 <script th:src="@{/js/asset/dpia.js}" defer></script>
+<script th:src="@{/js/asset/asset-hierarchy.js}" defer></script>
 <script th:src="@{/js/oversight/oversight-service.js}" defer></script>
 
 <body class="jumping">
@@ -30,7 +31,17 @@
                                     <li class="breadcrumb-item active" aria-current="page" th:text="${asset.name}"></li>
                                 </ol>
                             </nav>
-                            <h1 class="page-title mb-0 mt-2" th:text="${asset.name}"></h1>
+                            <h1 class="page-title mb-0 mt-2">
+                                <span th:text="${asset.name}"></span>
+                                <button type="button"
+                                        class="btn btn-secondary btn-sm ms-2"
+                                        data-bs-toggle="modal"
+                                        data-bs-target="#hierarchyModal"
+                                        title="Vis hierarkidiagram">
+                                    <i class="pli-cube-molecule-2"></i>
+                                </button>
+                            </h1>
+
                             <p class="lead"></p>
                         </div>
                         <div class="align-self-center d-inline-flex">
@@ -631,6 +642,64 @@
         <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
     </div>
 
+    <div class="modal fade" id="hierarchyModal" tabindex="-1" aria-labelledby="hierarchyModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="hierarchyModalLabel">
+                        <i class="pli-cube-molecule-2 me-2"></i>
+                        Hierarkidiagram - <span th:text="${asset.name}"></span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Luk"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <div>
+                            <small class="text-muted">
+                                Viser afhængigheder for det valgte aktiv. Klik på noder for at udvide/sammenfold.
+                            </small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <div class="btn-group" role="group">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="expandAllBtn" title="Udvider alle noder">
+                                    <i class="pli-maximize-2"></i> Udvid alle
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" id="collapseAllBtn" title="Sammenfolder alle noder">
+                                    <i class="pli-minimize-2"></i> Sammenfold alle
+                                </button>
+                            </div>
+                            <button type="button" class="btn btn-sm btn-outline-primary" id="fitToViewBtn" title="Tilpasser zoom, så hele diagrammet passer i vinduet">
+                                <i class="pli-target"></i> Tilpas størrelse
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="chart-info text-center mb-3">
+                        <h5>Hierarkidiagram</h5>
+                        <p class="text-muted">
+                            Viser max 10 niveauer -
+                            <span id="nodeCount"></span>
+                             aktiver</p>
+                    </div>
+
+                    <div id="hierarchy-chart-container" style="height: 700px; width: 100%; border: 1px solid #ddd; border-radius: 4px; background-color: #f8f9fa;">
+                        <div class="d-flex justify-content-center align-items-center h-100">
+                            <div class="text-center">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Indlæser...</span>
+                                </div>
+                                <p class="mt-2 text-muted">Indlæser hierarkidiagram...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Luk</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
     <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
 
@@ -644,7 +713,7 @@
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
     <div th:replace="~{assets/fragments/riskAssessmentKitosModal :: riskAssessmentKitosModalFragment}"></div>
-    <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true)}"></div>
+    <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true, hierarchy = true)}"></div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/
@@ -665,6 +734,8 @@
         let managersChoicesEditSelect = null;
         let suppliersChoicesEditSelect = null;
         let responsibleChoicesEditSelect = null;
+
+        let networkService;
 
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -701,6 +772,8 @@
             }
             toggleRiskFactorContainer();
             aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
+
+            networkService = new NetworkService(token);
         });
 
 
