@@ -9,6 +9,7 @@ class CustomChoiceListService {
 
     constructor() {
         this.initGrid()
+        initSaveAsExcelButton();
     }
 
     initGrid() {
@@ -158,8 +159,6 @@ class CustomChoiceListService {
         // dismiss modal
         this.#modal.hide()
     }
-
-    initSaveAsExcelButton();
 }
 
 function initSaveAsExcelButton() {

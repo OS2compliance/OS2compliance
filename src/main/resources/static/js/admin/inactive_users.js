@@ -1,9 +1,12 @@
 let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, transferResponsibilityModal;
 
-let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function(event) {
     pageLoaded()
+
+
+    initSaveAsExcelButton()
 });
 
 function initSaveAsExcelButton() {
@@ -58,7 +61,7 @@ function pageLoaded() {
     }
 
     transferResponsibilityModal = document.getElementById('transferResponsibilityModal');
-    transferResponsibilityModal.addEventListener('hidden.bs.modal', function () {
+    transferResponsibilityModal?.addEventListener('hidden.bs.modal', function () {
         transferFromChoice.removeActiveItems();
         transferToChoice.removeActiveItems();
         transferFromChoice.enable();
@@ -163,6 +166,4 @@ function pageLoaded() {
             }
         }
     }).render(document.getElementById("inactiveUsersDatatable"));
-
-    initSaveAsExcelButton()
 }
