@@ -30,6 +30,7 @@ public interface Roles {
 	String SECTION_DPIA = "ROLE_s_dpia";
 	String SECTION_DOCUMENT = "ROLE_s_document";
 	String SECTION_TASK = "ROLE_s_task";
+	String SECTION_INCIDENT = "ROLE_s_incident";
 	String SECTION_CONFIGURATION = "ROLE_s_configuration";
 	String SECTION_REPORT = "ROLE_s_report";
 	String SECTION_ADMIN = "ROLE_s_admin";

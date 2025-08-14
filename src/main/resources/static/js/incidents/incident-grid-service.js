@@ -119,7 +119,8 @@ function IncidentGridService() {
                 headers: {
                     'X-CSRF-TOKEN': token
                 },
-                then: data => { this.data = data;
+                then: data => {
+                    this.data = data;
                     return data.content.map(field => this.mapRow(field));
                 },
                 total: data => data.totalCount
@@ -131,12 +132,14 @@ function IncidentGridService() {
         const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', incidentsTable);
         window.customGridFunctions = customGridFunctions;
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
+
+        initGridActions()
     }
 
     this.mapRow = (field) => {
         let columnValues = [];
         let customColumns = this.columns.filter((c) =>
-            c.id !== 'id' && c.id !== 'title' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'actions');
+            c.id !== 'id' && c.id !== 'title' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'allowedActions');
         customColumns.forEach(c => {
             let added = false;
             field.responses.forEach(response => {
@@ -149,11 +152,12 @@ function IncidentGridService() {
                 columnValues.push("");
             }
         });
-        return [field.id, field.name, field.createdAt, ...columnValues, field.updatedAt];
+        return [field.id, field.name, field.createdAt, ...columnValues, field.updatedAt, field.allowedActions];
     }
 
     this.buildColumns = (columnNames) => {
-        this.columns = [{
+        const columns = [
+            {
                 id: "id",
                 hidden: true
             },
@@ -170,35 +174,46 @@ function IncidentGridService() {
                 id: "createdAt",
                 name: "Oprettet",
                 width: '120px'
-            }];
+            }
+        ]
+
         columnNames.forEach(c => {
-            this.columns.push({
+            columns.push({
                 id: c,
                 name: c,
                 sort: 0
             })
         });
-        this.columns.push(
+        columns.push(
             {
                 id: "updatedAt",
                 name: "Opdateret"
-            },
+            }
+        )
+        columns.push(
             {
-                id: "actions",
+                id: "allowedActions",
                 name: "Handlinger",
                 sort: 0,
                 width: '90px',
                 formatter: (cell, row) => {
-                    const id = row.cells[0]['data'];
-                    const name = row.cells[1]['data'];
-                    if(superuser) {
-                        return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentService.editIncident('editIncidentDialog', '${id}')"><i class="pli-pencil fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentService.deleteIncident(incidentGridService.incidentGrid, '${id}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                    }
+                    const identifier = row.cells[0]['data'];
+                    const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    attributeMap.set('name', name);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
-            });
-    }
+            }
+        );
 
+        this.columns = columns;
+    }
 }
 
+function initGridActions() {
+    delegateListItemActions('incidentsTable',
+        (id, elem) => incidentService.editIncident('editIncidentDialog', id),
+        (id, name, elem) => incidentService.deleteIncident(incidentGridService.incidentGrid, id, name),
+        )
+}

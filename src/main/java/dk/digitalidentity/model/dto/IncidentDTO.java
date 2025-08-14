@@ -2,6 +2,7 @@ package dk.digitalidentity.model.dto;
 
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @Builder
@@ -26,5 +28,8 @@ public class IncidentDTO {
     private String updatedAt;
 	@ExcludeFromExport
     private List<IncidentFieldResponseDTO> responses = new ArrayList<>();
+
+	@ExcludeFromExport
+	private Set<AllowedAction> allowedActions;
 }
 

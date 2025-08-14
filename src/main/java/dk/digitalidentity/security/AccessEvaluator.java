@@ -22,6 +22,10 @@ public class AccessEvaluator {
 		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_CONFIGURATION));
 	}
 
+	public boolean incident() {
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_INCIDENT));
+	}
+
 	public boolean dbs() {
 		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_DBS));
 	}

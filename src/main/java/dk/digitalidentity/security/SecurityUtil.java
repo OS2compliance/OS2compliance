@@ -131,7 +131,8 @@ public class SecurityUtil {
 				Roles.SECTION_TASK,
 				Roles.SECTION_REPORT,
 				Roles.SECTION_ADMIN,
-				Roles.SECTION_SETTINGS
+				Roles.SECTION_SETTINGS,
+				Roles.SECTION_INCIDENT
 		);
 	}
 
@@ -154,7 +155,8 @@ public class SecurityUtil {
 				Roles.SECTION_CONFIGURATION,
 				Roles.SECTION_DOCUMENT,
 				Roles.SECTION_TASK,
-				Roles.SECTION_REPORT
+				Roles.SECTION_REPORT,
+				Roles.SECTION_INCIDENT
 		);
 
 	}
@@ -210,7 +212,8 @@ public class SecurityUtil {
 				Roles.SECTION_RISK_ASSESSMENT,
 				Roles.SECTION_DPIA,
 				Roles.SECTION_DOCUMENT,
-				Roles.SECTION_TASK
+				Roles.SECTION_TASK,
+				Roles.SECTION_INCIDENT
 		);
 	}
 
