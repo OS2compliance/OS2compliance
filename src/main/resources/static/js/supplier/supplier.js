@@ -13,8 +13,6 @@ document.addEventListener("DOMContentLoaded", async function (event) {
     initGrid()
 
     initAllowedActions()
-
-    initPageTopButtons()
 });
 
 const updateUrl = (prev, query) => {
@@ -176,10 +174,6 @@ function initGrid() {
     gridOptions.init(grid, document.getElementById("gridOptions"));
 }
 
-function initPageTopButtons() {
-    const createRegisterButton = document.getElementById("createRegisterButton");
-    createRegisterButton.addEventListener("click",  () => createRegisterService.show())
-}
 
 function initSaveAsExcelButton(customGridFunctions) {
     const saveAsExcelButton = document.getElementById("saveAsExcelButton");
