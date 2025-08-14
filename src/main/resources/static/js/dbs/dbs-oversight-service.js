@@ -187,7 +187,8 @@ function DBSOversightService() {
         });
         searchService.initSearch(grid, gridConfig);
 
-        new CustomGridFunctions(grid, gridDBSOversightUrl, 'assetsDatatable')
+        const customGridFunctions = new CustomGridFunctions(grid, gridDBSOversightUrl, 'assetsDatatable');
+        window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }

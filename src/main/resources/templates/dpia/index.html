@@ -3,6 +3,7 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
+<script th:src="@{/js/export-service.js}"></script>
 <body class="jumping">
 
 <div id="root" class="root mn--max hd--expanded">
@@ -21,6 +22,9 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="exportGridServerSide(customGridFunctions, 'Konsekvensanalyser')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
+                            <i class="ti-bookmark"></i> <span class="vr"></span>Gem som Excel
+                        </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
                                 class="btn btn-info btn-lg hstack gap-2"
                                 style="margin-bottom: 8px; margin-right: 14px; height: 45px"

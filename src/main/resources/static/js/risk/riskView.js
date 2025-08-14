@@ -658,4 +658,9 @@ function pageLoaded() {
 
     // init comment field
     initCommentField();
+
+    // init threatCatalog modal
+    const catalogSelect = document.getElementById('editThreatCatalogSelect');
+    initSelectWithConfirmation(catalogSelect);
+
 }

@@ -58,6 +58,8 @@
         var viewUrl = [[@{/standards/supporting/}]];
     +]*/
 
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
     document.addEventListener("DOMContentLoaded", function(event) {
         const defaultClassName = {
             table: 'table table-striped',
