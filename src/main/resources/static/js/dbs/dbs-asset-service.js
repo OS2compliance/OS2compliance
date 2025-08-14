@@ -12,7 +12,7 @@ function DBSAssetService() {
             header: "d-flex justify-content-end"
         };
 
-        var tableDiv = document.getElementById("assetsDatatable");
+        let tableDiv = document.getElementById("assetsDatatable");
         let gridConfig = {
             className: defaultClassName,
             search: {
@@ -43,7 +43,7 @@ function DBSAssetService() {
                     formatter: (cell, row) => {
                         const dbsAssetId = row.cells[0]['data'];
 
-                        var options = '';
+                        let options = '';
                         for (let index = 0; index < cell.length; ++index) {
                             const asset = cell[index];
                             options += `<option value="${asset.id}" selected>${asset.name}</option>`;
@@ -115,11 +115,16 @@ function DBSAssetService() {
 
 
         const customGridFunctions = new CustomGridFunctions(grid, gridDBSAssetsUrl, 'assetsDatatable');
-        window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
 
-        // const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
+        initSaveAsExcelButton(customGridFunctions);
+    }
+
+    function initSaveAsExcelButton(customGridFunctionsObject) {
+        const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+
+        saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctionsObject, 'DBS_aktiver'))
     }
 
 
