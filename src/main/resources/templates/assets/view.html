@@ -192,6 +192,17 @@
                                             </div>
 
                                             <div class="row mb-3">
+                                                <label for="activeAsset" class="col-sm-3 col-form-label">Aktiv/Inaktiv</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{active}" id="activeAsset"
+                                                            tabindex="-1" disabled>
+                                                        <option th:value="true">Aktiv</option>
+                                                        <option th:value="false">Inaktiv</option>
+                                                    </select>
+                                                </div>
+                                            </div>
+                                            <div class="row mb-3">
                                                 <label for="aiStatus"
                                                        class="col-sm-3 col-form-label">Anvender løsningen AI?</label>
                                                 <div class="col-sm-9">
@@ -331,7 +342,7 @@
                                                 <label for="contractDate"
                                                     class="col-sm-3 col-form-label">
                                                     Kontraktdato &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <div th:if="${isKitos}" th:hidden="*{contractDate == null}">
@@ -359,7 +370,7 @@
                                                 <label for="contractTermination"
                                                     class="col-sm-3 col-form-label">
                                                     Kontraktophør &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <div th:if="${isKitos}" th:hidden="*{contractTermination == null}">
@@ -387,7 +398,7 @@
                                                 <label for="terminationNotice"
                                                     class="col-sm-3 col-form-label">
                                                     Opsigelsesvarsel &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9">
                                                     <input th:if="${isKitos}" class="form-control" id="terminationNotice"
@@ -407,7 +418,7 @@
                                                     Systemet skal arkiveres
                                                     <span th:if="${isKitos}" class="pli-exclamation" style="color: orange; font-weight: bold;" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
                                                     &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;">
+                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <select class="form-control form-select editField" th:field="*{archive}" name="archive" id="archive" tabindex="-1" disabled>
@@ -651,6 +662,7 @@
 
         /*[+
             var isKitos = [[${isKitos}]];
+            var isOldKitos = [[${isOldKitos}]];
             var scaleMap = [[${scale}]];
             var scaleColorMap = [[${riskScoreColorMap}]];
             var riskProfiles = [[${riskProfiles}]];
@@ -945,6 +957,7 @@
         function editMode(enabled) {
             const rootElement = document.getElementById('editForm');
             const aiStatus = document.getElementById('aiStatus');
+            const active = document.getElementById('activeAsset');
             const aiRiskFactor = document.getElementById('riskFactor');
             if (enabled) {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
@@ -970,6 +983,7 @@
 
                 if (!isKitos) {
                     managersChoicesEditSelect.enable();
+                    active.disabled = false;
                     document.getElementById("productLinksViewContainer").hidden = true;
                     document.getElementById("productLinksEditContainer").hidden = false;
                     document.getElementById("addProductLinkBtn").hidden = false;
@@ -1002,6 +1016,7 @@
                 responsibleChoicesEditSelect.disable();
 
                 if (!isKitos) {
+                    active.disabled = true;
                     document.getElementById("productLinksViewContainer").hidden = false;
                     document.getElementById("productLinksEditContainer").hidden = true;
                     document.getElementById("addProductLinkBtn").hidden = true;

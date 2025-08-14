@@ -41,4 +41,8 @@ public class AssetDTO {
     private int registers;
 	@ExcludeFromExport
     private boolean changeable;
+	@ExcludeFromExport
+	private boolean oldKitos;
+	@ExcludeFromExport
+	private boolean active;
 }

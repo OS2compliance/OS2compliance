@@ -61,10 +61,12 @@ public interface AssetMapper {
             .assetCategory(nullSafe(() -> assetGrid.getAssetCategory().getMessage()))
             .assetCategoryOrder(nullSafe(() -> assetGrid.getAssetCategoryOrder()))
 
-            .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
+            .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos() || assetGrid.isOldKitos())))
             .registers(nullSafe(() -> assetGrid.getRegisters()))
             .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
             .changeable(false)
+			.oldKitos(assetGrid.isOldKitos())
+			.active(assetGrid.isActive())
             .build();
     }
 
@@ -197,6 +199,7 @@ public interface AssetMapper {
         @Mapping(target = "assetType", ignore = true),
 		@Mapping(target = "aiStatus", ignore = true),
 		@Mapping(target = "aiRisk", ignore = true),
+		@Mapping(target = "active", ignore = true),
 		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);
