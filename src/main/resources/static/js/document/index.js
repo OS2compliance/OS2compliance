@@ -52,7 +52,7 @@ function deleteClicked(documentId, name) {
 function initGridActions() {
     delegateListItemActions(
         'documentsDatatable',
-        (id)=>{}, // No editing..?
+        (id)=>{}, // No editing.
         (id, name) => deleteClicked(id, name)
         )
 }
