@@ -1,6 +1,16 @@
 
 const createTaskService = new CreateTaskService();
 
+document.addEventListener('DOMContentLoaded', (e) => {
+    // Find create task button ( if it exists) and add event listener
+    const createTaskButton = document.getElementById('createTaskButton');
+    if (createTaskButton) {
+        createTaskButton.addEventListener('click', (e) => {
+            createTaskService.show()
+        })
+    }
+})
+
 function CreateTaskService() {
     this.taskModalDialog = null;
     this.createTaskOuChoicesEditSelect = null;

@@ -25,9 +25,7 @@
                         <button id="addHeaderButton" type="button" sec:authorize="hasRole('ROLE_create_all')" th:data-id="${template.identifier}" onclick="createSectionService.openHeaderModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny gruppe
                         </button>
-                        <button type="button" sec:authorize="hasRole('ROLE_create_all')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>
