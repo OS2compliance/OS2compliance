@@ -1,14 +1,10 @@
 package dk.digitalidentity.mapping;
 
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
-import dk.digitalidentity.service.AssetService;
-import lombok.RequiredArgsConstructor;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
@@ -45,6 +41,10 @@ public interface TaskMapper {
 		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
 				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
 			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.CREATE_ALL))) {
+			allowedActions.add(AllowedAction.COPY);
 		}
 		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
 				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {

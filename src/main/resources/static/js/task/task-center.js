@@ -16,6 +16,31 @@ const defaultClassName = {
 
 document.addEventListener("DOMContentLoaded", function() {
 
+    initGrid()
+
+});
+
+
+function deleteClicked(taskId, name) {
+    Swal.fire({
+      text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra TASK slettes også.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#03a9f4',
+      cancelButtonColor: '#df5645',
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${deleteUrl}${taskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+      }
+    })
+}
+
+function initGrid() {
     let gridConfig = {
         className: defaultClassName,
         columns: [
@@ -155,20 +180,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 },
             },
             {
-                id: 'handlinger',
+                id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
                 width: '90px',
                 formatter: (cell, row) => {
-                    const taskId = row.cells[0]['data'];
+                    const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    if(superuser) {
-                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="copyTaskService.showCopyDialog('${taskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${taskId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                    } else if(row.cells[10]['data']) {
-                        return gridjs.html(`<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editTaskService.showEditDialog('${taskId}')"><i class="pli-pencil fs-5"></i></button>`)
-                    }
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    attributeMap.set('name', name);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
             }
         ],
@@ -181,7 +203,7 @@ document.addEventListener("DOMContentLoaded", function() {
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType,
                     task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
-                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed, task.changeable ]
+                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed, task.allowedActions ]
             ),
             total: data => data.totalCount
         },
@@ -209,24 +231,13 @@ document.addEventListener("DOMContentLoaded", function() {
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 
-});
+    initGridActions()
+}
 
-
-function deleteClicked(taskId, name) {
-    Swal.fire({
-      text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra TASK slettes også.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#03a9f4',
-      cancelButtonColor: '#df5645',
-      confirmButtonText: 'Ja',
-      cancelButtonText: 'Nej'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${deleteUrl}${taskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                .then(() => {
-                    window.location.reload();
-                });
-      }
-    })
+function initGridActions() {
+    delegateListItemActions('tasksDatatable',
+        (id, elem) => editTaskService.showEditDialog(id),
+        (id, name, elem) => deleteClicked(id, name),
+        (id, elem) =>copyTaskService.showCopyDialog(id) ,
+    )
 }

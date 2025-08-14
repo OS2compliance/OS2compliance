@@ -59,6 +59,6 @@ public class AccessEvaluator {
 	}
 
 	public boolean task() {
-		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_ADMIN));
+		return SecurityContextHolder.getContext().getAuthentication().getAuthorities().stream().anyMatch(a -> a.getAuthority().equals(Roles.SECTION_TASK));
 	}
 }
