@@ -26,6 +26,7 @@ import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
@@ -93,14 +94,14 @@ public class ReportController {
 	private final SystemOwnerOverviewService systemOwnerOverviewService;
 	private final RiskImageService riskImageService;
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
 	@GetMapping
     public String reportList(final Model model) {
         model.addAttribute("tags", tagDao.findAll());
         return "reports/index";
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
 	@GetMapping("overview/systemowner")
 	public ModelAndView systemOwnerOverview(final HttpServletResponse response) {
 
@@ -137,7 +138,7 @@ public class ReportController {
 		return new ModelAndView(new SystemOwnerOverviewView(), model);
 	}
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("incidents")
     public String incidents(final Model model,
                             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
@@ -151,7 +152,7 @@ public class ReportController {
         return "reports/incidentReport";
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("incidents/excel")
     public ModelAndView incidentsExcel(final HttpServletResponse response,
                                        @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
@@ -171,7 +172,7 @@ public class ReportController {
         return new ModelAndView(new IncidentsXlsView(), model);
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("tags")
     public String tagReport(final Model model,
                             @RequestParam(name = "tags") final List<Long> tagIds,
@@ -196,7 +197,7 @@ public class ReportController {
         return "reports/tagReport";
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("taskLog/{taskId}")
     public String taskLogReport(final Model model, @PathVariable("taskId") final Long taskId,
                                 @RequestParam(value = "from", required = false) final LocalDate from,
@@ -209,7 +210,7 @@ public class ReportController {
         return "reports/taskLogReport";
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("yearwheel")
     public ModelAndView yearWheel(final HttpServletResponse response) {
         final LocalDate cutOff = LocalDateTime.now().minusYears(1).with(lastDayOfYear()).toLocalDate();
@@ -227,7 +228,7 @@ public class ReportController {
         return new ModelAndView(new YearWheelView(), model);
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("sheet")
     public ModelAndView sheet(@RequestParam(name = "identifier", required = true) final String identifier, final HttpServletResponse response) {
         final StandardTemplate template = standardTemplateDao.findByIdentifier(identifier);
@@ -252,7 +253,7 @@ public class ReportController {
         return new ModelAndView(view, model);
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("word")
     public @ResponseBody ResponseEntity<?> word(@RequestParam(name = "identifier") final String identifier,
                                                 @RequestParam(name = "riskId", required = false) final Long riskId,
@@ -276,7 +277,7 @@ public class ReportController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("dpia")
     public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "dpiaId") final Long dpiaId,
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
@@ -330,7 +331,7 @@ public class ReportController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
     @GetMapping("dpia/screening")
     public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaScreeningReport(@RequestParam(name = "dpiaId") final Long dpiaId,
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
@@ -385,7 +386,7 @@ public class ReportController {
     }
 
 
-	@RequireReadAll
+	@RequireReadOwnerOnly
 	@GetMapping("riskimage")
 	public ModelAndView getRiskImageReport(
 			final HttpServletResponse response,
