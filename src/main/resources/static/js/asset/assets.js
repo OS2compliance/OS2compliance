@@ -30,6 +30,12 @@
 
     });
 
+    function initSaveAsExcelButton(customGridFunctionsObject) {
+        const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+
+        saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctionsObject, 'Aktiver'))
+    }
+
     function deleteClicked(assetId, name) {
         Swal.fire({
           text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
@@ -241,9 +247,9 @@
         const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
 
         const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable');
-        window.customGridFunctions = customGridFunctions;
-
         gridOptions.init(grid, document.getElementById("gridOptions"));
+
+        initSaveAsExcelButton(customGridFunctions)
     }
 
     function initGridActionButtons() {

@@ -4,4 +4,11 @@
         type="button" class="btn btn-info btn-lg hstack gap-2">
     <i  th:class="${iconClass}"></i> <span class="vr"></span> <span th:text="${text}"></span>
 </button>
+
+
+<button th:fragment="openModalInfoButton(id, text, iconClass, target)" sec:authorize="hasAnyRole('ROLE_create_owner_only','ROLE_create_all')"
+        th:id="${id}" data-bs-toggle="modal" th:attr="data-bs-target=${target}"
+        type="button" class="btn btn-info btn-lg hstack gap-2">
+    <i  th:class="${iconClass}"></i> <span class="vr"></span> <span th:text="${text}"></span>
+</button>
 </html>
