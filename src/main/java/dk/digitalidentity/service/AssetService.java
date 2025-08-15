@@ -181,11 +181,9 @@ public class AssetService {
     }
 
 	public boolean isEditable(final List<Asset> assets) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		return authentication.getAuthorities().stream()
-				.anyMatch(r -> r.getAuthority().equals(Roles.UPDATE_OWNER_ONLY)
-				|| assets.stream().flatMap(a->a.getResponsibleUsers().stream())
-				.anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())));
+		boolean responsibleForAnyAsset = assets.stream().anyMatch(this::isResponsibleFor);
+		return SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) ||
+				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && responsibleForAnyAsset);
 	}
 
     /**

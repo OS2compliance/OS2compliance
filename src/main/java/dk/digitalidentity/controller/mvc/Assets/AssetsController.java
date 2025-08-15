@@ -139,6 +139,7 @@ public class AssetsController {
 	private final OS2complianceConfiguration os2complianceConfiguration;
 
 
+	@RequireReadOwnerOnly
 	@GetMapping
 	public String assetsList() {
 		return "assets/index";

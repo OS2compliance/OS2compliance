@@ -35,7 +35,7 @@
                             <div class="d-flex mt-2 justify-content-end">
                                 <div class="d-flex mt-2">
                                     <div class="d-flex flex-fill align-items-start mb-3 p-1">
-                                        <button type="button" th:if="${changeableAsset}" class="btn btn-success"
+                                        <button type="button" th:if="${changeable}" class="btn btn-success"
                                                 th:onclick="|assetDpiaService.setRevisionInterval(${dpia.id})|">
                                             <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
                                         </button>
@@ -69,7 +69,7 @@
                                     </div>
                                     <div id="commentAccordionItem" class="accordion-collapse collapse" aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
                                         <div class="accordion-body">
-                                            <textarea id="dpiaCommentArea" th:value="${dpia.comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3" th:text="${dpia.comment}"></textarea>
+                                            <textarea id="dpiaCommentArea" th:value="${dpia.comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3" th:text="${dpia.comment}" th:readonly="${!changeable}"></textarea>
                                         </div>
                                     </div>
                                 </div>

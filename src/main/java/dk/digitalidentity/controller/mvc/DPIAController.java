@@ -136,6 +136,7 @@ public class DPIAController {
                 .collect(Collectors.toList());
 
 		model.addAttribute("changeableAsset", assetService.isEditable(assets));
+		model.addAttribute("changeable", assetService.isEditable(assets));
         model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), dpia.getName(), assets.stream().map(a-> new DPIADetailAssetDTO(a.getId(), a.getName())).toList(), dpia.getComment()));
         model.addAttribute("assets", assets);
 		model.addAttribute("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
