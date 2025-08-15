@@ -466,7 +466,7 @@ public class RegisterController {
 							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
 							task.getTaskType().getMessage(),
 							task.getNextDeadline().toString(),
-							task.getRepetition().getMessage(),
+							task.getRepetition() != null ? task.getRepetition().getMessage() : "",
 							taskService.findHtmlStatusBadgeForTask(task),
 							RelationType.TASK
 					);
