@@ -282,6 +282,7 @@ public class TaskService {
 
     @Transactional
     public void deleteById(final Long taskId) {
+		relationService.deleteRelatedTo(taskId);
         taskDao.deleteById(taskId);
     }
 

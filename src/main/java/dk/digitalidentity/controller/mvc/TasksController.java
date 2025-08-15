@@ -284,7 +284,6 @@ public class TasksController {
     @Transactional
     public void taskDelete(@PathVariable final String id) {
         final Long lid = Long.valueOf(id);
-        relationService.deleteRelatedTo(lid);
         taskService.deleteById(lid);
     }
 
