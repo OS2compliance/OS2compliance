@@ -207,6 +207,7 @@ public class DPIAController {
 		if (dpia.getResponsibleOu() != null) {
 			model.addAttribute("responsibleOu", new DPIAResponsibleOu(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName()));
 		}
+		model.addAttribute("isResponsible", dpiaService.isResponsibleFor(dpia));
 		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";
 	}
 

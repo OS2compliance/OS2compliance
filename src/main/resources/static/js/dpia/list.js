@@ -30,10 +30,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 
 function initPageTopButtons() {
     const createExternalButton = document.getElementById("createExternalDPIAButton");
-    createExternalButton.addEventListener("click",  () => createExternalDPIAService.createExternalClicked())
+    createExternalButton?.addEventListener("click",  () => createExternalDPIAService.createExternalClicked())
 
     const createButton = document.getElementById("createDPIAButton");
-    createButton.addEventListener("click",  () => createDPIAService.formReset())
+    createButton?.addEventListener("click",  () => createDPIAService.formReset())
 }
 
 function deleteClicked(dpiaId, name) {

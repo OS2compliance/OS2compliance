@@ -982,7 +982,7 @@
                 document.getElementById('editAssetBtn').hidden = true;
 
                 if (!isKitos) {
-                    if (responsibleFieldChangeable) {
+                    if (responsibleFieldChangeable=== 'true') {
                         managersChoicesEditSelect.enable();
                     }
                     document.getElementById("productLinksViewContainer").hidden = true;
@@ -991,7 +991,7 @@
                 }
 
                 suppliersChoicesEditSelect.enable();
-                if (responsibleFieldChangeable) {
+                if (responsibleFieldChangeable === 'true') {
                     responsibleChoicesEditSelect.enable();
                 }
             } else {

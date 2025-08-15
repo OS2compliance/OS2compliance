@@ -26,7 +26,6 @@ export default function RegisterGeneralService() {
 
         editButton?.addEventListener('click', (e) =>{
             const isResponsibleChangeable = editButton.dataset.responsibleChangeable;
-            console.log(isResponsibleChangeable);
             this.setGenereltEditState(true, isResponsibleChangeable);
         })
 
@@ -160,7 +159,7 @@ export default function RegisterGeneralService() {
             kleService.groupSelectorInstance.disable();
             dataProtectionOfficerChoice.disable()
         } else {
-            if (isResponsibleFieldEditable) {
+            if (isResponsibleFieldEditable === 'true') {
                 userChoices.enable();
                 customResponsibleUserChoices.enable();
             }

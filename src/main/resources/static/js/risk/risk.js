@@ -56,7 +56,7 @@ function Preselect() {
 function initTableActions() {
     delegateListItemActions('risksDatatable',
         (id, elem) => {
-            if (elem.dataset.external) {
+            if (elem.dataset.external === 'true') {
                 createExternalRiskassessmentService.editExternalClicked(id)
             } else {
                 editRiskService.showEditDialog(id)
@@ -294,7 +294,7 @@ function CreateTable() {
 
 function initPageTopButtons() {
     const createButton = document.getElementById("createExternalThreatassessmentButton");
-    createButton.addEventListener("click",  () => createExternalRiskassessmentService.createExternalClicked())
+    createButton?.addEventListener("click",  () => createExternalRiskassessmentService.createExternalClicked())
 }
 
 

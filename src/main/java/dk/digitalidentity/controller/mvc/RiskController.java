@@ -157,6 +157,7 @@ public class RiskController {
 
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
+		model.addAttribute("isResponsible", threatAssessmentService.isResponsibleFor(threatAssessment));
         return "risks/editForm";
     }
 
@@ -182,7 +183,10 @@ public class RiskController {
         editedAssessment.setName(assessment.getName());
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
-        editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
+
+		if (!threatAssessmentService.isResponsibleFor(editedAssessment)) {
+			editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
+		}
 
 		// Handle threatCatalog changes
 		threatAssessmentService.handleThreatCatalogChanges(editedAssessment, assessment.getThreatCatalogs());
@@ -574,6 +578,7 @@ public class RiskController {
 		);
 
         model.addAttribute("risk", externalDTO);
+		model.addAttribute("isResponsible", threatAssessmentService.isResponsibleFor(riskassessment));
         return "risks/fragments/edit_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 
@@ -584,6 +589,7 @@ public class RiskController {
 
         model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY));
         model.addAttribute("risk", new ExternalThreatAssessmentCreateDTO(null, "", ThreatAssessmentType.ASSET, new ResponsibleOUDTO("", ""), new ResponsibleUserDTO("", ""), "")); // emppty dto
+		model.addAttribute("isResponsible", false);
         return "risks/fragments/create_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 
