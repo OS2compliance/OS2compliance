@@ -5,7 +5,6 @@ import dk.digitalidentity.event.AssetDPIAKitosEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.mapping.AssetMapper;
 import dk.digitalidentity.model.dto.AssetDTO;
-import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
@@ -15,10 +14,11 @@ import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.Property;
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
@@ -29,6 +29,7 @@ import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
@@ -45,6 +46,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -57,14 +59,18 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 
-import static dk.digitalidentity.integration.kitos.KitosConstants.*;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_ASSET_DPIA_CHANGED_QUEUE;
+import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DPIA_LAST_SYNC_PROPERTY_KEY;
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
@@ -83,6 +89,7 @@ public class AssetsRestController {
     private final AssetOversightService assetOversightService;
 	private final DPIAService dPIAService;
 	private final ApplicationEventPublisher eventPublisher;
+	private final RelationService relationService;
 	private final ExcelExportService excelExportService;
 
 	@PostMapping("list")
@@ -315,8 +322,80 @@ public class AssetsRestController {
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
+	public record HierarchyNode(String id, String name, String parentId, String assetId) {}
 
-    private void reorderQuestions(final long id, final boolean backwards) {
+	@GetMapping("{assetId}/hierarchy")
+	public ResponseEntity<List<HierarchyNode>> getAssetHierarchy(@PathVariable Long assetId) {
+		final Asset asset = assetService.findById(assetId)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		List<HierarchyNode> response = buildCompleteHierarchy(asset);
+		return ResponseEntity.ok(response);
+	}
+
+	private List<HierarchyNode> buildCompleteHierarchy(Asset rootAsset) {
+		List<HierarchyNode> allNodes = new ArrayList<>();
+		Set<String> visitedPaths = new HashSet<>();
+
+		// Start recursive building from root
+		addAssetAndChildren(rootAsset, null, allNodes, visitedPaths, 0, "");
+
+		return allNodes;
+	}
+
+	private void addAssetAndChildren(Asset asset, String parentId, List<HierarchyNode> allNodes, Set<String> visitedPaths, int depth, String currentPath) {
+		// Prevent infinite depth - show max 10 levels
+		if (depth > 9) {
+			return;
+		}
+
+		// Create unique path to track this specific branch
+		String newPath = currentPath.isEmpty() ? asset.getId().toString() : currentPath + "->" + asset.getId();
+
+		// Skip if we've seen this exact path before (prevents cycles)
+		if (visitedPaths.contains(newPath)) {
+			return;
+		}
+
+		// Check for cycles - if current asset is already in the path
+		if (currentPath.contains("->" + asset.getId() + "->") || currentPath.startsWith(asset.getId() + "->")) {
+			return;
+		}
+
+		// Create unique node ID for this instance (asset can appear multiple times)
+		String uniqueNodeId = asset.getId().toString();
+		if (parentId != null) {
+			// Add path hash to make it unique when asset appears multiple times
+			uniqueNodeId = asset.getId() + "_" + Math.abs(newPath.hashCode());
+		}
+
+		// Add current asset with both unique ID and original asset ID
+		allNodes.add(new HierarchyNode(uniqueNodeId, asset.getName(), parentId, asset.getId().toString()));
+		visitedPaths.add(newPath);
+
+		// Find all related assets
+		final List<Relatable> relatedAssets = relationService.findAllRelatedTo(asset)
+				.stream()
+				.filter(r -> r.getRelationType() == RelationType.ASSET)
+				.toList();
+
+		// Add all related assets as children
+		for (Relatable relatedAsset : relatedAssets) {
+			Asset childAsset = assetService.findById(relatedAsset.getId()).orElse(null);
+			if (childAsset != null) {
+				// Check if adding this child would create a cycle
+				boolean wouldCreateCycle = newPath.contains("->" + childAsset.getId() + "->") ||
+						newPath.startsWith(childAsset.getId() + "->") ||
+						newPath.equals(childAsset.getId().toString());
+
+				if (!wouldCreateCycle) {
+					addAssetAndChildren(childAsset, uniqueNodeId, allNodes, visitedPaths, depth + 1, newPath);
+				}
+			}
+		}
+	}
+
+	private void reorderQuestions(final long id, final boolean backwards) {
         final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final List<DPIATemplateQuestion> allQuestionsInSection = dpiaTemplateQuestionService.findAll().stream()
             .filter(q -> !q.isDeleted() && q.getDpiaTemplateSection().getId() == question.getDpiaTemplateSection().getId())
