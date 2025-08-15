@@ -18,13 +18,9 @@
                             </ol>
                         </nav>
                     </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" type="button" sec:authorize="hasRole('ROLE_create_all')" th:data-id="${template.identifier}" onclick="createSectionService.openRequirementModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny krav
-                        </button>
-                        <button id="addHeaderButton" type="button" sec:authorize="hasRole('ROLE_create_all')" th:data-id="${template.identifier}" onclick="createSectionService.openHeaderModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny gruppe
-                        </button>
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='createRequirementButton', text='Ny krav', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='addHeaderButton', text='Ny gruppe', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
@@ -145,8 +141,18 @@
             toastService.error(modalError);
         }
 
+        initPageTopButtons()
+
         // choiceService.initHeaderSelect("headerSelect");
     });
+
+    function initPageTopButtons() {
+        const createGroupButton = document.getElementById("addHeaderButton");
+        createGroupButton.addEventListener("click",  () => createSectionService.openHeaderModal(createGroupButton))
+
+        const createReqButton = document.getElementById("createRequirementButton");
+        createReqButton.addEventListener("click",  () => createSectionService.openRequirementModal(createReqButton))
+    }
     /*]]>*/
 </script>
 
