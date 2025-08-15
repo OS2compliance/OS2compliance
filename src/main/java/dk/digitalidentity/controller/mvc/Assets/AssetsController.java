@@ -495,20 +495,23 @@ public class AssetsController {
         if(!Objects.isNull(asset.getSupplier())) {
             existingAsset.setSupplier(asset.getSupplier());
         }
-        existingAsset.setAssetType(asset.getAssetType());
-        existingAsset.setCriticality(asset.getCriticality());
-        existingAsset.setDescription(asset.getDescription());
-        existingAsset.setSociallyCritical(asset.isSociallyCritical());
-        existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
-        existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
-        existingAsset.setContractLink(asset.getContractLink());
-        existingAsset.setContractDate(asset.getContractDate());
-        existingAsset.setContractTermination(asset.getContractTermination());
-        existingAsset.setTerminationNotice(asset.getTerminationNotice());
-        existingAsset.setArchive(asset.getArchive());
-        existingAsset.setAssetStatus(asset.getAssetStatus());
-        existingAsset.setAssetCategory(asset.getAssetCategory());
-		existingAsset.setAiStatus(asset.getAiStatus());
+		// Add null check because when it's from Kitos the frontend element will be disabled and thus not included in the @ModelAttribute, i.e., be null
+		if (!Objects.isNull(asset.getAiStatus())) {
+			existingAsset.setAiStatus(asset.getAiStatus());
+		}
+		existingAsset.setAssetType(asset.getAssetType());
+		existingAsset.setCriticality(asset.getCriticality());
+		existingAsset.setDescription(asset.getDescription());
+		existingAsset.setSociallyCritical(asset.isSociallyCritical());
+		existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
+		existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
+		existingAsset.setContractLink(asset.getContractLink());
+		existingAsset.setContractDate(asset.getContractDate());
+		existingAsset.setContractTermination(asset.getContractTermination());
+		existingAsset.setTerminationNotice(asset.getTerminationNotice());
+		existingAsset.setArchive(asset.getArchive());
+		existingAsset.setAssetStatus(asset.getAssetStatus());
+		existingAsset.setAssetCategory(asset.getAssetCategory());
 		existingAsset.setAiRisk(asset.getAiRisk());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 

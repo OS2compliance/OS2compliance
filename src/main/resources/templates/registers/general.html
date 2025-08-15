@@ -98,7 +98,9 @@
                             <label for="informationResponsible" class="col-form-label">Navn på DPO</label>
                             <select class="form-select choices__input" th:field="*{dataProtectionOfficer}"
                                     data-trigger="" id="dataProtectionOfficer" tabindex="-1" disabled>
-                                <option th:value="*{dataProtectionOfficer.uuid}" th:text="*{dataProtectionOfficer.name}" selected></option>
+                                <option th:value="${dataProtectionOfficer?.uuid ?: ''}"
+                                        th:text="${dataProtectionOfficer?.name ?: 'Ingen valgt'}"
+                                        selected>
                             </select>
                         </div>
 
