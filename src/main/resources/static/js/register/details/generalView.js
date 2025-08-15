@@ -24,13 +24,13 @@ export default function RegisterGeneralService() {
         const editButton = document.getElementById('editBtn');
         const cancelButton = document.getElementById('cancelBtn');
 
-        editButton.addEventListener('click', (e) =>{
+        editButton?.addEventListener('click', (e) =>{
             const isResponsibleChangeable = editButton.dataset.responsibleChangeable;
             console.log(isResponsibleChangeable);
             this.setGenereltEditState(true, isResponsibleChangeable);
         })
 
-        cancelButton.addEventListener('click', (e) =>{
+        cancelButton?.addEventListener('click', (e) =>{
             this.setGenereltEditState(false, false);
         })
     }
