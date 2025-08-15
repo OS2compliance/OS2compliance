@@ -36,6 +36,9 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
 
     List<Asset> findByDeletedFalse(Sort sort);
 
+	@Query("select a from Asset a where a.deleted = false")
+	Page<Asset> findNonDeletedAssets(Pageable pageable);
+
     long countByAssetType_Id(Long id);
 
 	boolean existsByResponsibleUsers_UuidContains(String userUuid);
