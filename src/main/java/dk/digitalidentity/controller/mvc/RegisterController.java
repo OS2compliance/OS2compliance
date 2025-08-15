@@ -463,7 +463,7 @@ public class RegisterController {
 							task.getId(),
 							task.getName(),
 							task.getResponsibleUser().getName(),
-							task.getResponsibleOu().getName(),
+							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
 							task.getTaskType().getMessage(),
 							task.getNextDeadline().toString(),
 							task.getRepetition().getMessage(),
