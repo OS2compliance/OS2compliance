@@ -45,6 +45,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.nodes.Entities;
 import org.jsoup.select.Elements;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
@@ -118,6 +119,11 @@ public class AssetService {
         return assetDao.findAll(Pageable.ofSize(pageSize).withPage(page));
     }
 
+	public Page<Asset> getPagedNonDeleted(final int pageSize, final int page) {
+		Pageable pageable = PageRequest.of(page, pageSize);
+		return assetDao.findNonDeletedAssets(pageable);
+	}
+
     public List<Asset> getAllSortedByName() {
         return assetDao.findByDeletedFalse(Sort.by(Sort.Direction.ASC, "name"));
     }
@@ -150,6 +156,8 @@ public class AssetService {
     }
 
     public void delete(final Asset asset) {
+		relationService.deleteRelatedTo(asset.getId());
+		dataProcessingDao.delete(asset.getDataProcessing());
         assetDao.delete(asset);
     }
 

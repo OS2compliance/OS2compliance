@@ -427,7 +427,6 @@ public class RiskController {
         final List<Task> tasks = taskService.findRelatedTasks(threatAssessment, t -> t.getTaskType() == TaskType.CHECK);
         taskDao.deleteAll(tasks);
 
-        relationService.deleteRelatedTo(id);
         threatAssessmentService.deleteById(id);
     }
 

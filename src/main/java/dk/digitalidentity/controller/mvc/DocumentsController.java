@@ -89,7 +89,6 @@ public class DocumentsController {
         // All related checks should be deleted along with the document
         final List<Task> tasks = taskService.findRelatedTasks(document, t -> t.getTaskType() == TaskType.CHECK);
         taskService.deleteAll(tasks);
-        relationService.deleteRelatedTo(id);
         documentService.deleteById(id);
     }
 

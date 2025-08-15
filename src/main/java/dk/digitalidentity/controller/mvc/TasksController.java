@@ -331,7 +331,6 @@ public class TasksController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-        relationService.deleteRelatedTo(lid);
         taskService.deleteById(lid);
     }
 

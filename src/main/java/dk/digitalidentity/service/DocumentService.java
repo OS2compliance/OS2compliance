@@ -67,11 +67,13 @@ public class DocumentService {
 
     @Transactional
 	public void delete(final Document document) {
+		relationService.deleteRelatedTo(document.getId());
 		documentDao.delete(document);
 	}
 
     @Transactional
     public void deleteById(final Long id) {
+		relationService.deleteRelatedTo(id);
         documentDao.deleteById(id);
     }
 

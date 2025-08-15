@@ -109,7 +109,6 @@ public class SupplierController {
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
         final List<Task> tasks = taskService.findRelatedTasks(supplier, t -> t.getTaskType() == TaskType.CHECK);
-        relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
         supplierService.delete(supplier);
 	}

@@ -26,6 +26,7 @@ public class RegisterService {
     private final RegisterDao registerDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
     private final DataProcessingDao dataProcessingDao;
+	private final RelationService relationService;
 
 	public boolean isResponsibleFor(Register register) {
 		return register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
@@ -108,6 +109,7 @@ public class RegisterService {
     public void delete(final Register register) {
         dataProcessingDao.delete(register.getDataProcessing());
         consequenceAssessmentDao.delete(register.getConsequenceAssessment());
+		relationService.deleteRelatedTo(register.getId());
         registerDao.delete(register);
     }
 

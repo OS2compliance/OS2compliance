@@ -188,6 +188,7 @@ public class ThreatAssessmentService {
 
     @Transactional
     public void deleteById(final Long threatAssessmentId) {
+		relationService.deleteRelatedTo(threatAssessmentId);
         threatAssessmentDao.deleteById(threatAssessmentId);
     }
 

@@ -8,6 +8,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- (Løsningsbeskrivelse 15.04.2025) Fortegnelsesmodulet
 - (Løsningsbeskrivelse 21.04.2025) KLE-integration
 - (Løsningsbeksrivelse 16.04.2025) Udvidelse af OS2kitos integration
 - (https://os2web.atlassian.net/browse/COMPLY-65) Standarder: Ændring af nuværende forside
@@ -23,6 +24,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-262) (Aktiver/Generelt) Nyt felt på aktivets forside så der er 4 forskellige roller.
 - (https://os2web.atlassian.net/browse/COMPLY-289) (Risikostyring/Risikovurderinger) Mulighed for at vælge flere trusselskataloger
 - (https://os2web.atlassian.net/browse/COMPLY-255) (Rapporter/overblikssiderne) Mulighed for at eksportere alle sider med visninger til Excel
+- (https://os2web.atlassian.net/browse/COMPLY-176) (Aktiver/oversigt) Markering på aktiver, der ikke længere er markeret som anvendt i KITOS
+- (https://os2web.atlassian.net/browse/COMPLY-325) (Aktiver/Generelt) Visualisering af sammenhæng mellem systemer
+- (https://os2web.atlassian.net/browse/COMPLY-188) (Opgavecenter/Opgave og Kontrol) Udvidelse af beskrivelsesfeltet i en opgave, så det automatisk passer til tekstens længde
 
 ### Fixed
 - (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke

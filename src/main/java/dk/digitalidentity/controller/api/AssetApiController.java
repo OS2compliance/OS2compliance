@@ -88,7 +88,7 @@ public class AssetApiController {
     @GetMapping(produces = "application/json")
     public PageEO<AssetEO> list(@Parameter(description = "Page size to fetch, max is 500")  @RequestParam(value = "pageSize", defaultValue = "100") @Max(500) final int pageSize,
                                 @Parameter(description = "The page to fetch, first page is 0") @RequestParam(value = "page", defaultValue = "0") @PositiveOrZero final int page) {
-        return assetMapper.toEO(assetService.getPaged(pageSize, page));
+        return assetMapper.toEO(assetService.getPagedNonDeleted(pageSize, page));
     }
 
     @Operation(summary = "Create a new asset")
