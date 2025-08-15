@@ -25,8 +25,9 @@ public class RegisterService {
     private final RegisterDao registerDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
     private final DataProcessingDao dataProcessingDao;
+	private final RelationService relationService;
 
-    public Optional<Register> findById(final Long id) {
+	public Optional<Register> findById(final Long id) {
         return registerDao.findById(id);
     }
 
@@ -102,6 +103,7 @@ public class RegisterService {
     public void delete(final Register register) {
         dataProcessingDao.delete(register.getDataProcessing());
         consequenceAssessmentDao.delete(register.getConsequenceAssessment());
+		relationService.deleteRelatedTo(register.getId());
         registerDao.delete(register);
     }
 

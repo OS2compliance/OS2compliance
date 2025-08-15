@@ -14,8 +14,10 @@ public class PrecautionService {
 
     @Autowired
     private PrecautionDao precautionDao;
+	@Autowired
+	private RelationService relationService;
 
-    public List<Precaution> findAll() {
+	public List<Precaution> findAll() {
         return precautionDao.findByDeletedFalse();
     }
 
@@ -28,6 +30,7 @@ public class PrecautionService {
     }
 
     public void delete(Precaution precaution) {
+		relationService.deleteRelatedTo(precaution.getId());
         precautionDao.delete(precaution);
     }
 }

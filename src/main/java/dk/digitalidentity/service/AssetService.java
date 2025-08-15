@@ -145,6 +145,8 @@ public class AssetService {
     }
 
     public void delete(final Asset asset) {
+		relationService.deleteRelatedTo(asset.getId());
+		dataProcessingDao.delete(asset.getDataProcessing());
         assetDao.delete(asset);
     }
 
