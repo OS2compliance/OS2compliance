@@ -8,6 +8,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 ## [Unreleased]
 
 ### Added
+- (Løsningsbeskrivelse 15.04.2025) Fortegnelsesmodulet
 - (Løsningsbeskrivelse 21.04.2025) KLE-integration
 - (Løsningsbeksrivelse 16.04.2025) Udvidelse af OS2kitos integration
 - (https://os2web.atlassian.net/browse/COMPLY-65) Standarder: Ændring af nuværende forside
