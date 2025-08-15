@@ -220,7 +220,7 @@ public class TaskService {
             }
 
             String statusText = "Ikke udført";
-            if (newestLog != null) {
+            if (newestLog != null && newestLog.getTaskResult() != null) {
                 switch (newestLog.getTaskResult()) {
                     case NO_ERROR -> statusText = "Ingen fejl";
                     case NO_CRITICAL_ERROR -> statusText = "Ingen kritiske fejl";
@@ -282,6 +282,7 @@ public class TaskService {
 
     @Transactional
     public void deleteById(final Long taskId) {
+		relationService.deleteRelatedTo(taskId);
         taskDao.deleteById(taskId);
     }
 

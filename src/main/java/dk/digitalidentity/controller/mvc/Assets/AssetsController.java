@@ -388,7 +388,6 @@ public class AssetsController {
 
         // All related checks should be deleted along with the asset
         final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
-        relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
         asset.getSuppliers().clear();
         assetService.deleteById(asset);
