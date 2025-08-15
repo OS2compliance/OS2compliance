@@ -17,6 +17,21 @@ export default function RegisterGeneralService() {
         this.initAssetRelationSelect();
         this.initDocumentRelationSelectPrivate();
         this.initTaskRelationSelectPrivate();
+        this.initGeneralEditButtons()
+    }
+
+    this.initGeneralEditButtons = function () {
+        const editButton = document.getElementById('editBtn');
+        const cancelButton = document.getElementById('cancelBtn');
+
+        editButton?.addEventListener('click', (e) =>{
+            const isResponsibleChangeable = editButton.dataset.responsibleChangeable;
+            this.setGenereltEditState(true, isResponsibleChangeable);
+        })
+
+        cancelButton?.addEventListener('click', (e) =>{
+            this.setGenereltEditState(false, false);
+        })
     }
 
 
@@ -105,7 +120,7 @@ export default function RegisterGeneralService() {
         );
     }
 
-    this.setGenereltEditState = function (editable) {
+    this.setGenereltEditState = function (editable, isResponsibleFieldEditable) {
         const editBtn = document.querySelector('#editBtn');
         const cancelBtn = document.querySelector('#cancelBtn');
         const saveBtn = document.querySelector('#saveBtn');
@@ -144,8 +159,10 @@ export default function RegisterGeneralService() {
             kleService.groupSelectorInstance.disable();
             dataProtectionOfficerChoice.disable()
         } else {
-            userChoices.enable();
-            customResponsibleUserChoices.enable();
+            if (isResponsibleFieldEditable === 'true') {
+                userChoices.enable();
+                customResponsibleUserChoices.enable();
+            }
             ouChoices.enable();
             departmentChoices.enable();
             registerRegardingChoices.enable();

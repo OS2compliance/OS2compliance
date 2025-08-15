@@ -1,8 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +34,7 @@ public class DefaultController implements ErrorController {
 
 	@Transactional
     @GetMapping("/dashboard")
-    @RequireUser
+    @RequireReadOwnerOnly
 	public String index(final Model model) {
         if (SecurityUtil.isLoggedIn()) {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();

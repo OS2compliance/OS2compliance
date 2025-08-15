@@ -6,9 +6,10 @@ import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireDocument;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,8 +17,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -35,7 +34,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/documents")
-@RequireUser
+@RequireDocument
 @RequiredArgsConstructor
 public class DocumentRestController {
     private final DocumentGridDao documentGridDao;
@@ -43,43 +42,62 @@ public class DocumentRestController {
     private final UserService userService;
 	private final ExcelExportService excelExportService;
 
+	@RequireReadOwnerOnly
 	@PostMapping("list")
-	public Object list(
+	public PageDTO<DocumentDTO> list(
 			@RequestParam(value = "page", defaultValue = "0") int page,
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
 			@RequestParam(value = "export", defaultValue = "false") boolean export,
 			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
+			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
 			HttpServletResponse response
 	) throws IOException {
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
+		}
+
+        Page<DocumentGrid> documents;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			documents = documentGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DocumentGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DocumentGrid.class
+			);
+		}
+		else {
+			// Logged in user can see only own
+			documents = documentGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, DocumentGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DocumentGrid.class
+			);
+		}
 
 		// For export mode, get ALL records (no pagination)
 		if (export) {
-			Page<DocumentGrid> allDocuments = documentGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DocumentGrid.class),
-					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-
-			List<DocumentDTO> allData = mapper.toDTO(allDocuments.getContent());
+			List<DocumentDTO> allData = mapper.toDTO(documents.getContent());
 			excelExportService.exportToExcel(allData, fileName, response);
 			return null;
 		}
 
-		// Normal mode - return paginated JSON
-        Page<DocumentGrid> documents =  documentGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, DocumentGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            DocumentGrid.class
-        );
-
         assert documents != null;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
     }
 
+	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
     public PageDTO<DocumentDTO> list(
         @PathVariable(name = "id") final String uuid,
@@ -89,20 +107,17 @@ public class DocumentRestController {
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Page<DocumentGrid> documents = documentGridDao.findAllForResponsibleUser(
-            validateSearchFilters(filters, DocumentGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            DocumentGrid.class, user);
+		Page<DocumentGrid> documents = documentGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, DocumentGrid.class),
+				user,
+				buildPageable(page, limit, sortColumn, sortDirection),
+				DocumentGrid.class
+		);
 
         assert documents != null;
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
     }
 
 }

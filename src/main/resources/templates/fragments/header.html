@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/html">
+<html xmlns="http://www.w3.org/1999/html"  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
 <head th:fragment="head">
 
@@ -69,7 +69,7 @@
 
 			<!-- Content Header - Right Side: -->
 			<div class="header__content-end">
-				<div th:if="${T(dk.digitalidentity.security.SecurityUtil).administrator}">
+				<div sec:authorize="@accessEvaluator.settings()">
 					<a style="margin-bottom: 2px; margin-right: 14px; height: 45px; margin-top: 50px;" onclick="settingsService.show()">
 						<i class="ti-settings fs-4"></i>
 					</a>

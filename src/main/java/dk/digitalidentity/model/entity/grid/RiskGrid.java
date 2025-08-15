@@ -62,6 +62,9 @@ public class RiskGrid  implements HasSingleResponsibleUser {
     @Column
     private String localizedEnums;
 
+	@Column
+	private String signerUuid;
+
     @Column
     @Enumerated(EnumType.STRING)
     private ThreatAssessmentReportApprovalStatus threatAssessmentReportApprovalStatus;

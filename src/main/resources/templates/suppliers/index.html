@@ -21,16 +21,10 @@
 							<h1 class="page-title mb-0 mt-2">Leverandører</h1>
 							<p class="lead"></p>
 						</div>
-						<div class="align-self-center d-inline-flex">
-                            <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="exportGridServerSide(customGridFunctions, 'Leverandører')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
-                                <i class="ti-bookmark"></i> <span class="vr"></span>Gem som Excel
-                            </button>
-							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
-								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny leverandør
-							</button>
-							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-							</button>
+						<div class="align-self-center d-inline-flex gap-2">
+                            <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='saveAsExcelButton', text='Gem som Excel', iconClass='ti-bookmark')}"></div>
+                            <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createSupplierButton', text='Ny leverandør', iconClass='ti-plus', target='#formDialog')}"></div>
+                            <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
 						</div>
 					</div>
 				</div>
@@ -62,8 +56,8 @@
 		<nav th:replace="~{fragments/navbar :: main (page='leverandører')}" />
 	</div>
 
-	<div class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
-	<div class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
+	<div sec:authorize="hasRole('ROLE_create_all')" class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
+	<div sec:authorize="hasRole('ROLE_update_all')" class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
 
 	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 

@@ -11,10 +11,13 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SupplierService;
@@ -45,7 +48,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("suppliers")
-@RequireUser
+@RequireSupplier
 @RequiredArgsConstructor
 public class SupplierController {
 	private final SupplierService supplierService;
@@ -56,13 +59,14 @@ public class SupplierController {
     private final AssetService assetService;
     private final TaskService taskService;
 
+	@RequireReadOwnerOnly
 	@GetMapping
 	public String suppliersList(Model model) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
         return "suppliers/index";
 	}
 
+	@RequireReadOwnerOnly
 	@GetMapping("{id}")
 	public String supplier(final Model model, @PathVariable final String id) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
@@ -81,12 +85,11 @@ public class SupplierController {
 
         final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
-            .collect(Collectors.toList());
+            .toList();
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
         model.addAttribute("oversights", assetOversights);
-        model.addAttribute("changeableSupplier", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (supplier.getResponsibleUser() != null && supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()))));
+        model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);
@@ -97,7 +100,7 @@ public class SupplierController {
 		return "suppliers/view";
 	}
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteAll
     @DeleteMapping("{id}")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
@@ -110,6 +113,7 @@ public class SupplierController {
         supplierService.delete(supplier);
 	}
 
+	@RequireCreateAll
 	@GetMapping("form")
 	public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
 		if (id == null) {
@@ -126,14 +130,15 @@ public class SupplierController {
 		return "suppliers/form";
 	}
 
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("form")
 	public String formPost(@ModelAttribute final Supplier supplier) {
 		if (supplier.getId() != null) {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !existingSupplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+
+            if(!existingSupplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
             existingSupplier.setName(supplier.getName());
@@ -156,6 +161,7 @@ public class SupplierController {
 		return "redirect:/suppliers";
 	}
 
+	@RequireUpdateAll
 	@Transactional
 	@PostMapping(value = "edit", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
 	public String descriptionPost(@RequestParam("id") final String id, @RequestParam("description") final String description,
@@ -167,8 +173,7 @@ public class SupplierController {
                                                                        @RequestParam("cvr") final String cvr) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if(!supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		supplier.setDescription(description);

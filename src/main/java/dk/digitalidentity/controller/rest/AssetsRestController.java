@@ -19,10 +19,15 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
@@ -40,10 +45,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -77,7 +81,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/assets")
-@RequireUser
+@RequireAsset
 @RequiredArgsConstructor
 public class AssetsRestController {
     private final AssetService assetService;
@@ -92,43 +96,61 @@ public class AssetsRestController {
 	private final RelationService relationService;
 	private final ExcelExportService excelExportService;
 
+	@RequireReadOwnerOnly
 	@PostMapping("list")
-	public Object list(
-			@RequestParam(value = "page", defaultValue = "0") int page,
-			@RequestParam(value = "limit", defaultValue = "50") int limit,
-			@RequestParam(value = "order", required = false) String sortColumn,
-			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
+    public PageDTO<AssetDTO> list(
+        @RequestParam(value = "page", defaultValue = "0") int page,
+        @RequestParam(value = "limit", defaultValue = "50") int limit,
+        @RequestParam(value = "order", required = false) String sortColumn,
+        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+		@RequestParam(value = "export", defaultValue = "false") boolean export,
+		@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+        @RequestParam Map<String, String> filters, // Dynamic filters for search fields
 			HttpServletResponse response
-	) throws IOException {
+    ) throws IOException {
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<AssetGrid> allAssets = assetGridDao.findAllWithColumnSearch(
+		final String userUuid = SecurityUtil.getLoggedInUserUuid();
+		final User user = userService.findByUuid(userUuid)
+				.orElseThrow();
+		if (userUuid == null) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		int pageLimit = limit;
+		if(export) {
+			// For export mode, get ALL records (no pagination)
+			pageLimit = Integer.MAX_VALUE;
+		}
+
+		Page<AssetGrid> assets = null;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged in user can see all
+			assets = assetGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, AssetGrid.class),
-					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					AssetGrid.class
 			);
+		}
+		else {
+			// Logged in user can see only own
+			assets = assetGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, AssetGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+		}
 
-			List<AssetDTO> allData = mapper.toDTO(allAssets.getContent());
+		if (export) {
+			List<AssetDTO> allData = mapper.toDTO(assets.getContent());
 			excelExportService.exportToExcel(allData, fileName, response);
 			return null;
 		}
 
-		// Normal mode - return paginated JSON
-        Page<AssetGrid> assets =  assetGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, AssetGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            AssetGrid.class
-        );
-
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(),
-            authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
     }
 
+	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
     public PageDTO<AssetDTO> list(
         @PathVariable(name = "id") final String uuid,
@@ -139,52 +161,60 @@ public class AssetsRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
+
+        if ( !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-		Page<AssetGrid> assets = assetGridDao.findAllForResponsibleUser(
-				validateSearchFilters(filters,AssetGrid.class ),
+		Page<AssetGrid> assets = assetGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, AssetGrid.class),
+				user,
 				buildPageable(page, limit, sortColumn, sortDirection),
-				AssetGrid.class,
-				user
+				AssetGrid.class
 		);
 
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
     }
 
+	@RequireUpdateOwnerOnly
     @PutMapping("{id}/setfield")
     public void setAssetField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                               @RequestParam(value = "value", required = false) final String value) {
         canSetFieldGuard(fieldName);
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if (!assetService.isEditable(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         ReflectionHelper.callSetterWithParam(Asset.class, asset, fieldName, value);
         assetService.save(asset);
     }
 
+	@RequireUpdateOwnerOnly
     @PutMapping("{id}/dpiascreening/setfield")
     public void setDpiaScreeningField(@PathVariable("id") final Long id, @RequestParam("name") final String fieldName,
                                       @RequestParam(value = "value", required = false) final String value) {
         canSetFieldDPIAScreeningGuard(fieldName);
 		DPIA dpia = dPIAService.find(id);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !isResponsibleForAsset(dpia.getAssets())) {
+
+        if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsibleForAsset(dpia.getAssets())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
         ReflectionHelper.callSetterWithParam(DataProtectionImpactAssessmentScreening.class, dpia.getDpiaScreening(), fieldName, value);
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PutMapping("{id}/oversightresponsible")
     public void setOversightResponsible(@PathVariable("id") final Long id, @RequestParam("userUuid") final String userUuid) {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         asset.setOversightResponsibleUser(user);
         if (asset.getSupervisoryModel() != ChoiceOfSupervisionModel.DBS) {
             assetOversightService.setAssetsToDbsOversight(Collections.singletonList(asset));
@@ -194,15 +224,20 @@ public class AssetsRestController {
     }
 
     @Transactional
-    @RequireSuperuserOrAdministrator
+   	@RequireDeleteOwnerOnly
     @DeleteMapping("{id}/oversightresponsible")
     public void removeOversightResponsibl(@PathVariable("id") final Long id) {
         final Asset asset = assetService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) && !assetService.isResponsibleFor(asset)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         asset.setOversightResponsibleUser(null);
     }
 
-    record DPIASetFieldDTO(long id, String fieldName, String value) {}
-    @RequireSuperuserOrAdministrator
+    public record DPIASetFieldDTO(long id, String fieldName, String value) {}
+    @RequireUpdateAll
     @PutMapping("dpia/schema/section/setfield")
     public void setDPIASectionField(@RequestBody final DPIASetFieldDTO dto) {
         canSetDPIASectionFieldGuard(dto.fieldName);
@@ -211,60 +246,61 @@ public class AssetsRestController {
         dpiaTemplateSectionService.save(dpiaTemplateSection);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateAll
     @PostMapping("dpia/schema/section/{id}/up")
-    public ResponseEntity<?> reorderUp(@PathVariable("id") final long id) {
+    public ResponseEntity<HttpStatus> reorderUp(@PathVariable("id") final long id) {
         reorderSections(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+	@RequireUpdateAll
     @PostMapping("dpia/schema/section/{id}/down")
-    public ResponseEntity<?> reorderDown(@PathVariable("id") final long id) {
+    public ResponseEntity<HttpStatus> reorderDown(@PathVariable("id") final long id) {
         reorderSections(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+	@RequireUpdateAll
     @PostMapping("dpia/schema/question/{id}/up")
-    public ResponseEntity<?> reorderQuestionUp(@PathVariable("id") final long id) {
+    public ResponseEntity<HttpStatus> reorderQuestionUp(@PathVariable("id") final long id) {
         reorderQuestions(id, false);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+	@RequireUpdateAll
     @PostMapping("dpia/schema/question/{id}/down")
-    public ResponseEntity<?> reorderQuestionDown(@PathVariable("id") final long id) {
+    public ResponseEntity<HttpStatus> reorderQuestionDown(@PathVariable("id") final long id) {
         reorderQuestions(id, true);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteAll
     @DeleteMapping("dpia/schema/question/{id}/delete")
-    public ResponseEntity<?> deleteQuestion(@PathVariable("id") final long id) {
+    public ResponseEntity<HttpStatus> deleteQuestion(@PathVariable("id") final long id) {
         final DPIATemplateQuestion question = dpiaTemplateQuestionService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         question.setDeleted(true);
         dpiaTemplateQuestionService.save(question);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	@RequireDeleteOwnerOnly
     @Transactional
     @DeleteMapping("oversight/{oversightId}")
-    public ResponseEntity<?> deleteOversight(@PathVariable("oversightId") Long oversightId) {
+    public ResponseEntity<HttpStatus> deleteOversight(@PathVariable("oversightId") Long oversightId) {
         final AssetOversight assetOversight = assetService.getOversight(oversightId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && assetOversight.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()))) {
+
+        if ( !SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) && assetOversight.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         assetOversightService.delete(assetOversight);
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteAll
     @Transactional
     @DeleteMapping("{assetId}/subsupplier/{subSupplierId}")
-    public ResponseEntity<?> subSupplierDelete(@PathVariable("subSupplierId") final Long subSupplierId,
+    public ResponseEntity<HttpStatus> subSupplierDelete(@PathVariable("subSupplierId") final Long subSupplierId,
                                                @PathVariable("assetId") final Long assetId) {
         final Asset asset = assetService.get(assetId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -274,8 +310,9 @@ public class AssetsRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	@RequireCreateAll
 	@PostMapping("{assetId}/dpia/kitos")
-	public ResponseEntity<?> syncDPIAToKitos(@PathVariable("assetId") final long assetId, HttpServletRequest request) {
+	public ResponseEntity<HttpStatus> syncDPIAToKitos(@PathVariable("assetId") final long assetId, HttpServletRequest request) {
 		final Asset asset = assetService.get(assetId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
@@ -302,7 +339,7 @@ public class AssetsRestController {
 				);
 
 		// create event
-		String kitosUsageId = asset.getProperties().stream().filter(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY)).map(p -> p.getValue()).findFirst().orElse(null);
+		String kitosUsageId = asset.getProperties().stream().filter(p -> p.getKey().equals(KitosConstants.KITOS_USAGE_UUID_PROPERTY_KEY)).map(Property::getValue).findFirst().orElse(null);
 		LocalDateTime createdAt = latestDPIA.getCreatedAt();
 		ZoneId zoneId = ZoneId.systemDefault(); // eller en specifik zone fx ZoneId.of("Europe/Copenhagen")
 		Date createdAtDate = Date.from(createdAt.atZone(zoneId).toInstant());

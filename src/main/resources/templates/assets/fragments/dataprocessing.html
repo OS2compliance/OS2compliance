@@ -125,6 +125,8 @@
         });
 
         function initSubsupplierModal(id) {
+            const dialogElement = document.getElementById('subsupplierDialog')
+            if (!dialogElement) {return}
             let params = new URLSearchParams({asset: [[${asset.id}]]});
 
             if (id) {
@@ -134,7 +136,7 @@
             return fetch(subsupplierUrl + '?' + params.toString())
             .then(response => response.text()
                 .then(data => {
-                    document.getElementById('subsupplierDialog').innerHTML = data;
+                    dialogElement.innerHTML = data;
 
                     //Init modal
                     subsupplierDialog = new bootstrap.Modal(document.getElementById('subsupplierDialog'), {

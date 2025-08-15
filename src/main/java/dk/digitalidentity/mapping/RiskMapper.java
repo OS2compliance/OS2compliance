@@ -2,13 +2,18 @@ package dk.digitalidentity.mapping;
 
 
 import dk.digitalidentity.model.dto.RiskDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -35,24 +40,43 @@ public interface RiskMapper {
                 .build();
     }
 
-    default RiskDTO toDTO(final RiskGrid riskGrid, boolean superuser, String principalUuid) {
+    default RiskDTO toDTO(final RiskGrid riskGrid, Set<AllowedAction> allowedActions) {
         RiskDTO riskDTO = toDTO(riskGrid);
-        if(superuser || principalUuid.equals(riskGrid.getResponsibleUser().getUuid())) {
-            riskDTO.setChangeable(true);
-        }
+		riskDTO.setAllowedActions(allowedActions);
         return riskDTO;
     }
 
-    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid) {
-        List<RiskDTO> riskDTOS = new ArrayList<>();
-        riskGrid.forEach(a -> riskDTOS.add(toDTO(a)));
-        return riskDTOS;
+    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid, Set<String> responsibleAssetNames, String userUuid) {
+		return riskGrid.stream().map(r -> {
+			Set<AllowedAction> allowedActions = new HashSet<>();
+			boolean isAssetOwner = containsAnyString(r.getRelatedAssetsAndRegisters(), responsibleAssetNames);
+			boolean isRiskOwner = r.getResponsibleUser() != null && r.getResponsibleUser().getUuid().equals(userUuid);
+			boolean isSignedResponsible = r.getSignerUuid() != null && r.getSignerUuid().equals(userUuid);
+			boolean isResponsible = isAssetOwner || isRiskOwner || isSignedResponsible;
+			if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+					|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
+				allowedActions.add(AllowedAction.UPDATE);
+			}
+			if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
+					|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
+				allowedActions.add(AllowedAction.DELETE);
+			}
+			if (SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)) {
+				allowedActions.add(AllowedAction.COPY);
+			}
+
+			return toDTO(r, allowedActions);
+		}).toList();
     }
 
-    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid, boolean superuser, String principalUuid) {
-        List<RiskDTO> riskDTOS = new ArrayList<>();
-        riskGrid.forEach(a -> riskDTOS.add(toDTO(a, superuser, principalUuid)));
-        return riskDTOS;
-    }
+	default boolean containsAnyString(String commaSeperatedList, Set<String> stringSet) {
+		String[] names = commaSeperatedList.split(",");
+		for (String name : names) {
+			if (stringSet.contains(name.trim())) {
+				return true;
+			}
+		}
+		return false;
+
+	}
 }

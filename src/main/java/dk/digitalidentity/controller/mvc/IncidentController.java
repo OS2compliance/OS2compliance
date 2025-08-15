@@ -3,10 +3,12 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.event.IncidentFieldsUpdatedEvent;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.security.RequireAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.IncidentService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -28,26 +30,27 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @Controller
 @RequestMapping("incidents")
-@RequireUser
+@RequireConfiguration
 @RequiredArgsConstructor
 public class IncidentController {
     private final IncidentService incidentService;
     private final ApplicationEventPublisher eventPublisher;
 
+	@RequireReadAll
     @GetMapping("logs")
     public String incidentLog(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "incidents/logs/index";
     }
 
-    @RequireAdministrator
+    @RequireReadAll
     @GetMapping("questions")
     public String incidentQuestions() {
         return "incidents/questions/index";
     }
 
-    @RequireAdministrator
+    @RequireCreateAll
     @GetMapping("questionForm")
     public String questionForm(final Model model, @RequestParam(name = "id", required = false) Long questionId) {
         if (questionId != null) {
@@ -63,7 +66,7 @@ public class IncidentController {
         return "incidents/questions/form";
     }
 
-    @RequireAdministrator
+    @RequireUpdateAll
     @PostMapping("questionForm")
     public String questionForm(@Valid @ModelAttribute final IncidentField form) {
         if (form.getId() != null) {
@@ -81,11 +84,17 @@ public class IncidentController {
         return "redirect:/incidents/questions";
     }
 
+	@RequireUpdateAll
     @GetMapping("logForm")
     public String logForm(final Model model, @RequestParam(name = "id", required = false) final Long incidentId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
         if (incidentId != null) {
+
+			if (!SecurityUtil.isOperationAllowed(Roles.CREATE_ALL)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+        	model.addAttribute("superuser", true);
+
             final Incident incident = incidentService.findById(incidentId).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             model.addAttribute("formTitle", "Rediger hændelse");
@@ -97,6 +106,12 @@ public class IncidentController {
             model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
             model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
         } else {
+
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+        	model.addAttribute("superuser", true);
+
             final Incident incident = new Incident();
             incidentService.addDefaultFieldResponses(incident);
             model.addAttribute("formTitle", "Ny hændelse");
@@ -106,16 +121,16 @@ public class IncidentController {
         return "incidents/logs/form";
     }
 
-
+@RequireReadAll
     @GetMapping("logs/{id}")
     public String viewIncident(final Model model, @PathVariable final Long id) {
         final Incident incident = incidentService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
         model.addAttribute("incident", incident);
         // The incident responses only contains identifiers for the objects it points to, so we need to look up
         // the object to be able to show the names in the edit dialog.
-        model.addAttribute("changeableIncident", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (incident.getCreator() != null && SecurityUtil.getPrincipalUuid().equals(incident.getCreator().getUuid()))));
+        model.addAttribute("changeableIncident", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (incident.getCreator() != null && SecurityUtil.getPrincipalUuid().equals(incident.getCreator().getUuid()))));
         model.addAttribute("responseEntities", incidentService.lookupResponseEntities(incident));
         model.addAttribute("responseUsers", incidentService.lookupResponseUsers(incident));
         model.addAttribute("responseOrganisations", incidentService.lookupResponseOrganisations(incident));
@@ -123,7 +138,7 @@ public class IncidentController {
         return "incidents/logs/view";
     }
 
-
+	@RequireCreateAll
     @PostMapping("log")
     public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
         if (incident.getId() != null) {

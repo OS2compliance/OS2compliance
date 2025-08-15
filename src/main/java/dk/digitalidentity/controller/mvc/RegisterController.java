@@ -30,10 +30,14 @@ import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
 import dk.digitalidentity.model.entity.kle.KLESubject;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceService;
@@ -86,7 +90,7 @@ import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 
 @Slf4j
 @Controller
-@RequireUser
+@RequireRegister
 @RequestMapping("registers")
 @RequiredArgsConstructor
 public class RegisterController {
@@ -107,14 +111,15 @@ public class RegisterController {
 	private final KLELegalReferenceService kLELegalReferenceService;
 	private final CatalogService catalogService;
 
+	@RequireReadOwnerOnly
 	@GetMapping
 	public String registerList(Model model) {
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 		return "registers/index";
 	}
 
-
+	@RequireCreateOwnerOnly
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
         if (id == null) {
@@ -133,7 +138,7 @@ public class RegisterController {
         return "registers/form";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @Transactional
     @PostMapping("create")
     public String create(@ModelAttribute @Valid final Register register) {
@@ -141,13 +146,13 @@ public class RegisterController {
         return "redirect:/registers/" + saved.getId();
     }
 
+	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("{id}/assessment")
 	public String updateAssessment(@PathVariable final Long id,
 			@ModelAttribute @Valid final ConsequenceAssessment assessment,
 			@RequestParam(required = false) final String section) {
 		final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
 		if (existingOptional.isPresent()) {
 			final ConsequenceAssessment existing = existingOptional.get();
@@ -179,7 +184,7 @@ public class RegisterController {
 			assessment.setId(null);
 			final Register register = registerService.findById(id)
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-			if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid()))) {
+			if(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 			assessment.setRegister(register);
@@ -205,7 +210,7 @@ public class RegisterController {
 		// Find columns to remove (exist in current but not in incoming)
 		List<OrganisationAssessmentColumn> toRemove = existingColumns.stream()
 				.filter(col -> !incomingByChoiceValueId.containsKey(col.getChoiceValue().getId()))
-				.collect(Collectors.toList());
+				.toList();
 
 		// Remove columns that are no longer present
 		existingColumns.removeAll(toRemove);
@@ -239,6 +244,7 @@ public class RegisterController {
 		}
 	}
 
+	@RequireUpdateOwnerOnly
     @PostMapping("{id}/update")
 	public String update(@PathVariable final Long id,
 			@RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
@@ -331,6 +337,7 @@ public class RegisterController {
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("{id}/purpose")
     public String purpose(
@@ -376,6 +383,7 @@ public class RegisterController {
         return "redirect:/registers/" + id + "?section=purpose";
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("{id}/dataprocessing")
     public String dataProcessing(@PathVariable final Long id, @Valid @ModelAttribute final DataProcessingDTO body) {
@@ -387,6 +395,7 @@ public class RegisterController {
         return "redirect:/registers/" + id + "?section=dataprocessing";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("{id}")
     public String view(final Model model, @PathVariable final Long id,
                        @RequestParam(required = false) final String section) {
@@ -429,7 +438,7 @@ public class RegisterController {
 
 		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups()));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
 
 		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
 
@@ -437,11 +446,8 @@ public class RegisterController {
 				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
 
         model.addAttribute("section", section);
-		model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
-				.anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR))
-				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
-				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
-		);
+		model.addAttribute("changeableRegister", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)	|| registerService.isResponsibleFor(register)) );
+		model.addAttribute("responsibleFieldChangeable", !registerService.isResponsibleFor(register)); // Those responsible for an asset change change who is responsible
 
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
@@ -482,7 +488,7 @@ public class RegisterController {
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
 		model.addAttribute("risk", new ThreatAssessment());
-		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
 
         model.addAttribute("organisationAssessmentColumnTypes", getOrganisationAssessmentColumnTypes());
         model.addAttribute("organisationAssessmentMap", getOrganisationAssessmentMap(assessment));
@@ -547,7 +553,7 @@ public class RegisterController {
 				legalReference.getParagraph());
 	}
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteAll
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -562,6 +568,7 @@ public class RegisterController {
         registerService.delete(register);
     }
 
+	@RequireUpdateAll
     @GetMapping("{id}/relations/{relatedId}/{relatedType}")
     @Transactional
     public String editRelation(final Model model, @PathVariable final long id, @PathVariable final long relatedId, @PathVariable final RelationType relatedType) {
@@ -586,12 +593,10 @@ public class RegisterController {
     }
 
     private static void ensureEditingIsAllowed(final Register register) {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream()
-				.noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))
-				&& !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
-				&& !register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
-		) {
+		boolean isResponsible = register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+				|| register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid());
+
+		if (!isResponsible && !SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }

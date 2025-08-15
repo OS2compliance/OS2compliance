@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,12 @@ public class RegisterService {
     private final DataProcessingDao dataProcessingDao;
 	private final RelationService relationService;
 
-	public Optional<Register> findById(final Long id) {
+	public boolean isResponsibleFor(Register register) {
+		return register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
+				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
+	}
+
+    public Optional<Register> findById(final Long id) {
         return registerDao.findById(id);
     }
 

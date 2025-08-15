@@ -31,6 +31,10 @@ public class DPIAGrid {
 	@Column
 	private String responsibleUserName;
 
+	@ExcludeFromExport
+	@Column
+	private String responsibleUserUuid;
+
 	@Column
 	private String responsibleOuName;
 
@@ -51,4 +55,8 @@ public class DPIAGrid {
 	@ExcludeFromExport
     @Column
     private boolean isExternal;
+
+	@ExcludeFromExport
+	@Column
+	private String approverUuid;
 }

@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -34,6 +35,12 @@ public class DocumentService {
         this.relationService = relationService;
         this.userService = userService;
     }
+
+	public boolean isResponsibleFor(Document document) {
+		return (document.getResponsibleUser() != null
+				&& SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid())
+		);
+	}
 
 	public Optional<Document> get(final Long id) {
 		return documentDao.findById(id);

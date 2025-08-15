@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
 import lombok.AllArgsConstructor;
@@ -7,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -51,4 +53,6 @@ public class RegisterDTO {
     private String assetAssessment;
 	@ExcludeFromExport
     private Integer assetAssessmentOrder;
+	@ExcludeFromExport
+	private Set<AllowedAction> allowedActions = new HashSet<>();
 }

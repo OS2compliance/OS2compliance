@@ -16,10 +16,15 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RelatableService;
@@ -64,7 +69,7 @@ import static java.time.temporal.ChronoUnit.DAYS;
 @Slf4j
 @Controller
 @RequestMapping("tasks")
-@RequireUser
+@RequireTask
 @RequiredArgsConstructor
 public class TasksController {
     private final RelatableService relatableService;
@@ -78,18 +83,34 @@ public class TasksController {
     private final EmailTemplateService emailTemplateService;
 
 
+	@RequireReadOwnerOnly
     @GetMapping
     public String tasksList(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "tasks/index";
     }
 
-
+	@RequireUpdateOwnerOnly
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
         if (id == null) {
-            model.addAttribute("task", new Task());
+			boolean creationAllowed = SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY);
+			if (!creationAllowed) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+
+			boolean responsibleChooseable = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL);
+			Task task = new Task();
+			if (!responsibleChooseable) {
+				task.setResponsibleUser(
+						userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
+						.orElseThrow()
+				);
+			}
+			model.addAttribute("responsibleChooseable", responsibleChooseable);
+
+            model.addAttribute("task",task);
             model.addAttribute("formId", "taskCreateForm");
             model.addAttribute("formTitle", "Ny opgave");
             model.addAttribute("action", "/tasks/create");
@@ -97,7 +118,16 @@ public class TasksController {
         } else {
             final Task task = taskService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+			boolean isResponsible = taskService.isResponsibleFor(task);
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsible) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+
+			boolean responsibleChooseable = !isResponsible;
+
             final List<Relatable> relations = relationService.findAllRelatedTo(task);
+			model.addAttribute("responsibleChooseable", responsibleChooseable);
             model.addAttribute("task", task);
             model.addAttribute("formId", "taskEditForm");
             model.addAttribute("formTitle", "Rediger opgave");
@@ -107,7 +137,7 @@ public class TasksController {
         return "tasks/form";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,
@@ -179,15 +209,16 @@ public class TasksController {
         }
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Task task, @RequestParam(value = "showIndex", required = false, defaultValue = "false") final Boolean showIndex) {
         final Task existingTask = taskService.findById(task.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !existingTask.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !taskService.isResponsibleFor(task)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
         }
@@ -217,16 +248,19 @@ public class TasksController {
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
     record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
-    @GetMapping("{id}")
+    @RequireReadOwnerOnly
+	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if (!SecurityUtil.isOperationAllowed(Roles.READ_ALL) && !taskService.isResponsibleFor(task)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 
         model.addAttribute("task", task);
         model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
-        model.addAttribute("changeableTask", (authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) || (task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid()))));
+        model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
 
@@ -267,35 +301,49 @@ public class TasksController {
         return "tasks/view";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("{id}/timeline")
     public String taskTimeline(final Model model, @PathVariable final long id,
                                @RequestParam(value = "from", required = false) final LocalDate from,
                                @RequestParam(value = "to", required = false) final LocalDate to) {
         final Task task = taskService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!SecurityUtil.isOperationAllowed(Roles.READ_ALL) && !taskService.isResponsibleFor(task)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         final List<TaskLog> taskLogs = taskService.logsBetween(task, from, to);
         model.addAttribute("taskLogs", taskLogs);
         return "tasks/viewTimeline";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteOwnerOnly
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
     public void taskDelete(@PathVariable final String id) {
         final Long lid = Long.valueOf(id);
+
+		Task task = taskService.findById(lid)
+				.orElseThrow();
+		if (!SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) && !taskService.isResponsibleFor(task)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         taskService.deleteById(lid);
     }
 
     @SuppressWarnings("ClassEscapesDefinedScope")
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("complete")
     public String completeTask(@Valid @ModelAttribute final CompletionFormDTO dto, @RequestParam(name = "referral", required = false) String referral) {
         final Task task = taskService.findById(dto.taskId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !task.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !taskService.isResponsibleFor(task)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
         if (calculateCompleted(task)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
         }
@@ -334,6 +382,7 @@ public class TasksController {
         return "redirect:/tasks";
     }
 
+	@RequireCreateAll
     @GetMapping("{id}/copy")
     public String taskCopyDialog(final Model model, @PathVariable("id") final long id) {
         final Task task = taskService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -344,7 +393,7 @@ public class TasksController {
         return "tasks/copyForm";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireCreateAll
     @Transactional
     @PostMapping("{id}/copy")
     public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,

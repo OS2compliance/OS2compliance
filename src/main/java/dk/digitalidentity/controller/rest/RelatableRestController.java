@@ -17,8 +17,9 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RelationService;
@@ -52,7 +53,7 @@ import java.util.Set;
 @Slf4j
 @RestController
 @RequestMapping("rest/relatable")
-@RequireUser
+@RequireAuthenticated
 @RequiredArgsConstructor
 public class RelatableRestController {
     private final RelatableDao relatableDao;
@@ -64,6 +65,7 @@ public class RelatableRestController {
     private final AssetService assetService;
     private final PrecautionService precautionService;
 
+	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
     public PageDTO<RelatableDTO> autocomplete(@RequestParam(value = "types", required = false) final List<RelationType> types,
                                               @RequestParam(value = "search") final String search,
@@ -89,6 +91,7 @@ public class RelatableRestController {
 
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("tags/autocomplete")
     public PageDTO<Tag> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("value").descending());
@@ -102,6 +105,7 @@ public class RelatableRestController {
     }
 
 	public record RelatedPrecautionDTO(Long id,String name,String type,String typeMessage,String description){}
+	@RequireReadOwnerOnly
     @GetMapping("autocomplete/relatedprecautions")
     public PageDTO<RelatedPrecautionDTO> autocompletePrecautions(@RequestParam("search") final String search, @RequestParam("threatId") final long threatId, @RequestParam("threatType") final ThreatDatabaseType threatType, @RequestParam("threatIdentifier") final String threatIdentifier, @RequestParam("riskId") final long riskId) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -194,7 +198,7 @@ public class RelatableRestController {
     record AddRelationDTO(long relatableId, List<Long> relations) {}
     record AddedRelationDTO(long id, String title, RelationType type, String typeForUrl, String typeMessage, String standardIdentifier) {}
 
-    @RequireSuperuserOrAdministrator
+    @RequireCreateOwnerOnly
     @PostMapping("relations/add")
     public ResponseEntity<?> addRelation(@Valid @RequestBody final AddRelationDTO dto) {
         final Relatable relateTo = relatableDao.findById(dto.relatableId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

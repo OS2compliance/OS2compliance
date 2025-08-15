@@ -45,9 +45,7 @@
                             <p class="lead"></p>
                         </div>
                         <div class="align-self-center d-inline-flex">
-                            <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                                <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                            </button>
+                            <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                         </div>
                     </div>
                 </div>
@@ -86,8 +84,8 @@
                                     <!-- buttons row -->
                                     <div class="row mb-3 gap-1">
                                         <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="editMode(false);" hidden>Annuller</button>
-                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" hidden>Annuller</button>
+                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger stamdata</button>
                                     </div>
                                     <div class="row mb-3">
                                         <!-- Column 1 -->
@@ -711,8 +709,8 @@
         </div>
     </div>
 
-    <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
-    <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
+    <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
+    <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
 
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
@@ -746,6 +744,7 @@
         let managersChoicesEditSelect = null;
         let suppliersChoicesEditSelect = null;
         let responsibleChoicesEditSelect = null;
+        let operationResponsibleChoicesEditSelect = null;
 
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -782,8 +781,22 @@
             }
             toggleRiskFactorContainer();
             aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
+
+            initEditButtons()
         });
 
+        function initEditButtons() {
+            const editButton = document.getElementById('editAssetBtn');
+            const cancelButton = document.getElementById('cancelBtn');
+
+            editButton?.addEventListener('click', e => {
+                const responsibleFieldsCanBeChanged = editButton.dataset.responsibleChangeable;
+                editMode(true, responsibleFieldsCanBeChanged)
+            })
+            cancelButton?.addEventListener('click', e => {
+                editMode(false, false)
+            })
+        }
 
         function initTabs() {
             const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
@@ -1023,7 +1036,7 @@
             return supplierChoices;
         }
 
-        function editMode(enabled) {
+        function editMode(enabled, responsibleFieldChangeable) {
             const rootElement = document.getElementById('editForm');
             const aiStatus = document.getElementById('aiStatus');
             const active = document.getElementById('activeAsset');
@@ -1051,7 +1064,9 @@
                 document.getElementById('editAssetBtn').hidden = true;
 
                 if (!isKitos) {
-                    managersChoicesEditSelect.enable();
+                    if (responsibleFieldChangeable=== 'true') {
+                        managersChoicesEditSelect.enable();
+                    }
                     active.disabled = false;
                     document.getElementById("productLinksViewContainer").hidden = true;
                     document.getElementById("productLinksEditContainer").hidden = false;
@@ -1059,7 +1074,9 @@
                 }
 
                 suppliersChoicesEditSelect.enable();
-                responsibleChoicesEditSelect.enable();
+                if (responsibleFieldChangeable === 'true') {
+                    responsibleChoicesEditSelect.enable();
+                }
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                     elem.disabled = true;
@@ -1076,9 +1093,18 @@
                     }
                 });
 
-                document.getElementById('saveEditAssetBtn').hidden = true;
-                document.getElementById('cancelBtn').hidden = true;
-                document.getElementById('editAssetBtn').hidden = false;
+                const saveEditAssetBtn = document.getElementById('saveEditAssetBtn')
+                const cancelBtn =  document.getElementById('cancelBtn')
+                const editAssetBtn = document.getElementById('editAssetBtn')
+                if (saveEditAssetBtn) {
+                    saveEditAssetBtn.hidden = true;
+                }
+                if (cancelBtn) {
+                    cancelBtn.hidden = true;
+                }
+                if (editAssetBtn) {
+                    editAssetBtn.hidden = false;
+                }
 
                 suppliersChoicesEditSelect.disable();
                 managersChoicesEditSelect.disable();

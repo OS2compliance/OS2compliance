@@ -21,7 +21,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class AssetGrid implements HasMultipleResponsibleUsers {
+public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 	@Id
 	private Long id;
 
@@ -39,6 +39,9 @@ public class AssetGrid implements HasMultipleResponsibleUsers {
 
     @Column
     private String responsibleUserUuids;
+
+	@Column
+	private String managerUuids;
 
 	@Column
 	private LocalDate updatedAt;

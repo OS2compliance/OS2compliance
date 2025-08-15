@@ -46,10 +46,15 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
@@ -76,13 +81,10 @@ import org.htmlcleaner.TagNode;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.util.StringUtils;
-import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -114,7 +116,7 @@ import static dk.digitalidentity.util.LinkHelper.linkify;
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @Controller
-@RequireUser
+@RequireAsset
 @RequestMapping("assets")
 @RequiredArgsConstructor
 public class AssetsController {
@@ -137,12 +139,13 @@ public class AssetsController {
 	private final OS2complianceConfiguration os2complianceConfiguration;
 
 
+	@RequireReadOwnerOnly
 	@GetMapping
 	public String assetsList() {
 		return "assets/index";
 	}
 
-    @RequireSuperuserOrAdministrator
+	@RequireUpdateOwnerOnly
 	@GetMapping("form")
 	public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
 		if (id == null) {
@@ -162,7 +165,7 @@ public class AssetsController {
 		return "assets/form";
 	}
 
-    @RequireSuperuserOrAdministrator
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("form")
 	public String formCreate(@ModelAttribute final Asset asset) {
@@ -191,6 +194,7 @@ public class AssetsController {
 	record RiskAssessmentKitosSync(long assetId, String fillOption, boolean riskAssessmentConducted, @DateTimeFormat(pattern = "dd/MM-yyyy") Date riskAssessmentConductedDate, String result) {}
     record AssetEditDPIADTO(Long assetId, boolean optOut) {}
 	public record AssetRelatedDPIADTO(long id, String name, String responsibleUserName, String responsibleOuName, LocalDate userUpdatedDate, DPIAScreeningConclusion screeningConclusion) {}
+	@RequireReadOwnerOnly
 	@GetMapping("{id}")
     @Transactional
 	public String view(final Model model, @PathVariable final long id) {
@@ -319,9 +323,12 @@ public class AssetsController {
 		model.addAttribute("customSystemResponsibleInput", settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
 		model.addAttribute("customSystemOperationResponsibleInput", settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
         model.addAttribute("allAssetTypes", choiceService.getAssetTypeChoiceList().getValues());
+
+		model.addAttribute("responsibleFieldChangeable", !assetService.isResponsibleFor(asset)); // Those responsible for an asset change change who is responsible
 		return "assets/view";
 	}
 
+	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("riskassessment/kitos")
 	public String setKitosSync(@ModelAttribute final RiskAssessmentKitosSync body, HttpServletRequest request) throws JsonProcessingException {
@@ -379,7 +386,7 @@ public class AssetsController {
 		return "redirect:/assets/" + body.assetId;
 	}
 
-    @RequireSuperuserOrAdministrator
+	@RequireDeleteOwnerOnly
     @DeleteMapping("{id}")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -393,12 +400,13 @@ public class AssetsController {
         assetService.deleteById(asset);
     }
 
+	@RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("dataprocessing")
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         dataProcessingService.update(asset.getDataProcessing(), body);
@@ -416,12 +424,12 @@ public class AssetsController {
 		return "redirect:/assets/" + body.getId();
 	}
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("measures")
     public String measures(@ModelAttribute final SaveMeasuresDTO measuresForm) {
         final Asset asset = assetService.get(measuresForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         for (final SaveMeasureDTO answer : measuresForm.getMeasures()) {
@@ -439,12 +447,12 @@ public class AssetsController {
         return "redirect:/assets/" + measuresForm.getAssetId();
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("dpia")
     public String dpia(@ModelAttribute final AssetDPIAPageDTO dpiaForm) {
         final Asset asset = assetService.get(dpiaForm.getAssetId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDpiaOptOut(dpiaForm.isOptOut());
@@ -478,14 +486,14 @@ public class AssetsController {
         return "redirect:/assets/" + dpiaForm.getAssetId();
     }
 
-
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("edit")
     public String formEdit(@ModelAttribute final Asset asset) {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -533,6 +541,7 @@ public class AssetsController {
 		return "redirect:/assets/" + existingAsset.getId();
     }
 
+	@RequireUpdateOwnerOnly
     @GetMapping("subsupplier")
 	public String subsupplierForm(final Model model, @RequestParam(name = "id", required = false) final Long id, @RequestParam(name = "asset", required = true) final Long assetId) {
 		final ChoiceList acceptanceBasisChoices = choiceService.findChoiceList("dp-supplier-accept-list")
@@ -566,13 +575,14 @@ public class AssetsController {
 
 	record AssetSupplierDTO(long id, long assetId, long supplier, String service, ThirdCountryTransfer thirdCountryTransfer, String acceptanceBasis) {}
 
+	@RequireCreateOwnerOnly
+	@RequireUpdateOwnerOnly
     @Transactional
 	@PostMapping("subsupplier")
 	public String subsupplierCreateOrEdit(@Valid @ModelAttribute final AssetSupplierDTO body) {
 		final Asset asset = assetService.get(body.assetId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		final Optional<AssetSupplierMapping> subSupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), body.id)).findAny();
@@ -597,6 +607,7 @@ public class AssetsController {
 		return "redirect:/assets/" + asset.getId();
 	}
 
+	@RequireDeleteOwnerOnly
 	@Transactional
 	@DeleteMapping("subsupplier")
 	public String subSupplierDelete(@RequestParam(name = "id") final Long id, @RequestParam(name = "asset") final Long assetId) {
@@ -608,13 +619,13 @@ public class AssetsController {
 		return "/assets/" + asset.getId();
 	}
 
-
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("oversight")
     public String oversightSettings(@Valid @ModelAttribute final DataProcessingOversightDTO body) {
         final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
@@ -635,12 +646,12 @@ public class AssetsController {
 
     record AssetOversightDTO (long id, long assetId, User responsibleUser, ChoiceOfSupervisionModel supervisionModel, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
     }
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("oversight/edit")
     public String oversightCreateOrEdit(@Valid @ModelAttribute final AssetOversightDTO dto) {
         final Asset asset = assetService.get(dto.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
@@ -692,6 +703,7 @@ public class AssetsController {
             : "redirect:/suppliers/" + asset.getSupplier().getId();
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("oversight/{entityId}/{type}")
     public String oversightForm(final Model model, final @PathVariable("entityId") Long entityId, @PathVariable("type") final String type,
                                 @RequestParam(name = "id", required = false) final Long id) {
@@ -744,13 +756,14 @@ public class AssetsController {
         throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "typen fandtes ikke: understøttede er 'asset' og 'supplier'");
     }
 
+	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("tia")
     public String tia(@ModelAttribute final Asset asset) {
         final Asset existingAsset = assetService.get(asset.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+
+        if(!assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
@@ -775,13 +788,16 @@ public class AssetsController {
         return "redirect:/assets/" + existingAsset.getId();
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("dpia/schema")
     public String dpiaSchema(final Model model) {
         return "dpia/schema";
     }
 
+
     record TemplateSectionDTO(long id, Long sortKey, String identifier, String heading, String explainer, boolean canOptOut, boolean hasOptedOut, List<DPIATemplateQuestion> dpiaTemplateQuestions, long minQuestionSortKey, long maxQuestionSortKey) {}
-    @GetMapping("dpia/schema/fragment")
+	@RequireReadOwnerOnly
+	@GetMapping("dpia/schema/fragment")
     @Transactional
     public String editRelation(final Model model) {
         List<DPIATemplateSection> templateSections = dpiaTemplateSectionService.findAll().stream()
@@ -805,6 +821,7 @@ public class AssetsController {
     }
 
     record DPIATemplateQuestionForm(Long id, String title, String instructions, Long sectionId) {}
+	@RequireReadOwnerOnly
     @GetMapping("dpia/schema/question/form")
     public String questionForm(final Model model, @RequestParam(name = "id", required = false) final Long id) {
         model.addAttribute("action", "schema/question/form");
@@ -830,7 +847,7 @@ public class AssetsController {
         return "dpia/fragments/questionForm";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateAll
     @PostMapping("dpia/schema/question/form")
     public String formPost(@ModelAttribute final DPIATemplateQuestionForm dpiaTemplateQuestionForm) throws IOException {
         DPIATemplateSection section = dpiaTemplateSectionService.findById(dpiaTemplateQuestionForm.sectionId).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));

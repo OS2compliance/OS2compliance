@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
@@ -27,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Service
@@ -46,6 +48,13 @@ public class DPIAService {
         return dpiaDao.findById(dpiaId)
             .orElseThrow();
     }
+
+	public boolean isResponsibleFor(DPIA dpia) {
+		String userUuid = SecurityUtil.getPrincipalUuid();
+		return dpia.getResponsibleUser() != null && Objects.equals(dpia.getResponsibleUser().getUuid(),userUuid )
+				|| dpia.getAssets().stream().anyMatch(assetService::isResponsibleFor)
+				|| dpia.getDpiaReports().stream().anyMatch(r -> r.getReportApproverUuid().equals(userUuid));
+	}
 
 	public List<DPIA> findAll() {
 		return dpiaDao.findAll();
@@ -235,5 +244,9 @@ public class DPIAService {
 			return DPIAScreeningConclusion.RED;
 		}
 		return DPIAScreeningConclusion.GREEN;
+	}
+
+	public Set<DPIA> findByOwnedAsset(String userUuid) {
+		return dpiaDao.findByAssets_ResponsibleUsers_UuidContainsOrAssets_Managers_UuidContains(userUuid, userUuid);
 	}
 }

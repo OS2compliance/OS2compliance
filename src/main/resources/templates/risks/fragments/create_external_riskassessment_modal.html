@@ -46,7 +46,7 @@
                     <div class="row mt-3">
                         <label for="externalCreateUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalCreateUserSelect" hidden="" tabindex="-1" required>
+                            <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="externalCreateUserSelect" hidden="" tabindex="-1" required th:disabled="${isResponsible}">
                                 <th:block th:if="${risk != null && risk != ''}">
                                     <option th:if="${risk.responsibleUser != null}" th:value="${risk.responsibleUser.uuid}" th:text="${risk.responsibleUser.name}" selected></option>
                                 </th:block>

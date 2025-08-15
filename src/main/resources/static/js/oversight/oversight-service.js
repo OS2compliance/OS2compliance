@@ -13,6 +13,9 @@ function OversightService() {
     }
 
     this.initOversightModal = (oversightId, entityType, entityId) => {
+        const dialog = document.getElementById('oversightDialog');
+        if (!dialog) {return;}
+
         if (entityType === undefined) {
             let isAsset = window.location.href.indexOf('assets') > 0;
             entityType = isAsset ? 'asset' : 'supplier';

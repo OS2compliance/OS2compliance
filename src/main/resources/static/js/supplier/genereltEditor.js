@@ -10,9 +10,15 @@ function setEditState(editable) {
     const editDesc = document.querySelector('#editDescId');
     const readDesc = document.querySelector('#readDescId');
     const status = document.querySelector('#status');
-    readDesc.style = editable ? 'display: none' : 'display: block';
-    editDesc.style = editable ? 'display: block !important' : 'display: none !important';
-    status.disabled = !editable;
+    if (editDesc) {
+        readDesc.style = editable ? 'display: none' : 'display: block';
+    }
+    if (editDesc) {
+        editDesc.style = editable ? 'display: block !important' : 'display: none !important';
+    }
+    if (status) {
+        status.disabled = !editable;
+    }
 
     document.querySelectorAll('.edit-input').forEach(elem => {
         elem.readOnly = !editable;
@@ -21,7 +27,13 @@ function setEditState(editable) {
     const editDescBtn = document.querySelector('#editDescBtn');
     const saveBtn = document.querySelector('#saveBtn');
     const cancelBtn = document.querySelector('#cancelBtn');
-    editDescBtn.style = editable ? 'display: none' : 'display: block';
-    saveBtn.style = editable ? 'display: block' : 'display: none';
-    cancelBtn.style = editable ? 'display: block' : 'display: none';
+    if (editDescBtn) {
+        editDescBtn.style = editable ? 'display: none' : 'display: block';
+    }
+    if (saveBtn) {
+        saveBtn.style = editable ? 'display: block' : 'display: none';
+    }
+    if (cancelBtn) {
+        cancelBtn.style = editable ? 'display: block' : 'display: none';
+    }
 }

@@ -4,7 +4,8 @@ import dk.digitalidentity.dao.UserDao;
 import dk.digitalidentity.mapping.UserMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.UserDTO;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -19,13 +20,14 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("rest/users")
-@RequireUser
+@RequireAuthenticated
 @RequiredArgsConstructor
 public class UserRestController {
     private final UserDao userDao;
     private final UserMapper userMapper;
 
 
+	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
     public PageDTO<UserDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());

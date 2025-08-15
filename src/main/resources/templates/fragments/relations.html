@@ -16,7 +16,7 @@
                 </tr>
                 </thead>
                 <tbody>
-                <tr th:each="relation : ${relations}" th:unless="${relation.relationType == T(dk.digitalidentity.model.entity.enums.RelationType).THREAT_ASSESSMENT_RESPONSE}">
+                <tr th:each="relation : ${relations}" th:unless="${relation.relationType == null || relation.relationType == T(dk.digitalidentity.model.entity.enums.RelationType).THREAT_ASSESSMENT_RESPONSE}">
                     <td class="col-lg-9">
                         <div th:switch="${relation.relationType}">
                             <a th:case="${T(dk.digitalidentity.model.entity.enums.RelationType).SUPPLIER}" th:href="'/suppliers/' + ${relation.id}">

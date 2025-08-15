@@ -33,7 +33,7 @@
                 <div class="row mt-3">
                     <label for="editUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
                     <div class="col-sm-8">
-                        <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="editUserSelect" hidden="" tabindex="-1" required>
+                        <select class="form-control form-select choices__input" data-trigger="" name="ansvarlig" id="editUserSelect" hidden="" tabindex="-1" required th:disabled="${isResponsible}">
                             <option th:if="${responsibleUser != null}" th:value="${responsibleUser.uuid}" th:text="${responsibleUser.name}" selected></option>
                         </select>
                     </div>

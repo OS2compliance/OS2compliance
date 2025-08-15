@@ -4,7 +4,10 @@ import dk.digitalidentity.mapping.ThreatMapper;
 import dk.digitalidentity.model.dto.ThreatCatalogThreatDTO;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +29,14 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequireAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/catalogs", consumes = "application/json", produces = "application/json")
 public class CatalogRestController {
     private final CatalogService catalogService;
     private final ThreatMapper threatMapper;
 
+	@RequireDeleteAll
     @Transactional
     @DeleteMapping(value = "{catalogIdentifier}")
     public ResponseEntity<?> delete(@PathVariable("catalogIdentifier") final String catalogIdentifier) {
@@ -42,6 +46,7 @@ public class CatalogRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireReadAll
     @Transactional
     @GetMapping(value = "{catalogIdentifier}")
     public List<ThreatCatalogThreatDTO> list(@PathVariable("catalogIdentifier") final String catalogIdentifier) {
@@ -56,6 +61,7 @@ public class CatalogRestController {
             .collect(Collectors.toList());
     }
 
+	@RequireDeleteAll
     @Transactional
     @DeleteMapping("{catalogIdentifier}/{identifier}")
     public ResponseEntity<?> delete(@PathVariable("catalogIdentifier") final String catalogIdentifier,
@@ -68,6 +74,7 @@ public class CatalogRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("{catalogIdentifier}/{identifier}/up")
     public ResponseEntity<?> reorderUp(@PathVariable("catalogIdentifier") final String catalogIdentifier,
@@ -76,6 +83,7 @@ public class CatalogRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("{catalogIdentifier}/{identifier}/down")
     public ResponseEntity<?> reorderDown(@PathVariable("catalogIdentifier") final String catalogIdentifier,
