@@ -185,6 +185,9 @@ public class Asset extends Relatable {
     @Column
     private String dpiaOptOutReason;
 
+	@Column
+	private boolean active;
+
     @Column
     private boolean threatAssessmentOptOut = false;
 

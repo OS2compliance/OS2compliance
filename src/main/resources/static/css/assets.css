@@ -48,3 +48,7 @@
     border-color: #edf1f6;
     opacity: 1;
 }
+.grayscale {
+    filter: grayscale(100%);
+}
+
