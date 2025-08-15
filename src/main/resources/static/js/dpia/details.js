@@ -1,3 +1,11 @@
+
+document.addEventListener("DOMContentLoaded", function (event) {
+    assetDpiaService = new AssetDpiaService()
+    assetDpiaService.init()
+    assetDpiaService.initDpia()
+})
+
+
 function AssetDpiaService() {
     this.screeningBadgeElem = null;
     this.recommendationElem = null;
