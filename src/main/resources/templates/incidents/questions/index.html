@@ -128,15 +128,8 @@
         });
         incidentGrid.render(document.getElementById("incidentFieldsTable"));
 
-        initSaveAsExcelButton()
+        initSaveAsExcelButtonWithDefaultGrid('incidentFieldsTable', 'Hændelse_Opsætning')
     });
-
-    function initSaveAsExcelButton() {
-        const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-        saveAsExcelButton.addEventListener("click",  () => exportHtmlTableToExcel('incidentFieldsTable', 'Hændelse_Opsætning'))
-    }
-
-
     /*]]>*/
 </script>
 

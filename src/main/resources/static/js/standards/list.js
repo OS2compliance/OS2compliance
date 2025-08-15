@@ -6,7 +6,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
 function initCreateStandardButton() {
     const button = document.getElementById("createStandardButton");
-    button.addEventListener("click", () => createStandardService.openStandardModal(null, false))
+    button?.addEventListener("click", () => createStandardService.openStandardModal(null, false))
 }
 
 function initListItemActions() {

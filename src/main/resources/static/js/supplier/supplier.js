@@ -169,13 +169,7 @@ function initGrid() {
 
     const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, 'suppliersDatatable');
 
-    initSaveAsExcelButton(customGridFunctions)
+    initSaveAsExcelButton(customGridFunctions, 'Leverandører')
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
-}
-
-
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Leverandører'))
 }

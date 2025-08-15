@@ -232,7 +232,7 @@ function initGrid() {
 
     initGridActions()
 
-    initSaveAsExcelButton(customGridFunctions)
+    initSaveAsExcelButton(customGridFunctions, 'Opgavecenter')
 }
 
 function initGridActions() {
@@ -241,9 +241,4 @@ function initGridActions() {
         (id, name, elem) => deleteClicked(id, name),
         (id, elem) =>copyTaskService.showCopyDialog(id) ,
     )
-}
-
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Opgavecenter'))
 }

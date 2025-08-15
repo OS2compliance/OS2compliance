@@ -118,15 +118,8 @@ function DBSAssetService() {
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
 
-        initSaveAsExcelButton(customGridFunctions);
+        initSaveAsExcelButton(customGridFunctions, 'DBS_aktiver');
     }
-
-    function initSaveAsExcelButton(customGridFunctionsObject) {
-        const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-
-        saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctionsObject, 'DBS_aktiver'))
-    }
-
 
     this.handleAddRemoveEvent = async function (event) {
         const response = await fetch(gridDBSAssetsUpdateUrl, {

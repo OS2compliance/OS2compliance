@@ -6,13 +6,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
     pageLoaded()
 
 
-    initSaveAsExcelButton()
+    initSaveAsExcelButtonWithDefaultGrid('inactiveUsersDatatable', 'Inaktive_ansvarlige')
 });
-
-function initSaveAsExcelButton() {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportHtmlTableToExcel('inactiveUsersDatatable', 'Inaktive_ansvarlige'))
-}
 
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;

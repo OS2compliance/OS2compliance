@@ -4,7 +4,7 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function (event) {
     initGrid()
-    initSaveAsExcelButton()
+    initSaveAsExcelButtonWithDefaultGrid('precautionsDatatable', 'Foranstaltninger')
 
 });
 
@@ -86,11 +86,6 @@ function initGrid() {
             }
         }
     }).render(document.getElementById("precautionsDatatable"));
-}
-
-function initSaveAsExcelButton() {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportHtmlTableToExcel('precautionsDatatable', 'Foranstaltninger'))
 }
 
 function PrecautionService() {

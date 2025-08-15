@@ -135,7 +135,7 @@ function IncidentGridService() {
 
         initGridActions()
 
-        initSaveAsExcelButton(customGridFunctions)
+        initSaveAsExcelButton(customGridFunctions, 'Hændelseslog')
     }
 
     this.mapRow = (field) => {
@@ -218,9 +218,4 @@ function initGridActions() {
         (id, elem) => incidentService.editIncident('editIncidentDialog', id),
         (id, name, elem) => incidentService.deleteIncident(incidentGridService.incidentGrid, id, name),
         )
-}
-
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Hændelseslog'))
 }

@@ -629,8 +629,8 @@
         <nav th:replace="~{fragments/navbar :: main (page='aktiver')}"></nav>
     </div>
 
-    <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
-    <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
+    <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
+    <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
 
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
     <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
@@ -708,13 +708,11 @@
             const editButton = document.getElementById('editAssetBtn');
             const cancelButton = document.getElementById('cancelBtn');
 
-            console.log(editButton);
-
-            editButton.addEventListener('click', e => {
+            editButton?.addEventListener('click', e => {
                 const responsibleFieldsCanBeChanged = editButton.dataset.responsibleChangeable;
                 editMode(true, responsibleFieldsCanBeChanged)
             })
-            cancelButton.addEventListener('click', e => {
+            cancelButton?.addEventListener('click', e => {
                 editMode(false, false)
             })
         }
@@ -1012,9 +1010,18 @@
                     }
                 });
 
-                document.getElementById('saveEditAssetBtn').hidden = true;
-                document.getElementById('cancelBtn').hidden = true;
-                document.getElementById('editAssetBtn').hidden = false;
+                const saveEditAssetBtn = document.getElementById('saveEditAssetBtn')
+                const cancelBtn =  document.getElementById('cancelBtn')
+                const editAssetBtn = document.getElementById('editAssetBtn')
+                if (saveEditAssetBtn) {
+                    saveEditAssetBtn.hidden = true;
+                }
+                if (cancelBtn) {
+                    cancelBtn.hidden = true;
+                }
+                if (editAssetBtn) {
+                    editAssetBtn.hidden = false;
+                }
 
                 suppliersChoicesEditSelect.disable();
                 managersChoicesEditSelect.disable();

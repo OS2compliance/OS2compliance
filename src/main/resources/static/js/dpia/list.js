@@ -36,11 +36,6 @@ function initPageTopButtons() {
     createButton.addEventListener("click",  () => createDPIAService.formReset())
 }
 
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Konsekvensanalyser'))
-}
-
 function deleteClicked(dpiaId, name) {
     Swal.fire({
       text: `Er du sikker på du vil slette "${name}"?\nReferencer afhængige af konsekvensvurderingen slettes også.`,
@@ -226,7 +221,7 @@ function initGrid() {
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 
-    initSaveAsExcelButton(customGridFunctions)
+    initSaveAsExcelButton(customGridFunctions, 'Konsekvensanalyser')
 
     initGridListItemButtons()
 }

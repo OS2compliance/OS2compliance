@@ -9,7 +9,7 @@ class CustomChoiceListService {
 
     constructor() {
         this.initGrid()
-        initSaveAsExcelButton();
+        initSaveAsExcelButtonWithDefaultGrid('customChoiceListTable', 'Valglister');
     }
 
     initGrid() {
@@ -161,7 +161,3 @@ class CustomChoiceListService {
     }
 }
 
-function initSaveAsExcelButton() {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click", () => exportHtmlTableToExcel('customChoiceListTable', 'Valglister'))
-}

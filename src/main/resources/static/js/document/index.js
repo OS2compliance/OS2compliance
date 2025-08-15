@@ -163,12 +163,7 @@ function initGrid() {
     //Enables custom column search, serverside sorting and pagination
     const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, 'documentsDatatable');
 
-    initSaveAsExcelButton(customGridFunctions)
+    initSaveAsExcelButton(customGridFunctions, 'Dokumenter')
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
-}
-
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Dokumenter'))
 }

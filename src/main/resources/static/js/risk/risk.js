@@ -286,7 +286,7 @@ function CreateTable() {
 
         const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable');
 
-        initSaveAsExcelButton(customGridFunctions);
+        initSaveAsExcelButton(customGridFunctions,  'Risikovurderinger');
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }
@@ -297,10 +297,7 @@ function initPageTopButtons() {
     createButton.addEventListener("click",  () => createExternalRiskassessmentService.createExternalClicked())
 }
 
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Risikovurderinger'))
-}
+
 
 function deleteClicked(riskId, name) {
     Swal.fire({

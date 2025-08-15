@@ -23,11 +23,6 @@ function initPageTopButtons() {
     createRegisterButton.addEventListener("click",  () => createRegisterService.show())
 }
 
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportGridServerSide(customGridFunctions, 'Fortegnelse'))
-}
-
 function initGridActionButtons() {
     delegateListItemActions(
         "registersDatatable",
@@ -236,7 +231,7 @@ function initGrid() {
 
     const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, 'registersDatatable');
 
-    initSaveAsExcelButton(customGridFunctions)
+    initSaveAsExcelButton(customGridFunctions, 'Fortegnelse')
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 }

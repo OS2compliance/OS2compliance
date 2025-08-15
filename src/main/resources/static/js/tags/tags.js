@@ -56,7 +56,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     }).render(document.getElementById("tagsDatatable"));
 
-    initSaveAsExcelButton()
+    initSaveAsExcelButtonWithDefaultGrid('tagsDatatable', 'Tags')
 });
 
 
@@ -79,9 +79,4 @@ function TagService () {
             }
         });
     }
-}
-
-function initSaveAsExcelButton() {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click",  () => exportHtmlTableToExcel('tagsDatatable', 'Tags'))
 }

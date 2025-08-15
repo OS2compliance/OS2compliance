@@ -4,13 +4,8 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function (event) {
     initGrid()
-    initSaveAsExcelButton()
+    initSaveAsExcelButtonWithDefaultGrid('catalogsDatatable', 'Trusselskataloger')
 });
-
-function initSaveAsExcelButton(customGridFunctions) {
-    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
-    saveAsExcelButton.addEventListener("click", () => exportHtmlTableToExcel('catalogsDatatable', 'Trusselskataloger'))
-}
 
 function initGrid() {
     fetch(formUrl)
