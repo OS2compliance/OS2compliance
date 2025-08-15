@@ -23,6 +23,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-262) (Aktiver/Generelt) Nyt felt på aktivets forside så der er 4 forskellige roller.
 - (https://os2web.atlassian.net/browse/COMPLY-289) (Risikostyring/Risikovurderinger) Mulighed for at vælge flere trusselskataloger
 - (https://os2web.atlassian.net/browse/COMPLY-255) (Rapporter/overblikssiderne) Mulighed for at eksportere alle sider med visninger til Excel
+- (https://os2web.atlassian.net/browse/COMPLY-176) (Aktiver/oversigt) Markering på aktiver, der ikke længere er markeret som anvendt i KITOS
+- (https://os2web.atlassian.net/browse/COMPLY-325) (Aktiver/Generelt) Visualisering af sammenhæng mellem systemer
+- (https://os2web.atlassian.net/browse/COMPLY-188) (Opgavecenter/Opgave og Kontrol) Udvidelse af beskrivelsesfeltet i en opgave, så det automatisk passer til tekstens længde
 
 ### Fixed
 - (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke
