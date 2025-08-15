@@ -46,7 +46,8 @@
                 <div class="row mt-3">
                     <label th:for="${formId + 'TaskUserSelect'}" class="col-sm-4 col-form-label">Ansvarlig</label>
                     <div class="col-sm-8">
-                        <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" th:id="${formId + 'TaskUserSelect'}" hidden="" tabindex="-1" required>
+                        <input th:if="${!responsibleChooseable}" type="hidden" th:field="*{responsibleUser}" />
+                        <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" th:id="${formId + 'TaskUserSelect'}" hidden="" tabindex="-1" required th:disabled="${!responsibleChooseable}">
                             <option th:if="${task.responsibleUser} != null" th:value="${task.responsibleUser.uuid}" th:text="${task.responsibleUser.name}"></option>
                         </select>
                         <div class="invalid-feedback">Der skal vælges en ansvarlig</div>

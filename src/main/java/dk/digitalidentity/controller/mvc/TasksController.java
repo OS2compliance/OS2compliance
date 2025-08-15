@@ -95,11 +95,22 @@ public class TasksController {
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
         if (id == null) {
-			if (!SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY)) {
+			boolean creationAllowed = SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY);
+			if (!creationAllowed) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 
-            model.addAttribute("task", new Task());
+			boolean responsibleChooseable = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL);
+			Task task = new Task();
+			if (!responsibleChooseable) {
+				task.setResponsibleUser(
+						userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
+						.orElseThrow()
+				);
+			}
+			model.addAttribute("responsibleChooseable", responsibleChooseable);
+
+            model.addAttribute("task",task);
             model.addAttribute("formId", "taskCreateForm");
             model.addAttribute("formTitle", "Ny opgave");
             model.addAttribute("action", "/tasks/create");
@@ -108,11 +119,15 @@ public class TasksController {
             final Task task = taskService.findById(id)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !taskService.isResponsibleFor(task)) {
+			boolean isResponsible = taskService.isResponsibleFor(task);
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !isResponsible) {
 				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 			}
 
+			boolean responsibleChooseable = !isResponsible;
+
             final List<Relatable> relations = relationService.findAllRelatedTo(task);
+			model.addAttribute("responsibleChooseable", responsibleChooseable);
             model.addAttribute("task", task);
             model.addAttribute("formId", "taskEditForm");
             model.addAttribute("formTitle", "Rediger opgave");
@@ -122,7 +137,7 @@ public class TasksController {
         return "tasks/form";
     }
 
-    @RequireCreateAll
+    @RequireCreateOwnerOnly
     @Transactional
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Task task,

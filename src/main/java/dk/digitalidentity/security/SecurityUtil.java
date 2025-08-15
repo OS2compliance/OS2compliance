@@ -189,6 +189,7 @@ public class SecurityUtil {
 
 				Roles.READ_OWNER_ONLY,
 				Roles.UPDATE_OWNER_ONLY,
+				Roles.CREATE_OWNER_ONLY,
 
 				Roles.SECTION_DASHBOARD,
 				Roles.SECTION_REGISTER,

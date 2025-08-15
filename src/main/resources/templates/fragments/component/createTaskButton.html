@@ -1,5 +1,5 @@
 <html xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
-<button th:fragment="createTaskButton" sec:authorize="hasAnyRole('ROLE_create_owner_only','ROLE_create_all')"
+<button th:fragment="createTaskButton" sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')"
         id="createTaskButton"
         type="button" class="btn btn-success btn-lg hstack gap-2">
     <i class="ti-plus"></i> <span class="vr"></span> Ny opgave

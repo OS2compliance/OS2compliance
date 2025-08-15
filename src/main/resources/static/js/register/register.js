@@ -20,7 +20,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
 
 function initPageTopButtons() {
     const createRegisterButton = document.getElementById("createRegisterButton");
-    createRegisterButton.addEventListener("click",  () => createRegisterService.show())
+    createRegisterButton?.addEventListener("click",  () => createRegisterService.show())
 }
 
 function initGridActionButtons() {
