@@ -41,30 +41,29 @@ public class RolePostProcessor implements SamlLoginPostProcessor {
 		tokenUser.setUsername(user.getUuid());
 
 		final Set<SamlGrantedAuthority> authorities = new HashSet<>();
-		// TODO
-//		for (final var a : tokenUser.getAuthorities()) {
-//			if (configuration.getAuthorityAdministrator().equals(a.getAuthority())) {
-//				// Admins has access to everything
-//				authorities.addAll(grantAdminAuthorities());
-//			}
-//			else if (configuration.getAuthoritySuperuser().equals(a.getAuthority())) {
-//				// Superusers can: create, update and delete limited parts of the system
-//				authorities.addAll(grantSuperUserAuthorities());
-//			}
-//			else if (configuration.getAuthorityUser().equals(a.getAuthority())) {
-//				// Users can read limited parts of the app.
-//				// They can Delete and Update ONLY if they are responsible for the entity
-//				authorities.addAll(grantUserAuthorities());
-//			}
-//			else if (configuration.getAuthorityLimitedUser().equals(a.getAuthority())) {
-//				// Limited users can read very limited parts of the app.
-//				// They can Create, Delete and Update ONLY if they are responsible for the entity
-//				authorities.addAll(grantLimitedUserAuthorities());
-//			} else if (configuration.getAuthorityReadOnlyUser().equals(a.getAuthority())) {
-//				// Read only users can see everything in a subsection of the system, but has no rights to modify
-//				authorities.addAll(grantReadOnlyUserAuthorities());
-//			}
-//		}
+		for (final var a : tokenUser.getAuthorities()) {
+			if (configuration.getAuthorityAdministrator().equals(a.getAuthority())) {
+				// Admins has access to everything
+				authorities.addAll(grantAdminAuthorities());
+			}
+			else if (configuration.getAuthoritySuperuser().equals(a.getAuthority())) {
+				// Superusers can: create, update and delete limited parts of the system
+				authorities.addAll(grantSuperUserAuthorities());
+			}
+			else if (configuration.getAuthorityUser().equals(a.getAuthority())) {
+				// Users can read limited parts of the app.
+				// They can Delete and Update ONLY if they are responsible for the entity
+				authorities.addAll(grantUserAuthorities());
+			}
+			else if (configuration.getAuthorityLimitedUser().equals(a.getAuthority())) {
+				// Limited users can read very limited parts of the app.
+				// They can Create, Delete and Update ONLY if they are responsible for the entity
+				authorities.addAll(grantLimitedUserAuthorities());
+			} else if (configuration.getAuthorityReadOnlyUser().equals(a.getAuthority())) {
+				// Read only users can see everything in a subsection of the system, but has no rights to modify
+				authorities.addAll(grantReadOnlyUserAuthorities());
+			}
+		}
 		authorities.add(new SamlGrantedAuthority(Roles.AUTHENTICATED));
 		// Add roles coming directly from the database.
 		user.getRoles().forEach(r -> authorities.add(new SamlGrantedAuthority(r)));
