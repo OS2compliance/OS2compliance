@@ -142,7 +142,7 @@ public class DPIAController {
 		model.addAttribute("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
 		model.addAttribute("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a->a.getAssetType().getCaption()).toList()));
 		model.addAttribute("responsibleUserNames", String.join(", ", dpia.getAssets().stream().flatMap(a -> a.getResponsibleUsers().stream().map(User::getName)).toList()));
-		model.addAttribute("supplierNames", String.join(", ", dpia.getAssets().stream().map( a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
+		model.addAttribute("supplierNames", String.join(", ", dpia.getAssets().stream().filter(a -> a.getSupplier() != null).map( a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
 		model.addAttribute("managerNames", String.join(", ", dpia.getAssets().stream().flatMap( a -> a.getManagers().stream().map(User::getName)).toList()));
         model.addAttribute("dpiaScreeningDTO", dpiaScreeningDTO);
 		model.addAttribute("qualityassuranceCheckedValues", dpia.getChecks());

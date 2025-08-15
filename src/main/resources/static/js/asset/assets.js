@@ -90,6 +90,9 @@
                     formatter: (cell, row) => {
                         const url = viewUrl + row.cells[0]['data'];
                         if(row.cells[1]['data'] == 'true') {
+                            if (row.cells[12]['data'] == true) {
+                                return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" class="grayscale">`);
+                            }
                             return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" >`);
                         } else {
                             return gridjs.html(`<a href="${url}">${cell}</a>`);
@@ -100,6 +103,21 @@
                     name: "Leverandør",
                     searchable: {
                         searchKey: 'supplier'
+                    }
+                },
+                {
+                    name: "Aktiv/Inaktiv",
+                    searchable: {
+                        searchKey: 'active',
+                        fieldId : 'activeAssetSelector'
+                    },
+                    width: '150px',
+                    formatter: (cell, row) => {
+                        if (cell) {
+                            return 'Ja';
+                        } else {
+                            return 'Nej';
+                        }
                     }
                 },
                 {
@@ -218,7 +236,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions ],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, , asset.oldKitos ],
                 ),
                 total: data => data.totalCount
             },

@@ -121,6 +121,7 @@ SELECT
           WHEN a.asset_status = 'READY' THEN 3
         END) as asset_status_order,
     a.asset_category,
+    a.active AS active,
     (CASE WHEN a.asset_category = 'GREEN' THEN 1
           WHEN a.asset_category = 'YELLOW' THEN 2
           WHEN a.asset_category = 'RED' THEN 3
@@ -134,6 +135,7 @@ SELECT
         END) as assessment_order,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos,
+    IF(old_kitos_prop.prop_value IS NULL, 0, 1) AS old_kitos,
     CASE
         WHEN EXISTS (
             SELECT 1
@@ -146,6 +148,7 @@ SELECT
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
     LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
+    LEFT JOIN properties old_kitos_prop ON old_kitos_prop.entity_id = a.id AND old_kitos_prop.prop_key = 'old_kitos_usage_uuid'
     LEFT JOIN threat_assessments ta ON ta.id = (
             SELECT tb.id FROM threat_assessments tb
                 JOIN relations r ON (r.relation_a_id = a.id AND r.relation_b_id=tb.id

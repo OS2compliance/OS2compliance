@@ -276,7 +276,8 @@ public class AssetsController {
 		model.addAttribute("dataProcessing", asset.getDataProcessing());
 		model.addAttribute("dpChoices", dataProcessingService.getChoices());
 		model.addAttribute("acceptanceBasisChoices", acceptListIdentifiers);
-        model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY)));
+        model.addAttribute("isKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY) || p.getKey().equals((KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY))));
+        model.addAttribute("isOldKitos", asset.getProperties().stream().anyMatch(p -> p.getKey().equals(KitosConstants.X_KITOS_USAGE_UUID_PROPERTY_KEY)));
         model.addAttribute("oversight", oversights.isEmpty() ? null : oversights.get(0));
         model.addAttribute("oversights", oversights);
 		model.addAttribute("measuresForm", measuresForm);
@@ -503,22 +504,26 @@ public class AssetsController {
         if(!Objects.isNull(asset.getSupplier())) {
             existingAsset.setSupplier(asset.getSupplier());
         }
-        existingAsset.setAssetType(asset.getAssetType());
-        existingAsset.setCriticality(asset.getCriticality());
-        existingAsset.setDescription(asset.getDescription());
-        existingAsset.setSociallyCritical(asset.isSociallyCritical());
-        existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
-        existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
-        existingAsset.setContractLink(asset.getContractLink());
-        existingAsset.setContractDate(asset.getContractDate());
-        existingAsset.setContractTermination(asset.getContractTermination());
-        existingAsset.setTerminationNotice(asset.getTerminationNotice());
-        existingAsset.setArchive(asset.getArchive());
-        existingAsset.setAssetStatus(asset.getAssetStatus());
-        existingAsset.setAssetCategory(asset.getAssetCategory());
-		existingAsset.setAiStatus(asset.getAiStatus());
+		// Add null check because when it's from Kitos the frontend element will be disabled and thus not included in the @ModelAttribute, i.e., be null
+		if (!Objects.isNull(asset.getAiStatus())) {
+			existingAsset.setAiStatus(asset.getAiStatus());
+		}
+		existingAsset.setAssetType(asset.getAssetType());
+		existingAsset.setCriticality(asset.getCriticality());
+		existingAsset.setDescription(asset.getDescription());
+		existingAsset.setSociallyCritical(asset.isSociallyCritical());
+		existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
+		existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
+		existingAsset.setContractLink(asset.getContractLink());
+		existingAsset.setContractDate(asset.getContractDate());
+		existingAsset.setContractTermination(asset.getContractTermination());
+		existingAsset.setTerminationNotice(asset.getTerminationNotice());
+		existingAsset.setArchive(asset.getArchive());
+		existingAsset.setAssetStatus(asset.getAssetStatus());
+		existingAsset.setAssetCategory(asset.getAssetCategory());
 		existingAsset.setAiRisk(asset.getAiRisk());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
+		existingAsset.setActive(asset.isActive());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
 			existingAsset.getProductLinks().clear();

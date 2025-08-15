@@ -79,4 +79,10 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
     @Column
     private boolean hasThirdCountryTransfer;
 
+	@Column
+	private boolean oldKitos;
+
+	@Column
+	private boolean active;
+
 }

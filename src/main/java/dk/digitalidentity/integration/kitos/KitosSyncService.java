@@ -383,8 +383,16 @@ public class KitosSyncService {
     private void removeKitosUuid(final Asset asset) {
         final List<Property> listCopy = new ArrayList<>(asset.getProperties());
         listCopy.stream()
-            .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY) ||p.getKey().equals(KITOS_USAGE_UUID_PROPERTY_KEY))
-            .forEach(property -> asset.getProperties().remove(property));
+            .filter(p -> p.getKey().equals(KITOS_UUID_PROPERTY_KEY) || p.getKey().equals(KITOS_USAGE_UUID_PROPERTY_KEY))
+            .forEach(property -> {
+				Property copyOfProperty = new Property();
+				copyOfProperty.setKey(X_KITOS_USAGE_UUID_PROPERTY_KEY);
+				copyOfProperty.setValue(property.getValue());
+				copyOfProperty.setEntity(asset);
+				asset.getProperties().add(copyOfProperty);
+				asset.setActive(false);
+				asset.getProperties().remove(property);
+			});
     }
 
     private Optional<Asset> findItSystem(final String kitosUuid) {

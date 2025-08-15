@@ -19,6 +19,14 @@ function ViewTaskService() {
         initFormValidationForForm('editForm');
         initFormValidationForForm('completeTaskForm');
         initDatepicker("#deadlineBtn", "#deadline");
+
+        var textarea = document.getElementById('description');
+        if (textarea) {
+            this.fitDescription(textarea);
+            textarea.addEventListener('input', function () {
+                this.fitDescription(this);
+            });
+        }
     }
 
     // In case this task is an oversight, a special oversight dialog can be shown
@@ -27,6 +35,11 @@ function ViewTaskService() {
         const url = `/assets/oversight/${assetId}/asset`;
         oversightService.initOversightModal(null, 'asset', assetId)
             .then(() => {oversightDialog.show()});
+    }
+
+    this.fitDescription = function (textarea) {
+        textarea.style.height = 'auto';
+        textarea.style.height = textarea.scrollHeight + 'px';
     }
 
     this.setEditMode = function(enabled) {
