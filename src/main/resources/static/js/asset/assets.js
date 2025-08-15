@@ -9,20 +9,23 @@
     };
 
     document.addEventListener("DOMContentLoaded", function(event) {
-        fetch(formUrl)
-            .then(response => {
-                if (response.ok) {
-                    response.text()
-                        .then(data => {
-                            document.getElementById('formDialog').innerHTML = data;
-                            formLoaded();
-                            //initFormValidationForForm('formDialog');
-                        })
-                }
-            })
-            .catch(error => {
-                toastService.error(error)
-            })
+        const dialog = document.getElementById('formDialog')
+        if (dialog) {
+            fetch(formUrl)
+                .then(response => {
+                    if (response.ok) {
+                        response.text()
+                            .then(data => {
+                                dialog.innerHTML = data;
+                                formLoaded();
+                                //initFormValidationForForm('formDialog');
+                            })
+                    }
+                })
+                .catch(error => {
+                    toastService.error(error)
+                })
+        }
 
         initGrid()
 
