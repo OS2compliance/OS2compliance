@@ -1,1 +1,38 @@
-{"packageName":"kl_article30","name":"55. Behandling af personoplysninger i forbindelse med naturbeskyttelse, kystbeskyttelse, miljøbeskyttelse, klimaindsats og skadedyrsbekæmpelse","description":"Behandlingen af personoplysninger sker ifm.  ansøgninger, projektudførelse, lovovertrædelser og indberetninger vedr. klager og skadedyr","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-c","register-gdpr-p6-e","register-gdpr-valp10","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "55. Behandling af personoplysninger i forbindelse med naturbeskyttelse, kystbeskyttelse, miljøbeskyttelse, klimaindsats og skadedyrsbekæmpelse",
+  "description": "Behandlingen af personoplysninger sker ifm.  ansøgninger, projektudførelse, lovovertrædelser og indberetninger vedr. klager og skadedyr",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-c",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp10",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "01",
+    "09"
+  ],
+  "kleGroups": [
+    "01.05",
+    "01.24",
+    "01.30",
+    "01.35",
+    "09.00",
+    "09.02",
+    "09.04",
+    "09.05",
+    "09.08",
+    "09.11",
+    "09.13",
+    "09.16",
+    "09.17",
+    "09.18",
+    "09.19",
+    "09.20",
+    "09.23",
+    "09.30",
+    "09.35",
+    "09.40"
+  ]
+}

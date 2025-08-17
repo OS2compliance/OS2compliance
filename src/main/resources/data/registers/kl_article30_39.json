@@ -1,1 +1,16 @@
-{"packageName":"kl_article30","name":"40. Behandling af personoplysninger i forbindelse med administration af fonde, legater og stiftelser","description":"Behandlingen af personoplysninger sker ifm. registrering af ansøgninger og udbetalinger for fonde, legater og stiftelser","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "40. Behandling af personoplysninger i forbindelse med administration af fonde, legater og stiftelser",
+  "description": "Behandlingen af personoplysninger sker ifm. registrering af ansøgninger og udbetalinger for fonde, legater og stiftelser",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "00"
+  ],
+  "kleGroups": [
+    "00.06"
+  ]
+}

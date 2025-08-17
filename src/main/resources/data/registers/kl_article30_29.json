@@ -1,1 +1,25 @@
-{"packageName":"kl_article30","name":"30. Behandling af personoplysninger i forbindelse med havne og lufthavne","description":"Behandlingen af personoplysninger sker ifm. kommunalbestyrelsens valg af medlemmer af havneråd for statshavne, opkrævning af afgifter i havne,  organisering og benyttelse af havne (herunder i forbindelse med husbåde), sikring af havne og havneydelser (herunder bugsering, lodsvæsen og brobetjening). Derudover sker behandlingen ifm. godkendelse af flyvepladser, hændelser (acidents/incidents) på flyvepladser, sikkerhed på flyvepladser samt udlejning af lufthavnsbygninger og arealer","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "30. Behandling af personoplysninger i forbindelse med havne og lufthavne",
+  "description": "Behandlingen af personoplysninger sker ifm. kommunalbestyrelsens valg af medlemmer af havneråd for statshavne, opkrævning af afgifter i havne,  organisering og benyttelse af havne (herunder i forbindelse med husbåde), sikring af havne og havneydelser (herunder bugsering, lodsvæsen og brobetjening). Derudover sker behandlingen ifm. godkendelse af flyvepladser, hændelser (acidents/incidents) på flyvepladser, sikkerhed på flyvepladser samt udlejning af lufthavnsbygninger og arealer",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "08",
+    "13"
+  ],
+  "kleGroups": [
+    "08.00",
+    "08.01",
+    "08.03",
+    "08.06",
+    "08.10",
+    "08.13",
+    "08.20",
+    "08.25",
+    "13.25"
+  ]
+}
