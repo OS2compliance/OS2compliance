@@ -41,7 +41,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -114,11 +113,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(25, this::seedV25);
         incrementAndPerformIfVersion(26, this::seedV26);
         incrementAndPerformIfVersion(27, this::seedV27);
+        incrementAndPerformIfVersion(28, this::seedV28);
     }
-
-	private void seedV27() {
-		kleService.loadFromClassPath();
-	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
         final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
@@ -131,6 +127,25 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+
+	// TODO Remove when all is migrated
+	@SneakyThrows
+	private void seedV28() {
+		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
+		sortedResources.sort(Comparator.comparing(Resource::getFilename));
+		for (final Resource register : sortedResources) {
+			registerImporter.importRegister(register);
+		}
+	}
+
+	/**
+	 * Load initial KLE data, and add it to registers
+	 */
+	private void seedV27() {
+		kleService.loadFromClassPath();
+	}
+
 
 	private void seedV26 () {
 		for (ReportSetting setting : ReportSetting.values()) {

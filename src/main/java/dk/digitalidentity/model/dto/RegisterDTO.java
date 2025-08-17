@@ -2,11 +2,13 @@ package dk.digitalidentity.model.dto;
 
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
+import dk.digitalidentity.model.entity.kle.KLEGroup;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 
 @Data
@@ -51,4 +53,8 @@ public class RegisterDTO {
     private String assetAssessment;
 	@ExcludeFromExport
     private Integer assetAssessmentOrder;
+	@ExcludeFromExport
+	private Set<String> kleMainGroups = new HashSet<>();
+	@ExcludeFromExport
+	private Set<String> kleGroups = new HashSet<>();
 }
