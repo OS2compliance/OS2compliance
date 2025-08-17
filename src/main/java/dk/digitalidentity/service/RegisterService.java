@@ -80,6 +80,10 @@ public class RegisterService {
         return registerDao.existsByName(title);
     }
 
+	public Optional<Register> findByNamePrefix(final String prefix) {
+		return registerDao.findFirstByNameStartingWithIgnoreCase(prefix);
+	}
+
     public Optional<Register> findByName(final String name) {
         return registerDao.findByName(name);
     }

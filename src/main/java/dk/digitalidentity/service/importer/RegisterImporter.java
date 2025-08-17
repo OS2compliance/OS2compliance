@@ -11,6 +11,7 @@ import dk.digitalidentity.service.kle.KLEGroupService;
 import dk.digitalidentity.service.kle.KLEMainGroupService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,13 +37,27 @@ public class RegisterImporter {
 
 		final Register saved = registerService.findByName(registerDTO.getName())
 				.orElseGet(() -> registerService.save(registerMapper.fromDTO(registerDTO)));
-		if (saved.getKleMainGroups().isEmpty() && saved.getKleGroups().isEmpty()) {
+		if (saved.getKleMainGroups().isEmpty() || saved.getKleGroups().isEmpty()) {
 			final Set<KLEMainGroup> mainGroups = kleMainGroupService.getAllByMainGroupNumbers(registerDTO.getKleGroups());
 			final Set<KLEGroup> groups = kleGroupService.getAllByGroupNumbers(registerDTO.getKleGroups());
 			saved.setKleMainGroups(mainGroups);
 			saved.setKleGroups(groups);
 		}
     }
+
+	@Transactional
+	public void enrichWithKLE(final Resource resource) throws IOException {
+		final String jsonString = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
+		final RegisterDTO registerDTO = objectMapper.readValue(jsonString, RegisterDTO.class);
+
+		registerService.findByNamePrefix(StringUtils.substring(registerDTO.getName(), 0, 2)).ifPresent(register -> {
+			final Set<KLEMainGroup> mainGroups = kleMainGroupService.getAllByMainGroupNumbers(registerDTO.getKleMainGroups());
+			final Set<KLEGroup> groups = kleGroupService.getAllByGroupNumbers(registerDTO.getKleGroups());
+			register.setKleMainGroups(mainGroups);
+			register.setKleGroups(groups);
+		});
+
+	}
 
     @Transactional
     public void updateRegisterGdprChoices(final Resource resource) throws IOException {

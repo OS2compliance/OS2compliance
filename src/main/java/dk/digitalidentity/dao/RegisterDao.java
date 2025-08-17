@@ -21,6 +21,8 @@ public interface RegisterDao extends JpaRepository<Register, Long> {
 
     Optional<Register> findByName(final String name);
 
+	Optional<Register> findFirstByNameStartingWithIgnoreCase(final String name);
+
 	@Query("SELECT register FROM Register register WHERE :user MEMBER OF register.responsibleUsers AND register.id NOT IN " +
 			"(SELECT r.id FROM Register r INNER JOIN Relation rel ON " +
 			"(r.id = rel.relationAId AND rel.relationAType = 'TASK' AND rel.relationBType = 'ASSET') " +
