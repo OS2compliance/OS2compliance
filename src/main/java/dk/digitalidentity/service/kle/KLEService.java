@@ -11,13 +11,20 @@ import dk.kle_online.rest.resources.full.HovedgruppeKomponent;
 import dk.kle_online.rest.resources.full.KLEEmneplanKomponent;
 import dk.kle_online.rest.resources.full.RetskildeReferenceKomponent;
 import dk.kle_online.rest.resources.full.VejledningKomponent;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Unmarshaller;
 import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.transform.stream.StreamSource;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.StringReader;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Date;
@@ -31,7 +38,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Service
 public class KLEService {
-
+	private final JAXBContext jaxbContext;
 	private final KLEClient kLEClient;
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
@@ -47,6 +54,25 @@ public class KLEService {
 	 */
 	public KLEEmneplanKomponent fetchAllFromApi() throws JAXBException {
 		return kLEClient.getEmnePlan();
+	}
+
+	/**
+	 * Loads KLEEmneplanKomponent data from a predefined file in the classpath
+	 * and synchronizes it with the database.
+	 *
+	 * @throws RuntimeException if an error occurs during file reading or unmarshalling.
+	 *        This may be caused by an issue with locating the file, invalid XML content,
+	 *        or any I/O issue.
+	 */
+	@Transactional
+	public void loadFromClassPath() {
+		try (InputStream emnePlanStream = this.getClass().getClassLoader().getResourceAsStream("data/kle-emneplan.xml")) {
+			Unmarshaller unmarshaller = this.jaxbContext.createUnmarshaller();
+			JAXBElement<KLEEmneplanKomponent> element = unmarshaller.unmarshal(new StreamSource(emnePlanStream), KLEEmneplanKomponent.class);
+			syncToDatabase(element.getValue());
+		} catch (IOException | JAXBException e) {
+			throw new RuntimeException(e);
+		}
 	}
 
 	/**

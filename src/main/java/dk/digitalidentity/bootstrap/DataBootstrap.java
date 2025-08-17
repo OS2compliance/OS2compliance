@@ -22,6 +22,7 @@ import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
+import dk.digitalidentity.service.kle.KLEService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -75,6 +76,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final DPIAService dpiaService;
 	private final ChoiceService choiceService;
 	private final RegisterService registerService;
+	private final KLEService kleService;
 
 	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -111,9 +113,14 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(24, this::seedV24);
         incrementAndPerformIfVersion(25, this::seedV25);
         incrementAndPerformIfVersion(26, this::seedV26);
+        incrementAndPerformIfVersion(27, this::seedV27);
     }
 
-    private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
+	private void seedV27() {
+		kleService.loadFromClassPath();
+	}
+
+	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
         final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         transactionTemplate.execute(status -> {
             final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
