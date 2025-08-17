@@ -39,7 +39,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -154,18 +157,24 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 				.build());
 
 		// Migrate data from existing column to choicelists
+		final Map<String, ChoiceValue> choices = new HashMap<>();
 		registerService.findAll().stream()
 				.filter(r -> r.getOldRegisterRegarding() != null && !r.getOldRegisterRegarding().isEmpty())
 				.forEach(r -> {
-					String oldValue = r.getOldRegisterRegarding();
-					ChoiceValue oldValueChoice = ChoiceValue.builder()
-							.caption(oldValue)
-							.description(oldValue)
-							.identifier(UUID.randomUUID().toString())
-							.build();
-
-					choiceList.getValues().add(oldValueChoice);
-					r.setRegisterRegarding(Set.of(oldValueChoice));
+					final String oldValue = r.getOldRegisterRegarding();
+					// Avoid duplicates
+					if (choices.containsKey(oldValue)) {
+						choiceList.getValues().add(choices.get(oldValue));
+					} else {
+						final ChoiceValue oldValueChoice = ChoiceValue.builder()
+								.caption(oldValue)
+								.description(oldValue)
+								.identifier(UUID.randomUUID().toString())
+								.build();
+						choiceList.getValues().add(oldValueChoice);
+						choices.put(oldValue, oldValueChoice);
+					}
+					r.setRegisterRegarding(Set.of(choices.get(oldValue)));
 				});
 	}
 
