@@ -56,6 +56,7 @@ import dk.digitalidentity.service.kle.KLEMainGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -304,9 +305,9 @@ public class RegisterController {
         if (informationResponsible != null) {
             register.setInformationResponsible(informationResponsible);
         }
-		if (dataProtectionOfficer != null) {
+		if (StringUtils.isNotEmpty(dataProtectionOfficer)) {
 			User dpoUser = userService.findByUuid(dataProtectionOfficer)
-					.orElseThrow();
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Data Protection Officer not found"));
 			register.setDataProtectionOfficer(dpoUser);
 		}
 

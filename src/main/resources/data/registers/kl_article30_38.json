@@ -1,1 +1,26 @@
-{"packageName":"kl_article30","name":"39. Behandling af personoplysninger i forbindelse med kulturaktiviteter, herunder musik- og billedskoler, kulturhuses virksomhed, kulturhistoriske institutioner, arkiver og museer.","description":"Behandlingen af personoplysninger sker med henblik på drift af kulturaktiviteter, musik- og billedskoler, medborgerhuse,  events,  registrering af elever og aktiviteter m.v","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "39. Behandling af personoplysninger i forbindelse med kulturaktiviteter, herunder musik- og billedskoler, kulturhuses virksomhed, kulturhistoriske institutioner, arkiver og museer.",
+  "description": "Behandlingen af personoplysninger sker med henblik på drift af kulturaktiviteter, musik- og billedskoler, medborgerhuse,  events,  registrering af elever og aktiviteter m.v",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "19",
+    "20"
+  ],
+  "kleGroups": [
+    "19.00",
+    "19.02",
+    "20.07",
+    "20.08",
+    "20.10",
+    "20.11",
+    "20.13",
+    "20.15",
+    "20.20",
+    "20.30"
+  ]
+}

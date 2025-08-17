@@ -22,6 +22,7 @@ import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
+import dk.digitalidentity.service.kle.KLEService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -39,7 +40,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
@@ -72,6 +75,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final DPIAService dpiaService;
 	private final ChoiceService choiceService;
 	private final RegisterService registerService;
+	private final KLEService kleService;
 
 	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -108,9 +112,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(24, this::seedV24);
         incrementAndPerformIfVersion(25, this::seedV25);
         incrementAndPerformIfVersion(26, this::seedV26);
+        incrementAndPerformIfVersion(27, this::seedV27);
+        incrementAndPerformIfVersion(28, this::seedV28);
     }
 
-    private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
+	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
         final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         transactionTemplate.execute(status -> {
             final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
@@ -121,6 +127,25 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+
+	// TODO Remove when all is migrated
+	@SneakyThrows
+	private void seedV28() {
+		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
+		sortedResources.sort(Comparator.comparing(Resource::getFilename));
+		for (final Resource register : sortedResources) {
+			registerImporter.enrichWithKLE(register);
+		}
+	}
+
+	/**
+	 * Load initial KLE data, and add it to registers
+	 */
+	private void seedV27() {
+		kleService.loadFromClassPath();
+	}
+
 
 	private void seedV26 () {
 		for (ReportSetting setting : ReportSetting.values()) {
@@ -154,18 +179,24 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 				.build());
 
 		// Migrate data from existing column to choicelists
+		final Map<String, ChoiceValue> choices = new HashMap<>();
 		registerService.findAll().stream()
 				.filter(r -> r.getOldRegisterRegarding() != null && !r.getOldRegisterRegarding().isEmpty())
 				.forEach(r -> {
-					String oldValue = r.getOldRegisterRegarding();
-					ChoiceValue oldValueChoice = ChoiceValue.builder()
-							.caption(oldValue)
-							.description(oldValue)
-							.identifier(UUID.randomUUID().toString())
-							.build();
-
-					choiceList.getValues().add(oldValueChoice);
-					r.setRegisterRegarding(Set.of(oldValueChoice));
+					final String oldValue = r.getOldRegisterRegarding();
+					// Avoid duplicates
+					if (choices.containsKey(oldValue)) {
+						choiceList.getValues().add(choices.get(oldValue));
+					} else {
+						final ChoiceValue oldValueChoice = ChoiceValue.builder()
+								.caption(oldValue)
+								.description(oldValue)
+								.identifier(UUID.randomUUID().toString())
+								.build();
+						choiceList.getValues().add(oldValueChoice);
+						choices.put(oldValue, oldValueChoice);
+					}
+					r.setRegisterRegarding(Set.of(choices.get(oldValue)));
 				});
 	}
 

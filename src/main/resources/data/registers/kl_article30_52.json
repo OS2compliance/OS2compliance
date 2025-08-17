@@ -1,1 +1,17 @@
-{"packageName":"kl_article30","name":"53. Behandling af personoplysninger i forbindelse med frivillige i kommunale institutioner","description":"Behandlingen af personoplysninger sker med henblik på indgåelse/ophævelse af samarbejdsaftaler med frivillige samt tilrettelæggelse af arbejdet herunder uddannelse til de frivillige","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp10","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "53. Behandling af personoplysninger i forbindelse med frivillige i kommunale institutioner",
+  "description": "Behandlingen af personoplysninger sker med henblik på indgåelse/ophævelse af samarbejdsaftaler med frivillige samt tilrettelæggelse af arbejdet herunder uddannelse til de frivillige",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp10",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "81"
+  ],
+  "kleGroups": [
+    "81.50"
+  ]
+}
