@@ -199,7 +199,7 @@ class CustomGridFunctions {
                 for (const subcolumn of column.columns) {
                     subcolumn.hidden = column.hidden
                 }
-                if (column.hidden) {
+                if (column.hidden && column.searchable !== undefined && column.searchable.searchKey !== undefined) {
                     this.updateColumnValue(column.searchable.searchKey, null)
 
                     this.saveState(column.searchable.searchKey, null)
