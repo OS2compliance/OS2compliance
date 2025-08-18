@@ -130,7 +130,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
 	// TODO 2025/08/18 Remove when all is migrated
-	private void seedV29() throws IOException {
+	@SneakyThrows
+	private void seedV29() {
 		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
 		sortedResources.sort(Comparator.comparing(Resource::getFilename));
 		for (final Resource register : sortedResources) {
