@@ -324,6 +324,7 @@ public class AssetsRestController {
 
 	public record HierarchyNode(String id, String name, String parentId, String assetId) {}
 
+	@Transactional(readOnly = true)
 	@GetMapping("{assetId}/hierarchy")
 	public ResponseEntity<List<HierarchyNode>> getAssetHierarchy(@PathVariable Long assetId) {
 		final Asset asset = assetService.findById(assetId)
