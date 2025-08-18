@@ -14,17 +14,20 @@ import dk.kle_online.rest.resources.full.VejledningKomponent;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.Unmarshaller;
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
 import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.StringReader;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
 import java.util.Date;
@@ -34,9 +37,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-@AllArgsConstructor
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class KLEService {
 	private final JAXBContext jaxbContext;
 	private final KLEClient kLEClient;
@@ -46,6 +49,7 @@ public class KLEService {
 	private final KLELegalReferenceService kLELegalReferenceService;
 
 	private Set<KLELegalReference> kleLegalReferenceCache = new HashSet<>();
+	private Marshaller htmlTextMarshaller = null;
 
 	/**
 	 * Fetches an Emneplan containing all data from KLE API
@@ -227,12 +231,51 @@ public class KLEService {
 		return LocalDate.of(gregorianCalendar.getYear(), gregorianCalendar.getMonth(), gregorianCalendar.getDay());
 	}
 
+	private Marshaller getHtmlTextMarshaller() throws JAXBException {
+		if (htmlTextMarshaller == null) {
+			htmlTextMarshaller = jaxbContext.createMarshaller();
+			htmlTextMarshaller.setProperty(jakarta.xml.bind.Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+			htmlTextMarshaller.setProperty(jakarta.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		}
+		return htmlTextMarshaller;
+	}
+
 	private String vejledningToString(VejledningKomponent vejledningKomponent) {
 		if (vejledningKomponent == null) {
 			return "";
 		}
-		return String.join("<br>", vejledningKomponent.getVejledningTekst().getP().stream().flatMap(p -> p.getContent().stream()).map(Object::toString).toList());
+		try {
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			JAXBElement<VejledningKomponent.VejledningTekst> komponentJAXBElement = new JAXBElement<>(
+					new QName("VejledningTekst"),
+					VejledningKomponent.VejledningTekst.class,
+					vejledningKomponent.getVejledningTekst()
+			);
+
+			getHtmlTextMarshaller().marshal(komponentJAXBElement, outputStream);
+			final String fullXml = removeNamespaces(outputStream.toString(StandardCharsets.UTF_8));
+
+			// Skræl den yderste VejledningTekst af, vi vil kun have html'en inden i
+			int start = fullXml.indexOf('>') + 1;
+			int end = fullXml.lastIndexOf('<');
+			return start < end ? fullXml.substring(start, end).trim() : fullXml;
+		}
+		catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
 	}
+
+	private static String removeNamespaces(String xml) {
+		// Step 1: Remove all namespace declarations (e.g., xmlns="...")
+		xml = xml.replaceAll("xmlns(:\\w+)?=\"[^\"]*\"", "");
+		// Step 2: Remove all namespace prefixes from element names (e.g., <ns:p> to <p>)
+		xml = xml.replaceAll("(<|</)\\w+:", "$1");
+		// Step 3: Remove unnecessary spaces after opening tags (e.g., <li > becomes <li>)
+		xml = xml.replaceAll("<(\\w+)\\s+>", "<$1>");
+
+		return xml.trim();
+	}
+
 
 	private static Duration fromXmlDuration(javax.xml.datatype.Duration xmlDuration) {
 		if (xmlDuration == null)
