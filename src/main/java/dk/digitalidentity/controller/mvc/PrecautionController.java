@@ -34,6 +34,7 @@ public class PrecautionController {
     private final RelationService relationService;
 
     record AssetRelationDTO(long precautionId, String assetName, long assetId) {}
+	@Transactional
 	@RequireReadAll
     @GetMapping
     public String precautionList(final Model model) {

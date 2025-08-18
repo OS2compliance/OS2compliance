@@ -615,6 +615,9 @@ public class RegisterController {
     }
 
 	private String durationToString(final Duration duration) {
+		if (duration == null) {
+			return "Ikke angivet";
+		}
 		if (duration.isZero()) {
 			return "0 timer";
 		}
