@@ -1,6 +1,6 @@
 {
   "packageName": "kl_article30",
-  "name": "03. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge og seniorjob",
+  "name": "03. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge, seniorjob og sygedagpengeforsikring",
   "description": "Behandling af personoplysninger sker med henblik på at vurdere og følge op på sager i forbindelse med dagpenge, efterløn, feriedagpenge og seniorjob, herunder dagpenge i forbindelse med sygdom, barsel og pasning af alvorligt syge børn",
   "gdprChoices": [
     "register-gdpr-valp6",
@@ -12,6 +12,13 @@
     "register-gdpr-p7-f",
     "register-gdpr-valp7"
   ],
-  "kleMainGroups": null,
-  "kleGroups": null
+  "kleMainGroups": [
+    "15",
+    "32"
+  ],
+  "kleGroups": [
+    "15.01",
+    "15.28",
+    "32.30"
+  ]
 }

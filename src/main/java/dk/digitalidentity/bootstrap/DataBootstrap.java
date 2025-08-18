@@ -114,6 +114,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(26, this::seedV26);
         incrementAndPerformIfVersion(27, this::seedV27);
         incrementAndPerformIfVersion(28, this::seedV28);
+        incrementAndPerformIfVersion(29, this::seedV29);
     }
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -128,15 +129,24 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         });
     }
 
-
-	// TODO Remove when all is migrated
-	@SneakyThrows
-	private void seedV28() {
+	// TODO 2025/08/18 Remove when all is migrated
+	private void seedV29() throws IOException {
 		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
 		sortedResources.sort(Comparator.comparing(Resource::getFilename));
 		for (final Resource register : sortedResources) {
 			registerImporter.enrichWithKLE(register);
 		}
+	}
+
+	// TODO 2025/08/18 Remove when all is migrated
+	@SneakyThrows
+	private void seedV28() {
+		registerService.findByName("03. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge og seniorjob")
+				.ifPresent(r -> r.setName("03. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge, seniorjob og sygedagpengeforsikring"));
+		registerService.findByName("58. Behandling af personoplysninger i forbindelse med personlig hjælp herunder anvendelse af velfærdsteknologiske hjælpemidler, frit valg til personlig hjælp samt delegation")
+				.ifPresent(r -> r.setName("58. Behandling af personoplysninger i forbindelse med personlig hjælp herunder anvendelse af velfærdsteknologiske hjælpemidler og frit valg til personlig hjælp."));
+		registerService.findByName("61. Behandling af personoplysninger i forbindelse med hjemmesygepleje, genoptræning og behandlingstilbud efter serviceloven")
+				.ifPresent(r -> r.setName("61. Behandling af personoplysninger i forbindelse med hjemmesygepleje, genoptræning og behandlingstilbud efter sundhedsloven"));
 	}
 
 	/**

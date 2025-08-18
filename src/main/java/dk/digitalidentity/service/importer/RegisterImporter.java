@@ -50,7 +50,7 @@ public class RegisterImporter {
 		final String jsonString = new String(resource.getInputStream().readAllBytes(), StandardCharsets.UTF_8);
 		final RegisterDTO registerDTO = objectMapper.readValue(jsonString, RegisterDTO.class);
 
-		registerService.findByNamePrefix(StringUtils.substring(registerDTO.getName(), 0, 2)).ifPresent(register -> {
+		registerService.findByName(registerDTO.getName()).ifPresent(register -> {
 			final Set<KLEMainGroup> mainGroups = kleMainGroupService.getAllByMainGroupNumbers(registerDTO.getKleMainGroups());
 			final Set<KLEGroup> groups = kleGroupService.getAllByGroupNumbers(registerDTO.getKleGroups());
 			register.setKleMainGroups(mainGroups);
