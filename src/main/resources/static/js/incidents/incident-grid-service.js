@@ -7,13 +7,11 @@ function IncidentGridService() {
     this.filterTo = '';
 
     this.init = () => {
-        var rerender = false;
         let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom' );
         let filterFrom = localStorage.getItem("incidentFilterFrom");
         if (filterFrom != null && filterFrom !== "null") {
             fromPicker.setFullDate(new Date(filterFrom));
             this.filterFrom = fromPicker.getFormatedDate();
-            rerender = true;
         }
         fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
 
@@ -22,15 +20,12 @@ function IncidentGridService() {
         if (filterTo != null && filterTo !== "null") {
             toPicker.setFullDate(new Date(filterTo));
             this.filterTo = toPicker.getFormatedDate();
-            rerender = true;
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
         incidentService.fetchColumnName()
             .then(columnNames => {
                 this.initGrid(columnNames);
-                if (rerender) {
-                    this.incidentGrid.updateConfig(this.currentConfig).forceRender();
-                }
+                this.incidentGrid.updateConfig(this.currentConfig).forceRender();
             });
     }
 
