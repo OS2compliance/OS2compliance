@@ -15,7 +15,6 @@ async function exportGridToExcelSheet(customGridInstance, fileName = 'export.xls
 
         // Add export flag and filename to the URL
         const url = new URL(exportUrl, window.location.origin);
-        url.searchParams.set('export', 'true');
         url.searchParams.set('fileName', fileName);
 
         // Make request to the endpoint

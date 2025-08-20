@@ -3,10 +3,12 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.dao.grid.DBSAssetGridDao;
 import dk.digitalidentity.mapping.DBSAssetMapper;
+import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -18,6 +20,7 @@ import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
@@ -57,6 +60,7 @@ public class DBSAssetsRestController {
     private final RelationService relationService;
 	private final ExcelExportService excelExportService;
 	private final UserService userService;
+	private final SecurityUserService securityUserService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -65,51 +69,64 @@ public class DBSAssetsRestController {
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
-			HttpServletResponse response
-	) throws IOException {
-		final String userUuid = SecurityUtil.getLoggedInUserUuid();
-		final User user = userService.findByUuid(userUuid)
-				.orElseThrow();
-		if (userUuid == null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
-		int pageLimit = limit;
-		if(export) {
-			// For export mode, get ALL records (no pagination)
-			pageLimit = Integer.MAX_VALUE;
-		}
+			@RequestParam Map<String, String> filters // Dynamic filters for search fields
+	) {
+		User user = securityUserService.getCurrentUserOrThrow();
 
         Page<DBSAssetGrid> assets = null;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
+			// Logged-in user can see all
 			assets = dbsAssetGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, DBSAssetGrid.class),
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					buildPageable(page, limit, sortColumn, sortDirection),
 					DBSAssetGrid.class
 			);
 		}
 		else {
-			// Logged in user can see only own
+			// Logged-in user can see only own
 			assets = dbsAssetGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, DBSAssetGrid.class),
 					user,
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					buildPageable(page, limit, sortColumn, sortDirection),
 					DBSAssetGrid.class
 			);
 		}
 
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			List<DBSAssetDTO> allData = mapper.toDTO(assets.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
+		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+	}
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		int pageLimit = Integer.MAX_VALUE;
+
+		// Fetch all records (no pagination)
+		Page<DBSAssetGrid> assets;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			assets = dbsAssetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DBSAssetGrid.class),
+					buildPageable(0, pageLimit, sortColumn, sortDirection),
+					DBSAssetGrid.class
+			);
+		} else {
+			assets = dbsAssetGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, DBSAssetGrid.class),
+					user,
+					buildPageable(0, pageLimit, sortColumn, sortDirection),
+					DBSAssetGrid.class
+			);
 		}
 
-		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+		List<DBSAssetDTO> allData = mapper.toDTO(assets.getContent());
+		excelExportService.exportToExcel(allData, fileName, response);
 	}
 
     record UpdateDBSAssetDTO(long id, List<Long> assets) {}

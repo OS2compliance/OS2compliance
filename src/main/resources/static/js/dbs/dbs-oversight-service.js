@@ -187,9 +187,9 @@ function DBSOversightService() {
         });
         searchService.initSearch(grid, gridConfig);
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridDBSOversightUrl, 'assetsDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridDBSOversightUrl, exportDBSOversightUrl, 'assetsDatatable');
 
-        this.initSaveAsExcelButton(customGridFunctions, 'DBS_tilsyn');
+        initSaveAsExcelButton(customGridFunctions, 'DBS_tilsyn');
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }
