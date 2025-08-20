@@ -27,6 +27,7 @@ import javax.xml.transform.stream.StreamSource;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.time.LocalDate;
@@ -236,6 +237,7 @@ public class KLEService {
 			htmlTextMarshaller = jaxbContext.createMarshaller();
 			htmlTextMarshaller.setProperty(jakarta.xml.bind.Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 			htmlTextMarshaller.setProperty(jakarta.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+			htmlTextMarshaller.setProperty(Marshaller.JAXB_ENCODING, "UTF-8");
 		}
 		return htmlTextMarshaller;
 	}
@@ -245,15 +247,15 @@ public class KLEService {
 			return "";
 		}
 		try {
-			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			final StringWriter sw = new StringWriter();
 			JAXBElement<VejledningKomponent.VejledningTekst> komponentJAXBElement = new JAXBElement<>(
 					new QName("VejledningTekst"),
 					VejledningKomponent.VejledningTekst.class,
 					vejledningKomponent.getVejledningTekst()
 			);
 
-			getHtmlTextMarshaller().marshal(komponentJAXBElement, outputStream);
-			final String fullXml = removeNamespaces(outputStream.toString(StandardCharsets.UTF_8));
+			getHtmlTextMarshaller().marshal(komponentJAXBElement, sw);
+			final String fullXml = removeNamespaces(sw.toString());
 
 			// Skræl den yderste VejledningTekst af, vi vil kun have html'en inden i
 			int start = fullXml.indexOf('>') + 1;
