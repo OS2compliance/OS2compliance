@@ -143,13 +143,4 @@ function ViewTaskService() {
                 }))
             .catch(defaultErrorHandler);
     }
-
-    this.setRiskAssessmentOptOut = function(checkboxElem) {
-            let optOut = checkboxElem.checked;
-            asset.threatAssessmentOptOut = optOut;
-            let optOutBoolean = optOut ? 'true' : 'false';
-            this.setField('threatAssessmentOptOut', optOutBoolean);
-            this.updateRiskAssessmentBadge();
-            this.setTreatAssessmentVisibility(!optOut);
-    }
 }
