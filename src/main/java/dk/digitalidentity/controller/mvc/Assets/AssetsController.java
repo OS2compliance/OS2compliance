@@ -523,6 +523,7 @@ public class AssetsController {
 		existingAsset.setAiRisk(asset.getAiRisk());
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 		existingAsset.setActive(asset.isActive());
+		existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
 			existingAsset.getProductLinks().clear();
