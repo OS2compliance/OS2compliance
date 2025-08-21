@@ -60,6 +60,7 @@ function TaskLinkService() {
 function CreateTaskService() {
     this.taskModalDialog = null;
     this.createTaskOuChoicesEditSelect = null;
+    this.createTaskDepartmentChoicesEditSelect = null;
 
     this.selectCreateTaskOption = function(value) {
         const form = document.querySelector('#taskCreateForm');
@@ -75,6 +76,7 @@ function CreateTaskService() {
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
          this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
+         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
 
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {

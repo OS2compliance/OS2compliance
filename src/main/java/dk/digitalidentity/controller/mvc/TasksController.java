@@ -237,6 +237,7 @@ public class TasksController {
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
+        existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUser(task.getResponsibleUser());
 
 		existingTask.getLinks().clear();

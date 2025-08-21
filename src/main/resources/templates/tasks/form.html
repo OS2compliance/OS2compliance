@@ -64,6 +64,15 @@
                     </div>
                 </div>
 
+                <div class="row mt-3">
+                    <label th:for="${formId + 'TaskDepartmentSelect'}" class="col-sm-4 col-form-label">Forvaltning</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" th:field="*{department}" data-trigger="" th:id="${formId + 'TaskDepartmentSelect'}" hidden="" tabindex="-1">
+                            <option th:if="${task.department} != null" th:value="${task.department.uuid}" th:text="${task.department.name}"></option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="row mt-3" th:id="${formId + 'RepetitionDiv'}">
                     <label th:for="${formId + 'Repetition'}" class="col-sm-4 col-form-label">Gentagelse</label>
                     <div class="col-sm-8">
