@@ -2,37 +2,6 @@ const editorDescriptionInstances = {};
 const editorPracticeInstances = {};
 const editorSmartInstances = {};
 function supportingStandartsViewLoaded() {
-    let editors = document.querySelectorAll(`.descriptions`)
-    for (let i=0; i<editors.length; ++i) {
-        var elem = editors[i];
-        const editorId = elem.id;
-        const index = elem.dataset.index;
-        window.CreateCkEditor(elem, editor => {
-            var type = editor.sourceElement.dataset.type;
-            editor.editing.view.document.on('blur', () => {
-                var id = editor.sourceElement.dataset.id;
-                setField(id, type, editor.getData(), index)
-            });
-
-            if (type == 'DESCRIPTION') {
-                editorDescriptionInstances[index] = {
-                    editor: editor,
-                    editing: false
-                };
-            } else if (type == 'NSIS_PRACTICE') {
-                editorPracticeInstances[index] = {
-                    editor: editor,
-                    editing: false
-                };
-            } else if (type == 'NSIS_SMART') {
-                editorSmartInstances[index] = {
-                    editor: editor,
-                    editing: false
-                };
-            }
-        });
-    }
-
     const userSelects = document.querySelectorAll('.responsibleUserSelect');
     userSelects.forEach(select => {
         var choiceSelect = choiceService.initUserSelect(select.id, false);
@@ -139,59 +108,88 @@ function supportingStandartsViewLoaded() {
     document.getElementById('customAddRelationBtn').addEventListener('click', addRelations);
 
     const selectCheckboxes = document.querySelectorAll('.selectedCheckbox');
-        selectCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                var id = checkbox.dataset.id;
-                var index = checkbox.dataset.index;
-                var checked = checkbox.checked;
-                setField(id, "SELECTED", checked, index);
+    selectCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            var id = checkbox.dataset.id;
+            var index = checkbox.dataset.index;
+            var checked = checkbox.checked;
+            setField(id, "SELECTED", checked, index);
 
-                if (checked) {
-                    document.getElementById('statusTD' + index).style.display = "block";
-                    document.getElementById('selectedTD' + index).textContent = "Tilvalgt";
-                } else {
-                    document.getElementById('statusTD' + index).style.display = "none";
-                    document.getElementById('selectedTD' + index).textContent = "Fravalgt";
-                }
-            });
+            if (checked) {
+                document.getElementById('statusTD' + index).style.display = "block";
+                document.getElementById('selectedTD' + index).textContent = "Tilvalgt";
+            } else {
+                document.getElementById('statusTD' + index).style.display = "none";
+                document.getElementById('selectedTD' + index).textContent = "Fravalgt";
+            }
         });
+    });
 }
 
 function editField(elem) {
     var index = elem.dataset.index;
     var type = elem.dataset.type;
+
+    if (type == 'DESCRIPTION' && !editorDescriptionInstances[index].editing) {
+        showEditor(index, type);
+        return;
+    }
+    if (type == 'NSIS_PRACTICE' && !editorPracticeInstances[index].editing) {
+        showEditor(index, type);
+        return;
+    }
+    if (type == 'NSIS_SMART' && !editorSmartInstances[index].editing) {
+        showEditor(index, type);
+        return;
+    }
+
+    const editorContainer = document.getElementById(
+        type === 'DESCRIPTION' ? 'editorDescriptionContainer' + index :
+            type === 'NSIS_PRACTICE' ? 'editorPracticeContainer' + index :
+                'editorSmartContainer' + index
+    );
+
+    const elemToEdit = editorContainer.querySelector('.descriptions');
+
+    window.CreateCkEditor(elemToEdit, editor => {
+        const id = editor.sourceElement.dataset.id;
+        const editorObj = { editor, editing: true };
+
+        // save instance
+        if (type === 'DESCRIPTION') editorDescriptionInstances[index] = editorObj;
+        if (type === 'NSIS_PRACTICE') editorPracticeInstances[index] = editorObj;
+        if (type === 'NSIS_SMART') editorSmartInstances[index] = editorObj;
+
+        // handle blur → save field
+        editor.editing.view.document.on('blur', () => {
+            setField(id, type, editor.getData(), index);
+        });
+
+        showEditor(index, type); // reveal editor container, hide read-only view
+    });
+}
+
+function showEditor(index, type) {
     if (type == 'DESCRIPTION') {
-        if (!editorDescriptionInstances[index].editing) {
-            var descriptionRead = document.getElementById('descriptionRead' + index);
-            var editorContainer = document.getElementById('editorDescriptionContainer' + index);
-            descriptionRead.hidden = true;
-            editorContainer.hidden = false;
-            editorDescriptionInstances[index].editing = true;
-        }
+        document.getElementById('descriptionRead' + index).hidden = true;
+        document.getElementById('editorDescriptionContainer' + index).hidden = false;
+        editorDescriptionInstances[index].editing = true;
     } else if (type == 'NSIS_PRACTICE') {
-        if (!editorPracticeInstances[index].editing) {
-            var practiceRead = document.getElementById('practiceRead' + index);
-            var editorContainer = document.getElementById('editorPracticeContainer' + index);
-            practiceRead.hidden = true;
-            editorContainer.hidden = false;
-            editorPracticeInstances[index].editing = true;
-        }
+        document.getElementById('practiceRead' + index).hidden = true;
+        document.getElementById('editorPracticeContainer' + index).hidden = false;
+        editorPracticeInstances[index].editing = true;
     } else if (type == 'NSIS_SMART') {
-        if (!editorSmartInstances[index].editing) {
-            var smartRead = document.getElementById('smartRead' + index);
-            var editorContainer = document.getElementById('editorSmartContainer' + index);
-            smartRead.hidden = true;
-            editorContainer.hidden = false;
-            editorSmartInstances[index].editing = true;
-        }
+        document.getElementById('smartRead' + index).hidden = true;
+        document.getElementById('editorSmartContainer' + index).hidden = false;
+        editorSmartInstances[index].editing = true;
     }
 }
 
 function setField(standardSectionId, setFieldType, value, index) {
     var data = {
-         "setFieldType": setFieldType,
-         "value": value
-       };
+        "setFieldType": setFieldType,
+        "value": value
+    };
 
     postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((response) => {
         if (!response.ok) {
@@ -208,16 +206,16 @@ function setField(standardSectionId, setFieldType, value, index) {
 }
 
 function findTextInParentheses(str) {
-  // Regular expression for at finde tekst mellem parenteser
-  var regex = /\(([^)]+)\)/g;
-  // Brug match() metoden til at finde tekst mellem parenteser
-  var matches = str.match(regex);
-  // Tjek om der er nogen matches, og returner dem
-  if (matches) {
-    return matches.map(match => match.slice(1, -1)); // Fjern parenteserne
-  } else {
-    return []; // Returner en tom array hvis der ikke er nogen matches
-  }
+    // Regular expression for at finde tekst mellem parenteser
+    var regex = /\(([^)]+)\)/g;
+    // Brug match() metoden til at finde tekst mellem parenteser
+    var matches = str.match(regex);
+    // Tjek om der er nogen matches, og returner dem
+    if (matches) {
+        return matches.map(match => match.slice(1, -1)); // Fjern parenteserne
+    } else {
+        return []; // Returner en tom array hvis der ikke er nogen matches
+    }
 }
 
 var relationsChoice;
@@ -242,39 +240,39 @@ function addRelationFormLoaded() {
 function addRelations() {
     var relatableId = document.getElementById('relatableIdInput').value;
     var data = {
-         "relatableId": relatableId,
-         "relations": relationsChoice.getValue(true)
-       };
+        "relatableId": relatableId,
+        "relations": relationsChoice.getValue(true)
+    };
 
     postData("/rest/relatable/relations/add", data).then((response) => {
         if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.status);
-                }
+            throw new Error('Network response was not ok: ' + response.status);
+        }
         return response.json();
     }).then(function(responseData) {
-          var modalElement = document.getElementById('addRelationModal');
-          var modal = bootstrap.Modal.getInstance(modalElement);
-          modal.hide();
-          relationsChoice.removeActiveItems();
+        var modalElement = document.getElementById('addRelationModal');
+        var modal = bootstrap.Modal.getInstance(modalElement);
+        modal.hide();
+        relationsChoice.removeActiveItems();
 
-          var index = document.getElementById('standardSectionStatIndex').value;
-          var table = document.getElementById("relationTable" + index);
-          responseData.forEach(function(item) {
-              var row = table.insertRow();
-              var cell1 = row.insertCell(0);
-              var cell2 = row.insertCell(1);
-              var cell3 = row.insertCell(2);
-              cell1.innerHTML = '<a href="/' + item.typeForUrl + '/' + (item.standardIdentifier == null ? item.id : item.standardIdentifier) + '"><span>' + item.title + '</span></a>';
-              cell2.innerHTML = item.typeMessage;
-              cell3.innerHTML = '<i class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" data-relatableid="' + relatableId + '" data-relationid="' + item.id + '" data-relationtype="' + item.type + '"></i>';
-          });
-          return responseData; // Dette returneres som et promise-svar
+        var index = document.getElementById('standardSectionStatIndex').value;
+        var table = document.getElementById("relationTable" + index);
+        responseData.forEach(function(item) {
+            var row = table.insertRow();
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            cell1.innerHTML = '<a href="/' + item.typeForUrl + '/' + (item.standardIdentifier == null ? item.id : item.standardIdentifier) + '"><span>' + item.title + '</span></a>';
+            cell2.innerHTML = item.typeMessage;
+            cell3.innerHTML = '<i class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" data-relatableid="' + relatableId + '" data-relationid="' + item.id + '" data-relationtype="' + item.type + '"></i>';
+        });
+        return responseData; // Dette returneres som et promise-svar
     })
-    .catch(function(error) {
-        toastService.error(error);
-        console.error(error);
-        window.location.reload();
-    });
+        .catch(function(error) {
+            toastService.error(error);
+            console.error(error);
+            window.location.reload();
+        });
 }
 
 function customDeleteRelation(element) {

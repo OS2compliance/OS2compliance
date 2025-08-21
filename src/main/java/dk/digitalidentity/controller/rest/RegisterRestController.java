@@ -2,9 +2,11 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.RegisterGridDao;
 import dk.digitalidentity.mapping.RegisterMapper;
+import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.DPIAGrid;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -12,6 +14,7 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -43,6 +46,7 @@ public class RegisterRestController {
     private final UserService userService;
 	private final RegisterService registerService;
 	private final ExcelExportService excelExportService;
+	private final SecurityUserService securityUserService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -51,53 +55,68 @@ public class RegisterRestController {
             @RequestParam(value = "limit", defaultValue = "50") int limit,
             @RequestParam(value = "order", required = false) String sortColumn,
             @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-            @RequestParam Map<String, String> filters, // Dynamic filters for search fields
-			HttpServletResponse response
-    ) throws IOException {
-		final String userUuid = SecurityUtil.getLoggedInUserUuid();
-		final User user = userService.findByUuid(userUuid)
-				.orElseThrow();
-		if (userUuid == null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
-		int pageLimit = limit;
-		if(export) {
-			// For export mode, get ALL records (no pagination)
-			pageLimit = Integer.MAX_VALUE;
-		}
+            @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+		User user = securityUserService.getCurrentUserOrThrow();
 
 		Page<RegisterGrid> registers;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
+			// Logged-in user can see all
 			registers = registerGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, RegisterGrid.class),
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					buildPageable(page, limit, sortColumn, sortDirection),
 					RegisterGrid.class
 			);
 		}
 		else {
-			// Logged in user can see only own
+			// Logged-in user can see only own
 			registers = registerGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, RegisterGrid.class),
 					user,
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					buildPageable(page, limit, sortColumn, sortDirection),
 					RegisterGrid.class
 			);
-		}
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), registerService);
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
 		}
 
         assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
     }
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		// Fetch all records (no pagination)
+		Page<RegisterGrid> registers;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged-in user can see all
+			registers = registerGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RegisterGrid.class),
+					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
+					RegisterGrid.class
+			);
+		}
+		else {
+			// Logged-in user can see only own
+			registers = registerGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, RegisterGrid.class),
+					user,
+					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
+					RegisterGrid.class
+			);
+		}
+		assert registers != null;
+
+		List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), registerService);
+		excelExportService.exportToExcel(allData, fileName, response);
+	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
