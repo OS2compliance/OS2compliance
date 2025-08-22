@@ -223,23 +223,6 @@
                                                     </select>
                                                 </div>
                                             </div>
-                                            <div class="row mb-3" id="riskFactorContainer">
-                                                <label for="riskFactor" class="col-sm-3 col-form-label">
-                                                    Vurdering af risiko ved AI-brug
-                                                    &nbsp;
-                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
-                                                </label>
-                                                <div class="col-sm-9">
-                                                    <select class="form-control form-select editField"
-                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
-                                                            tabindex="-1" disabled>
-                                                        <option value=""></option>
-                                                        <option
-                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
-                                                                th:value="${risk}" th:text="${risk.message}"></option>
-                                                    </select>
-                                                </div>
-                                            </div>
                                         </div>
                                         <!-- Column 2 -->
                                         <div class="col-sm-12 col-md-12 col-lg-12 col-xl-6 gx-4">
@@ -324,6 +307,24 @@
                                                         <option
                                                                 th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
                                                                 th:value="${status}" th:text="${status.danishName}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3" id="riskFactorContainer">
+                                                <label for="riskFactor" class="col-sm-3 col-form-label">
+                                                    Vurdering af risiko ved AI-brug
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
+                                                                th:value="${risk}" th:text="${risk.message}"></option>
                                                     </select>
                                                 </div>
                                             </div>
