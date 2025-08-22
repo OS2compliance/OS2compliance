@@ -95,16 +95,6 @@
                         </div>
 
                         <div class="form-group row">
-                            <label for="informationResponsible" class="col-form-label">Navn på DPO</label>
-                            <select class="form-select choices__input" th:field="*{dataProtectionOfficer}"
-                                    data-trigger="" id="dataProtectionOfficer" tabindex="-1" disabled>
-                                <option th:value="${dataProtectionOfficer?.uuid ?: ''}"
-                                        th:text="${dataProtectionOfficer?.name ?: 'Ingen valgt'}"
-                                        selected>
-                            </select>
-                        </div>
-
-                        <div class="form-group row">
                             <label for="registerRegarding" class="col-form-label">Fortegnelse over behandlingsaktivitet angående</label>
                             <select class="form-select choices__input" id="registerRegarding" name="registerRegarding" multiple disabled>
                                 <option th:each="option : ${recordOfProcessingActivityRegardingChoices}"

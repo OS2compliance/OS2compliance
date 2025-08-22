@@ -172,10 +172,6 @@ public class Register extends Relatable {
 	)
 	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 
-	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
-	@JoinColumn(name = "data_protection_officer")
-	private User dataProtectionOfficer;
-
 	@Override
     public RelationType getRelationType() {
         return RelationType.REGISTER;
