@@ -126,7 +126,7 @@ public class DBSAssetsRestController {
 		}
 
 		List<DBSAssetDTO> allData = mapper.toDTO(assets.getContent());
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, DBSAssetDTO.class, fileName, response);
 	}
 
     record UpdateDBSAssetDTO(long id, List<Long> assets) {}

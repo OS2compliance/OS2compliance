@@ -111,7 +111,7 @@ public class DocumentRestController {
 		}
 
 		List<DocumentDTO> allData = mapper.toDTO(documents.getContent());
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, DocumentDTO.class, fileName, response);
 	}
 
 	@RequireReadOwnerOnly

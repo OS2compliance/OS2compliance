@@ -4,8 +4,15 @@ import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.RiskDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.grid.RiskGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
@@ -39,6 +46,11 @@ import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Slf4j
 @RestController
@@ -104,12 +116,9 @@ public class IncidentRestController {
         @RequestParam(name = "size", required = false, defaultValue = "50") final Integer size,
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir,
-		@RequestParam(value = "export", defaultValue = "false") boolean export,
-		@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-		@RequestParam Map<String, String> filters,
         @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
-        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam,
-			HttpServletResponse response) throws IOException {
+        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam
+	) {
         Sort sort = null;
         if (StringUtils.isNotEmpty(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
@@ -118,23 +127,51 @@ public class IncidentRestController {
             sort = Sort.by(Sort.Direction.DESC, "createdAt");
         }
         final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        final LocalDateTime fromDate = fromDateParam != null ? fromDateParam.atStartOfDay() : LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
-        final LocalDateTime toDate = toDateParam != null ? toDateParam.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0);
-        final Page<Incident> incidents = StringUtils.isNotEmpty(search)
-            ? incidentService.search(search, fromDate, toDate, sortAndPage)
-            : incidentService.listIncidents(fromDate, toDate, sortAndPage);
+		Page<Incident> incidents = getIncidents(search, fromDateParam, toDateParam, sortAndPage);
 
-		if (export) {
-			List<IncidentDTO> allData = incidentMapper.toDTOs(incidents.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
-		}
-
-        assert incidents != null;
-        return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
+		assert incidents != null;
+		return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
     }
 
-    @RequireReadAll
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(name = "search", required = false) final String search,
+			@RequestParam(name = "order", required = false) final String order,
+			@RequestParam(name = "dir", required = false) final String dir,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			@RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
+			@RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam,
+			HttpServletResponse response
+	) throws IOException {
+		Sort sort;
+		if (StringUtils.isNotEmpty(order)) {
+			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
+			sort = Sort.by(direction, order);
+		} else {
+			sort = Sort.by(Sort.Direction.DESC, "createdAt");
+		}
+		final Pageable sortAndPage = PageRequest.of(0, Integer.MAX_VALUE, sort);
+		Page<Incident> incidents = getIncidents(search, fromDateParam, toDateParam, sortAndPage);
+
+		assert incidents != null;
+
+		List<IncidentDTO> allData = incidentMapper.toDTOs(incidents.getContent());
+		excelExportService.exportToExcel(allData, IncidentDTO.class, fileName, response);
+	}
+
+	private Page<Incident> getIncidents(@RequestParam(name = "search", required = false) String search, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "fromDate", required = false) LocalDate fromDateParam, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "toDate", required = false) LocalDate toDateParam, Pageable sortAndPage) {
+		final LocalDateTime fromDate = fromDateParam != null ? fromDateParam.atStartOfDay() : LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+		final LocalDateTime toDate = toDateParam != null ? toDateParam.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0);
+		final Page<Incident> incidents = StringUtils.isNotEmpty(search)
+				? incidentService.search(search, fromDate, toDate, sortAndPage)
+				: incidentService.listIncidents(fromDate, toDate, sortAndPage);
+
+		return incidents;
+	}
+
+	@RequireReadAll
     @GetMapping("columns")
     public List<String> visibleColumns() {
         return incidentService.getAllFields().stream()

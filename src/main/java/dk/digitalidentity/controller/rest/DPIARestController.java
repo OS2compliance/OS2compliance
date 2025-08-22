@@ -198,7 +198,7 @@ public class DPIARestController {
 		}
 
 		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
-		excelExportService.exportToExcel(dtos, fileName, response);
+		excelExportService.exportToExcel(dtos, DPIAListDTO.class, fileName, response);
 	}
 
 	@RequireDeleteOwnerOnly

@@ -161,7 +161,7 @@ public class AssetsRestController {
 		}
 
 		List<AssetDTO> allData = mapper.toDTO(assets.getContent());
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, AssetDTO.class, fileName, response);
 	}
 
 	@RequireReadOwnerOnly

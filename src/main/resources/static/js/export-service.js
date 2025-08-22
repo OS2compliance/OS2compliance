@@ -26,7 +26,7 @@ async function exportGridToExcelSheet(customGridInstance, fileName = 'export.xls
         });
 
         if (!response.ok) {
-            throw new Error(`Export failed: ${response.status} ${response.statusText}`);
+            toastService.error("Export fejlede. Tjek at tabellen ikke er tomt.")
         }
 
         // Check if response is Excel file or JSON error

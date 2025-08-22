@@ -115,7 +115,7 @@ public class RegisterRestController {
 		assert registers != null;
 
 		List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), registerService);
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, RegisterDTO.class, fileName, response);
 	}
 
 	@RequireReadOwnerOnly

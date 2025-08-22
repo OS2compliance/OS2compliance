@@ -202,10 +202,8 @@ public class RiskRestController {
 		}
 
 		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid);
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
 	}
-
-
 
     record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}

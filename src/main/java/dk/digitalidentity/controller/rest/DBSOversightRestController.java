@@ -79,7 +79,7 @@ public class DBSOversightRestController {
 		);
 
 		List<DBSOversightDTO> allData = mapper.toDTO(oversights.getContent());
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, DBSOversightDTO.class, fileName, response);
 	}
 
 }

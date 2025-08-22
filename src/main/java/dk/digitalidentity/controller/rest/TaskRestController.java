@@ -116,7 +116,7 @@ public class TaskRestController {
 		assert tasks != null;
 
 		List<TaskDTO> allData = mapper.toDTO(tasks.getContent());
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, TaskDTO.class, fileName, response);
 	}
 
 	@RequireReadOwnerOnly

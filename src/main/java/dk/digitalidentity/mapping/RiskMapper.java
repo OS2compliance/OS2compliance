@@ -70,6 +70,10 @@ public interface RiskMapper {
     }
 
 	default boolean containsAnyString(String commaSeperatedList, Set<String> stringSet) {
+		if (commaSeperatedList == null || commaSeperatedList.isEmpty()) {
+			return false;
+		}
+
 		String[] names = commaSeperatedList.split(",");
 		for (String name : names) {
 			if (stringSet.contains(name.trim())) {

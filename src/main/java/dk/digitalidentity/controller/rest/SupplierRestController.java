@@ -158,7 +158,7 @@ public class SupplierRestController {
 					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), allowedActions);
 			allData.add(dto);
 		}
-		excelExportService.exportToExcel(allData, fileName, response);
+		excelExportService.exportToExcel(allData, SupplierGridDTO.class, fileName, response);
 	}
 
 	@RequireReadOwnerOnly
