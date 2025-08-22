@@ -232,7 +232,6 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         settingsService.createSetting(NotificationSetting.EVERYSEVENDAYSAFTER.getValue(), "false" , "notification", true);
     }
 
-	@SneakyThrows
 	private void seedV20() {
 
 	}

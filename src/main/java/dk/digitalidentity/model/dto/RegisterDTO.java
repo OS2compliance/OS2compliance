@@ -54,7 +54,9 @@ public class RegisterDTO {
 	@ExcludeFromExport
     private Integer assetAssessmentOrder;
 	@ExcludeFromExport
+	@Builder.Default
 	private Set<String> kleMainGroups = new HashSet<>();
 	@ExcludeFromExport
+	@Builder.Default
 	private Set<String> kleGroups = new HashSet<>();
 }

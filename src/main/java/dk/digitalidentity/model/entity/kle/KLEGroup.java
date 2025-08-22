@@ -56,6 +56,7 @@ public class KLEGroup {
 	@JoinColumn(name = "main_group_number", referencedColumnName = "main_group_number")
 	private KLEMainGroup mainGroup;
 
+	@Builder.Default
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Set<KLESubject> subjects = new HashSet<>();
 
@@ -65,6 +66,7 @@ public class KLEGroup {
 			joinColumns = @JoinColumn(name = "group_number"),
 			inverseJoinColumns = @JoinColumn(name = "accession_number")
 	)
+	@Builder.Default
 	private Set<KLELegalReference> legalReferences = new HashSet<>();
 
 }

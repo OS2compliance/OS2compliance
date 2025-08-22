@@ -71,6 +71,7 @@ public class KLESubject {
 			joinColumns = @JoinColumn(name = "subject_number"),
 			inverseJoinColumns = @JoinColumn(name = "accession_number")
 	)
+	@Builder.Default
 	private Set<KLELegalReference> legalReferences = new HashSet<>();
 
 }

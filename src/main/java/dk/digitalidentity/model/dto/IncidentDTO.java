@@ -25,6 +25,7 @@ public class IncidentDTO {
 	@ExcelColumn(headerName = "Opdateret", order = 3)
     private String updatedAt;
 	@ExcludeFromExport
+	@Builder.Default
     private List<IncidentFieldResponseDTO> responses = new ArrayList<>();
 }
 
