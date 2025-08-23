@@ -7,6 +7,8 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-08-23
+
 ### Added
 - (Løsningsbeskrivelse 15.04.2025) Fortegnelsesmodulet
 - (Løsningsbeskrivelse 21.04.2025) KLE-integration
