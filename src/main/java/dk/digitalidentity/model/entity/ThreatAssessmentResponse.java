@@ -31,17 +31,29 @@ public class ThreatAssessmentResponse extends Relatable {
     @Column
     private Integer confidentialityOrganisation;
 
+	@Column
+    private Integer confidentialitySociety;
+
     @Column
     private Integer integrityRegistered;
 
     @Column
     private Integer integrityOrganisation;
 
+	@Column
+    private Integer integritySociety;
+
     @Column
     private Integer availabilityRegistered;
 
     @Column
     private Integer availabilityOrganisation;
+
+	@Column
+    private Integer availabilitySociety;
+
+	@Column
+	private Integer authenticitySociety;
 
     @Column
     private String problem;

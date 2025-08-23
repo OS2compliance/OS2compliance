@@ -1,0 +1,293 @@
+package dk.digitalidentity.service.kle;
+
+import dk.digitalidentity.kle_client.KLEClient;
+import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLELegalReference;
+import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
+import dk.kle_online.rest.resources.full.EmneKomponent;
+import dk.kle_online.rest.resources.full.GruppeKomponent;
+import dk.kle_online.rest.resources.full.HovedgruppeKomponent;
+import dk.kle_online.rest.resources.full.KLEEmneplanKomponent;
+import dk.kle_online.rest.resources.full.RetskildeReferenceKomponent;
+import dk.kle_online.rest.resources.full.VejledningKomponent;
+import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
+import jakarta.xml.bind.JAXBException;
+import jakarta.xml.bind.Marshaller;
+import jakarta.xml.bind.Unmarshaller;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import javax.xml.datatype.XMLGregorianCalendar;
+import javax.xml.namespace.QName;
+import javax.xml.transform.stream.StreamSource;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.Date;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+@Slf4j
+@Service
+@RequiredArgsConstructor
+public class KLEService {
+	private final JAXBContext jaxbContext;
+	private final KLEClient kLEClient;
+	private final KLEMainGroupService kLEMainGroupService;
+	private final KLEGroupService kLEGroupService;
+	private final KLESubjectService kLESubjectService;
+	private final KLELegalReferenceService kLELegalReferenceService;
+
+	private Set<KLELegalReference> kleLegalReferenceCache = new HashSet<>();
+	private Marshaller htmlTextMarshaller = null;
+
+	/**
+	 * Fetches an Emneplan containing all data from KLE API
+	 *
+	 * @return KLEEmneplanKomponent containing all data from KLE API
+	 */
+	public KLEEmneplanKomponent fetchAllFromApi() throws JAXBException {
+		return kLEClient.getEmnePlan();
+	}
+
+	/**
+	 * Loads KLEEmneplanKomponent data from a predefined file in the classpath
+	 * and synchronizes it with the database.
+	 *
+	 * @throws RuntimeException if an error occurs during file reading or unmarshalling.
+	 *        This may be caused by an issue with locating the file, invalid XML content,
+	 *        or any I/O issue.
+	 */
+	@Transactional
+	public void loadFromClassPath() {
+		try (InputStream emnePlanStream = this.getClass().getClassLoader().getResourceAsStream("data/kle-emneplan.xml")) {
+			Unmarshaller unmarshaller = this.jaxbContext.createUnmarshaller();
+			JAXBElement<KLEEmneplanKomponent> element = unmarshaller.unmarshal(new StreamSource(emnePlanStream), KLEEmneplanKomponent.class);
+			syncToDatabase(element.getValue());
+		} catch (IOException | JAXBException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	/**
+	 * Removes all KLE-related entities in database and replaces them with entities based on a fetch from KLE api
+	 *
+	 * @param emneplan the result of a fetch from KLE Api
+	 * @return a list of MainGroups
+	 */
+	@Transactional
+	public List<KLEMainGroup> syncToDatabase(KLEEmneplanKomponent emneplan) {
+
+		// Map and persist
+		kleLegalReferenceCache = new HashSet<>(); // Reset cache used for legalreferences
+		List<KLEMainGroup> mainGroups = emneplan.getHovedgruppe().stream().map(this::mapToMainGroup).toList();
+
+		// Delete all existing in db
+		deleteUnusedFromDatabase(mainGroups);
+
+		return kLEMainGroupService.saveAll(mainGroups);
+	}
+
+	/**
+	 * Soft deletes any KLE objects in the db not matching the list of maingroup (and its content)
+	 * @param mainGroups Master list of KLEMainGroups, groups and subjects
+	 */
+	public void deleteUnusedFromDatabase(List<KLEMainGroup> mainGroups) {
+		Set<String> mainGroupNumbers = new HashSet<>();
+		Set<String> groupNumbers = new HashSet<>();
+		Set<String> subjectNumbers = new HashSet<>();
+		Set<String> legalRefNumbers = new HashSet<>();
+
+		for (KLEMainGroup mainGroup : mainGroups) {
+			mainGroupNumbers.add(mainGroup.getMainGroupNumber());
+			groupNumbers.addAll(mainGroup.getKleGroups().stream()
+					.map(KLEGroup::getGroupNumber)
+					.collect(Collectors.toSet()));
+			subjectNumbers.addAll(mainGroup.getKleGroups().stream()
+					.flatMap(g -> g.getSubjects().stream())
+					.map(KLESubject::getSubjectNumber)
+					.collect(Collectors.toSet()));
+			//Add legal refs from groups
+			legalRefNumbers.addAll(mainGroup.getKleGroups().stream()
+					.flatMap(g -> g.getLegalReferences().stream())
+					.map(KLELegalReference::getAccessionNumber)
+					.collect(Collectors.toSet()));
+
+			//add legal refs from subjects
+			legalRefNumbers.addAll(mainGroup.getKleGroups().stream()
+					.flatMap(g -> g.getSubjects().stream()
+							.flatMap(s -> s.getLegalReferences().stream()))
+					.map(KLELegalReference::getAccessionNumber)
+					.collect(Collectors.toSet()));
+		}
+
+		kLEMainGroupService.softDeleteAllNotMatching(mainGroupNumbers);
+		kLEGroupService.softDeleteAllNotMatching(groupNumbers);
+		kLESubjectService.softDeleteAllNotMatching(subjectNumbers);
+		kLELegalReferenceService.softDeleteAllNotMatching(legalRefNumbers);
+
+	}
+
+	private KLEMainGroup mapToMainGroup(HovedgruppeKomponent hovedgruppe) {
+		Optional<XMLGregorianCalendar> lastChanged = hovedgruppe.getHovedgruppeAdministrativInfo().getRettetDato().stream().max(XMLGregorianCalendar::compare);
+
+		KLEMainGroup mainGroup = KLEMainGroup.builder()
+				.mainGroupNumber(hovedgruppe.getHovedgruppeNr())
+				.title(hovedgruppe.getHovedgruppeTitel())
+				.instructionText(vejledningToString(hovedgruppe.getHovedgruppeVejledning()))
+				.creationDate(gregorianToLocalDate(hovedgruppe.getHovedgruppeAdministrativInfo().getOprettetDato()))
+				.lastUpdateDate(lastChanged.map(this::gregorianToLocalDate).orElse(null))
+				.uuid(hovedgruppe.getUUID())
+				.deleted(false)
+				.build();
+
+		KLEMainGroup persistedMainGroup = kLEMainGroupService.save(mainGroup);
+		persistedMainGroup.setKleGroups(hovedgruppe.getGruppe().stream().map(g -> mapToGroup(g, persistedMainGroup)).collect(Collectors.toSet()));
+
+		return persistedMainGroup;
+	}
+
+	private KLEGroup mapToGroup(GruppeKomponent gruppe, KLEMainGroup mainGroup) {
+		Optional<XMLGregorianCalendar> lastChanged = gruppe.getGruppeAdministrativInfo().getRettetDato().stream().max(XMLGregorianCalendar::compare);
+		KLEGroup kleGroup = KLEGroup.builder()
+				.groupNumber(gruppe.getGruppeNr())
+				.title(gruppe.getGruppeTitel())
+				.instructionText(vejledningToString(gruppe.getGruppeVejledning()))
+				.creationDate(gregorianToLocalDate(gruppe.getGruppeAdministrativInfo().getOprettetDato()))
+				.lastUpdateDate(lastChanged.map(this::gregorianToLocalDate).orElse(null))
+				.uuid(gruppe.getUUID())
+				.mainGroup(mainGroup)
+				.deleted(false)
+				.build();
+
+		KLEGroup persistedGroup = kLEGroupService.save(kleGroup);
+		persistedGroup.setSubjects(gruppe.getEmne().stream().map(e -> mapToSubject(e, persistedGroup)).collect(Collectors.toSet()));
+		persistedGroup.setLegalReferences(gruppe.getGruppeRetskildeReference().stream().map(l -> addKLELegalReference(l, persistedGroup, null)).collect(Collectors.toSet()));
+		return persistedGroup;
+	}
+
+	private KLESubject mapToSubject(EmneKomponent emne, KLEGroup group) {
+		Optional<XMLGregorianCalendar> lastChanged = emne.getEmneAdministrativInfo().getRettetDato().stream().max(XMLGregorianCalendar::compare);
+		KLESubject kleSubject = KLESubject.builder()
+				.subjectNumber(emne.getEmneNr())
+				.title(emne.getEmneTitel())
+				.instructionText(vejledningToString(emne.getEmneVejledning()))
+				.creationDate(gregorianToLocalDate(emne.getEmneAdministrativInfo().getOprettetDato()))
+				.lastUpdateDate(lastChanged.map(this::gregorianToLocalDate).orElse(null))
+				.preservationCode(emne.getBevaringJaevnfoerArkivloven())
+				.durationBeforeDeletion(fromXmlDuration(emne.getSletningJaevnfoerPersondataloven()))
+				.uuid(emne.getUUID())
+				.group(group)
+				.deleted(false)
+				.build();
+
+		KLESubject persistedSubject = kLESubjectService.save(kleSubject);
+		persistedSubject.setLegalReferences(emne.getEmneRetskildeReference().stream().map(r -> addKLELegalReference(r, null, persistedSubject)).collect(Collectors.toSet()));
+
+		return persistedSubject;
+	}
+
+	private KLELegalReference addKLELegalReference(RetskildeReferenceKomponent kleLegalReference, KLEGroup group, KLESubject subject) {
+		KLELegalReference current = kleLegalReferenceCache.stream().filter(l -> l.getAccessionNumber().equals(kleLegalReference.getRetsinfoAccessionsNr())).findAny().orElse(null);
+		if (current == null) {
+			current = mapToLegalReference(kleLegalReference);
+			kleLegalReferenceCache.add(current);
+		}
+		if (group != null) {
+			group.getLegalReferences().add(current);
+		}
+		if (subject != null) {
+			subject.getLegalReferences().add(current);
+		}
+		current.setDeleted(false);
+
+		return current;
+	}
+
+	private KLELegalReference mapToLegalReference(RetskildeReferenceKomponent retskilde) {
+		KLELegalReference kleLegalReference = KLELegalReference.builder()
+				.accessionNumber(retskilde.getRetsinfoAccessionsNr())
+				.paragraph(retskilde.getParagrafEllerKapitel())
+				.url(retskilde.getRetsinfoURL())
+				.title(retskilde.getRetskildeTitel())
+				.build();
+		return kLELegalReferenceService.save(kleLegalReference);
+	}
+
+	private LocalDate gregorianToLocalDate(XMLGregorianCalendar gregorianCalendar) {
+		if (gregorianCalendar == null) {
+			return null;
+		}
+		return LocalDate.of(gregorianCalendar.getYear(), gregorianCalendar.getMonth(), gregorianCalendar.getDay());
+	}
+
+	private Marshaller getHtmlTextMarshaller() throws JAXBException {
+		if (htmlTextMarshaller == null) {
+			htmlTextMarshaller = jaxbContext.createMarshaller();
+			htmlTextMarshaller.setProperty(jakarta.xml.bind.Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
+			htmlTextMarshaller.setProperty(jakarta.xml.bind.Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		}
+		return htmlTextMarshaller;
+	}
+
+	private String vejledningToString(VejledningKomponent vejledningKomponent) {
+		if (vejledningKomponent == null) {
+			return "";
+		}
+		try {
+			ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+			JAXBElement<VejledningKomponent.VejledningTekst> komponentJAXBElement = new JAXBElement<>(
+					new QName("VejledningTekst"),
+					VejledningKomponent.VejledningTekst.class,
+					vejledningKomponent.getVejledningTekst()
+			);
+
+			getHtmlTextMarshaller().marshal(komponentJAXBElement, outputStream);
+			final String fullXml = removeNamespaces(outputStream.toString(StandardCharsets.UTF_8));
+
+			// Skræl den yderste VejledningTekst af, vi vil kun have html'en inden i
+			int start = fullXml.indexOf('>') + 1;
+			int end = fullXml.lastIndexOf('<');
+			return start < end ? fullXml.substring(start, end).trim() : fullXml;
+		}
+		catch (JAXBException e) {
+			throw new RuntimeException(e);
+		}
+	}
+
+	private static String removeNamespaces(String xml) {
+		// Step 1: Remove all namespace declarations (e.g., xmlns="...")
+		xml = xml.replaceAll("xmlns(:\\w+)?=\"[^\"]*\"", "");
+		// Step 2: Remove all namespace prefixes from element names (e.g., <ns:p> to <p>)
+		xml = xml.replaceAll("(<|</)\\w+:", "$1");
+		// Step 3: Remove unnecessary spaces after opening tags (e.g., <li > becomes <li>)
+		xml = xml.replaceAll("<(\\w+)\\s+>", "<$1>");
+
+		return xml.trim();
+	}
+
+
+	private static Duration fromXmlDuration(javax.xml.datatype.Duration xmlDuration) {
+		if (xmlDuration == null)
+			return null;
+		try {
+			// Method 1: Use ISO-8601 string (most accurate)
+			return Duration.parse(xmlDuration.toString());
+		}
+		catch (Exception e) {
+			// Fallback: Use time in milliseconds
+			long millis = xmlDuration.getTimeInMillis(new Date());
+			return Duration.ofMillis(millis);
+		}
+	}
+}

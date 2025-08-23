@@ -1,3 +1,23 @@
+.navbar-top-links > li {
+    font-size: 16px;
+    line-height: 1em;
+    vertical-align: middle;
+}
+
+.navbar-top-links .tgl-menu-btn > a,
+.navbar-top-links .tgl-menu-btn > a:hover,
+.navbar-top-links .tgl-menu-btn > a:focus {
+    background-color: transparent;
+    color: #fff !important;
+    cursor: pointer;
+}
+
+@media (max-width: 992px) {
+    .brand-wrap > a {
+        display: none;
+    }
+}
+
 .mc-calendar {
     z-index: 1060 !important;
 }
@@ -14,18 +34,6 @@
     color:#000;
     background-color: #FFDE07FF;
     border-color:#FFDE07FF
-}
-
-.grid-scroll-wrapper {
-    display: block;
-    width: 100%;
-    overflow-x: auto;
-}
-
-.card-body, .grid-scroll-wrapper {
-    max-width: calc(100vw - 220px) !important;
-    width: 100% !important;
-    overflow-x: auto !important;
 }
 
 /*Validation*/
@@ -109,6 +117,11 @@ input[type=number]{
     background-color: #f3f5f9 !important;
 }
 
+.choices-readonly {
+    background-color: #fff;
+    cursor: default;
+}
+
 select[aria-readonly="true"] {
     pointer-events: none;
 }
@@ -180,4 +193,16 @@ html {
 @keyframes sk-circleFadeDelay {
   0%, 39%, 100% { opacity: 0; }
   40% { opacity: 1; }
+}
+
+.transparent-input {
+    line-height: 1.2;
+    background-color: transparent;
+    border-radius: 0.5rem;
+}
+
+.transparent-input:disabled {
+    background-color: transparent;
+    outline: transparent;
+    border-style: none;
 }

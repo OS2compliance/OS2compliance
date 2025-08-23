@@ -22,7 +22,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Immutable
-public class DocumentGrid {
+public class DocumentGrid implements HasSingleResponsibleUser{
     @Id
     private Long id;
 

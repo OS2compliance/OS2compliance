@@ -1,9 +1,12 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.digitalidentity.model.entity.enums.AiRiskFactor;
+import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
+import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
@@ -35,6 +38,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 @Entity
@@ -58,6 +62,14 @@ public class Asset extends Relatable {
 
     @Column
     private String description;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ContainsAITechnologyEnum aiStatus;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private AiRiskFactor aiRisk;
 
     @ManyToOne
     @JoinColumn(name = "asset_type", nullable = false)
@@ -102,9 +114,6 @@ public class Asset extends Relatable {
     private boolean sociallyCritical;
 
     @Column
-    private String productLink;
-
-    @Column
     private String emergencyPlanLink;
 
     @Column
@@ -128,8 +137,9 @@ public class Asset extends Relatable {
     @Column
     private String terminationNotice;
 
-    @Column
-    private boolean archive;
+	@Column
+	@Enumerated(EnumType.STRING)
+	private ArchiveDuty archive = ArchiveDuty.UNDECIDED;
 
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
@@ -175,6 +185,9 @@ public class Asset extends Relatable {
     @Column
     private String dpiaOptOutReason;
 
+	@Column
+	private boolean active;
+
     @Column
     private boolean threatAssessmentOptOut = false;
 
@@ -201,5 +214,21 @@ public class Asset extends Relatable {
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
 	private Set<Role> roles = new HashSet<>();
+
+	@OneToMany(mappedBy = "asset", cascade = CascadeType.ALL, orphanRemoval = true)
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<AssetProductLink> productLinks = new ArrayList<>();
+
+	@ManyToMany
+	@JoinTable(
+			name = "assets_operation_responsible_users_mapping",
+			joinColumns = { @JoinColumn(name = "asset_id") },
+			inverseJoinColumns = { @JoinColumn(name = "user_uuid") }
+	)
+	@ToString.Exclude
+	@JsonIgnore
+	private List<User> operationResponsibleUsers = new ArrayList<>();
+
 
 }

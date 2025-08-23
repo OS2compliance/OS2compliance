@@ -21,6 +21,14 @@
                         </div>
                     </div>
                     <div class="row mt-4">
+                        <label for="relevantLegalReferencesSelector" class="col-form-label col-lg-3">Relevante Lovhenvisninger</label>
+                        <div class="col-lg-9">
+                            <select name="relevantLegalReferences" id="relevantLegalReferencesSelector" class="form-control" disabled multiple>
+                                <option th:each="legalRef : ${kleLegalReferences}" th:text="${legalRef.display}" th:value="${legalRef.value}" th:selected="${legalRef.selected}"></option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
                         <label class="col-form-label col-lg-3 col-sm-12">GDPR lovhjemmel</label>
                         <div class="col-sm-12 col-lg-9 mt-2">
                             <div class="form-check" th:each="choice: ${gdprChoices}">
@@ -44,6 +52,18 @@
                             </div>
                         </div>
                     </div>
+                    <div id="consentGroup" class="row mt-4" hidden>
+                        <label for="consent" class="col-form-label col-lg-3 col-sm-12">Beskriv hvor samtykken opbevares, hvis relevant</label>
+                        <div class="col-lg-9 col-sm-12">
+                            <textarea name="consent" th:field="*{consent}" id="consent" class="p-2 form-control" th:text="${register.consent}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
+                    <div id="supplementalLegalGroup" class="row mt-4" hidden>
+                        <label for="supplementalLegalBasis" class="col-form-label col-lg-3 col-sm-12">Supplerende retsgrundlag</label>
+                        <div class="col-lg-9 col-sm-12">
+                            <textarea name="supplementalLegalBasis" th:field="*{supplementalLegalBasis}" id="supplementalLegalBasis" class="p-2 form-control" th:text="${register.consent}" rows="3" readonly></textarea>
+                        </div>
+                    </div>
                     <div class="row mt-4">
                         <label for="informationObligation" class="col-form-label col-lg-3 col-sm-12">Opfyldes oplysningspligten</label>
                         <div class="col-lg-3 col-sm-6">
@@ -58,12 +78,6 @@
                         <label for="informationObligationDesc" class="col-form-label col-lg-3 col-sm-12">Beskriv hvordan oplysningspligten opfyldes</label>
                         <div class="col-lg-9 col-sm-12">
                             <textarea name="informationObligationDesc" th:field="*{informationObligationDesc}" id="informationObligationDesc" class="p-2 form-control" th:text="${register.informationObligationDesc}" rows="3" readonly></textarea>
-                        </div>
-                    </div>
-                    <div class="row mt-4">
-                        <label for="consent" class="col-form-label col-lg-3 col-sm-12">Beskriv hvor samtykken opbevares, hvis relevant</label>
-                        <div class="col-lg-9 col-sm-12">
-                            <textarea name="consent" th:field="*{consent}" id="consent" class="p-2 form-control" th:text="${register.consent}" rows="3" readonly></textarea>
                         </div>
                     </div>
                     <div class="row mt-4">

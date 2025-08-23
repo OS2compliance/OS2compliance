@@ -23,7 +23,9 @@
                     <div class="row mt-3" id="registerSelectRow">
                         <label for="registerSelect" class="col-sm-4 col-form-label">Behandlingsaktivitet</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1"></select>
+                            <select class="form-control form-select choices__input" name="selectedRegister" data-trigger="" id="registerSelect" hidden="" tabindex="-1">
+                                <option th:if="${register != null}" th:value="${register?.id}" th:text="${register?.name}" selected="selected"></option>
+                            </select>
                             <div class="invalid-feedback" id="registerError">Der skal vælges mindst en behandlingsaktivitet</div>
                         </div>
                     </div>
@@ -43,9 +45,9 @@
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="threatCatalog" class="col-sm-4 col-form-label">Trusselskatalog</label>
+                        <label for="threatCatalogSelect" class="col-sm-4 col-form-label">Trusselskatalog</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select" th:field="*{threatCatalog}" id="threatCatalog" required>
+                            <select class="choices__input form-select" data-type="select-multiple" data-trigger="" th:field="*{threatCatalogs}" id="threatCatalogSelect" multiple>
                                 <option th:each="catalog : ${threatCatalogs}"
                                         th:value="${catalog.identifier}" th:text="${catalog.name}"></option>
                             </select>
@@ -63,9 +65,24 @@
                         <div class="col-sm-8">
                             <input id="organisation" th:field="*{organisation}" class="form-check-input" type="checkbox">
                             <label for="organisation" class="form-check-label">Vurdering for organisationen</label>
-                            <div class="invalid-feedback" id="checkboxError">Der skal vælges minimum en af de to vurderinger</div>
                         </div>
                     </div>
+                    <div class="row mt-3">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="society"  th:field="*{society}" class="form-check-input" type="checkbox">
+                            <label for="society" class="form-check-label">Vurdering for samfundet</label>
+                            <div class="invalid-feedback" id="checkboxError">Der skal vælges minimum en af de tre vurderinger</div>
+                        </div>
+                    </div>
+                    <div class="row mt-3" id="authenticitySection" hidden="hidden">
+                        <div class="col-sm-4 col-form-label"></div>
+                        <div class="col-sm-8">
+                            <input id="authenticity"  th:field="*{authenticity}" class="form-check-input" type="checkbox">
+                            <label for="authenticity" class="form-check-label">Vurdering for autenticitet</label>
+                        </div>
+                    </div>
+
                     <div class="row mt-3" id="inheritRow">
                         <div class="col-sm-4 col-form-label">
                             <p>Højeste konsekvens fra koblede behandlingsaktiviteter:</p>
@@ -74,21 +91,31 @@
                                     <th></th>
                                     <th style="font-weight: normal;">Registreret</th>
                                     <th style="font-weight: normal;">Organisationen</th>
+                                    <th style="font-weight: normal;">Samfundet</th>
                                 </tr>
                                 <tr>
                                     <td>Fortrolighed</td>
                                     <td style="text-align: center;" id="RF">1</td>
                                     <td style="text-align: center;" id="OF">2</td>
+                                    <td style="text-align: center;" id="SF">2</td>
                                 </tr>
                                 <tr>
                                     <td>Integritet</td>
                                     <td style="text-align: center;" id="RI">3</td>
                                     <td style="text-align: center;" id="OI">3</td>
+                                    <td style="text-align: center;" id="SI">3</td>
                                 </tr>
                                 <tr>
                                     <td>Tilgængelighed</td>
                                     <td style="text-align: center;" id="RT">4</td>
                                     <td style="text-align: center;" id="OT">3</td>
+                                    <td style="text-align: center;" id="ST">3</td>
+                                </tr>
+                                <tr>
+                                    <td>Autenticitet</td>
+                                    <td></td>
+                                    <td></td>
+                                    <td style="text-align: center;" id="SA">3</td>
                                 </tr>
                             </table>
                         </div>
@@ -100,21 +127,21 @@
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="userSelect" class="col-sm-4 col-form-label">Risikoejer</label>
+                        <label for="createRiskUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="createRiskUserSelect" hidden="" tabindex="-1" required></select>
                             <div class="invalid-feedback">Der skal vælges en risikoejer</div>
                         </div>
                     </div>
                     <div class="row mt-3">
-                        <label for="ouSelect" class="col-sm-4 col-form-label">Fagområde</label>
+                        <label for="createRiskOuSelect" class="col-sm-4 col-form-label">Fagområde</label>
                         <div class="col-sm-8">
-                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="ouSelect" hidden="" tabindex="-1" required></select>
+                            <select class="form-control form-select choices__input" th:field="*{responsibleOu}" data-trigger="" name="afdeling" id="createRiskOuSelect" hidden="" tabindex="-1" required></select>
                             <div class="invalid-feedback">Der skal vælges et fagområde</div>
                         </div>
                     </div>
                     <div class="row mt-3" id="presentSelectRow">
-                        <label for="assetSelect" class="col-sm-4 col-form-label">Tilstede på møde</label>
+                        <label for="presentAtMeetingSelect" class="col-sm-4 col-form-label">Tilstede på møde</label>
                         <div class="col-sm-8">
                             <select class="form-control form-select choices__input" name="presentAtMeeting" data-type="select-multiple"
                                     data-trigger="" id="presentAtMeetingSelect" hidden="" tabindex="-1" multiple></select>

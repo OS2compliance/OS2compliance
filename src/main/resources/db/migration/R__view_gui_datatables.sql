@@ -53,6 +53,7 @@ SELECT
     r.name,
     GROUP_CONCAT(DISTINCT u.name SEPARATOR ', ') as responsible_user_names,
     GROUP_CONCAT(DISTINCT u.uuid SEPARATOR ',') as responsible_user_uuids,
+    GROUP_CONCAT(DISTINCT cru.uuid SEPARATOR ',') as custom_responsible_user_uuids,
     GROUP_CONCAT(DISTINCT ou.name SEPARATOR ', ') as responsible_ou_names,
     GROUP_CONCAT(DISTINCT d.name SEPARATOR ', ') as department_names,
     r.updated_at,
@@ -92,6 +93,8 @@ LEFT JOIN threat_assessments ta ON ta.id = (
         WHERE rel.relation_b_id = tb.id OR rel.relation_a_id = tb.id)
 LEFT JOIN registers_responsible_users_mapping rum ON rum.register_id = r.id
 LEFT JOIN users u ON rum.user_uuid = u.uuid
+LEFT JOIN register_custom_responsible_user_mapping crum ON crum.register_id = r.id
+LEFT JOIN users cru ON crum.user_uuid = cru.uuid
 LEFT JOIN registers_responsible_ous_mapping roum ON roum.register_id = r.id
 LEFT JOIN ous ou ON roum.ou_uuid = ou.uuid
 LEFT JOIN registers_departments_mapping rdm ON rdm.register_id = r.id
@@ -117,6 +120,7 @@ SELECT
           WHEN a.asset_status = 'READY' THEN 3
         END) as asset_status_order,
     a.asset_category,
+    a.active AS active,
     (CASE WHEN a.asset_category = 'GREEN' THEN 1
           WHEN a.asset_category = 'YELLOW' THEN 2
           WHEN a.asset_category = 'RED' THEN 3
@@ -130,6 +134,7 @@ SELECT
         END) as assessment_order,
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos,
+    IF(old_kitos_prop.prop_value IS NULL, 0, 1) AS old_kitos,
     CASE
         WHEN EXISTS (
             SELECT 1
@@ -142,6 +147,7 @@ SELECT
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
     LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
+    LEFT JOIN properties old_kitos_prop ON old_kitos_prop.entity_id = a.id AND old_kitos_prop.prop_key = 'old_kitos_usage_uuid'
     LEFT JOIN threat_assessments ta ON ta.id = (
             SELECT tb.id FROM threat_assessments tb
                 JOIN relations r ON (r.relation_a_id = a.id AND r.relation_b_id=tb.id
@@ -174,10 +180,43 @@ SELECT
         END) as assessment_order,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks,
     t.from_external_source,
-    t.external_link
+    t.external_link,
+    GROUP_CONCAT(DISTINCT
+                 CASE
+                     WHEN a.name IS NOT NULL THEN a.name
+                     WHEN rgs.name IS NOT NULL THEN rgs.name
+                     END
+                 ORDER BY
+                 CASE
+                     WHEN a.name IS NOT NULL THEN a.name
+                     WHEN rgs.name IS NOT NULL THEN rgs.name
+                     END ASC
+                 SEPARATOR '||'
+    ) AS related_assets_and_registers,
+    (SELECT GROUP_CONCAT(DISTINCT tc.name ORDER BY tc.name ASC SEPARATOR ',')
+         FROM threat_assessment_catalogs tac
+         LEFT JOIN threat_catalogs tc ON tac.threat_catalog_identifier = tc.identifier
+         WHERE tac.threat_assessment_id = t.id
+           AND tc.deleted = false
+        ) AS threat_catalogs
 FROM
     threat_assessments t
-WHERE t.deleted = false;
+        LEFT JOIN relations rel ON (
+        (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+            OR (rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
+        )
+        LEFT JOIN assets a ON (
+        (rel.relation_a_type = 'ASSET' AND rel.relation_a_id = a.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
+            OR (rel.relation_b_type = 'ASSET' AND rel.relation_b_id = a.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+        )
+        LEFT JOIN registers rgs ON (
+        (rel.relation_a_type = 'REGISTER' AND rel.relation_a_id = rgs.id AND rel.relation_b_type = 'THREAT_ASSESSMENT' AND rel.relation_b_id = t.id)
+            OR (rel.relation_b_type = 'REGISTER' AND rel.relation_b_id = rgs.id AND rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
+        )
+WHERE
+    t.deleted = false
+GROUP BY
+    t.id;
 
 CREATE OR REPLACE
 VIEW view_gridjs_documents AS

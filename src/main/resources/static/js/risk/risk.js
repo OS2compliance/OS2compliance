@@ -5,7 +5,35 @@
         header: "d-flex justify-content-end"
     };
 
+    const createRiskService = new CreateRiskService();
+    const copyRiskService = new CopyRiskService();
+    const editRiskService = new EditRiskService();
+    const createTable = new CreateTable();
+    const preselect = new Preselect();
+    let registerView = true;
+
     document.addEventListener("DOMContentLoaded", function(event) {
+        const table = document.getElementById("risksDatatable");
+        if (table) {
+            registerView = false;
+            createTable.init();
+        } else {
+            preselect.init();
+        }
+        createRiskService.init();
+    });
+
+function Preselect() {
+    this.init = function () {
+        // Preselect the type
+        let type = document.getElementById("threatAssessmentType");
+        type.value = "REGISTER";
+        type.dispatchEvent(new Event("change"));
+    }
+}
+
+function CreateTable() {
+    this.init = function () {
         const defaultClassName = {
             table: 'table table-striped',
             search: "form-control",
@@ -25,8 +53,8 @@
                         searchKey: 'name'
                     },
                     formatter: (cell, row) => {
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
+                        const external = row.cells[12]['data']
+                        const externalLink = row.cells[13]['data']
                         const url = viewUrl + row.cells[0]['data'];
                         if(external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
@@ -48,12 +76,36 @@
                     searchable: {
                         searchKey: 'responsibleOU.name'
                     },
+                    width: '250px',
                 },
                 {
                     name: "Risikoejer",
                     searchable: {
                         searchKey: 'responsibleUser.name'
                     },
+                    width: '250px',
+                },
+                {
+                    name: "Entitet",
+                    searchable: {
+                        searchKey: 'relatedAssetsAndRegisters'
+                    },
+                    formatter: (cell, row) => {
+                        console.log(cell);
+                        let items = [];
+                        if (typeof cell === "string" && cell.trim() !== "") {
+                            items = cell.split("||").map(name => name.trim());
+                        } else if (Array.isArray(cell)) {
+                            items = cell.map(item => typeof item === "string" ? item.trim() : item.name);
+                        }
+
+                        const badges = items.map(option =>
+                            `<div class="badge bg-info me-1 mb-1" style="white-space: normal; word-break: break-word; overflow-wrap: break-word; text-align: left">${option}</div>`
+                        );
+
+                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
+                    },
+                    width: '300px'
                 },
                 {
                     name: "Opgaver",
@@ -81,7 +133,7 @@
                     name: "Risikovurdering",
                     searchable: {
                         searchKey: 'assessment',
-                       fieldId: 'riskAssessmentSearchSelector'
+                        fieldId: 'riskAssessmentSearchSelector'
                     },
                     width: '120px',
                     formatter: (cell, row) => {
@@ -113,6 +165,25 @@
                     },
                 },
                 {
+                    name: "Trusselskataloger",
+                    searchable: {
+                        searchKey: 'threatCatalogs',
+                    },
+                    width: '150px',
+                    formatter: (cell, row) => {
+                        if (!cell || cell.trim() === '') {
+                            return gridjs.html('<span class="text-muted">Ingen kataloger</span>');
+                        }
+
+                        const catalogs = cell.split(',').map(catalog => catalog.trim()).filter(catalog => catalog !== '');
+                        const badges = catalogs.map(catalog =>
+                            `<span class="badge bg-info me-1 mb-1">${catalog}</span>`
+                        );
+
+                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
+                    },
+                },
+                {
                     id: 'handlinger',
                     name: 'Handlinger',
                     sort: 0,
@@ -120,9 +191,9 @@
                     formatter: (cell, row) => {
                         const riskId = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[10]['data']
-                        const externalLink = row.cells[11]['data']
-                        const changeable = row.cells[9]['data']
+                        const external = row.cells[12]['data']
+                        const externalLink = row.cells[13]['data']
+                        const changeable = row.cells[11]['data']
                         let buttonHTML = ''
 
                         //edit button
@@ -157,15 +228,12 @@
                 headers: {
                     'X-CSRF-TOKEN': token
                 },
-                then: data => data.content.map(risk =>
-                    [ risk.id, risk.name, risk.type, risk.responsibleOU, risk.responsibleUser, risk.tasks, risk.date, risk.threatAssessmentReportApprovalStatus, risk.assessment, risk.changeable]
-                ),
                 then: data => data.content.map(obj => {
                         const result = []
                         for (const property of columnProperties) {
                             result.push(obj[property])
                         }
-                        return result;
+                    return result;
                     }
                 ),
                 total: data => data.totalCount
@@ -188,10 +256,28 @@
         };
         const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
 
-        new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable')
+        grid.on('ready', function() {
+            // Ensure correct page load behavior
+            if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
+                document.getElementsByClassName("gridjs-pages")[0].children[1]?.click();
+            }
+
+            // Initialize all Entitet Choices.js selects
+            Array.from(document.querySelectorAll("[id^='assetsRegistersSelect']"))
+                .map(select => select.id)
+                .forEach(elementId => {
+                    let elementById = document.getElementById(elementId);
+                    initSelect(elementById, 'form-control', { readOnly: true });
+                });
+        });
+
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable');
+
+        window.customGridFunctions = customGridFunctions;
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
-    });
+    }
+}
 
 function deleteClicked(riskId, name) {
     Swal.fire({
@@ -276,13 +362,6 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
         .catch(error => toastService.error(error));
 }
 
-const createRiskService = new CreateRiskService();
-const copyRiskService = new CopyRiskService();
-const editRiskService = new EditRiskService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    createRiskService.init();
-});
-
 function EditRiskService() {
     this.getScopedElementById = function(id) {
         return this.modalContainer.querySelector(`#${id}`);
@@ -324,6 +403,9 @@ function EditRiskService() {
         if (assetSelect !== null) {
             this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
         }
+
+        const catalogSelect = this.getScopedElementById('editThreatCatalogSelect');
+        initSelectWithConfirmation(catalogSelect);
 
         this.editAssessmentModal = new bootstrap.Modal(this.modalContainer);
         this.editAssessmentModal.show();
@@ -414,10 +496,14 @@ function CreateRiskService() {
 
         const registerSelect = this.getScopedElementById('registerSelect');
         const assetSelect = this.getScopedElementById('assetSelect');
-        this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        if (registerView) {
+            this.registerChoicesSelect = initRegisterSelectWithPreselect(registerSelect);
+        } else {
+            this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        }
         this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
-        this.userChoicesSelect = choiceService.initUserSelect("userSelect");
-        this.ouChoicesSelect = choiceService.initOUSelect("ouSelect");
+        this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
+        this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
 
         this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
              const userUuid = self.userChoicesSelect.passedElement.element.value;
@@ -447,6 +533,23 @@ function CreateRiskService() {
         if (presentSelect !== null) {
             this.presentSelect = choiceService.initUserSelect('presentAtMeetingSelect');
         }
+
+        const catalogSelect = this.getScopedElementById('threatCatalogSelect');
+        initSelect(catalogSelect);
+
+        let societyCheckbox = this.getScopedElementById("society");
+        let authenticityCheckbox = this.getScopedElementById("authenticity");
+        let authenticitySection = this.getScopedElementById("authenticitySection");
+        societyCheckbox.addEventListener('change', function() {
+            if (societyCheckbox.checked) {
+                // show authenticity checkbox
+                authenticitySection.hidden = false;
+            } else {
+                // hide authenticity checkbox and reset
+                authenticitySection.hidden = true;
+                authenticityCheckbox.checked = false;
+            }
+        });
 
         initFormValidationForForm("createRiskModal",
             () => {
@@ -528,7 +631,8 @@ function CreateRiskService() {
         }
         let registered = this.getScopedElementById("registered");
         let organisation = this.getScopedElementById("organisation");
-        if (!registered.checked && !organisation.checked) {
+        let society = this.getScopedElementById("society");
+        if (!registered.checked && !organisation.checked && !society.checked) {
             registered.classList.add('is-invalid');
             organisation.classList.add('is-invalid');
             this.getScopedElementById("checkboxError").classList.add('show');
@@ -562,10 +666,14 @@ function CreateRiskService() {
                     // set text in table
                     this.getScopedElementById("RF").innerHTML = data.rf === 0 ? "" : data.rf;
                     this.getScopedElementById("OF").innerHTML = data.of === 0 ? "" : data.of;
+                    this.getScopedElementById("SF").innerHTML = data.sf === 0 ? "" : data.sf;
                     this.getScopedElementById("RI").innerHTML = data.ri === 0 ? "" : data.ri;
                     this.getScopedElementById("OI").innerHTML = data.oi === 0 ? "" : data.oi;
+                    this.getScopedElementById("SI").innerHTML = data.si === 0 ? "" : data.si;
                     this.getScopedElementById("RT").innerHTML = data.rt === 0 ? "" : data.rt;
                     this.getScopedElementById("OT").innerHTML = data.ot === 0 ? "" : data.ot;
+                    this.getScopedElementById("ST").innerHTML = data.st === 0 ? "" : data.st;
+                    this.getScopedElementById("SA").innerHTML = data.sa === 0 ? "" : data.sa;
 
                     this.getScopedElementById("inheritRow").style.display = '';
                 }))
@@ -579,6 +687,60 @@ function CreateRiskService() {
     this.getScopedElementById = function(id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
+}
 
+function updateTypeSelectWithPreselect(choices, search, types, preselectName = null) {
+    fetch(`/rest/relatable/autocomplete?types=${types}&search=${search}`)
+        .then(response => response.json()
+            .then(data => {
+                const choiceItems = data.content.map(reg => {
+                    return {
+                        id: reg.id,
+                        name: truncateString(reg.typeMessage + ": " + reg.name, 60),
+                        fullName: reg.name,
+                    };
+                })
 
+                if (search === "" && preselectName) {
+                    const preselectedId = getPreselectedRegisterId();
+
+                    // Add the preselected option at the beginning
+                    choiceItems.unshift({
+                        id: preselectedId,
+                        name: truncateString("Fortegnelse: " + preselectName, 60),
+                        fullName: preselectName,
+                    });
+                }
+
+                choices.setChoices(choiceItems, 'id', 'name', true);
+
+                const registerTitle = document.getElementById("name");
+
+                // Now set the selection
+                if (search === "" && preselectName) {
+                    const preselectedId = getPreselectedRegisterId();
+                    choices.setChoiceByValue(preselectedId);
+                    registerTitle.value = preselectName;
+                }
+            }))
+        .catch(error => toastService.error(error));
+}
+
+function initRegisterSelectWithPreselect(registerSelectElement) {
+    const registerChoices = initSelect(registerSelectElement);
+    const regi = document.getElementById("breadcrump-register-name");
+    const initialName = regi.getAttribute("data-register-name");
+    updateTypeSelectWithPreselect(registerChoices, "", "REGISTER", initialName);
+    registerSelectElement.addEventListener("search",
+        function(event) {
+            updateTypeSelectWithPreselect(registerChoices, event.detail.value, "REGISTER");
+        },
+        false,
+    );
+    return registerChoices;
+}
+
+function getPreselectedRegisterId() {
+    const breadcrumb = document.getElementById("breadcrump-register-name");
+    return breadcrumb.getAttribute("data-register-id");
 }

@@ -1,0 +1,1 @@
+ALTER TABLE threat_assessments ADD comment TEXT NULL;

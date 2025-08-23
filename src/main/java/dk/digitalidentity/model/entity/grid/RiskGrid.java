@@ -24,7 +24,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class RiskGrid {
+public class RiskGrid  implements HasSingleResponsibleUser {
     @Id
     private Long id;
 
@@ -34,6 +34,9 @@ public class RiskGrid {
     @ManyToOne
     @JoinColumn(name = "responsible_uuid")
     private User responsibleUser;
+
+	@Column
+	private String relatedAssetsAndRegisters;
 
     @ManyToOne
     @JoinColumn(name = "responsible_ou_uuid")
@@ -68,4 +71,7 @@ public class RiskGrid {
 
     @Column
     private String externalLink;
+
+	@Column
+	private String threatCatalogs;
 }

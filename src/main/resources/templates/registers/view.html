@@ -1,11 +1,18 @@
 <!DOCTYPE html>
-<html lang="da">
-<head th:replace="~{fragments/header :: head (sweetalerts = true)}"></head>
+<html lang="da" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity5">
+<head th:replace="~{fragments/header :: head (sweetalerts = true, gridjs = true, burgermenu = true)}"></head>
 <link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
 <script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <script th:src="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.min.js}" defer></script>
 <script th:src="@{/js/data-processing-component.js}" defer></script>
+<script th:src="@{/js/risk/risk.js}" defer></script>
+
+<link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
+<link rel="stylesheet" th:href="@{/css/dataProcessing.css}" />
+
+<link rel="stylesheet" th:href="@{/vendor/choices/styles/choices.min.css}" />
+<script th:src="@{/vendor/choices/scripts/choices.min.js}" defer></script>
 
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
@@ -13,20 +20,26 @@
         <div class="content__header content__boxed overlapping">
             <div class="content__wrap">
                 <div class="d-md-flex">
-                    <div class="me-auto">
+                    <div class="me-auto w-75">
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/registers}">Fortegnelse</a></li>
-                                <li class="breadcrumb-item active" aria-current="page" th:text="${#strings.abbreviate(register.name, 25)}"></li>
+                                <li class="breadcrumb-item active" aria-current="page" id="breadcrump-register-name" th:data-register-id="${register.id}" th:data-register-name="${register.name}" th:text="${#strings.abbreviate(register.name, 25)}"></li>
                             </ol>
                         </nav>
                         <div class="row mt-4 mb-3">
                             <div class="col-12">
-                                <h1 class="page-title text-no-transform fs-2 mb-0" th:text="${register.name}"></h1>
+                                <!--suppress XmlInvalidId -->
+                                <input id="registerNameField" form="editDescId" name="name" class="page-title transparent-input mb-0 mt-2 col-12" th:value="${register.name}" disabled />
                             </div>
                         </div>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
+                                class="btn btn-info btn-lg hstack gap-2"
+                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createModal">
+                            <i class="ti-plus"></i> <span class="vr"></span> Ny risikovurdering
+                        </button>
                         <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
                         </button>
@@ -46,6 +59,9 @@
                             <button class="nav-link" th:classappend="${section == 'purpose'} ? 'active' : ''" data-bs-toggle="tab" data-bs-target="#_dm-tabsPurpose" type="button" role="tab" aria-controls="purpose" th:aria-selected="${section == 'purpose'}">Formål & Lovhjemmel</button>
                         </li>
                         <li class="nav-item" role="presentation">
+                            <button class="nav-link" th:classappend="${section == 'kledetails'} ? 'active' : ''" data-bs-toggle="tab" data-bs-target="#_dm-tabsKLEDetails" type="button" role="tab" aria-controls="risk" th:aria-selected="${section == 'kledetails'}">KLE</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
                             <button class="nav-link" th:classappend="${section == 'dataprocessing'} ? 'active' : ''" data-bs-toggle="tab" data-bs-target="#_dm-tabsDataProcessing" type="button" role="tab" aria-controls="dataprocessing" th:aria-selected="${section == 'dataprocessing'}">Databehandling</button>
                         </li>
                         <li class="nav-item" role="presentation">
@@ -59,6 +75,9 @@
                         </div>
                         <div id="_dm-tabsPurpose" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'purpose'} ? 'active show' : ''" aria-labelledby="purpose-tab">
                             <div th:replace="~{registers/purpose :: purpose(${register})}"></div>
+                        </div>
+                        <div id="_dm-tabsKLEDetails" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'kledetails'} ? 'active show' : ''" aria-labelledby="kleDetails-tab">
+                            <div th:replace="~{registers/fragments/kleDetailFragment :: kleDetailFragment(${register})}"></div>
                         </div>
                         <div id="_dm-tabsDataProcessing" class="tab-pane fade" role="tabpanel" th:classappend="${section == 'dataprocessing'} ? 'active show' : ''" aria-labelledby="dataprocessing-tab">
                             <div th:replace="~{registers/dataprocessingFragment :: dataProcessing(${dpChoices}, ${register})}"></div>
@@ -77,15 +96,16 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='fortegnelse')}"></nav>
 
-    <script type="text/javascript" th:src="@{/js/register/details.js}"></script>
+    <script type="module" th:src="@{/js/register/details/details.js}"></script>
 </div>
 
 <div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=DocumentRelationModal)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=TaskRelationModal)}"></div>
 <div th:replace="~{registers/fragments/addAssetRelation :: addAssetRelation(relatableId=${register.id})}"></div>
+<div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
 <div id="EditRelationModalHolder"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, gridjs = true, gridoptions = true)}"></div>
 
 </body>
 

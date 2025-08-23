@@ -5,25 +5,35 @@ import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
+import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
+import dk.digitalidentity.report.riskimage.RiskImageService;
+import dk.digitalidentity.report.riskimage.RiskImageView;
+import dk.digitalidentity.report.riskimage.dto.ThreatRow;
+import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
+import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
+import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -77,12 +87,52 @@ public class ReportController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
     private final DPIAService dpiaService;
+	private final UserService userService;
+	private final RegisterService registerService;
+	private final SystemOwnerOverviewService systemOwnerOverviewService;
+	private final RiskImageService riskImageService;
 
-    @GetMapping
+	@GetMapping
     public String reportList(final Model model) {
         model.addAttribute("tags", tagDao.findAll());
         return "reports/index";
     }
+
+	@GetMapping("overview/systemowner")
+	public ModelAndView systemOwnerOverview(final HttpServletResponse response) {
+
+		// Validate user has access
+		User currentUser = userService.currentUser();
+		if (currentUser == null || !assetService.isSystemOwnerAnywhere(currentUser.getUuid())){
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		log.info("Building system owner overview spreadsheet");
+
+		// Metadata
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"systemejer_overblik.xls\"");
+
+		// Build content
+		Set<Asset> systemOwnerAssets = assetService.getAllForSystemOwner(currentUser.getUuid());
+
+		Map<Asset, Set<Relatable>> assetRelations = new HashMap<>();
+		for (Asset asset : systemOwnerAssets) {
+			assetRelations.put(asset, new HashSet<>(relationService.findAllRelatedTo(asset))); // Always true predicate to get all tasks
+		}
+
+		// Handle tasks not related to assets, but with matching responsible user
+		Set<Task> assetUnrelatedTasks = taskService.findAllUnrelatedTasksForResponsibleUser(currentUser.getUuid());
+
+		// Handle registers not related to assets, but with matching responsible user
+		Set<Register> assetUnrelatedRegisters = registerService.findAllUnrelatedRegistersForResponsibleUser(currentUser);
+
+		final Map<String, Object> model = systemOwnerOverviewService.mapToModel(assetRelations, assetUnrelatedTasks, assetUnrelatedRegisters);
+
+		log.info("Finished collecting data, building spreadsheet");
+
+		return new ModelAndView(new SystemOwnerOverviewView(), model);
+	}
 
     @GetMapping("incidents")
     public String incidents(final Model model,
@@ -274,7 +324,6 @@ public class ReportController {
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
                                                                           final HttpServletResponse response) throws IOException {
         DPIA dpia = dpiaService.find(dpiaId);
-//        Asset asset = dpia.getAssets();
         if (type.equals("PDF")) {
             byte[] byteData = assetService.getDPIAScreeningPdf(dpia);
             response.addHeader("Content-disposition", "attachment;filename=screening vedr " + dpia.getName() + ".pdf");
@@ -322,6 +371,36 @@ public class ReportController {
 
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
+
+
+	@GetMapping("riskimage")
+	public ModelAndView getRiskImageReport(
+			final HttpServletResponse response,
+			@RequestParam List<String> includedTypes,
+			@RequestParam(required = false) List<String> latestOnly,
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate fromDate,
+			@RequestParam  @DateTimeFormat(pattern = "dd/MM-yyyy")LocalDate toDate) {
+
+		// Validate
+		if (fromDate == null && toDate == null) {
+			throw new IllegalArgumentException("fromDate and toDate must be provided");
+		}
+
+		// Metadata
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"risikobillede.xlsx\"");
+
+		Set<ThreatAssessment> relevantThreatAssessments = riskImageService.findRelevantThreatAssessments(includedTypes, latestOnly, fromDate, toDate);
+
+		List<ThreatRow> threats = riskImageService.mapToRows(relevantThreatAssessments);
+
+		final Map<String, Object> model = new HashMap<>();
+		model.put("threats", threats);
+
+		return new ModelAndView(new RiskImageView(), model);
+	}
+
+
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
                                   final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {

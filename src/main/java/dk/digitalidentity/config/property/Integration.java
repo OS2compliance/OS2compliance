@@ -18,4 +18,7 @@ public class Integration {
 
     @NestedConfigurationProperty
     private DBS dbs = new DBS();
+
+	@NestedConfigurationProperty
+	private KLEClient kleClient = new KLEClient();
 }

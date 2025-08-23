@@ -24,6 +24,7 @@ import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.data_processing.DataProcessingInfoReceiver;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
@@ -72,6 +73,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -295,7 +297,7 @@ public class DocxServiceTest {
         register.setResponsibleOus(List.of(OrganisationUnit.builder().name("Enhed #" + num).build()));
         register.setDepartments(List.of(OrganisationUnit.builder().name("Afdeling #" + num).build()));
         register.setInformationResponsible("Kommunen er dataansvarlig for behandlingen af personoplysningerne");
-        register.setRegisterRegarding("Plappe");
+        register.setRegisterRegarding(new HashSet<>());
         register.setPurpose("Behandling af personoplysninger sker med henblik på at hjælpe ledige borgere i uddannelse eller job, hjælpe sygemeldte borgere tilbage på arbejdsmarkedet samt godkendelse af arbejdsmiljø mv. på private erhvervsvirksomheder, der beskæftiger ledige midlertidigt.");
         register.setInformationObligation(InformationObligationStatus.YES);
         register.setInformationObligationDesc("En beskrivelse her");
@@ -313,12 +315,25 @@ public class DocxServiceTest {
     }
 
     private List<DataProcessingCategoriesRegistered> createRegisteredCategories() {
+
+        DataProcessingInfoReceiver rec1 = DataProcessingInfoReceiver.builder()
+                .choiceValue(ChoiceValue.builder()
+                        .identifier("dp-receiver-lawyers")
+                        .build())
+                .build();
+        DataProcessingInfoReceiver rec2 = DataProcessingInfoReceiver.builder()
+                .choiceValue(ChoiceValue.builder()
+                        .identifier("dp-receiver-citizens")
+                        .build())
+                .build();
+
+
         return List.of(
             DataProcessingCategoriesRegistered.builder()
                 .personCategoriesInformationIdentifiers(Set.of("dp-person-categories-sensitive","dp-person-categories-offences","dp-person-categories-classified","dp-person-categories-sensitive-etnicity"))
                 .personCategoriesRegisteredIdentifier("dp-categories-registered-adult")
                 .informationPassedOn(InformationPassedOn.YES)
-                .informationReceivers(Set.of("dp-receiver-lawyers","dp-receiver-citizens"))
+                .informationReceivers(Set.of(rec1, rec2))
                 .build(),
             DataProcessingCategoriesRegistered.builder()
                 .personCategoriesInformationIdentifiers(Set.of("dp-person-categories-sensitive","dp-person-categories-sensitive-religion","dp-person-categories-sensitive-union","dp-person-categories-regular"))
@@ -400,7 +415,7 @@ public class DocxServiceTest {
         tct2.setDescription("There is no one who loves pain itself, who seeks after it and wants to have it, simply because it is pain..");
         catalog.setIdentifier("test");
         catalog.setThreats(Arrays.asList(tct1, tct2));
-        assessment.setThreatCatalog(catalog);
+        assessment.setThreatCatalogs(List.of(catalog));
         assessment.setThreatAssessmentResponses(
             List.of(createResponseWithResidual(tct1), createResponse(tct2))
         );

@@ -4,18 +4,25 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.dao.TagDao;
+import dk.digitalidentity.integration.kitos.KitosConstants;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
+import dk.digitalidentity.model.entity.enums.RegisterSetting;
+import dk.digitalidentity.model.entity.enums.ReportSetting;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceListImporter;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
-import dk.digitalidentity.service.importer.ThreatCatalogImporter;
+import dk.digitalidentity.service.kle.KLEService;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -33,8 +40,13 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.UUID;
+import java.util.Optional;
 
 import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 
@@ -61,8 +73,11 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     private final PlatformTransactionManager transactionManager;
     private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
 	private final DPIAService dpiaService;
+	private final ChoiceService choiceService;
+	private final RegisterService registerService;
+	private final KLEService kleService;
 
-    @Value("classpath:data/registers/*.json")
+	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
 
     @Override
@@ -93,14 +108,16 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(20, this::seedV20);
         incrementAndPerformIfVersion(21, this::seedV21);
         incrementAndPerformIfVersion(22, this::seedV22);
+        incrementAndPerformIfVersion(23, this::seedV23);
+        incrementAndPerformIfVersion(24, this::seedV24);
+        incrementAndPerformIfVersion(25, this::seedV25);
+        incrementAndPerformIfVersion(26, this::seedV26);
+        incrementAndPerformIfVersion(27, this::seedV27);
+        incrementAndPerformIfVersion(28, this::seedV28);
+        incrementAndPerformIfVersion(29, this::seedV29);
     }
 
-    @SneakyThrows
-    private void seedV20() {
-
-    }
-
-    private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
+	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
         final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
         transactionTemplate.execute(status -> {
             final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
@@ -111,6 +128,92 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+	// TODO 2025/08/18 Remove when all is migrated
+	@SneakyThrows
+	private void seedV29() {
+		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
+		sortedResources.sort(Comparator.comparing(Resource::getFilename));
+		for (final Resource register : sortedResources) {
+			registerImporter.enrichWithKLE(register);
+		}
+	}
+
+	// TODO 2025/08/18 Remove when all is migrated
+	@SneakyThrows
+	private void seedV28() {
+		registerService.findByName("03. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge og seniorjob")
+				.ifPresent(r -> r.setName("03. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge, seniorjob og sygedagpengeforsikring"));
+		registerService.findByName("58. Behandling af personoplysninger i forbindelse med personlig hjælp herunder anvendelse af velfærdsteknologiske hjælpemidler, frit valg til personlig hjælp samt delegation")
+				.ifPresent(r -> r.setName("58. Behandling af personoplysninger i forbindelse med personlig hjælp herunder anvendelse af velfærdsteknologiske hjælpemidler og frit valg til personlig hjælp."));
+		registerService.findByName("61. Behandling af personoplysninger i forbindelse med hjemmesygepleje, genoptræning og behandlingstilbud efter serviceloven")
+				.ifPresent(r -> r.setName("61. Behandling af personoplysninger i forbindelse med hjemmesygepleje, genoptræning og behandlingstilbud efter sundhedsloven"));
+	}
+
+	/**
+	 * Load initial KLE data, and add it to registers
+	 */
+	private void seedV27() {
+		kleService.loadFromClassPath();
+	}
+
+
+	private void seedV26 () {
+		for (ReportSetting setting : ReportSetting.values()) {
+			settingsService.createSetting(setting.getKey(), "", "report", true);
+		}
+	}
+
+	private void seedV25 () {
+		// Update each of these specific lists to be editable
+		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list","dp-person-categories-list",  "dp-person-storage-duration-list", "dp-receiver-list");
+		for (String identifier : listIdentifiers) {
+			Optional<ChoiceList> list = choiceService.findChoiceList(identifier);
+			if (list.isEmpty()) {
+				continue;
+			}
+
+			list.get().setCustomizable(true);
+		}
+		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "Systemejer" , "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Systemansvarlig" , "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Driftsansvarlig" , "asset", true);
+	}
+
+	private void seedV24 () {
+		ChoiceList choiceList = choiceService.saveChoiceList(ChoiceList.builder()
+						.identifier("record-of-processing-activity-regarding")
+						.name("Fortegnelse over behandlingsaktivitet angående")
+						.multiSelect(true)
+						.customizable(true)
+						.values(new ArrayList<>())
+				.build());
+
+		// Migrate data from existing column to choicelists
+		final Map<String, ChoiceValue> choices = new HashMap<>();
+		registerService.findAll().stream()
+				.filter(r -> r.getOldRegisterRegarding() != null && !r.getOldRegisterRegarding().isEmpty())
+				.forEach(r -> {
+					final String oldValue = r.getOldRegisterRegarding();
+					// Avoid duplicates
+					if (choices.containsKey(oldValue)) {
+						choiceList.getValues().add(choices.get(oldValue));
+					} else {
+						final ChoiceValue oldValueChoice = ChoiceValue.builder()
+								.caption(oldValue)
+								.description(oldValue)
+								.identifier(UUID.randomUUID().toString())
+								.build();
+						choiceList.getValues().add(oldValueChoice);
+						choices.put(oldValue, oldValueChoice);
+					}
+					r.setRegisterRegarding(Set.of(choices.get(oldValue)));
+				});
+	}
+
+	private void seedV23 () {
+		settingsService.createSetting(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse" , "register", true);
+	}
 
 	private void seedV22() {
 		dpiaService.findAll()
@@ -128,6 +231,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         settingsService.createSetting(NotificationSetting.ONDAY.getValue(), "false" , "notification", true);
         settingsService.createSetting(NotificationSetting.EVERYSEVENDAYSAFTER.getValue(), "false" , "notification", true);
     }
+
+	private void seedV20() {
+
+	}
 
     private void seedV19() {
         try {
@@ -155,7 +262,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
     private void seedV17() {
-
+		// No longer needed
     }
 
     private void seedV14() {

@@ -2,17 +2,21 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringSetNullSafeConverter;
+import dk.digitalidentity.model.entity.data_processing.DataProcessingInfoReceiver;
 import dk.digitalidentity.model.entity.enums.InformationPassedOn;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -58,9 +62,23 @@ public class DataProcessingCategoriesRegistered {
     @Enumerated(EnumType.STRING)
     private InformationPassedOn informationPassedOn;
 
-    @Column(name = "information_receivers")
+    @Column(name = "information_receivers_old")
     @Convert(converter = StringSetNullSafeConverter.class)
     @Builder.Default
-    private Set<String> informationReceivers = new HashSet<>();
+    private Set<String> informationReceiversOld = new HashSet<>();
+
+	@OneToMany(mappedBy = "dataProcessingCategoriesRegistered",
+			cascade = {CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH},
+			orphanRemoval = true,
+			fetch = FetchType.LAZY
+	)
+	@Builder.Default
+	private Set<DataProcessingInfoReceiver> informationReceivers = new HashSet<>();
+
+	@Column
+	private String receiverComment;
+
+	@Column
+	private String note;
 
 }

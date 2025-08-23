@@ -191,7 +191,9 @@
             grid = new gridjs.Grid(gridConfig).render( document.getElementById( "registersDatatable" ));
 //            searchService.initSearch(grid, gridConfig);
 
-            new CustomGridFunctions(grid ,gridRegistersUrl, 'registersDatatable')
+            const customGridFunctions = new CustomGridFunctions(grid ,gridRegistersUrl, 'registersDatatable');
+
+            window.customGridFunctions = customGridFunctions;
 
             gridOptions.init(grid, document.getElementById("gridOptions"));
 		});

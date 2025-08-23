@@ -1,1 +1,28 @@
-{"packageName":"kl_article30","name":"42. Behandling af personoplysninger i forbindelse med biblioteker","description":"Behandling af personoplysninger sker i forbindelse med udlån af bøger og brug af bibliotekets faciliteter. Herunder rykkere og bøder.","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "42. Behandling af personoplysninger i forbindelse med biblioteker",
+  "description": "Behandling af personoplysninger sker i forbindelse med udlån af bøger og brug af bibliotekets faciliteter. Herunder rykkere og bøder.",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "21"
+  ],
+  "kleGroups": [
+    "21.00",
+    "21.01",
+    "21.02",
+    "21.03",
+    "21.05",
+    "21.06",
+    "21.07",
+    "21.08",
+    "21.09",
+    "21.10",
+    "21.11",
+    "21.15",
+    "21.20"
+  ]
+}

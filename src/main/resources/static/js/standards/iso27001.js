@@ -98,7 +98,7 @@ function submitForm(event, button, state) {
     let statusSelect = document.getElementById(`statusSelect${sectionId}`);
     let statusValue = statusSelect.value;  // Single select, can use .value
     let documentsSelect = document.getElementById(`documentsSelect${sectionId}`);
-    let editDescript = document.querySelector("#editorContainer" + sectionId + "> div > div.ck.ck-editor__main > div > p").innerHTML;
+    let editDescript = document.querySelector("#editorContainer" + sectionId + " textarea").value;
 
     //manually handle submit with fetch
     let form = document.getElementById(`sectionForm${sectionId}`);

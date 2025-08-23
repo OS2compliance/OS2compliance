@@ -52,6 +52,10 @@ public class RelationService {
         return relationDao.findRelatedToWithType(relatable.getId(), relatedType);
     }
 
+	public List<Long> findAllIdsRelatedToWithType(final Collection<Long> relatedToIds, final RelationType relatedType) {
+		return relationDao.findAllIdsRelatedToWithType(relatedToIds, relatedType);
+	}
+
     public List<Relation> findRelatedToWithType(final Collection<Long> relatedToId, final RelationType relatedType) {
         return relationDao.findRelatedToWithType(relatedToId, relatedType);
     }
@@ -70,6 +74,7 @@ public class RelationService {
                 .map(r -> Objects.equals(r.getRelationAId(), relatable.getId()) ? r.getRelationBId() : r.getRelationAId())
                 .map(rid -> relatableDao.findById(rid).orElseGet(() -> {
                     log.error("Could not look up related entity {}, source relation type {}, id {}", rid, relatable.getRelationType(), relatable.getId());
+					relationDao.deleteRelationByEntityIds(rid, relatable.getId());
                     return null;
                 }))
                 .filter(Objects::nonNull)
