@@ -1,1 +1,21 @@
-{"packageName":"kl_article30","name":"B. Behandling af personoplysninger i forbindelse med kommunens overholdelse af Databeskyttelses-forordningens regler om den registreredes rettigheder samt dataudveksling ml. fagsystemer","description":"Behandlingen af personoplysninger sker med henblik på at sikre den registreredes rettigheder i henhold til databeskyttelsesforordningen og databeskyttelsesloven, eks. oplysningspligten, indsigtsretten, dataportabilitet og indsigelse mv.","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp10","register-gdpr-valp11","register-gdpr-p7-f","register-gdpr-valp7"]}
+{
+  "packageName": "kl_article30",
+  "name": "B. Behandling af personoplysninger i forbindelse med kommunens overholdelse af Databeskyttelses-forordningens regler om den registreredes rettigheder samt dataudveksling ml. fagsystemer",
+  "description": "Behandlingen af personoplysninger sker med henblik på at sikre den registreredes rettigheder i henhold til databeskyttelsesforordningen og databeskyttelsesloven, eks. oplysningspligten, indsigtsretten, dataportabilitet og indsigelse mv.",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp10",
+    "register-gdpr-valp11",
+    "register-gdpr-p7-f",
+    "register-gdpr-valp7"
+  ],
+  "kleMainGroups": [
+    "00",
+    "23"
+  ],
+  "kleGroups": [
+    "00.75",
+    "23.25"
+  ]
+}

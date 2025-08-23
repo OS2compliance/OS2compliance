@@ -1,1 +1,22 @@
-{"packageName":"kl_article30","name":"09. Behandling af personoplysninger i forbindelse med valg til råd, nævn, bestyrelser og øvrige organer.","description":"Behandling af personoplysninger sker med henblik på at kunne udpege medlemmer til råd, nævn, bestyrelser og øvrige organer","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "09. Behandling af personoplysninger i forbindelse med valg til råd, nævn, bestyrelser og øvrige organer.",
+  "description": "Behandling af personoplysninger sker med henblik på at kunne udpege medlemmer til råd, nævn, bestyrelser og øvrige organer",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "84"
+  ],
+  "kleGroups": [
+    "84.04",
+    "84.05",
+    "84.06",
+    "84.07",
+    "84.10",
+    "84.11",
+    "84.12"
+  ]
+}

@@ -5,6 +5,8 @@ import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
+import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.kle.KLEService;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 

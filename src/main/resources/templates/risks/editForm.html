@@ -37,6 +37,15 @@
                             <div class="invalid-feedback">Der skal angives en titel</div>
                         </div>
                     </div>
+                    <div class="row mt-3">
+                        <label for="editThreatCatalogSelect" class="col-sm-4 col-form-label">Trusselskatalog</label>
+                        <div class="col-sm-8">
+                            <select class="choices__input form-select" data-type="select-multiple" data-trigger="" th:field="*{threatCatalogs}" id="editThreatCatalogSelect" multiple>
+                                <option th:each="catalog : ${threatCatalogs}"
+                                        th:value="${catalog.identifier}" th:text="${catalog.name}"></option>
+                            </select>
+                        </div>
+                    </div>
 
                     <div class="row mt-3">
                         <label for="editUserSelect" class="col-sm-4 col-form-label">Risikoejer</label>

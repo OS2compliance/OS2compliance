@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
 <script th:src="@{/js/asset/form.js}" defer></script>
+<script th:src="@{/js/export-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/assets.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -21,6 +22,9 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="exportGridServerSide(customGridFunctions, 'Aktiver')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
+                            <i class="ti-bookmark"></i> <span class="vr"></span>Gem som Excel
+                        </button>
 						<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#formDialog">
 							<i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj aktiv
 						</button>
@@ -54,7 +58,12 @@
                                     <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
                                             th:value="${option}" th:text="${option.message}"></option>
                                 </select>
-
+                                <!-- Custom search selectors-->
+                                <select class="form-control form-select editField" data-trigger="" name="activeAssetSelector" id="activeAssetSelector" tabindex="-1" required >
+                                    <option th:text="'Alle'" th:value="null"></option>
+                                    <option value="1">Ja</option>
+                                    <option value="0">Nej</option>
+                                </select>
                                 <!-- Custom search selectors-->
                                 <select class="form-control form-select editField" data-trigger="" name="assetThirdCountrySelector" id="assetThirdCountrySelector" tabindex="-1" required >
                                     <option th:text="'Alle'" th:value="null"></option>

@@ -10,6 +10,7 @@ import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Property;
@@ -20,6 +21,7 @@ import org.apache.commons.lang3.BooleanUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
+import org.mapstruct.Named;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
@@ -59,10 +61,12 @@ public interface AssetMapper {
             .assetCategory(nullSafe(() -> assetGrid.getAssetCategory().getMessage()))
             .assetCategoryOrder(nullSafe(() -> assetGrid.getAssetCategoryOrder()))
 
-            .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos())))
+            .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos() || assetGrid.isOldKitos())))
             .registers(nullSafe(() -> assetGrid.getRegisters()))
             .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
             .changeable(false)
+			.oldKitos(assetGrid.isOldKitos())
+			.active(assetGrid.isActive())
             .build();
     }
 
@@ -101,6 +105,7 @@ public interface AssetMapper {
         @Mapping(source = "managers", target = "responsibleUsers"),
         @Mapping(source = "suppliers", target = "subSuppliers"),
         @Mapping(source = "assetType", target = "assetType"),
+        @Mapping(source = "productLinks", target = "productLinks"),
     })
     AssetEO toEO(Asset asset);
 
@@ -125,7 +130,27 @@ public interface AssetMapper {
             .build();
     }
 
-    @Mappings({
+	default List<String> map(List<AssetProductLink> links) {
+		if (links == null) return null;
+		return links.stream()
+				.map(AssetProductLink::getUrl)
+				.toList();
+	}
+
+	@Named("mapToProductLinks")
+	default List<AssetProductLink> mapToProductLinks(List<String> urls) {
+		if (urls == null) return null;
+		return urls.stream()
+				.map(url -> {
+					AssetProductLink link = new AssetProductLink();
+					link.setUrl(url);
+					return link;
+				})
+				.toList();
+	}
+
+
+	@Mappings({
         @Mapping(target = "id", ignore = true),
         @Mapping(target = "entity", ignore = true)
     })
@@ -157,6 +182,7 @@ public interface AssetMapper {
         @Mapping(target = "tia", ignore = true),
         @Mapping(target = "assetOversights", ignore = true),
         @Mapping(target = "responsibleUsers", source = "systemOwners"),
+        @Mapping(target = "operationResponsibleUsers", source = "systemOwners"),
         @Mapping(target = "suppliers", ignore = true),
         @Mapping(target = "measures", ignore = true),
         @Mapping(target = "dpias", ignore = true),
@@ -170,8 +196,12 @@ public interface AssetMapper {
         @Mapping(target = "oversightResponsibleUser", ignore = true),
         @Mapping(target = "assetCategory", ignore = true),
         @Mapping(target = "roles", ignore = true),
-        @Mapping(target = "assetType", ignore = true)
-    })
+        @Mapping(target = "assetType", ignore = true),
+		@Mapping(target = "aiStatus", ignore = true),
+		@Mapping(target = "aiRisk", ignore = true),
+		@Mapping(target = "active", ignore = true),
+		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
+	})
     Asset fromEO(AssetCreateEO assetCreateEO);
 
 }

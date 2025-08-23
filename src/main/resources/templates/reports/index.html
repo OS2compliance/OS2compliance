@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true)}"></head>
+<head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
@@ -80,10 +80,16 @@
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">Tag-rapport</h5>
                             <i class="pli-printer fs-3 text-info"></i>
-
                         </div>
 
                         <p class="mb-1">Kontrol liste</p>
+                    </button>
+                    <button id="riskImageDialogButton" href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#riskImageReportDialog" aria-expanded="false">
+                        <div class="d-flex w-100 justify-content-between">
+                            <h5 class="mb-1">Risikobillede</h5>
+                            <i class="pli-download-2 fs-3 text-info"></i>
+                        </div>
+                        <p class="mb-1">Samlet billede af udvalgte risikovurderinger</p>
                     </button>
                 </div>
               </div>
@@ -98,9 +104,11 @@
 </div>
 
 <div th:replace="~{reports/fragments/tagReportDialog :: tagReportDialog}"></div>
+<div th:replace="~{reports/fragments/riskImageReportDialog :: riskImageReportDialog}"></div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
+<script type="module" th:src="@{/js/reports/report.js}"></script>
 </body>
 
 </html>

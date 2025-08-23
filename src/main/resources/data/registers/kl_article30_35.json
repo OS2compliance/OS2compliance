@@ -1,1 +1,20 @@
-{"packageName":"kl_article30","name":"36. Behandling af personoplysninger i forbindelse med spildevand og vandløb","description":"Behandlingen af personoplysninger sker i forbindelse med tilladelser og påbud om tilslutning, nedsivning eller udledning af spildevand samt ekspropriation til spildevandsanlæg","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp10","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "36. Behandling af personoplysninger i forbindelse med spildevand og vandløb",
+  "description": "Behandlingen af personoplysninger sker i forbindelse med tilladelser og påbud om tilslutning, nedsivning eller udledning af spildevand samt ekspropriation til spildevandsanlæg",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp10",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "06"
+  ],
+  "kleGroups": [
+    "06.00",
+    "06.01",
+    "06.02",
+    "06.11"
+  ]
+}

@@ -1,1 +1,19 @@
-{"packageName":"kl_article30","name":"80. Behandling af personoplysninger i forbindelse med bekæmpelse af ungdomskriminalitet (ungdomskriminalitets-nævnet)","description":"Behandlingen af personoplysninger sker med henblik på bekæmpelse af ungdomskriminalitet herunder kommunens sagsbehandling ifm. ungdomskriminalitetsnævnets myndighed","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp10","register-gdpr-valp11","register-gdpr-p7-f","register-gdpr-valp7"]}
+{
+  "packageName": "kl_article30",
+  "name": "80. Behandling af personoplysninger i forbindelse med bekæmpelse af ungdomskriminalitet (ungdomskriminalitets-nævnet)",
+  "description": "Behandlingen af personoplysninger sker med henblik på bekæmpelse af ungdomskriminalitet herunder kommunens sagsbehandling ifm. ungdomskriminalitetsnævnets myndighed",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp10",
+    "register-gdpr-valp11",
+    "register-gdpr-p7-f",
+    "register-gdpr-valp7"
+  ],
+  "kleMainGroups": [
+    "27"
+  ],
+  "kleGroups": [
+    "27.29"
+  ]
+}

@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
@@ -15,6 +16,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -23,8 +25,9 @@ public class RegisterService {
     private final RegisterDao registerDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
     private final DataProcessingDao dataProcessingDao;
+	private final RelationService relationService;
 
-    public Optional<Register> findById(final Long id) {
+	public Optional<Register> findById(final Long id) {
         return registerDao.findById(id);
     }
 
@@ -77,6 +80,10 @@ public class RegisterService {
         return registerDao.existsByName(title);
     }
 
+	public Optional<Register> findByNamePrefix(final String prefix) {
+		return registerDao.findFirstByNameStartingWithIgnoreCase(prefix);
+	}
+
     public Optional<Register> findByName(final String name) {
         return registerDao.findByName(name);
     }
@@ -100,7 +107,15 @@ public class RegisterService {
     public void delete(final Register register) {
         dataProcessingDao.delete(register.getDataProcessing());
         consequenceAssessmentDao.delete(register.getConsequenceAssessment());
+		relationService.deleteRelatedTo(register.getId());
         registerDao.delete(register);
     }
 
+	public Set<Register> findAllUnrelatedRegistersForResponsibleUser(User user) {
+		return registerDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(user);
+	}
+
+	public boolean isInUseOnConsequenceAssessment(Long existingId) {
+		return consequenceAssessmentDao.existsByOrganisationAssessmentColumnsChoiceValueId(existingId);
+	}
 }

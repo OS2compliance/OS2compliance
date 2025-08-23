@@ -1,5 +1,6 @@
 package dk.digitalidentity.report.replacers;
 
+import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.PlaceHolder;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -7,6 +8,7 @@ import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
@@ -15,6 +17,7 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.model.RiskProfileDTO;
@@ -78,6 +81,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     private final RelationService relationService;
     private final TaskService taskService;
 	private final ChoiceService choiceService;
+	private final SettingsService settingsService;
 
     private static class ThreatContext {
         Asset asset;
@@ -202,8 +206,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 			addGeneralInfoSection(document, cursor, context);
 
+			addComment(document, cursor, context);
             addPresentAddMeeting(document, cursor, context);
             addCriticality(document, cursor, context);
+			addAreas(document, cursor, context);
             addRiskProfile(document, cursor, context);
             addRiskExplanations(document, cursor);
 
@@ -583,6 +589,34 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         cell.getCTTc().addNewTcPr().addNewShd().setFill(StringUtils.removeStart(color, "#"));
     }
 
+	private void addTextWithBreaks(String text, XWPFParagraph paragraph) {
+		String[] lines = text.split("\n");
+		XWPFRun run = paragraph.createRun();
+
+		for (int i = 0; i < lines.length; i++) {
+			run.setText(lines[i]);
+			if (i < lines.length - 1) {
+				run.addBreak();
+			}
+		}
+
+		run.addBreak();
+	}
+
+	private void addComment(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+		final String comment = context.threatAssessment.getComment();
+		if (comment == null || comment.isBlank()) {
+			return;
+		}
+		final XWPFParagraph heading = document.insertNewParagraph(cursor);
+		heading.setStyle(HEADING3);
+		addTextRun("Kommentar", heading);
+		advanceCursor(cursor);
+		final XWPFParagraph plain = document.insertNewParagraph(cursor);
+		addTextWithBreaks(comment, plain);
+		advanceCursor(cursor);
+	}
+
     private void addPresentAddMeeting(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
         final List<User> present = context.threatAssessment.getPresentAtMeeting();
         if (present == null || present.isEmpty()) {
@@ -623,6 +657,26 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         }
     }
 
+	private void addAreas(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
+		if (context.threatAssessment != null) {
+			final XWPFParagraph heading = document.insertNewParagraph(cursor);
+			heading.setStyle(HEADING3);
+			addTextRun("Medtagne konsekvensområder", heading);
+			advanceCursor(cursor);
+			final XWPFParagraph plain = document.insertNewParagraph(cursor);
+			if (context.threatAssessment.isOrganisation()) {
+				addTextRun("Organisationen", plain).addBreak();
+			}
+			if (context.threatAssessment.isRegistered()) {
+				addTextRun("Den registrerede", plain).addBreak();
+			}
+			if (context.threatAssessment.isSociety()) {
+				addTextRun("Samfundet", plain).addBreak();
+			}
+			advanceCursor(cursor);
+		}
+	}
+
 	public record registeredDataCategory(String title, List<String> types) {
 	}
 
@@ -657,7 +711,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
 			table.setTableAlignment(TableRowAlign.LEFT);
 
-			createTableCells(table, 8 + categories.size(), 3);
+			int extraRowsForAsset = isAsset ? 1 : 0;
+			createTableCells(table, 9 + categories.size() + extraRowsForAsset, 3);
 			final XWPFTableRow row = table.getRow(0);
 
 			//System type
@@ -670,43 +725,63 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 					context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))
 					: context.register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
 			;
-			setCellTextSmall(row1, 0, "Systemejere:");
+			Setting ownerInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME);
+			String customInputOwner = (ownerInputSetting != null ? ownerInputSetting.getSettingValue() : "systemejer") + ":";
+			setCellTextSmall(row1, 0, customInputOwner);
 			setCellTextSmall(row1, 1, systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
 
 			//System responsible
 			final XWPFTableRow row2 = table.getRow(2);
-			setCellTextSmall(row2, 0, "Systemansvarlige:");
+			Setting responsibleInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
+			String customInputResponsible = (responsibleInputSetting != null ? responsibleInputSetting.getSettingValue() : "Systemansvarlige") + ":";
+			setCellTextSmall(row2, 0, customInputResponsible);
 			setCellTextSmall(row2, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
 
-			//Suppliers
+			//Operation responsible
 			final XWPFTableRow row3 = table.getRow(3);
-			setCellTextSmall(row3, 0, "Leverandør:");
-			setCellTextSmall(row3, 1, isAsset && context.asset.getSupplier() != null ? context.asset.getSupplier().getName() : "");
+			Setting operationResponsibleInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
+			String customInputOperationResponsible = (operationResponsibleInputSetting != null ? operationResponsibleInputSetting.getSettingValue() : "Driftsansvarlige") + ":";
+			setCellTextSmall(row3, 0, customInputOperationResponsible);
+			setCellTextSmall(row3, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
+
+			//Suppliers
+			final XWPFTableRow row4 = table.getRow(4);
+			setCellTextSmall(row4, 0, "Leverandør:");
+			setCellTextSmall(row4, 1, isAsset && context.asset.getSupplier() != null ? context.asset.getSupplier().getName() : "");
 
 			//Who has access?
-			final XWPFTableRow row4 = table.getRow(4);
-			setCellTextSmall(row4, 0, "Hvem har adgang til personoplysningerne?:");
-			setCellTextSmall(row4, 1, String.join(", ", context.personsWithDataAccessList));
+			final XWPFTableRow row5 = table.getRow(5);
+			setCellTextSmall(row5, 0, "Hvem har adgang til personoplysningerne?:");
+			setCellTextSmall(row5, 1, String.join(", ", context.personsWithDataAccessList));
 
 			//Access count
-			final XWPFTableRow row5 = table.getRow(5);
-			setCellTextSmall(row5, 0, "Hvor mange har adgang til personoplysningerne?:");
+			final XWPFTableRow row6 = table.getRow(6);
+			setCellTextSmall(row6, 0, "Hvor mange har adgang til personoplysningerne?:");
 			var accessCount = choiceService.getValue(dataProcessing.getAccessCountIdentifier());
-			setCellTextSmall(row5, 1, accessCount.isPresent() ? accessCount.get().getCaption() : "");
+			setCellTextSmall(row6, 1, accessCount.isPresent() ? accessCount.get().getCaption() : "");
 
 			//Deletion procedure?
-			final XWPFTableRow row6 = table.getRow(6);
-			setCellTextSmall(row6, 0, "Sletteprocedure udarbejdet?:");
-			setCellTextSmall(row6, 1, dataProcessing.getDeletionProcedure() != null ? dataProcessing.getDeletionProcedure().getMessage() : "Ikke udfyldt");
+			final XWPFTableRow row7 = table.getRow(7);
+			setCellTextSmall(row7, 0, "Sletteprocedure udarbejdet?:");
+			setCellTextSmall(row7, 1, dataProcessing.getDeletionProcedure() != null ? dataProcessing.getDeletionProcedure().getMessage() : "Ikke udfyldt");
 
 			//Deletion procedure link
-			final XWPFTableRow row7 = table.getRow(7);
-			setCellTextSmall(row7, 0, "Link til sletteprocedure");
-			setCellTextSmall(row7, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
+			final XWPFTableRow row8 = table.getRow(8);
+			setCellTextSmall(row8, 0, "Link til sletteprocedure");
+			setCellTextSmall(row8, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
+
+			// sociallyCritical
+			int nextRowIndex = 9;
+			if (isAsset) {
+				final XWPFTableRow row9 = table.getRow(9);
+				setCellTextSmall(row9, 0, "Samfundskritisk:");
+				setCellTextSmall(row9, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
+				nextRowIndex = 10;
+			}
 
 			// Registered data categories
 			for (int i = 0; i < categories.size(); i++) {
-				final XWPFTableRow catRow = table.getRow(i + 8); // Add magic number of previous rows to start at the current row
+				final XWPFTableRow catRow = table.getRow(i + nextRowIndex); // Add magic number of previous rows to start at the current row
 				if (i == 0) {
 					setCellTextSmall(catRow, 0, "Registrerede persondatakategorier:");
 				}
@@ -721,8 +796,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				}
 			}
 			if (categories.isEmpty()) {
-				final XWPFTableRow row8 = table.createRow();
-				setCellTextSmall(row8, 0, "Registrerede persondatakategorier:");
+				final XWPFTableRow row9 = table.createRow();
+				setCellTextSmall(row9, 0, "Registrerede persondatakategorier:");
 			}
 
 			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);
@@ -740,8 +815,10 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     }
 
     private String subHeading(final ThreatContext context) {
+		Setting setting = settingsService.findBySettingKey(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME);
+		String customSystemOwner = (setting != null ? setting.getSettingValue() : "systemejer") + ":";
         if (context.asset != null && context.asset.getResponsibleUsers() != null && !context.asset.getResponsibleUsers().isEmpty()) {
-            return "Systemejere: " + context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
+            return  customSystemOwner + context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
         } else if (context.register != null && context.register.getResponsibleUsers() != null && !context.register.getResponsibleUsers().isEmpty()) {
             return "Behandlingsansvarlige: " + context.register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
         }

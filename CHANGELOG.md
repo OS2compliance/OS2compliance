@@ -7,6 +7,43 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+## [2.3.0] - 2025-08-23
+
+### Added
+- (Løsningsbeskrivelse 15.04.2025) Fortegnelsesmodulet
+- (Løsningsbeskrivelse 21.04.2025) KLE-integration
+- (Løsningsbeksrivelse 16.04.2025) Udvidelse af OS2kitos integration
+- (https://os2web.atlassian.net/browse/COMPLY-65) Standarder: Ændring af nuværende forside
+- (https://os2web.atlassian.net/browse/COMPLY-124) (Rapporter) Samlet rapport til systemejer vedr. alle systemer
+- (https://os2web.atlassian.net/browse/COMPLY-320) (Risikostyring) OS2Compliance skal understøtte NIS2 risikovurderinger
+- (https://os2web.atlassian.net/browse/COMPLY-283) (Risikostyring/Den enkelte risikovurdering) Fritekstfelt
+- (https://os2web.atlassian.net/browse/COMPLY-182) (Risikostyring/Opsætning) Mulighed for at ændre konsekvenstyper
+- (https://os2web.atlassian.net/browse/COMPLY-282) (Risikostyring/Forside) Risikovurderingens tilknytning til systemer/behandlingsaktiviteter
+- (https://os2web.atlassian.net/browse/COMPLY-260) (Aktiver/Generelt) Løsninger der imødekommer AI-forordningen
+- (https://os2web.atlassian.net/browse/COMPLY-321) (Risikostyring) Risikostyring med visuel risikomatrix
+- (https://os2web.atlassian.net/browse/COMPLY-101) (Administrativt) Overblik over hvilke mails systemet har sendt
+- (https://os2web.atlassian.net/browse/COMPLY-66)  (Standarder/Understøttende standarder) Oprettelse af ny standard
+- (https://os2web.atlassian.net/browse/COMPLY-262) (Aktiver/Generelt) Nyt felt på aktivets forside så der er 4 forskellige roller.
+- (https://os2web.atlassian.net/browse/COMPLY-289) (Risikostyring/Risikovurderinger) Mulighed for at vælge flere trusselskataloger
+- (https://os2web.atlassian.net/browse/COMPLY-255) (Rapporter/overblikssiderne) Mulighed for at eksportere alle sider med visninger til Excel
+- (https://os2web.atlassian.net/browse/COMPLY-176) (Aktiver/oversigt) Markering på aktiver, der ikke længere er markeret som anvendt i KITOS
+- (https://os2web.atlassian.net/browse/COMPLY-325) (Aktiver/Generelt) Visualisering af sammenhæng mellem systemer
+- (https://os2web.atlassian.net/browse/COMPLY-188) (Opgavecenter/Opgave og Kontrol) Udvidelse af beskrivelsesfeltet i en opgave, så det automatisk passer til tekstens længde
+
+### Fixed
+- (Ad-hoc) Riskovurdering: når man fjerner indhold forsvinder scoren ikke
+- (Ad-hoc) Tekstfelt i konsekvensanalyserne (DPIA)
+- (Ad-hoc) Konsekvensvurdering kolonne bredder
+- (Ad-hoc) Bug i "Tilknyt ekstern risikovurdering" Aktiv-fane
+- (Ad-hoc) Bug - Navigation forsvinder - implementeret burger menu
+- (Ad-hoc) Søgning og sortering efter navn i konsekvensanalyser virkede ikke
+- (Ad-hoc) Sæt max længde på tilsyns konklusion op, og tilføje validering
+- (Ad-hoc) Gør det muligt at slette dokumenter, som er anvendt som dokumentation for opgave udførsel
+
+## [2.2.1]
+### Fixed
+- (Ad-hoc) Der var en fejl på konsekvensvurderingsoverblikssiden, der fjorde at den ikke kunne vises korrekt, det er retttet.
+
 ## [2.2.0]
 
 ### Added

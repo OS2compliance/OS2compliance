@@ -24,7 +24,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Immutable
-public class TaskGrid {
+public class TaskGrid  implements HasSingleResponsibleUser{
     @Id
     private Long id;
 

@@ -148,7 +148,11 @@ public class TasksController {
                 relationService.addRelation(savedTask, response);
 
             } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
-                final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(riskCatalogIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+				final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+						.flatMap(catalog -> catalog.getThreats().stream())
+						.filter(t -> t.getIdentifier().equals(riskCatalogIdentifier))
+						.findAny()
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
                     .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
                     .findAny().orElse(null);
@@ -280,7 +284,6 @@ public class TasksController {
     @Transactional
     public void taskDelete(@PathVariable final String id) {
         final Long lid = Long.valueOf(id);
-        relationService.deleteRelatedTo(lid);
         taskService.deleteById(lid);
     }
 
@@ -371,6 +374,7 @@ public class TasksController {
                     .message(message)
                     .subject(title)
                     .email(task.getResponsibleUser().getEmail())
+					.templateType(template.getTemplateType())
                     .build());
             } else {
                 log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");

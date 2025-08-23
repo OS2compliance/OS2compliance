@@ -40,8 +40,9 @@ public class DPIAService {
     private final DPIAResponseSectionAnswerService dpiaResponseSectionAnswerService;
 	private final UserService userService;
 	private final OrganisationService organisationService;
+	private final RelationService relationService;
 
-    public DPIA find (Long dpiaId) {
+	public DPIA find (Long dpiaId) {
         return dpiaDao.findById(dpiaId)
             .orElseThrow();
     }
@@ -57,9 +58,7 @@ public class DPIAService {
 
     @Transactional
     public void delete(Long dpiaId) {
-        DPIA dpia = dpiaDao.findById(dpiaId)
-            .orElseThrow();
-
+		relationService.deleteRelatedTo(dpiaId);
         dpiaDao.deleteById(dpiaId);
     }
 

@@ -32,6 +32,7 @@ public class PrecautionController {
     private final RelationService relationService;
 
     record AssetRelationDTO(long precautionId, String assetName, long assetId) {}
+	@Transactional
     @GetMapping
     public String precautionList(final Model model) {
         final List<Precaution> precautions = precautionService.findAll();

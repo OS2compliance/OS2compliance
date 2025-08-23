@@ -46,9 +46,13 @@ public class ThreatAssessment extends Relatable {
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOu;
 
-    @ManyToOne
-    @JoinColumn(name = "threat_catalog_identifier")
-    private ThreatCatalog threatCatalog;
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "threat_assessment_catalogs",
+			joinColumns = { @JoinColumn(name = "threat_assessment_id") },
+			inverseJoinColumns = { @JoinColumn(name = "threat_catalog_identifier") }
+	)
+	private List<ThreatCatalog> threatCatalogs;
 
     @ManyToOne
     @JoinColumn(name = "threat_assessment_report_s3_document_id")
@@ -72,6 +76,12 @@ public class ThreatAssessment extends Relatable {
     @Column
     private boolean organisation;
 
+	@Column
+	private boolean society;
+
+	@Column
+	private boolean authenticity;
+
     @Column
     private boolean inherit;
 
@@ -81,17 +91,29 @@ public class ThreatAssessment extends Relatable {
     @Column
     private Integer inheritedConfidentialityOrganisation;
 
+	@Column
+    private Integer inheritedConfidentialitySociety;
+
     @Column
     private Integer inheritedIntegrityRegistered;
 
     @Column
     private Integer inheritedIntegrityOrganisation;
 
+	@Column
+    private Integer inheritedIntegritySociety;
+
     @Column
     private Integer inheritedAvailabilityRegistered;
 
     @Column
     private Integer inheritedAvailabilityOrganisation;
+
+	@Column
+    private Integer inheritedAvailabilitySociety;
+
+	@Column
+	private Integer inheritedAuthenticitySociety;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -121,6 +143,9 @@ public class ThreatAssessment extends Relatable {
 
     @Column
     private String externalLink;
+
+    @Column
+    private String comment;
 
     @Override
     public RelationType getRelationType() {

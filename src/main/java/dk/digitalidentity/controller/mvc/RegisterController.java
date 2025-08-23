@@ -4,28 +4,38 @@ import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
+import dk.digitalidentity.model.dto.SelectionChoiceDTO;
+import dk.digitalidentity.model.dto.SelectionDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
+import dk.digitalidentity.model.entity.OrganisationAssessmentColumn;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.RegisterSetting;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.kle.KLELegalReference;
+import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
 import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
 import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
@@ -33,11 +43,16 @@ import dk.digitalidentity.service.RegisterAssetAssessmentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ScaleService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.kle.KLEGroupService;
+import dk.digitalidentity.service.kle.KLELegalReferenceService;
+import dk.digitalidentity.service.kle.KLEMainGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -55,8 +70,14 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
@@ -81,13 +102,18 @@ public class RegisterController {
     private final DataProcessingService dataProcessingService;
     private final TaskService taskService;
     private final UserService userService;
+	private final SettingsService settingsService;
+	private final KLEMainGroupService kLEMainGroupService;
+	private final KLEGroupService kLEGroupService;
+	private final KLELegalReferenceService kLELegalReferenceService;
+	private final CatalogService catalogService;
 
-    @GetMapping
-    public String registerList(Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
-        return "registers/index";
-    }
+	@GetMapping
+	public String registerList(Model model) {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+		return "registers/index";
+	}
 
 
     @GetMapping("form")
@@ -116,65 +142,123 @@ public class RegisterController {
         return "redirect:/registers/" + saved.getId();
     }
 
-    @Transactional
-    @PostMapping("{id}/assessment")
-    public String updateAssessment(@PathVariable final Long id,
-                                   @ModelAttribute @Valid final ConsequenceAssessment assessment,
-                                   @RequestParam(required = false) final String section) {
-        final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+	@Transactional
+	@PostMapping("{id}/assessment")
+	public String updateAssessment(@PathVariable final Long id,
+			@ModelAttribute @Valid final ConsequenceAssessment assessment,
+			@RequestParam(required = false) final String section) {
+		final Optional<ConsequenceAssessment> existingOptional = consequenceAssessmentDao.findById(id);
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        if (existingOptional.isPresent()) {
-            final ConsequenceAssessment existing = existingOptional.get();
-            ensureEditingIsAllowed(existing.getRegister());
+		if (existingOptional.isPresent()) {
+			final ConsequenceAssessment existing = existingOptional.get();
+			ensureEditingIsAllowed(existing.getRegister());
 
-            existing.setAssessment(assessment.getAssessment());
-            existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
-            existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
-            existing.setConfidentialityOrganisationRep(assessment.getConfidentialityOrganisationRep());
-            existing.setConfidentialityOrganisationEco(assessment.getConfidentialityOrganisationEco());
-            existing.setConfidentialityReason(assessment.getConfidentialityReason());
+			existing.setAssessment(assessment.getAssessment());
+			existing.setConfidentialityRegistered(assessment.getConfidentialityRegistered());
+			existing.setConfidentialityOrganisation(assessment.getConfidentialityOrganisation());
+			existing.setConfidentialitySociety(assessment.getConfidentialitySociety());
 
-            existing.setIntegrityRegistered(assessment.getIntegrityRegistered());
-            existing.setIntegrityOrganisation(assessment.getIntegrityOrganisation());
-            existing.setIntegrityOrganisationRep(assessment.getIntegrityOrganisationRep());
-            existing.setIntegrityOrganisationEco(assessment.getIntegrityOrganisationEco());
-            existing.setIntegrityReason(assessment.getIntegrityReason());
+			existing.setIntegrityRegistered(assessment.getIntegrityRegistered());
+			existing.setIntegrityOrganisation(assessment.getIntegrityOrganisation());
+			existing.setIntegritySociety(assessment.getIntegritySociety());
 
-            existing.setAvailabilityRegistered(assessment.getAvailabilityRegistered());
-            existing.setAvailabilityOrganisation(assessment.getAvailabilityOrganisation());
-            existing.setAvailabilityOrganisationRep(assessment.getAvailabilityOrganisationRep());
-            existing.setAvailabilityOrganisationEco(assessment.getAvailabilityOrganisationEco());
-            existing.setAvailabilityReason(assessment.getAvailabilityReason());
-        } else {
-            assessment.setId(null);
-            final Register register = registerService.findById(id)
-                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-            if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid()))) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
-            assessment.setRegister(register);
-            register.setConsequenceAssessment(assessment);
-            consequenceAssessmentDao.save(assessment);
-        }
+			existing.setAvailabilityRegistered(assessment.getAvailabilityRegistered());
+			existing.setAvailabilityOrganisation(assessment.getAvailabilityOrganisation());
+			existing.setAvailabilitySociety(assessment.getAvailabilitySociety());
 
-        return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
-    }
+			existing.setAuthenticitySociety(assessment.getAuthenticitySociety());
+
+			existing.setSocietyReason(assessment.getSocietyReason());
+			existing.setOrganisationReason(assessment.getOrganisationReason());
+			existing.setRegisteredReason(assessment.getRegisteredReason());
+
+			// Update organisation assessment columns from the incoming assessment
+			updateOrganisationAssessmentColumns(existing, assessment);
+
+		} else {
+			assessment.setId(null);
+			final Register register = registerService.findById(id)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) && register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid()))) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+			assessment.setRegister(register);
+			register.setConsequenceAssessment(assessment);
+			consequenceAssessmentDao.save(assessment);
+		}
+
+		return "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+	}
+
+	private void updateOrganisationAssessmentColumns(ConsequenceAssessment existing, ConsequenceAssessment incoming) {
+		List<OrganisationAssessmentColumn> existingColumns = existing.getOrganisationAssessmentColumns();
+		List<OrganisationAssessmentColumn> incomingColumns = incoming.getOrganisationAssessmentColumns() != null ?
+				incoming.getOrganisationAssessmentColumns() : new ArrayList<>();
+
+		// Create maps for efficient lookup
+		Map<Long, OrganisationAssessmentColumn> existingByChoiceValueId = existingColumns.stream()
+				.collect(Collectors.toMap(col -> col.getChoiceValue().getId(), col -> col));
+
+		Map<Long, OrganisationAssessmentColumn> incomingByChoiceValueId = incomingColumns.stream()
+				.collect(Collectors.toMap(col -> col.getChoiceValue().getId(), col -> col));
+
+		// Find columns to remove (exist in current but not in incoming)
+		List<OrganisationAssessmentColumn> toRemove = existingColumns.stream()
+				.filter(col -> !incomingByChoiceValueId.containsKey(col.getChoiceValue().getId()))
+				.collect(Collectors.toList());
+
+		// Remove columns that are no longer present
+		existingColumns.removeAll(toRemove);
+
+		// Update existing columns and add new ones
+		for (OrganisationAssessmentColumn incomingColumn : incomingColumns) {
+			Long choiceValueId = incomingColumn.getChoiceValue().getId();
+			OrganisationAssessmentColumn existingColumn = existingByChoiceValueId.get(choiceValueId);
+
+			if (existingColumn != null) {
+				// Update existing column if values have changed
+				if (!Objects.equals(existingColumn.getAvailability(), incomingColumn.getAvailability()) ||
+						!Objects.equals(existingColumn.getIntegrity(), incomingColumn.getIntegrity()) ||
+						!Objects.equals(existingColumn.getConfidentiality(), incomingColumn.getConfidentiality())) {
+
+					existingColumn.setAvailability(incomingColumn.getAvailability());
+					existingColumn.setIntegrity(incomingColumn.getIntegrity());
+					existingColumn.setConfidentiality(incomingColumn.getConfidentiality());
+				}
+			} else {
+				// Add new column
+				OrganisationAssessmentColumn newColumn = OrganisationAssessmentColumn.builder()
+						.choiceValue(incomingColumn.getChoiceValue())
+						.availability(incomingColumn.getAvailability())
+						.integrity(incomingColumn.getIntegrity())
+						.confidentiality(incomingColumn.getConfidentiality())
+						.consequenceAssessment(existing)
+						.build();
+				existingColumns.add(newColumn);
+			}
+		}
+	}
 
     @PostMapping("{id}/update")
-    public String update(@PathVariable final Long id,
-                         @RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
-                         @RequestParam(value = "name", required = false) @Valid final String name,
-                         @RequestParam(value = "description", required = false) @Valid final String description,
-                         @RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
-                         @RequestParam(value = "departments", required = false) @Valid final Set<String> departmentUuids,
-                         @RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids,
-                         @RequestParam(value = "criticality", required = false) final Criticality criticality,
-                         @RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
-                         @RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
-                         @RequestParam(value = "registerRegarding", required = false) final String registerRegarding,
-                         @RequestParam(required = false) final String section,
-                         @RequestParam(value = "status", required = false) final RegisterStatus status) {
+	public String update(@PathVariable final Long id,
+			@RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
+			@RequestParam(value = "name", required = false) @Valid final String name,
+			@RequestParam(value = "description", required = false) @Valid final String description,
+			@RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
+			@RequestParam(value = "departments", required = false) @Valid final Set<String> departmentUuids,
+			@RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids,
+			@RequestParam(value = "customResponsibleUsers", required = false) @Valid final Set<String> customResponsibleUserUuids,
+			@RequestParam(value = "criticality", required = false) final Criticality criticality,
+			@RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
+			@RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
+			@RequestParam(value = "registerRegarding", required = false) final Set<ChoiceValue> registerRegarding,
+			@RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
+			@RequestParam(required = false) final String section,
+			@RequestParam(value = "status", required = false) final RegisterStatus status,
+			@RequestParam(value = "mainGroups", required = false) final Set<String> mainGroupIds,
+			@RequestParam(value = "groups", required = false) final Set<String> groupIds
+			) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
@@ -202,34 +286,58 @@ public class RegisterController {
         } else {
             register.setResponsibleUsers(null);
         }
+		if (customResponsibleUserUuids != null && !customResponsibleUserUuids.isEmpty()) {
+			final List<User> customResponsibleUsers = userService.findAllByUuids(customResponsibleUserUuids);
+			register.setCustomResponsibleUsers(customResponsibleUsers);
+		} else {
+			register.setCustomResponsibleUsers(new ArrayList<>());
+		}
         if (emergencyPlanLink != null) {
             register.setEmergencyPlanLink(emergencyPlanLink);
         }
         if (informationResponsible != null) {
             register.setInformationResponsible(informationResponsible);
         }
-        if (registerRegarding != null) {
-            register.setRegisterRegarding(registerRegarding);
-        }
+		register.setRegisterRegarding(registerRegarding);
+
+		if (securityPrecautions != null) {
+			register.setSecurityPrecautions(securityPrecautions);
+		}
         if (criticality != null) {
             register.setCriticality(criticality);
         }
         if (status != null) {
             register.setStatus(status);
         }
+
+		if (mainGroupIds != null && !mainGroupIds.isEmpty()) {
+			register.setKleMainGroups(kLEMainGroupService.getAllByMainGroupNumbers(mainGroupIds));
+		} else {
+			register.setKleMainGroups(new HashSet<>());
+		}
+		if (groupIds != null && !groupIds.isEmpty()) {
+			register.setKleGroups(kLEGroupService.getAllByGroupNumbers(groupIds));
+		} else {
+			register.setKleGroups(new HashSet<>());
+		}
+
         registerService.save(register);
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
 
     @Transactional
     @PostMapping("{id}/purpose")
-    public String purpose(@PathVariable final Long id,
-                          @RequestParam(value = "purpose", required = false) final String purpose,
-                          @RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
-                          @RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
-                          @RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
-                          @RequestParam(value = "consent", required = false) final String consent,
-                          @RequestParam(value = "purposeNotes", required = false) final String purposeNotes) {
+    public String purpose(
+			@PathVariable final Long id,
+			@RequestParam(value = "purpose", required = false) final String purpose,
+			@RequestParam(value = "gdprChoices", required = false) final Set<String> gdprChoices,
+			@RequestParam(value = "informationObligation", required = false) final InformationObligationStatus informationObligationStatus,
+			@RequestParam(value = "informationObligationDesc", required = false) final String informationObligationDesc,
+			@RequestParam(value = "consent", required = false) final String consent,
+			@RequestParam(value = "purposeNotes", required = false) final String purposeNotes,
+			@RequestParam(value = "relevantLegalReferences", required = false) final Set<String> relevantLegalReferences,
+			@RequestParam(value = "supplementalLegalBasis", required = false) final String supplementalLegalBasis
+	) {
         final Register register = registerService.findById(id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         ensureEditingIsAllowed(register);
@@ -245,12 +353,20 @@ public class RegisterController {
         if (consent != null) {
             register.setConsent(consent);
         }
+		if (supplementalLegalBasis != null) {
+			register.setSupplementalLegalBasis(supplementalLegalBasis);
+		}
         if (informationObligationStatus != null) {
             register.setInformationObligation(informationObligationStatus);
         }
         if (informationObligationDesc != null) {
             register.setInformationObligationDesc(informationObligationDesc);
         }
+		if(relevantLegalReferences != null && !relevantLegalReferences.isEmpty()) {
+			register.setRelevantKLELegalReferences(kLELegalReferenceService.getAllWithAccessionNumberIn(relevantLegalReferences));
+		}
+
+		registerService.save(register);
         return "redirect:/registers/" + id + "?section=purpose";
     }
 
@@ -287,12 +403,40 @@ public class RegisterController {
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
         final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
+		final List<SelectionDTO> mainGroups = kLEMainGroupService.getAll().stream()
+				.sorted(Comparator.comparing(KLEMainGroup::getMainGroupNumber))
+				.map(mg -> new SelectionDTO(mg.getMainGroupNumber()+" "+mg.getTitle(), mg.getMainGroupNumber(), register.getKleMainGroups().contains(mg)))
+				.toList();
+		model.addAttribute("mainGroups", mainGroups);
+
+		final Set<KLEGroup> kleGroups = kLEGroupService.getAllForMainGroups(register.getKleMainGroups());
+		model.addAttribute("kleGroups", kleGroups.stream()
+				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
+				.map(g -> new SelectionDTO(g.getGroupNumber() +" " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))));
+
+		final Set<String> selectedLegalReferenceAccessionNumbers = register.getRelevantKLELegalReferences().stream().map(KLELegalReference::getAccessionNumber).collect(Collectors.toSet());
+		final Set<SelectionDTO> kleLegalReferences = register.getKleGroups().stream()
+				.flatMap(g -> g.getLegalReferences().stream())
+				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(lr.getAccessionNumber())))
+				.collect(Collectors.toSet());
+		model.addAttribute("kleLegalReferences", kleLegalReferences);
+
+		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups()));
+
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
+
+		model.addAttribute("recordOfProcessingActivityRegardingChoices", choiceService.findChoiceValuesForListIdentifier("record-of-processing-activity-regarding").stream()
+				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
+
         model.addAttribute("section", section);
-        model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
-            .anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR)) || register.getResponsibleUsers().stream()
-            .anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))));
+		model.addAttribute("changeableRegister", (authentication.getAuthorities().stream()
+				.anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR))
+				|| register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid())))
+				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
+		);
+
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());
         model.addAttribute("register", register);
@@ -302,21 +446,100 @@ public class RegisterController {
         model.addAttribute("gdprP7Choices", gdprP7Choices);
         model.addAttribute("relatedDocuments", allRelatedTo.stream()
                 .filter(r -> r.getRelationType() == RelationType.DOCUMENT)
-                .collect(Collectors.toList()));
-        model.addAttribute("relatedTasks", allRelatedTo.stream()
-                .filter(r -> r.getRelationType() == RelationType.TASK)
-                .collect(Collectors.toList()));
+				.toList());
+
+		record TaskListDTO(long id, String title, String responsibleUserName, String responsibleOuName, String taskType, String deadline, String repeats, String status, RelationType relationType){}
+		model.addAttribute("relatedTasks", allRelatedTo.stream()
+				.filter(r -> r.getRelationType() == RelationType.TASK)
+				.map(r -> {
+					Task task = ((Task) r);
+					return new TaskListDTO(
+							task.getId(),
+							task.getName(),
+							task.getResponsibleUser().getName(),
+							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
+							task.getTaskType().getMessage(),
+							task.getNextDeadline().toString(),
+							task.getRepetition() != null ? task.getRepetition().getMessage() : "",
+							taskService.findHtmlStatusBadgeForTask(task),
+							RelationType.TASK
+					);
+				})
+				.toList());
         model.addAttribute("relatedAssets", relatedAssets);
         model.addAttribute("threatAssessments", allRelatedTo.stream()
             .filter(r -> r.getRelationType() == RelationType.THREAT_ASSESSMENT)
-            .collect(Collectors.toList()));
+				.toList());
         model.addAttribute("assetThreatAssessments", assetThreatAssessments);
         model.addAttribute("scale", new TreeMap<>(scaleService.getConsequenceScale()));
         model.addAttribute("consequenceScale", scaleService.getConsequenceNumberDescriptions());
         model.addAttribute("relatedAssetsSubSuppliers", assetSupplierMappingList);
+		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
+		model.addAttribute("risk", new ThreatAssessment());
+		model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        model.addAttribute("organisationAssessmentColumnTypes", getOrganisationAssessmentColumnTypes());
+        model.addAttribute("organisationAssessmentMap", getOrganisationAssessmentMap(assessment));
 
         return "registers/view";
     }
+
+	private List<ChoiceValue> getOrganisationAssessmentColumnTypes() {
+		return choiceService.findChoiceList("organisation-assessment-columns")
+				.map(ChoiceList::getValues)
+				.orElse(Collections.emptyList());
+	}
+
+	public Map<Long, OrganisationAssessmentColumn> getOrganisationAssessmentMap(ConsequenceAssessment assessment) {
+		return assessment.getOrganisationAssessmentColumns().stream()
+				.collect(Collectors.toMap(
+						col -> col.getChoiceValue().getId(),
+						col -> col
+				));
+	}
+
+	record SelectedLegalReferenceDTO(String accessionNumber, String title, String paragraph) {}
+	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, Set<SelectedLegalReferenceDTO> legalReferences){}
+	record SelectedKLEGroupDTO (String groupNumber, String title, List<SelectedKLESubjectDTO> subjects) {}
+	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
+
+	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
+		return mainGroups.stream().map(mg ->
+						new SelectedKleMainGroupDTO(mg.getMainGroupNumber(), mg.getTitle(), mg.getKleGroups().stream()
+								.filter(groups::contains)
+								.map(this::toSelectedKLEGroupDTO)
+								.sorted(Comparator.comparing(SelectedKLEGroupDTO::groupNumber))
+								.toList()))
+				.sorted(Comparator.comparing(SelectedKleMainGroupDTO::mainGroupNumber))
+				.toList();
+	}
+	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group) {
+		return new SelectedKLEGroupDTO(
+				group.getGroupNumber(),
+				group.getTitle(),
+				group.getSubjects().stream()
+						.map(this::toSelectedKLESubjectDTO )
+						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
+						.toList());
+	}
+
+	private SelectedKLESubjectDTO toSelectedKLESubjectDTO(KLESubject subject) {
+		return new SelectedKLESubjectDTO(
+				subject.getSubjectNumber(),
+				subject.getTitle(),
+				subject.getPreservationCode(),
+				durationToString(subject.getDurationBeforeDeletion()),
+				subject.getLegalReferences().stream()
+						.map(this::selectedLegalReferenceDTO)
+						.collect(Collectors.toSet()));
+	}
+
+	private SelectedLegalReferenceDTO selectedLegalReferenceDTO(KLELegalReference legalReference) {
+		return new SelectedLegalReferenceDTO(
+				legalReference.getAccessionNumber(),
+				legalReference.getTitle(),
+				legalReference.getParagraph());
+	}
 
     @RequireSuperuserOrAdministrator
     @DeleteMapping("{id}")
@@ -329,7 +552,6 @@ public class RegisterController {
         // All related checks should be deleted along with the register
         final List<Task> tasks = taskService.findRelatedTasks(register, t -> t.getTaskType() == TaskType.CHECK);
 
-        relationService.deleteRelatedTo(id);
         taskService.deleteAll(tasks);
         registerService.delete(register);
     }
@@ -359,7 +581,11 @@ public class RegisterController {
 
     private static void ensureEditingIsAllowed(final Register register) {
         final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())) {
+        if(authentication.getAuthorities().stream()
+				.noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))
+				&& !register.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+				&& !register.getCustomResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid())
+		) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
     }
@@ -367,13 +593,56 @@ public class RegisterController {
     private static List<ChoiceValue> sortChoicesNumeric(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted(Comparator.comparingInt(a -> asNumber(a.getIdentifier())))
-                .collect(Collectors.toList());
+				.toList();
     }
 
     private static List<ChoiceValue> sortChoicesAlpha(final ChoiceList gdprChoiceList) {
         return gdprChoiceList.getValues().stream()
                 .sorted((a, b) -> a.getCaption().compareToIgnoreCase(b.getCaption()))
-                .collect(Collectors.toList());
+				.toList();
     }
 
+	private String durationToString(final Duration duration) {
+		if (duration == null) {
+			return "Ikke angivet";
+		}
+		if (duration.isZero()) {
+			return "0 timer";
+		}
+
+		List<String> parts = new ArrayList<>();
+
+		// Convert duration to total days and remaining time
+		long totalDays = duration.toDays();
+		Duration remainingTime = duration.minusDays(totalDays);
+
+		// Calculate years, months, and days
+		long years = totalDays / 365;
+		long remainingDaysAfterYears = totalDays % 365;
+		long months = remainingDaysAfterYears / 30; // Approximate months
+		long days = remainingDaysAfterYears % 30;
+
+		// Get hours from remaining time
+		long hours = remainingTime.toHours();
+
+		// Add non-zero components to the result
+		if (years > 0) {
+			parts.add(years + " år");
+		}
+
+		if (months > 0) {
+			parts.add(months + " måneder");
+		}
+
+		if (days > 0) {
+			parts.add(days + " dage");
+		}
+
+		if (hours > 0) {
+			parts.add(hours + " timer");
+		}
+
+		// Join parts with commas
+		return String.join(", ", parts);
+	}
 }

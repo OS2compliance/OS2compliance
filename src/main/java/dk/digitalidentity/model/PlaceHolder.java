@@ -9,7 +9,8 @@ public enum PlaceHolder {
     ACTIVITIES("{behandlingsaktiviteter}"),
     STANDARDS("{standards}"),
     ISO27002("{iso27002}"),
-    RISK_ASSESSMENT("{risk_assessment}");
+    RISK_ASSESSMENT("{risk_assessment}"),
+	DATARESPONSIBLE_SETTINGS("{dataresponsible_settings}"),;
 
     private final String placeHolder;
 

@@ -1,1 +1,27 @@
-{"packageName":"kl_article30","name":"29. Behandling af personoplysninger i forbindelse med affald og genanvendelse","description":"Behandlingen af pesonoplysninger sker ifm. affaldsordninger, brug, vedeligehold og anlæg af genbrugspladser","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "29. Behandling af personoplysninger i forbindelse med affald og genanvendelse",
+  "description": "Behandlingen af pesonoplysninger sker ifm. affaldsordninger, brug, vedeligehold og anlæg af genbrugspladser",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "07"
+  ],
+  "kleGroups": [
+    "07.00",
+    "07.01",
+    "07.03",
+    "07.04",
+    "07.08",
+    "07.13",
+    "07.15",
+    "07.16",
+    "07.17",
+    "07.18",
+    "07.20",
+    "07.22"
+  ]
+}

@@ -1,1 +1,17 @@
-{"packageName":"kl_article30","name":"34. Behandling af personoplysninger i forbindelse med kommunale begravelser og kommunale kirkegårde","description":"Behandling af personoplysninger sker med henblik på at fremsætte anmodning til begravelsesmyndighed i tilfælde, hvor der ikke findes pårørende eller andre nære relationer, der kan påtages sig opgaven. \n\nI tilfælde af, at kommunen driiver kirkegårde kan behandlingsaktiviteten beskrives som følgende: \nBehandling af personoplysninger sker med henblik på at undestøtte kommunens arbejde i forbindelse med kommunale begravelser og kommunale kirkegårde, herunder oplysninger om kremering, fllytning af urne, gravsted mv.","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "34. Behandling af personoplysninger i forbindelse med kommunale begravelser og kommunale kirkegårde",
+  "description": "Behandling af personoplysninger sker med henblik på at fremsætte anmodning til begravelsesmyndighed i tilfælde, hvor der ikke findes pårørende eller andre nære relationer, der kan påtages sig opgaven. \n\nI tilfælde af, at kommunen driiver kirkegårde kan behandlingsaktiviteten beskrives som følgende: \nBehandling af personoplysninger sker med henblik på at undestøtte kommunens arbejde i forbindelse med kommunale begravelser og kommunale kirkegårde, herunder oplysninger om kremering, fllytning af urne, gravsted mv.",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "04"
+  ],
+  "kleGroups": [
+    "04.30",
+    "04.31"
+  ]
+}

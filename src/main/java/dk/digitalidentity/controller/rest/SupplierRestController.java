@@ -3,10 +3,15 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.mapping.SupplierMapper;
+import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
+import dk.digitalidentity.model.entity.grid.DBSOversightGrid;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.service.ExcelExportService;
+import jakarta.servlet.http.HttpServletResponse;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -20,6 +25,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -38,20 +44,44 @@ public class SupplierRestController {
 	private final SupplierGridDao supplierGridDao;
 	private final SupplierMapper supplierMapper;
 	private final SupplierDao supplierDao;
+	private final ExcelExportService excelExportService;
 
 	record SupplierGridDTO(long id, String name, int solutionCount, String updated, String status) {}
 
-    @PostMapping("list")
-	public PageDTO<SupplierGridDTO> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
-	) {
+	@PostMapping("list")
+	public Object list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<SupplierGrid> allSuppliers = supplierGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, SupplierGrid.class),
+					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+					SupplierGrid.class
+			);
+
+			final List<SupplierGridDTO> allData = new ArrayList<>();
+			for (final SupplierGrid supplier : allSuppliers.getContent()) {
+				final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
+						supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage());
+				allData.add(dto);
+			}
+
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
+
+		// Normal mode - return paginated JSON
         Page<SupplierGrid> suppliers =  supplierGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, SupplierGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             SupplierGrid.class
         );

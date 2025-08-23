@@ -19,7 +19,7 @@ public interface Examples {
     String ASSET_STATUS_EXAMPLE = "READY";
     String ASSET_CRITICALITY_EXAMPLE = "CRITICAL";
     String ASSET_SOC_CRITICALITY_EXAMPLE = "true";
-    String ASSET_PRODUCT_LINK_EXAMPLE = "https://www.os2.eu/os2compliance";
+    String ASSET_PRODUCT_LINKS_EXAMPLE = "[\"https://www.os2.eu/os2compliance\"]";
     String ASSET_EMERGENCY_LINK_EXAMPLE = "https://confluence/emergency";
     String ASSET_RE_ESTAB_LINK_EXAMPLE = "https://confluence/reestab";
     String ASSET_CONTRACT_LINK_EXAMPLE = "https://confluence/itsystem/contract";
@@ -65,4 +65,5 @@ public interface Examples {
 
     String ASSET_TYPE_IDENTIFIER = "asset-type-it-system-83AF9E";
     String ASSET_TYPE_NAME = "IT-system";
+	String ASSET_ARCHIVE_EXAMPLE = "UNDECIDED";
 }

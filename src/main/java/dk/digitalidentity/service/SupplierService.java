@@ -14,10 +14,12 @@ import java.util.Optional;
 @Transactional
 public class SupplierService {
     private final SupplierDao supplierDao;
+	private final RelationService relationService;
 
-    public SupplierService(final SupplierDao supplierDao) {
+	public SupplierService(final SupplierDao supplierDao, RelationService relationService) {
         this.supplierDao = supplierDao;
-    }
+		this.relationService = relationService;
+	}
 
     public List<Supplier> getAll() {
         return supplierDao.findAll();
@@ -48,6 +50,7 @@ public class SupplierService {
     }
 
     public void delete(final Supplier supplier) {
+		relationService.deleteRelatedTo(supplier.getId());
         supplierDao.delete(supplier);
     }
 

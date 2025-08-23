@@ -1,1 +1,20 @@
-{"packageName":"kl_article30","name":"88. Behandling af personoplysninger i forbindelse med beskatning","description":"Behandlingen af personoplysninger sker i forbindelse med vurdering af kommunens opgaver vedr. beskatning herunder opkrævning","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "88. Behandling af personoplysninger i forbindelse med beskatning",
+  "description": "Behandlingen af personoplysninger sker i forbindelse med vurdering af kommunens opgaver vedr. beskatning herunder opkrævning",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "25"
+  ],
+  "kleGroups": [
+    "25.00",
+    "25.02",
+    "25.03",
+    "25.10",
+    "25.45"
+  ]
+}

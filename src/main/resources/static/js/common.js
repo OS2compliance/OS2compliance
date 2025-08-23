@@ -6,7 +6,43 @@ function truncateString(str, num) {
     return str.slice(0, num) + '...'
 }
 
-const initSelect = (element, containerInner = 'form-control') => {
+const initSelect = (element, containerInner = 'form-control', extraOptions = {}) => {
+    const defaultOptions = {
+        searchChoices: false,
+        removeItemButton: true,
+        allowHTML: true,
+        searchFloor: 0,
+        searchPlaceholderValue: 'Søg...',
+        itemSelectText: 'Vælg',
+        noChoicesText: 'Søg...',
+        classNames: {
+            containerInner: containerInner
+        },
+        duplicateItemsAllowed: false,
+    };
+    // Hvis readOnly er sat, så sæt de relevante defaults
+    if (extraOptions.readOnly) {
+        extraOptions = {
+            ...extraOptions,
+            removeItemButton: false
+        };
+        defaultOptions.classNames.disabledState = 'choices-readonly';
+    }
+    const options = { ...defaultOptions, ...extraOptions };
+    const choices = new Choices(element, options);
+    if (extraOptions.readOnly) {
+        choices.disable();
+    }
+    element.addEventListener("change",
+        function(event) {
+            choices.hideDropdown();
+        },
+        false,
+    );
+    return choices;
+}
+
+const initSelectWithConfirmation = (element, containerInner = 'form-control') => {
     let choices = new Choices(element, {
         searchChoices: false,
         removeItemButton: true,
@@ -20,12 +56,37 @@ const initSelect = (element, containerInner = 'form-control') => {
         },
         duplicateItemsAllowed: false,
     });
-    element.addEventListener("change",
-        function(event) {
-            choices.hideDropdown();
-        },
-        false,
-    );
+
+    element.addEventListener("removeItem", function(event) {
+        event.preventDefault(); // Stop the removal temporarily
+
+        const removedItem = event.detail;
+        const removedCatalogName = removedItem.label;
+
+        Swal.fire({
+            title: 'Bekræft fjernelse',
+            text: `Er du sikker på at du vil fjerne trusselskataloget "${removedCatalogName}"? Alle besvarelser relateret til dette katalog vil blive slettet.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ja, fjern det!',
+            cancelButtonText: 'Annuller'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // User confirmed - actually remove the item
+                choices.removeActiveItemsByValue(removedItem.value);
+            } else {
+                // User cancelled - restore the item by re-adding it
+                choices.setChoiceByValue(removedItem.value);
+            }
+        });
+    }, false);
+
+    element.addEventListener("change", function(event) {
+        choices.hideDropdown();
+    }, false);
+
     return choices;
 }
 
@@ -47,6 +108,33 @@ function initDatepicker(elementQuerySelector, inputField) {
     });
     return datePicker;
 }
+
+function formatDateToDdMmYyyy(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const month = (date.getMonth() + 1).toString().padStart(2, '0');
+    const year = date.getFullYear();
+    const day = date.getDate().toString().padStart(2, '0');
+    return `${day}/${month}-${year}`;
+}
+
+function isValidDateDMY(dateStr) {
+    // d/MM-yyyy or dd/MM-yyyy
+    const regex = /^(\d{1,2})\/(\d{2})-(\d{4})$/;
+    const match = dateStr.match(regex);
+    if(!match) return false;
+
+    const day = parseInt(match[1], 10);
+    const month = parseInt(match[2], 10);
+    const year = parseInt(match[3], 10);
+
+    const date = new Date(year, month - 1, day);
+    if(date.getFullYear() !== year || date.getMonth() !== month - 1 || date.getDate() !== day) {
+        return false;
+    }
+    return true;
+}
+
 function checkInputField(my_choices, atleastOne = false) {
     const inner_element = my_choices.containerInner.element;
     const value = my_choices.getValue(true);
@@ -322,11 +410,9 @@ class NetworkService {
     * @returns response as JS object
     */
     async Put (url, data){
-
         if (!this.XCSRFToken && !token) {
             throw new Error(`X-CSRF token not defined. NetworkService methods requires the token variable to be defined in the document`)
         }
-
         const response = await fetch (url, {
             method: 'PUT',
             headers: {
@@ -335,12 +421,21 @@ class NetworkService {
             },
             body: JSON.stringify(data)
         })
-
         if (!response.ok) {
             throw new Error(`Error when posting to url: ${url}`)
         }
 
-        return await response.json()
+        const text = await response.text();
+        if (!text) {
+            return {};
+        }
+
+        try {
+            return JSON.parse(text);
+        } catch (error) {
+            console.error('Invalid JSON response:', text);
+            throw new Error(`Invalid JSON response from ${url}: ${text}`);
+        }
     }
 
     /**

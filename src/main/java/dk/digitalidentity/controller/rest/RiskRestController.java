@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
@@ -36,6 +37,7 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
@@ -44,6 +46,7 @@ import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -70,7 +73,10 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -78,7 +84,9 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -106,18 +114,36 @@ public class RiskRestController {
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
 	private final OrganisationService organisationService;
+	private final ExcelExportService excelExportService;
 
     @PostMapping("list")
-    public PageDTO<RiskDTO> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
+    public Object list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+    ) throws IOException {
+
+		// For export mode, get ALL records (no pagination)
+		if (export) {
+			Page<RiskGrid> allRisks = riskGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RiskGrid.class),
+					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+
+			List<RiskDTO> allData = mapper.toDTO(allRisks.getContent());
+			excelExportService.exportToExcel(allData, fileName, response);
+			return null;
+		}
+
+		// Normal mode - return paginated JSON
         Page<RiskGrid> risks =  riskGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, RiskGrid.class),
-            null,
             buildPageable(page, limit, sortColumn, sortDirection),
             RiskGrid.class
         );
@@ -141,15 +167,15 @@ public class RiskRestController {
         return new ResponsibleUsersWithElementNameDTO(register.getName(), users);
     }
 
-    record RiskUIDTO(String elementName, int rf, int of, int ri, int oi, int rt, int ot, ResponsibleUsersWithElementNameDTO users) {}
+    record RiskUIDTO(String elementName, int rf, int of, int sf, int ri, int oi, int si, int rt, int ot, int st, int sa, ResponsibleUsersWithElementNameDTO users) {}
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetService.findAllById(assetIds);
         final ResponsibleUsersWithElementNameDTO users = !assets.isEmpty() ? getUser(assets.get(0)) : null;
         final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream()
-            .map(Relatable::getId).collect(Collectors.toList()));
+            .map(Relatable::getId).toList());
         final String elementName = assets.isEmpty() ? null : assets.stream().map(Relatable::getName).collect(Collectors.joining(", "));
-        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getRt(), riskDTO.getOt(), users);
+        return new RiskUIDTO(elementName, riskDTO.getRf(), riskDTO.getOf(), riskDTO.getSf(), riskDTO.getRi(), riskDTO.getOi(), riskDTO.getSi(), riskDTO.getRt(), riskDTO.getOt(), riskDTO.getSt(), riskDTO.getSa(), users);
     }
 
     record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
@@ -227,6 +253,7 @@ public class RiskRestController {
 
             emailEvent.setMessage(message);
             emailEvent.setSubject(title);
+			emailEvent.setTemplateType(template.getTemplateType());
         } else {
             log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
         }
@@ -271,9 +298,20 @@ public class RiskRestController {
             case OF -> response.setConfidentialityOrganisation(Integer.parseInt(dto.value()));
             case OI -> response.setIntegrityOrganisation(Integer.parseInt(dto.value()));
             case OT -> response.setAvailabilityOrganisation(Integer.parseInt(dto.value()));
+			case SF -> response.setConfidentialitySociety(Integer.parseInt(dto.value()));
+			case SI -> response.setIntegritySociety(Integer.parseInt(dto.value()));
+			case ST -> response.setAvailabilitySociety(Integer.parseInt(dto.value()));
+			case SA -> response.setAuthenticitySociety(Integer.parseInt(dto.value()));
             case PROBLEM -> response.setProblem(dto.value());
             case EXISTING_MEASURES -> response.setExistingMeasures(dto.value());
-            case METHOD -> response.setMethod(ThreatMethod.valueOf(dto.value()));
+            case METHOD -> {
+				ThreatMethod threatMethod = ThreatMethod.valueOf(dto.value());
+				response.setMethod(threatMethod);
+				if (threatMethod.equals(ThreatMethod.NONE) || threatMethod.equals(ThreatMethod.ACCEPT)) {
+					response.setResidualRiskProbability(null);
+					response.setResidualRiskConsequence(null);
+				}
+			}
             case ELABORATION -> response.setElaboration(dto.value());
             case RESIDUAL_RISK_PROBABILITY -> response.setResidualRiskProbability(Integer.parseInt(dto.value()));
             case RESIDUAL_RISK_CONSEQUENCE -> response.setResidualRiskConsequence(Integer.parseInt(dto.value()));
@@ -345,7 +383,11 @@ public class RiskRestController {
     private ThreatAssessmentResponse getRelevantResponse(final ThreatAssessment threatAssessment, final ThreatDatabaseType threatType, final Long threatId, final String threatIdentifier) {
         ThreatAssessmentResponse response = null;
         if (threatType.equals(ThreatDatabaseType.CATALOG)) {
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+					.flatMap(catalog -> catalog.getThreats().stream())
+					.filter(t -> t.getIdentifier().equals(threatIdentifier))
+					.findAny()
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream()
                 .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
                 .findAny()
@@ -399,6 +441,10 @@ public class RiskRestController {
             response.setConfidentialityOrganisation(null);
             response.setIntegrityOrganisation(null);
             response.setAvailabilityOrganisation(null);
+            response.setConfidentialitySociety(null);
+            response.setIntegritySociety(null);
+            response.setAvailabilitySociety(null);
+            response.setAuthenticitySociety(null);
         }
     }
 
@@ -406,7 +452,7 @@ public class RiskRestController {
         if (asset.getResponsibleUsers() == null || asset.getResponsibleUsers().isEmpty()) {
             return new ResponsibleUsersWithElementNameDTO(asset.getName(), new ArrayList<>());
         }
-        final List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).collect(Collectors.toList());
+        final List<ResponsibleUserDTO> users = asset.getResponsibleUsers().stream().map(r -> new ResponsibleUserDTO(r.getUuid(), r.getName(), r.getUserId())).toList();
         return new ResponsibleUsersWithElementNameDTO(asset.getName(), users);
     }
 
@@ -462,11 +508,25 @@ public class RiskRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	public record CommentUpdateDTO(Long riskId, String comment){}
+	@PostMapping("comment/update")
+	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
+		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		threatAssessment.setComment(commentUpdateDTO.comment);
+		threatAssessmentService.save(threatAssessment);
+
+		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
     private void relateAssets(final Set<Long> selectedAsset, final ThreatAssessment savedThreatAssessment) {
         final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);
         relatedAssets.forEach(asset -> relationService.addRelation(savedThreatAssessment, asset));
         if (savedThreatAssessment.isInherit()) {
-            inheritRisk(savedThreatAssessment, relatedAssets);
+            threatAssessmentService.inheritRisk(savedThreatAssessment, relatedAssets);
         }
     }
 
@@ -476,29 +536,174 @@ public class RiskRestController {
         relationService.addRelation(savedThreatAssessment, register);
     }
 
-    private void inheritRisk(final ThreatAssessment savedThreatAssesment, final List<Asset> assets) {
-        final dk.digitalidentity.service.model.RiskDTO riskDTO = threatAssessmentService.calculateRiskFromRegisters(assets.stream().map(Relatable::getId).collect(Collectors.toList()));
-        savedThreatAssesment.setInheritedConfidentialityRegistered(riskDTO.getRf());
-        savedThreatAssesment.setInheritedIntegrityRegistered(riskDTO.getRi());
-        savedThreatAssesment.setInheritedAvailabilityRegistered(riskDTO.getRt());
-        savedThreatAssesment.setInheritedConfidentialityOrganisation(riskDTO.getOf());
-        savedThreatAssesment.setInheritedIntegrityOrganisation(riskDTO.getOi());
-        savedThreatAssesment.setInheritedAvailabilityOrganisation(riskDTO.getOt());
+	public record RiskMatrixItem(int probability, int consequence, int count) {}
+	@GetMapping("/dashboard/risk-matrix")
+	public ResponseEntity<List<RiskMatrixItem>> getRiskMatrixData(
+			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
 
-        for (final ThreatCatalogThreat threat : savedThreatAssesment.getThreatCatalog().getThreats()) {
-            final ThreatAssessmentResponse response = new ThreatAssessmentResponse();
-            response.setName(threat.getDescription());
-            response.setConfidentialityRegistered(riskDTO.getRf());
-            response.setIntegrityRegistered(riskDTO.getRi());
-            response.setAvailabilityRegistered(riskDTO.getRt());
-            response.setConfidentialityOrganisation(riskDTO.getOf());
-            response.setIntegrityOrganisation(riskDTO.getOi());
-            response.setAvailabilityOrganisation(riskDTO.getOt());
-            response.setMethod(ThreatMethod.NONE);
-            response.setThreatCatalogThreat(threat);
-            response.setThreatAssessment(savedThreatAssesment);
-            savedThreatAssesment.getThreatAssessmentResponses().add(response);
-        }
-        threatAssessmentService.save(savedThreatAssesment);
-    }
+		if (types == null || types.isEmpty()) {
+			return ResponseEntity.ok(new ArrayList<RiskMatrixItem>());
+		}
+
+		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+
+		return ResponseEntity.ok(calculateRiskMatrix(threatAssessments));
+	}
+
+	public List<RiskMatrixItem> calculateRiskMatrix(List<ThreatAssessment> threatAssessments) {
+		Map<String, Integer> riskCounts = new HashMap<>();
+
+		for (ThreatAssessment assessment : threatAssessments) {
+			RiskLevel riskLevel = calculateRiskLevel(assessment);
+
+			if (riskLevel.probability() > 0 && riskLevel.consequence() > 0) {
+				String key = riskLevel.probability() + "," + riskLevel.consequence();
+				riskCounts.merge(key, 1, Integer::sum);
+			}
+		}
+
+		return riskCounts.entrySet().stream()
+				.map(entry -> {
+					String[] coords = entry.getKey().split(",");
+					int probability = Integer.parseInt(coords[0]);
+					int consequence = Integer.parseInt(coords[1]);
+					return new RiskMatrixItem(probability, consequence, entry.getValue());
+				})
+				.toList();
+	}
+
+	public record RiskLevel(int probability, int consequence) {}
+	public RiskLevel calculateRiskLevel(ThreatAssessment threatAssessment) {
+		List<ThreatAssessmentResponse> responses = threatAssessment.getThreatAssessmentResponses();
+
+		if (responses == null || responses.isEmpty()) {
+			return new RiskLevel(0, 0);
+		}
+
+		// calculate the highest scores the same way its calculated when setting the threatAssessment.assessment
+		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment);
+
+		return new RiskLevel(result.globalHighestprobability(), result.globalHighestConsequence());
+	}
+
+	public record RiskDetailItem(Long id, String name, String type, String assessment, String createdAt) {}
+	@GetMapping("/dashboard/risk-matrix/{probability}/{consequence}")
+	public ResponseEntity<List<RiskDetailItem>> getRiskDetails(
+			@PathVariable int probability,
+			@PathVariable int consequence,
+			@RequestParam(value = "types", required = false) List<ThreatAssessmentType> types) {
+
+		if (types == null || types.isEmpty()) {
+			return ResponseEntity.ok(new ArrayList<RiskDetailItem>());
+		}
+
+		// Fetch threat assessments filtered by types
+		List<ThreatAssessment> threatAssessments = threatAssessmentService.findByTypeInAndNotDeleted(types);
+
+		// Filter assessments that match the requested probability and consequence
+		List<RiskDetailItem> details = threatAssessments.stream()
+				.filter(assessment -> {
+					RiskLevel riskLevel = calculateRiskLevel(assessment);
+					return riskLevel.probability() == probability && riskLevel.consequence() == consequence;
+				})
+				.map(assessment -> new RiskDetailItem(
+						assessment.getId(),
+						assessment.getName(),
+						assessment.getThreatAssessmentType().getMessage(),
+						assessment.getAssessment().getMessage(),
+						assessment.getCreatedAt().format(DK_DATE_FORMATTER)
+				))
+				.toList();
+
+		return ResponseEntity.ok(details);
+	}
+
+	public record RiskOverTimeData( int[] green, int[] lightGreen, int[] yellow, int[] orange, int[] red) {}
+	@GetMapping("/dashboard/risk-over-time/{year}")
+	public ResponseEntity<RiskOverTimeData> getRiskOverTime(@PathVariable int year) {
+
+		// Get ALL non-deleted threat assessments (not just from selected year)
+		List<ThreatAssessment> allAssessments = threatAssessmentService.findAllNotDeleted()
+				.stream()
+				.filter(assessment -> assessment.getCreatedAt() != null)
+				.toList();
+
+		// Initialize arrays for 12 months (0-indexed)
+		int[] green = new int[12];
+		int[] lightGreen = new int[12];
+		int[] yellow = new int[12];
+		int[] orange = new int[12];
+		int[] red = new int[12];
+
+		// For each month, get the latest assessment per asset/register up to that point
+		for (int month = 0; month < 12; month++) {
+			// Create cutoff date for end of this month in selected year
+			LocalDateTime cutoffDate = LocalDateTime.of(year, month + 1, 1, 0, 0)
+					.plusMonths(1).minusSeconds(1);
+
+			// Get latest assessment for each unique key up to this month (including all previous years)
+			Map<String, ThreatAssessment> latestAssessments = allAssessments.stream()
+					.filter(assessment -> assessment.getCreatedAt().isBefore(cutoffDate) ||
+							assessment.getCreatedAt().isEqual(cutoffDate))
+					.collect(Collectors.toMap(
+							assessment -> getAssessmentKey(assessment),
+							assessment -> assessment,
+							(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt()) ?
+									existing : replacement
+					));
+
+			// Count by risk assessment color
+			for (ThreatAssessment assessment : latestAssessments.values()) {
+				if (assessment.getAssessment() != null) {
+					switch (assessment.getAssessment()) {
+						case GREEN:
+							green[month]++;
+							break;
+						case LIGHT_GREEN:
+							lightGreen[month]++;
+							break;
+						case YELLOW:
+							yellow[month]++;
+							break;
+						case ORANGE:
+							orange[month]++;
+							break;
+						case RED:
+							red[month]++;
+							break;
+					}
+				}
+			}
+		}
+
+		return ResponseEntity.ok(new RiskOverTimeData(green, lightGreen, yellow, orange, red));
+	}
+
+	private String getAssessmentKey(ThreatAssessment assessment) {
+		// Create unique identifier based on assessment type and target
+		String key = assessment.getThreatAssessmentType().name() + "_";
+
+		final List<Relatable> relations = relationService.findAllRelatedTo(assessment);
+		switch (assessment.getThreatAssessmentType()) {
+			case ASSET:
+				final Optional<Asset> asset = relations.stream().filter(r -> r.getRelationType() == RelationType.ASSET)
+						.map(Asset.class::cast)
+						.findFirst();
+				key += asset.isPresent() ? asset.get().getId() : "unknown";
+				break;
+			case REGISTER:
+				final Optional<Register> register = relations.stream().filter(r -> r.getRelationType() == RelationType.REGISTER)
+						.map(Register.class::cast)
+						.findFirst();
+				key += register.isPresent() ? register.get().getId() : "unknown";
+				break;
+			case SCENARIO:
+				key += assessment.getId(); // Scenarios are unique per assessment
+				break;
+			default:
+				key += assessment.getId();
+		}
+
+		return key;
+	}
 }

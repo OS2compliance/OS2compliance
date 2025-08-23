@@ -21,7 +21,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class AssetGrid {
+public class AssetGrid implements HasMultipleResponsibleUsers {
 	@Id
 	private Long id;
 
@@ -75,5 +75,11 @@ public class AssetGrid {
 
     @Column
     private boolean hasThirdCountryTransfer;
+
+	@Column
+	private boolean oldKitos;
+
+	@Column
+	private boolean active;
 
 }

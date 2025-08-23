@@ -1,5 +1,5 @@
 {
   "identifier": "iso27001",
   "name": "ISO27001",
-  "supporting": false
+  "supporting": true
 }

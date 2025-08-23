@@ -1,7 +1,11 @@
 package dk.digitalidentity.integration.kitos;
 
+import dk.digitalidentity.event.AssetDPIAKitosEvent;
+import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.integration.kitos.exception.KitosSynchronizationException;
 import dk.digitalidentity.integration.kitos.mapper.KitosMapper;
+import dk.digitalidentity.model.api.AssetEO;
+import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.service.SettingsService;
 import dk.kitos.api.ApiV2DeltaFeedApi;
 import dk.kitos.api.ApiV2ItContractApi;
@@ -9,6 +13,7 @@ import dk.kitos.api.ApiV2ItSystemApi;
 import dk.kitos.api.ApiV2ItSystemUsageApi;
 import dk.kitos.api.ApiV2ItSystemUsageRoleTypeApi;
 import dk.kitos.api.ApiV2OrganizationApi;
+import dk.kitos.api.model.ArchivingUpdateRequestDTO;
 import dk.kitos.api.model.GDPRWriteRequestDTO;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -26,9 +31,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.HttpClientErrorException;
 
 import java.time.OffsetDateTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 import java.util.function.Function;
@@ -142,43 +149,156 @@ public class KitosClientService {
     }
 
     /**
-     * Update business criticality for an it-system usage
+     * Update business criticality and archiving for an it-system usage
      */
-    public void updateBusinessCritical(final String itSystemUuid, boolean critical) {
+    public void updateBusinessCriticalAndArchiveDuty(final String itSystemUuid, boolean critical, AssetEO.ArchiveDuty archiveDuty) {
         final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUuid));
         final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
-        if (update.getGdpr() == null) {
+
+
+		if (update.getGdpr() == null) {
             update.setGdpr(new GDPRWriteRequestDTO());
         }
         final GDPRWriteRequestDTO gdpr = update.getGdpr();
-        if (isEmpty(gdpr.getDirectoryDocumentation())) {
-            gdpr.setDirectoryDocumentation(null);
-        }
-        if (isEmpty(gdpr.getTechnicalPrecautionsDocumentation())) {
-            gdpr.setTechnicalPrecautionsDocumentation(null);
-        }
-        if (isEmpty(gdpr.getUserSupervisionDocumentation())) {
-            gdpr.setUserSupervisionDocumentation(null);
-        }
-        if (isEmpty(gdpr.getRiskAssessmentDocumentation())) {
-            gdpr.setRiskAssessmentDocumentation(null);
-        }
-        if (isEmpty(gdpr.getDpiaDocumentation())) {
-            gdpr.setDpiaDocumentation(null);
-        }
+		setGdprFieldsNull(gdpr);
+
+		if (archiveDuty != null) {
+			if (update.getArchiving() == null) {
+				update.setArchiving(new ArchivingUpdateRequestDTO());
+			}
+			update.getArchiving().setArchiveDuty(toArchiveDutyEnum(archiveDuty));
+		}
 
         // Only send
-        update.setArchiving(null);
         update.setGeneral(null);
         update.setLocalKleDeviations(null);
         update.setOrganizationUsage(null);
         update.setExternalReferences(null);
         update.setRoles(null);
         update.getGdpr().setBusinessCritical(critical ? GDPRWriteRequestDTO.BusinessCriticalEnum.YES : GDPRWriteRequestDTO.BusinessCriticalEnum.NO);
-        itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
+
+		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUuid), update);
     }
 
-    private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
+	/**
+	 * Update risk assessment for an it-system usage
+	 */
+	public void updateAssetRiskAssessment(String itSystemUsageUuid, AssetRiskKitosEvent event) {
+		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
+		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+
+		if (update.getGdpr() == null) {
+			update.setGdpr(new GDPRWriteRequestDTO());
+		}
+		final GDPRWriteRequestDTO gdpr = update.getGdpr();
+		setGdprFieldsNull(gdpr);
+
+		// Only send
+		update.setGeneral(null);
+		update.setLocalKleDeviations(null);
+		update.setOrganizationUsage(null);
+		update.setExternalReferences(null);
+		update.setRoles(null);
+		update.getGdpr().setRiskAssessmentConducted(event.isRiskAssessmentConducted() ? GDPRWriteRequestDTO.RiskAssessmentConductedEnum.YES : GDPRWriteRequestDTO.RiskAssessmentConductedEnum.NO);
+		update.getGdpr().setRiskAssessmentConductedDate(getOffsetDateTime(event.getRiskAssessmentConductedDate()));
+		update.getGdpr().setRiskAssessmentResult(getRiskAssessmentResult(event.getResult()));
+		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
+		update.getGdpr().getRiskAssessmentDocumentation().setName(event.getRiskAssessmentName());
+		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getRiskAssessmentUrl());
+		update.getGdpr().setPlannedRiskAssessmentDate(getOffsetDateTime(event.getNextRiskAssessment()));
+
+		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update);
+	}
+
+	/**
+	 * Update DPIA for an it-system usage
+	 */
+	public void updateAssetDPIA(String itSystemUsageUuid, AssetDPIAKitosEvent event) {
+		final ItSystemUsageResponseDTO originalUsage = itSystemUsageApi.getSingleItSystemUsageV2GetItSystemUsage(UUID.fromString(itSystemUsageUuid));
+		final UpdateItSystemUsageRequestDTO update = kitosMapper.toUpdateReq(originalUsage);
+
+		if (update.getGdpr() == null) {
+			update.setGdpr(new GDPRWriteRequestDTO());
+		}
+		final GDPRWriteRequestDTO gdpr = update.getGdpr();
+		setGdprFieldsNull(gdpr);
+
+		// Only send
+		update.setGeneral(null);
+		update.setLocalKleDeviations(null);
+		update.setOrganizationUsage(null);
+		update.setExternalReferences(null);
+		update.setRoles(null);
+		update.getGdpr().setDpiaConducted(GDPRWriteRequestDTO.DpiaConductedEnum.YES);
+		update.getGdpr().setDpiaDate(getOffsetDateTime(event.getDpiaDate()));
+		update.getGdpr().setRiskAssessmentDocumentation(new SimpleLinkDTO());
+		update.getGdpr().getRiskAssessmentDocumentation().setName(event.getDpiaName());
+		update.getGdpr().getRiskAssessmentDocumentation().setUrl(event.getDpiaUrl());
+
+		itSystemUsageApi.patchSingleItSystemUsageV2PatchSystemUsage(UUID.fromString(itSystemUsageUuid), update);
+	}
+
+	private void setGdprFieldsNull(GDPRWriteRequestDTO gdpr) {
+		if (isEmpty(gdpr.getDirectoryDocumentation())) {
+			gdpr.setDirectoryDocumentation(null);
+		}
+		if (isEmpty(gdpr.getTechnicalPrecautionsDocumentation())) {
+			gdpr.setTechnicalPrecautionsDocumentation(null);
+		}
+		if (isEmpty(gdpr.getUserSupervisionDocumentation())) {
+			gdpr.setUserSupervisionDocumentation(null);
+		}
+		if (isEmpty(gdpr.getRiskAssessmentDocumentation())) {
+			gdpr.setRiskAssessmentDocumentation(null);
+		}
+		if (isEmpty(gdpr.getDpiaDocumentation())) {
+			gdpr.setDpiaDocumentation(null);
+		}
+	}
+
+	private GDPRWriteRequestDTO.RiskAssessmentResultEnum getRiskAssessmentResult(RiskAssessment result) {
+		if (result == null) {
+			return GDPRWriteRequestDTO.RiskAssessmentResultEnum.UNDECIDED;
+		}
+
+		// the api only have three possible results, OS2compliance has five. We are rounding up
+		return switch (result) {
+			case LIGHT_GREEN, GREEN -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.LOW;
+			case YELLOW -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.MEDIUM;
+			case ORANGE, RED -> GDPRWriteRequestDTO.RiskAssessmentResultEnum.HIGH;
+		};
+	}
+
+	private OffsetDateTime getOffsetDateTime(Date date) {
+		if (date == null) {
+			return null;
+		}
+		return date.toInstant().atZone(ZoneId.systemDefault()).toOffsetDateTime();
+	}
+
+	private ArchivingUpdateRequestDTO.ArchiveDutyEnum toArchiveDutyEnum(AssetEO.ArchiveDuty archiveDuty) {
+		switch (archiveDuty) {
+			case K -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.K;
+			}
+			case B -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.B;
+			}
+			case UNDECIDED -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
+			}
+			case UNKNOWN -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNKNOWN;
+			}
+			case PRESERVEDATACANDISCARDDOCUMENTS -> {
+				return ArchivingUpdateRequestDTO.ArchiveDutyEnum.PRESERVEDATACANDISCARDDOCUMENTS;
+			}
+		}
+
+		return ArchivingUpdateRequestDTO.ArchiveDutyEnum.UNDECIDED;
+	}
+
+	private boolean isEmpty(final SimpleLinkDTO simpleLinkDTO) {
         return simpleLinkDTO != null && simpleLinkDTO.getUrl() == null && simpleLinkDTO.getName() == null;
     }
 
@@ -210,5 +330,4 @@ public class KitosClientService {
             throw new RuntimeException(e);
         }
     }
-
 }

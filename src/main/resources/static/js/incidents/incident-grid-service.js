@@ -7,13 +7,11 @@ function IncidentGridService() {
     this.filterTo = '';
 
     this.init = () => {
-        var rerender = false;
         let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom' );
         let filterFrom = localStorage.getItem("incidentFilterFrom");
         if (filterFrom != null && filterFrom !== "null") {
             fromPicker.setFullDate(new Date(filterFrom));
             this.filterFrom = fromPicker.getFormatedDate();
-            rerender = true;
         }
         fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
 
@@ -22,15 +20,12 @@ function IncidentGridService() {
         if (filterTo != null && filterTo !== "null") {
             toPicker.setFullDate(new Date(filterTo));
             this.filterTo = toPicker.getFormatedDate();
-            rerender = true;
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
         incidentService.fetchColumnName()
             .then(columnNames => {
                 this.initGrid(columnNames);
-                if (rerender) {
-                    this.incidentGrid.forceRender();
-                }
+                this.incidentGrid.updateConfig(this.currentConfig).forceRender();
             });
     }
 
@@ -128,6 +123,7 @@ function IncidentGridService() {
         this.incidentGrid = new gridjs.Grid(this.currentConfig);
         this.incidentGrid.render(document.getElementById("incidentsTable"));
         searchService.initSearch(this.incidentGrid, this.currentConfig);
+        window.customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', incidentsTable);
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
     }
 

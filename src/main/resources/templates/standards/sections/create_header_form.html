@@ -1,0 +1,29 @@
+<div class="modal-dialog">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" th:text="${formTitle}"></h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <form th:id="${formId}" class="row g-3 needs-validation" action="#" th:action="${action}" th:object="${header}" method="post">
+                <div class="row mt-3">
+                    <label class="col-sm-2 col-form-label">Sektions nummer</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" id="sectionNumberInput" th:field="*{section}" required>
+                        <div class="invalid-feedback" id="conclusionAmountExceeded">Der må maks angives 10 tegn</div>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <label class="col-sm-2 col-form-label">Navn</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" th:field="*{description}" required>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+            <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+        </div>
+    </div>
+</div>
