@@ -2,16 +2,15 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.DocumentGridDao;
 import dk.digitalidentity.mapping.DocumentMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireDocument;
+import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
@@ -45,6 +44,7 @@ public class DocumentRestController {
     private final UserService userService;
 	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
+	private final DocumentService documentService;
 
 	@RequireReadOwnerOnly
 	@PostMapping("list")
@@ -57,24 +57,7 @@ public class DocumentRestController {
 	) {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-        Page<DocumentGrid> documents;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			documents = documentGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DocumentGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			documents = documentGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DocumentGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-		}
+        Page<DocumentGrid> documents = documentService.getDocuments(sortColumn, sortDirection, filters, page, limit, user);
 
         assert documents != null;
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
@@ -94,22 +77,9 @@ public class DocumentRestController {
 		int pageLimit = Integer.MAX_VALUE;
 
 		// Fetch all records (no pagination)
-		Page<DocumentGrid> documents;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			documents = documentGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DocumentGrid.class),
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-		} else {
-			documents = documentGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DocumentGrid.class),
-					user,
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-		}
+		Page<DocumentGrid> documents = documentService.getDocuments(sortColumn, sortDirection, filters, 0, pageLimit, user);
 
+		assert documents != null;
 		List<DocumentDTO> allData = mapper.toDTO(documents.getContent());
 		excelExportService.exportToExcel(allData, DocumentDTO.class, fileName, response);
 	}

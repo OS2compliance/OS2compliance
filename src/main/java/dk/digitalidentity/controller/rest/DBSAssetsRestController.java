@@ -3,18 +3,15 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.DBSAssetDao;
 import dk.digitalidentity.dao.grid.DBSAssetGridDao;
 import dk.digitalidentity.mapping.DBSAssetMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.DBSAssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
-import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.security.annotations.sections.RequireDBS;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
@@ -52,14 +49,12 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @RequireDBS
 @RequiredArgsConstructor
 public class DBSAssetsRestController {
-	private final DBSAssetGridDao dbsAssetGridDao;
 	private final DBSAssetDao dbsAssetDao;
 	private final DBSAssetMapper mapper;
     private final AssetService assetService;
     private final AssetOversightService assetOversightService;
     private final RelationService relationService;
 	private final ExcelExportService excelExportService;
-	private final UserService userService;
 	private final SecurityUserService securityUserService;
 
 	@RequireReadOwnerOnly
@@ -73,25 +68,9 @@ public class DBSAssetsRestController {
 	) {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-        Page<DBSAssetGrid> assets = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			assets = dbsAssetGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DBSAssetGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					DBSAssetGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			assets = dbsAssetGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DBSAssetGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					DBSAssetGrid.class
-			);
-		}
+        Page<DBSAssetGrid> assets = assetService.getDbsAssets(sortColumn, sortDirection, filters, page, limit, user);
 
+		assert assets != null;
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
 	}
 
@@ -109,28 +88,14 @@ public class DBSAssetsRestController {
 		int pageLimit = Integer.MAX_VALUE;
 
 		// Fetch all records (no pagination)
-		Page<DBSAssetGrid> assets;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			assets = dbsAssetGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DBSAssetGrid.class),
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					DBSAssetGrid.class
-			);
-		} else {
-			assets = dbsAssetGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DBSAssetGrid.class),
-					user,
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					DBSAssetGrid.class
-			);
-		}
+		Page<DBSAssetGrid> assets = assetService.getDbsAssets(sortColumn, sortDirection, filters, 0, pageLimit, user);
 
+		assert assets != null;
 		List<DBSAssetDTO> allData = mapper.toDTO(assets.getContent());
 		excelExportService.exportToExcel(allData, DBSAssetDTO.class, fileName, response);
 	}
 
-    record UpdateDBSAssetDTO(long id, List<Long> assets) {}
-
+	record UpdateDBSAssetDTO(long id, List<Long> assets) {}
     @RequireUpdateOwnerOnly
     @PostMapping("update")
     @Transactional

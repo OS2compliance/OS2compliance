@@ -2,11 +2,9 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.grid.RegisterGridDao;
 import dk.digitalidentity.mapping.RegisterMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.DPIAGrid;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -60,25 +58,9 @@ public class RegisterRestController {
 		User user = securityUserService.getCurrentUserOrThrow();
 
 		Page<RegisterGrid> registers;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			registers = registerGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, RegisterGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					RegisterGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			registers = registerGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, RegisterGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					RegisterGrid.class
-			);
-		}
+		registers = registerService.getRegisters(sortColumn, sortDirection, filters, page, limit, user);
 
-        assert registers != null;
+		assert registers != null;
         return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
     }
 
@@ -94,26 +76,9 @@ public class RegisterRestController {
 		User user = securityUserService.getCurrentUserOrThrow();
 
 		// Fetch all records (no pagination)
-		Page<RegisterGrid> registers;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			registers = registerGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, RegisterGrid.class),
-					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
-					RegisterGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			registers = registerGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, RegisterGrid.class),
-					user,
-					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
-					RegisterGrid.class
-			);
-		}
-		assert registers != null;
+		Page<RegisterGrid> registers = registerService.getRegisters(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
 
+		assert registers != null;
 		List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), registerService);
 		excelExportService.exportToExcel(allData, RegisterDTO.class, fileName, response);
 	}

@@ -1,7 +1,6 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.dao.SupplierDao;
-import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.mapping.SupplierMapper;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
@@ -16,6 +15,7 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.SupplierService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +48,9 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @RequireSupplier
 @RequiredArgsConstructor
 public class SupplierRestController {
-	private final SupplierGridDao supplierGridDao;
 	private final SupplierMapper supplierMapper;
 	private final SupplierDao supplierDao;
+	private final SupplierService supplierService;
 	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
 
@@ -81,24 +81,9 @@ public class SupplierRestController {
 
 		Set<AllowedAction> allowedActions = setAllowedActions();
 
-		Page<SupplierGrid> suppliers;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
-			suppliers = supplierGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, SupplierGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					SupplierGrid.class
-			);
-		}
-		else {
-			// Logged in user can see only own
-			suppliers = supplierGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, SupplierGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					SupplierGrid.class
-			);
-		}
+		Page<SupplierGrid> suppliers = supplierService.getSuppliers(sortColumn, sortDirection, filters, page, limit, user);
+
+		assert suppliers != null;
 
 		// Convert to DTO
 		final List<SupplierGridDTO> supplierDTOs = new ArrayList<>();
@@ -133,24 +118,9 @@ public class SupplierRestController {
 		int pageLimit = Integer.MAX_VALUE;
 
 		// Fetch all records (no pagination)
-		Page<SupplierGrid> suppliers;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			suppliers = supplierGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, SupplierGrid.class),
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					SupplierGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			suppliers = supplierGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, SupplierGrid.class),
-					user,
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					SupplierGrid.class
-			);
-		}
+		Page<SupplierGrid> suppliers = supplierService.getSuppliers(sortColumn, sortDirection, filters, 0, pageLimit, user);
+
+		assert suppliers != null;
 
 		final List<SupplierGridDTO> allData = new ArrayList<>();
 		for (final SupplierGrid supplier : suppliers.getContent()) {

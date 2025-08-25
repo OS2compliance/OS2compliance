@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.grid.DPIAGridDao;
 import dk.digitalidentity.event.EmailEvent;
-import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Asset;
@@ -26,7 +25,6 @@ import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.grid.DPIAGrid;
-import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -96,7 +94,6 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @RequireDPIA
 @RequiredArgsConstructor
 public class DPIARestController {
-	private final DPIAGridDao dpiaGridDao;
 	private final DPIAService dpiaService;
 	private final ChoiceDPIADao choiceDPIADao;
     private final AssetService assetService;
@@ -140,28 +137,11 @@ public class DPIARestController {
 		String userUuid = user.getUuid();
 
 		// Normal mode - return paginated JSON
-		Page<DPIAGrid> dpiaGrids = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			dpiaGrids = dpiaGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DPIAGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					DPIAGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			dpiaGrids = dpiaGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DPIAGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					DPIAGrid.class
-			);
-		}
-
-		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
+		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, page, limit, user);
 
 		assert dpiaGrids != null;
+
+		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
 		return new PageDTO<>(dpiaGrids.getTotalElements(), dtos);
 	}
 
@@ -178,24 +158,9 @@ public class DPIARestController {
 		String userUuid = user.getUuid();
 
 		// Fetch all records (no pagination)
-		Page<DPIAGrid> dpiaGrids = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			dpiaGrids = dpiaGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DPIAGrid.class),
-					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
-					DPIAGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			dpiaGrids = dpiaGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DPIAGrid.class),
-					user,
-					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
-					DPIAGrid.class
-			);
-		}
+		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
+
+		assert dpiaGrids != null;
 
 		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
 		excelExportService.exportToExcel(dtos, DPIAListDTO.class, fileName, response);

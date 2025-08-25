@@ -108,24 +108,7 @@ public class AssetsRestController {
     ) {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		Page<AssetGrid> assets = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			assets = assetGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, AssetGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			assets = assetGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, AssetGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		}
+		Page<AssetGrid> assets = assetService.getAssets(sortColumn, sortDirection, filters, page, limit, user);
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
     }
@@ -144,21 +127,7 @@ public class AssetsRestController {
 		int pageLimit = Integer.MAX_VALUE;
 
 		// Fetch all records (no pagination)
-		Page<AssetGrid> assets;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			assets = assetGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, AssetGrid.class),
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		} else {
-			assets = assetGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, AssetGrid.class),
-					user,
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		}
+		Page<AssetGrid> assets = assetService.getAssets(sortColumn, sortDirection, filters, 0, pageLimit, user);
 
 		List<AssetDTO> allData = mapper.toDTO(assets.getContent());
 		excelExportService.exportToExcel(allData, AssetDTO.class, fileName, response);

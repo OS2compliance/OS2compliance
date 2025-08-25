@@ -3,10 +3,8 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -14,6 +12,7 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SecurityUserService;
+import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -45,6 +44,7 @@ public class TaskRestController {
     private final TaskMapper mapper;
 	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
+	private final TaskService taskService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -53,31 +53,11 @@ public class TaskRestController {
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", defaultValue = "nextDeadline", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "asc", required = false) String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
-			HttpServletResponse response
-	) throws IOException {
+			@RequestParam Map<String, String> filters // Dynamic filters for search fields
+	) {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		Page<TaskGrid> tasks;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			tasks = taskGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, TaskGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					TaskGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			tasks = taskGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, TaskGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					TaskGrid.class
-			);
-		}
+		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, page, limit, user);
 
         assert tasks != null;
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
@@ -95,26 +75,9 @@ public class TaskRestController {
 		User user = securityUserService.getCurrentUserOrThrow();
 
 		// Fetch all records (no pagination)
-		Page<TaskGrid> tasks;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			tasks = taskGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, TaskGrid.class),
-					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
-					TaskGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			tasks = taskGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, TaskGrid.class),
-					user,
-					buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
-					TaskGrid.class
-			);
-		}
-		assert tasks != null;
+		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
 
+		assert tasks != null;
 		List<TaskDTO> allData = mapper.toDTO(tasks.getContent());
 		excelExportService.exportToExcel(allData, TaskDTO.class, fileName, response);
 	}

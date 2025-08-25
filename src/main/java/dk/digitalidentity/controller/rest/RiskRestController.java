@@ -4,7 +4,6 @@ import dk.digitalidentity.dao.grid.RiskGridDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.event.ThreatAssessmentUpdatedEvent;
 import dk.digitalidentity.mapping.RiskMapper;
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RiskDTO;
 import dk.digitalidentity.model.dto.enums.ReportFormat;
@@ -29,7 +28,6 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatu
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.security.Roles;
@@ -138,24 +136,7 @@ public class RiskRestController {
 				.map(Relatable::getName)
 				.collect(Collectors.toSet());
 
-		Page<RiskGrid> risks = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged-in user can see all
-			risks = riskGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, RiskGrid.class),
-					buildPageable(page, limit, sortColumn, sortDirection),
-					RiskGrid.class
-			);
-		}
-		else {
-			// Logged-in user can see only own
-			risks = riskGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, RiskGrid.class),
-					user,
-					buildPageable(page, limit, sortColumn, sortDirection),
-					RiskGrid.class
-			);
-		}
+		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, page, limit, user);
 
 		assert risks != null;
 
@@ -181,13 +162,22 @@ public class RiskRestController {
 				.map(Relatable::getName)
 				.collect(Collectors.toSet());
 
-		// Fetch all records (no pagination)
+		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, 0, pageLimit, user);
+
+		assert risks != null;
+
+		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid);
+		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
+	}
+
+	// Should be in Service class but risks doesn't have one???
+	private Page<RiskGrid> getRisks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		Page<RiskGrid> risks = null;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
 			// Logged-in user can see all
 			risks = riskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, RiskGrid.class),
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					RiskGrid.class
 			);
 		}
@@ -196,16 +186,14 @@ public class RiskRestController {
 			risks = riskGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, RiskGrid.class),
 					user,
-					buildPageable(0, pageLimit, sortColumn, sortDirection),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
 					RiskGrid.class
 			);
 		}
-
-		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid);
-		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
+		return risks;
 	}
 
-    record ResponsibleUserDTO(String uuid, String name, String userId) {}
+	record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}
 	@RequireReadOwnerOnly
     @GetMapping("register")

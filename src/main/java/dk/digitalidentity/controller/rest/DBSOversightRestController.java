@@ -4,16 +4,10 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
-import dk.digitalidentity.model.dto.AssetDTO;
-import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
-import dk.digitalidentity.security.Roles;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
 import dk.digitalidentity.security.annotations.sections.RequireDBS;
 import dk.digitalidentity.service.ExcelExportService;
-import dk.digitalidentity.service.SecurityUserService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -41,7 +35,6 @@ public class DBSOversightRestController {
 	private final DBSOversightGridDao dbsOversightGridDao;
 	private final DBSOversightMapper mapper;
 	private final ExcelExportService excelExportService;
-	private final SecurityUserService securityUserService;
 
 	@RequireReadOwnerOnly
 	@PostMapping("list")
