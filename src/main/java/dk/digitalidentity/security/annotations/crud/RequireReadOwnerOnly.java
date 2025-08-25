@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasAnyRole('read_owner','read_all')")
+@PreAuthorize("hasAnyRole('ROLE_read_owner','ROLE_read_all')")
 public @interface RequireReadOwnerOnly {
 }

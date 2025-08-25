@@ -9,6 +9,6 @@ import java.lang.annotation.Target;
 
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
-@PreAuthorize("hasRole('update_all')")
+@PreAuthorize("hasRole('ROLE_update_all')")
 public @interface RequireUpdateAll {
 }
