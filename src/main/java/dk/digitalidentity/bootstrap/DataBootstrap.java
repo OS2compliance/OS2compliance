@@ -197,7 +197,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 					final String oldValue = r.getOldRegisterRegarding();
 					// Avoid duplicates
 					if (choices.containsKey(oldValue)) {
-						choiceList.getValues().add(choices.get(oldValue));
+						if (choiceList.getValues().stream()
+								.noneMatch(v -> v.getIdentifier().equals(choices.get(oldValue).getIdentifier()))) {
+							choiceList.getValues().add(choices.get(oldValue));
+						}
 					} else {
 						final ChoiceValue oldValueChoice = ChoiceValue.builder()
 								.caption(oldValue)
