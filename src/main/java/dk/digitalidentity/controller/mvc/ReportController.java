@@ -66,10 +66,7 @@ import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
-import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
-import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
-import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.*;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 
@@ -253,17 +250,17 @@ public class ReportController {
         return new ModelAndView(view, model);
     }
 
-	@RequireReadOwnerOnly
     @GetMapping("word")
     public @ResponseBody ResponseEntity<?> word(@RequestParam(name = "identifier") final String identifier,
                                                 @RequestParam(name = "riskId", required = false) final Long riskId,
                                                 @RequestParam(name = "type", required = false, defaultValue = "WORD") String type,
                                                 final HttpServletResponse response) {
-        if ("article30".equals(identifier)) {
+		if ("article30".equals(identifier)) {
             generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap(), false, null);
         } else if ("iso27001".equals(identifier)) {
             generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap(), false, null);
         } else if ("iso27002_2022".equals(identifier)) {
+			log.info("We are hitting a correct one");
             generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap(), false, null);
         } else if ("risk".equals(identifier)) {
             if (type.equals("WORD")) {
@@ -274,6 +271,9 @@ public class ReportController {
                     Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), true, riskId);
             }
         }
+		else {
+			generateDocument(response, STANDARD_TEMPLATE_DOC, (identifier + "_standard.docx"), Collections.emptyMap(), false, null);
+		}
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
@@ -428,7 +428,7 @@ public class ReportController {
                 response.getOutputStream().write(byteData);
                 response.flushBuffer();
             } else {
-                try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters)) {
+				try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters)) {
                     response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
                     response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                     myDocument.write(response.getOutputStream());
