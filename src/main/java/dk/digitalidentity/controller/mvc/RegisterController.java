@@ -255,8 +255,8 @@ public class RegisterController {
 			@RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
 			@RequestParam(required = false) final String section,
 			@RequestParam(value = "status", required = false) final RegisterStatus status,
-			@RequestParam(value = "kleMainGroups", required = false) final Set<String> mainGroupIds,
-			@RequestParam(value = "kleGroups", required = false) final Set<String> groupIds
+			@RequestParam(value = "mainGroups", required = false) final Set<String> mainGroupIds,
+			@RequestParam(value = "groups", required = false) final Set<String> groupIds
 			) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
