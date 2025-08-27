@@ -11,10 +11,7 @@ import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
-import dk.digitalidentity.security.Roles;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
-import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireStandard;
@@ -45,7 +42,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -157,23 +153,13 @@ public class StandardController {
     @GetMapping
     public String supportingPage(final Model model) {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
-        for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(StandardTemplate::isSupporting).toList()) {
-            final List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
-                .flatMap(s -> s.getChildren().stream())
-                .filter(s -> s.getStandardSection().isSelected())
-                .toList();
-            final double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).count();
-            final double notRelevantCount = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.NOT_RELEVANT)).count();
+		Set<AllowedAction> allowedActions = supportingStandardService.calculateAllowedActions();
+        for (final StandardTemplate standardTemplate : standardTemplateDao.findAllBySupportingIsTrue()) {
+            final List<StandardTemplateSection> collect = standardTemplateSectionDao.findSelectedChildSectionsByTemplate(standardTemplate);
+			final double readyCounter = standardTemplateSectionDao.countByTemplateAndStatus(standardTemplate, StandardSectionStatus.READY);
+            final double notRelevantCount = standardTemplateSectionDao.countByTemplateAndStatus(standardTemplate, StandardSectionStatus.NOT_RELEVANT);
             final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
-
-			Set<AllowedAction> allowedActions = new HashSet<>();
-			if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
-				allowedActions.add(AllowedAction.UPDATE);
-			}
-			if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
-				allowedActions.add(AllowedAction.DELETE);
-			}
 
             if (relevantCount == 0 ) {
                 templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%", allowedActions));
