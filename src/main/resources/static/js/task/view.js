@@ -52,9 +52,10 @@ function ViewTaskService() {
             document.getElementById('saveEditTaskBtn').hidden = false;
             document.getElementById('editTaskBtn').hidden = true;
             document.getElementById('completeBtn').hidden = true;
-            document.getElementById('realLink').hidden = true;
-            document.getElementById('linkField').hidden = false;
             this.nameField.disabled = false
+            document.getElementById("linksViewContainer").hidden = true;
+            document.getElementById("linksEditContainer").hidden = false;
+            document.getElementById("addLinkBtn").hidden = false;
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -64,9 +65,10 @@ function ViewTaskService() {
             document.getElementById('saveEditTaskBtn').hidden = true;
             document.getElementById('editTaskBtn').hidden = false;
             document.getElementById('completeBtn').hidden = false;
-            document.getElementById('realLink').hidden = false;
-            document.getElementById('linkField').hidden = true;
             this.nameField.disabled = true
+            document.getElementById("linksViewContainer").hidden = false;
+            document.getElementById("linksEditContainer").hidden = true;
+            document.getElementById("addLinkBtn").hidden = true;
         }
     }
 
