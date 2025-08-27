@@ -509,9 +509,10 @@ public class RegisterController {
 				));
 	}
 
+	record KLEKeywordDTO(String text, String actionFacetNr) {}
 	record SelectedLegalReferenceDTO(String accessionNumber, String title, String paragraph) {}
-	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, Set<SelectedLegalReferenceDTO> legalReferences){}
-	record SelectedKLEGroupDTO (String groupNumber, String title, List<SelectedKLESubjectDTO> subjects) {}
+	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, String instructionText, List<KLEKeywordDTO> keywords, Set<SelectedLegalReferenceDTO> legalReferences){}
+	record SelectedKLEGroupDTO (String groupNumber, String title, String instructionText, List<KLEKeywordDTO> keywords, List<SelectedKLESubjectDTO> subjects) {}
 	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
 
 	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
@@ -528,6 +529,10 @@ public class RegisterController {
 		return new SelectedKLEGroupDTO(
 				group.getGroupNumber(),
 				group.getTitle(),
+				group.getInstructionText(),
+				group.getKeywords().stream()
+						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
+						.toList(),
 				group.getSubjects().stream()
 						.map(this::toSelectedKLESubjectDTO )
 						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
@@ -540,6 +545,10 @@ public class RegisterController {
 				subject.getTitle(),
 				subject.getPreservationCode(),
 				durationToString(subject.getDurationBeforeDeletion()),
+				subject.getInstructionText(),
+				subject.getKeywords().stream()
+						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
+						.toList(),
 				subject.getLegalReferences().stream()
 						.map(this::selectedLegalReferenceDTO)
 						.collect(Collectors.toSet()));
