@@ -49,8 +49,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -104,7 +102,13 @@ public class AssetService {
 	private final S3Service s3Service;
 
 	public boolean isResponsibleFor(Asset asset) {
-		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid());
+		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
+	}
+
+	public boolean isOwning(Asset asset) {
+		boolean isResponsible = isResponsibleFor(asset);
+		boolean isManager = asset.getManagers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
+		return isResponsible || isManager;
 	}
 
 	public Optional<AssetOversight> getOversight(final Long oversightId) {
@@ -184,13 +188,13 @@ public class AssetService {
     }
 
     public boolean isEditable(final Asset asset) {
-        return SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
-                || isResponsibleFor(asset);
+        return SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && isOwning(asset));
     }
 
 	public boolean isEditable(final List<Asset> assets) {
-		boolean responsibleForAnyAsset = assets.stream().anyMatch(this::isResponsibleFor);
-		return SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) ||
+		boolean responsibleForAnyAsset = assets.stream().anyMatch(this::isOwning);
+		return SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
 				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && responsibleForAnyAsset);
 	}
 
@@ -663,7 +667,7 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 					.append(entry.getValue())
 					.append(";");
 		}
-		System.out.println(builder.toString());
+
 		img.attr("style", builder.toString());
 		return img;
 	}
