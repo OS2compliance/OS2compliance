@@ -44,6 +44,9 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 	private String managerUuids;
 
 	@Column
+	private String managerUserNames;
+
+	@Column
 	private LocalDate updatedAt;
 
 	@Column

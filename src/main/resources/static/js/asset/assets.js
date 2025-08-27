@@ -148,8 +148,14 @@
                 {
                     name: "Systemejer",
                     searchable: {
-                        searchKey: 'responsibleUserNames'
+                        searchKey: 'ownedByUserNames'
                     },
+                },
+                {
+                    name: "Systemansvarlig",
+                    searchable: {
+                        searchKey: 'responsibleUserNames'
+                    }
                 },
                 {
                     name: "Opdateret",
@@ -239,7 +245,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, , asset.oldKitos ],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },

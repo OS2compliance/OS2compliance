@@ -114,6 +114,7 @@ SELECT
     GROUP_CONCAT(u.name SEPARATOR ', ') as responsible_user_names,
     GROUP_CONCAT(u.uuid SEPARATOR ',') as responsible_user_uuids,
     GROUP_CONCAT(mu.uuid SEPARATOR ',') as manager_uuids,
+    GROUP_CONCAT(mu.name SEPARATOR ',') as manager_user_names,
     a.updated_at,
     a.asset_status,
     (CASE WHEN a.asset_status = 'NOT_STARTED' THEN 1
