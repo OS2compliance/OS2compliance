@@ -60,12 +60,22 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import static dk.digitalidentity.Constants.*;
+import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.STANDARD_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 
@@ -75,7 +85,7 @@ import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 @RequestMapping("reports")
 @RequiredArgsConstructor
 public class ReportController {
-    private final RelationService relationService;
+	private final RelationService relationService;
     private final StandardTemplateDao standardTemplateDao;
     private final TagDao tagDao;
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
