@@ -524,6 +524,7 @@ public class AssetsController {
         existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 		existingAsset.setActive(asset.isActive());
 		existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
+		existingAsset.setDepartments(asset.getDepartments());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
 			existingAsset.getProductLinks().clear();

@@ -154,6 +154,16 @@
                                             </div>
 
                                             <div class="row mb-3">
+                                                <label for="departmentSelect" class="col-sm-3 col-form-label">Ansvarlige forvaltninger</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-select choices__input" th:field="*{departments}"
+                                                            data-trigger="" name="forvaltning" id="departmentSelect" tabindex="-1" multiple="multiple" disabled>
+                                                        <option th:each="department : *{departments}" th:value="${department.uuid}" th:text="${department.name}" selected></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
                                                 <label for="assetStatus"
                                                        class="col-sm-3 col-form-label">Status</label>
                                                 <div class="col-sm-9">
@@ -764,6 +774,7 @@
         let suppliersChoicesEditSelect = null;
         let responsibleChoicesEditSelect = null;
         let operationResponsibleChoicesEditSelect = null;
+        let departmentChoices = null;
 
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -778,6 +789,8 @@
             responsibleChoicesEditSelect.disable();
             operationResponsibleChoicesEditSelect = choiceService.initUserSelect("operationResponsible", false);
             operationResponsibleChoicesEditSelect.disable();
+            departmentChoices = choiceService.initOUSelect('departmentSelect', false);
+            departmentChoices.disable();
             editMode(false);
             initDpia();
 
@@ -1096,7 +1109,11 @@
                 }
 
                 suppliersChoicesEditSelect.enable();
+                if (responsibleFieldChangeable === 'true') {
+                    responsibleChoicesEditSelect.enable();
+                }
 
+                departmentChoices.enable();
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                     elem.disabled = true;
@@ -1137,6 +1154,8 @@
                     document.getElementById("productLinksEditContainer").hidden = true;
                     document.getElementById("addProductLinkBtn").hidden = true;
                 }
+
+                departmentChoices.disable();
             }
             if (isKitos) {
                 aiStatus.disabled = true;

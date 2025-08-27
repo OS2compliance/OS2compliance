@@ -5,6 +5,7 @@ import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -20,7 +21,6 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
-import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
@@ -40,8 +40,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -145,7 +143,12 @@ public class TasksController {
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
-        final Task savedTask = taskService.saveTask(task);
+		List<TaskLink> links = new ArrayList<>();
+		for (TaskLink link : task.getLinks()) {
+			links.add(new TaskLink(null, linkify(link.getUrl()), task));
+		}
+		task.setLinks(links);
+		final Task savedTask = taskService.saveTask(task);
         relationService.setRelationsAbsolute(savedTask, relations);
 
         if (riskId != null) {
@@ -234,8 +237,17 @@ public class TasksController {
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
+        existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUser(task.getResponsibleUser());
-        existingTask.setLink(linkify(task.getLink()));
+
+		existingTask.getLinks().clear();
+		for (TaskLink link : task.getLinks()) {
+			if (link.getUrl() != null && !link.getUrl().isBlank()) {
+				link.setTask(existingTask);
+				link.setUrl(linkify(link.getUrl()));
+				existingTask.getLinks().add(link);
+			}
+		}
 
         if (existingTask.getTaskType().equals(TaskType.CHECK)) {
             existingTask.setRepetition(task.getRepetition());
