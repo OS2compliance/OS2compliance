@@ -104,6 +104,7 @@ public interface AssetMapper {
     @Mappings({
         @Mapping(source = "responsibleUsers", target = "systemOwners"),
         @Mapping(source = "managers", target = "responsibleUsers"),
+        @Mapping(source = "departments", target = "departments"),
         @Mapping(source = "suppliers", target = "subSuppliers"),
         @Mapping(source = "assetType", target = "assetType"),
         @Mapping(source = "productLinks", target = "productLinks"),
@@ -201,7 +202,8 @@ public interface AssetMapper {
 		@Mapping(target = "aiStatus", ignore = true),
 		@Mapping(target = "aiRisk", ignore = true),
 		@Mapping(target = "active", ignore = true),
-		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
+		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks"),
+		@Mapping(target = "departments", source = "departments")
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);
 

@@ -230,5 +230,11 @@ public class Asset extends Relatable {
 	@JsonIgnore
 	private List<User> operationResponsibleUsers = new ArrayList<>();
 
-
+	@ManyToMany
+	@JoinTable(
+			name = "assets_departments_mapping",
+			joinColumns = { @JoinColumn(name = "asset_id") },
+			inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
+	)
+	private List<OrganisationUnit> departments;
 }
