@@ -30,12 +30,13 @@ public class FilterService {
         Map<String, String> validatedFilters = new HashMap<>();
             List<String> classFields = Arrays.stream(validationClass.getDeclaredFields()).map(Field::getName).toList();
         for ( String filterKey : filters.keySet() ) {
-            if (
-                classFields.contains(filterKey)
-                || classFields.contains( filterKey.split("\\.")[0])
-
-            ) {
-                validatedFilters.put(filterKey, filters.get(filterKey));
+            if (classFields.contains(filterKey) || classFields.contains( filterKey.split("\\.")[0])) {
+                String value = filters.get(filterKey);
+				if ("__EMPTY__".equals(value)) {
+					validatedFilters.put(filterKey, "EMPTY");
+				} else {
+					validatedFilters.put(filterKey, filters.get(filterKey));
+				}
             }
         }
         return validatedFilters;
