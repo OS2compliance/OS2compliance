@@ -52,7 +52,6 @@ import dk.digitalidentity.service.kle.KLEMainGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -129,7 +128,7 @@ public class RegisterController {
             model.addAttribute("register", register);
             model.addAttribute("formId", "editForm");
             model.addAttribute("formTitle", "Rediger behandlingsaktivitet");
-            model.addAttribute("action", "/registers/" + register.getId() + "/update?showIndex=true");
+            model.addAttribute("action", "/registers/list/" + register.getId() + "/update?showIndex=true");
         }
         return "registers/form";
     }
@@ -324,6 +323,39 @@ public class RegisterController {
         registerService.save(register);
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
+
+	@PostMapping("list/{id}/update")
+	public String update(@PathVariable final Long id,
+			@RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
+			@RequestParam(required = false) final String section,
+			@RequestParam(value = "name", required = false) @Valid final String name,
+			@RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
+			@RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids
+	) {
+		final Register register = registerService.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		ensureEditingIsAllowed(register);
+		if (name != null) {
+			register.setName(name);
+		}
+
+		if (responsibleOuUuids != null && !responsibleOuUuids.isEmpty()) {
+			final List<OrganisationUnit> responsibleOus = organisationService.findAllByUuids(responsibleOuUuids);
+			register.setResponsibleOus(responsibleOus);
+		} else {
+			register.setResponsibleOus(null);
+		}
+
+		if (responsibleUserUuids != null && !responsibleUserUuids.isEmpty()) {
+			final List<User> responsibleUsers = userService.findAllByUuids(responsibleUserUuids);
+			register.setResponsibleUsers(responsibleUsers);
+		} else {
+			register.setResponsibleUsers(null);
+		}
+
+		registerService.save(register);
+		return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+	}
 
     @Transactional
     @PostMapping("{id}/purpose")
