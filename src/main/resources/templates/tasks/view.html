@@ -79,6 +79,15 @@
                                 </div>
 
                                 <div class="row mb-3">
+                                    <label for="ouSelect" class="col-sm-2 col-form-label">Forvaltning</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField" th:field="*{department}" data-trigger="" name="forvaltning" id="departmentOuSelect" tabindex="-1" hidden>
+                                            <option th:if="${task.department} != null" th:value="*{department.uuid}" th:text="*{department.name}" selected></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
 
                                     <label for="deadline" class="col-sm-2 col-form-label">Deadline</label>
                                     <div class="col-sm-10">

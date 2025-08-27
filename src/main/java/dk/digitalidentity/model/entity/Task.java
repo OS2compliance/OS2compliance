@@ -47,6 +47,10 @@ public class Task extends Relatable {
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOu;
 
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_uuid")
+	private OrganisationUnit department;
+
     @Column
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     @NotNull
