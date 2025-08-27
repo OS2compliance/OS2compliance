@@ -93,6 +93,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 		final List<Predicate> predicates = new ArrayList<>();
 		for (final Map.Entry<String, String> searchEntry : searchableProperties.entrySet()) {
 			final Path<String> propertyPath;
+			String value = searchEntry.getValue();
 
 			propertyPath = getPropertyPath(searchEntry, root);
 
@@ -107,6 +108,9 @@ public class SearchRepositoryImpl implements SearchRepository {
 			}
 			else if (propertyPath.getJavaType().isAssignableFrom(Boolean.class)) {
 				predicates.add(handleBoolean(propertyPath, searchEntry, criteriaBuilder));
+			}
+			else if ("EMPTY".equals(value)) {
+				predicates.add(criteriaBuilder.or(criteriaBuilder.isNull(propertyPath), criteriaBuilder.equal(propertyPath.as(String.class), "")));
 			}
 			else {
 				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath), "%" + searchEntry.getValue().toLowerCase() + "%"));
