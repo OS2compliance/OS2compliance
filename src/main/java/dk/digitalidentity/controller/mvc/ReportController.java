@@ -259,6 +259,7 @@ public class ReportController {
         return new ModelAndView(view, model);
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("word")
     public @ResponseBody ResponseEntity<?> word(@RequestParam(name = "identifier") final String identifier,
                                                 @RequestParam(name = "riskId", required = false) final Long riskId,
