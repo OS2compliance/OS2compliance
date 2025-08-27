@@ -33,7 +33,7 @@ import java.util.Set;
 @Table(name = "dpia")
 @Getter
 @Setter
-public class DPIA extends Relatable {
+public class DPIA extends Relatable implements HasSingleResponsibleUser {
 	@ManyToMany
 	@JoinTable(
 			name = "dpia_asset",

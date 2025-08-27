@@ -30,7 +30,7 @@ import java.util.Set;
 @Table(name = "tasks")
 @Getter
 @Setter
-public class Task extends Relatable {
+public class Task extends Relatable implements HasSingleResponsibleUser{
 
     @Column
     @Enumerated(EnumType.STRING)

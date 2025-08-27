@@ -24,7 +24,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StandardSection extends Relatable {
+public class StandardSection extends Relatable implements HasSingleResponsibleUser{
 
     @OneToOne
     @JoinColumn(name = "template_section_identifier")

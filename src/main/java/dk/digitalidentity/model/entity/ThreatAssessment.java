@@ -33,7 +33,7 @@ import java.util.List;
 @Setter
 @SQLDelete(sql = "UPDATE threat_assessments SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class ThreatAssessment extends Relatable {
+public class ThreatAssessment extends Relatable implements HasSingleResponsibleUser{
     @Column
     @Enumerated(EnumType.STRING)
     private ThreatAssessmentType threatAssessmentType;
