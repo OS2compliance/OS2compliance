@@ -9,7 +9,6 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -23,8 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -211,16 +208,15 @@ public class RelatableController {
      * Check if the current user is responsible for the given relatable, if not an exception is thrown
      */
     private void ensureModificationIsAllowed(final Relatable relateTo) {
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			return;
+		}
 
-        if (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)) {
-            final List<User> responsibleUsers = relatableService.findResponsibleUsers(relateTo);
-            final String principalUuid = SecurityUtil.getPrincipalUuid();
-            if (responsibleUsers.stream()
-                .map(User::getUuid)
-                .noneMatch(u -> u.equals(principalUuid))) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
-        }
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && relatableService.isOwner(relateTo)) {
+			return;
+		}
+
+		throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
     private void setRelationProperties(final Relation relation, final Map<String, String> properties) {
