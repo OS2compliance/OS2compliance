@@ -191,7 +191,7 @@ public class DocxServiceTest {
     @Test
     public void canReplaceISO27001() throws IOException {
         try (final XWPFDocument doc = documentService.readDocument("reports/ISO27001/ISO27001.docx")) {
-            documentService.replacePlaceHolders(doc, Collections.emptyMap());
+            documentService.replacePlaceHolders(doc, Collections.emptyMap(), null);
             final FileOutputStream out = new FileOutputStream("test-result-iso27001.docx");
             doc.write(out);
             out.close();
@@ -206,7 +206,7 @@ public class DocxServiceTest {
     @Test
     public void canReplaceISO27002() throws IOException {
         try (final XWPFDocument doc = documentService.readDocument("reports/ISO27002/ISO27002.docx")) {
-            documentService.replacePlaceHolders(doc, Collections.emptyMap());
+            documentService.replacePlaceHolders(doc, Collections.emptyMap(), null);
             final FileOutputStream out = new FileOutputStream("test-result-iso27002.docx");
             doc.write(out);
             out.close();
@@ -221,7 +221,7 @@ public class DocxServiceTest {
     @Test
     public void canReplaceArticle30() throws IOException {
         try (final XWPFDocument doc = documentService.readDocument("reports/article30/main.docx")) {
-            documentService.replacePlaceHolders(doc, Collections.emptyMap());
+            documentService.replacePlaceHolders(doc, Collections.emptyMap(), null);
             final FileOutputStream out = new FileOutputStream("test-result-article30.docx");
             doc.write(out);
             out.close();
@@ -231,7 +231,7 @@ public class DocxServiceTest {
     @Test
     public void canReplaceThreatAssessment() throws IOException {
         try (final XWPFDocument doc = documentService.readDocument("reports/risk/main.docx")) {
-            documentService.replacePlaceHolders(doc, Map.of(PARAM_RISK_ASSESSMENT_ID, "1"));
+            documentService.replacePlaceHolders(doc, Map.of(PARAM_RISK_ASSESSMENT_ID, "1"), null);
             final FileOutputStream out = new FileOutputStream("test-result-threat-assessment.docx");
             doc.write(out);
             out.close();

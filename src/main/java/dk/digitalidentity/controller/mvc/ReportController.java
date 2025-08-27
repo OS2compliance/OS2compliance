@@ -25,7 +25,6 @@ import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
-import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
@@ -256,23 +255,25 @@ public class ReportController {
                                                 @RequestParam(name = "type", required = false, defaultValue = "WORD") String type,
                                                 final HttpServletResponse response) {
 		if ("article30".equals(identifier)) {
-            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap(), false, null);
+            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap(), false, null, null);
         } else if ("iso27001".equals(identifier)) {
-            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap(), false, null);
+            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap(), false, null, null);
         } else if ("iso27002_2022".equals(identifier)) {
-			log.info("We are hitting a correct one");
-            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap(), false, null);
+            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap(), false, null, null);
         } else if ("risk".equals(identifier)) {
             if (type.equals("WORD")) {
                 generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.docx",
-                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), false, riskId);
+                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), false, riskId, null);
             } else if (type.equals("PDF")) {
                 generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.pdf",
-                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), true, riskId);
+                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), true, riskId, null);
             }
         }
 		else {
-			generateDocument(response, STANDARD_TEMPLATE_DOC, (identifier + "_standard.docx"), Collections.emptyMap(), false, null);
+			StandardTemplate template = standardTemplateDao.findByIdentifier(identifier);
+			if (template != null) {
+				generateDocument(response, STANDARD_TEMPLATE_DOC, (identifier + "_standard.docx"), Collections.emptyMap(), false, null, template);
+			}
 		}
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
@@ -417,7 +418,7 @@ public class ReportController {
 
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
-                                  final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {
+                                  final Map<String, String> parameters, final boolean toPDF, Long riskId, StandardTemplate template) throws ResponseStatusException {
         try {
             final long start = System.currentTimeMillis();
             if (toPDF) {
@@ -428,7 +429,7 @@ public class ReportController {
                 response.getOutputStream().write(byteData);
                 response.flushBuffer();
             } else {
-				try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters)) {
+				try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters, template)) {
                     response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
                     response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                     myDocument.write(response.getOutputStream());

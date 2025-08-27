@@ -235,7 +235,7 @@ public class RiskRestController {
 
         if (dto.format.equals(ReportFormat.WORD)) {
             try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(RISK_ASSESSMENT_TEMPLATE_DOC,
-                Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
+                Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id), null)) {
                 final File outputFile = File.createTempFile(UUID.randomUUID().toString(), ".docx");
                 myDocument.write(new FileOutputStream(outputFile));
                 emailEvent.getAttachments().add(new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),

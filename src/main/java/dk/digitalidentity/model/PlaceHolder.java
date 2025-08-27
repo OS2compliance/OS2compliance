@@ -11,7 +11,7 @@ public enum PlaceHolder {
     ISO27002("{iso27002}"),
     RISK_ASSESSMENT("{risk_assessment}"),
 	DATARESPONSIBLE_SETTINGS("{dataresponsible_settings}"),
-	STANDARD_NAME("{standard_id}"),;
+	STANDARD_NAME("{standard_name} rapport");
 
     private final String placeHolder;
 
