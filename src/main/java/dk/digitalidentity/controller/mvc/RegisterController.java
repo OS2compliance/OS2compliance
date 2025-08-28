@@ -59,8 +59,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -419,7 +417,7 @@ public class RegisterController {
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
         final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
-		final List<SelectionDTO> mainGroups = kLEMainGroupService.getAll().stream()
+		final List<SelectionDTO> mainGroups = kLEMainGroupService.getAllActive().stream()
 				.sorted(Comparator.comparing(KLEMainGroup::getMainGroupNumber))
 				.map(mg -> new SelectionDTO(mg.getMainGroupNumber()+" "+mg.getTitle(), mg.getMainGroupNumber(), register.getKleMainGroups().contains(mg)))
 				.toList();
@@ -511,9 +509,10 @@ public class RegisterController {
 				));
 	}
 
+	record KLEKeywordDTO(String text, String actionFacetNr) {}
 	record SelectedLegalReferenceDTO(String accessionNumber, String title, String paragraph) {}
-	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, Set<SelectedLegalReferenceDTO> legalReferences){}
-	record SelectedKLEGroupDTO (String groupNumber, String title, List<SelectedKLESubjectDTO> subjects) {}
+	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, String instructionText, List<KLEKeywordDTO> keywords, Set<SelectedLegalReferenceDTO> legalReferences){}
+	record SelectedKLEGroupDTO (String groupNumber, String title, String instructionText, List<KLEKeywordDTO> keywords, List<SelectedKLESubjectDTO> subjects) {}
 	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
 
 	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
@@ -530,6 +529,10 @@ public class RegisterController {
 		return new SelectedKLEGroupDTO(
 				group.getGroupNumber(),
 				group.getTitle(),
+				group.getInstructionText(),
+				group.getKeywords().stream()
+						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
+						.toList(),
 				group.getSubjects().stream()
 						.map(this::toSelectedKLESubjectDTO )
 						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
@@ -542,6 +545,10 @@ public class RegisterController {
 				subject.getTitle(),
 				subject.getPreservationCode(),
 				durationToString(subject.getDurationBeforeDeletion()),
+				subject.getInstructionText(),
+				subject.getKeywords().stream()
+						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
+						.toList(),
 				subject.getLegalReferences().stream()
 						.map(this::selectedLegalReferenceDTO)
 						.collect(Collectors.toSet()));

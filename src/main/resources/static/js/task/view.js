@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function ViewTaskService() {
     this.userChoicesEditSelect = null;
     this.ouChoicesEditSelect = null;
+    this.ouDepartmentChoicesEditSelect = null;
     this.nameField = null;
 
     this.init = function() {
@@ -48,25 +49,29 @@ function ViewTaskService() {
                 elem.disabled = false;
             });
             this.ouChoicesEditSelect.enable();
+            this.ouDepartmentChoicesEditSelect.enable();
             this.userChoicesEditSelect.enable();
             document.getElementById('saveEditTaskBtn').hidden = false;
             document.getElementById('editTaskBtn').hidden = true;
             document.getElementById('completeBtn').hidden = true;
-            document.getElementById('realLink').hidden = true;
-            document.getElementById('linkField').hidden = false;
             this.nameField.disabled = false
+            document.getElementById("linksViewContainer").hidden = true;
+            document.getElementById("linksEditContainer").hidden = false;
+            document.getElementById("addLinkBtn").hidden = false;
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
             });
             this.ouChoicesEditSelect.disable();
+            this.ouDepartmentChoicesEditSelect.disable();
             this.userChoicesEditSelect.disable();
             document.getElementById('saveEditTaskBtn').hidden = true;
             document.getElementById('editTaskBtn').hidden = false;
             document.getElementById('completeBtn').hidden = false;
-            document.getElementById('realLink').hidden = false;
-            document.getElementById('linkField').hidden = true;
             this.nameField.disabled = true
+            document.getElementById("linksViewContainer").hidden = false;
+            document.getElementById("linksEditContainer").hidden = true;
+            document.getElementById("addLinkBtn").hidden = true;
         }
     }
 
@@ -74,6 +79,7 @@ function ViewTaskService() {
         const self = this;
         this.userChoicesEditSelect = choiceService.initUserSelect('userSelect');
         this.ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
+        this.ouDepartmentChoicesEditSelect = choiceService.initOUSelect('departmentOuSelect');
         this.nameField = document.getElementById("taskNameField")
 
         this.userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
@@ -84,6 +90,7 @@ function ViewTaskService() {
             elem.disabled = true;
         });
         this.ouChoicesEditSelect.disable();
+        this.ouDepartmentChoicesEditSelect.disable();
         this.userChoicesEditSelect.disable();
     }
 

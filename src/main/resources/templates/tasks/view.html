@@ -79,6 +79,15 @@
                                 </div>
 
                                 <div class="row mb-3">
+                                    <label for="ouSelect" class="col-sm-2 col-form-label">Forvaltning</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField" th:field="*{department}" data-trigger="" name="forvaltning" id="departmentOuSelect" tabindex="-1" hidden>
+                                            <option th:if="${task.department} != null" th:value="*{department.uuid}" th:text="*{department.name}" selected></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
 
                                     <label for="deadline" class="col-sm-2 col-form-label">Deadline</label>
                                     <div class="col-sm-10">
@@ -114,10 +123,40 @@
                                 </div>
 
                                 <div class="row mb-3">
-                                    <label for="taskType" class="col-sm-2 col-form-label">Link</label>
+                                    <label for="taskType" class="col-sm-2 col-form-label">Links</label>
                                     <div class="col-sm-10">
-                                        <a id="realLink" th:text="*{link}" th:href="*{link}" target="_blank"></a>
-                                        <input class="form-control editField" id="linkField" th:field="*{link}" hidden>
+                                        <!-- view mode -->
+                                        <div id="linksViewContainer" class="editField">
+                                            <div th:each="link : *{links}" class="mb-1">
+                                                <a th:href="${link.url}"
+                                                   th:text="${link.url}"
+                                                   class="form-control-link"
+                                                   target="_blank"
+                                                   rel="noopener noreferrer"
+                                                   style="word-wrap: break-word;
+                                                                      overflow-wrap: break-word;
+                                                                      word-break: break-all;
+                                                                      display: inline-block;
+                                                                      max-width: 100%;
+                                                                      white-space: normal;"
+                                                >
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- edit mode -->
+                                        <div id="linksEditContainer" hidden>
+                                            <div th:each="link, iterStat : *{links}" class="input-group mb-2">
+                                                <input type="text"
+                                                       th:name="'links[' + ${iterStat.index} + '].url'"
+                                                       th:value="${link.url}"
+                                                       class="form-control editField">
+                                                <button type="button" class="btn btn-danger editField" onclick="taskLinkService.removeLink(this)">-</button>
+                                            </div>
+                                        </div>
+
+                                        <button id="addLinkBtn" class="btn btn-secondary editField" type="button"
+                                                onclick="taskLinkService.addLink()" hidden>+ Tilføj link</button>
                                     </div>
                                 </div>
 

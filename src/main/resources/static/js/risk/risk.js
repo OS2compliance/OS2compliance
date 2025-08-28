@@ -284,7 +284,7 @@ function CreateTable() {
                 });
         });
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, 'risksDatatable');
 
         initSaveAsExcelButton(customGridFunctions,  'Risikovurderinger');
 

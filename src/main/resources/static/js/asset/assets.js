@@ -267,7 +267,7 @@
         };
         const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, 'assetsDatatable');
         gridOptions.init(grid, document.getElementById("gridOptions"));
 
         initSaveAsExcelButton(customGridFunctions,'Aktiver')

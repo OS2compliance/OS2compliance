@@ -167,7 +167,7 @@ function initGrid() {
     };
     const grid = new gridjs.Grid(gridConfig).render(document.getElementById("suppliersDatatable"));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, 'suppliersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, 'suppliersDatatable');
 
     initSaveAsExcelButton(customGridFunctions, 'Leverandører')
 

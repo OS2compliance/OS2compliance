@@ -10,7 +10,9 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireDocument;
+import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -41,6 +43,8 @@ public class DocumentRestController {
     private final DocumentMapper mapper;
     private final UserService userService;
 	private final ExcelExportService excelExportService;
+	private final SecurityUserService securityUserService;
+	private final DocumentService documentService;
 
 	@RequireReadOwnerOnly
 	@PostMapping("list")
@@ -49,53 +53,36 @@ public class DocumentRestController {
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
-			HttpServletResponse response
-	) throws IOException {
-		final String userUuid = SecurityUtil.getLoggedInUserUuid();
-		final User user = userService.findByUuid(userUuid)
-				.orElseThrow();
-		if (userUuid == null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
+			@RequestParam Map<String, String> filters // Dynamic filters for search fields
+	) {
+		User user = securityUserService.getCurrentUserOrThrow();
 
-		int pageLimit = limit;
-		if(export) {
-			// For export mode, get ALL records (no pagination)
-			pageLimit = Integer.MAX_VALUE;
-		}
-
-        Page<DocumentGrid> documents;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
-			documents = documentGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DocumentGrid.class),
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-		}
-		else {
-			// Logged in user can see only own
-			documents = documentGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DocumentGrid.class),
-					user,
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					DocumentGrid.class
-			);
-		}
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			List<DocumentDTO> allData = mapper.toDTO(documents.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
-		}
+        Page<DocumentGrid> documents = documentService.getDocuments(sortColumn, sortDirection, filters, page, limit, user);
 
         assert documents != null;
         return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
     }
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		int pageLimit = Integer.MAX_VALUE;
+
+		// Fetch all records (no pagination)
+		Page<DocumentGrid> documents = documentService.getDocuments(sortColumn, sortDirection, filters, 0, pageLimit, user);
+
+		assert documents != null;
+		List<DocumentDTO> allData = mapper.toDTO(documents.getContent());
+		excelExportService.exportToExcel(allData, DocumentDTO.class, fileName, response);
+	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
