@@ -6,6 +6,21 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-100) Global søgning
+- (https://os2web.atlassian.net/browse/COMPLY-136) Tilføjelse af felter til ansvarlig forvaltning
+- (https://os2web.atlassian.net/browse/COMPLY-224) Man skal kunne sætte flere links ind på en opgave
+- (https://os2web.atlassian.net/browse/COMPLY-331) (Aktiver) Systemansvarlig som kolonne på listevisningen
+- (https://os2web.atlassian.net/browse/COMPLY-177) Visningen i opgavehistorikken skal vende om, så den seneste kontrol står øverst
+- 
+### Fixed
+- (Adhoc) Tilføj dokument til aktiv virker ikke
+### Changed
+- (Adhoc) Added more KLE details after test feedback 
+- (Adhoc) Split excel export functionality into own endpoints
+
+### Removed
+- (Adhoc) Remove DP
 
 ## [2.3.0] - 2025-08-23
 
