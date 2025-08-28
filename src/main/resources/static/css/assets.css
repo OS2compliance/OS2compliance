@@ -51,4 +51,7 @@
 .grayscale {
     filter: grayscale(100%);
 }
+.kitosLogo {
+    width: 40px;
+}
 

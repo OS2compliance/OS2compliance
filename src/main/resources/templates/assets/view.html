@@ -94,7 +94,11 @@
 
                                             <div class="row mb-3">
                                                 <label for="responsibleUsers"
-                                                    class="col-sm-3 col-form-label" th:text="${customSystemOwnerInput.settingValue}"></label>
+                                                    class="col-sm-3 col-form-label">
+                                                    <span th:text="${customSystemOwnerInput.settingValue}"></span>
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                             data-trigger="" id="responsibleUsers" th:field="*{responsibleUsers}" hidden=""
@@ -133,7 +137,11 @@
 
                                             <div class="row mb-3">
                                                 <label for="managers"
-                                                    class="col-sm-3 col-form-label" th:text="${customSystemResponsibleInput.settingValue}"></label>
+                                                    class="col-sm-3 col-form-label">
+                                                    <span th:text="${customSystemResponsibleInput.settingValue}"></span>
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                         data-trigger="" id="managers" th:field="*{managers}" hidden=""
@@ -141,6 +149,16 @@
                                                         <option th:each="user : *{managers}" th:value="${user.uuid}"
                                                             th:text="'(' + ${user.userId} + ') ' + ${user.name}"
                                                             selected></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="departmentSelect" class="col-sm-3 col-form-label">Ansvarlige forvaltninger</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-select choices__input" th:field="*{departments}"
+                                                            data-trigger="" name="forvaltning" id="departmentSelect" tabindex="-1" multiple="multiple" disabled>
+                                                        <option th:each="department : *{departments}" th:value="${department.uuid}" th:text="${department.name}" selected></option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -188,7 +206,11 @@
 
                                             <div class="row mb-3">
                                                 <label for="managers"
-                                                       class="col-sm-3 col-form-label" th:text="${customSystemOperationResponsibleInput.settingValue}"></label>
+                                                       class="col-sm-3 col-form-label">
+                                                    <span th:text="${customSystemOperationResponsibleInput.settingValue}"></span>
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                             data-trigger="" id="operationResponsible" th:field="*{operationResponsibleUsers}" hidden=""
@@ -208,35 +230,6 @@
                                                             tabindex="-1" disabled>
                                                         <option th:value="true">Aktiv</option>
                                                         <option th:value="false">Inaktiv</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row mb-3">
-                                                <label for="aiStatus"
-                                                       class="col-sm-3 col-form-label">Anvender løsningen AI?</label>
-                                                <div class="col-sm-9">
-                                                    <select class="form-control form-select editField"
-                                                            th:field="*{aiStatus}" name="assetCategory" id="aiStatus"
-                                                            tabindex="-1" disabled>
-                                                        <option value=""></option>
-                                                        <option
-                                                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
-                                                                th:value="${status}" th:text="${status.danishName}"></option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="row mb-3" id="riskFactorContainer">
-                                                <label for="riskFactor"
-                                                       class="col-sm-3 col-form-label">Vurdering af risiko ved AI-brug</label>
-                                                <div class="col-sm-9">
-                                                    <select class="form-control form-select editField"
-                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
-                                                            tabindex="-1" disabled>
-                                                        <option value=""></option>
-                                                        <option
-                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
-                                                                th:value="${risk}" th:text="${risk.message}"></option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -311,6 +304,42 @@
                                             </div>
 
                                             <div class="row mb-3">
+                                                <label for="aiStatus" class="col-sm-3 col-form-label">
+                                                    Anvender løsningen AI?
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{aiStatus}" name="assetCategory" id="aiStatus"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
+                                                                th:value="${status}" th:text="${status.danishName}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3" id="riskFactorContainer">
+                                                <label for="riskFactor" class="col-sm-3 col-form-label">
+                                                    Vurdering af risiko ved AI-brug
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
+                                                                th:value="${risk}" th:text="${risk.message}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
                                                 <label for="emergencyPlanLink"
                                                     class="col-sm-3 col-form-label">Nødplan</label>
                                                 <div class="col-sm-9">
@@ -351,7 +380,7 @@
                                                 <label for="contractDate"
                                                     class="col-sm-3 col-form-label">
                                                     Kontraktdato &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <div th:if="${isKitos}" th:hidden="*{contractDate == null}">
@@ -379,7 +408,7 @@
                                                 <label for="contractTermination"
                                                     class="col-sm-3 col-form-label">
                                                     Kontraktophør &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <div th:if="${isKitos}" th:hidden="*{contractTermination == null}">
@@ -407,7 +436,7 @@
                                                 <label for="terminationNotice"
                                                     class="col-sm-3 col-form-label">
                                                     Opsigelsesvarsel &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9">
                                                     <input th:if="${isKitos}" class="form-control" id="terminationNotice"
@@ -427,7 +456,7 @@
                                                     Systemet skal arkiveres
                                                     <span th:if="${isKitos}" class="pli-exclamation" style="color: orange; font-weight: bold;" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
                                                     &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <select class="form-control form-select editField" th:field="*{archive}" name="archive" id="archive" tabindex="-1" disabled>
@@ -745,6 +774,7 @@
         let suppliersChoicesEditSelect = null;
         let responsibleChoicesEditSelect = null;
         let operationResponsibleChoicesEditSelect = null;
+        let departmentChoices = null;
 
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
@@ -752,12 +782,15 @@
             initDatePickers();
             suppliersChoicesEditSelect = initSuppliersSelect();
             suppliersChoicesEditSelect.disable();
+
             managersChoicesEditSelect = choiceService.initUserSelect("managers", false);
             managersChoicesEditSelect.disable();
             responsibleChoicesEditSelect = choiceService.initUserSelect("responsibleUsers", false);
             responsibleChoicesEditSelect.disable();
             operationResponsibleChoicesEditSelect = choiceService.initUserSelect("operationResponsible", false);
             operationResponsibleChoicesEditSelect.disable();
+            departmentChoices = choiceService.initOUSelect('departmentSelect', false);
+            departmentChoices.disable();
             editMode(false);
             initDpia();
 
@@ -1066,6 +1099,8 @@
                 if (!isKitos) {
                     if (responsibleFieldChangeable=== 'true') {
                         managersChoicesEditSelect.enable();
+                        responsibleChoicesEditSelect.enable();
+                        operationResponsibleChoicesEditSelect.enable();
                     }
                     active.disabled = false;
                     document.getElementById("productLinksViewContainer").hidden = true;
@@ -1077,6 +1112,8 @@
                 if (responsibleFieldChangeable === 'true') {
                     responsibleChoicesEditSelect.enable();
                 }
+
+                departmentChoices.enable();
             } else {
                 rootElement.querySelectorAll('.editField').forEach(elem => {
                     elem.disabled = true;
@@ -1109,6 +1146,7 @@
                 suppliersChoicesEditSelect.disable();
                 managersChoicesEditSelect.disable();
                 responsibleChoicesEditSelect.disable();
+                operationResponsibleChoicesEditSelect.disable();
 
                 if (!isKitos) {
                     active.disabled = true;
@@ -1116,6 +1154,8 @@
                     document.getElementById("productLinksEditContainer").hidden = true;
                     document.getElementById("addProductLinkBtn").hidden = true;
                 }
+
+                departmentChoices.disable();
             }
             if (isKitos) {
                 aiStatus.disabled = true;

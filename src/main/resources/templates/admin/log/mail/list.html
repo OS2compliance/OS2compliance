@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:th="http://www.thymeleaf.org">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
+<script th:src="@{/js/export-service.js}" defer></script>
 <body class="jumping">
 
 <div id="root" class="root mn--max hd--expanded">
@@ -18,7 +19,8 @@
                         <h1 class="page-title mb-0 mt-2">Mail log</h1>
                         <p class="lead"></p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='saveAsExcelButton', text='Gem som Excel', iconClass='ti-bookmark')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>

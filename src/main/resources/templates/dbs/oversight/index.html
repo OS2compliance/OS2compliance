@@ -42,6 +42,7 @@
                                     <option th:text="'Alle'" th:value="null"></option>
                                     <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}"
                                             th:value="${option}" th:text="${option.message}"></option>
+                                    <option th:text="'Ingen'" th:value="__EMPTY__"></option>
                                 </select>
 
                                 <!-- Custom search selectors-->
@@ -49,6 +50,7 @@
                                     <option th:text="'Alle'" th:value="null"></option>
                                     <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).values()}"
                                             th:value="${option}" th:text="${option.message}"></option>
+                                    <option th:text="'Ingen'" th:value="__EMPTY__"></option>
                                 </select>
 
                             </div>
@@ -79,6 +81,7 @@
 
     /*[+
         var gridDBSOversightUrl = [[@{/rest/dbs/oversight/list}]];
+        var exportDBSOversightUrl = [[@{/rest/dbs/oversight/export}]];
         var assetsUrl = [[@{/assets/}]]
         var suppliersUrl = [[@{/suppliers/}]]
         var tasksUrl = [[@{/tasks/}]]

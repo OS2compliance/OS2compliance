@@ -44,33 +44,35 @@ public class DBSOversightRestController {
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam Map<String, String> filters
+	) {
+        Page<DBSOversightGrid> oversights =  dbsOversightGridDao.findAllWithColumnSearch(
+            validateSearchFilters(filters, DBSOversightGrid.class),
+            buildPageable(page, limit, sortColumn, sortDirection),
+            DBSOversightGrid.class
+        );
+
+        return new PageDTO<>(oversights.getTotalElements(), mapper.toDTO(oversights.getContent()));
+	}
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
 			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
 			@RequestParam Map<String, String> filters,
 			HttpServletResponse response
 	) throws IOException {
+		// Fetch all records (no pagination)
+		Page<DBSOversightGrid> oversights = dbsOversightGridDao.findAllWithColumnSearch(
+			validateSearchFilters(filters, DBSOversightGrid.class),
+			buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
+			DBSOversightGrid.class
+		);
 
-		int pageLimit = limit;
-		if(export) {
-			// For export mode, get ALL records (no pagination)
-			pageLimit = Integer.MAX_VALUE;
-		}
-
-		// Normal mode - return paginated JSON
-        Page<DBSOversightGrid> oversights =  dbsOversightGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, DBSOversightGrid.class),
-            buildPageable(page, pageLimit, sortColumn, sortDirection),
-            DBSOversightGrid.class
-        );
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			List<DBSOversightDTO> allData = mapper.toDTO(oversights.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
-		}
-
-        return new PageDTO<>(oversights.getTotalElements(), mapper.toDTO(oversights.getContent()));
+		List<DBSOversightDTO> allData = mapper.toDTO(oversights.getContent());
+		excelExportService.exportToExcel(allData, DBSOversightDTO.class, fileName, response);
 	}
 
 }

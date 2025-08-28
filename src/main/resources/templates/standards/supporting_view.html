@@ -13,7 +13,7 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/standards}">Standarder</a></li>
-                                <li class="breadcrumb-item"><a th:href="@{/standards/supporting}">Understøttende standarder</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/standards}">Understøttende standarder</a></li>
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${template.name}"></li>
                             </ol>
                         </nav>
@@ -72,7 +72,7 @@
                                                     </span>
                                                 </td>
                                             </tr>
-                                            <th:block th:if="${statusFilter == null OR section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
+                                            <th:block th:if="${statusFilter == null || section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
                                                 <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
                                                     <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${section.section} + ' ' + ${section.description}"></td>
                                                     <td th:unless="${isNSIS}" th:id="'selectedTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.selected} ? 'Tilvalgt' : 'Fravalgt'" style="font-weight: bold;"></td>
@@ -81,19 +81,18 @@
                                                     <td th:id="'dateTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${#temporals.format(section.standardSection.updatedAt, 'dd-MM-yyyy')}" style="font-weight: bold;"></td>
                                                     <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.name}" style="font-weight: bold;"></td>
                                                     <td th:if="${section.standardSection != null && section.standardSection.status != null}" th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}" th:style="${'display: ' + (section.standardSection.selected ? 'block' : 'none')}">
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED == section.standardSection.status} " class="d-block badge bg-yellow-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS == section.standardSection.status} " class="d-block badge bg-blue-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT == section.standardSection.status} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED.equals(section.standardSection.status)} " class="d-block badge bg-yellow-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS.equals(section.standardSection.status)} " class="d-block badge bg-blue-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY.equals(section.standardSection.status)} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT.equals(section.standardSection.status)} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                     </td>
                                                     <td><span ><button sec:authorize="hasRole('ROLE_delete_all')" th:data-id="${section.identifier}" onclick="createSectionService.openDeleteSwal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
                                                 </tr>
                                                 <tr class="hidden">
                                                     <td style="border-right: 1px solid black;"></td>
                                                     <td colspan="5">
-                                                        <div sec:authorize="hasRole('ROLE_update_all')" th:replace="~{standards/fragments/sectionFragment :: editable-section}"></div>
-                                                        <div sec:authorize="!hasRole('ROLE_update_all')" th:replace="~{standards/fragments/sectionFragment :: readonly-section}"></div>
-
+                                                        <div sec:authorize="hasRole('update_all')" th:replace="~{standards/fragments/sectionFragment :: editable-section}"></div>
+                                                        <div sec:authorize="!hasRole('update_all')" th:replace="~{standards/fragments/sectionFragment :: readonly-section}"></div>
                                                     </td>
                                                 </tr>
                                                 <tr>
