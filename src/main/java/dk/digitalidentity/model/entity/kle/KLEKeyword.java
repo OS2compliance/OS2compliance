@@ -1,6 +1,5 @@
 package dk.digitalidentity.model.entity.kle;
 
-import dk.digitalidentity.model.entity.Register;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -26,33 +25,24 @@ import java.util.Set;
 @Getter
 @Setter
 @Entity
-@Table(name = "kle_legal_reference")
-public class KLELegalReference implements Persistable<String> {
+@Table(name = "kle_keyword")
+public class KLEKeyword implements Persistable<String> {
 
 	@Id
-	@Column(name = "accession_number")
-	private String accessionNumber;
-
-	@Column(name = "paragraph", columnDefinition = "TEXT")
-	private String paragraph;
-
-	@Column(name = "url")
-	private String url;
-
-	@Column(name = "title", nullable = false)
-	private String title;
+	@Column
+	private String hashedId;
 
 	@Column
-	private boolean deleted;
+	private String text;
 
-	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
+	@Column
+	private String handlingsfacetNr;
+
+	@ManyToMany(mappedBy = "keywords", fetch = FetchType.LAZY)
 	private Set<KLEGroup> groups = new HashSet<>();
 
-	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
+	@ManyToMany(mappedBy = "keywords", fetch = FetchType.LAZY)
 	private Set<KLESubject> subjects = new HashSet<>();
-
-	@ManyToMany(mappedBy = "relevantKLELegalReferences", fetch = FetchType.LAZY)
-	private Set<Register> registers = new HashSet<>();
 
 	@Transient
 	private boolean isNew = true;
@@ -63,7 +53,7 @@ public class KLELegalReference implements Persistable<String> {
 
 	@Override
 	public String getId() {
-		return accessionNumber;
+		return hashedId;
 	}
 
 	@Override
