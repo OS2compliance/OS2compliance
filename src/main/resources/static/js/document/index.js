@@ -161,7 +161,7 @@ function initGrid() {
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "documentsDatatable" ));
 
     //Enables custom column search, serverside sorting and pagination
-    const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, 'documentsDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, exportDocumentsUrl, 'documentsDatatable');
 
     initSaveAsExcelButton(customGridFunctions, 'Dokumenter')
 

@@ -124,7 +124,7 @@ function IncidentGridService() {
         this.incidentGrid = new gridjs.Grid(this.currentConfig);
         this.incidentGrid.render(document.getElementById("incidentsTable"));
         searchService.initSearch(this.incidentGrid, this.currentConfig);
-        const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', incidentsTable);
+        const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', restUrl + 'export', incidentsTable);
 
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
 

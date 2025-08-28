@@ -43,6 +43,7 @@ import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
@@ -93,7 +94,6 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @RequireDPIA
 @RequiredArgsConstructor
 public class DPIARestController {
-	private final DPIAGridDao dpiaGridDao;
 	private final DPIAService dpiaService;
 	private final ChoiceDPIADao choiceDPIADao;
     private final AssetService assetService;
@@ -109,8 +109,19 @@ public class DPIARestController {
 	private final ApplicationEventPublisher eventPublisher;
 	private final OrganisationService organisationService;
 	private final ExcelExportService excelExportService;
+	private final SecurityUserService securityUserService;
 
-	public record DPIAListDTO(long id, String name, String responsibleUserName, String responsibleOUName, LocalDate userUpdatedDate, int taskCount, ThreatAssessmentReportApprovalStatus status, DPIAScreeningConclusion screeningConclusion, Boolean isExternal, Set<AllowedAction> allowedActions) {
+	public record DPIAListDTO(
+			long id,
+			String name,
+			String responsibleUserName,
+			String responsibleOUName,
+			LocalDate userUpdatedDate,
+			int taskCount,
+			ThreatAssessmentReportApprovalStatus status,
+			DPIAScreeningConclusion screeningConclusion,
+			Boolean isExternal,
+			Set<AllowedAction> allowedActions) {
 	}
 
 	@RequireReadOwnerOnly
@@ -120,54 +131,39 @@ public class DPIARestController {
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
+			@RequestParam Map<String, String> filters
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+		String userUuid = user.getUuid();
+
+		// Normal mode - return paginated JSON
+		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, page, limit, user);
+
+		assert dpiaGrids != null;
+
+		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
+		return new PageDTO<>(dpiaGrids.getTotalElements(), dtos);
+	}
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
 			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
 			@RequestParam Map<String, String> filters,
 			HttpServletResponse response
 	) throws IOException {
-		final String userUuid = SecurityUtil.getLoggedInUserUuid();
-		final User user = userService.findByUuid(userUuid)
-				.orElseThrow();
-		if (userUuid == null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
+		User user = securityUserService.getCurrentUserOrThrow();
+		String userUuid = user.getUuid();
 
-		int pageLimit = limit;
-		if (export) {
-			// For export mode, get ALL records (no pagination)
-			pageLimit = Integer.MAX_VALUE;
-		}
-
-		// Normal mode - return paginated JSON
-		Page<DPIAGrid> dpiaGrids = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
-			dpiaGrids = dpiaGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DPIAGrid.class),
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					DPIAGrid.class
-			);
-		}
-		else {
-			// Logged in user can see only own
-			dpiaGrids = dpiaGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, DPIAGrid.class),
-					user,
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					DPIAGrid.class
-			);
-		}
-
-		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			excelExportService.exportToExcel(dtos, fileName, response);
-			return null;
-		}
+		// Fetch all records (no pagination)
+		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
 
 		assert dpiaGrids != null;
-		return new PageDTO<>(dpiaGrids.getTotalElements(), dtos);
+
+		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
+		excelExportService.exportToExcel(dtos, DPIAListDTO.class, fileName, response);
 	}
 
 	@RequireDeleteOwnerOnly
