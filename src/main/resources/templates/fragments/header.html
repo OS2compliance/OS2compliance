@@ -63,7 +63,23 @@
 
 			<!-- Content Header - Left Side: -->
 			<div class="header__content-start">
+                <div class="header-searchbox">
 
+                    <!-- Searchbox toggler for small devices -->
+                    <label for="header-search-input" class="header__btn d-md-none btn btn-icon rounded-pill shadow-none border-0 btn-sm" type="button">
+                        <i class="pli-magnifi-glass"></i>
+                    </label>
+
+                    <!-- Searchbox input -->
+                    <form class="searchbox searchbox--auto-expand searchbox--hide-btn input-group">
+                        <input id="header-search-input" class="m-2 searchbox__input form-control bg-transparent" type="search" placeholder="Søg" aria-label="Search">
+                        <div class="searchbox__backdrop">
+                            <button class="searchbox__btn header__btn btn btn-icon rounded shadow-none border-0 btn-sm" type="button">
+                                <i class="pli-magnifi-glass"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
 			</div>
 			<!-- End - Content Header - Left Side -->
 

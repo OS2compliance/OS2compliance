@@ -1,4 +1,37 @@
 document.addEventListener("DOMContentLoaded", function() {
+
+    // search
+    const searchForm = document.querySelector('.searchbox');
+    const searchInput = document.getElementById('header-search-input');
+    const searchButton = document.querySelector('.searchbox__btn');
+
+    // handle enter
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Forhindrer standard form submit
+            performSearch();
+        });
+    }
+
+    // handle click on search button
+    if (searchButton) {
+        searchButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            performSearch();
+        });
+    }
+
+    // perform search
+    function performSearch() {
+        const searchTerm = searchInput.value.trim();
+
+        if (searchTerm) {
+            window.location.href = `/search-results?q=${encodeURIComponent(searchTerm)}`;
+        }
+    }
+
+
+    // burgerMenu
     const burgerBtn = document.getElementById("burger-menu");
     const nav = document.getElementById("mainnav-container");
     let links = document.getElementsByClassName("nav-link");

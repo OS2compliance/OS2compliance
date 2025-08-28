@@ -38,8 +38,8 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "assets")
@@ -48,7 +48,7 @@ import java.util.Set;
 @ToString
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Asset extends Relatable {
+public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers {
 
     @ManyToMany
     @JoinTable(
@@ -230,6 +230,15 @@ public class Asset extends Relatable {
 	@JsonIgnore
 	private List<User> operationResponsibleUsers = new ArrayList<>();
 
+	@Override
+	public String getManagerUuids() {
+		return managers.stream().map(m -> m.getUuid()).collect(Collectors.joining(","));
+	}
+
+	@Override
+	public String getResponsibleUserUuids() {
+		return responsibleUsers.stream().map(m -> m.getUuid()).collect(Collectors.joining(","));
+	}
 	@ManyToMany
 	@JoinTable(
 			name = "assets_departments_mapping",
