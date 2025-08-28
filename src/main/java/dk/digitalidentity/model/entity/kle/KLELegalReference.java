@@ -45,12 +45,15 @@ public class KLELegalReference implements Persistable<String> {
 	@Column
 	private boolean deleted;
 
+	@Builder.Default
 	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
 	private Set<KLEGroup> groups = new HashSet<>();
 
+	@Builder.Default
 	@ManyToMany(mappedBy = "legalReferences", fetch = FetchType.LAZY)
 	private Set<KLESubject> subjects = new HashSet<>();
 
+	@Builder.Default
 	@ManyToMany(mappedBy = "relevantKLELegalReferences", fetch = FetchType.LAZY)
 	private Set<Register> registers = new HashSet<>();
 

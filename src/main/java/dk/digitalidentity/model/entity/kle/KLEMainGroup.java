@@ -55,12 +55,14 @@ public class KLEMainGroup  implements Persistable<String> {
 	private boolean deleted;
 
 	@OneToMany(mappedBy = "mainGroup", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+	@Builder.Default
 	private Set<KLEGroup> kleGroups = new HashSet<>();
 
 	@ManyToMany(mappedBy = "kleMainGroups",
 			cascade = {CascadeType.PERSIST, CascadeType.MERGE},
 			fetch = FetchType.LAZY
 	)
+	@Builder.Default
 	private Set<Register> registers = new HashSet<>();
 
 	@Transient

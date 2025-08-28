@@ -67,10 +67,12 @@ public class IncidentFieldResponse {
 
     @Column
     @Convert(converter = StringListNullSafeConverter.class)
+	@Builder.Default
     private List<String> answerElementIds = new ArrayList<>();
 
     @Column(name="answer_choice_values")
     @Convert(converter = StringListNullSafeConverter.class)
+	@Builder.Default
     private List<String> answerChoiceValues = new ArrayList<>();
 
     @ManyToOne
