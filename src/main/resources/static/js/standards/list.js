@@ -2,6 +2,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
     initTable()
     initListItemActions()
     initCreateStandardButton()
+    const success = document.body.dataset.success;
+
+    if (success) {
+        toastService.info(success);
+    }
 });
 
 function initCreateStandardButton() {
