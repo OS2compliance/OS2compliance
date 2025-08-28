@@ -47,6 +47,7 @@ import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -116,6 +117,7 @@ public class RiskRestController {
     private final EmailTemplateService emailTemplateService;
 	private final OrganisationService organisationService;
 	private final ExcelExportService excelExportService;
+	private final SecurityUserService securityUserService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -124,32 +126,55 @@ public class RiskRestController {
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters, // Dynamic filters for search fields
-			HttpServletResponse response
-	) throws IOException {
-		final String userUuid = SecurityUtil.getLoggedInUserUuid();
-		final User user = userService.findByUuid(userUuid)
-				.orElseThrow();
-		if (userUuid == null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
-		int pageLimit = limit;
-		if(export) {
-			// For export mode, get ALL records (no pagination)
-			pageLimit = Integer.MAX_VALUE;
-		}
+			@RequestParam Map<String, String> filters // Dynamic filters for search fields
+	) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		String uuid = user.getUuid();
 
 		// Assets user is responsible for
-		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(userUuid).stream()
+		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
 				.map(Relatable::getName)
 				.collect(Collectors.toSet());
 
+		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, page, limit, user);
+
+		assert risks != null;
+
+		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid));
+    }
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+		String uuid = user.getUuid();
+
+		int pageLimit = Integer.MAX_VALUE;
+
+		// Assets user is responsible for
+		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
+				.map(Relatable::getName)
+				.collect(Collectors.toSet());
+
+		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, 0, pageLimit, user);
+
+		assert risks != null;
+
+		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid);
+		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
+	}
+
+	// Should be in Service class but risks doesn't have one???
+	private Page<RiskGrid> getRisks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		Page<RiskGrid> risks = null;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
+			// Logged-in user can see all
 			risks = riskGridDao.findAllWithColumnSearch(
 					validateSearchFilters(filters, RiskGrid.class),
 					buildPageable(page, pageLimit, sortColumn, sortDirection),
@@ -157,7 +182,7 @@ public class RiskRestController {
 			);
 		}
 		else {
-			// Logged in user can see only own
+			// Logged-in user can see only own
 			risks = riskGridDao.findAllWithAssignedUser(
 					validateSearchFilters(filters, RiskGrid.class),
 					user,
@@ -165,22 +190,10 @@ public class RiskRestController {
 					RiskGrid.class
 			);
 		}
+		return risks;
+	}
 
-		assert risks != null;
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, userUuid);
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
-		}
-
-		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, userUuid));
-    }
-
-
-
-    record ResponsibleUserDTO(String uuid, String name, String userId) {}
+	record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}
 	@RequireReadOwnerOnly
     @GetMapping("register")

@@ -1,6 +1,7 @@
 export default class MailLogListService {
     /**Endpoint for grid data*/
     #searchRestUrl = "/rest/admin/log/mail/list";
+    #exportRestUrl = "/rest/admin/log/mail/export";
 
     /**Array specifying the property names and order of properties in the received dto*/
     #columnPropertyNames = [
@@ -89,10 +90,12 @@ export default class MailLogListService {
             .render(document.getElementById(this.#tableIdentifier));
 
         // Initialized search, pagination and so forth. Mutates specific parts of table config
-        new CustomGridFunctions(grid, this.#searchRestUrl, this.#tableIdentifier, {
+        const customGridFunctions = new CustomGridFunctions(grid, this.#searchRestUrl, this.#exportRestUrl, this.#tableIdentifier, {
             sortDirection: 'DESC',
             sortField: 'sentAt',
         })
+
+        initSaveAsExcelButton(customGridFunctions, 'Mail_Logs');
     }
 
     #dateFormatter(rawDate) {

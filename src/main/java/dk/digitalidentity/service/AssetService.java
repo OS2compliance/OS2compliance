@@ -5,6 +5,8 @@ import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.dao.DataProcessingDao;
+import dk.digitalidentity.dao.grid.AssetGridDao;
+import dk.digitalidentity.dao.grid.DBSAssetGridDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -34,6 +36,8 @@ import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
+import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.model.entity.grid.DBSAssetGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
@@ -49,8 +53,6 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
@@ -83,6 +85,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 import static java.util.stream.Collectors.groupingBy;
 import static java.util.stream.Collectors.toList;
 import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
@@ -91,7 +95,9 @@ import static org.hibernate.internal.util.collections.CollectionHelper.listOf;
 @Service
 @RequiredArgsConstructor
 public class AssetService {
+	private final DBSAssetGridDao dbsAssetGridDao;
     private final AssetDao assetDao;
+	private final AssetGridDao assetGridDao;
     private final AssetOversightDao assetOversightDao;
     private final RelationService relationService;
     private final DataProcessingDao dataProcessingDao;
@@ -104,7 +110,13 @@ public class AssetService {
 	private final S3Service s3Service;
 
 	public boolean isResponsibleFor(Asset asset) {
-		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).toList().contains(SecurityUtil.getPrincipalUuid());
+		return !asset.getResponsibleUsers().isEmpty() && asset.getResponsibleUsers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
+	}
+
+	public boolean isOwning(Asset asset) {
+		boolean isResponsible = isResponsibleFor(asset);
+		boolean isManager = asset.getManagers().stream().map(User::getUuid).anyMatch(uuid -> uuid.equals(SecurityUtil.getPrincipalUuid()));
+		return isResponsible || isManager;
 	}
 
 	public Optional<AssetOversight> getOversight(final Long oversightId) {
@@ -184,13 +196,13 @@ public class AssetService {
     }
 
     public boolean isEditable(final Asset asset) {
-        return SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY)
-                || isResponsibleFor(asset);
+        return SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && isOwning(asset));
     }
 
 	public boolean isEditable(final List<Asset> assets) {
-		boolean responsibleForAnyAsset = assets.stream().anyMatch(this::isResponsibleFor);
-		return SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) ||
+		boolean responsibleForAnyAsset = assets.stream().anyMatch(this::isOwning);
+		return SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
 				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && responsibleForAnyAsset);
 	}
 
@@ -663,7 +675,7 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 					.append(entry.getValue())
 					.append(";");
 		}
-		System.out.println(builder.toString());
+
 		img.attr("style", builder.toString());
 		return img;
 	}
@@ -678,5 +690,45 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 
 	public Set<Asset> findAssetsByOwnerUuid(String userUuid) {
 		return assetDao.findByResponsibleUsers_UuidContainsOrManagers_UuidContains(userUuid, userUuid);
+	}
+
+	// Helper method to get DBSAssets and avoid duplicated code in export and list
+	public Page<DBSAssetGrid> getDbsAssets(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<DBSAssetGrid> assets;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			assets = dbsAssetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DBSAssetGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DBSAssetGrid.class
+			);
+		} else {
+			assets = dbsAssetGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, DBSAssetGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DBSAssetGrid.class
+			);
+		}
+		return assets;
+	}
+
+	// Helper method to get assets and avoid duplicated code in export and list
+	public Page<AssetGrid> getAssets(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<AssetGrid> assets;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			assets = assetGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, AssetGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+		} else {
+			assets = assetGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, AssetGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					AssetGrid.class
+			);
+		}
+		return assets;
 	}
 }

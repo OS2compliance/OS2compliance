@@ -229,7 +229,7 @@ function initGrid() {
     };
     grid = new gridjs.Grid(gridConfig).render(document.getElementById("registersDatatable"));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, 'registersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, 'registersDatatable');
 
     initSaveAsExcelButton(customGridFunctions, 'Fortegnelse')
 

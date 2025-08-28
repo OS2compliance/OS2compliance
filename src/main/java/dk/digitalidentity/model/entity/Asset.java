@@ -239,4 +239,11 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	public String getResponsibleUserUuids() {
 		return responsibleUsers.stream().map(m -> m.getUuid()).collect(Collectors.joining(","));
 	}
+	@ManyToMany
+	@JoinTable(
+			name = "assets_departments_mapping",
+			joinColumns = { @JoinColumn(name = "asset_id") },
+			inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
+	)
+	private List<OrganisationUnit> departments;
 }

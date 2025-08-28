@@ -148,8 +148,14 @@
                 {
                     name: "Systemejer",
                     searchable: {
-                        searchKey: 'responsibleUserNames'
+                        searchKey: 'ownedByUserNames'
                     },
+                },
+                {
+                    name: "Systemansvarlig",
+                    searchable: {
+                        searchKey: 'responsibleUserNames'
+                    }
                 },
                 {
                     name: "Opdateret",
@@ -239,7 +245,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, , asset.oldKitos ],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },
@@ -261,7 +267,7 @@
         };
         const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, 'assetsDatatable');
         gridOptions.init(grid, document.getElementById("gridOptions"));
 
         initSaveAsExcelButton(customGridFunctions,'Aktiver')
