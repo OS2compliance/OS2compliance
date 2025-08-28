@@ -114,7 +114,7 @@ function DBSAssetService() {
         });
 
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridDBSAssetsUrl, 'assetsDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridDBSAssetsUrl, exportDBSAssetsUrl,'assetsDatatable');
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
 

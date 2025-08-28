@@ -1,5 +1,7 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.HasManagers;
+import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
@@ -42,6 +44,9 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 
 	@Column
 	private String managerUuids;
+
+	@Column
+	private String managerUserNames;
 
 	@Column
 	private LocalDate updatedAt;

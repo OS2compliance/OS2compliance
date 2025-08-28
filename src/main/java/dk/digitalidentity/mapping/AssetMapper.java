@@ -57,7 +57,8 @@ public interface AssetMapper {
             .name(assetGrid.getName())
             .supplier(nullSafe(assetGrid::getSupplier))
             .assetType(assetGrid.getAssetType())
-            .responsibleUsers(nullSafe(assetGrid::getResponsibleUserNames))
+            .ownedByUsers(nullSafe(assetGrid::getResponsibleUserNames))
+            .responsibleUsers(nullSafe(assetGrid::getManagerUserNames))
             .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
             .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
             .assessmentOrder(assetGrid.getAssessmentOrder())
@@ -104,6 +105,7 @@ public interface AssetMapper {
     @Mappings({
         @Mapping(source = "responsibleUsers", target = "systemOwners"),
         @Mapping(source = "managers", target = "responsibleUsers"),
+        @Mapping(source = "departments", target = "departments"),
         @Mapping(source = "suppliers", target = "subSuppliers"),
         @Mapping(source = "assetType", target = "assetType"),
         @Mapping(source = "productLinks", target = "productLinks"),
@@ -201,7 +203,8 @@ public interface AssetMapper {
 		@Mapping(target = "aiStatus", ignore = true),
 		@Mapping(target = "aiRisk", ignore = true),
 		@Mapping(target = "active", ignore = true),
-		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
+		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks"),
+		@Mapping(target = "departments", source = "departments")
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);
 

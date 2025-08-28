@@ -29,13 +29,14 @@ public class ExcelExportService {
 
 	/**
 	 * @param data - The data we provide when calling this method in each of the rest controllers. It contains the columns and rows.
+	 * @param dtoClass - The class of the dto that we export.
 	 * @param fileName - The file name of the exported Excel sheet.
 	 * @param response - The reponse we send back.
 	 * @throws IOException - An exception we throw when an error happens.
 	 */
-	public void exportToExcel(List<?> data, String fileName, HttpServletResponse response) throws IOException {
-		if (data == null || data.isEmpty()) {
-			throw new IllegalArgumentException("No data to export");
+	public void exportToExcel(List<?> data, Class<?> dtoClass, String fileName, HttpServletResponse response) throws IOException {
+		if (data == null) {
+			throw new IllegalArgumentException("No data provided");
 		}
 
 		// Create workbook
@@ -48,7 +49,6 @@ public class ExcelExportService {
 		CellStyle alternateRowStyle = createAlternateRowStyle(workbook, rowStyle);
 
 		// Get column information from the DTO class
-		Class<?> dtoClass = data.get(0).getClass();
 		List<Field> exportableFields = getExportableFields(dtoClass);
 		List<String> columnHeaders = getColumnHeaders(exportableFields);
 

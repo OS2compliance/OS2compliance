@@ -29,7 +29,7 @@ import java.util.List;
 @Setter
 @SQLDelete(sql = "UPDATE suppliers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Supplier extends Relatable {
+public class Supplier extends Relatable implements HasSingleResponsibleUser {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "responsible_uuid")

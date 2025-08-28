@@ -26,7 +26,7 @@ public class AssetDTO {
 	@ExcelColumn(headerName = "Type", order = 4)
     private String assetType;
 	@ExcelColumn(headerName = "Systemejer", order = 5)
-    private String responsibleUsers;
+    private String ownedByUsers;
 	@ExcelColumn(headerName = "Opdateret", order = 6)
     private String updatedAt;
 	@ExcelColumn(headerName = "Risiko vurdering", order = 8)
@@ -51,4 +51,6 @@ public class AssetDTO {
 	private boolean oldKitos;
 	@ExcludeFromExport
 	private boolean active;
+	@ExcelColumn(headerName = "Systemansvarlig", order = 10)
+	private String responsibleUsers;
 }

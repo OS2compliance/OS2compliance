@@ -217,7 +217,7 @@ function initGrid() {
         }
     };
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "dpiaDatatable" ));
-    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, 'dpiaDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, exportDataUrl, 'dpiaDatatable');
 
     gridOptions.init(grid, document.getElementById("gridOptions"));
 

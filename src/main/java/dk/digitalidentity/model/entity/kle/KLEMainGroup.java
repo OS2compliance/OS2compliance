@@ -8,12 +8,16 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
+import jakarta.persistence.PostLoad;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.springframework.data.domain.Persistable;
 
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -26,7 +30,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_main_group")
-public class KLEMainGroup {
+public class KLEMainGroup  implements Persistable<String> {
 
 	@Id
 	@Column(name = "main_group_number")
@@ -58,4 +62,32 @@ public class KLEMainGroup {
 			fetch = FetchType.LAZY
 	)
 	private Set<Register> registers = new HashSet<>();
+
+	@Transient
+	private boolean isNew = true;
+
+	public void setAsNew() {
+		isNew = true;
+	}
+
+	@Override
+	public String getId() {
+		return mainGroupNumber;
+	}
+
+	@Override
+	public boolean isNew() {
+		return isNew;
+	}
+
+	@PrePersist
+	@PostLoad
+	public void markNotNew() {
+		this.isNew = false;
+	}
+
+	// Helper method for your sync logic
+	public void markAsExisting() {
+		this.isNew = false;
+	}
 }

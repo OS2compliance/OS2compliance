@@ -27,6 +27,7 @@ function EditTaskService() {
         let self = this;
         initDatepicker("#taskEditFormTaskDeadlineBtn", "#taskEditFormTaskDeadline");
         this.editTaskOuChoicesSelect = choiceService.initOUSelect('taskEditFormTaskOuSelect');
+        this.editTaskDepartmentChoicesSelect = choiceService.initOUSelect('taskEditFormTaskDepartmentSelect');
 
         this.editTaskUserChoicesEditSelect = choiceService.initUserSelect('taskEditFormTaskUserSelect');
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {

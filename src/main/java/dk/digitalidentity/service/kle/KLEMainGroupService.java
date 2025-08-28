@@ -14,7 +14,11 @@ import java.util.Set;
 public class KLEMainGroupService {
 	private final KLEMainGroupDao kleMainGroupDao;
 
-	public Set<KLEMainGroup> getAll() {
+	public List<KLEMainGroup> getAll() {
+		return kleMainGroupDao.findAll();
+	}
+
+	public Set<KLEMainGroup> getAllActive() {
 		return kleMainGroupDao.findAllByDeletedFalse();
 	}
 
@@ -28,9 +32,5 @@ public class KLEMainGroupService {
 
 	public List<KLEMainGroup> saveAll(List<KLEMainGroup> mainGroups) {
 		return kleMainGroupDao.saveAll(mainGroups);
-	}
-
-	public void softDeleteAllNotMatching(Collection<String> mainGroupNumbers) {
-		kleMainGroupDao.softDeleteByMainGroupNumbers(mainGroupNumbers);
 	}
 }
