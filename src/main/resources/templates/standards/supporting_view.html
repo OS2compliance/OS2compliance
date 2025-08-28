@@ -90,9 +90,8 @@
                                                 <tr class="hidden">
                                                     <td style="border-right: 1px solid black;"></td>
                                                     <td colspan="5">
-                                                        <div sec:authorize="hasRole('ROLE_update_all')" th:replace="~{standards/fragments/sectionFragment :: editable-section}"></div>
-                                                        <div sec:authorize="!hasRole('ROLE_update_all')" th:replace="~{standards/fragments/sectionFragment :: readonly-section}"></div>
-
+                                                        <div sec:authorize="hasRole('update_all')" th:replace="~{standards/fragments/sectionFragment :: editable-section}"></div>
+                                                        <div sec:authorize="!hasRole('update_all')" th:replace="~{standards/fragments/sectionFragment :: readonly-section}"></div>
                                                     </td>
                                                 </tr>
                                                 <tr>

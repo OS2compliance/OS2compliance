@@ -35,6 +35,7 @@ import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.simple_queue.QueueMessage;
 import dk.digitalidentity.simple_queue.json.JsonSimpleMessage;
@@ -45,7 +46,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
@@ -95,6 +95,7 @@ public class AssetsRestController {
 	private final ApplicationEventPublisher eventPublisher;
 	private final RelationService relationService;
 	private final ExcelExportService excelExportService;
+	private final SecurityUserService securityUserService;
 
 	@RequireReadOwnerOnly
 	@PostMapping("list")
@@ -103,52 +104,34 @@ public class AssetsRestController {
         @RequestParam(value = "limit", defaultValue = "50") int limit,
         @RequestParam(value = "order", required = false) String sortColumn,
         @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-		@RequestParam(value = "export", defaultValue = "false") boolean export,
-		@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-        @RequestParam Map<String, String> filters, // Dynamic filters for search fields
-			HttpServletResponse response
-    ) throws IOException {
+        @RequestParam Map<String, String> filters // Dynamic filters for search fields
+    ) {
+		User user = securityUserService.getCurrentUserOrThrow();
 
-		final String userUuid = SecurityUtil.getLoggedInUserUuid();
-		final User user = userService.findByUuid(userUuid)
-				.orElseThrow();
-		if (userUuid == null) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
-
-		int pageLimit = limit;
-		if(export) {
-			// For export mode, get ALL records (no pagination)
-			pageLimit = Integer.MAX_VALUE;
-		}
-
-		Page<AssetGrid> assets = null;
-		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			// Logged in user can see all
-			assets = assetGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, AssetGrid.class),
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		}
-		else {
-			// Logged in user can see only own
-			assets = assetGridDao.findAllWithAssignedUser(
-					validateSearchFilters(filters, AssetGrid.class),
-					user,
-					buildPageable(page, pageLimit, sortColumn, sortDirection),
-					AssetGrid.class
-			);
-		}
-
-		if (export) {
-			List<AssetDTO> allData = mapper.toDTO(assets.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
-		}
+		Page<AssetGrid> assets = assetService.getAssets(sortColumn, sortDirection, filters, page, limit, user);
 
 		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
     }
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		int pageLimit = Integer.MAX_VALUE;
+
+		// Fetch all records (no pagination)
+		Page<AssetGrid> assets = assetService.getAssets(sortColumn, sortDirection, filters, 0, pageLimit, user);
+
+		List<AssetDTO> allData = mapper.toDTO(assets.getContent());
+		excelExportService.exportToExcel(allData, AssetDTO.class, fileName, response);
+	}
 
 	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
@@ -515,6 +498,4 @@ public class AssetsRestController {
 				.toList()
 				.contains(SecurityUtil.getPrincipalUuid());
 	}
-
-
 }

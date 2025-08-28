@@ -15,7 +15,6 @@ async function exportGridToExcelSheet(customGridInstance, fileName = 'export.xls
 
         // Add export flag and filename to the URL
         const url = new URL(exportUrl, window.location.origin);
-        url.searchParams.set('export', 'true');
         url.searchParams.set('fileName', fileName);
 
         // Make request to the endpoint
@@ -27,7 +26,7 @@ async function exportGridToExcelSheet(customGridInstance, fileName = 'export.xls
         });
 
         if (!response.ok) {
-            throw new Error(`Export failed: ${response.status} ${response.statusText}`);
+            toastService.error("Export fejlede. Tjek at tabellen ikke er tomt.")
         }
 
         // Check if response is Excel file or JSON error

@@ -116,22 +116,22 @@ function supportingStandartsViewLoaded() {
     document.getElementById('customAddRelationBtn').addEventListener('click', addRelations);
 
     const selectCheckboxes = document.querySelectorAll('.selectedCheckbox');
-        selectCheckboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', function() {
-                var id = checkbox.dataset.id;
-                var index = checkbox.dataset.index;
-                var checked = checkbox.checked;
-                setField(id, "SELECTED", checked, index);
+    selectCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            var id = checkbox.dataset.id;
+            var index = checkbox.dataset.index;
+            var checked = checkbox.checked;
+            setField(id, "SELECTED", checked, index);
 
-                if (checked) {
-                    document.getElementById('statusTD' + index).style.display = "block";
-                    document.getElementById('selectedTD' + index).textContent = "Tilvalgt";
-                } else {
-                    document.getElementById('statusTD' + index).style.display = "none";
-                    document.getElementById('selectedTD' + index).textContent = "Fravalgt";
-                }
-            });
+            if (checked) {
+                document.getElementById('statusTD' + index).style.display = "block";
+                document.getElementById('selectedTD' + index).textContent = "Tilvalgt";
+            } else {
+                document.getElementById('statusTD' + index).style.display = "none";
+                document.getElementById('selectedTD' + index).textContent = "Fravalgt";
+            }
         });
+    });
 }
 
 function editField(elem) {
@@ -196,9 +196,9 @@ function showEditor(index, type) {
 
 function setField(standardSectionId, setFieldType, value, index) {
     var data = {
-         "setFieldType": setFieldType,
-         "value": value
-       };
+        "setFieldType": setFieldType,
+        "value": value
+    };
 
     postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((response) => {
         if (!response.ok) {
@@ -215,16 +215,16 @@ function setField(standardSectionId, setFieldType, value, index) {
 }
 
 function findTextInParentheses(str) {
-  // Regular expression for at finde tekst mellem parenteser
-  var regex = /\(([^)]+)\)/g;
-  // Brug match() metoden til at finde tekst mellem parenteser
-  var matches = str.match(regex);
-  // Tjek om der er nogen matches, og returner dem
-  if (matches) {
-    return matches.map(match => match.slice(1, -1)); // Fjern parenteserne
-  } else {
-    return []; // Returner en tom array hvis der ikke er nogen matches
-  }
+    // Regular expression for at finde tekst mellem parenteser
+    var regex = /\(([^)]+)\)/g;
+    // Brug match() metoden til at finde tekst mellem parenteser
+    var matches = str.match(regex);
+    // Tjek om der er nogen matches, og returner dem
+    if (matches) {
+        return matches.map(match => match.slice(1, -1)); // Fjern parenteserne
+    } else {
+        return []; // Returner en tom array hvis der ikke er nogen matches
+    }
 }
 
 var relationsChoice;
@@ -249,39 +249,39 @@ function addRelationFormLoaded() {
 function addRelations() {
     var relatableId = document.getElementById('relatableIdInput').value;
     var data = {
-         "relatableId": relatableId,
-         "relations": relationsChoice.getValue(true)
-       };
+        "relatableId": relatableId,
+        "relations": relationsChoice.getValue(true)
+    };
 
     postData("/rest/relatable/relations/add", data).then((response) => {
         if (!response.ok) {
-                    throw new Error('Network response was not ok: ' + response.status);
-                }
+            throw new Error('Network response was not ok: ' + response.status);
+        }
         return response.json();
     }).then(function(responseData) {
-          var modalElement = document.getElementById('addRelationModal');
-          var modal = bootstrap.Modal.getInstance(modalElement);
-          modal.hide();
-          relationsChoice.removeActiveItems();
+        var modalElement = document.getElementById('addRelationModal');
+        var modal = bootstrap.Modal.getInstance(modalElement);
+        modal.hide();
+        relationsChoice.removeActiveItems();
 
-          var index = document.getElementById('standardSectionStatIndex').value;
-          var table = document.getElementById("relationTable" + index);
-          responseData.forEach(function(item) {
-              var row = table.insertRow();
-              var cell1 = row.insertCell(0);
-              var cell2 = row.insertCell(1);
-              var cell3 = row.insertCell(2);
-              cell1.innerHTML = '<a href="/' + item.typeForUrl + '/' + (item.standardIdentifier == null ? item.id : item.standardIdentifier) + '"><span>' + item.title + '</span></a>';
-              cell2.innerHTML = item.typeMessage;
-              cell3.innerHTML = '<i class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" data-relatableid="' + relatableId + '" data-relationid="' + item.id + '" data-relationtype="' + item.type + '"></i>';
-          });
-          return responseData; // Dette returneres som et promise-svar
+        var index = document.getElementById('standardSectionStatIndex').value;
+        var table = document.getElementById("relationTable" + index);
+        responseData.forEach(function(item) {
+            var row = table.insertRow();
+            var cell1 = row.insertCell(0);
+            var cell2 = row.insertCell(1);
+            var cell3 = row.insertCell(2);
+            cell1.innerHTML = '<a href="/' + item.typeForUrl + '/' + (item.standardIdentifier == null ? item.id : item.standardIdentifier) + '"><span>' + item.title + '</span></a>';
+            cell2.innerHTML = item.typeMessage;
+            cell3.innerHTML = '<i class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" data-relatableid="' + relatableId + '" data-relationid="' + item.id + '" data-relationtype="' + item.type + '"></i>';
+        });
+        return responseData; // Dette returneres som et promise-svar
     })
-    .catch(function(error) {
-        toastService.error(error);
-        console.error(error);
-        window.location.reload();
-    });
+        .catch(function(error) {
+            toastService.error(error);
+            console.error(error);
+            window.location.reload();
+        });
 }
 
 function customDeleteRelation(element) {
