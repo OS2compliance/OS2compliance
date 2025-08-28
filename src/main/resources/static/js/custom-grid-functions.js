@@ -153,6 +153,9 @@ class CustomGridFunctions {
      * @param {string} valuef
      */
     updateColumnValue(column, value) {
+        if (value === '__EMPTY__') {
+            this.state.searchValues[column] = "EMPTY";
+        }
         this.state.searchValues[column] = value;
     }
 

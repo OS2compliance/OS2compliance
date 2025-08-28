@@ -15,6 +15,7 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -280,7 +281,10 @@ public class DBSService {
                                     task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
 
                                     //set link to the folder containing the documents
-                                    task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
+									String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
+									if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(url))) {
+										task.getLinks().add(new TaskLink(null, url, task));
+									}
                                 },
                                 () -> {
                                     // Create a new task

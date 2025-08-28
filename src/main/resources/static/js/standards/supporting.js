@@ -31,29 +31,37 @@ function supportingStandartsViewLoaded() {
     foldableRows.forEach(row => {
         row.addEventListener('click', () => {
             const nextRow = row.nextElementSibling;
+            let index = row.dataset.index;
 
             if (nextRow.classList.contains('hidden')) {
                 nextRow.classList.remove('hidden');
-                document.getElementById('noteTD' + index)
             } else {
                 nextRow.classList.add('hidden');
 
-                var index = row.dataset.index;
-                if (document.getElementById('editorDescriptionContainer' + index) != null) {
+                if (editorDescriptionInstances[index] &&
+                    document.getElementById('editorDescriptionContainer' + index) != null &&
+                    !document.getElementById('editorDescriptionContainer' + index).hidden) {
+
                     var editorElement = editorDescriptionInstances[index].editor;
                     document.getElementById('descriptionRead' + index).innerHTML = editorElement.getData();
                     document.getElementById('editorDescriptionContainer' + index).hidden = true;
                     document.getElementById('descriptionRead' + index).hidden = false;
                     editorDescriptionInstances[index].editing = false;
                 }
-                if (document.getElementById('editorPracticeContainer' + index) != null) {
+                if (editorPracticeInstances[index] &&
+                    document.getElementById('editorPracticeContainer' + index) != null &&
+                    !document.getElementById('editorPracticeContainer' + index).hidden) {
+
                     var editorElement = editorPracticeInstances[index].editor;
                     document.getElementById('practiceRead' + index).innerHTML = editorElement.getData();
                     document.getElementById('editorPracticeContainer' + index).hidden = true;
                     document.getElementById('practiceRead' + index).hidden = false;
                     editorPracticeInstances[index].editing = false;
                 }
-                if (document.getElementById('editorSmartContainer' + index) != null) {
+                if (editorSmartInstances[index] &&
+                    document.getElementById('editorSmartContainer' + index) != null &&
+                    !document.getElementById('editorSmartContainer' + index).hidden) {
+
                     var editorElement = editorSmartInstances[index].editor;
                     document.getElementById('smartRead' + index).innerHTML = editorElement.getData();
                     document.getElementById('editorSmartContainer' + index).hidden = true;
@@ -127,22 +135,23 @@ function supportingStandartsViewLoaded() {
 }
 
 function editField(elem) {
-    var index = elem.dataset.index;
-    var type = elem.dataset.type;
+    let index = elem.dataset.index;
+    let type = elem.dataset.type;
 
-    if (type == 'DESCRIPTION' && !editorDescriptionInstances[index].editing) {
+    if (type === 'DESCRIPTION' && editorDescriptionInstances[index]) {
         showEditor(index, type);
         return;
     }
-    if (type == 'NSIS_PRACTICE' && !editorPracticeInstances[index].editing) {
+    if (type === 'NSIS_PRACTICE' && editorPracticeInstances[index]) {
         showEditor(index, type);
         return;
     }
-    if (type == 'NSIS_SMART' && !editorSmartInstances[index].editing) {
+    if (type === 'NSIS_SMART' && editorSmartInstances[index]) {
         showEditor(index, type);
         return;
     }
 
+    // first-time initialization
     const editorContainer = document.getElementById(
         type === 'DESCRIPTION' ? 'editorDescriptionContainer' + index :
             type === 'NSIS_PRACTICE' ? 'editorPracticeContainer' + index :
@@ -153,7 +162,7 @@ function editField(elem) {
 
     window.CreateCkEditor(elemToEdit, editor => {
         const id = editor.sourceElement.dataset.id;
-        const editorObj = { editor, editing: true };
+        const editorObj = {editor, editing: true};
 
         // save instance
         if (type === 'DESCRIPTION') editorDescriptionInstances[index] = editorObj;
@@ -165,20 +174,20 @@ function editField(elem) {
             setField(id, type, editor.getData(), index);
         });
 
-        showEditor(index, type); // reveal editor container, hide read-only view
+        showEditor(index, type);
     });
 }
 
 function showEditor(index, type) {
-    if (type == 'DESCRIPTION') {
+    if (type === 'DESCRIPTION') {
         document.getElementById('descriptionRead' + index).hidden = true;
         document.getElementById('editorDescriptionContainer' + index).hidden = false;
         editorDescriptionInstances[index].editing = true;
-    } else if (type == 'NSIS_PRACTICE') {
+    } else if (type === 'NSIS_PRACTICE') {
         document.getElementById('practiceRead' + index).hidden = true;
         document.getElementById('editorPracticeContainer' + index).hidden = false;
         editorPracticeInstances[index].editing = true;
-    } else if (type == 'NSIS_SMART') {
+    } else if (type === 'NSIS_SMART') {
         document.getElementById('smartRead' + index).hidden = true;
         document.getElementById('editorSmartContainer' + index).hidden = false;
         editorSmartInstances[index].editing = true;
