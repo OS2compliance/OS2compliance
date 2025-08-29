@@ -18,7 +18,8 @@
                             </ol>
                         </nav>
                     </div>
-                    <div class="align-self-center d-inline-flex gap-2">
+                    <div class="align-self-center d-inline-flex gap-2 mb-2">
+                        <a id="exportStandardToExcel" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
                         <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='createRequirementButton', text='Ny krav', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='addHeaderButton', text='Ny gruppe', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
