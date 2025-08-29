@@ -20,5 +20,6 @@ public class DPIATemplateSectionDTO {
     private String header;
     private String explainer;
     private boolean canOptOut;
+	@Builder.Default
     private List<DPIATemplateQuestionDTO> dpiaTemplateQuestions = new ArrayList<>();
 }

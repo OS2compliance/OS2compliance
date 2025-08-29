@@ -227,7 +227,7 @@ function ChoiceService() {
     }
 
     this.updateRelationsDocumentsOnly = (choices, search) => {
-        this.updateAssets(choices, `/rest/relatable/autocomplete?types=DOCUMENT&search=${search}`);
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=DOCUMENT&search=${search}`);
     }
 
 

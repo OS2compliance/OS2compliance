@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;

@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.DocumentType;
@@ -22,7 +23,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Immutable
-public class DocumentGrid implements HasSingleResponsibleUser{
+public class DocumentGrid implements HasSingleResponsibleUser {
     @Id
     private Long id;
 

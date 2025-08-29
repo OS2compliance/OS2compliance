@@ -56,11 +56,8 @@ import dk.digitalidentity.service.kle.KLEMainGroupService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -134,7 +131,7 @@ public class RegisterController {
             model.addAttribute("register", register);
             model.addAttribute("formId", "editForm");
             model.addAttribute("formTitle", "Rediger behandlingsaktivitet");
-            model.addAttribute("action", "/registers/" + register.getId() + "/update?showIndex=true");
+            model.addAttribute("action", "/registers/list/" + register.getId() + "/update?showIndex=true");
         }
         return "registers/form";
     }
@@ -258,7 +255,6 @@ public class RegisterController {
 			@RequestParam(value = "criticality", required = false) final Criticality criticality,
 			@RequestParam(value = "emergencyPlanLink", required = false) final String emergencyPlanLink,
 			@RequestParam(value = "informationResponsible", required = false) final String informationResponsible,
-			@RequestParam(value = "dataProtectionOfficer", required = false) final String dataProtectionOfficer,
 			@RequestParam(value = "registerRegarding", required = false) final Set<ChoiceValue> registerRegarding,
 			@RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
 			@RequestParam(required = false) final String section,
@@ -305,12 +301,6 @@ public class RegisterController {
         if (informationResponsible != null) {
             register.setInformationResponsible(informationResponsible);
         }
-		if (StringUtils.isNotEmpty(dataProtectionOfficer)) {
-			User dpoUser = userService.findByUuid(dataProtectionOfficer)
-					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Data Protection Officer not found"));
-			register.setDataProtectionOfficer(dpoUser);
-		}
-
 		register.setRegisterRegarding(registerRegarding);
 
 		if (securityPrecautions != null) {
@@ -337,6 +327,39 @@ public class RegisterController {
         registerService.save(register);
         return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
     }
+
+	@PostMapping("list/{id}/update")
+	public String update(@PathVariable final Long id,
+			@RequestParam(value = "showIndex", required = false, defaultValue = "false") final boolean showIndex,
+			@RequestParam(required = false) final String section,
+			@RequestParam(value = "name", required = false) @Valid final String name,
+			@RequestParam(value = "responsibleOus", required = false) @Valid final Set<String> responsibleOuUuids,
+			@RequestParam(value = "responsibleUsers", required = false) @Valid final Set<String> responsibleUserUuids
+	) {
+		final Register register = registerService.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		ensureEditingIsAllowed(register);
+		if (name != null) {
+			register.setName(name);
+		}
+
+		if (responsibleOuUuids != null && !responsibleOuUuids.isEmpty()) {
+			final List<OrganisationUnit> responsibleOus = organisationService.findAllByUuids(responsibleOuUuids);
+			register.setResponsibleOus(responsibleOus);
+		} else {
+			register.setResponsibleOus(null);
+		}
+
+		if (responsibleUserUuids != null && !responsibleUserUuids.isEmpty()) {
+			final List<User> responsibleUsers = userService.findAllByUuids(responsibleUserUuids);
+			register.setResponsibleUsers(responsibleUsers);
+		} else {
+			register.setResponsibleUsers(null);
+		}
+
+		registerService.save(register);
+		return showIndex ? "redirect:/registers" : "redirect:/registers/" + id + (section != null ? "?section=" + section : "");
+	}
 
 	@RequireUpdateOwnerOnly
     @Transactional
@@ -419,7 +442,7 @@ public class RegisterController {
         final List<Pair<Integer, AssetSupplierMapping>> assetSupplierMappingList = registerAssetAssessmentService.assetSupplierMappingList(relatedAssets);
         final List<RegisterAssetRiskDTO> assetThreatAssessments = registerAssetAssessmentService.assetThreatAssessments(assetSupplierMappingList);
 
-		final List<SelectionDTO> mainGroups = kLEMainGroupService.getAll().stream()
+		final List<SelectionDTO> mainGroups = kLEMainGroupService.getAllActive().stream()
 				.sorted(Comparator.comparing(KLEMainGroup::getMainGroupNumber))
 				.map(mg -> new SelectionDTO(mg.getMainGroupNumber()+" "+mg.getTitle(), mg.getMainGroupNumber(), register.getKleMainGroups().contains(mg)))
 				.toList();
@@ -511,9 +534,10 @@ public class RegisterController {
 				));
 	}
 
+	record KLEKeywordDTO(String text, String actionFacetNr) {}
 	record SelectedLegalReferenceDTO(String accessionNumber, String title, String paragraph) {}
-	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, Set<SelectedLegalReferenceDTO> legalReferences){}
-	record SelectedKLEGroupDTO (String groupNumber, String title, List<SelectedKLESubjectDTO> subjects) {}
+	record SelectedKLESubjectDTO(String subjectNumber, String title, String preservationCode, String durationBeforeDeletion, String instructionText, List<KLEKeywordDTO> keywords, Set<SelectedLegalReferenceDTO> legalReferences){}
+	record SelectedKLEGroupDTO (String groupNumber, String title, String instructionText, List<KLEKeywordDTO> keywords, List<SelectedKLESubjectDTO> subjects) {}
 	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
 
 	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
@@ -530,6 +554,10 @@ public class RegisterController {
 		return new SelectedKLEGroupDTO(
 				group.getGroupNumber(),
 				group.getTitle(),
+				group.getInstructionText(),
+				group.getKeywords().stream()
+						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
+						.toList(),
 				group.getSubjects().stream()
 						.map(this::toSelectedKLESubjectDTO )
 						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
@@ -542,6 +570,10 @@ public class RegisterController {
 				subject.getTitle(),
 				subject.getPreservationCode(),
 				durationToString(subject.getDurationBeforeDeletion()),
+				subject.getInstructionText(),
+				subject.getKeywords().stream()
+						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
+						.toList(),
 				subject.getLegalReferences().stream()
 						.map(this::selectedLegalReferenceDTO)
 						.collect(Collectors.toSet()));

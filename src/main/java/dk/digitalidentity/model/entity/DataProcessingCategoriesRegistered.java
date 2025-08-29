@@ -72,6 +72,7 @@ public class DataProcessingCategoriesRegistered {
 			orphanRemoval = true,
 			fetch = FetchType.LAZY
 	)
+	@Builder.Default
 	private Set<DataProcessingInfoReceiver> informationReceivers = new HashSet<>();
 
 	@Column

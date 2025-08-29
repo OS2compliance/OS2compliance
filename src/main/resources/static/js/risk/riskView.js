@@ -173,6 +173,12 @@ function setField() {
     var id = this.dataset.id;
     var identifier = this.dataset.identifier;
     var value = this.value;
+
+    let validated = validateFieldBeforeSetting(setFieldType, value);
+    if (!validated) {
+        return;
+    }
+
     var data = {
                  "setFieldType": setFieldType,
                  "dbType": dbType,
@@ -187,6 +193,16 @@ function setField() {
             }
             toastService.info("Info", "Dine ændringer er blevet gemt")
         }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.error(error)});
+}
+
+function validateFieldBeforeSetting(setFieldType, value) {
+    if (setFieldType == 'PROBLEM') {
+        if (value.length >= 2048) {
+            toastService.error("Teksten i 'Problemstilling' må maksimalt være 2048 tegn")
+            return false;
+        }
+    }
+    return true;
 }
 
 function updateAverage() {
