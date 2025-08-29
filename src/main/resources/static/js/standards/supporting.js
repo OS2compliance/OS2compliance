@@ -209,7 +209,7 @@ function setField(standardSectionId, setFieldType, value, index) {
         console.error(error);
         window.location.reload();
     });
-
+    toastService.info("Opdatering gemt!");
     // set last updated date
     document.getElementById('dateTD' + index).textContent = today;
 }
@@ -275,6 +275,7 @@ function addRelations() {
             cell2.innerHTML = item.typeMessage;
             cell3.innerHTML = '<i class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" data-relatableid="' + relatableId + '" data-relationid="' + item.id + '" data-relationtype="' + item.type + '"></i>';
         });
+        toastService.info("Relation tilknyttet");
         return responseData; // Dette returneres som et promise-svar
     })
         .catch(function(error) {
