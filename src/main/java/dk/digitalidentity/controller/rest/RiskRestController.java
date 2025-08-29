@@ -221,16 +221,17 @@ public class RiskRestController {
     }
 
     record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
-	@RequireCreateAll
+	@RequireCreateOwnerOnly
     @Transactional
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        ThreatAssessment finalThreatAssessment = threatAssessment;
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPER_USER)) && !finalThreatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+
+		if (!SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
         if (responsibleUser.getEmail() == null || responsibleUser.getEmail().isBlank()) {
             return new ResponseEntity<>("Den valgte bruger har ikke nogen email tilknyttet, og rapporten kan derfor ikke sendes.", HttpStatus.BAD_REQUEST);
@@ -320,9 +321,11 @@ public class RiskRestController {
     public ResponseEntity<HttpStatus> setField(@PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(!threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
@@ -372,10 +375,11 @@ public class RiskRestController {
     @PostMapping("{id}/threats/setPrecautions")
     public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if( !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
 
         if (threatAssessment.getThreatAssessmentResponses() == null) {
             threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
@@ -459,6 +463,12 @@ public class RiskRestController {
     @DeleteMapping("{id}/threats/{threatId}")
     public ResponseEntity<HttpStatus> deleteCustomThread(@PathVariable final long id, @PathVariable final long threatId) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         final CustomThreat customThreat = threatAssessment.getCustomThreats().stream()
             .filter(c -> c.getId() == threatId)
             .findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -503,7 +513,7 @@ public class RiskRestController {
 
     public record CreateExternalRiskassessmentDTO(Long riskId, Set<Long> assetIds, String link, String name, ThreatAssessmentType type, Long registerId, String responsibleUserUuid, String responsibleOuUuid) {
     }
-	@RequireCreateOwnerOnly
+	@RequireCreateAll
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalRiskassessmentDTO createExternalDTO) {
 
@@ -557,9 +567,11 @@ public class RiskRestController {
 	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if(!threatAssessmentService.isResponsibleFor(threatAssessment)) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
+
 		threatAssessment.setComment(commentUpdateDTO.comment);
 		threatAssessmentService.save(threatAssessment);
 

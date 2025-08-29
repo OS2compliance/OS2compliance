@@ -402,15 +402,16 @@ public class RiskController {
         return "risks/revisionIntervalForm";
     }
 
-	@RequireCreateOwnerOnly
+	@RequireUpdateOwnerOnly
     @PostMapping("{id}/revision")
     @Transactional
     public String postRevisionForm(@ModelAttribute final ThreatAssessment assessment, @PathVariable final long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!threatAssessmentService.isResponsibleFor(threatAssessment)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
         threatAssessment.setRevisionInterval(assessment.getRevisionInterval());
         threatAssessment.setNextRevision(assessment.getNextRevision());
         threatAssessmentService.createOrUpdateAssociatedCheck(threatAssessment);
