@@ -17,6 +17,7 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${template.name}"></li>
                             </ol>
                         </nav>
+                        <h1 class="page-title mb-0 mt-2 mb-2" th:text="${template.name}"></h1>
                     </div>
                     <div class="align-self-center d-inline-flex gap-2 mb-2">
                         <a id="exportStandardToExcel" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
@@ -34,15 +35,35 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div class="row col-lg-12 mb-3">
-                                    <label for="statusFilter" class="col-sm-2 col-form-label">Filtrér på status</label>
-                                    <div class="col-sm-4">
+                                <div class="row align-items-center mb-3">
+                                    <div class="col-6 d-flex align-items-center">
+                                        <label for="statusFilter" class="me-2 mb-0">Filtrér på status</label>
                                         <select class="form-control form-select" id="statusFilter" onChange="filterOnStatusChanged();">
                                             <option th:selected="${statusFilter == null}" value="ALL">Alle</option>
-                                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${statusFilter == status}"></option>
+                                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}"
+                                                    th:value="${status}" th:text="${status.getMessage()}" th:selected="${statusFilter == status}">
+                                            </option>
                                         </select>
                                     </div>
+
+                                    <div class="col-6 d-flex align-items-center justify-content-end">
+                                        <label class="me-2 mb-0">Progression:</label>
+                                        <div class="progress flex-grow-1" style="height: 38px;">
+                                            <th:block th:each="entry : ${progressbarValue}">
+                                                <div class="progress-bar"
+                                                     th:classappend="${statusColors[entry.key.name()]}"
+                                                     role="progressbar"
+                                                     th:style="'width: ' + (${entry.value} * 100 / ${totalCount}) + '%'"
+                                                     th:attr="aria-valuenow=${entry.value}, aria-valuemin=0, aria-valuemax=${totalCount}"
+                                                     th:title="${statusTranslations[entry.key.name()]} + ': ' + ${entry.value}"
+                                                     data-bs-toggle="tooltip"
+                                                     th:data-bs-title="${entry.key} + ': ' + ${entry.value}">
+                                                </div>
+                                            </th:block>
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <table class="col-lg-12 table">
                                     <thead>
                                     <tr class="bg-light">

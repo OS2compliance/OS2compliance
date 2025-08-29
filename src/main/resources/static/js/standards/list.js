@@ -2,6 +2,9 @@ document.addEventListener("DOMContentLoaded", function (event) {
     initTable()
     initListItemActions()
     initCreateStandardButton()
+
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].forEach(el => new bootstrap.Tooltip(el));
 });
 
 function initCreateStandardButton() {
@@ -46,6 +49,58 @@ function initTable() {
             {
                 id: "compliance",
                 name: "Efterlevelse"
+            },
+            {
+                id: "progressBarValues",
+                name: "Progression",
+                formatter: (cell, row) => {
+                    const statusCounts = row.cells[3]['data'];
+                    const total = row.cells[4]['data'];
+
+                    if (!total || total === 0) {
+                        return gridjs.html(
+                            '<div class="progress"><div class="progress-bar bg-secondary" style="width: 100%">Ingen data</div></div>'
+                        );
+                    }
+
+                    // Map statuses to Bootstrap colors
+                    const statusColors = {
+                        READY: "bg-green-500",
+                        IN_PROGRESS: "bg-blue-500",
+                        NOT_STARTED: "bg-yellow-500",
+                        NOT_RELEVANT: "bg-gray-500"
+                    };
+
+                    const statusTranslations = {
+                        READY: "Færdig",
+                        IN_PROGRESS: "I gang",
+                        NOT_STARTED: "Ikke startet",
+                        NOT_RELEVANT: "Ikke relevant"
+                    }
+
+                    let bars = "";
+                    for (const [status, count] of Object.entries(statusCounts)) {
+                        if (count > 0) {
+                            const percent = (count / total) * 100;
+                            bars += `
+                                <div class="progress-bar ${statusColors[status] || ''}" 
+                                     role="progressbar" 
+                                     style="width: ${percent.toFixed(2)}%" 
+                                     aria-valuenow="${count}" 
+                                     aria-valuemin="0" 
+                                     aria-valuemax="${total}"
+                                     data-bs-toggle="dropdown" 
+                                     aria-expanded="false"
+                                     title="${statusTranslations[status] || ''}: ${count}">
+                                </div>`;
+                        }
+                    }
+                    return gridjs.html(`<div class="progress">${bars}</div>`);
+                }
+            },
+            {
+              id: "totalCount",
+              hidden: true
             },
             {
                 id: "allowedActions",
