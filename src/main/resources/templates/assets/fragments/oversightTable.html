@@ -1,6 +1,6 @@
 <div th:fragment="oversightTable(oversights)" id="oversightTable" aria-labelledby="oversight-table">
 <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
-    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="oversightService.showOversightModal()">
+    <button type="button" sec:authorize="hasAnyRole('ROLE_create_all')" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="oversightService.showOversightModal()">
         <i class="ti-plus fs-4"></i>
         <span class="vr"></span>
         Nyt tilsyn
@@ -38,10 +38,10 @@
                     <div th:if="${T(dk.digitalidentity.model.entity.enums.AssetOversightStatus).YELLOW == oversight.status}" class="d-block badge bg-yellow" style="width: 60px">Gul</div>
                 </td>
                 <td>
-                    <button onclick="oversightService.editOversight(this)" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit oversight">
+                    <button onclick="oversightService.editOversight(this)" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-primary btn-sm" type="button" aria-label="Edit oversight">
                         <i class="pli-pen-4 fs-6"></i>
                     </button>
-                    <button onclick="oversightService.deleteOversight(this)" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete oversight">
+                    <button onclick="oversightService.deleteOversight(this)" sec:authorize="hasAnyRole('ROLE_delete_owner','ROLE_delete_all')" th:attr="data-oversightid=${oversight.id}" class="btn btn-icon btn-outline-danger btn-sm" type="button" aria-label="Delete oversight">
                         <i class="pli-trash fs-6"></i>
                     </button>
                 </td>

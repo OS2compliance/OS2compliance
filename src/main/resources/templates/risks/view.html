@@ -262,12 +262,12 @@
                                                 </select>
                                             </td>
                                             <td class="riskViewTd text-center" >
-                                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs"
+                                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs"
                                                         th:onclick="|createTaskClicked(this)|" title="Opgave eller kontrol"
                                                         th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
                                                     Ny opgave
                                                 </button>
-                                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1"
+                                                <button sec:authorize="hasAnyRole('ROLE_delete_all')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1"
                                                         th:onclick="|deleteThreatClicked(this)|" title="Slet"
                                                         th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
                                                     Slet trussel
@@ -380,13 +380,13 @@
                         </div>
                         <div class="d-flex mb-2">
                             <div class="d-flex flex-fill align-items-start mb-3 p-1">
-                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-success mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
+                                <button sec:authorize="hasAnyRole('ROLE_create_all')" type="button" class="btn btn-success mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
                                     <i class="ti-plus"></i> <span class="vr"></span> Tilføj ny trussel
                                 </button>
-                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-success me-1" th:onclick="|setRevisionInterval(${risk.id})|">
+                                <button sec:authorize=hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success me-1" th:onclick="|setRevisionInterval(${risk.id})|">
                                     <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
                                 </button>
-                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#threatCatalogModal">
+                                <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#threatCatalogModal">
                                     <i class="pli-files"></i> <span class="vr"></span> Vælg trusselskataloger
                                 </button>
                             </div>
