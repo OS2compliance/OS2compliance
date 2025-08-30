@@ -35,8 +35,12 @@ function CreateStandardService() {
                 if (result.isConfirmed) {
                     fetch("/rest/standards/delete/" + id, {method: 'POST', headers: {'X-CSRF-TOKEN': token}})
                         .then(() => {
-                            window.location.reload();
-                        });
+                            toastService.info("Standard slettet");
+                            setTimeout(() => {
+                                window.location.reload()
+                            }, 250);
+                        })
+                        .catch(error => toastService.error(error));
                 }
             })
         }

@@ -149,6 +149,7 @@
     /*[+
         var viewUrl = [[@{/standards/supporting/}]];
         var today = [[${today}]];
+        var success = [[${successMessage}]];
         var templateIdentifier = [[${template.identifier}]];
         var testMap = [[${relationMap}]]
         var modalError = [[${headerModalError}]]
@@ -161,9 +162,10 @@
             document.getElementById('addHeaderButton').click();
             toastService.error(modalError);
         }
-
         initPageTopButtons()
-
+        if (success) {
+            toastService.info(success);
+        }
         // choiceService.initHeaderSelect("headerSelect");
     });
 

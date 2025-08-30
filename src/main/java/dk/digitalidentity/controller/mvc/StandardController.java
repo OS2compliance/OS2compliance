@@ -212,21 +212,25 @@ public class StandardController {
 	@RequireCreateAll
 	@Transactional
 	@PostMapping("/create")
-	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
 		standard.setIdentifier(standard.getIdentifier()	.replaceAll("[.,\\s-]", "_"));
 		standard.setSupporting(true);
 		standardTemplateDao.save(standard);
+		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
+
 		return "redirect:/standards";
 	}
 
 	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/update")
-	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
 		StandardTemplate template = supportingStandardService.lookup(standard.getIdentifier())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		template.setName(standard.getName());
 		standardTemplateDao.save(template);
+		redirectAttributes.addFlashAttribute("successMessage", "Standard opdateret");
+
 		return "redirect:/standards";
 	}
 
@@ -348,6 +352,7 @@ public class StandardController {
 		if (!Objects.equals(header.getDescription(), standardTemplateSection.getDescription())) {
 			header.setDescription(standardTemplateSection.getDescription());
 			standardTemplateSectionDao.save(header);
+			redirectAttributes.addFlashAttribute("successMessage", "Gruppe opdateret!");
 		}
 
 		return "redirect:/standards/supporting/" + id;
@@ -356,7 +361,7 @@ public class StandardController {
 	@RequireCreateAll
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
-	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
+	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier, RedirectAttributes redirectAttributes) {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
@@ -380,6 +385,7 @@ public class StandardController {
 		standardSection.setTemplateSection(save);
 		standardSectionService.save(standardSection);
 
+		redirectAttributes.addFlashAttribute("successMessage", "Krav gemt!");
 		return "redirect:/standards/supporting/" + identifier;
 	}
 
@@ -403,6 +409,8 @@ public class StandardController {
 		standardTemplateSection.setIdentifier(identifier);
 		standardTemplateSection.setStandardTemplate(template);
 		standardTemplateSectionDao.save(standardTemplateSection);
+
+		redirectAttributes.addFlashAttribute("successMessage", "Gruppe gemt!");
 		return "redirect:/standards/supporting/" + id;
 	}
 
