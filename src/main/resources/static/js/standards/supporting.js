@@ -203,13 +203,14 @@ function setField(standardSectionId, setFieldType, value, index) {
     postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((response) => {
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`);
+        } else {
+            toastService.info("Opdatering gemt!");
         }
     }).catch(function(error) {
         toastService.error(error);
         console.error(error);
         window.location.reload();
     });
-    toastService.info("Opdatering gemt!");
     // set last updated date
     document.getElementById('dateTD' + index).textContent = today;
 }
