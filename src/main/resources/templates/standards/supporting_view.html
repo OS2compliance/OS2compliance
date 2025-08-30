@@ -48,18 +48,7 @@
 
                                     <div class="col-6 d-flex align-items-center justify-content-end">
                                         <label class="me-2 mb-0">Progression:</label>
-                                        <div class="progress flex-grow-1" style="height: 38px;">
-                                            <th:block th:each="entry : ${progressbarValue}">
-                                                <div class="progress-bar"
-                                                     th:classappend="${statusColors[entry.key.name()]}"
-                                                     role="progressbar"
-                                                     th:style="'width: ' + (${entry.value} * 100 / ${totalCount}) + '%'"
-                                                     th:attr="aria-valuenow=${entry.value}, aria-valuemin=0, aria-valuemax=${totalCount}"
-                                                     th:title="${statusTranslations[entry.key.name()]} + ': ' + ${entry.value}"
-                                                     data-bs-toggle="tooltip"
-                                                     th:data-bs-title="${entry.key} + ': ' + ${entry.value}">
-                                                </div>
-                                            </th:block>
+                                        <div class="progress flex-grow-1" style="height: 38px;" id="progressBar">
                                         </div>
                                     </div>
                                 </div>
@@ -147,6 +136,7 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
+        const progressUrl = [[@{/standards/supporting/__${template.identifier}__/progress}]];
         var viewUrl = [[@{/standards/supporting/}]];
         var today = [[${today}]];
         var success = [[${successMessage}]];

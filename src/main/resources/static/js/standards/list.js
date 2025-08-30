@@ -30,8 +30,8 @@ function initTable() {
         search: "form-control",
         header: "d-flex justify-content-end"
     };
-
-    new gridjs.Grid({
+    const cache = new Map();
+    let standardsGrid = new gridjs.Grid({
         className: defaultClassName,
         sort: {
             enabled: true,
@@ -58,54 +58,14 @@ function initTable() {
             {
                 id: "progressBarValues",
                 name: "Progression",
-                formatter: (cell, row) => {
-                    const statusCounts = row.cells[3]['data'];
-                    const total = row.cells[4]['data'];
-
-                    if (!total || total === 0) {
-                        return gridjs.html(
-                            '<div class="progress"><div class="progress-bar bg-secondary" style="width: 100%">Ingen data</div></div>'
-                        );
-                    }
-
-                    // Map statuses to Bootstrap colors
-                    const statusColors = {
-                        READY: "bg-green-500",
-                        IN_PROGRESS: "bg-blue-500",
-                        NOT_STARTED: "bg-yellow-500",
-                        NOT_RELEVANT: "bg-gray-500"
-                    };
-
-                    const statusTranslations = {
-                        READY: "Færdig",
-                        IN_PROGRESS: "I gang",
-                        NOT_STARTED: "Ikke startet",
-                        NOT_RELEVANT: "Ikke relevant"
-                    }
-
-                    let bars = "";
-                    for (const [status, count] of Object.entries(statusCounts)) {
-                        if (count > 0) {
-                            const percent = (count / total) * 100;
-                            bars += `
-                                <div class="progress-bar ${statusColors[status] || ''}" 
-                                     role="progressbar" 
-                                     style="width: ${percent.toFixed(2)}%" 
-                                     aria-valuenow="${count}" 
-                                     aria-valuemin="0" 
-                                     aria-valuemax="${total}"
-                                     data-bs-toggle="dropdown" 
-                                     aria-expanded="false"
-                                     title="${statusTranslations[status] || ''}: ${count}">
-                                </div>`;
-                        }
-                    }
-                    return gridjs.html(`<div class="progress">${bars}</div>`);
+                attributes: (cell, row) => {
+                    if (!row) return {};
+                    return {'data-extra-id': row.cells[0]['data']};
                 }
             },
             {
-              id: "totalCount",
-              hidden: true
+                id: "totalCount",
+                hidden: true
             },
             {
                 id: "allowedActions",
@@ -134,5 +94,19 @@ function initTable() {
                 'page': (page) => `Side ${page}`
             }
         }
-    }).render(document.getElementById("tablePlaceholder"));
+    });
+    standardsGrid.render(document.getElementById("tablePlaceholder"));
+    standardsGrid.on('ready', () => {
+        document.querySelectorAll('[data-extra-id]').forEach(async td => {
+            const id = td.getAttribute('data-extra-id');
+            if (td.dataset.loaded) return; // undgå duplikat ved re-renders
+            td.dataset.loaded = '1';
+            if (cache.has(id)) { td.innerHTML = cache.get(id); return; }
+
+            let html = await fetch(`${viewUrl}${id}/progress`).then(r => r.text());
+            html = `<div class="progress flex-grow-1" style="height: 1.2rem;">${html}</div>`
+            cache.set(id, html);
+            td.innerHTML = html;
+        });
+    });
 }
