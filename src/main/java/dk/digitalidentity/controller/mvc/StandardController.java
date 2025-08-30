@@ -40,6 +40,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -160,8 +161,7 @@ public class StandardController {
             final double notRelevantCount = standardTemplateSectionDao.countByTemplateAndStatus(standardTemplate, StandardSectionStatus.NOT_RELEVANT);
             final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
-
-            if (relevantCount == 0 ) {
+			if (relevantCount == 0 ) {
                 templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%", allowedActions));
             } else {
                 final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / relevantCount);
@@ -183,7 +183,6 @@ public class StandardController {
         model.addAttribute("isNSIS", template.getIdentifier().toLowerCase().startsWith("nsis"));
         model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
         model.addAttribute("statusFilter", status);
-
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
         return "standards/supporting_view";
@@ -199,6 +198,31 @@ public class StandardController {
 		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
 
 		return "redirect:/standards";
+	}
+
+	@RequireReadOwnerOnly
+	@Transactional(readOnly = true)
+	@GetMapping("supporting/{id}/progress")
+	public String standardProgress(final Model model, @PathVariable final String id) {
+		final StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Map<StandardSectionStatus, Integer> progressBarValues = getProgressBarValues(template);
+		model.addAttribute("progressbarValues", progressBarValues);
+		model.addAttribute("totalCount", progressBarValues.values().stream().mapToInt(Integer::intValue).sum());
+		model.addAttribute("statusColors", Map.of(
+				"READY", "bg-green-500",
+				"IN_PROGRESS", "bg-blue-500",
+				"NOT_STARTED", "bg-yellow-500",
+				"NOT_RELEVANT", "bg-gray-500"
+		));
+		model.addAttribute("statusTranslations", Map.of(
+				"READY", "Færdigt",
+				"IN_PROGRESS", "I gang",
+				"NOT_STARTED", "Ikke startet",
+				"NOT_RELEVANT", "Ikke relevant"
+		));
+
+		return "standards/progress";
 	}
 
 	@RequireUpdateAll
@@ -464,6 +488,16 @@ public class StandardController {
 		}
 
 		return prefix + (max + 1);
+	}
+
+	private Map<StandardSectionStatus, Integer> getProgressBarValues(final StandardTemplate template) {
+		Map<StandardSectionStatus, Integer> result = new HashMap<>();
+		for (StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
+			standardTemplateSection.getChildren().forEach(child -> {
+				result.put(child.getStandardSection().getStatus(), result.getOrDefault(child.getStandardSection().getStatus(), 0) + 1);
+			});
+		}
+		return result;
 	}
 
 }
