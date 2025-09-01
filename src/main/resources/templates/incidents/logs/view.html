@@ -4,7 +4,6 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head }"></head>
 <script th:src="@{/js/incidents/incident-service.js}" defer></script>
-<script th:src="@{/js/incidents/incident-view-service.js}" defer></script>
 
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
@@ -47,8 +46,8 @@
                             <div class="card-header toolbar">
                                 <h5 class="toolbar-start m-0"></h5>
                                 <div class="toolbar-end">
-                                    <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-xs" onclick="incidentViewService.setEditable('_dm-tabsIncident', true)">Rediger</button>
-                                    <button id="cancelBtn" th:if="${changeableIncident}" type="button" onclick="incidentViewService.setEditable('_dm-tabsIncident', false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                                    <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-xs">Rediger</button>
+                                    <button id="cancelBtn" th:if="${changeableIncident}" type="button" class="btn btn-light btn-xs" style="display: none">Annuller</button>
                                     <button id="saveBtn" th:if="${changeableIncident}" th:form="${formId}" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                                 </div>
                             </div>
@@ -103,6 +102,8 @@
 
     /*]]>*/
 </script>
+
+<script type="module" th:src="@{/js/incidents/incident-view-service.js}" defer></script>
 
 </body>
 

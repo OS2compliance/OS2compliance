@@ -1,5 +1,6 @@
+import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 
-
+let onUnSubmittedService = new OnUnSubmittedService();
 let viewTaskService = new ViewTaskService();
 document.addEventListener("DOMContentLoaded", function(event) {
     viewTaskService.init();
@@ -12,6 +13,23 @@ function ViewTaskService() {
     this.nameField = null;
 
     this.init = function() {
+        const oversightBtn = document.getElementById("oversightBtn");
+        const saveEditTaskBtn = document.getElementById("saveEditTaskBtn");
+        const editTaskBtn = document.getElementById("editTaskBtn");
+
+        oversightBtn?.addEventListener("click", () => {
+            this.showOversightDialog(oversightBtn.dataset.assetId);
+        });
+
+        editTaskBtn?.addEventListener("click", () => {
+            this.setEditMode(true);
+            // Prevent user from reloading/leaving page without confirmation
+            onUnSubmittedService.setChangesMade();
+        });
+
+        saveEditTaskBtn?.addEventListener("click", () => {
+            onUnSubmittedService.reset();
+        });
 
         this.loadViewAndEditForm();
         this.initRelationSelect();
@@ -31,8 +49,11 @@ function ViewTaskService() {
     }
 
     // In case this task is an oversight, a special oversight dialog can be shown
-    this.showOversightDialog = (source) => {
-        const assetId = source.dataset.assetId;
+    this.showOversightDialog = (assetId) => {
+        if(!assetId) {
+            return;
+        }
+
         const url = `/assets/oversight/${assetId}/asset`;
         oversightService.initOversightModal(null, 'asset', assetId)
             .then(() => {oversightDialog.show()});

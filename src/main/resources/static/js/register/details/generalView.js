@@ -1,11 +1,13 @@
 import KLESelectionService from "./kleSelectionService.js";
+import OnUnSubmittedService from "../../on-unsubmitted-changes-service.js";
 
+let onUnSubmittedService = new OnUnSubmittedService();
 let ouChoices;
 let departmentChoices;
 let userChoices;
 let customResponsibleUserChoices;
 let registerRegardingChoices;
-let kleService
+let kleService;
 
 /**
  * Functionality related to the "Generelt" page of the register detail view
@@ -22,15 +24,22 @@ export default function RegisterGeneralService() {
     this.initGeneralEditButtons = function () {
         const editButton = document.getElementById('editBtn');
         const cancelButton = document.getElementById('cancelBtn');
+        const saveButton = document.getElementById("saveBtn");
 
         editButton?.addEventListener('click', (e) =>{
             const isResponsibleChangeable = editButton.dataset.responsibleChangeable;
             this.setGenereltEditState(true, isResponsibleChangeable);
+            onUnSubmittedService.setChangesMade();
         })
 
         cancelButton?.addEventListener('click', (e) =>{
             this.setGenereltEditState(false, false);
+            onUnSubmittedService.reset();
         })
+
+        saveBtn?.addEventListener('click', () => {
+            onUnSubmittedService.reset();
+        });
     }
 
 
