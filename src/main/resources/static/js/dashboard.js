@@ -196,24 +196,22 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 },
                 {
                     name: "Status",
-                    searchable: {searchKey: 'assetStatus', fieldId: 'assetStatusSearchSelector'},
-                    formatter: (cell, row) => {
-                        var status = cell;
+                    searchable: { searchKey: 'assetStatus', fieldId: 'assetStatusSearchSelector' },
+                    formatter: (cell) => {
+                        // default to empty string so it's never null
+                        let status = "";
+
                         if (cell === "Ikke startet") {
-                            status = [
-                                '<div class="d-block badge bg-warning">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-warning">' + cell + '</div>';
                         } else if (cell === "I gang") {
-                            status = [
-                                '<div class="d-block badge bg-info">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-info">' + cell + '</div>';
                         } else if (cell === "Klar") {
-                            status = [
-                                '<div class="d-block badge bg-success">' + cell + '</div>'
-                            ]
+                            status = '<div class="d-block badge bg-success">' + cell + '</div>';
+                        } else if (cell) {
+                            status = '<div class="d-block badge bg-secondary">' + cell + '</div>';
                         }
-                        return gridjs.html(''.concat(...status), 'div')
-                    },
+                        return gridjs.html(status, 'div');
+                    }
                 }
             ],
             server: {
