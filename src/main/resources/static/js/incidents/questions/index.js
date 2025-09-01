@@ -8,7 +8,7 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 let incidentQuestionService = new IncidentQuestionService();
 
 document.addEventListener("DOMContentLoaded", function(event) {
-    window.incidentQuestionService = new IncidentQuestionService();
+    window.incidentQuestionService = new IncidentQuestionService(); // TODO - compatibility for onclicks in list - remove when they are replaced with proper listeners
 
     incidentQuestionService.createQuestion("createQuestionDialog");
 
@@ -74,6 +74,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     });
     incidentGrid.render(document.getElementById("incidentFieldsTable"));
+
+    window.incidentGrid = incidentGrid; // TODO - compatibility for onclicks in list - remove when they are replaced with proper listeners
 
     initSaveAsExcelButtonWithDefaultGrid('incidentFieldsTable', 'Hændelse_Opsætning')
 });

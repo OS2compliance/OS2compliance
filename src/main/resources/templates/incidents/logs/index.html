@@ -83,7 +83,7 @@
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
 
-<script th:src="@{/js/incidents/incident-service.js}" defer></script>
+<script type="module"  th:src="@{/js/incidents/incident-service.js}" defer></script>
 <script th:src="@{/js/incidents/incident-grid-service.js}" defer></script>
 <script th:src="@{/js/export-service.js}" defer></script>
 <script th:inline="javascript">

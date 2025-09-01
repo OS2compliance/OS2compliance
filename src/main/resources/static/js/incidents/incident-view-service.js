@@ -1,6 +1,4 @@
 const incidentViewService = new IncidentViewService();
-const formUrl = "/incidents/questionForm"
-const restUrl = "/rest/incidents/questions"
 
 document.addEventListener("DOMContentLoaded", function(event) {
     incidentViewService.init();
