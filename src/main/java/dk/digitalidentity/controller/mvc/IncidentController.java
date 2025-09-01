@@ -15,8 +15,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -76,6 +74,7 @@ public class IncidentController {
             toUpdate.setIncidentType(form.getIncidentType());
             toUpdate.setIndexColumnName(form.getIndexColumnName());
             toUpdate.setDefinedList(form.getDefinedList());
+			toUpdate.setObligatoryAnswer(form.isObligatoryAnswer());
         } else {
             form.setSortKey(incidentService.nextIncidentFieldSortKey());
             incidentService.save(form);
