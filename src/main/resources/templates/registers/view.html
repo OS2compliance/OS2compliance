@@ -94,8 +94,8 @@
 </div>
 
 <div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=DocumentRelationModal)}"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=TaskRelationModal)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=DocumentRelationModal, relationType=dokumenter)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${register.id}, modalId=TaskRelationModal, relationType=opgaver)}"></div>
 <div th:replace="~{registers/fragments/addAssetRelation :: addAssetRelation(relatableId=${register.id})}"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
 <div id="EditRelationModalHolder"></div>
