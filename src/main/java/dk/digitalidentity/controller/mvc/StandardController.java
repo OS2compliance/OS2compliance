@@ -40,6 +40,7 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -160,8 +161,7 @@ public class StandardController {
             final double notRelevantCount = standardTemplateSectionDao.countByTemplateAndStatus(standardTemplate, StandardSectionStatus.NOT_RELEVANT);
             final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
-
-            if (relevantCount == 0 ) {
+			if (relevantCount == 0 ) {
                 templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%", allowedActions));
             } else {
                 final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / relevantCount);
@@ -183,7 +183,6 @@ public class StandardController {
         model.addAttribute("isNSIS", template.getIdentifier().toLowerCase().startsWith("nsis"));
         model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
         model.addAttribute("statusFilter", status);
-
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
         return "standards/supporting_view";
@@ -192,21 +191,50 @@ public class StandardController {
 	@RequireCreateAll
 	@Transactional
 	@PostMapping("/create")
-	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
 		standard.setIdentifier(standard.getIdentifier()	.replaceAll("[.,\\s-]", "_"));
 		standard.setSupporting(true);
 		standardTemplateDao.save(standard);
+		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
+
 		return "redirect:/standards";
+	}
+
+	@RequireReadOwnerOnly
+	@Transactional(readOnly = true)
+	@GetMapping("supporting/{id}/progress")
+	public String standardProgress(final Model model, @PathVariable final String id) {
+		final StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Map<StandardSectionStatus, Integer> progressBarValues = getProgressBarValues(template);
+		model.addAttribute("progressbarValues", progressBarValues);
+		model.addAttribute("totalCount", progressBarValues.values().stream().mapToInt(Integer::intValue).sum());
+		model.addAttribute("statusColors", Map.of(
+				"READY", "bg-green-500",
+				"IN_PROGRESS", "bg-blue-500",
+				"NOT_STARTED", "bg-yellow-500",
+				"NOT_RELEVANT", "bg-gray-500"
+		));
+		model.addAttribute("statusTranslations", Map.of(
+				"READY", "Færdigt",
+				"IN_PROGRESS", "I gang",
+				"NOT_STARTED", "Ikke startet",
+				"NOT_RELEVANT", "Ikke relevant"
+		));
+
+		return "standards/progress";
 	}
 
 	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/update")
-	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
 		StandardTemplate template = supportingStandardService.lookup(standard.getIdentifier())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		template.setName(standard.getName());
 		standardTemplateDao.save(template);
+		redirectAttributes.addFlashAttribute("successMessage", "Standard opdateret");
+
 		return "redirect:/standards";
 	}
 
@@ -328,6 +356,7 @@ public class StandardController {
 		if (!Objects.equals(header.getDescription(), standardTemplateSection.getDescription())) {
 			header.setDescription(standardTemplateSection.getDescription());
 			standardTemplateSectionDao.save(header);
+			redirectAttributes.addFlashAttribute("successMessage", "Gruppe opdateret!");
 		}
 
 		return "redirect:/standards/supporting/" + id;
@@ -336,7 +365,7 @@ public class StandardController {
 	@RequireCreateAll
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
-	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
+	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier, RedirectAttributes redirectAttributes) {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
@@ -360,6 +389,7 @@ public class StandardController {
 		standardSection.setTemplateSection(save);
 		standardSectionService.save(standardSection);
 
+		redirectAttributes.addFlashAttribute("successMessage", "Krav gemt!");
 		return "redirect:/standards/supporting/" + identifier;
 	}
 
@@ -383,6 +413,8 @@ public class StandardController {
 		standardTemplateSection.setIdentifier(identifier);
 		standardTemplateSection.setStandardTemplate(template);
 		standardTemplateSectionDao.save(standardTemplateSection);
+
+		redirectAttributes.addFlashAttribute("successMessage", "Gruppe gemt!");
 		return "redirect:/standards/supporting/" + id;
 	}
 
@@ -456,6 +488,16 @@ public class StandardController {
 		}
 
 		return prefix + (max + 1);
+	}
+
+	private Map<StandardSectionStatus, Integer> getProgressBarValues(final StandardTemplate template) {
+		Map<StandardSectionStatus, Integer> result = new HashMap<>();
+		for (StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
+			standardTemplateSection.getChildren().forEach(child -> {
+				result.put(child.getStandardSection().getStatus(), result.getOrDefault(child.getStandardSection().getStatus(), 0) + 1);
+			});
+		}
+		return result;
 	}
 
 }

@@ -10,7 +10,8 @@ public enum PlaceHolder {
     STANDARDS("{standards}"),
     ISO27002("{iso27002}"),
     RISK_ASSESSMENT("{risk_assessment}"),
-	DATARESPONSIBLE_SETTINGS("{dataresponsible_settings}"),;
+	DATARESPONSIBLE_SETTINGS("{dataresponsible_settings}"),
+	STANDARD_NAME("{standard_name} rapport");
 
     private final String placeHolder;
 

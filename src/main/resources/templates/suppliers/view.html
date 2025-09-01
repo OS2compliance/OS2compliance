@@ -49,7 +49,7 @@
                                 <div class="card-header toolbar">
                                     <h5 class="toolbar-start m-0">Kontakter</h5>
                                     <div class="toolbar-end">
-                                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-secondary btn-xs" data-bs-toggle="modal" data-bs-target="#formDialog">Tilføj</button>
+                                        <button sec:authorize="hasAnyRole('ROLE_create_all')" type="button" class="btn btn-secondary btn-xs" data-bs-toggle="modal" data-bs-target="#formDialog">Tilføj</button>
                                     </div>
                                 </div>
                                 <div class="card-body">
@@ -73,7 +73,7 @@
                                     <div class="card-header toolbar">
                                         <h5 class="toolbar-start m-0">Aktiver</h5>
                                         <div class="toolbar-end">
-                                            <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
+                                            <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -100,7 +100,7 @@
                                     <div class="card-header toolbar">
                                         <h5 class="toolbar-start m-0">Dokumenter</h5>
                                         <div class="toolbar-end">
-                                            <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                                            <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -122,7 +122,7 @@
                                     <div class="card-header toolbar">
                                         <h5 class="toolbar-start m-0">Opgaver</h5>
                                         <div class="toolbar-end">
-                                            <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                                            <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -144,7 +144,7 @@
                                     <div class="card-header toolbar">
                                         <h5 class="toolbar-start m-0">Hændelser</h5>
                                         <div class="toolbar-end">
-                                            <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
+                                            <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
                                         </div>
                                     </div>
                                     <div class="card-body">
@@ -155,7 +155,7 @@
                                                     <a th:text="${incident.name}" th:href="@{ '/incidents/logs/' + ${incident.id}}"></a>
                                                 </td>
                                                 <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
-                                                    <i class="pli-cross fs-5 me-2" sec:authorize="hasAnyRole('Role_administrator', 'Role_forandre')" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${incident.id}, data-relationtype=${incident.relationType}"></i>
+                                                    <i class="pli-cross fs-5 me-2" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${incident.id}, data-relationtype=${incident.relationType}"></i>
                                                 </td>
                                             </tr>
                                             </tbody>

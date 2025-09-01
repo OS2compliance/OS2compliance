@@ -17,8 +17,10 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${template.name}"></li>
                             </ol>
                         </nav>
+                        <h1 class="page-title mb-0 mt-2 mb-2" th:text="${template.name}"></h1>
                     </div>
-                    <div class="align-self-center d-inline-flex gap-2">
+                    <div class="align-self-center d-inline-flex gap-2 mb-2">
+                        <a id="exportStandardToExcel" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
                         <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='createRequirementButton', text='Ny krav', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='addHeaderButton', text='Ny gruppe', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
@@ -33,15 +35,24 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div class="row col-lg-12 mb-3">
-                                    <label for="statusFilter" class="col-sm-2 col-form-label">Filtrér på status</label>
-                                    <div class="col-sm-4">
+                                <div class="row align-items-center mb-3">
+                                    <div class="col-6 d-flex align-items-center">
+                                        <label for="statusFilter" class="me-2 mb-0">Filtrér på status</label>
                                         <select class="form-control form-select" id="statusFilter" onChange="filterOnStatusChanged();">
                                             <option th:selected="${statusFilter == null}" value="ALL">Alle</option>
-                                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${statusFilter == status}"></option>
+                                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}"
+                                                    th:value="${status}" th:text="${status.getMessage()}" th:selected="${statusFilter == status}">
+                                            </option>
                                         </select>
                                     </div>
+
+                                    <div class="col-6 d-flex align-items-center justify-content-end">
+                                        <label class="me-2 mb-0">Progression:</label>
+                                        <div class="progress flex-grow-1" style="height: 38px;" id="progressBar">
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <table class="col-lg-12 table">
                                     <thead>
                                     <tr class="bg-light">
@@ -125,8 +136,10 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
+        const progressUrl = [[@{/standards/supporting/__${template.identifier}__/progress}]];
         var viewUrl = [[@{/standards/supporting/}]];
         var today = [[${today}]];
+        var success = [[${successMessage}]];
         var templateIdentifier = [[${template.identifier}]];
         var testMap = [[${relationMap}]]
         var modalError = [[${headerModalError}]]
@@ -139,9 +152,10 @@
             document.getElementById('addHeaderButton').click();
             toastService.error(modalError);
         }
-
         initPageTopButtons()
-
+        if (success) {
+            toastService.info(success);
+        }
         // choiceService.initHeaderSelect("headerSelect");
     });
 

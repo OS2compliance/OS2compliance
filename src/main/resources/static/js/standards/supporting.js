@@ -2,6 +2,7 @@ const editorDescriptionInstances = {};
 const editorPracticeInstances = {};
 const editorSmartInstances = {};
 function supportingStandartsViewLoaded() {
+    fetchHtml(`${progressUrl}`, 'progressBar').finally()
     const userSelects = document.querySelectorAll('.responsibleUserSelect');
     userSelects.forEach(select => {
         var choiceSelect = choiceService.initUserSelect(select.id, false);
@@ -79,7 +80,9 @@ function supportingStandartsViewLoaded() {
             var index = select.dataset.index;
             var value = select.value;
 
-            setField(id, "STATUS", value, index)
+            setField(id, "STATUS", value, index, () => {
+                fetchHtml(`${progressUrl}`, 'progressBar').finally()
+            })
 
             if (value === "READY") {
                 document.getElementById('statusTD' + index).innerHTML = '<div class="d-block badge bg-green-500" style="width: 60px">Klar</div>';
@@ -194,7 +197,7 @@ function showEditor(index, type) {
     }
 }
 
-function setField(standardSectionId, setFieldType, value, index) {
+function setField(standardSectionId, setFieldType, value, index, onSaved = null) {
     var data = {
         "setFieldType": setFieldType,
         "value": value
@@ -203,13 +206,17 @@ function setField(standardSectionId, setFieldType, value, index) {
     postData("/rest/standards/" + templateIdentifier + "/supporting/standardsection/" + standardSectionId, data).then((response) => {
         if (!response.ok) {
             throw new Error(`${response.status} ${response.statusText}`);
+        } else {
+            toastService.info("Opdatering gemt!", null);
+            if (onSaved) {
+                onSaved();
+            }
         }
     }).catch(function(error) {
         toastService.error(error);
         console.error(error);
         window.location.reload();
     });
-
     // set last updated date
     document.getElementById('dateTD' + index).textContent = today;
 }
@@ -275,6 +282,7 @@ function addRelations() {
             cell2.innerHTML = item.typeMessage;
             cell3.innerHTML = '<i class="pli-cross fs-5 me-2" onclick="customDeleteRelation(this)" data-relatableid="' + relatableId + '" data-relationid="' + item.id + '" data-relationtype="' + item.type + '"></i>';
         });
+        toastService.info("Relation tilknyttet");
         return responseData; // Dette returneres som et promise-svar
     })
         .catch(function(error) {
