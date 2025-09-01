@@ -120,7 +120,7 @@ public class IncidentController {
         return "incidents/logs/form";
     }
 
-@RequireReadAll
+	@RequireReadAll
     @GetMapping("logs/{id}")
     public String viewIncident(final Model model, @PathVariable final Long id) {
         final Incident incident = incidentService.findById(id)
@@ -140,6 +140,17 @@ public class IncidentController {
 	@RequireCreateAll
     @PostMapping("log")
     public String createOrUpdateIncident(@ModelAttribute final Incident incident) {
+		if (incident.getResponses().stream().anyMatch(r ->
+				r.getIncidentField().isObligatoryAnswer() && (
+						(r.getAnswerText() == null || r.getAnswerText().isEmpty())
+								&& r.getAnswerDate() == null
+								&& (r.getAnswerElementIds() == null || r.getAnswerElementIds().isEmpty())
+								&& (r.getAnswerChoiceValues() == null || r.getAnswerChoiceValues().isEmpty())
+				)
+		)) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
+		}
+
         if (incident.getId() != null) {
             final Incident existingIncident = incidentService.findById(incident.getId()).orElseThrow(
                 () -> new ResponseStatusException(HttpStatus.NOT_FOUND));
