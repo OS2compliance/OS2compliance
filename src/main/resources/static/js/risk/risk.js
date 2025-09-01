@@ -574,7 +574,7 @@ function CreateRiskService() {
         initFormValidationForForm("createRiskModal",
             () => {
                 return this.validateEntitySelection() &&
-                    this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect);
+                    this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect) && this.validateNameLength();
             });
 
     }
@@ -642,6 +642,22 @@ function CreateRiskService() {
         return result;
     };
 
+    this.validateNameLength = function () {
+        console.log("called?")
+        const nameInput = document.getElementById("name");
+        const tooLongFeedback = document.getElementById("threatAssesmentTooLongText");
+        const noNameInputFeedback = document.getElementById("noThreatAssesmentName");
+
+        if (nameInput.value.length > 255) {
+            tooLongFeedback.style.display = "block";
+
+            nameInput.classList.add("is-invalid");
+            return false;
+        } else {
+            tooLongFeedback.style.display = "none";
+            nameInput.classList.remove("is-invalid");
+        }
+    }
     this.validateChoicesAndCheckboxesRisk = function (...choiceList) {
         let result = true;
         for (let i = 0; i < choiceList.length; i++) {
