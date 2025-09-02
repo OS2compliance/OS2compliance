@@ -436,7 +436,30 @@ function EditRiskService() {
         if (this.assetChoicesSelect != null) {
             result &= checkInputField(this.assetChoicesSelect, true);
         }
-        return result;
+        return result && this.validateNameLength();
+    }
+
+    // A bit of code duplication, we can probably move this to a validator service at some point
+    this.validateNameLength = function () {
+        const nameInput = document.getElementById("editName");
+        const tooLongFeedback = document.getElementById("threatAssesmentTooLongText");
+        const noNameInputFeedback = document.getElementById("noThreatAssesmentName");
+
+        tooLongFeedback.style.display = "none";
+        noNameInputFeedback.style.display = "none";
+        nameInput.classList.remove("is-invalid");
+
+        if (!nameInput.value.trim()) {
+            noNameInputFeedback.style.display = "block";
+            nameInput.classList.add("is-invalid");
+            return false;
+        }
+        else if (nameInput.value.length > 255) {
+            tooLongFeedback.style.display = "block";
+            nameInput.classList.add("is-invalid");
+            return false;
+        }
+        return true;
     }
 }
 
