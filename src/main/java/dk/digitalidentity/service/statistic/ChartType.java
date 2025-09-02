@@ -8,7 +8,7 @@ import lombok.RequiredArgsConstructor;
 public enum ChartType {
 	PIE("pie"),
 	BAR("bar"),
-	STACKED_BAR("stackedbar");
+	STACKEDBAR("stackedbar");
 
 
 	private final String configString;

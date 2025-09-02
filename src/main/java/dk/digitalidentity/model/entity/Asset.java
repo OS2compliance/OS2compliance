@@ -11,6 +11,9 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.Ownable;
 import dk.digitalidentity.service.statistic.StatisticEnabled;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
@@ -26,6 +29,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -49,7 +53,7 @@ import java.util.stream.Collectors;
 @ToString
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled {
+public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled, Ownable {
 
     @ManyToMany
     @JoinTable(
@@ -247,4 +251,10 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
 	)
 	private List<OrganisationUnit> departments;
+
+	@Transient
+	@Override
+	public boolean isOwnedBy(User user) {
+		return this.responsibleUsers.contains(user) || this.managers.contains(user);
+	}
 }

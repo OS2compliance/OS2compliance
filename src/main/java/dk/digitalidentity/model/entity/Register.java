@@ -5,6 +5,8 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
@@ -18,7 +20,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
@@ -186,11 +187,11 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 
 	@Override
 	public String getCustomResponsibleUserUuids() {
-		return customResponsibleUsers.stream().map(c -> c.getUuid()).collect(Collectors.joining(","));
+		return customResponsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
 	}
 
 	@Override
 	public String getResponsibleUserUuids() {
-		return responsibleUsers.stream().map(u -> u.getUuid()).collect(Collectors.joining(","));
+		return responsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
 	}
 }

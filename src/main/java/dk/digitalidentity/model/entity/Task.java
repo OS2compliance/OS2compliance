@@ -3,6 +3,7 @@ package dk.digitalidentity.model.entity;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.service.statistic.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

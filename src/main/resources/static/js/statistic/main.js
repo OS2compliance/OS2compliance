@@ -1,6 +1,6 @@
-import testChart from "./statistic-service.js";
+import {renderDashboardChart} from "./taskCharts.js";
 
 
 document.addEventListener("DOMContentLoaded", function() {
-    testChart();
+    renderDashboardChart();
 })

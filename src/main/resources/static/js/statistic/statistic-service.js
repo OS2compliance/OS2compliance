@@ -1,41 +1,28 @@
 let chartInstance = null;
 
-const CHARTTYPE = {
+export const CHARTTYPE = {
     BAR : "BAR",
     PIE : "PIE",
     STACKED_BAR: "STACKEDBAR",
 }
 
-export default async function testChart() {
-
-    const entity = 'task'
-    const type = CHARTTYPE.BAR
-    const x = 'taskType'
-    const y = 'name'
-    const stack =null;
-    const aggregation = 'count';
-    const dateField = null;
-    const startDate = Date.parse('2025-09-01')
-    const endDate = Date.parse('2025-09-08')
-    let url = `/rest/statistic/${entity}?type=${type.toLocaleUpperCase()}&x=${x}&y=${y}&aggregation=${aggregation}`;
-
-    if (stack && type === 'stackedbar') {
-        url += `&stack=${stack}`;
-    }
-
-    if (dateField) {
-        url += `&dateField=${dateField}`;
-        if (startDate) url += `&startDate=${startDate}`;
-        if (endDate) url += `&endDate=${endDate}`;
-    }
-
-    const data = await fetchStatistic(url);
-
-    renderChart(data, type.toLocaleLowerCase());
-
+const defaultConfig = {
+    entity : 'task',
+    type : CHARTTYPE.BAR,
+    x : 'name',
+    y : 'id',
+    stack :null,
+    aggregation : 'count',
+    groupTimeBy : 'MONTH',
+    dateField : null,
+    startDate : null,
+    endDate : null,
+    ownerOnly : true,
 }
 
-async function fetchStatistic(url) {
+
+
+export async function fetchStatistic(url) {
     const response = await fetch(url)
     if (!response.ok) {
         console.error(response.error);
@@ -44,7 +31,7 @@ async function fetchStatistic(url) {
 
 }
 
-function renderChart(data, chartType) {
+export function renderChart(data, chartType, title) {
     const ctx = document.getElementById('testChart');
 
     // Destroy existing chart
@@ -52,9 +39,11 @@ function renderChart(data, chartType) {
         chartInstance.destroy();
     }
 
+    const type =chartType.toLocaleLowerCase()
+
     // Chart configuration based on type
     const config = {
-        type: chartType === 'stackedbar' ? 'bar' : chartType,
+        type: type === 'stackedbar' ? 'bar' : type,
         data: data,
         options: {
             responsive: true,
@@ -62,7 +51,7 @@ function renderChart(data, chartType) {
             plugins: {
                 title: {
                     display: true,
-                    text: getChartTitle()
+                    text: title
                 },
                 legend: {
                     display: chartType !== 'pie'
@@ -87,6 +76,26 @@ function renderChart(data, chartType) {
     chartInstance = new Chart(ctx, config);
 }
 
-function getChartTitle() {
-    return 'testTitle'
+export function buildUrl(config = defaultConfig) {
+    let url = `/rest/statistic/${config.entity}?type=${config.type.toLocaleUpperCase()}&x=${config.x}&y=${config.y}&aggregation=${config.aggregation}`;
+
+    if (config.ownerOnly) {
+        url += '&ownerOnly=true';
+    }
+
+    if (config.stack && config.type === 'stackedbar') {
+        url += `&stack=${config.stack}`;
+    }
+
+    if (config.groupTimeBy) {
+        url += `&groupTimeBy=${config.groupTimeBy}`;
+    }
+
+    if (config.dateField) {
+        url += `&dateField=${config.dateField}`;
+        if (config.startDate) url += `&startDate=${config.startDate}`;
+        if (config.endDate) url += `&endDate=${config.endDate}`;
+    }
+
+    return url;
 }

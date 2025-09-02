@@ -1,4 +1,4 @@
-package dk.digitalidentity.model.entity;
+package dk.digitalidentity.model.entity.interfaces;
 
 /**
  * Marks a grid view entity that has a field for multiple customizable responsible user uuids

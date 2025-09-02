@@ -3,6 +3,7 @@ package dk.digitalidentity.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;

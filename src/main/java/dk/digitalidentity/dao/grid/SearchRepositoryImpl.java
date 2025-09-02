@@ -1,10 +1,10 @@
 package dk.digitalidentity.dao.grid;
 
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.HasCustomResponsibleUsers;
-import dk.digitalidentity.model.entity.HasManagers;
-import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
-import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
+import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;

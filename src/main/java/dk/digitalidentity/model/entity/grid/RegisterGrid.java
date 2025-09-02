@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.HasCustomResponsibleUsers;
-import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.enums.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;

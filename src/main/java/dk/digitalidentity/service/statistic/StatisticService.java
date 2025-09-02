@@ -1,7 +1,19 @@
 package dk.digitalidentity.service.statistic;
 
+import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
+import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.UserService;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Join;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +36,7 @@ import java.util.stream.Collectors;
 @Service
 public class StatisticService {
 	private final EntityManager entityManager;
+	private final UserService userService;
 
 	public ChartJsDataDTO generateChart(Class<? extends StatisticEnabled> entityClass,
 			ChartType chartType,
@@ -31,22 +44,26 @@ public class StatisticService {
 			String yField,
 			String stackField,
 			String aggregation,
+			boolean ownerOnly,
+			String groupTimeBy,
 			String dateField,
 			LocalDateTime startDate,
 			LocalDateTime endDate) {
 
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(
-				entityClass, dateField, startDate, endDate, xField, yField, stackField);
+				entityClass, ownerOnly, dateField, startDate, endDate, xField, yField, stackField);
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, xField, yField, aggregation);
 			case ChartType.PIE -> generatePieChart(rawData, xField, yField, aggregation);
-			case ChartType.STACKED_BAR -> generateStackedBarChart(rawData, xField, yField, stackField, aggregation);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xField, yField, stackField, aggregation);
 		};
 	}
 
-	private List<Map<String, Object>> getFilteredFieldData(Class<? extends StatisticEnabled> entityClass,
+	private List<Map<String, Object>> getFilteredFieldData(
+			Class<? extends StatisticEnabled> entityClass,
+			boolean ownerOnly,
 			String dateField,
 			LocalDateTime startDate,
 			LocalDateTime endDate,
@@ -62,7 +79,7 @@ public class StatisticService {
 
 		var selections = new Selection[validFields.size()];
 		for (int i = 0; i < validFields.size(); i++) {
-			selections[i] = root.get(validFields.get(i)).alias(validFields.get(i));
+			selections[i] = getPropertyPath(validFields.get(i), root).alias(validFields.get(i));
 		}
 
 		query.multiselect(selections);
@@ -72,13 +89,18 @@ public class StatisticService {
 			List<Predicate> predicates = new ArrayList<>();
 
 			if (startDate != null) {
-				predicates.add(cb.greaterThanOrEqualTo(root.get(dateField), startDate));
+				predicates.add(cb.greaterThanOrEqualTo(  root.get(dateField), startDate));
 			}
 			if (endDate != null) {
 				predicates.add(cb.lessThanOrEqualTo(root.get(dateField), endDate));
 			}
 
 			query.where(cb.and(predicates.toArray(new Predicate[0])));
+		}
+
+		if (ownerOnly) {
+			List<Predicate> predicates = buildOwnerPredicates(entityClass, root, cb);
+			query.where(cb.or(predicates.toArray(new Predicate[0])));
 		}
 
 		var tuples = entityManager.createQuery(query).getResultList();
@@ -203,5 +225,54 @@ public class StatisticService {
 					.orElse(0.0);
 			default -> (double) values.size(); // Default to count
 		};
+	}
+
+	private <T> Path<String> getPropertyPath(String propertyName, Root<T> root) {
+		if (propertyName.contains(".")) {
+			final String joinColumnName = propertyName.substring(0, propertyName.indexOf('.'));
+			final Join<T, ?> join = root.join(joinColumnName, JoinType.LEFT);
+
+			final String joinProperty = propertyName.substring(propertyName.indexOf('.') + 1);
+			return join.get(joinProperty);
+		}
+		else {
+			return root.get(propertyName);
+		}
+	}
+
+	private <T> List<Predicate> buildOwnerPredicates(Class<? extends StatisticEnabled> entityClass, Root<T> root, CriteriaBuilder criteriaBuilder) {
+
+		User user = userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
+				.orElseThrow();
+
+		// Add user permission filter (user must match at least one role)
+		List<Predicate> userPredicates = new ArrayList<>();
+
+		// Check if entity supports responsible users (like Asset.responsibleUsers)
+		if (HasMultipleResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			Join<T, User> responsibleUsersJoin = root.join("responsibleUsers", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(responsibleUsersJoin.get("uuid"), user.getUuid()));
+		} else if (HasSingleResponsibleUser.class.isAssignableFrom(entityClass)) {
+			userPredicates.add(criteriaBuilder.equal(root.get("responsibleUser"), user));
+		}
+
+		// Check if entity supports managers (like Asset.managers)
+		if (HasManagers.class.isAssignableFrom(entityClass)) {
+			Join<T, User> managersJoin = root.join("managers", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(managersJoin.get("uuid"), user.getUuid()));
+		}
+
+		// Check if entity supports custom responsible users
+		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			Join<T, User> customResponsibleUsersJoin = root.join("customResponsibleUsers", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(customResponsibleUsersJoin.get("uuid"), user.getUuid()));
+		}
+
+		// User must match at least one permission
+		if (!userPredicates.isEmpty()) {
+			userPredicates.add(criteriaBuilder.or(userPredicates.toArray(new Predicate[0])));
+		}
+
+		return userPredicates;
 	}
 }

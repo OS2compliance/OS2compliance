@@ -45,11 +45,15 @@ public class StatisticRestController {
 			@RequestParam String y, // Y-axis field, usually for values
 			@RequestParam(required = false) String stack, // Stack field for stacked charts
 			@RequestParam(defaultValue = "count") String aggregation,
+			@RequestParam(required = false) String groupTimeBy,
+			@RequestParam(required = false) Boolean ownerOnly,
 			@RequestParam(required = false) String dateField, // Date field for filtering
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate) {
+			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
+	) {
 
 		Class<? extends StatisticEnabled> entityClass = entityMap.get(entityName);
+
 		if (entityClass == null
 				|| type == null
 				|| x == null
@@ -58,9 +62,11 @@ public class StatisticRestController {
 			return ResponseEntity.badRequest().build();
 		}
 
-		ChartJsDataDTO chartData = statisticService.generateChart(entityClass, type, x, y, stack, aggregation, dateField, startDate, endDate);
+		ChartJsDataDTO chartData = statisticService.generateChart(entityClass, type, x, y, stack, aggregation, ownerOnly, groupTimeBy, dateField, startDate, endDate);
 		return ResponseEntity.ok(chartData);
 
 	}
+
+
 
 }
