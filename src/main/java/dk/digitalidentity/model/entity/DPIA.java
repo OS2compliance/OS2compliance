@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
+import dk.digitalidentity.service.statistic.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -33,7 +34,7 @@ import java.util.Set;
 @Table(name = "dpia")
 @Getter
 @Setter
-public class DPIA extends Relatable implements HasSingleResponsibleUser {
+public class DPIA extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
 	@ManyToMany
 	@JoinTable(
 			name = "dpia_asset",

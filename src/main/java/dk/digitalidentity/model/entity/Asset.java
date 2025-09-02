@@ -11,6 +11,7 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.service.statistic.StatisticEnabled;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -48,7 +49,7 @@ import java.util.stream.Collectors;
 @ToString
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers {
+public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled {
 
     @ManyToMany
     @JoinTable(
@@ -232,12 +233,12 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 
 	@Override
 	public String getManagerUuids() {
-		return managers.stream().map(m -> m.getUuid()).collect(Collectors.joining(","));
+		return managers.stream().map(User::getUuid).collect(Collectors.joining(","));
 	}
 
 	@Override
 	public String getResponsibleUserUuids() {
-		return responsibleUsers.stream().map(m -> m.getUuid()).collect(Collectors.joining(","));
+		return responsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
 	}
 	@ManyToMany
 	@JoinTable(

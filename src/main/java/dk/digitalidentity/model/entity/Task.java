@@ -3,6 +3,7 @@ package dk.digitalidentity.model.entity;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.statistic.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -32,7 +33,7 @@ import java.util.Set;
 @Table(name = "tasks")
 @Getter
 @Setter
-public class Task extends Relatable implements HasSingleResponsibleUser{
+public class Task extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
 
     @Column
     @Enumerated(EnumType.STRING)

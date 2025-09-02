@@ -1,8 +1,8 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.service.statistic.StatisticEnabled;
 import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -21,7 +21,7 @@ import java.util.List;
 @Table(name = "incidents")
 @Getter
 @Setter
-public class Incident extends Relatable {
+public class Incident extends Relatable implements StatisticEnabled {
 
     @ToString.Exclude
     @EqualsAndHashCode.Exclude
