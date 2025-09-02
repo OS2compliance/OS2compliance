@@ -653,7 +653,7 @@ public class AssetsController {
     @PostMapping("oversight/edit")
     public String oversightCreateOrEdit(@Valid @ModelAttribute final AssetOversightDTO dto) {
         final Asset asset = assetService.get(dto.assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!assetService.isResponsibleFor(asset)) {
+        if(!assetService.isResponsibleFor(asset) && !SecurityUtil.isAdministrator()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final Optional<AssetOversight> oversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), dto.id)).findAny();
