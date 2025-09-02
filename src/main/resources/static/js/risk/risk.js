@@ -62,7 +62,7 @@ function initTableActions() {
                 editRiskService.showEditDialog(id)
             }
         },
-        (id, name, elem) => editRiskService.showEditDialog(id),
+        (id, name, elem) => deleteClicked(id, name),
         (id, elem) => copyRiskService.showCopyDialog(id),
     )
 }

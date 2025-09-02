@@ -2,6 +2,14 @@ document.addEventListener("DOMContentLoaded", function (event) {
     initTable()
     initListItemActions()
     initCreateStandardButton()
+    const success = document.body.dataset.success;
+
+    if (success) {
+        toastService.info(success);
+    }
+
+    const tooltipTriggerList = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+    [...tooltipTriggerList].forEach(el => new bootstrap.Tooltip(el));
 });
 
 function initCreateStandardButton() {
@@ -22,8 +30,8 @@ function initTable() {
         search: "form-control",
         header: "d-flex justify-content-end"
     };
-
-    new gridjs.Grid({
+    const cache = new Map();
+    let standardsGrid = new gridjs.Grid({
         className: defaultClassName,
         sort: {
             enabled: true,
@@ -46,6 +54,18 @@ function initTable() {
             {
                 id: "compliance",
                 name: "Efterlevelse"
+            },
+            {
+                id: "progressBarValues",
+                name: "Progression",
+                attributes: (cell, row) => {
+                    if (!row) return {};
+                    return {'data-extra-id': row.cells[0]['data']};
+                }
+            },
+            {
+                id: "totalCount",
+                hidden: true
             },
             {
                 id: "allowedActions",
@@ -74,5 +94,19 @@ function initTable() {
                 'page': (page) => `Side ${page}`
             }
         }
-    }).render(document.getElementById("tablePlaceholder"));
+    });
+    standardsGrid.render(document.getElementById("tablePlaceholder"));
+    standardsGrid.on('ready', () => {
+        document.querySelectorAll('[data-extra-id]').forEach(async td => {
+            const id = td.getAttribute('data-extra-id');
+            if (td.dataset.loaded) return; // undgå duplikat ved re-renders
+            td.dataset.loaded = '1';
+            if (cache.has(id)) { td.innerHTML = cache.get(id); return; }
+
+            let html = await fetch(`${viewUrl}${id}/progress`).then(r => r.text());
+            html = `<div class="progress flex-grow-1" style="height: 1.2rem;">${html}</div>`
+            cache.set(id, html);
+            td.innerHTML = html;
+        });
+    });
 }

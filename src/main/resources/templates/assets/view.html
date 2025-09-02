@@ -474,7 +474,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Behandlingsaktivitet</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#RegisterRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -502,7 +502,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Foranstaltninger</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#PrecautionRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -528,7 +528,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Relaterede aktiver</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -554,7 +554,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Dokumenter</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -579,7 +579,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Opgaver</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -605,7 +605,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Hændelser</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -741,13 +741,13 @@
     <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
     <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
 
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal, relationType=aktiver)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal, relationType=dokumenter)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal, relationType=opgaver)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal, relationType=fortegnelser)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal, relationType=foranstaltninger)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal, relationType=foranstaltninger)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal, relationType=hændelser)}"></div>
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
     <div th:replace="~{assets/fragments/riskAssessmentKitosModal :: riskAssessmentKitosModalFragment}"></div>

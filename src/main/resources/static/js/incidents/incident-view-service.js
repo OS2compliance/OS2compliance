@@ -1,4 +1,5 @@
 const incidentViewService = new IncidentViewService();
+
 document.addEventListener("DOMContentLoaded", function(event) {
     incidentViewService.init();
 });

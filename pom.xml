@@ -75,6 +75,8 @@
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
 			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+			<optional>true</optional>
 		</dependency>
 		<dependency>
 			<groupId>org.flywaydb</groupId>
@@ -160,7 +162,7 @@
         <dependency>
             <groupId>dk.digitalidentity</groupId>
             <artifactId>saml-module</artifactId>
-            <version>4.1.0</version>
+            <version>4.4.0</version>
         </dependency>
         <dependency>
             <groupId>dk.digitalidentity</groupId>

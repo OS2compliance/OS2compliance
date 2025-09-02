@@ -3,7 +3,7 @@
         <div class="card-header toolbar">
             <h5 class="toolbar-start m-0">Tags</h5>
             <div class="toolbar-end">
-                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:unless="${completed}" type="button" class="btn btn-secondary addTagBtn btn-xs" th:attr="data-relatableid=${relatableId}" data-bs-toggle="modal" data-bs-target="#addTagModal">Tilføj</button>
+                <button sec:authorize="hasAnyRole('ROLE_create_all')" th:unless="${completed}" type="button" class="btn btn-secondary addTagBtn btn-xs" th:attr="data-relatableid=${relatableId}" data-bs-toggle="modal" data-bs-target="#addTagModal">Tilføj</button>
             </div>
         </div>
         <div class="card-body">
@@ -18,7 +18,7 @@
                 <tr th:each="tag : ${tags}">
                     <td class="col-lg-11" th:text="${tag.value}"></td>
                     <td class="col-lg-1">
-                        <i sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="tagService.deleteTag(this)" th:attr="data-relatableid=${relatableId}, data-tagid=${tag.id}"></i>
+                        <i sec:authorize="hasAnyRole('ROLE_delete_all')" th:unless="${completed}" class="pli-cross fs-5 me-2" onclick="tagService.deleteTag(this)" th:attr="data-relatableid=${relatableId}, data-tagid=${tag.id}"></i>
                     </td>
                 </tr>
                 </tbody>

@@ -1,4 +1,6 @@
-const incidentService = new IncidentService();
+import FormValidationService from "../FormValidationService.js";
+
+window.incidentService = new IncidentService();
 document.addEventListener("DOMContentLoaded", function(event) {
     incidentService.init();
 });
@@ -195,6 +197,13 @@ function IncidentService() {
             }
             incidentService.setFieldValidity(input, feedback, isValid);
         });
+
+        // Validate obligatory fields
+        const fvs = new FormValidationService(form)
+        fvs.removeValidationMessages()
+        if (!fvs.validate_isNotEmpty()) {
+            valid = false;
+        }
 
         if (!valid) {
             event.preventDefault();

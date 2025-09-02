@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="da" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
-<body class="jumping">
+<body class="jumping" th:attr="data-success=${successMessage}">
 
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
