@@ -9,6 +9,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.UserService;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
@@ -19,13 +20,16 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -45,25 +49,26 @@ public class StatisticService {
 			String stackField,
 			String aggregation,
 			boolean ownerOnly,
-			String groupTimeBy,
+			Period groupTimeBy,
 			String dateField,
 			LocalDateTime startDate,
 			LocalDateTime endDate) {
 
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(
-				entityClass, ownerOnly, dateField, startDate, endDate, xField, yField, stackField);
+				entityClass, ownerOnly, groupTimeBy, dateField, startDate, endDate, xField, yField, stackField);
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, xField, yField, aggregation);
 			case ChartType.PIE -> generatePieChart(rawData, xField, yField, aggregation);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xField, yField, stackField, aggregation);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xField, yField, stackField, aggregation, groupTimeBy);
 		};
 	}
 
 	private List<Map<String, Object>> getFilteredFieldData(
 			Class<? extends StatisticEnabled> entityClass,
 			boolean ownerOnly,
+			Period groupTimeBy,
 			String dateField,
 			LocalDateTime startDate,
 			LocalDateTime endDate,
@@ -77,12 +82,52 @@ public class StatisticService {
 				.filter(Objects::nonNull)
 				.toList();
 
-		var selections = new Selection[validFields.size()];
-		for (int i = 0; i < validFields.size(); i++) {
-			selections[i] = getPropertyPath(validFields.get(i), root).alias(validFields.get(i));
+		Expression<?> groupByExpr;
+		if (groupTimeBy != null && dateField != null) {
+			groupByExpr = switch (groupTimeBy) {
+				case MONTH -> {
+					cb.function("month", Integer.class, root.get(dateField));
+					Expression<String> yearExpr = cb.function("year", String.class, root.get(dateField));
+					Expression<String> monthExpr = cb.function("month", String.class, root.get(dateField));
+					yield cb.concat(yearExpr, monthExpr);
+				}
+				case QUARTER -> {
+					Expression<String> yearExpr = cb.function("year", String.class, root.get(dateField));
+					Expression<String> quarterExpr = cb.function("quarter", String.class, root.get(dateField));
+					yield cb.concat(cb.concat(yearExpr, "-Q"), quarterExpr);
+				}
+				case YEAR -> cb.function("year", Integer.class, root.get(dateField));
+				default -> null;
+			};
+		}
+		else {
+			groupByExpr = null;
+		}
+
+		//		var selections = new Selection[validFields.size()];
+//		if (groupByExpr != null) {
+//			selections.add(groupByExpr.alias("groupedPeriod"));
+//		}
+//		for (int i = 0; i < validFields.size(); i++) {
+//			selections[i] = getPropertyPath(validFields.get(i), root).alias(validFields.get(i));
+//		}
+
+		List<Selection<?>> selections = new ArrayList<>();
+
+		if (groupByExpr != null) {
+			selections.add(groupByExpr.alias("groupedPeriod"));
+		}
+		for (String field : validFields) {
+			selections.add(getPropertyPath(field, root).alias(field));
+		}
+
+		if (groupByExpr != null) {
+			query.groupBy(groupByExpr);
 		}
 
 		query.multiselect(selections);
+
+		List<Predicate> allPredicates = new ArrayList<>();
 
 		// Add date filtering if specified
 		if (dateField != null && (startDate != null || endDate != null)) {
@@ -95,18 +140,28 @@ public class StatisticService {
 				predicates.add(cb.lessThanOrEqualTo(root.get(dateField), endDate));
 			}
 
-			query.where(cb.and(predicates.toArray(new Predicate[0])));
+			allPredicates.add(cb.or(predicates.toArray(new Predicate[0])));
 		}
 
 		if (ownerOnly) {
 			List<Predicate> predicates = buildOwnerPredicates(entityClass, root, cb);
-			query.where(cb.or(predicates.toArray(new Predicate[0])));
+			allPredicates.add(cb.or(predicates.toArray(new Predicate[0])));
+		}
+
+		if (!allPredicates.isEmpty()) {
+			query.where(cb.and(allPredicates.toArray(new Predicate[0])));
 		}
 
 		var tuples = entityManager.createQuery(query).getResultList();
 
 		return tuples.stream().map(tuple -> {
 			Map<String, Object> fieldMap = new LinkedHashMap<>();
+
+			if (groupByExpr != null) {
+				Object groupVal = tuple.get("groupedPeriod");
+				fieldMap.put("groupedPeriod", groupVal);
+			}
+
 			for (String fieldName : validFields) {
 				Object value = tuple.get(fieldName);
 				if (value instanceof LocalDateTime localDateTime) {
@@ -160,19 +215,27 @@ public class StatisticService {
 	}
 
 	private ChartJsDataDTO generateStackedBarChart(List<Map<String, Object>> rawData,
-			String xField, String yField,
-			String stackField, String aggregation) {
-		// Get unique x-axis categories
-		Set<String> xCategories = rawData.stream()
-				.map(row -> String.valueOf(row.get(xField)))
-				.collect(Collectors.toCollection(LinkedHashSet::new));
+			String xField,
+			String yField,
+			String stackField,
+			String aggregation,
+			Period groupDateBy
+	) {
+			LinkedHashSet<String> xCategories = rawData.stream()
+					.map(row -> formatGroupedDate(row, xField, groupDateBy))
+					.collect(Collectors.toCollection(LinkedHashSet::new));
+
+//		// Get unique x-axis categories
+//		Set<String> xCategories = rawData.stream()
+//				.map(row -> String.valueOf(row.get(xField)))
+//				.collect(Collectors.toCollection(LinkedHashSet::new));
 
 		// Group by stack field, then by x field
 		Map<String, Map<String, List<Object>>> stackData = rawData.stream()
 				.collect(Collectors.groupingBy(
 						row -> String.valueOf(row.get(stackField)),
 						Collectors.groupingBy(
-								row -> String.valueOf(row.get(xField)),
+								row -> formatGroupedDate(row, xField, groupDateBy),
 								Collectors.mapping(row -> row.get(yField), Collectors.toList())
 						)
 				));
@@ -274,5 +337,20 @@ public class StatisticService {
 		}
 
 		return userPredicates;
+	}
+
+	private String formatGroupedDate(Map<String, Object> row, String xField, Period groupDateBy) {
+		Object value = row.get(xField);
+
+		if (!(value instanceof LocalDate localDate)) {
+			return String.valueOf(value); // fallback
+		}
+
+		return switch (groupDateBy) {
+			case MONTH -> localDate.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH) ;
+			case QUARTER -> String.format("%d-Q%d", localDate.getYear(), (localDate.getMonthValue() + 2) / 3); // e.g., 2025-Q1
+			case YEAR -> String.valueOf(localDate.getYear()); // e.g., 2025
+			default -> localDate.toString(); // ISO date by default
+		};
 	}
 }

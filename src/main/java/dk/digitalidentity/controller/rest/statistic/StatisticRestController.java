@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.service.statistic.ChartJsDataDTO;
 import dk.digitalidentity.service.statistic.ChartType;
+import dk.digitalidentity.service.statistic.Period;
 import dk.digitalidentity.service.statistic.StatisticEnabled;
 import dk.digitalidentity.service.statistic.StatisticService;
 import lombok.RequiredArgsConstructor;
@@ -45,7 +46,7 @@ public class StatisticRestController {
 			@RequestParam String y, // Y-axis field, usually for values
 			@RequestParam(required = false) String stack, // Stack field for stacked charts
 			@RequestParam(defaultValue = "count") String aggregation,
-			@RequestParam(required = false) String groupTimeBy,
+			@RequestParam(required = false) Period groupTimeBy,
 			@RequestParam(required = false) Boolean ownerOnly,
 			@RequestParam(required = false) String dateField, // Date field for filtering
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,

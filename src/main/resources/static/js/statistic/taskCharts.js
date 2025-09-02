@@ -10,7 +10,7 @@ export async function renderDashboardChart () {
         stack :'taskType',
         aggregation : 'count',
         groupTimeBy : 'MONTH',
-        dateField : null,
+        dateField : 'nextDeadline',
         startDate : null,
         endDate : null,
         ownerOnly : true,
