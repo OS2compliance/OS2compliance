@@ -421,6 +421,7 @@ public class RiskRestController {
             .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId() == threatId)
             .findFirst().ifPresent(r -> {
                 relationService.deleteRelatedTo(r.getId());
+				r.setCustomThreat(null);
                 threatAssessment.getThreatAssessmentResponses().remove(r);
             });
         threatAssessment.getCustomThreats().remove(customThreat);
