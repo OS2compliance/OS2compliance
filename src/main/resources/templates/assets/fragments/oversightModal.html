@@ -9,16 +9,14 @@
                 th:object="${oversight}" method="post">
                 <input id="id" name="id" th:field="*{id}" type="hidden">
                 <input id="redirectUrl" name="redirectUrl" type="hidden" th:field="*{redirect}">
-                <input th:unless="${assetId == null}" id="assetId" name="assetId" th:value="${assetId}" type="hidden">
-                <div th:if="${assetId == null}" class="row mt-3">
-
-                        <label class="col-sm-4 col-form-label" for="assetId">Aktiv</label>
-                        <div class="col-sm-8">
-                            <select class="form-control form-select" name="assetSelect" id="assetId" th:field="*{assetId}">
-                                <option th:each="supAsset : ${supplierAssets}" th:value="${supAsset.id}" th:text="${supAsset.name}"></option>
-                            </select>
-                        </div>
-
+                <input th:unless="*{assetIds == null}" th:field="*{assetIds}" type="hidden">
+                <div th:if="*{assetIds == null}" class="row mt-3">
+                    <label class="col-sm-4 col-form-label" for="multipleAssetSelect">Aktiver</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" name="assetSelect" id="multipleAssetSelect" th:field="*{assetIds}" multiple="multiple">
+                            <option th:each="supAsset : ${supplierAssets}" th:value="${supAsset.id}" th:text="${supAsset.name}"></option>
+                        </select>
+                    </div>
                 </div>
                 <div class="row mt-3">
                     <div class="input-group col-sm-8">
@@ -45,7 +43,7 @@
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" th:field="*{responsibleUser}"
                             data-trigger="" id="oversightUserSelect" hidden="" required>
-                            <option th:if="${responsibleUser != null}" th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}" selected></option>
+                            <option th:if="*{responsibleUser != null}" th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}"></option>
                         </select>
                         <div class="invalid-feedback">Ansvarlig bruger påkrævet</div>
                     </div>
