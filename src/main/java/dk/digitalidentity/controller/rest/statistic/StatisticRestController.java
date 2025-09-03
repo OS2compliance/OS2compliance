@@ -5,7 +5,7 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.service.statistic.ChartJsDataDTO;
+import dk.digitalidentity.service.statistic.ChartJsConfigDTO;
 import dk.digitalidentity.service.statistic.ChartType;
 import dk.digitalidentity.service.statistic.Period;
 import dk.digitalidentity.service.statistic.StatisticEnabled;
@@ -39,7 +39,7 @@ public class StatisticRestController {
 	);
 
 	@GetMapping("{entityName}")
-	public ResponseEntity<ChartJsDataDTO> getChart(
+	public ResponseEntity<ChartJsConfigDTO> getChart(
 			@PathVariable String entityName,
 			@RequestParam ChartType type,
 			@RequestParam String x, // X-axis field, usually for label
@@ -47,7 +47,7 @@ public class StatisticRestController {
 			@RequestParam(required = false) String stack, // Stack field for stacked charts
 			@RequestParam(defaultValue = "count") String aggregation,
 			@RequestParam(required = false) Period groupTimeBy,
-			@RequestParam(required = false) Boolean ownerOnly,
+			@RequestParam(required = false, defaultValue = "false") Boolean ownerOnly,
 			@RequestParam(required = false) String dateField, // Date field for filtering
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
 			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
@@ -63,7 +63,7 @@ public class StatisticRestController {
 			return ResponseEntity.badRequest().build();
 		}
 
-		ChartJsDataDTO chartData = statisticService.generateChart(entityClass, type, x, y, stack, aggregation, ownerOnly, groupTimeBy, dateField, startDate, endDate);
+		ChartJsConfigDTO chartData = statisticService.generateChart(entityClass, type, x, y, aggregation, ownerOnly, groupTimeBy, dateField, startDate, endDate);
 		return ResponseEntity.ok(chartData);
 
 	}

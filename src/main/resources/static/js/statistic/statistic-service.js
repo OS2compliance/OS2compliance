@@ -39,11 +39,9 @@ export function renderChart(data, chartType, title) {
         chartInstance.destroy();
     }
 
-    const type =chartType.toLocaleLowerCase()
-
     // Chart configuration based on type
     const config = {
-        type: type === 'stackedbar' ? 'bar' : type,
+        type: chartType === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : type.toLocaleLowerCase(),
         data: data,
         options: {
             responsive: true,
@@ -61,7 +59,7 @@ export function renderChart(data, chartType, title) {
     };
 
     // Add stacked configuration for stacked bar charts
-    if (chartType === 'stackedbar') {
+    if (chartType === CHARTTYPE.STACKED_BAR) {
         config.options.scales = {
             x: {stacked: true},
             y: {stacked: true}
@@ -69,21 +67,24 @@ export function renderChart(data, chartType, title) {
     }
 
     // Special configuration for pie charts
-    if (chartType === 'pie') {
+    if (chartType === CHARTTYPE.PIE) {
         config.options.scales = undefined;
     }
 
     chartInstance = new Chart(ctx, config);
+
+    console.log(chartInstance);
 }
 
 export function buildUrl(config = defaultConfig) {
-    let url = `/rest/statistic/${config.entity}?type=${config.type.toLocaleUpperCase()}&x=${config.x}&y=${config.y}&aggregation=${config.aggregation}`;
+    const upperCaseType = config.type.toLocaleUpperCase()
+    let url = `/rest/statistic/${config.entity}?type=${upperCaseType}&x=${config.x}&y=${config.y}&aggregation=${config.aggregation}`;
 
     if (config.ownerOnly) {
         url += '&ownerOnly=true';
     }
 
-    if (config.stack && config.type === 'stackedbar') {
+    if (config.stack && upperCaseType === CHARTTYPE.STACKED_BAR) {
         url += `&stack=${config.stack}`;
     }
 

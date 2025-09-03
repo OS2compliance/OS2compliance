@@ -13,5 +13,5 @@ import java.util.List;
 @AllArgsConstructor
 public class ChartJsDatasetDTO {
 	private String label;
-	private List<Object> data;
+	private List<ChartJsDataDTO> data;
 }

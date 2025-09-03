@@ -20,5 +20,7 @@ export async function renderDashboardChart () {
 
     const data = await fetchStatistic(url);
 
+    console.log(data);
+
     renderChart(data, config.type, "Fordeling af opgaver og kontroller");
 }
