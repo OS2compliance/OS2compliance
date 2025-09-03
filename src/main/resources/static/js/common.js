@@ -155,6 +155,28 @@ function checkInputField(my_choices, atleastOne = false) {
     }
 }
 
+function validateInputFieldLength(inputFieldId, maxLength) {
+    const nameInput = document.getElementById(inputFieldId);
+    const tooLongFeedback = document.getElementById("threatAssesmentTooLongText");
+    const noNameInputFeedback = document.getElementById("noThreatAssesmentName");
+
+    tooLongFeedback.style.display = "none";
+    noNameInputFeedback.style.display = "none";
+    nameInput.classList.remove("is-invalid");
+
+    if (!nameInput.value.trim()) {
+        noNameInputFeedback.style.display = "block";
+        nameInput.classList.add("is-invalid");
+        return false;
+    }
+    else if (nameInput.value.length > maxLength) {
+        tooLongFeedback.style.display = "block";
+        nameInput.classList.add("is-invalid");
+        return false;
+    }
+    return true;
+}
+
 function sessionExpiredHandler() {
     toastService.error("Din session er udløbet, genindlæser");
     setTimeout(function () {
