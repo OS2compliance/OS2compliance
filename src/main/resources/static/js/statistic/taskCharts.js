@@ -7,12 +7,11 @@ export async function renderDashboardChart () {
         type : CHARTTYPE.STACKED_BAR,
         x : 'nextDeadline',
         y : 'taskType',
-        stack :'taskType',
         aggregation : 'count',
         groupTimeBy : 'MONTH',
         dateField : 'nextDeadline',
-        startDate : null,
-        endDate : null,
+        startDate : '01/09-2025',
+        endDate : '01/10-2025',
         ownerOnly : true,
     }
 

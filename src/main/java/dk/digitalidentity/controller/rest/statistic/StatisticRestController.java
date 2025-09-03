@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.Map;
 
 @Slf4j
@@ -49,8 +49,8 @@ public class StatisticRestController {
 			@RequestParam(required = false) Period groupTimeBy,
 			@RequestParam(required = false, defaultValue = "false") Boolean ownerOnly,
 			@RequestParam(required = false) String dateField, // Date field for filtering
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime startDate,
-			@RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
+			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate startDate,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate endDate
 	) {
 
 		Class<? extends StatisticEnabled> entityClass = entityMap.get(entityName);

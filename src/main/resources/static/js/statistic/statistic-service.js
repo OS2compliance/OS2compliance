@@ -11,7 +11,6 @@ const defaultConfig = {
     type : CHARTTYPE.BAR,
     x : 'name',
     y : 'id',
-    stack :null,
     aggregation : 'count',
     groupTimeBy : 'MONTH',
     dateField : null,

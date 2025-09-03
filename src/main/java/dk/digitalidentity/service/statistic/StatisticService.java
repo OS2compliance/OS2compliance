@@ -48,8 +48,8 @@ public class StatisticService {
 			boolean ownerOnly,
 			Period groupTimeBy,
 			String dateField,
-			LocalDateTime startDate,
-			LocalDateTime endDate) {
+			LocalDate startDate,
+			LocalDate endDate) {
 
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(
@@ -66,8 +66,8 @@ public class StatisticService {
 			Class<? extends StatisticEnabled> entityClass,
 			boolean ownerOnly,
 			String dateField,
-			LocalDateTime startDate,
-			LocalDateTime endDate,
+			LocalDate startDate,
+			LocalDate endDate,
 			String... fieldNames) {
 		var cb = entityManager.getCriteriaBuilder();
 		var query = cb.createTupleQuery();
@@ -89,16 +89,12 @@ public class StatisticService {
 
 		// Add date filtering if specified
 		if (dateField != null && (startDate != null || endDate != null)) {
-			List<Predicate> predicates = new ArrayList<>();
-
 			if (startDate != null) {
-				predicates.add(cb.greaterThanOrEqualTo(root.get(dateField), startDate));
+				allPredicates.add(cb.greaterThanOrEqualTo(root.get(dateField), startDate));
 			}
 			if (endDate != null) {
-				predicates.add(cb.lessThanOrEqualTo(root.get(dateField), endDate));
+				allPredicates.add(cb.lessThanOrEqualTo(root.get(dateField), endDate));
 			}
-
-			allPredicates.add(cb.or(predicates.toArray(new Predicate[0])));
 		}
 
 		if (ownerOnly) {
