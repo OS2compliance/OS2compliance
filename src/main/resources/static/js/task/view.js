@@ -43,6 +43,7 @@ function ViewTaskService() {
     }
 
     this.setEditMode = function(enabled) {
+        let performButton = document.getElementById('completeBtn') || document.getElementById('oversightBtn');
         if (enabled) {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = false;
@@ -51,7 +52,7 @@ function ViewTaskService() {
             this.userChoicesEditSelect.enable();
             document.getElementById('saveEditTaskBtn').hidden = false;
             document.getElementById('editTaskBtn').hidden = true;
-            document.getElementById('completeBtn').hidden = true;
+            performButton.hidden = true;
             document.getElementById('realLink').hidden = true;
             document.getElementById('linkField').hidden = false;
             this.nameField.disabled = false
@@ -63,7 +64,7 @@ function ViewTaskService() {
             this.userChoicesEditSelect.disable();
             document.getElementById('saveEditTaskBtn').hidden = true;
             document.getElementById('editTaskBtn').hidden = false;
-            document.getElementById('completeBtn').hidden = false;
+            performButton.hidden = false;
             document.getElementById('realLink').hidden = false;
             document.getElementById('linkField').hidden = true;
             this.nameField.disabled = true
