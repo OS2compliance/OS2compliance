@@ -181,10 +181,10 @@
 
 <div class="modal fade" id="formDialog" tabindex="-1" aria-labelledby="contactLabel" aria-hidden="true"></div>
 <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal)}"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal)}"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal)}"></div>
-<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=IncidentRelationModal)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=AssetRelationModal, relationType=aktiver)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=DocumentRelationModal, relationType=dokumenter)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal, relationType=opgaver)}"></div>
+<div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=IncidentRelationModal, relationType=hændelser)}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor=true)}"></div>
 
 
