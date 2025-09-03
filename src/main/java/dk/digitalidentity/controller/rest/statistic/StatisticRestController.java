@@ -44,7 +44,6 @@ public class StatisticRestController {
 			@RequestParam ChartType type,
 			@RequestParam String x, // X-axis field, usually for label
 			@RequestParam String y, // Y-axis field, usually for values
-			@RequestParam(required = false) String stack, // Stack field for stacked charts
 			@RequestParam(defaultValue = "count") String aggregation,
 			@RequestParam(required = false) Period groupTimeBy,
 			@RequestParam(required = false, defaultValue = "false") Boolean ownerOnly,

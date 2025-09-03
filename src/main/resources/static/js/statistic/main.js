@@ -1,6 +1,7 @@
-import {renderDashboardChart} from "./taskCharts.js";
+import {renderDashboardChart, renderOverdueChart} from "./taskCharts.js";
 
 
 document.addEventListener("DOMContentLoaded", function() {
     renderDashboardChart();
+    renderOverdueChart()
 })

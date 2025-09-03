@@ -19,7 +19,46 @@ export async function renderDashboardChart () {
 
     const data = await fetchStatistic(url);
 
-    console.log(data);
+    renderChart(data, 'testChart', config.type, "Fordeling af opgaver og kontroller");
+}
 
-    renderChart(data, config.type, "Fordeling af opgaver og kontroller");
+export async function renderOverdueChart () {
+    const now = uiFormatDate(new Date());
+
+    const config = {
+        entity : 'task',
+        type : CHARTTYPE.BAR,
+        x : 'responsibleUser.name',
+        y : 'responsibleUser',
+        aggregation : 'count',
+        groupTimeBy : null,
+        dateField : 'nextDeadline',
+        startDate : null,
+        endDate : now,
+        ownerOnly : false,
+    }
+
+    let url = buildUrl(config)
+
+    const data = await fetchStatistic(url);
+
+    console.log(data)
+
+    renderChart(data, 'testChart2', config.type, "Overskredne opgaver");
+}
+
+function uiFormatDate(date) {
+    if (date === null || date === '') {
+        return '';
+    }
+    let dd = "" + date.getDate();
+    if (dd.length === 1) {
+        dd = "0" + dd;
+    }
+    let mm = "" + (date.getMonth()+1);
+    if (mm.length === 1) {
+        mm = "0" + mm;
+    }
+    let yyyy = date.getFullYear();
+    return `${dd}/${mm}-${yyyy}`;
 }

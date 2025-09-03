@@ -25,6 +25,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -56,7 +57,7 @@ public class StatisticService {
 				entityClass, ownerOnly, dateField, startDate, endDate, xField, yField);
 
 		return switch (chartType) {
-			case ChartType.BAR -> generateStackedBarChart(rawData, xField, yField, aggregation, groupTimeBy); // TODO
+			case ChartType.BAR -> generateBarChart(rawData, xField, yField, aggregation, groupTimeBy); // TODO
 			case ChartType.PIE -> generateStackedBarChart(rawData, xField, yField, aggregation, groupTimeBy); // TODO
 			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xField, yField, aggregation, groupTimeBy);
 		};
@@ -131,12 +132,10 @@ public class StatisticService {
 			Period groupDateBy
 	) {
 		// First, get all unique x categories and sort them properly
-		Set<Object> xCategoriesSet = rawData.stream()
-				.map(row -> row.get(xField))
-				.collect(Collectors.toSet());
+		Set<Object> xCategoriesSet = getUniqueCategoryLabels(rawData, xField);
 
 		// Sort the categories based on their type and grouping
-		List<String> xCategories = sortCategories(xCategoriesSet, rawData, xField, groupDateBy);
+		List<String> xCategories = sortCategories(xCategoriesSet, groupDateBy);
 
 		// Group by stack field (yField value), then by formatted x field
 		Map<String, Map<String, List<Object>>> stackData = rawData.stream()
@@ -171,12 +170,53 @@ public class StatisticService {
 		return chartData;
 	}
 
+	private ChartJsConfigDTO generateBarChart(
+			List<Map<String, Object>> rawData,
+			String xField,
+			String yField,
+			String aggregation,
+			Period groupDateBy
+	) {
+		// Group by formatted x field
+		Map<String, List<Object>> groupedData = rawData.stream()
+				.collect(Collectors.groupingBy(
+								row -> formatLabel(row.get(xField), groupDateBy),
+								Collectors.mapping(row -> row.get(yField), Collectors.toList())
+						)
+				);
+
+		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
+
+		List<ChartJsDatasetDTO> datasets = new ArrayList<>();
+
+			// Create list of ChartJsDataDTO objects
+			List<ChartJsDataDTO> data = groupedData.entrySet().stream()
+					.map(entry -> {
+						List<Object> values = entry.getValue();
+						Object value = aggregateValues(values, aggregation);
+						return toChartDataDTO(value, entry.getKey());
+					})
+					.sorted(Comparator.comparing(ChartJsDataDTO::getX))
+					.toList();
+
+			ChartJsDatasetDTO dataset = new ChartJsDatasetDTO(null, data);
+			datasets.add(dataset);
+
+		chartData.setDatasets(datasets);
+		return chartData;
+	}
+
+	private Set<Object> getUniqueCategoryLabels(List<Map<String, Object>> rawData, String xField) {
+		return rawData.stream()
+				.map(row -> row.get(xField))
+				.collect(Collectors.toSet());
+	}
+
 	private Double aggregateValues(List<Object> values, String aggregation) {
 		if (values.isEmpty())
 			return 0.0;
 
 		return switch (aggregation.toLowerCase()) {
-			case "count" -> (double) values.size();
 			case "sum" -> values.stream()
 					.filter(Objects::nonNull)
 					.mapToDouble(v -> v instanceof Number number ? number.doubleValue() : 0.0)
@@ -291,10 +331,9 @@ public class StatisticService {
 		};
 	}
 
-	private List<String> sortCategories(Set<Object> categories, List<Map<String, Object>> rawData, String xField, Period groupDateBy) {
+	private List<String> sortCategories(Set<Object> categories, Period groupDateBy) {
 		// Check if we're dealing with dates by examining the first non-null value
-		Object firstValue = rawData.stream()
-				.map(row -> row.get(xField))
+		Object firstValue = categories.stream()
 				.filter(Objects::nonNull)
 				.findFirst()
 				.orElse(null);

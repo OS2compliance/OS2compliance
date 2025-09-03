@@ -1,4 +1,3 @@
-let chartInstance = null;
 
 export const CHARTTYPE = {
     BAR : "BAR",
@@ -30,17 +29,12 @@ export async function fetchStatistic(url) {
 
 }
 
-export function renderChart(data, chartType, title) {
-    const ctx = document.getElementById('testChart');
-
-    // Destroy existing chart
-    if (chartInstance) {
-        chartInstance.destroy();
-    }
+export function renderChart(data, elementId, chartType, title) {
+    const ctx = document.getElementById(elementId);
 
     // Chart configuration based on type
     const config = {
-        type: chartType === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : type.toLocaleLowerCase(),
+        type: chartType === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : chartType.toLocaleLowerCase(),
         data: data,
         options: {
             responsive: true,
@@ -51,7 +45,7 @@ export function renderChart(data, chartType, title) {
                     text: title
                 },
                 legend: {
-                    display: chartType !== 'pie'
+                    display: chartType === CHARTTYPE.STACKED_BAR
                 }
             }
         }
@@ -70,9 +64,7 @@ export function renderChart(data, chartType, title) {
         config.options.scales = undefined;
     }
 
-    chartInstance = new Chart(ctx, config);
-
-    console.log(chartInstance);
+    return new Chart(ctx, config);
 }
 
 export function buildUrl(config = defaultConfig) {
