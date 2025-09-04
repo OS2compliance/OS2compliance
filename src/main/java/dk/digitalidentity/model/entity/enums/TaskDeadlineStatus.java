@@ -3,15 +3,14 @@ package dk.digitalidentity.model.entity.enums;
 import lombok.Getter;
 
 @Getter
-public enum TaskStatus {
-    NOT_STARTED("Ikke startet"),
-    IN_PROGRESS("I gang"),
+public enum TaskDeadlineStatus {
+    FUTURE("Kommende"),
     EXCEEDED("Overskredet"),
-    DONE("Udført");
+    COMPLETED("Udført");
 
     private final String message;
 
-    TaskStatus(final String message) {
+    TaskDeadlineStatus(final String message) {
         this.message = message;
     }
 }

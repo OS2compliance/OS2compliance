@@ -2,7 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskStatus;
+import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.service.statistic.StatisticEnabled;
@@ -113,8 +113,17 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
         notifyResponsible = bool;
     }
 
-    public void setNextDeadline(final LocalDate date){
-        nextDeadline = date;
-    }
+
+	@Formula("(SELECT CASE " +
+			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) THEN 'COMPLETED' " +
+			"WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE' " +
+			"ELSE 'EXCEEDED' " +
+			"END " +
+			"FROM tasks t " +
+			"WHERE t.id = id)")
+	@Enumerated(EnumType.STRING)
+	private TaskDeadlineStatus status;
+
+
 
 }

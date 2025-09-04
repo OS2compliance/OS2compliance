@@ -48,7 +48,7 @@ export async function renderOverdueChart () {
 export async function renderTaskStatusChart () {
 
     const config = {
-        entity : 'taskGrid',
+        entity : 'task',
         type : CHARTTYPE.PIE,
         x : 'status',
         y : 'status',
