@@ -5,7 +5,6 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.service.statistic.AggregationMethod;
 import dk.digitalidentity.service.statistic.ChartJsConfigDTO;
 import dk.digitalidentity.service.statistic.ChartType;
@@ -36,7 +35,6 @@ public class StatisticRestController {
 			"asset", Asset.class,
 			"incident", Incident.class,
 			"task", Task.class,
-			"taskGrid", TaskGrid.class,
 			"dpia", DPIA.class,
 			"threatassessment", ThreatAssessment.class
 	);

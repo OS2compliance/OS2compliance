@@ -6,7 +6,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+
+import java.util.Set;
 
 // No section security annotation as this is accessible for many different sections
 @Slf4j
@@ -15,12 +18,33 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequiredArgsConstructor
 public class StatisticController {
 
+	public enum StatisticSupportedPages {
+		ASSET,	INCIDENT, TASK, DPIA, THREAT_ASSESSMENT
+	}
 
+	private final Set<String> statisticSupportedSections = Set.of(
+			"asset",
+			"incident",
+			"task",
+			"dpia",
+			"threatassessment"
+	);
 
 	@RequireReadAll
 	@GetMapping
 	public String getBaseView(final Model model) {
 
 		return "statistic/base";
+	}
+
+	@RequireReadAll
+	@GetMapping("{section}")
+	public String getModal(final Model model, @PathVariable("section") String section) {
+
+		if (section == null || !statisticSupportedSections.contains(section)) {
+			throw new IllegalArgumentException();
+		}
+
+		return "statistic/pageView/" + section;
 	}
 }

@@ -1,4 +1,15 @@
+import {initStatisticView} from "./statisticView.js";
+
 let today = new Date();
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    initGrid()
+
+    initStatisticView('task')
+
+});
 
 const DateDiff = {
     inDays: function (d1, d2) {
@@ -13,13 +24,6 @@ const defaultClassName = {
     search: "form-control",
     header: "d-flex justify-content-end"
 };
-
-document.addEventListener("DOMContentLoaded", function() {
-
-    initGrid()
-
-});
-
 
 function deleteClicked(taskId, name) {
     Swal.fire({

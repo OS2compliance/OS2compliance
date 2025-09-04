@@ -14,6 +14,8 @@
         <button type="button" class="copyBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-data-copy fs-5"></i></button>
     </template>
 
+    <div th:if="${statistic == true}" id="statisticModalContainer" class="modal fade" tabindex="-1"></div>
+
     <div class="toast" id="toastTemplate">
         <div class="toast-header">
             <svg class="bd-placeholder-img rounded me-2" width="20" height="20" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" preserveAspectRatio="xMidYMid slice" focusable="false">
