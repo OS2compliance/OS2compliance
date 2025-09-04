@@ -18,7 +18,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - (Adhoc) Tilføj dokument til aktiv virker ikke
-- 
+- (Adhoc) Rettet OS2kitos integration, den fjernede ikke ansvarlige, den tilføjede kun
+- (Adhoc) Print kontrol virkede ikke 
+
 ### Changed
 - (Adhoc) Added more KLE details after test feedback 
 - (Adhoc) Split excel export functionality into own endpoints
