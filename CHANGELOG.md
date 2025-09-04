@@ -18,12 +18,13 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 - (Adhoc) Tilføj dokument til aktiv virker ikke
+- 
 ### Changed
 - (Adhoc) Added more KLE details after test feedback 
 - (Adhoc) Split excel export functionality into own endpoints
 
 ### Removed
-- (Adhoc) Remove DP
+- (Adhoc) Fjernet DPO for behandlingsaktiviteter, da der allerede var en global indstilling
 
 ## [2.3.0] - 2025-08-23
 
