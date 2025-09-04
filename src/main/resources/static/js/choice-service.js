@@ -129,9 +129,7 @@ function ChoiceService() {
     }
 
     this.initTagSelect = (id) => {
-        console.log('initTagSelect ' + id)
         const tagsSelect = document.getElementById(id);
-        console.log(tagsSelect)
         const tagsChoice = initSelect(tagsSelect);
         this.updateTags(tagsChoice, "");
         tagsSelect.addEventListener("search",
