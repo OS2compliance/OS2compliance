@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
+import dk.digitalidentity.service.statistic.AggregationMethod;
 import dk.digitalidentity.service.statistic.ChartJsConfigDTO;
 import dk.digitalidentity.service.statistic.ChartType;
 import dk.digitalidentity.service.statistic.Period;
@@ -46,7 +47,7 @@ public class StatisticRestController {
 			@RequestParam ChartType type,
 			@RequestParam String x, // X-axis field, usually for label
 			@RequestParam String y, // Y-axis field, usually for values
-			@RequestParam(defaultValue = "count") String aggregation,
+			@RequestParam(defaultValue = "COUNT") AggregationMethod aggregation,
 			@RequestParam(required = false) Period groupTimeBy,
 			@RequestParam(required = false, defaultValue = "false") Boolean ownerOnly,
 			@RequestParam(required = false) String dateField, // Date field for filtering

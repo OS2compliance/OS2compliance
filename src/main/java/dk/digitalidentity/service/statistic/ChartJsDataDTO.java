@@ -8,5 +8,4 @@ import lombok.Setter;
 public class ChartJsDataDTO {
 	private String x;
 	private Object y;
-	private Object r;
 }

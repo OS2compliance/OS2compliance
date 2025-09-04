@@ -1,4 +1,4 @@
-import {fetchStatistic, renderChart, buildUrl, CHARTTYPE} from "./statistic-service.js";
+import {renderChart, CHARTTYPE, AGGREGATION_TYPE} from "./statistic-service.js";
 
 export async function renderDashboardChart () {
 
@@ -7,7 +7,7 @@ export async function renderDashboardChart () {
         type : CHARTTYPE.STACKED_BAR,
         x : 'nextDeadline',
         y : 'taskType',
-        aggregation : 'count',
+        aggregation : AGGREGATION_TYPE.COUNT,
         groupTimeBy : 'MONTH',
         dateField : 'nextDeadline',
         startDate : '01/01-2025',
@@ -15,11 +15,7 @@ export async function renderDashboardChart () {
         ownerOnly : true,
     }
 
-    let url = buildUrl(config)
-
-    const data = await fetchStatistic(url);
-
-    renderChart(data, 'testChart', config.type, "Fordeling af opgaver og kontroller");
+    await renderChart(config, 'testChart', "Fordeling af opgaver og kontroller");
 }
 
 export async function renderOverdueChart () {
@@ -28,9 +24,9 @@ export async function renderOverdueChart () {
     const config = {
         entity : 'task',
         type : CHARTTYPE.BAR,
-        x : 'responsibleUser.name',
-        y : 'responsibleUser',
-        aggregation : 'count',
+        x : 'responsibleOu.name',
+        y : 'responsibleOu',
+        aggregation : AGGREGATION_TYPE.COUNT,
         groupTimeBy : null,
         dateField : 'nextDeadline',
         startDate : null,
@@ -38,11 +34,7 @@ export async function renderOverdueChart () {
         ownerOnly : false,
     }
 
-    let url = buildUrl(config)
-
-    const data = await fetchStatistic(url);
-
-    renderChart(data, 'testChart2', config.type, "Overskredne opgaver");
+    await renderChart(config, 'testChart2', "Overskredne opgaver");
 }
 
 export async function renderTaskStatusChart () {
@@ -52,7 +44,7 @@ export async function renderTaskStatusChart () {
         type : CHARTTYPE.PIE,
         x : 'status',
         y : 'status',
-        aggregation : 'count',
+        aggregation : AGGREGATION_TYPE.COUNT,
         groupTimeBy : null,
         dateField : 'null',
         startDate : null,
@@ -60,13 +52,7 @@ export async function renderTaskStatusChart () {
         ownerOnly : false,
     }
 
-    let url = buildUrl(config)
-
-    const data = await fetchStatistic(url);
-
-    console.log(data)
-
-    renderChart(data, 'testChart3', config.type, "Øjebliksbillede af opgaver");
+    await renderChart(config, 'testChart3', "Øjebliksbillede af opgaver");
 }
 
 function uiFormatDate(date) {

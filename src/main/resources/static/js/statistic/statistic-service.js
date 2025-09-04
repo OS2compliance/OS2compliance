@@ -5,12 +5,20 @@ export const CHARTTYPE = {
     STACKED_BAR: "STACKEDBAR",
 }
 
+export const AGGREGATION_TYPE = {
+    COUNT : 'COUNT',
+    SUM:'SUM',
+    AVG : 'AVERAGE',
+    MIN : 'MIN',
+    MAX : 'MAX',
+}
+
 const defaultConfig = {
     entity : 'task',
     type : CHARTTYPE.BAR,
     x : 'name',
     y : 'id',
-    aggregation : 'count',
+    aggregation : AGGREGATION_TYPE.COUNT,
     groupTimeBy : 'MONTH',
     dateField : null,
     startDate : null,
@@ -20,7 +28,9 @@ const defaultConfig = {
 
 
 
-export async function fetchStatistic(url) {
+export async function fetchStatistic(config) {
+    const url = buildUrl(config)
+
     const response = await fetch(url)
     if (!response.ok) {
         console.error(response.error);
@@ -29,13 +39,20 @@ export async function fetchStatistic(url) {
 
 }
 
-export function renderChart(dataConfig, elementId, chartType, title) {
+export async function renderChart(config, elementId, title) {
     const ctx = document.getElementById(elementId);
 
+    if (!ctx) {
+        console.error(`could not find canvas element with id ${elementId}. Will not render chart.`);
+        return;
+    }
+
+    const data = await fetchStatistic(config);
+
     // Chart configuration based on type
-    const config = {
-        type: chartType === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : chartType.toLocaleLowerCase(),
-        data: dataConfig,
+    const chartConfiguration = {
+        type: config.type === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : config.type.toLocaleLowerCase(),
+        data: data,
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -45,21 +62,21 @@ export function renderChart(dataConfig, elementId, chartType, title) {
                     text: title
                 },
                 legend: {
-                    display: chartType !== CHARTTYPE.BAR
+                    display: config.type !== CHARTTYPE.BAR
                 }
             }
         }
     };
 
     // Add stacked configuration for stacked bar charts
-    if (chartType === CHARTTYPE.STACKED_BAR) {
-        config.options.scales = {
+    if (config.type === CHARTTYPE.STACKED_BAR) {
+        chartConfiguration.options.scales = {
             x: {stacked: true},
             y: {stacked: true}
         };
     }
 
-    return new Chart(ctx, config);
+    return new Chart(ctx, chartConfiguration);
 }
 
 export function buildUrl(config = defaultConfig) {
