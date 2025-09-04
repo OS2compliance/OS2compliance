@@ -9,7 +9,8 @@ import java.util.List;
 @Getter
 @Setter
 public class ChartJsConfigDTO {
-	private List<ChartJsDatasetDTO> datasets;
+	private List<String> labels;
+	private List<ChartJSDatasetable> datasets;
 
 	public ChartJsConfigDTO() {
 		this.datasets = new ArrayList<>();

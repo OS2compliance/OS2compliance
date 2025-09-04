@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
+import dk.digitalidentity.model.entity.enums.TaskStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.service.statistic.StatisticEnabled;
@@ -22,6 +23,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -114,4 +116,5 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     public void setNextDeadline(final LocalDate date){
         nextDeadline = date;
     }
+
 }

@@ -11,7 +11,7 @@ import java.util.List;
 @Setter
 @RequiredArgsConstructor
 @AllArgsConstructor
-public class ChartJsDatasetDTO {
+public class ChartJsGeneralDatasetDTO implements ChartJSDatasetable {
 	private String label;
 	private List<ChartJsDataDTO> data;
 }

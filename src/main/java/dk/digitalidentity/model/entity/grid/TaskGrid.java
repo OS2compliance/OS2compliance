@@ -6,6 +6,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.service.statistic.StatisticEnabled;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,7 +26,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Immutable
-public class TaskGrid  implements HasSingleResponsibleUser {
+public class TaskGrid  implements HasSingleResponsibleUser, StatisticEnabled {
     @Id
     private Long id;
 

@@ -10,8 +10,8 @@ export async function renderDashboardChart () {
         aggregation : 'count',
         groupTimeBy : 'MONTH',
         dateField : 'nextDeadline',
-        startDate : '01/09-2025',
-        endDate : '01/10-2025',
+        startDate : '01/01-2025',
+        endDate : '24/12-2025',
         ownerOnly : true,
     }
 
@@ -42,9 +42,31 @@ export async function renderOverdueChart () {
 
     const data = await fetchStatistic(url);
 
+    renderChart(data, 'testChart2', config.type, "Overskredne opgaver");
+}
+
+export async function renderTaskStatusChart () {
+
+    const config = {
+        entity : 'taskGrid',
+        type : CHARTTYPE.PIE,
+        x : 'status',
+        y : 'status',
+        aggregation : 'count',
+        groupTimeBy : null,
+        dateField : 'null',
+        startDate : null,
+        endDate : null,
+        ownerOnly : false,
+    }
+
+    let url = buildUrl(config)
+
+    const data = await fetchStatistic(url);
+
     console.log(data)
 
-    renderChart(data, 'testChart2', config.type, "Overskredne opgaver");
+    renderChart(data, 'testChart3', config.type, "Øjebliksbillede af opgaver");
 }
 
 function uiFormatDate(date) {

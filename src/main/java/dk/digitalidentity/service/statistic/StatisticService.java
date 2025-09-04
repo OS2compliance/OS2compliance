@@ -26,6 +26,7 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -57,8 +58,8 @@ public class StatisticService {
 				entityClass, ownerOnly, dateField, startDate, endDate, xField, yField);
 
 		return switch (chartType) {
-			case ChartType.BAR -> generateBarChart(rawData, xField, yField, aggregation, groupTimeBy); // TODO
-			case ChartType.PIE -> generateStackedBarChart(rawData, xField, yField, aggregation, groupTimeBy); // TODO
+			case ChartType.BAR -> generateBarChart(rawData, xField, yField, aggregation, groupTimeBy);
+			case ChartType.PIE -> generatePieChart(rawData, xField, yField, aggregation, groupTimeBy);
 			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xField, yField, aggregation, groupTimeBy);
 		};
 	}
@@ -77,14 +78,15 @@ public class StatisticService {
 		// Build selections (remove nulls)
 		List<String> validFields = Arrays.stream(fieldNames)
 				.filter(Objects::nonNull)
+				.filter(s -> !s.equalsIgnoreCase("null"))
 				.toList();
 
-		List<Selection<?>> selections = new ArrayList<>();
+		Set<Selection<?>> selections = new HashSet<>(); // Set to filter out duplicates
 		for (String field : validFields) {
 			selections.add(getPropertyPath(field, root).alias(field));
 		}
 
-		query.multiselect(selections);
+		query.multiselect(new ArrayList<>(selections));
 
 		List<Predicate> allPredicates = new ArrayList<>();
 
@@ -150,7 +152,7 @@ public class StatisticService {
 		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
 		//		chartData.setLabels(xCategories); // Set the sorted labels
 
-		List<ChartJsDatasetDTO> datasets = new ArrayList<>();
+		List<ChartJSDatasetable> datasets = new ArrayList<>();
 
 		for (Map.Entry<String, Map<String, List<Object>>> stackEntry : stackData.entrySet()) {
 			// Create list of ChartJsDataDTO objects belonging to each stack
@@ -162,7 +164,7 @@ public class StatisticService {
 					})
 					.toList();
 
-			ChartJsDatasetDTO dataset = new ChartJsDatasetDTO(stackEntry.getKey(), data);
+			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(stackEntry.getKey(), data);
 			datasets.add(dataset);
 		}
 
@@ -178,16 +180,11 @@ public class StatisticService {
 			Period groupDateBy
 	) {
 		// Group by formatted x field
-		Map<String, List<Object>> groupedData = rawData.stream()
-				.collect(Collectors.groupingBy(
-								row -> formatLabel(row.get(xField), groupDateBy),
-								Collectors.mapping(row -> row.get(yField), Collectors.toList())
-						)
-				);
+		Map<String, List<Object>> groupedData = groupData(rawData, xField, yField, groupDateBy);
 
 		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
 
-		List<ChartJsDatasetDTO> datasets = new ArrayList<>();
+		List<ChartJSDatasetable> datasets = new ArrayList<>();
 
 			// Create list of ChartJsDataDTO objects
 			List<ChartJsDataDTO> data = groupedData.entrySet().stream()
@@ -199,11 +196,63 @@ public class StatisticService {
 					.sorted(Comparator.comparing(ChartJsDataDTO::getX))
 					.toList();
 
-			ChartJsDatasetDTO dataset = new ChartJsDatasetDTO(null, data);
+			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
 			datasets.add(dataset);
 
 		chartData.setDatasets(datasets);
 		return chartData;
+	}
+
+	private ChartJsConfigDTO generatePieChart(
+			List<Map<String, Object>> rawData,
+			String xField,
+			String yField,
+			String aggregation,
+			Period groupDateBy
+	) {
+		// Group by formatted x field
+		Map<String, List<Object>> groupedData = groupData(rawData, xField, yField, groupDateBy);
+
+		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
+
+		List<ChartJSDatasetable> datasets = new ArrayList<>();
+
+
+		List<Map.Entry<String, List<Object>>> sortedAndGroupedData = groupedData.entrySet().stream()
+				.sorted(Map.Entry.comparingByKey())
+				.toList();
+
+		// Create list of ChartJsDataDTO objects
+		List<Double> data = sortedAndGroupedData.stream()
+				.map(entry -> {
+					List<Object> values = entry.getValue();
+					return aggregateValues(values, aggregation);
+				})
+				.toList();
+
+		List<String> labels = sortedAndGroupedData.stream()
+				.map(Map.Entry::getKey)
+				.toList();
+		chartData.setLabels(labels);
+
+		ChartJsPieDatasetDTO dataset = new ChartJsPieDatasetDTO(data);
+		datasets.add(dataset);
+
+		chartData.setDatasets(datasets);
+		return chartData;
+	}
+
+	private Map<String, List<Object>> groupData(
+			List<Map<String, Object>> rawData,
+			String xField,
+			String yField,
+			Period groupDateBy) {
+		return rawData.stream()
+				.collect(Collectors.groupingBy(
+								row -> formatLabel(row.get(xField), groupDateBy),
+								Collectors.mapping(row -> row.get(yField), Collectors.toList())
+						)
+				);
 	}
 
 	private Set<Object> getUniqueCategoryLabels(List<Map<String, Object>> rawData, String xField) {

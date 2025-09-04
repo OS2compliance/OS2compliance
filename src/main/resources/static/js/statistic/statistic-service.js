@@ -29,13 +29,13 @@ export async function fetchStatistic(url) {
 
 }
 
-export function renderChart(data, elementId, chartType, title) {
+export function renderChart(dataConfig, elementId, chartType, title) {
     const ctx = document.getElementById(elementId);
 
     // Chart configuration based on type
     const config = {
         type: chartType === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : chartType.toLocaleLowerCase(),
-        data: data,
+        data: dataConfig,
         options: {
             responsive: true,
             maintainAspectRatio: false,
@@ -45,7 +45,7 @@ export function renderChart(data, elementId, chartType, title) {
                     text: title
                 },
                 legend: {
-                    display: chartType === CHARTTYPE.STACKED_BAR
+                    display: chartType !== CHARTTYPE.BAR
                 }
             }
         }
@@ -57,11 +57,6 @@ export function renderChart(data, elementId, chartType, title) {
             x: {stacked: true},
             y: {stacked: true}
         };
-    }
-
-    // Special configuration for pie charts
-    if (chartType === CHARTTYPE.PIE) {
-        config.options.scales = undefined;
     }
 
     return new Chart(ctx, config);
