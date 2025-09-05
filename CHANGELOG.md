@@ -11,9 +11,10 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-136) Tilføjelse af felter til ansvarlig forvaltning
 - (https://os2web.atlassian.net/browse/COMPLY-224) Man skal kunne sætte flere links ind på en opgave
 - (https://os2web.atlassian.net/browse/COMPLY-331) (Aktiver) Systemansvarlig som kolonne på listevisningen
-- (https://os2web.atlassian.net/browse/COMPLY-177) Visningen i opgavehistorikken skal vende om, så den seneste kontrol står øverst
+- (https://os2web.atlassian.net/browse/COMPLY-277) Visningen i opgavehistorikken skal vende om, så den seneste kontrol står øverst
 - (https://os2web.atlassian.net/browse/COMPLY-165) Opgavecenter - Mulighed for at tilføje forvaltning
 - (https://os2web.atlassian.net/browse/COMPLY-69) Standarder - Oversigt over progression
+- (https://os2web.atlassian.net/browse/COMPLY-252) Ny rolle Læseadgang
 - (Ad-hoc) Mulighed for at udskrive standarder
 
 ### Fixed
