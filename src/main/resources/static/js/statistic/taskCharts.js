@@ -46,7 +46,7 @@ export async function renderTaskStatusChart () {
         y : 'status',
         aggregation : AGGREGATION_TYPE.COUNT,
         groupTimeBy : null,
-        dateField : 'null',
+        dateField : null,
         startDate : null,
         endDate : null,
         ownerOnly : false,

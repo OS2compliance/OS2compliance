@@ -5,7 +5,7 @@ import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
-import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
+import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;

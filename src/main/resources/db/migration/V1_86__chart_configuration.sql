@@ -5,9 +5,9 @@ CREATE TABLE chart_configuration (
     name VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
     aggregation VARCHAR(255) NULL,
-    ownerOnly BOOLEAN DEFAULT FALSE,
-    supported_x_fields VARCHAR(255) NULL,
-    supported_y_fields VARCHAR(255) NULL,
+    owner_only BOOLEAN DEFAULT FALSE,
+    allowed_x_field_choices VARCHAR(255) NULL,
+    allowed_y_field_choices VARCHAR(255) NULL,
     group_time_by_field VARCHAR(255) NULL,
     default_start_time DATETIME NULL,
     default_end_time DATETIME NULL

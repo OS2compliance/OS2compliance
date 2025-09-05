@@ -1,4 +1,4 @@
-package dk.digitalidentity.service.statistic.model.enumerable;
+package dk.digitalidentity.service.statistic.enumerable;
 
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

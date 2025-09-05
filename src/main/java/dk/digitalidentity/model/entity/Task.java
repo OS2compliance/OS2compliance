@@ -5,7 +5,9 @@ import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
-import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
+import dk.digitalidentity.service.statistic.StatisticLabel;
+import dk.digitalidentity.service.statistic.dto.EntityFieldChoiceDTO;
+import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -18,6 +20,7 @@ import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
+import jakarta.persistence.Transient;
 import jakarta.validation.constraints.NotNull;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
@@ -30,6 +33,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 @Entity
@@ -38,15 +42,18 @@ import java.util.Set;
 @Setter
 public class Task extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
 
+	@StatisticLabel("Type")
     @Column
     @Enumerated(EnumType.STRING)
     private TaskType taskType = TaskType.TASK;
 
+	@StatisticLabel("Ansvarlig Bruger")
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsible_uuid")
     private User responsibleUser;
 
+	@StatisticLabel("Ansvarlig Afdeling")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOu;
@@ -55,6 +62,7 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @JoinColumn(name = "department_uuid")
 	private OrganisationUnit department;
 
+	@StatisticLabel("Næste deadline")
     @Column
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     @NotNull
@@ -113,7 +121,6 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
         notifyResponsible = bool;
     }
 
-
 	@Formula("(SELECT CASE " +
 			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) THEN 'COMPLETED' " +
 			"WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE' " +
@@ -123,7 +130,6 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
 			"WHERE t.id = id)")
 	@Enumerated(EnumType.STRING)
 	private TaskDeadlineStatus status;
-
 
 
 }

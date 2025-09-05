@@ -12,43 +12,12 @@
             <div class="form-group">
                 <label for="diagramSelector" class="form-label">Vælg diagram</label>
                 <select id="diagramSelector" class="form-control">
-                    <option th:each="diagram : ${availableDiagrams}" th:value="${diagram.id}" th:text="${diagram.name}"></option>
+                    <option th:each="diagram : ${availableDiagrams}" th:value="${diagram.id}" th:text="${diagram.name}" th:attr="data-entity-name=${diagram.entityName}"></option>
                 </select>
             </div>
 
             <div id="additionalOptionsContainer" hidden>
 
-                <!--x & y axis choices-->
-                <div class="form-group hidden">
-                    <label for="xAxisSelector" class="form-label">Vælg grupperingsakse</label>
-                    <select id="xAxisSelector" class="form-control">  <!--Content dynamically loaded-->
-                    </select>
-                </div>
-
-                <div class="form-group hidden">
-                    <label for="yAxisSelector" class="form-label">Vælg dataakse</label>
-                    <select id="yAxisSelector" class="form-control"></select> <!--Content dynamically loaded-->
-                </div>
-
-                <!--Time period-->
-                <div id="timePeriodContainer">
-                    <div class="form-group">
-                        <label for="fromTimePicker" class="form-label">Fra tidspunkt</label>
-                        <input id="fromTimePicker" type="datetime-local" class="form-control datepicker">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="toTimePicker" class="form-label">Til tidspunkt</label>
-                        <input id="toTimePicker" type="datetime-local" class="form-control datepicker">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="periodGroupingSelector" class="form-label">Vælg gruppering af datoer</label>
-                        <select id="periodGroupingSelector" class="form-control">
-                            <option th:each="period : ${T(dk.digitalidentity.service.statistic.Period).values()}" th:value="${period}" th:text="${period.getName()}"></option>
-                        </select>
-                    </div>
-                </div>
             </div>
         </div>
         <div id="diagramContainer">

@@ -1,14 +1,16 @@
 package dk.digitalidentity.service.statistic.model.ChartConfiguration;
 
-import dk.digitalidentity.service.statistic.model.enumerable.AggregationMethod;
-import dk.digitalidentity.service.statistic.model.enumerable.ChartType;
-import dk.digitalidentity.service.statistic.model.enumerable.Period;
+import dk.digitalidentity.config.StringListNullSafeConverter;
+import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.service.statistic.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.enumerable.Period;
 import jakarta.persistence.Column;
-import jakarta.persistence.ElementCollection;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
@@ -23,17 +25,18 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-@Entity
-@Table(name = "chart_configuration")
 @Getter
 @Setter
 @Builder
 @ToString
 @NoArgsConstructor
 @AllArgsConstructor
+@Table(name = "chart_configuration")
+@Entity
 public class ChartConfiguration {
 
 	@Id
+	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	@Column
 	private Long id;
 
@@ -63,13 +66,14 @@ public class ChartConfiguration {
 	@Column
 	private Boolean ownerOnly;
 
-	@ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)
-	private List<String> supportedXFields = new ArrayList<>();
+	@Column(name = "allowed_x_field_choices")
+	@Convert(converter = StringListNullSafeConverter.class)
+	private List<String> allowedXFieldChoices = new ArrayList<>();
 
-	@ElementCollection(targetClass = String.class, fetch = FetchType.EAGER)
-	private List<String> supportedYFields = new ArrayList<>();
+	@Column(name = "allowed_y_field_choices")
+	@Convert(converter = StringListNullSafeConverter.class)
+	private List<String> allowedYFieldChoices = new ArrayList<>();
 
-	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
 	private Period groupTimeByField;

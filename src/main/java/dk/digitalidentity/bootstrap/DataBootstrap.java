@@ -25,9 +25,9 @@ import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
 import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfiguration;
 import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfigurationService;
-import dk.digitalidentity.service.statistic.model.enumerable.AggregationMethod;
-import dk.digitalidentity.service.statistic.model.enumerable.ChartType;
-import dk.digitalidentity.service.statistic.model.enumerable.Period;
+import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.service.statistic.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.enumerable.Period;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -465,22 +465,46 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
     }
 
 	private List<ChartConfiguration> buildChartConfigurations() {
-		final List<ChartConfiguration> chartConfigurations = new ArrayList<>();
-		chartConfigurations.add(
-				new ChartConfiguration().builder()
+		return List.of(
+				ChartConfiguration.builder()
 						.entityName("Task")
 						.section("Dashboard")
 						.name("Fordeling af opgaver")
 						.type(ChartType.STACKEDBAR)
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(true)
-						.supportedXFields(List.of("nextDeadline"))
-						.supportedYFields(List.of("taskType"))
+						.allowedXFieldChoices(List.of("nextDeadline"))
+						.allowedYFieldChoices(List.of("taskType"))
 						.groupTimeByField(Period.MONTH)
+						.defaultStartTime(null)
+						.defaultEndTime(null)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Task")
+						.section("Task")
+						.name("Øjebliksbillede af opgaver")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.allowedXFieldChoices(List.of("status"))
+						.allowedYFieldChoices(List.of("status"))
+						.groupTimeByField(null)
+						.defaultStartTime(null)
+						.defaultEndTime(null)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Task")
+						.section("Task")
+						.name("Overskredne opgaver")
+						.type(ChartType.BAR)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.allowedXFieldChoices(List.of("responsibleUser.name","responsibleOu.name"))
+						.allowedYFieldChoices(List.of("responsibleUser","responsibleOu"))
+						.groupTimeByField(null)
 						.defaultStartTime(null)
 						.defaultEndTime(null)
 						.build()
 		);
-		return chartConfigurations;
 	}
 }

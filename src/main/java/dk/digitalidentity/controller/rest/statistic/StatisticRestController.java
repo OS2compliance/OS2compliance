@@ -5,11 +5,11 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.service.statistic.model.enumerable.AggregationMethod;
-import dk.digitalidentity.service.statistic.model.dto.ChartJsConfigDTO;
-import dk.digitalidentity.service.statistic.model.enumerable.ChartType;
-import dk.digitalidentity.service.statistic.model.enumerable.Period;
-import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
+import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsConfigDTO;
+import dk.digitalidentity.service.statistic.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.enumerable.Period;
+import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import dk.digitalidentity.service.statistic.StatisticService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,7 +31,8 @@ import java.util.Map;
 public class StatisticRestController {
 	private final StatisticService statisticService;
 
-	private final Map<String, Class<? extends StatisticEnabled>> entityMap = Map.of(
+	private final Map<String, Class<? extends StatisticEnabled>> entityMap = Map.of
+			(
 			"asset", Asset.class,
 			"incident", Incident.class,
 			"task", Task.class,

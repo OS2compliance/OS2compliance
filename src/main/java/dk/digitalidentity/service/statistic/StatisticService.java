@@ -7,15 +7,15 @@ import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.UserService;
-import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
-import dk.digitalidentity.service.statistic.model.enumerable.AggregationMethod;
-import dk.digitalidentity.service.statistic.model.interfaces.ChartJSDatasetable;
-import dk.digitalidentity.service.statistic.model.dto.ChartJsConfigDTO;
-import dk.digitalidentity.service.statistic.model.dto.ChartJsDataDTO;
-import dk.digitalidentity.service.statistic.model.dto.ChartJsGeneralDatasetDTO;
-import dk.digitalidentity.service.statistic.model.dto.ChartJsPieDatasetDTO;
-import dk.digitalidentity.service.statistic.model.enumerable.ChartType;
-import dk.digitalidentity.service.statistic.model.enumerable.Period;
+import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
+import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.service.statistic.interfaces.ChartJSDatasetable;
+import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsConfigDTO;
+import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsDataDTO;
+import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsGeneralDatasetDTO;
+import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsPieDatasetDTO;
+import dk.digitalidentity.service.statistic.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.enumerable.Period;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
@@ -28,6 +28,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -41,6 +42,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -52,15 +54,15 @@ public class StatisticService {
 	private final UserService userService;
 
 	public ChartJsConfigDTO generateChart(Class<? extends StatisticEnabled> entityClass,
-										  ChartType chartType,
-										  String xField,
-										  String yField,
-										  AggregationMethod aggregation,
-										  boolean ownerOnly,
-										  Period groupTimeBy,
-										  String dateField,
-										  LocalDate startDate,
-										  LocalDate endDate) {
+			ChartType chartType,
+			String xField,
+			String yField,
+			AggregationMethod aggregation,
+			boolean ownerOnly,
+			Period groupTimeBy,
+			String dateField,
+			LocalDate startDate,
+			LocalDate endDate) {
 
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(
@@ -75,12 +77,13 @@ public class StatisticService {
 
 	/**
 	 * Retrieves data from the indicated fields in the indicated class. Optionally filters based on ownership and a period of time
+	 *
 	 * @param entityClass Entity to get data from.
-	 * @param ownerOnly Flag indicating that data should only be collected from entities the current user owns
-	 * @param dateField Optional name of which field is used for filtering based on time period
-	 * @param startDate Optional start date used for filtering on time period. Requires a set datefield
-	 * @param endDate Optional end date used for filtering on time period. Requires a set datefield
-	 * @param fieldNames Names of the fields that should be fetched from db
+	 * @param ownerOnly   Flag indicating that data should only be collected from entities the current user owns
+	 * @param dateField   Optional name of which field is used for filtering based on time period
+	 * @param startDate   Optional start date used for filtering on time period. Requires a set datefield
+	 * @param endDate     Optional end date used for filtering on time period. Requires a set datefield
+	 * @param fieldNames  Names of the fields that should be fetched from db
 	 * @return requested data as a list of maps
 	 */
 	private List<Map<String, Object>> getFilteredFieldData(
@@ -146,10 +149,11 @@ public class StatisticService {
 	}
 
 	/**
-	 *Generates a ChartJS Stacked Bar-chart compatible data structure for the provided data
-	 * @param rawData data from db
-	 * @param xField name of the field holding the labels for the chart
-	 * @param yField name of the field holding the values for the chart
+	 * Generates a ChartJS Stacked Bar-chart compatible data structure for the provided data
+	 *
+	 * @param rawData     data from db
+	 * @param xField      name of the field holding the labels for the chart
+	 * @param yField      name of the field holding the values for the chart
 	 * @param aggregation what type of aggregation should be performed on the data
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
@@ -201,9 +205,10 @@ public class StatisticService {
 
 	/**
 	 * Generates a ChartJS Bar-chart compatible data structure for the provided data
-	 * @param rawData data from db
-	 * @param xField name of the field holding the labels for the chart
-	 * @param yField name of the field holding the values for the chart
+	 *
+	 * @param rawData     data from db
+	 * @param xField      name of the field holding the labels for the chart
+	 * @param yField      name of the field holding the values for the chart
 	 * @param aggregation what type of aggregation should be performed on the data
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
@@ -222,18 +227,18 @@ public class StatisticService {
 
 		List<ChartJSDatasetable> datasets = new ArrayList<>();
 
-			// Create list of ChartJsDataDTO objects
-			List<ChartJsDataDTO> data = groupedData.entrySet().stream()
-					.map(entry -> {
-						List<Object> values = entry.getValue();
-						Object value = aggregateValues(values, aggregation);
-						return toChartDataDTO(value, entry.getKey());
-					})
-					.sorted(Comparator.comparing(ChartJsDataDTO::getX))
-					.toList();
+		// Create list of ChartJsDataDTO objects
+		List<ChartJsDataDTO> data = groupedData.entrySet().stream()
+				.map(entry -> {
+					List<Object> values = entry.getValue();
+					Object value = aggregateValues(values, aggregation);
+					return toChartDataDTO(value, entry.getKey());
+				})
+				.sorted(Comparator.comparing(ChartJsDataDTO::getX))
+				.toList();
 
-			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
-			datasets.add(dataset);
+		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
+		datasets.add(dataset);
 
 		chartData.setDatasets(datasets);
 		return chartData;
@@ -241,9 +246,10 @@ public class StatisticService {
 
 	/**
 	 * Generates a ChartJS Pie-chart compatible data structure for the provided data
-	 * @param rawData data from db
-	 * @param xField name of the field holding the labels for the chart
-	 * @param yField name of the field holding the values for the chart
+	 *
+	 * @param rawData     data from db
+	 * @param xField      name of the field holding the labels for the chart
+	 * @param yField      name of the field holding the values for the chart
 	 * @param aggregation what type of aggregation should be performed on the data
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
@@ -261,7 +267,6 @@ public class StatisticService {
 		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
 
 		List<ChartJSDatasetable> datasets = new ArrayList<>();
-
 
 		List<Map.Entry<String, List<Object>>> sortedAndGroupedData = groupedData.entrySet().stream()
 				.sorted(Map.Entry.comparingByKey())
@@ -289,9 +294,10 @@ public class StatisticService {
 
 	/**
 	 * Groups data by the provided x-axis field, with values of the provided y-axis field
-	 * @param rawData data entries from db
-	 * @param xField name of the field holding the labels for the chart
-	 * @param yField name of the field holding the values for the chart
+	 *
+	 * @param rawData     data entries from db
+	 * @param xField      name of the field holding the labels for the chart
+	 * @param yField      name of the field holding the values for the chart
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return a map of categories containing lists of data
 	 */
@@ -310,8 +316,9 @@ public class StatisticService {
 
 	/**
 	 * Maps entries to a set of labels
+	 *
 	 * @param rawData entries from db
-	 * @param xField the field in entries that contains the labels
+	 * @param xField  the field in entries that contains the labels
 	 * @return a set of labels
 	 */
 	private Set<Object> getUniqueCategoryLabels(List<Map<String, Object>> rawData, String xField) {
@@ -322,7 +329,8 @@ public class StatisticService {
 
 	/**
 	 * Aggregates a list of values by the provided aggregation method
-	 * @param values list of values
+	 *
+	 * @param values      list of values
 	 * @param aggregation the method of aggregation
 	 * @return the aggregation of the provided values
 	 */
@@ -356,10 +364,11 @@ public class StatisticService {
 
 	/**
 	 * Gets the property path, taking dot-seperated values into account. Note that this only works for one level. Paths with more than one dot only handles the first one.
+	 *
 	 * @param propertyName name of the property to access. May contain max one dot-seperation
-	 * @param root root of the query
+	 * @param root         root of the query
+	 * @param <T>          entity
 	 * @return a Path to the indicated property
-	 * @param <T> entity
 	 */
 	private <T> Path<String> getPropertyPath(String propertyName, Root<T> root) {
 		if (propertyName.contains(".")) {
@@ -376,11 +385,12 @@ public class StatisticService {
 
 	/**
 	 * Constructs a list of predicates, allowing a query to check for ownership of the entity by its implemented ownership interfaces
-	 * @param entityClass class of the entity
-	 * @param root root for the query
+	 *
+	 * @param entityClass     class of the entity
+	 * @param root            root for the query
 	 * @param criteriaBuilder criteriabuilder used for the query
+	 * @param <T>             ownable object
 	 * @return a list of predicates
-	 * @param <T> ownable object
 	 */
 	private <T> List<Predicate> buildOwnerPredicates(Class<? extends StatisticEnabled> entityClass, Root<T> root, CriteriaBuilder criteriaBuilder) {
 
@@ -421,7 +431,8 @@ public class StatisticService {
 
 	/**
 	 * Constructs a DTO conforming to ChartJS data structure, used for most charts (PIE is exception)
-	 * @param value value of the data point
+	 *
+	 * @param value         value of the data point
 	 * @param categoryLabel label for the data point
 	 * @return ChartJsDataDTO conforming to ChartJS data structure
 	 */
@@ -435,8 +446,9 @@ public class StatisticService {
 
 	/**
 	 * Formats a label for the chart
-	 * @param value value of the label
-	 * @param groupDateBy  field specifying how dates should be grouped.
+	 *
+	 * @param value       value of the label
+	 * @param groupDateBy field specifying how dates should be grouped.
 	 * @return a formatted label
 	 */
 	private String formatLabel(Object value, Period groupDateBy) {
@@ -460,7 +472,8 @@ public class StatisticService {
 
 	/**
 	 * Formats the local date according to the groupDateBy field.
-	 * @param localDate date to format
+	 *
+	 * @param localDate   date to format
 	 * @param groupDateBy enum stating how the date should be formatted (YEAR, MONTH, QUARTER or naturally)
 	 * @return a string representation of the date label
 	 */
@@ -479,7 +492,8 @@ public class StatisticService {
 
 	/**
 	 * Sorts the provided categories (labels), according to their type
-	 * @param categories set of categories to sort
+	 *
+	 * @param categories  set of categories to sort
 	 * @param groupDateBy field specifying how dates should be grouped. Null if categories are not dates
 	 * @return a list of formatted and sorted labels based on the categories
 	 */
@@ -506,7 +520,8 @@ public class StatisticService {
 
 	/**
 	 * Sorts categories as dates. Note that this method only works with LocalDate or LocalDateTime
-	 * @param categories Set of categories (labels) for a chart
+	 *
+	 * @param categories  Set of categories (labels) for a chart
 	 * @param groupDateBy field specifying how dates should be grouped.
 	 * @return list of sorted date categories
 	 */
@@ -523,6 +538,33 @@ public class StatisticService {
 				.sorted()
 				.map(date -> formatDateLabel(date, groupDateBy))
 				.toList();
+	}
+
+	/**
+	 * Gets the label for a field with the StatisticLabel annotation in a StatisticEnabled class
+	 *
+	 * @param entityClass StatisticEnabled class
+	 * @param fieldName   name of field in class annmotated with StatisticLabel
+	 * @return Optional with the label from the annotation or an empty optional if the label is not present
+	 */
+	public Optional<String> getStatisticLabelForField(Class<? extends StatisticEnabled> entityClass, String fieldName) {
+		try {
+			String workingFieldName = fieldName;
+			// Handle dot-seperated values
+			if (fieldName.contains(".")) {
+				workingFieldName = fieldName.substring(0, fieldName.indexOf("."));
+			}
+
+			Field field = entityClass.getDeclaredField(workingFieldName);
+			StatisticLabel labelAnnotation = field.getAnnotation(StatisticLabel.class);
+			if (labelAnnotation != null) {
+				return Optional.of(labelAnnotation.value());
+			}
+			return Optional.empty();
+		}
+		catch (NoSuchFieldException e) {
+			return Optional.empty();
+		}
 	}
 
 }

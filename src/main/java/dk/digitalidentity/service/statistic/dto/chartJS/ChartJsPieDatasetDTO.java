@@ -1,6 +1,6 @@
-package dk.digitalidentity.service.statistic.model.dto;
+package dk.digitalidentity.service.statistic.dto.chartJS;
 
-import dk.digitalidentity.service.statistic.model.interfaces.ChartJSDatasetable;
+import dk.digitalidentity.service.statistic.interfaces.ChartJSDatasetable;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
