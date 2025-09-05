@@ -1,4 +1,4 @@
-package dk.digitalidentity.service.statistic;
+package dk.digitalidentity.service.statistic.model.enumerable;
 
 public enum AggregationMethod {
 	COUNT,

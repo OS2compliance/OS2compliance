@@ -18,7 +18,6 @@ async function openStatisticModal(domain) {
         const modal = new bootstrap.Modal(statisticModalContainer, {
             backdrop: "static"
         })
-        console.log(modal);
         modal.show()
     } else {
         console.error('could not show modal for statistics')

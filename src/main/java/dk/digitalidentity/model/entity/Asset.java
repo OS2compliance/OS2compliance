@@ -14,7 +14,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.Ownable;
-import dk.digitalidentity.service.statistic.StatisticEnabled;
+import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;

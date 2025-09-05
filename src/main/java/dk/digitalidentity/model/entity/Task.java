@@ -5,7 +5,7 @@ import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
-import dk.digitalidentity.service.statistic.StatisticEnabled;
+import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

@@ -23,6 +23,11 @@ import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
+import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfiguration;
+import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfigurationService;
+import dk.digitalidentity.service.statistic.model.enumerable.AggregationMethod;
+import dk.digitalidentity.service.statistic.model.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.model.enumerable.Period;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +81,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final ChoiceService choiceService;
 	private final RegisterService registerService;
 	private final KLEService kleService;
+	private final ChartConfigurationService chartConfigurationService;
 
 	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -115,6 +121,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(27, this::seedV27);
         incrementAndPerformIfVersion(28, this::seedV28);
         incrementAndPerformIfVersion(29, this::seedV29);
+        incrementAndPerformIfVersion(30, this::seedV30);
     }
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -128,6 +135,12 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             return 0;
         });
     }
+
+	private void seedV30() {
+		chartConfigurationService.saveAll(
+		 	buildChartConfigurations()
+		);
+	}
 
 	// TODO 2025/08/18 Remove when all is migrated
 	@SneakyThrows
@@ -450,4 +463,24 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
             tagDao.save(nis2);
         }
     }
+
+	private List<ChartConfiguration> buildChartConfigurations() {
+		final List<ChartConfiguration> chartConfigurations = new ArrayList<>();
+		chartConfigurations.add(
+				new ChartConfiguration().builder()
+						.entityName("Task")
+						.section("Dashboard")
+						.name("Fordeling af opgaver")
+						.type(ChartType.STACKEDBAR)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(true)
+						.supportedXFields(List.of("nextDeadline"))
+						.supportedYFields(List.of("taskType"))
+						.groupTimeByField(Period.MONTH)
+						.defaultStartTime(null)
+						.defaultEndTime(null)
+						.build()
+		);
+		return chartConfigurations;
+	}
 }

@@ -7,6 +7,15 @@ import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
+import dk.digitalidentity.service.statistic.model.enumerable.AggregationMethod;
+import dk.digitalidentity.service.statistic.model.interfaces.ChartJSDatasetable;
+import dk.digitalidentity.service.statistic.model.dto.ChartJsConfigDTO;
+import dk.digitalidentity.service.statistic.model.dto.ChartJsDataDTO;
+import dk.digitalidentity.service.statistic.model.dto.ChartJsGeneralDatasetDTO;
+import dk.digitalidentity.service.statistic.model.dto.ChartJsPieDatasetDTO;
+import dk.digitalidentity.service.statistic.model.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.model.enumerable.Period;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.Join;
@@ -43,15 +52,15 @@ public class StatisticService {
 	private final UserService userService;
 
 	public ChartJsConfigDTO generateChart(Class<? extends StatisticEnabled> entityClass,
-			ChartType chartType,
-			String xField,
-			String yField,
-			AggregationMethod aggregation,
-			boolean ownerOnly,
-			Period groupTimeBy,
-			String dateField,
-			LocalDate startDate,
-			LocalDate endDate) {
+										  ChartType chartType,
+										  String xField,
+										  String yField,
+										  AggregationMethod aggregation,
+										  boolean ownerOnly,
+										  Period groupTimeBy,
+										  String dateField,
+										  LocalDate startDate,
+										  LocalDate endDate) {
 
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(

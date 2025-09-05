@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.service.statistic.StatisticEnabled;
+import dk.digitalidentity.service.statistic.model.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
