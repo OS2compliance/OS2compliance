@@ -15,7 +15,9 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-165) Opgavecenter - Mulighed for at tilføje forvaltning
 - (https://os2web.atlassian.net/browse/COMPLY-69) Standarder - Oversigt over progression
 - (https://os2web.atlassian.net/browse/COMPLY-252) Ny rolle Læseadgang
+- (https://os2web.atlassian.net/browse/COMPLY-295) (COMPLY-295) Mulighed for at koble tilsyn på flere aktiver
 - (Ad-hoc) Mulighed for at udskrive standarder
+- (Ad-hoc) Advarsel når man går væk fra en side man er ved at redigere
 
 ### Fixed
 - (Adhoc) Tilføj dokument til aktiv virker ikke
