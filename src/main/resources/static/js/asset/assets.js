@@ -148,13 +148,13 @@
                 {
                     name: "Systemejer",
                     searchable: {
-                        searchKey: 'ownedByUserNames'
+                        searchKey: 'responsibleUserNames'
                     },
                 },
                 {
                     name: "Systemansvarlig",
                     searchable: {
-                        searchKey: 'responsibleUserNames'
+                        searchKey: 'managerUserNames'
                     }
                 },
                 {
