@@ -39,12 +39,15 @@ public class KLEKeyword implements Persistable<String> {
 	private String handlingsfacetNr;
 
 	@ManyToMany(mappedBy = "keywords", fetch = FetchType.LAZY)
+	@Builder.Default
 	private Set<KLEGroup> groups = new HashSet<>();
 
 	@ManyToMany(mappedBy = "keywords", fetch = FetchType.LAZY)
+	@Builder.Default
 	private Set<KLESubject> subjects = new HashSet<>();
 
 	@Transient
+	@Builder.Default
 	private boolean isNew = true;
 
 	public void setAsNew() {
