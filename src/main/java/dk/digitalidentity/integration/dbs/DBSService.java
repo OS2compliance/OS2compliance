@@ -11,7 +11,6 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DBSOversight;
 import dk.digitalidentity.model.entity.DBSSupplier;
-import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
@@ -64,8 +63,12 @@ public class DBSService {
     public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
         //Filter only itSystems related to this cvr
         final List<ItSystem> relevantItSystems = allItSystems.stream()
-            .filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
-            .toList();
+				.filter(i ->
+						   "on_going".equals(i.getStatus().getValue())
+						|| "waiting".equals(i.getStatus().getValue())
+						|| "published".equals(i.getStatus().getValue()))
+				.filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
+				.toList();
         log.debug("Found {} relevant itSystems in DBS", relevantItSystems.size());
 
         // First synchronize all suppliers
@@ -135,7 +138,7 @@ public class DBSService {
 
 	private void mapKitosAssetsToDBS(ItSystem itSystem, @NotNull DBSAsset dbsAsset) {
 		Set<Long> assetIds = assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, itSystem.getKitosUuid()).stream().map(Asset::getId).collect(Collectors.toSet());
-		if (assetIds != null && !assetIds.isEmpty()) {
+		if (!assetIds.isEmpty()) {
 			relationService.setRelationsAbsolute(dbsAsset, assetIds);
 			assetOversightService.setAssetsToDbsOversight(assetService.findAllById(assetIds));
 		}
@@ -211,7 +214,7 @@ public class DBSService {
                     existingDBSOversight.setName(document.getName());
                     changes = true;
                 }
-                if (document.getLocked() != null && !Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
+                if (!Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
                     existingDBSOversight.setLocked(document.getLocked());
                     changes = true;
                 }

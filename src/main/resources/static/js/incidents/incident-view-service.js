@@ -2,6 +2,7 @@ import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 const incidentViewService = new IncidentViewService();
+
 document.addEventListener("DOMContentLoaded", function(event) {
     incidentViewService.init();
 });
