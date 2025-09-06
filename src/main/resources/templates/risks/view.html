@@ -73,8 +73,8 @@
                                    <th class="riskViewTh" colspan="5"></th>
                                    <th class="riskViewTh" colspan="3" th:if="${risk.registered}">Konsekvens for den registrerede</th>
                                    <th class="riskViewTh" colspan="3" th:if="${risk.organisation}">Konsekvens for organisationen</th>
-                                   <th class="riskViewTh" colspan="3" th:if="${risk.society AND !risk.authenticity}">Konsekvens for samfundet</th>
-                                   <th class="riskViewTh" colspan="4" th:if="${risk.society AND risk.authenticity}">Konsekvens for samfundet</th>
+                                   <th class="riskViewTh" colspan="3" th:if="${risk.society && !risk.authenticity}">Konsekvens for samfundet</th>
+                                   <th class="riskViewTh" colspan="4" th:if="${risk.society && risk.authenticity}">Konsekvens for samfundet</th>
                                    <th class="riskViewTh" colspan="3"></th>
                                    <th class="riskViewTh" colspan="3">Residualrisiko</th>
                                 </tr>
@@ -276,13 +276,13 @@
                                                 </button>
                                             </td>
                                             <td class="riskViewTd riskViewResidual editCell" >
-                                                <select th:id="'residualRiskProbabilityBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_PROBABILITY" th:value="${row.residualRiskProbability}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
+                                                <select th:id="'residualRiskProbabilityBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_PROBABILITY" th:value="${row.residualRiskProbability}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT || row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
                                                     <option value="-1" th:selected="${row.residualRiskProbability} == -1"></option>
                                                     <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskProbability == entry.key}"></option>
                                                 </select>
                                             </td>
                                             <td class="riskViewTd riskViewResidual editCell" >
-                                                <select th:id="'residualRiskConsequenceBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_CONSEQUENCE" th:value="${row.residualRiskConsequence}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
+                                                <select th:id="'residualRiskConsequenceBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_CONSEQUENCE" th:value="${row.residualRiskConsequence}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT || row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
                                                     <option value="-1" th:selected="${row.residualRiskConsequence} == -1"></option>
                                                     <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskConsequence == entry.key}"></option>
                                                 </select>
