@@ -58,6 +58,7 @@ public class KLELegalReference implements Persistable<String> {
 	private Set<Register> registers = new HashSet<>();
 
 	@Transient
+	@Builder.Default
 	private boolean isNew = true;
 
 	public void setAsNew() {
