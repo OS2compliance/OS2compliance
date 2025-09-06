@@ -93,12 +93,13 @@ public class DBSService {
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
                 asset.setStatus(itSystem.getStatus().getValue());
-				mapKitosAssetsToDBS(itSystem, asset);
 				if (itSystem.getNextRevision() != null) {
-                    asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
-                }
-                dbsAssetDao.save(asset);
-            })
+					asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+				}
+				dbsAssetDao.save(asset);
+				// Call this here to assure that asset is saved in the DB already
+				mapKitosAssetsToDBS(itSystem, asset);
+			})
             .count();
 
         // Update existing
