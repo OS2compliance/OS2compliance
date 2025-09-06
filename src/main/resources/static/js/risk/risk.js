@@ -29,7 +29,10 @@ const preselect = new Preselect();
 let registerView = true;
 
 document.addEventListener("DOMContentLoaded", function (event) {
-    createExternalRiskassessmentService = new CreateExternalRiskassessmentService()
+    if (typeof CreateExternalRiskassessmentService === "function") {
+        // CreateExternalRiskassessmentService might not always be defined
+        createExternalRiskassessmentService = new CreateExternalRiskassessmentService()
+    }
 
     const table = document.getElementById("risksDatatable");
     if (table) {
@@ -436,7 +439,7 @@ function EditRiskService() {
         if (this.assetChoicesSelect != null) {
             result &= checkInputField(this.assetChoicesSelect, true);
         }
-        return result;
+        return result && validateInputFieldLength("editName", 255);
     }
 }
 
@@ -574,7 +577,7 @@ function CreateRiskService() {
         initFormValidationForForm("createRiskModal",
             () => {
                 return this.validateEntitySelection() &&
-                    this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect);
+                    this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect) && validateInputFieldLength("name", 255);
             });
 
     }
