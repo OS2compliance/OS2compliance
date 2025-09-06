@@ -11,19 +11,25 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-136) Tilføjelse af felter til ansvarlig forvaltning
 - (https://os2web.atlassian.net/browse/COMPLY-224) Man skal kunne sætte flere links ind på en opgave
 - (https://os2web.atlassian.net/browse/COMPLY-331) (Aktiver) Systemansvarlig som kolonne på listevisningen
-- (https://os2web.atlassian.net/browse/COMPLY-177) Visningen i opgavehistorikken skal vende om, så den seneste kontrol står øverst
+- (https://os2web.atlassian.net/browse/COMPLY-277) Visningen i opgavehistorikken skal vende om, så den seneste kontrol står øverst
 - (https://os2web.atlassian.net/browse/COMPLY-165) Opgavecenter - Mulighed for at tilføje forvaltning
 - (https://os2web.atlassian.net/browse/COMPLY-69) Standarder - Oversigt over progression
+- (https://os2web.atlassian.net/browse/COMPLY-252) Ny rolle Læseadgang
+- (https://os2web.atlassian.net/browse/COMPLY-295) (COMPLY-295) Mulighed for at koble tilsyn på flere aktiver
 - (Ad-hoc) Mulighed for at udskrive standarder
+- (Ad-hoc) Advarsel når man går væk fra en side man er ved at redigere
 
 ### Fixed
 - (Adhoc) Tilføj dokument til aktiv virker ikke
+- (Adhoc) Rettet OS2kitos integration, den fjernede ikke ansvarlige, den tilføjede kun
+- (Adhoc) Print kontrol virkede ikke 
+
 ### Changed
 - (Adhoc) Added more KLE details after test feedback 
 - (Adhoc) Split excel export functionality into own endpoints
 
 ### Removed
-- (Adhoc) Remove DP
+- (Adhoc) Fjernet DPO for behandlingsaktiviteter, da der allerede var en global indstilling
 
 ## [2.3.0] - 2025-08-23
 

@@ -259,37 +259,45 @@
                                             <select class="form-control form-select choices__input col-sm-8"
                                                     id="ownerSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                                <option value="">Ingen</option>
                                                 <option th:each="role : ${kitosRoles}"
                                                         th:value="${role.uuid}"
-                                                        th:text="${role.name}"></option>
+                                                        th:text="${role.name}"
+                                                        th:selected="${role.uuid} == ${setting.settingValue}">
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
-                                    <div
-                                        th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_KEY}">
+                                    <div th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_RESPONSIBLE_ROLE_SETTING_KEY}">
                                         <div class="row mt-1">
-                                            <label for="ownerSelect" class="col-sm-10 col-form-label"
+                                            <label for="responsibleSelect" class="col-sm-10 col-form-label"
                                                    style="color: black;" th:text="${'Vælg ' + customSystemResponsibleInput.settingValue + ' rolle i Kitos'}"></label>
                                             <select class="form-control form-select choices__input"
                                                     id="responsibleSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                                <option value="">Ingen</option>
                                                 <option th:each="role : ${kitosRoles}"
                                                         th:value="${role.uuid}"
-                                                        th:text="${role.name}"></option>
+                                                        th:text="${role.name}"
+                                                        th:selected="${role.uuid} == ${setting.settingValue}">
+                                                </option>
                                             </select>
                                         </div>
                                     </div>
                                     <div
                                             th:if="${setting.settingKey == T(dk.digitalidentity.integration.kitos.KitosConstants).KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY}">
                                         <div class="row mt-1">
-                                            <label for="ownerSelect" class="col-sm-10 col-form-label"
+                                            <label for="otherSelect" class="col-sm-10 col-form-label"
                                                    style="color: black;" th:text="${'Vælg ' + customSystemOperationResponsibleInput.settingValue + ' rolle i Kitos'}"></label>
                                             <select class="form-control form-select choices__input col-sm-8"
                                                     id="otherSelect"
                                                     th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                                <option value="">Ingen</option>
                                                 <option th:each="role : ${kitosRoles}"
                                                         th:value="${role.uuid}"
-                                                        th:text="${role.name}"></option>
+                                                        th:text="${role.name}"
+                                                        th:selected="${role.uuid} == ${setting.settingValue}">
+                                                </option>
                                             </select>
                                         </div>
                                     </div>

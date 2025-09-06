@@ -84,9 +84,11 @@ public class KLESubject implements Persistable<String> {
 			joinColumns = @JoinColumn(name = "subject_number"),
 			inverseJoinColumns = @JoinColumn(name = "hashed_id")
 	)
+	@Builder.Default
 	private Set<KLEKeyword> keywords = new HashSet<>();
 
 	@Transient
+	@Builder.Default
 	private boolean isNew = true;
 
 	public void setAsNew() {
