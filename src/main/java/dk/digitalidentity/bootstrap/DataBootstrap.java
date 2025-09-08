@@ -23,6 +23,9 @@ import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
+import dk.digitalidentity.service.statistic.enumerable.DateTimePreset;
+import dk.digitalidentity.service.statistic.enumerable.SelectableAxis;
+import dk.digitalidentity.service.statistic.enumerable.SelectablePeriod;
 import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfiguration;
 import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfigurationService;
 import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
@@ -473,11 +476,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.type(ChartType.STACKEDBAR)
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(true)
+						.selectableAxis(SelectableAxis.NONE)
 						.allowedXFieldChoices(List.of("nextDeadline"))
 						.allowedYFieldChoices(List.of("taskType"))
+						.selectablePeriod(SelectablePeriod.BOTH)
 						.groupTimeByField(Period.MONTH)
-						.defaultStartTime(null)
-						.defaultEndTime(null)
+						.defaultStartTime(DateTimePreset.NONE)
+						.defaultEndTime(DateTimePreset.NONE)
 						.build(),
 				ChartConfiguration.builder()
 						.entityName("Task")
@@ -486,11 +491,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.type(ChartType.PIE)
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.NONE)
 						.allowedXFieldChoices(List.of("status"))
-						.allowedYFieldChoices(List.of("status"))
+						.allowedYFieldChoices(new ArrayList<>())
+						.selectablePeriod(SelectablePeriod.NONE)
 						.groupTimeByField(null)
-						.defaultStartTime(null)
-						.defaultEndTime(null)
+						.defaultStartTime(DateTimePreset.NONE)
+						.defaultEndTime(DateTimePreset.NONE)
 						.build(),
 				ChartConfiguration.builder()
 						.entityName("Task")
@@ -499,11 +506,13 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.type(ChartType.BAR)
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(false)
-						.allowedXFieldChoices(List.of("responsibleUser.name","responsibleOu.name"))
-						.allowedYFieldChoices(List.of("responsibleUser","responsibleOu"))
+						.selectableAxis(SelectableAxis.Y_ONLY)
+						.allowedXFieldChoices(List.of("responsibleUser","responsibleOu"))
+						.allowedYFieldChoices(new ArrayList<>())
+						.selectablePeriod(SelectablePeriod.NONE)
 						.groupTimeByField(null)
-						.defaultStartTime(null)
-						.defaultEndTime(null)
+						.defaultStartTime(DateTimePreset.NONE)
+						.defaultEndTime(DateTimePreset.CURRENT_TIME)
 						.build()
 		);
 	}

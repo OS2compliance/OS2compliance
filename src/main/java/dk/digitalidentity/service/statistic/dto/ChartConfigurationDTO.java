@@ -19,9 +19,15 @@ public class ChartConfigurationDTO {
 	private ChartType type;
 	private AggregationMethod aggregation;
 	private Boolean ownerOnly;
-	private List<EntityFieldChoiceDTO> allowedXFieldChoices = new ArrayList<>();
-	private List<EntityFieldChoiceDTO> allowedYFieldChoices = new ArrayList<>();
+	private boolean showGroupTime;
+	private boolean showXField;
+	private List<EntityFieldChoiceDTO> allowedXFieldChoices;
+	private boolean showYField;
+	private List<EntityFieldChoiceDTO> allowedYFieldChoices;
 	private Period groupTimeByField;
+	private boolean showStartTime;
 	private LocalDateTime defaultStartTime;
+	private boolean showEndTime;
 	private LocalDateTime defaultEndTime;
+	private boolean yFieldFromXField;
 }

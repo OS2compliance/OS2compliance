@@ -3,7 +3,10 @@ package dk.digitalidentity.service.statistic.model.ChartConfiguration;
 import dk.digitalidentity.config.StringListNullSafeConverter;
 import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
 import dk.digitalidentity.service.statistic.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.enumerable.DateTimePreset;
 import dk.digitalidentity.service.statistic.enumerable.Period;
+import dk.digitalidentity.service.statistic.enumerable.SelectableAxis;
+import dk.digitalidentity.service.statistic.enumerable.SelectablePeriod;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -21,7 +24,6 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -55,16 +57,23 @@ public class ChartConfiguration {
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
-	private ChartType type;
+	private ChartType type = ChartType.BAR;
 
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
-	private AggregationMethod aggregation;
+	private AggregationMethod aggregation = AggregationMethod.COUNT;
+
 
 	@NotNull
 	@Column
-	private Boolean ownerOnly;
+	@Enumerated(EnumType.STRING)
+	private SelectableAxis selectableAxis = SelectableAxis.X_ONLY;
+
+	@NotNull
+	@Column
+	@Enumerated(EnumType.STRING)
+	private SelectablePeriod selectablePeriod = SelectablePeriod.NONE;
 
 	@Column(name = "allowed_x_field_choices")
 	@Convert(converter = StringListNullSafeConverter.class)
@@ -78,10 +87,18 @@ public class ChartConfiguration {
 	@Enumerated(EnumType.STRING)
 	private Period groupTimeByField;
 
+	@NotNull
 	@Column
-	private LocalDateTime defaultStartTime;
+	@Enumerated(EnumType.STRING)
+	private DateTimePreset defaultStartTime = DateTimePreset.NONE;
 
+	@NotNull
 	@Column
-	private LocalDateTime defaultEndTime;
+	@Enumerated(EnumType.STRING)
+	private DateTimePreset defaultEndTime = DateTimePreset.NONE;
+
+	@NotNull
+	@Column
+	private Boolean ownerOnly = false;
 
 }
