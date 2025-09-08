@@ -34,6 +34,7 @@ public class StatisticController {
 	}
 
 	private final Set<String> statisticSupportedSections = Set.of(
+			"dashboard",
 			"asset",
 			"incident",
 			"task",
