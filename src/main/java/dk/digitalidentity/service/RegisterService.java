@@ -120,9 +120,12 @@ public class RegisterService {
 
     @Transactional
     public void delete(final Register register) {
-        dataProcessingDao.delete(register.getDataProcessing());
-        consequenceAssessmentDao.delete(register.getConsequenceAssessment());
 		relationService.deleteRelatedTo(register.getId());
+		register.setDataProcessing(null);
+		if (register.getConsequenceAssessment() != null) {
+			register.getConsequenceAssessment().setRegister(null);
+			register.setConsequenceAssessment(null);
+		}
         registerDao.delete(register);
     }
 

@@ -1,8 +1,29 @@
+import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+
+let onUnSubmittedService = new OnUnSubmittedService();
 
 document.addEventListener("DOMContentLoaded", () => {
     window.CreateCkEditor(document.querySelector('#description-editor'), editor => {
         window.editor = editor;
         setEditState(false);
+    });
+
+    const editDescBtn = document.getElementById("editDescBtn");
+    const cancelBtn = document.getElementById("cancelBtn");
+    const saveBtn = document.getElementById("saveBtn");
+
+    editDescBtn?.addEventListener("click", () => {
+        setEditState(true);
+        onUnSubmittedService.setChangesMade();
+    });
+
+    cancelBtn?.addEventListener("click", () => {
+        setEditState(false);
+        onUnSubmittedService.reset();
+    });
+
+    saveBtn?.addEventListener("click", () => {
+        onUnSubmittedService.reset();
     });
 });
 

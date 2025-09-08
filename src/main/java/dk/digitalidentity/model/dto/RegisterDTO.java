@@ -61,5 +61,6 @@ public class RegisterDTO {
 	@Builder.Default
 	private Set<String> kleGroups = new HashSet<>();
 	@ExcludeFromExport
+	@Builder.Default
 	private Set<AllowedAction> allowedActions = new HashSet<>();
 }

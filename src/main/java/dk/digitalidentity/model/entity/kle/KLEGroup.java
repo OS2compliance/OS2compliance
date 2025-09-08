@@ -64,7 +64,7 @@ public class KLEGroup  implements Persistable<String> {
 	@OneToMany(mappedBy = "group", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
 	private Set<KLESubject> subjects = new HashSet<>();
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(
 			name = "kle_group_legal_reference",
 			joinColumns = @JoinColumn(name = "group_number"),
@@ -73,15 +73,17 @@ public class KLEGroup  implements Persistable<String> {
 	@Builder.Default
 	private Set<KLELegalReference> legalReferences = new HashSet<>();
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany
 	@JoinTable(
 			name = "kle_group_keyword",
 			joinColumns = @JoinColumn(name = "group_number"),
 			inverseJoinColumns = @JoinColumn(name = "hashed_id")
 	)
+	@Builder.Default
 	private Set<KLEKeyword> keywords = new HashSet<>();
 
 	@Transient
+	@Builder.Default
 	private boolean isNew = true;
 
 	public void setAsNew() {

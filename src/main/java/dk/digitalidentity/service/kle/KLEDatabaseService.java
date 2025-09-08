@@ -175,8 +175,8 @@ public class KLEDatabaseService {
 			g.markAsExisting();
 			toSave.add(g);
 		});
-
 		kLELegalReferenceService.saveAll(toSave);
+
 	}
 
 	public void syncKeywords(final Map<String, KLEKeyword> cache, Collection<KLEKeyword> allExisting) {

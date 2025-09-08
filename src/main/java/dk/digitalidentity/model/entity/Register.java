@@ -142,7 +142,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 	@Column
 	private String supplementalLegalBasis;
 
-    @OneToOne(mappedBy = "register")
+	@OneToOne(mappedBy = "register", cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
     private ConsequenceAssessment consequenceAssessment;
 

@@ -3,7 +3,6 @@
 <head th:replace="~{fragments/header :: head (burgermenu = true)}"></head>
 <body class="jumping">
 
-<script th:src="@{/js/task/view.js}" defer></script>
 <script th:src="@{/js/oversight/oversight-service.js}" defer></script>
 <script th:src="@{/js/tag-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
@@ -47,9 +46,9 @@
                         <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
                                 <div class="row mb-3">
                                     <button th:unless="${completed}" th:if="${changeableTask}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right">Rediger stamdata</button>
                                     <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.empty}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
-                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.present}" id="oversightBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" onclick="viewTaskService.showOversightDialog(this)" th:attr="data-asset-id=${oversightAsset.get().id}">Udfør tilsyn</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.present}" id="oversightBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" th:attr="data-asset-id=${oversightAsset.get().id}">Udfør tilsyn</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">
@@ -229,7 +228,7 @@
             </div>
         </div>
     </section>
-                            </form>
+    </form>
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}"></nav>
 </div>
@@ -253,6 +252,8 @@
     +]*/
     /*]]>*/
 </script>
+
+<script type="module" th:src="@{/js/task/view.js}" defer></script>
 
 </body>
 

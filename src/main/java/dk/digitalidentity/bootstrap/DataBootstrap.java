@@ -125,6 +125,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         incrementAndPerformIfVersion(28, this::seedV28);
         incrementAndPerformIfVersion(29, this::seedV29);
         incrementAndPerformIfVersion(30, this::seedV30);
+        incrementAndPerformIfVersion(31, this::seedV31);
     }
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -139,10 +140,21 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
         });
     }
 
-	private void seedV30() {
+	private void seedV31() {
 		chartConfigurationService.saveAll(
-		 	buildChartConfigurations()
+				buildChartConfigurations()
 		);
+	}
+
+	@SneakyThrows
+	private void seedV30() {
+		// Make sure we have all kitos settings available
+		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY, "" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY, "" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_FIELDS_CONTRACT_END, "" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_FIELDS_CONTRACT_DATE, "" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, "" , "kitos", true);
 	}
 
 	// TODO 2025/08/18 Remove when all is migrated
