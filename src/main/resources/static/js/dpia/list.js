@@ -171,8 +171,6 @@ function initGrid() {
                 sort: 0,
                 width: '100px',
                 formatter: (cell, row) => {
-                    console.log(cell)
-                    console.log(row)
                     const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
                     const external = row.cells[8]['data']
@@ -229,7 +227,6 @@ function initGrid() {
 function initGridListItemButtons() {
     delegateListItemActions('dpiaDatatable',
         (id, elem) => {
-        console.log(elem.dataset.external)
             if (elem.dataset.external === 'true') {
                 createExternalDPIAService.editExternalClicked(id)
             } else {

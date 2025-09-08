@@ -1,4 +1,4 @@
-import {initStatisticView} from "./statisticView.js";
+import {initStatisticView} from "../statistic/statisticView.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");

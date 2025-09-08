@@ -1,20 +1,13 @@
 package dk.digitalidentity.service.statistic.dto.chartJS;
 
-import dk.digitalidentity.service.statistic.interfaces.ChartJSDatasetable;
+import dk.digitalidentity.service.statistic.enumerable.ChartType;
+import lombok.Builder;
 import lombok.Getter;
-import lombok.Setter;
-
-import java.util.ArrayList;
-import java.util.List;
 
 @Getter
-@Setter
+@Builder
 public class ChartJsConfigDTO {
-	private List<String> labels;
-	private List<ChartJSDatasetable> datasets;
-
-	public ChartJsConfigDTO() {
-		this.datasets = new ArrayList<>();
-	}
-
+	private String title;
+	private ChartType type;
+	private ChartJsDataDTO data;
 }

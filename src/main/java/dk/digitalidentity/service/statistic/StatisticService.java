@@ -1,5 +1,6 @@
 package dk.digitalidentity.service.statistic;
 
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
@@ -10,8 +11,8 @@ import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
 import dk.digitalidentity.service.statistic.interfaces.ChartJSDatasetable;
-import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsConfigDTO;
 import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsDataDTO;
+import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsDataPointDTO;
 import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsGeneralDatasetDTO;
 import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsPieDatasetDTO;
 import dk.digitalidentity.service.statistic.enumerable.ChartType;
@@ -53,7 +54,7 @@ public class StatisticService {
 	private final EntityManager entityManager;
 	private final UserService userService;
 
-	public ChartJsConfigDTO generateChart(Class<? extends StatisticEnabled> entityClass,
+	public ChartJsDataDTO generateChart(Class<? extends StatisticEnabled> entityClass,
 			ChartType chartType,
 			String xField,
 			String yField,
@@ -64,14 +65,18 @@ public class StatisticService {
 			LocalDate startDate,
 			LocalDate endDate) {
 
+		// if the entity field is of type relation, get its name for the label field
+		String parsedLabel = getLabelAttributeForField(entityClass, xField)
+				.orElse(xField);
+
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(
-				entityClass, ownerOnly, dateField, startDate, endDate, xField, yField);
+				entityClass, ownerOnly, dateField, startDate, endDate, parsedLabel, yField);
 
 		return switch (chartType) {
-			case ChartType.BAR -> generateBarChart(rawData, xField, yField, aggregation, groupTimeBy);
-			case ChartType.PIE -> generatePieChart(rawData, xField, yField, aggregation, groupTimeBy);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xField, yField, aggregation, groupTimeBy);
+			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
+			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
 		};
 	}
 
@@ -158,7 +163,7 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsConfigDTO generateStackedBarChart(
+	private ChartJsDataDTO generateStackedBarChart(
 			List<Map<String, Object>> rawData,
 			String xField,
 			String yField,
@@ -181,13 +186,13 @@ public class StatisticService {
 						)
 				));
 
-		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
+		ChartJsDataDTO chartData = new ChartJsDataDTO();
 
 		List<ChartJSDatasetable> datasets = new ArrayList<>();
 
 		for (Map.Entry<String, Map<String, List<Object>>> stackEntry : stackData.entrySet()) {
 			// Create list of ChartJsDataDTO objects belonging to each stack
-			List<ChartJsDataDTO> data = xCategories.stream()
+			List<ChartJsDataPointDTO> data = xCategories.stream()
 					.map(category -> {
 						List<Object> values = stackEntry.getValue().getOrDefault(category, new ArrayList<>());
 						Object value = aggregateValues(values, aggregation);
@@ -213,7 +218,7 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsConfigDTO generateBarChart(
+	private ChartJsDataDTO generateBarChart(
 			List<Map<String, Object>> rawData,
 			String xField,
 			String yField,
@@ -223,18 +228,18 @@ public class StatisticService {
 		// Group by formatted x field
 		Map<String, List<Object>> groupedData = groupData(rawData, xField, yField, groupDateBy);
 
-		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
+		ChartJsDataDTO chartData = new ChartJsDataDTO();
 
 		List<ChartJSDatasetable> datasets = new ArrayList<>();
 
 		// Create list of ChartJsDataDTO objects
-		List<ChartJsDataDTO> data = groupedData.entrySet().stream()
+		List<ChartJsDataPointDTO> data = groupedData.entrySet().stream()
 				.map(entry -> {
 					List<Object> values = entry.getValue();
 					Object value = aggregateValues(values, aggregation);
 					return toChartDataDTO(value, entry.getKey());
 				})
-				.sorted(Comparator.comparing(ChartJsDataDTO::getX))
+				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
 				.toList();
 
 		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
@@ -254,7 +259,7 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsConfigDTO generatePieChart(
+	private ChartJsDataDTO generatePieChart(
 			List<Map<String, Object>> rawData,
 			String xField,
 			String yField,
@@ -264,7 +269,7 @@ public class StatisticService {
 		// Group by formatted x field
 		Map<String, List<Object>> groupedData = groupData(rawData, xField, yField, groupDateBy);
 
-		ChartJsConfigDTO chartData = new ChartJsConfigDTO();
+		ChartJsDataDTO chartData = new ChartJsDataDTO();
 
 		List<ChartJSDatasetable> datasets = new ArrayList<>();
 
@@ -436,8 +441,8 @@ public class StatisticService {
 	 * @param categoryLabel label for the data point
 	 * @return ChartJsDataDTO conforming to ChartJS data structure
 	 */
-	private ChartJsDataDTO toChartDataDTO(Object value, String categoryLabel) {
-		ChartJsDataDTO dataPoint = new ChartJsDataDTO();
+	private ChartJsDataPointDTO toChartDataDTO(Object value, String categoryLabel) {
+		ChartJsDataPointDTO dataPoint = new ChartJsDataPointDTO();
 		dataPoint.setX(categoryLabel);  // Category label
 		dataPoint.setY(value);  // y-axis value
 
@@ -559,6 +564,22 @@ public class StatisticService {
 			StatisticLabel labelAnnotation = field.getAnnotation(StatisticLabel.class);
 			if (labelAnnotation != null) {
 				return Optional.of(labelAnnotation.value());
+			}
+			return Optional.empty();
+		}
+		catch (NoSuchFieldException e) {
+			return Optional.empty();
+		}
+	}
+
+	public Optional<String> getLabelAttributeForField(Class<? extends StatisticEnabled> entityClass, String fieldName) {
+		try {
+			Field field = entityClass.getDeclaredField(fieldName);
+
+			Class<?> fieldType = field.getType();
+			// if the field is relatable or a User, return the 'name' of the relatable
+			if (User.class.isAssignableFrom(fieldType) || fieldType.isAssignableFrom(Relatable.class)) {
+				return Optional.of(fieldName + ".name");
 			}
 			return Optional.empty();
 		}

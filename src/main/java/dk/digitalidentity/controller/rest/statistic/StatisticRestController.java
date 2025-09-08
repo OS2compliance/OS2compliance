@@ -5,12 +5,13 @@ import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
 import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsConfigDTO;
-import dk.digitalidentity.service.statistic.enumerable.ChartType;
+import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsDataDTO;
 import dk.digitalidentity.service.statistic.enumerable.Period;
 import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import dk.digitalidentity.service.statistic.StatisticService;
+import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfiguration;
+import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfigurationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -30,6 +31,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class StatisticRestController {
 	private final StatisticService statisticService;
+	private final ChartConfigurationService chartConfigurationService;
 
 	private final Map<String, Class<? extends StatisticEnabled>> entityMap = Map.of
 			(
@@ -40,32 +42,41 @@ public class StatisticRestController {
 			"threatassessment", ThreatAssessment.class
 	);
 
-	@GetMapping("{entityName}")
+	@GetMapping("{chartId}")
 	public ResponseEntity<ChartJsConfigDTO> getChart(
-			@PathVariable String entityName,
-			@RequestParam ChartType type,
-			@RequestParam String x, // X-axis field, usually for label
-			@RequestParam String y, // Y-axis field, usually for values
-			@RequestParam(defaultValue = "COUNT") AggregationMethod aggregation,
+			@PathVariable Long chartId,
+			@RequestParam(required = false) String x, // X-axis field, usually for label
+			@RequestParam(required = false) String y, // Y-axis field, usually for values
 			@RequestParam(required = false) Period groupTimeBy,
-			@RequestParam(required = false, defaultValue = "false") Boolean ownerOnly,
-			@RequestParam(required = false) String dateField, // Date field for filtering
 			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate startDate,
 			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate endDate
 	) {
 
-		Class<? extends StatisticEnabled> entityClass = entityMap.get(entityName);
+		ChartConfiguration chartConfig = chartConfigurationService.findById(chartId)
+				.orElseThrow();
+
+		Class<? extends StatisticEnabled> entityClass = entityMap.get(chartConfig.getEntityName().toLowerCase());
+
+		String xField = x;
+		String yField = y;
+		if (chartConfig.getAllowedYFieldChoices().isEmpty()) {
+			// if no value-fields are allowed, it should be the same as the label field
+			yField = xField;
+		}
 
 		if (entityClass == null
-				|| type == null
-				|| x == null
-				|| y == null
+				|| xField == null
+				|| yField == null
 		) {
 			return ResponseEntity.badRequest().build();
 		}
 
-		ChartJsConfigDTO chartData = statisticService.generateChart(entityClass, type, x, y, aggregation, ownerOnly, groupTimeBy, dateField, startDate, endDate);
-		return ResponseEntity.ok(chartData);
+		ChartJsDataDTO chartData = statisticService.generateChart(entityClass, chartConfig.getType(), x, y, chartConfig.getAggregation(), chartConfig.getOwnerOnly(), groupTimeBy, chartConfig.getAllowedDateFieldChoices().stream().findFirst().orElse(null), startDate, endDate);
+		return ResponseEntity.ok(ChartJsConfigDTO.builder()
+						.title(chartConfig.getName())
+						.type(chartConfig.getType())
+						.data(chartData)
+				.build());
 
 	}
 

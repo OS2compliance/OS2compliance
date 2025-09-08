@@ -83,6 +83,14 @@ public class ChartConfiguration {
 	@Convert(converter = StringListNullSafeConverter.class)
 	private List<String> allowedYFieldChoices = new ArrayList<>();
 
+	@NotNull
+	@Column
+	private Boolean selectableDateField = false;
+
+	@Column(name = "allowed_date_field_choices")
+	@Convert(converter = StringListNullSafeConverter.class)
+	private List<String> allowedDateFieldChoices = new ArrayList<>();
+
 	@Column
 	@Enumerated(EnumType.STRING)
 	private Period groupTimeByField;

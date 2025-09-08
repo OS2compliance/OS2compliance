@@ -74,6 +74,7 @@ public class StatisticController {
 						chartConfig.getName(),
 						chartConfig.getEntityName(),
 						chartConfig.getId()))
+				.toList()
 		);
 
 		return "statistic/pageView/" + section;

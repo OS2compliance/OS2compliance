@@ -34,7 +34,7 @@ export async function renderOverdueChart () {
         ownerOnly : false,
     }
 
-    await renderChart(config, 'testChart2', "Overskredne opgaver");
+    await renderChart(config, 'testChart2');
 }
 
 export async function renderTaskStatusChart () {

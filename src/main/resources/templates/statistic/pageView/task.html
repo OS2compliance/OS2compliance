@@ -3,33 +3,8 @@
       xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <body>
-<th:block th:replace="~{fragments/component/modalWrapper :: modalWrapper(title='Opgaver', content=~{::content}, footer=~{::footer})}">
 
-    <th:block th:fragment="content">
-        <div id="optionsContainer">
+<th:block th:replace="~{statistic/fragment/defaultStatisticView :: defaultStatisticView(title='Opgave statistik')}"></th:block>
 
-            <!--Diagram picker-->
-            <div class="form-group">
-                <label for="diagramSelector" class="form-label">Vælg diagram</label>
-                <select id="diagramSelector" class="form-control">
-                    <option th:each="diagram : ${availableDiagrams}" th:value="${diagram.id}" th:text="${diagram.name}" th:attr="data-entity-name=${diagram.entityName}"></option>
-                </select>
-            </div>
-
-            <div id="additionalOptionsContainer" hidden>
-
-            </div>
-        </div>
-        <div id="diagramContainer">
-
-        </div>
-    </th:block>
-
-    <th:block th:fragment="footer">
-        <!--        Generér diagram knap-->
-
-    </th:block>
-
-</th:block>
 </body>
 </html>

@@ -1,32 +1,30 @@
 
 export const CHARTTYPE = {
-    BAR : "BAR",
-    PIE : "PIE",
+    BAR: "BAR",
+    PIE: "PIE",
     STACKED_BAR: "STACKEDBAR",
 }
 
 export const AGGREGATION_TYPE = {
-    COUNT : 'COUNT',
-    SUM:'SUM',
-    AVG : 'AVERAGE',
-    MIN : 'MIN',
-    MAX : 'MAX',
+    COUNT: 'COUNT',
+    SUM: 'SUM',
+    AVG: 'AVERAGE',
+    MIN: 'MIN',
+    MAX: 'MAX',
 }
 
 const defaultConfig = {
-    entity : 'task',
-    type : CHARTTYPE.BAR,
-    x : 'name',
-    y : 'id',
-    aggregation : AGGREGATION_TYPE.COUNT,
-    groupTimeBy : 'MONTH',
-    dateField : null,
-    startDate : null,
-    endDate : null,
-    ownerOnly : true,
+    entity: 'task',
+    type: CHARTTYPE.BAR,
+    x: 'name',
+    y: 'id',
+    aggregation: AGGREGATION_TYPE.COUNT,
+    groupTimeBy: 'MONTH',
+    dateField: null,
+    startDate: null,
+    endDate: null,
+    ownerOnly: true,
 }
-
-
 
 export async function fetchStatistic(config) {
     const url = buildUrl(config)
@@ -39,7 +37,7 @@ export async function fetchStatistic(config) {
 
 }
 
-export async function renderChart(config, elementId, title) {
+export async function renderChart(argumentConfig, elementId) {
     const ctx = document.getElementById(elementId);
 
     if (!ctx) {
@@ -47,7 +45,14 @@ export async function renderChart(config, elementId, title) {
         return;
     }
 
-    const data = await fetchStatistic(config);
+    // destroy any existing instance of a chart
+    const existingChart = Chart.getChart(ctx);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+
+    const config = await fetchStatistic(argumentConfig);
+    const data = config.data;
 
     // Chart configuration based on type
     const chartConfiguration = {
@@ -59,7 +64,7 @@ export async function renderChart(config, elementId, title) {
             plugins: {
                 title: {
                     display: true,
-                    text: title
+                    text: config.title
                 },
                 legend: {
                     display: config.type !== CHARTTYPE.BAR
@@ -80,25 +85,30 @@ export async function renderChart(config, elementId, title) {
 }
 
 export function buildUrl(config = defaultConfig) {
-    const upperCaseType = config.type.toLocaleUpperCase()
-    let url = `/rest/statistic/${config.entity}?type=${upperCaseType}&x=${config.x}&y=${config.y}&aggregation=${config.aggregation}`;
+    let url = `/rest/statistic/${config.chartId}`;
 
-    if (config.ownerOnly) {
-        url += '&ownerOnly=true';
+    const queryArray = []
+    if (config.x) {
+        queryArray.push(`&x=${config.x}`);
     }
-
-    if (config.stack && upperCaseType === CHARTTYPE.STACKED_BAR) {
-        url += `&stack=${config.stack}`;
+    if (config.y) {
+        queryArray.push(`&y=${config.y}`);
     }
-
     if (config.groupTimeBy) {
-        url += `&groupTimeBy=${config.groupTimeBy}`;
+        queryArray.push(`&groupTimeBy=${config.groupTimeBy}`);
+    }
+    if (config.startDate) {
+        queryArray.push(`&startDate=${config.startDate}`);
+    }
+    if (config.endDate) {
+        queryArray.push(`&endDate=${config.endDate}`);
     }
 
-    if (config.dateField) {
-        url += `&dateField=${config.dateField}`;
-        if (config.startDate) url += `&startDate=${config.startDate}`;
-        if (config.endDate) url += `&endDate=${config.endDate}`;
+    if (queryArray.length > 0) {
+        url += '?'
+        for (const query of queryArray) {
+            url += query;
+        }
     }
 
     return url;

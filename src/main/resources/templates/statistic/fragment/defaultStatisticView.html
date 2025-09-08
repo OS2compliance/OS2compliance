@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="da"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<body>
+<th:block th:fragment="defaultStatisticView(title)" th:replace="~{fragments/component/modalWrapper :: modalWrapper(title=${title}, content=~{::content}, footer=~{::footer})}">
+
+    <th:block th:fragment="content">
+        <div id="optionsContainer">
+
+            <!--Diagram picker-->
+            <div class="form-group">
+                <label for="diagramSelector" class="form-label">Vælg diagram</label>
+                <select id="diagramSelector" class="form-control">
+                    <option th:each="diagram : ${availableDiagrams}" th:value="${diagram.id}" th:text="${diagram.name}" th:attr="data-entity-name=${diagram.entityName}"></option>
+                </select>
+            </div>
+
+            <div id="additionalOptionsContainer" hidden>
+                <!--ChartConfig is loaded dynamically here-->
+            </div>
+        </div>
+        <div id="diagramContainer">
+            <canvas id="diagramCanvas"></canvas>
+        </div>
+    </th:block>
+
+    <th:block th:fragment="footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tilbage</button>
+        <button type="button" id="generateChartButton" class="btn btn-primary">Generér diagram</button>
+    </th:block>
+
+</th:block>
+</body>
+</html>

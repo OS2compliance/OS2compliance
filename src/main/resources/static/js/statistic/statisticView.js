@@ -1,3 +1,5 @@
+import {CHARTTYPE, renderChart} from "./statistic-service.js";
+
 export async function initStatisticView(domain) {
 
     const statisticButton = document.getElementById('toggleStatisticButton');
@@ -19,7 +21,8 @@ async function openStatisticModal(domain) {
         const modal = new bootstrap.Modal(statisticModalContainer, {
             backdrop: "static"
         })
-        initChartPicker()
+        await initChartPicker()
+        initFooterButtons()
         modal.show()
     } else {
         console.error('could not show modal for statistics')
@@ -46,7 +49,7 @@ async function getConfigForChart(chartId, entityName) {
     }
 }
 
-function initChartPicker() {
+async function initChartPicker() {
     const chartPicker = document.getElementById('diagramSelector');
     chartPicker?.addEventListener('change', async (e) => {
         const selectedOption =  chartPicker.selectedOptions[0]
@@ -54,4 +57,47 @@ function initChartPicker() {
         const entityName = selectedOption.dataset.entityName;
         await getConfigForChart(value, entityName);
     })
+
+    // Gets fields for for the first in list on load
+    const selectedOption =  chartPicker.selectedOptions[0]
+    const value = selectedOption.value;
+    const entityName = selectedOption.dataset.entityName;
+    await getConfigForChart(value, entityName);
+}
+
+function initFooterButtons() {
+    const generateBtn = document.getElementById('generateChartButton');
+    generateBtn.addEventListener('click', async (e) => {
+
+        const title = document.getElementById('titleElement');
+        const collectedConfig = collectChartConfig();
+        await renderChart(
+            collectedConfig,
+            'diagramCanvas',
+            title?.textContent.trim() || 'Unavngivet diagram');
+    })
+}
+
+function collectChartConfig() {
+    const chartId = document.getElementById('diagramSelector')?.selectedOptions[0]?.value;
+    const x = document.getElementById('xAxisSelector')?.selectedOptions[0]?.value;
+    const y = document.getElementById('yAxisSelector')?.selectedOptions[0]?.value;
+    const groupTimeBy = document.getElementById('periodGroupingSelector')?.selectedOptions[0]?.value;
+    const startDate = document.getElementById('fromTimePicker')?.value
+    const endDate = document.getElementById('toTimePicker')?.value
+    const dateField = document.getElementById('dateField')?.selectedOptions[0]?.value;
+
+    const config = {
+        chartId: chartId,
+        type : CHARTTYPE.BAR,
+        x : x,
+        y : y,
+        groupTimeBy : groupTimeBy,
+        dateField : dateField,
+        startDate : startDate,
+        endDate : endDate,
+        ownerOnly : false,
+    }
+
+    return config;
 }
