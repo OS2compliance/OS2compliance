@@ -25,6 +25,7 @@ function IncidentGridService() {
         incidentService.fetchColumnName()
             .then(columnNames => {
                 this.initGrid(columnNames);
+                this.updateSort(this.incidentGrid);
                 this.incidentGrid.updateConfig(this.currentConfig).forceRender();
             });
     }
@@ -58,6 +59,7 @@ function IncidentGridService() {
             formattedDate = '';
         }
         this.filterFrom = formattedDate;
+        this.updateSort(this.incidentGrid);
         this.incidentGrid.updateConfig(this.currentConfig).forceRender();
         localStorage.setItem("incidentFilterFrom", date);
     }
@@ -67,6 +69,7 @@ function IncidentGridService() {
             formattedDate = '';
         }
         this.filterTo = formattedDate;
+        this.updateSort(this.incidentGrid);
         this.incidentGrid.updateConfig(this.currentConfig).forceRender();
         localStorage.setItem("incidentFilterTo", date);
     }
@@ -129,14 +132,13 @@ function IncidentGridService() {
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
 
         initGridActions()
-
         initSaveAsExcelButton(customGridFunctions, 'Hændelseslog')
     }
 
     this.mapRow = (field) => {
         let columnValues = [];
         let customColumns = this.columns.filter((c) =>
-            c.id !== 'id' && c.id !== 'title' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'allowedActions');
+            c.id !== 'id' && c.id !== 'name' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'allowedActions');
         customColumns.forEach(c => {
             let added = false;
             field.responses.forEach(response => {
@@ -156,21 +158,26 @@ function IncidentGridService() {
         const columns = [
             {
                 id: "id",
-                hidden: true
+                hidden: true,
             },
             {
-                id: "title",
+                id: "name",
                 name: "Titel",
                 formatter: (cell, row) => {
                     const url = viewUrl + row.cells[0]['data'];
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
                 },
-                width: '250px'
+                width: '250px',
+                canSortFlag: true
             },
             {
                 id: "createdAt",
                 name: "Oprettet",
-                width: '120px'
+                width: '120px',
+                sort: {
+                    enabled: true
+                },
+                canSortFlag: true
             }
         ]
 
@@ -178,20 +185,23 @@ function IncidentGridService() {
             columns.push({
                 id: c,
                 name: c,
-                sort: 0
+                sort: {
+                    enabled: false
+                }
             })
         });
         columns.push(
             {
                 id: "updatedAt",
-                name: "Opdateret"
+                name: "Opdateret",
+                canSortFlag: true
             }
         )
         columns.push(
             {
                 id: "allowedActions",
                 name: "Handlinger",
-                sort: 0,
+                sort: false,
                 width: '90px',
                 formatter: (cell, row) => {
                     const identifier = row.cells[0]['data'];
@@ -206,6 +216,13 @@ function IncidentGridService() {
 
         this.columns = columns;
     }
+
+    this.updateSort = () => {
+        this.currentConfig.columns.forEach(column => {
+            column.columns.forEach(subcolumn => {subcolumn.sort = column.canSortFlag !== undefined})
+        })
+    }
+
 }
 
 function initGridActions() {

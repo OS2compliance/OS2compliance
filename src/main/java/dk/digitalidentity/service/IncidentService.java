@@ -225,10 +225,9 @@ public class IncidentService {
 	public Page<Incident> getIncidents(@RequestParam(name = "search", required = false) String search, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "fromDate", required = false) LocalDate fromDateParam, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "toDate", required = false) LocalDate toDateParam, Pageable sortAndPage) {
 		final LocalDateTime fromDate = fromDateParam != null ? fromDateParam.atStartOfDay() : LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
 		final LocalDateTime toDate = toDateParam != null ? toDateParam.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0);
-		final Page<Incident> incidents = StringUtils.isNotEmpty(search)
+
+		return StringUtils.isNotEmpty(search)
 				? search(search, fromDate, toDate, sortAndPage)
 				: listIncidents(fromDate, toDate, sortAndPage);
-
-		return incidents;
 	}
 }
