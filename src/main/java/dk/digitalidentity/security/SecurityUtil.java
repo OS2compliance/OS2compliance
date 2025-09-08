@@ -19,10 +19,12 @@ import static dk.digitalidentity.Constants.SYSTEM_USERID;
 public class SecurityUtil {
 
     public static boolean isLoggedIn() {
-        boolean exists = SecurityContextHolder.getContext().getAuthentication() != null;
+        if (SecurityContextHolder.getContext().getAuthentication() == null) {
+			return false;
+		}
         boolean hasDetails = SecurityContextHolder.getContext().getAuthentication().getDetails() != null;
         boolean tokenUser = SecurityContextHolder.getContext().getAuthentication().getDetails() instanceof TokenUser;
-        return exists && hasDetails && tokenUser;
+        return hasDetails && tokenUser;
     }
 
     public static String getLoggedInUserUuid() {
