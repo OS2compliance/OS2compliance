@@ -45,11 +45,11 @@ public class StatisticRestController {
 	@GetMapping("{chartId}")
 	public ResponseEntity<ChartJsConfigDTO> getChart(
 			@PathVariable Long chartId,
-			@RequestParam(required = false) String x, // X-axis field, usually for label
-			@RequestParam(required = false) String y, // Y-axis field, usually for values
-			@RequestParam(required = false) Period groupTimeBy,
-			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate startDate,
-			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate endDate
+			@RequestParam(required = false) final String x, // X-axis field, usually for label
+			@RequestParam(required = false) final String y, // Y-axis field, usually for values
+			@RequestParam(required = false) final Period groupTimeBy,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy HH:mm:ss") final LocalDate startDate,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy HH:mm:ss") final LocalDate endDate
 	) {
 
 		ChartConfiguration chartConfig = chartConfigurationService.findById(chartId)

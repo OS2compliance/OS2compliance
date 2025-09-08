@@ -44,6 +44,9 @@ async function getConfigForChart(chartId, entityName) {
     const networkService = new NetworkService();
     if (await networkService.GetFragment(url, additionalOptionsContainer)) {
         additionalOptionsContainer.hidden = false
+
+        initDatePicker('fromTimePicker', )
+        initDatePicker('toTimePicker', )
     } else {
         console.error('could not load additional config options for chart ' + chartId);
     }
@@ -100,4 +103,18 @@ function collectChartConfig() {
     }
 
     return config;
+}
+
+function initDatePicker(id) {
+    return MCDatepicker.create({
+        el: `#${id}`,
+        autoClose: true,
+        dateFormat: 'dd/mm-yyyy',
+        closeOnBlur: true,
+        firstWeekday: 1,
+        customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
+        customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
+        customClearBTN: "Ryd",
+        customCancelBTN: "Annuller"
+    });
 }

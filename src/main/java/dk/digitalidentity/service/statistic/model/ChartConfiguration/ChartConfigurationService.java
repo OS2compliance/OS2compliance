@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
@@ -91,7 +92,7 @@ public class ChartConfigurationService {
 	}
 
 	private LocalDateTime toLocalDateTime(DateTimePreset preset) {
-		LocalDateTime now = LocalDateTime.now();
+		LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
 		LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
 		LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
 		int quarterStartMonth = ((now.getMonthValue() - 1) / 3) * 3 + 1;
