@@ -579,27 +579,31 @@ public class AssetsController {
 
 	record AssetSupplierDTO(long id, long assetId, long supplier, String service, ThirdCountryTransfer thirdCountryTransfer, String acceptanceBasis) {}
 
-	@RequireCreateOwnerOnly
 	@RequireUpdateOwnerOnly
     @Transactional
 	@PostMapping("subsupplier")
 	public String subsupplierCreateOrEdit(@Valid @ModelAttribute final AssetSupplierDTO body) {
 		final Asset asset = assetService.get(body.assetId)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 		final Optional<AssetSupplierMapping> subSupplier = asset.getSuppliers().stream().filter(s -> Objects.equals(s.getId(), body.id)).findAny();
 		final Supplier supplier = supplierService.get(body.supplier).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if (subSupplier.isPresent()) {
 			//Edit
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
+					!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && assetService.isResponsibleFor(asset))) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
 			subSupplier.get().setSupplier(supplier);
 			subSupplier.get().setAcceptanceBasis(body.acceptanceBasis);
 			subSupplier.get().setService(body.service);
 			subSupplier.get().setThirdCountryTransfer(body.thirdCountryTransfer);
 		} else {
 			//Create
+			if (!SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
+					!(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && assetService.isResponsibleFor(asset))) {
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
 			final AssetSupplierMapping newSubsupplier = new AssetSupplierMapping();
 			newSubsupplier.setAsset(asset);
 			newSubsupplier.setSupplier(supplier);
