@@ -143,7 +143,7 @@ public class ThreatAssessmentService {
         final List<CustomThreat> customThreats = sourceAssessment.getCustomThreats().stream()
             .map(c -> copyCustomThreat(savedAssessment, c))
             .toList();
-        savedAssessment.setCustomThreats(customThreats);
+        savedAssessment.getCustomThreats().addAll(customThreats);
         final List<ThreatAssessmentResponse> responses = sourceAssessment.getThreatAssessmentResponses().stream()
             .map(r -> copyResponse(savedAssessment, customThreats, r))
             .toList();

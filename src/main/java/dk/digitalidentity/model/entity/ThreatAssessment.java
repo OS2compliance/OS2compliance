@@ -134,7 +134,7 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
     private List<User> presentAtMeeting;
 
     @OneToMany(mappedBy = "threatAssessment",  orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<CustomThreat> customThreats;
+    private List<CustomThreat> customThreats = new ArrayList<>();
 
     @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     private List<ThreatAssessmentResponse> threatAssessmentResponses = new ArrayList<>();
