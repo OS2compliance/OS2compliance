@@ -118,11 +118,11 @@ public class ThreatAssessmentService {
     public ThreatAssessment copy(final long sourceId) {
         final ThreatAssessment sourceAssessment = threatAssessmentDao.findById(sourceId).orElseThrow();
         final ThreatAssessment targetAssessment = new ThreatAssessment();
+		final List<ThreatCatalog> sourceThreatCatalogs = sourceAssessment.getThreatCatalogs();
         targetAssessment.setName(sourceAssessment.getName());
         targetAssessment.setThreatAssessmentType(sourceAssessment.getThreatAssessmentType());
         targetAssessment.setResponsibleUser(sourceAssessment.getResponsibleUser());
         targetAssessment.setResponsibleOu(sourceAssessment.getResponsibleOu());
-        targetAssessment.setThreatCatalogs(sourceAssessment.getThreatCatalogs());
         targetAssessment.setRegistered(sourceAssessment.isRegistered());
         targetAssessment.setOrganisation(sourceAssessment.isOrganisation());
         targetAssessment.setInherit(sourceAssessment.isInherit());
@@ -135,6 +135,10 @@ public class ThreatAssessmentService {
         targetAssessment.setInheritedAvailabilityOrganisation(sourceAssessment.getInheritedAvailabilityOrganisation());
         targetAssessment.setAssessment(sourceAssessment.getAssessment());
         final ThreatAssessment savedAssessment = threatAssessmentDao.save(targetAssessment);
+
+		sourceThreatCatalogs.forEach(threatCatalog -> {
+			savedAssessment.getThreatCatalogs().add(threatCatalog);
+		});
 
         final List<CustomThreat> customThreats = sourceAssessment.getCustomThreats().stream()
             .map(c -> copyCustomThreat(savedAssessment, c))
