@@ -69,7 +69,7 @@ public class KLESubject implements Persistable<String> {
 	@JoinColumn(name = "group_number", referencedColumnName = "group_number")
 	private KLEGroup group;
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(
 			name = "kle_subject_legal_reference",
 			joinColumns = @JoinColumn(name = "subject_number"),
@@ -78,7 +78,7 @@ public class KLESubject implements Persistable<String> {
 	@Builder.Default
 	private Set<KLELegalReference> legalReferences = new HashSet<>();
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany(fetch = FetchType.LAZY)
 	@JoinTable(
 			name = "kle_subject_keyword",
 			joinColumns = @JoinColumn(name = "subject_number"),
