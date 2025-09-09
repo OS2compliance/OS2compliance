@@ -50,6 +50,7 @@ export async function renderChart(argumentConfig, elementId) {
     if (existingChart) {
         existingChart.destroy();
     }
+    console.log(argumentConfig)
 
     const config = await fetchStatistic(argumentConfig);
     const data = config.data;
@@ -102,6 +103,9 @@ export function buildUrl(config = defaultConfig) {
     }
     if (config.endDate) {
         queryArray.push(`&endDate=${config.endDate}`);
+    }
+    if (config.incidentFieldId) {
+        queryArray.push(`&incidentFieldId=${config.incidentFieldId}`);
     }
 
     if (queryArray.length > 0) {

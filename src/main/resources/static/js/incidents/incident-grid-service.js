@@ -1,8 +1,5 @@
-const incidentGridService = new IncidentGridService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    incidentGridService.init();
-});
-function IncidentGridService() {
+
+export default function IncidentGridService() {
     this.filterFrom = '';
     this.filterTo = '';
 

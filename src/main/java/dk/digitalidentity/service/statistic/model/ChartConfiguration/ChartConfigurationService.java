@@ -1,5 +1,7 @@
 package dk.digitalidentity.service.statistic.model.ChartConfiguration;
 
+import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.statistic.StatisticService;
 import dk.digitalidentity.service.statistic.dto.ChartConfigurationDTO;
 import dk.digitalidentity.service.statistic.dto.EntityFieldChoiceDTO;
@@ -12,6 +14,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -20,6 +23,7 @@ import java.util.Optional;
 public class ChartConfigurationService {
 	private final ChartConfigurationDao chartConfigurationDao;
 	private final StatisticService statisticService;
+	private final IncidentService incidentService;
 
 	public Optional<ChartConfiguration> findById(Long id) {
 		return chartConfigurationDao.findById(id);
@@ -70,6 +74,18 @@ public class ChartConfigurationService {
 
 		boolean showGroupTime = showStartTime || showEndTime;
 
+		List<EntityFieldChoiceDTO> allowedXFieldChoices = new ArrayList<>();
+
+		if (chartConfig.getName().equalsIgnoreCase("Hændelser")) {
+			// special case for incidents, where allowed fields are generated from obligatory incident fields
+			List<IncidentField> incidentFields = incidentService.getAllObligatoryFields();
+			allowedXFieldChoices = incidentFields.stream().map(i -> new EntityFieldChoiceDTO(i.getIndexColumnName(), i.getIndexColumnName(), i.getId().toString())).toList();
+		}
+		else {
+			allowedXFieldChoices = chartConfig.getAllowedXFieldChoices().stream().map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s), null)).toList();
+		}
+		List<EntityFieldChoiceDTO> allowedYFieldChoices = chartConfig.getAllowedYFieldChoices().stream().map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s), null)).toList();
+
 		return ChartConfigurationDTO.builder()
 				.id(chartConfig.getId())
 				.name(chartConfig.getName())
@@ -78,9 +94,9 @@ public class ChartConfigurationService {
 				.aggregation(chartConfig.getAggregation())
 				.type(chartConfig.getType())
 				.showXField(showX)
-				.allowedXFieldChoices(chartConfig.getAllowedXFieldChoices().stream().map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s))).toList())
+				.allowedXFieldChoices(allowedXFieldChoices)
 				.showYField(showY)
-				.allowedYFieldChoices(chartConfig.getAllowedYFieldChoices().stream().map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s))).toList())
+				.allowedYFieldChoices(allowedYFieldChoices)
 				.showStartTime(showStartTime)
 				.defaultStartTime(defaultStartTime)
 				.showEndTime(showEndTime)

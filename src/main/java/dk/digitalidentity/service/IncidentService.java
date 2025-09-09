@@ -59,6 +59,10 @@ public class IncidentService {
         return IterableUtils.toList(incidentFieldDao.findAllByOrderBySortKeyAsc());
     }
 
+    public List<IncidentField> getAllObligatoryFields() {
+        return incidentFieldDao.findAllByObligatoryAnswerTrue();
+    }
+
     public void deleteField(final IncidentField incidentField) {
         incidentFieldDao.delete(incidentField);
     }
@@ -230,5 +234,9 @@ public class IncidentService {
 				: listIncidents(fromDate, toDate, sortAndPage);
 
 		return incidents;
+	}
+
+	public List<Incident> getIncidentsMatching(Long incidentFieldId, LocalDateTime fromDate, LocalDateTime toDate) {
+		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, fromDate, toDate);
 	}
 }

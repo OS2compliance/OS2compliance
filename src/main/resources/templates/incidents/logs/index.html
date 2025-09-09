@@ -35,7 +35,10 @@
                         <div class="card mb-3">
                             <div class="card-body">
                                 <div class="row mt-1">
-                                    <div class="col-lg-1 col-md-1 col-sm-2"></div>
+                                    <div class=" d-flex gap-2 col-lg-1 col-md-1 col-sm-2">
+                                        <div th:replace="~{fragments/gridOptions :: dropdown(customStyle='')}"></div>
+                                        <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                                    </div>
                                     <div class="col-lg-3 col-md-4 col-sm-4">
                                         <div class="input-group">
                                             <label for="filterFrom" class="col-form-label" style="width: 40px">Fra</label>
@@ -60,9 +63,7 @@
                                     </div>
                                     <div class="col-lg-3 col-md-1"></div>
                                 </div>
-                                <div th:replace="~{fragments/gridOptions :: dropdown}">
 
-                                </div>
                                 <div class="grid-scroll-wrapper">
                                     <div id="incidentsTable"></div>
                                 </div>
@@ -81,10 +82,9 @@
     <nav th:replace="~{fragments/navbar :: main (page='incidentlogs')}"></nav>
 </div>
 
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, statistic = true)}"></div>
 
 <script type="module"  th:src="@{/js/incidents/incident-service.js}" defer></script>
-<script th:src="@{/js/incidents/incident-grid-service.js}" defer></script>
 <script th:src="@{/js/export-service.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/

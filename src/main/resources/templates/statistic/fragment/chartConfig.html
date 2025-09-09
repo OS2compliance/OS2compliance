@@ -3,14 +3,14 @@
 <body>
 
 <!--x & y axis choices-->
-<div class="form-group" th:hidden="${config.showXField ? '' : 'hidden'}">
+<div class="form-group" th:hidden="${!config.showXField}">
     <label for="xAxisSelector" class="form-label col-4">Vælg grupperingsakse</label>
     <select id="xAxisSelector" class="form-control col-7">
-        <option th:each="option : ${config.allowedXFieldChoices}" th:value="${option.fieldName}" th:text="${option.label}"></option>
+        <option th:each="option : ${config.allowedXFieldChoices}" th:attr="data-incident-field-id=${option.dataAttribute}" th:value="${option.fieldName}" th:text="${option.label}"></option>
     </select>
 </div>
 
-<div class="form-group" th:hidden="${config.showYField ? '' : 'hidden'}">
+<div class="form-group" th:hidden="${!config.showYField}">
     <label for="yAxisSelector" class="form-label col-4">Vælg dataakse</label>
     <select id="yAxisSelector" class="form-control col-7">
         <option th:each="option : ${config.allowedYFieldChoices}" th:value="${option.fieldName}" th:text="${option.label}"></option>
@@ -19,17 +19,17 @@
 
 <!--Time period-->
 <div id="timePeriodContainer">
-    <div class="form-group" th:hidden="${config.showStartTime ? '' : 'hidden'}">
+    <div class="form-group" th:hidden="${!config.showStartTime}">
         <label for="fromTimePicker" class="form-label col-4">Fra tidspunkt</label>
         <input id="fromTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultStartTime, 'dd/MM-yyyy HH:mm:ss')}"/>
     </div>
 
-    <div class="form-group" th:hidden="${config.showEndTime ? '' : 'hidden'}">
+    <div class="form-group" th:hidden="${!config.showEndTime}">
         <label for="toTimePicker" class="form-label col-4">Til tidspunkt</label>
         <input id="toTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultEndTime, 'dd/MM-yyyy HH:mm:ss')}"/>
     </div>
 
-    <div class="form-group" th:hidden="${config.showGroupTime ? '' : 'hidden'}">
+    <div class="form-group" th:hidden="${!config.showGroupTime}">
         <label for="periodGroupingSelector" class="form-label col-4">Vælg gruppering af datoer</label>
         <select id="periodGroupingSelector" class="form-control col-7">
             <option th:each="period : ${T(dk.digitalidentity.service.statistic.enumerable.Period).values()}" th:value="${period}" th:text="${period.getName()}"></option>

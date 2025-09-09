@@ -522,7 +522,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.type(ChartType.BAR)
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(false)
-						.selectableAxis(SelectableAxis.Y_ONLY)
+						.selectableAxis(SelectableAxis.X_ONLY)
 						.allowedXFieldChoices(List.of("responsibleUser","responsibleOu"))
 						.allowedYFieldChoices(new ArrayList<>())
 						.selectablePeriod(SelectablePeriod.NONE)
@@ -531,6 +531,23 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.groupTimeByField(null)
 						.defaultStartTime(DateTimePreset.NONE)
 						.defaultEndTime(DateTimePreset.CURRENT_TIME)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Incident")
+						.section("Incident")
+						.name("Hændelser")
+						.type(ChartType.STACKEDBAR)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.X_ONLY)
+						.allowedXFieldChoices(new ArrayList<>()) // This chart is special, with allowed choices generated from obligatory incident fields at runtime
+						.allowedYFieldChoices(List.of("incidentType"))
+						.selectablePeriod(SelectablePeriod.BOTH)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(List.of("createdAt"))
+						.groupTimeByField(Period.MONTH)
+						.defaultStartTime(DateTimePreset.YEAR_START)
+						.defaultEndTime(DateTimePreset.YEAR_END)
 						.build()
 		);
 	}

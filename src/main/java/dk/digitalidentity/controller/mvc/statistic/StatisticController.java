@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.mvc.statistic;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
+import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
@@ -42,13 +43,14 @@ public class StatisticController {
 			"threatassessment"
 	);
 
-	private final Map<String, Class<? extends StatisticEnabled>> entityMap = Map.of(
-			"asset", Asset.class,
-			"incident", Incident.class,
-			"task", Task.class,
-			"dpia", DPIA.class,
-			"threatassessment", ThreatAssessment.class
-	);
+	private final Map<String, Class<? extends StatisticEnabled>> entityMap = Map.of
+			(
+					"asset".toLowerCase(), Asset.class,
+					"incident".toLowerCase(), Incident.class,
+					"task".toLowerCase(), Task.class,
+					"dpia".toLowerCase(), DPIA.class,
+					"threatAssessment".toLowerCase(), ThreatAssessment.class
+			);
 
 	@RequireReadAll
 	@GetMapping
@@ -86,7 +88,6 @@ public class StatisticController {
 
 		ChartConfiguration chartConfig = chartConfigurationService.findById(id)
 				.orElseThrow();
-
 
 		model.addAttribute("config", chartConfigurationService.toDTO(chartConfig, entityMap.get(entityName.toLowerCase())));
 		return "statistic/fragment/chartConfig";

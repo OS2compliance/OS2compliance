@@ -3,6 +3,8 @@ package dk.digitalidentity.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringListNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.IncidentType;
+import dk.digitalidentity.service.statistic.StatisticLabel;
+import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
@@ -33,7 +35,7 @@ import java.util.List;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class IncidentFieldResponse {
+public class IncidentFieldResponse implements StatisticEnabled {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -43,6 +45,7 @@ public class IncidentFieldResponse {
     @Column(length = 2048)
     private String question;
 
+	@StatisticLabel("Hændelsestype")
     @Column
     @Enumerated(EnumType.STRING)
     private IncidentType incidentType;
@@ -61,6 +64,7 @@ public class IncidentFieldResponse {
     @Column
     private String answerText;
 
+	@StatisticLabel("Svartidspunkt")
     @Column
     @DateTimeFormat(pattern = "d/M-yyyy")
     private LocalDate answerDate;

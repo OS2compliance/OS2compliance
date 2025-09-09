@@ -8,6 +8,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 public interface IncidentDao extends JpaRepository<Incident, Long> {
 
@@ -37,4 +38,6 @@ public interface IncidentDao extends JpaRepository<Incident, Long> {
     )
     Page<Incident> searchAll(@Param("search") final String search, @Param("from") final LocalDateTime from,
                              @Param("to") final LocalDateTime to, final Pageable pageable);
+
+	List<Incident> findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(Long id, LocalDateTime createdAt, LocalDateTime createdAt1);
 }

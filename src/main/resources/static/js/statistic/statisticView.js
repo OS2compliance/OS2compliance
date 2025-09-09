@@ -82,24 +82,26 @@ function initFooterButtons() {
 }
 
 function collectChartConfig() {
+
+    const xChoice =document.getElementById('xAxisSelector')?.selectedOptions[0]
     const chartId = document.getElementById('diagramSelector')?.selectedOptions[0]?.value;
-    const x = document.getElementById('xAxisSelector')?.selectedOptions[0]?.value;
+    const x = xChoice?.value;
     const y = document.getElementById('yAxisSelector')?.selectedOptions[0]?.value;
     const groupTimeBy = document.getElementById('periodGroupingSelector')?.selectedOptions[0]?.value;
     const startDate = document.getElementById('fromTimePicker')?.value
     const endDate = document.getElementById('toTimePicker')?.value
     const dateField = document.getElementById('dateField')?.selectedOptions[0]?.value;
+    const incidentFieldId = xChoice.dataset.incidentFieldId;
 
     const config = {
         chartId: chartId,
-        type : CHARTTYPE.BAR,
         x : x,
         y : y,
         groupTimeBy : groupTimeBy,
         dateField : dateField,
         startDate : startDate,
         endDate : endDate,
-        ownerOnly : false,
+        incidentFieldId : incidentFieldId,
     }
 
     return config;

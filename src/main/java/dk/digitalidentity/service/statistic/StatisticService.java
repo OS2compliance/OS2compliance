@@ -1,5 +1,9 @@
 package dk.digitalidentity.service.statistic;
 
+import dk.digitalidentity.dao.IncidentFieldDao;
+import dk.digitalidentity.model.entity.Incident;
+import dk.digitalidentity.model.entity.IncidentField;
+import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
@@ -7,6 +11,7 @@ import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
@@ -37,6 +42,7 @@ import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -53,6 +59,7 @@ import java.util.stream.Collectors;
 public class StatisticService {
 	private final EntityManager entityManager;
 	private final UserService userService;
+	private final IncidentService incidentService;
 
 	public ChartJsDataDTO generateChart(Class<? extends StatisticEnabled> entityClass,
 			ChartType chartType,
@@ -62,21 +69,59 @@ public class StatisticService {
 			boolean ownerOnly,
 			Period groupTimeBy,
 			String dateField,
-			LocalDate startDate,
-			LocalDate endDate) {
+			LocalDateTime startDate,
+			LocalDateTime endDate
+	) {
 
 		// if the entity field is of type relation, get its name for the label field
-		String parsedLabel = getLabelAttributeForField(entityClass, xField)
-				.orElse(xField);
+		String parsedLabel = null;
+		if (xField != null) {
+			parsedLabel = getLabelAttributeForField(entityClass, xField)
+					.orElse(xField);
+		}
 
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(
-				entityClass, ownerOnly, dateField, startDate, endDate, parsedLabel, yField);
+				entityClass, ownerOnly, dateField, startDate, endDate, new HashMap<>(), parsedLabel, yField);
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
 			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
 			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
+		};
+	}
+
+	public ChartJsDataDTO generateIncidentChart(
+			ChartType chartType,
+			String xField,
+			String yField,
+			AggregationMethod aggregation,
+			Period groupTimeBy,
+			String dateField,
+			LocalDateTime startDate,
+			LocalDateTime endDate,
+			Long incidentFieldId
+	) {
+		IncidentField incidentField= incidentService.findField(incidentFieldId)
+				.orElseThrow();
+
+		List<Map<String, Object>> rawData = incidentService.getIncidentsMatching(incidentFieldId, startDate, endDate).stream()
+				.map(i -> Map.of(
+						"id", (Object) i.getId(),
+						"createdAt", (Object) i.getCreatedAt(),
+						incidentField.getIndexColumnName(), incidentField.getIndexColumnName()
+				))
+				.toList();
+
+
+		// Get filtered raw data
+//		List<Map<String, Object>> rawData = getFilteredFieldData(
+//				entityClass, false, dateField, startDate, endDate, conditions, yField);
+
+		return switch (chartType) {
+			case ChartType.BAR -> generateBarChart(rawData, dateField, yField, aggregation, groupTimeBy);
+			case ChartType.PIE -> generatePieChart(rawData, dateField, yField, aggregation, groupTimeBy);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, dateField, yField, aggregation, groupTimeBy);
 		};
 	}
 
@@ -95,8 +140,9 @@ public class StatisticService {
 			Class<? extends StatisticEnabled> entityClass,
 			boolean ownerOnly,
 			String dateField,
-			LocalDate startDate,
-			LocalDate endDate,
+			LocalDateTime startDate,
+			LocalDateTime endDate,
+			Map<String, Object> filteringConditions,
 			String... fieldNames) {
 		var cb = entityManager.getCriteriaBuilder();
 		var query = cb.createTupleQuery();
@@ -116,6 +162,11 @@ public class StatisticService {
 		query.multiselect(new ArrayList<>(selections));
 
 		List<Predicate> allPredicates = new ArrayList<>();
+
+		// handle additional filtering
+		for (Map.Entry<String, Object> entry : filteringConditions.entrySet()) {
+			allPredicates.add(cb.equal(root.get(entry.getKey()), entry.getValue()));
+		}
 
 		// Add date filtering if specified
 		if (dateField != null && (startDate != null || endDate != null)) {
@@ -434,6 +485,17 @@ public class StatisticService {
 		return userPredicates;
 	}
 
+	private <T> List<Predicate> buildIncidentFieldPredicate(Long incidentFieldId, Root<T> root, CriteriaBuilder criteriaBuilder) {
+		List<Predicate> predicates = new ArrayList<>();
+
+		if (incidentFieldId != null) {
+			Join<T, IncidentField> incidentFieldJoin = root.join("incident_field_id", JoinType.INNER);
+			predicates.add(criteriaBuilder.equal(incidentFieldJoin.get("id"), incidentFieldId));
+		}
+
+		return predicates;
+	}
+
 	/**
 	 * Constructs a DTO conforming to ChartJS data structure, used for most charts (PIE is exception)
 	 *
@@ -572,6 +634,13 @@ public class StatisticService {
 		}
 	}
 
+	/**
+	 * Checks if the field name refers to a User or a Relatable, and if so, changes the field name to refer to that entity's name instead
+	 *
+	 * @param entityClass The class to containing the field
+	 * @param fieldName   the field to check
+	 * @return either the given fieldName or a an adjusted version of the fieldname with ".name" appended
+	 */
 	public Optional<String> getLabelAttributeForField(Class<? extends StatisticEnabled> entityClass, String fieldName) {
 		try {
 			Field field = entityClass.getDeclaredField(fieldName);
