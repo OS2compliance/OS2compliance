@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
+import dk.digitalidentity.model.entity.enums.DPIACompletionStatus;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -34,6 +35,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
 import org.hibernate.annotations.Where;
@@ -257,4 +259,14 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	public boolean isOwnedBy(User user) {
 		return this.responsibleUsers.contains(user) || this.managers.contains(user);
 	}
+
+	@Formula("(SELECT CASE " +
+			"WHEN a.dpia_opt_out THEN 'OPTED_OUT' " +
+			"WHEN EXISTS (SELECT 1 FROM dpia_asset da WHERE da.asset_id = id) THEN 'COMPLETED' " +
+			"ELSE 'PENDING' " +
+			"END " +
+			"FROM assets a " +
+			"WHERE a.id = id)")
+	@Enumerated(EnumType.STRING)
+	private DPIACompletionStatus dpiaCompletionStatus;
 }
