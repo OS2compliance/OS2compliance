@@ -5,7 +5,7 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [2.4.0] - 2025-09-10
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-100) Global søgning
 - (https://os2web.atlassian.net/browse/COMPLY-136) Tilføjelse af felter til ansvarlig forvaltning
