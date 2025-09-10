@@ -322,8 +322,7 @@ public class RiskRestController {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
