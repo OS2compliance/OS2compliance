@@ -92,7 +92,7 @@ function collectChartConfig() {
     const startDate = document.getElementById('fromTimePicker')?.value
     const endDate = document.getElementById('toTimePicker')?.value
     const dateField = document.getElementById('dateField')?.selectedOptions[0]?.value;
-    const incidentFieldId = yChoice.dataset.incidentFieldId;
+    const incidentFieldId = yChoice?.dataset.incidentFieldId;
 
     const config = {
         chartId: chartId,

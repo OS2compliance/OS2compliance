@@ -386,7 +386,11 @@ public class StatisticService {
 					})
 					.toList();
 
-			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(stackEntry.getKey(), data);
+			String parsedDatasetLabel = stackEntry.getKey() == null
+					|| stackEntry.getKey().isEmpty()
+					|| stackEntry.getKey().equalsIgnoreCase("null")
+					? yField : stackEntry.getKey();
+			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(parsedDatasetLabel, data);
 			datasets.add(dataset);
 		}
 
@@ -618,17 +622,6 @@ public class StatisticService {
 		}
 
 		return userPredicates;
-	}
-
-	private <T> List<Predicate> buildIncidentFieldPredicate(Long incidentFieldId, Root<T> root, CriteriaBuilder criteriaBuilder) {
-		List<Predicate> predicates = new ArrayList<>();
-
-		if (incidentFieldId != null) {
-			Join<T, IncidentField> incidentFieldJoin = root.join("incident_field_id", JoinType.INNER);
-			predicates.add(criteriaBuilder.equal(incidentFieldJoin.get("id"), incidentFieldId));
-		}
-
-		return predicates;
 	}
 
 	/**
