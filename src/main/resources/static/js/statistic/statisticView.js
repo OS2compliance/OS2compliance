@@ -1,4 +1,4 @@
-import {CHARTTYPE, renderChart} from "./statistic-service.js";
+import {renderChart} from "./statistic-service.js";
 
 export async function initStatisticView(domain) {
 
@@ -45,8 +45,8 @@ async function getConfigForChart(chartId, entityName) {
     if (await networkService.GetFragment(url, additionalOptionsContainer)) {
         additionalOptionsContainer.hidden = false
 
-        initDatePicker('fromTimePicker', )
-        initDatePicker('toTimePicker', )
+        initDatePicker('fromTimePicker',)
+        initDatePicker('toTimePicker',)
     } else {
         console.error('could not load additional config options for chart ' + chartId);
     }
@@ -55,14 +55,14 @@ async function getConfigForChart(chartId, entityName) {
 async function initChartPicker() {
     const chartPicker = document.getElementById('diagramSelector');
     chartPicker?.addEventListener('change', async (e) => {
-        const selectedOption =  chartPicker.selectedOptions[0]
+        const selectedOption = chartPicker.selectedOptions[0]
         const value = selectedOption.value;
         const entityName = selectedOption.dataset.entityName;
         await getConfigForChart(value, entityName);
     })
 
     // Gets fields for for the first in list on load
-    const selectedOption =  chartPicker.selectedOptions[0]
+    const selectedOption = chartPicker.selectedOptions[0]
     const value = selectedOption.value;
     const entityName = selectedOption.dataset.entityName;
     await getConfigForChart(value, entityName);
@@ -83,25 +83,26 @@ function initFooterButtons() {
 
 function collectChartConfig() {
 
-    const xChoice =document.getElementById('xAxisSelector')?.selectedOptions[0]
+    const xChoice = document.getElementById('xAxisSelector')?.selectedOptions[0]
+    const yChoice = document.getElementById('yAxisSelector')?.selectedOptions[0]
     const chartId = document.getElementById('diagramSelector')?.selectedOptions[0]?.value;
     const x = xChoice?.value;
-    const y = document.getElementById('yAxisSelector')?.selectedOptions[0]?.value;
+    const y = yChoice?.value;
     const groupTimeBy = document.getElementById('periodGroupingSelector')?.selectedOptions[0]?.value;
     const startDate = document.getElementById('fromTimePicker')?.value
     const endDate = document.getElementById('toTimePicker')?.value
     const dateField = document.getElementById('dateField')?.selectedOptions[0]?.value;
-    const incidentFieldId = xChoice.dataset.incidentFieldId;
+    const incidentFieldId = yChoice.dataset.incidentFieldId;
 
     const config = {
         chartId: chartId,
-        x : x,
-        y : y,
-        groupTimeBy : groupTimeBy,
-        dateField : dateField,
-        startDate : startDate,
-        endDate : endDate,
-        incidentFieldId : incidentFieldId,
+        x: x,
+        y: y,
+        groupTimeBy: groupTimeBy,
+        dateField: dateField,
+        startDate: startDate,
+        endDate: endDate,
+        incidentFieldId: incidentFieldId,
     }
 
     return config;

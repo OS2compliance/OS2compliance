@@ -5,7 +5,6 @@ import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.statistic.StatisticService;
 import dk.digitalidentity.service.statistic.dto.ChartConfigurationDTO;
 import dk.digitalidentity.service.statistic.dto.EntityFieldChoiceDTO;
-import dk.digitalidentity.service.statistic.enumerable.ChartType;
 import dk.digitalidentity.service.statistic.enumerable.DateTimePreset;
 import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import lombok.RequiredArgsConstructor;
@@ -14,7 +13,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -38,16 +36,43 @@ public class ChartConfigurationService {
 	}
 
 	public ChartConfigurationDTO toDTO(ChartConfiguration chartConfig, Class<? extends StatisticEnabled> entityClass) {
-		// Calculate Axis fields
+		List<EntityFieldChoiceDTO> allowedXFieldChoices;
+		List<EntityFieldChoiceDTO> allowedYFieldChoices;
+
+		if (chartConfig.getEntityName().equalsIgnoreCase("Incident")) {
+			// special case for incidents, where allowed fields are generated from obligatory incident fields
+			List<IncidentField> incidentFields = incidentService.getAllObligatoryFields();
+			allowedYFieldChoices = incidentFields.stream()
+					.map(i -> new EntityFieldChoiceDTO(
+							i.getIndexColumnName(),
+							i.getIndexColumnName(),
+							i.getId().toString())).toList();
+
+			allowedXFieldChoices = chartConfig.getAllowedXFieldChoices().stream()
+					.map(s -> new EntityFieldChoiceDTO(
+							s,
+							statisticService.getStatisticLabelForField(entityClass, s).orElse(s),
+							null))
+					.toList();
+
+		}
+		else {
+			allowedYFieldChoices = chartConfig.getAllowedYFieldChoices().stream()
+					.map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s), null)).toList();
+			allowedXFieldChoices = chartConfig.getAllowedXFieldChoices().stream()
+					.map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s), null)).toList();
+		}
+
+		// Calculate showing of Axis fields
 		boolean showX = false;
 		boolean showY = false;
 		switch (chartConfig.getSelectableAxis()) {
 			case BOTH -> {
-				showX = !chartConfig.getAllowedYFieldChoices().isEmpty();
-				showY = !chartConfig.getAllowedYFieldChoices().isEmpty() && chartConfig.getType() != ChartType.PIE;
+				showX = !allowedXFieldChoices.isEmpty();
+				showY = !allowedYFieldChoices.isEmpty();
 			}
-			case X_ONLY -> showX = !chartConfig.getAllowedYFieldChoices().isEmpty();
-			case Y_ONLY -> showY = !chartConfig.getAllowedYFieldChoices().isEmpty() && chartConfig.getType() != ChartType.PIE;
+			case X_ONLY -> showX = !allowedXFieldChoices.isEmpty();
+			case Y_ONLY -> showY = !allowedYFieldChoices.isEmpty();
 			default -> {
 				// None of the axes should show
 			}
@@ -70,21 +95,10 @@ public class ChartConfigurationService {
 			}
 		}
 
-		boolean yFieldFromXField = chartConfig.getAllowedYFieldChoices().isEmpty();
+		boolean yFieldFromXField = allowedYFieldChoices.isEmpty();
+		boolean xFieldFromYField = allowedXFieldChoices.isEmpty();
 
 		boolean showGroupTime = showStartTime || showEndTime;
-
-		List<EntityFieldChoiceDTO> allowedXFieldChoices = new ArrayList<>();
-
-		if (chartConfig.getName().equalsIgnoreCase("Hændelser")) {
-			// special case for incidents, where allowed fields are generated from obligatory incident fields
-			List<IncidentField> incidentFields = incidentService.getAllObligatoryFields();
-			allowedXFieldChoices = incidentFields.stream().map(i -> new EntityFieldChoiceDTO(i.getIndexColumnName(), i.getIndexColumnName(), i.getId().toString())).toList();
-		}
-		else {
-			allowedXFieldChoices = chartConfig.getAllowedXFieldChoices().stream().map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s), null)).toList();
-		}
-		List<EntityFieldChoiceDTO> allowedYFieldChoices = chartConfig.getAllowedYFieldChoices().stream().map(s -> new EntityFieldChoiceDTO(s, statisticService.getStatisticLabelForField(entityClass, s).orElse(s), null)).toList();
 
 		return ChartConfigurationDTO.builder()
 				.id(chartConfig.getId())
@@ -104,6 +118,7 @@ public class ChartConfigurationService {
 				.showGroupTime(showGroupTime)
 				.groupTimeByField(chartConfig.getGroupTimeByField())
 				.yFieldFromXField(yFieldFromXField)
+				.xFieldFromYField(xFieldFromYField)
 				.build();
 	}
 

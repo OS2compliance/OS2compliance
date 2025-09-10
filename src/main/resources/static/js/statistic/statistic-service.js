@@ -50,7 +50,6 @@ export async function renderChart(argumentConfig, elementId) {
     if (existingChart) {
         existingChart.destroy();
     }
-    console.log(argumentConfig)
 
     const config = await fetchStatistic(argumentConfig);
     const data = config.data;

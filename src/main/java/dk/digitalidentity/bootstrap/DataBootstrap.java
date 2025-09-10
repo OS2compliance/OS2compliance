@@ -7,6 +7,7 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -23,6 +24,7 @@ import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
+import dk.digitalidentity.service.statistic.StatisticService;
 import dk.digitalidentity.service.statistic.enumerable.DateTimePreset;
 import dk.digitalidentity.service.statistic.enumerable.SelectableAxis;
 import dk.digitalidentity.service.statistic.enumerable.SelectablePeriod;
@@ -85,6 +87,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final RegisterService registerService;
 	private final KLEService kleService;
 	private final ChartConfigurationService chartConfigurationService;
+	private final StatisticService statisticService;
 
 	@Value("classpath:data/registers/*.json")
     private Resource[] registers;
@@ -535,14 +538,31 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 				ChartConfiguration.builder()
 						.entityName("Incident")
 						.section("Incident")
-						.name("Hændelser")
+						.name("Hændelser (Søjlediagram)")
 						.type(ChartType.STACKEDBAR)
 						.aggregation(AggregationMethod.COUNT)
 						.ownerOnly(false)
-						.selectableAxis(SelectableAxis.X_ONLY)
-						.allowedXFieldChoices(new ArrayList<>()) // This chart is special, with allowed choices generated from obligatory incident fields at runtime
-						.allowedYFieldChoices(List.of("incidentType"))
+						.selectableAxis(SelectableAxis.Y_ONLY)
+						.allowedXFieldChoices(List.of( statisticService.getPrefixForField(Incident.class) + "createdAt"))
+						.allowedYFieldChoices(new ArrayList<>()) // This chart is special, with allowed choices generated from obligatory incident fields at runtime
 						.selectablePeriod(SelectablePeriod.BOTH)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(List.of("createdAt"))
+						.groupTimeByField(Period.MONTH)
+						.defaultStartTime(DateTimePreset.YEAR_START)
+						.defaultEndTime(DateTimePreset.YEAR_END)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Incident")
+						.section("Incident")
+						.name("Hændelser (Cirkeldiagram)")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.Y_ONLY)
+						.allowedXFieldChoices(List.of( statisticService.getPrefixForField(Incident.class) + "createdAt"))
+						.allowedYFieldChoices(new ArrayList<>()) // This chart is special, with allowed choices generated from obligatory incident fields at runtime
+						.selectablePeriod(SelectablePeriod.NONE)
 						.selectableDateField(false)
 						.allowedDateFieldChoices(List.of("createdAt"))
 						.groupTimeByField(Period.MONTH)

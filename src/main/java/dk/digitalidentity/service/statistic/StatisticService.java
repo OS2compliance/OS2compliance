@@ -1,11 +1,11 @@
 package dk.digitalidentity.service.statistic;
 
-import dk.digitalidentity.dao.IncidentFieldDao;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.IncidentType;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
@@ -23,7 +23,9 @@ import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsPieDatasetDTO;
 import dk.digitalidentity.service.statistic.enumerable.ChartType;
 import dk.digitalidentity.service.statistic.enumerable.Period;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.From;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Path;
@@ -37,12 +39,11 @@ import org.springframework.stereotype.Service;
 import java.lang.reflect.Field;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -82,12 +83,12 @@ public class StatisticService {
 
 		// Get filtered raw data
 		List<Map<String, Object>> rawData = getFilteredFieldData(
-				entityClass, ownerOnly, dateField, startDate, endDate, new HashMap<>(), parsedLabel, yField);
+				entityClass, ownerOnly, dateField, startDate, endDate, parsedLabel, yField);
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
 			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy, yField);
 		};
 	}
 
@@ -102,27 +103,56 @@ public class StatisticService {
 			LocalDateTime endDate,
 			Long incidentFieldId
 	) {
-		IncidentField incidentField= incidentService.findField(incidentFieldId)
+		String answerChoicesFieldName = "answerChoiceValues";
+		IncidentField incidentField = incidentService.findField(incidentFieldId)
 				.orElseThrow();
 
-		List<Map<String, Object>> rawData = incidentService.getIncidentsMatching(incidentFieldId, startDate, endDate).stream()
-				.map(i -> Map.of(
-						"id", (Object) i.getId(),
-						"createdAt", (Object) i.getCreatedAt(),
-						incidentField.getIndexColumnName(), incidentField.getIndexColumnName()
-				))
-				.toList();
+		IncidentType type = incidentField.getIncidentType();
+		boolean isChoiceListType = type == IncidentType.CHOICE_LIST || type == IncidentType.CHOICE_LIST_MULTIPLE;
 
+		Set<String> fieldNamesForIncidents = new HashSet<>();
+		Set<String> fieldNamesForIncidentsFields = new HashSet<>();
+		Set<String> fieldNamesForIncidentsFieldResponses = new HashSet<>();
 
-		// Get filtered raw data
-//		List<Map<String, Object>> rawData = getFilteredFieldData(
-//				entityClass, false, dateField, startDate, endDate, conditions, yField);
+		Map<String, Set<String>> prefixMap = Map.of(
+				getPrefixForField(Incident.class), fieldNamesForIncidents,
+				getPrefixForField(IncidentField.class), fieldNamesForIncidentsFields,
+				getPrefixForField(IncidentFieldResponse.class), fieldNamesForIncidentsFieldResponses
+		);
+
+		// Only x-values are  prefixed with the entity to search.
+		// Y values are assumed  to be incidentField entities and are only used for post-data fetching processing
+		String xFieldNoPrefix = removePrefixAndAddToRelevantList(xField, prefixMap);
+
+		if (isChoiceListType) {
+			fieldNamesForIncidentsFields.add("indexColumnName"); // column Name of the incident question
+			fieldNamesForIncidentsFieldResponses.add(answerChoicesFieldName); // chosen values for choicelist type of question
+		}
+
+		// Fetch data
+		List<Map<String, Object>> rawData = getFilteredFieldDataForIncidents(
+				incidentFieldId, dateField, startDate, endDate, fieldNamesForIncidents, fieldNamesForIncidentsFields, fieldNamesForIncidentsFieldResponses);
 
 		return switch (chartType) {
-			case ChartType.BAR -> generateBarChart(rawData, dateField, yField, aggregation, groupTimeBy);
-			case ChartType.PIE -> generatePieChart(rawData, dateField, yField, aggregation, groupTimeBy);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, dateField, yField, aggregation, groupTimeBy);
-		};
+			case ChartType.BAR -> generateBarChart(rawData, xFieldNoPrefix, yField, aggregation, groupTimeBy);
+			case ChartType.PIE -> generatePieChart(rawData, isChoiceListType ? answerChoicesFieldName : xFieldNoPrefix, yField, aggregation, groupTimeBy);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xFieldNoPrefix, yField, aggregation, groupTimeBy, isChoiceListType ? answerChoicesFieldName : yField);
+		}
+
+				;
+	}
+
+	private String removePrefixAndAddToRelevantList(String field, Map<String, Set<String>> prefixMap) {
+		for (Map.Entry<String, Set<String>> entry : prefixMap.entrySet()) {
+			if (field.startsWith(entry.getKey())) {
+				String noPrefix = removePrefix(field, getPrefixForField(Incident.class));
+				entry.getValue().add(
+						noPrefix
+				);
+				return noPrefix;
+			}
+		}
+		return field;
 	}
 
 	/**
@@ -142,7 +172,6 @@ public class StatisticService {
 			String dateField,
 			LocalDateTime startDate,
 			LocalDateTime endDate,
-			Map<String, Object> filteringConditions,
 			String... fieldNames) {
 		var cb = entityManager.getCriteriaBuilder();
 		var query = cb.createTupleQuery();
@@ -161,22 +190,8 @@ public class StatisticService {
 
 		query.multiselect(new ArrayList<>(selections));
 
-		List<Predicate> allPredicates = new ArrayList<>();
-
-		// handle additional filtering
-		for (Map.Entry<String, Object> entry : filteringConditions.entrySet()) {
-			allPredicates.add(cb.equal(root.get(entry.getKey()), entry.getValue()));
-		}
-
 		// Add date filtering if specified
-		if (dateField != null && (startDate != null || endDate != null)) {
-			if (startDate != null) {
-				allPredicates.add(cb.greaterThanOrEqualTo(root.get(dateField), startDate));
-			}
-			if (endDate != null) {
-				allPredicates.add(cb.lessThanOrEqualTo(root.get(dateField), endDate));
-			}
-		}
+		List<Predicate> allPredicates = filterByDateField(dateField, startDate, endDate, root, cb);
 
 		if (ownerOnly) {
 			List<Predicate> predicates = buildOwnerPredicates(entityClass, root, cb);
@@ -189,18 +204,137 @@ public class StatisticService {
 
 		var tuples = entityManager.createQuery(query).getResultList();
 
-		return tuples.stream().map(tuple -> {
-					Map<String, Object> fieldMap = new LinkedHashMap<>();
+		return tuples.stream()
+				.flatMap(tuple -> mapToupleToMaps(tuple, new HashSet<>(validFields)).stream())
+				.toList();
+	}
 
-					for (String fieldName : validFields) {
-						Object value = tuple.get(fieldName);
-						if (value instanceof LocalDateTime localDateTime) {
-							value = localDateTime.format(DateTimeFormatter.ISO_LOCAL_DATE);
-						}
-						fieldMap.put(fieldName, value);
-					}
-					return fieldMap;
-				})
+	private List<Map<String, Object>> getFilteredFieldDataForIncidents(
+			Long incidentFieldId,
+			String dateField,
+			LocalDateTime startDate,
+			LocalDateTime endDate,
+			Set<String> fieldNamesForIncidents,
+			Set<String> fieldNamesForIncidentsFields,
+			Set<String> fieldNamesForIncidentsFieldResponses
+	) {
+
+		Class<? extends StatisticEnabled> entityClass = IncidentFieldResponse.class;
+
+		var cb = entityManager.getCriteriaBuilder();
+		var query = cb.createTupleQuery();
+		var root = query.from(entityClass);
+
+		// remove null values
+		List<String> validIncidentFields = extractValidFields(fieldNamesForIncidents);
+		List<String> validIncidentResponseFields = extractValidFields(fieldNamesForIncidentsFieldResponses);
+		List<String> validIncidentFieldFields = extractValidFields(fieldNamesForIncidentsFields);
+
+		// Join the two related tables
+		Join<IncidentFieldResponse, Incident> incidentJoin = root.join("incident", JoinType.INNER);
+		Join<IncidentFieldResponse, IncidentField> fieldJoin = root.join("incidentField", JoinType.INNER);
+
+		// Create selections
+		Set<Selection<?>> selections = new HashSet<>(); // Set to filter out duplicates
+		selections.addAll(getSelectionsFromFields(validIncidentResponseFields, root));
+		selections.addAll(getSelectionsFromFields(validIncidentFields, incidentJoin));
+		selections.addAll(getSelectionsFromFields(validIncidentFieldFields, fieldJoin));
+
+		query.multiselect(new ArrayList<>(selections));
+
+		// Create predicates
+		// Add date filtering if specified
+		List<Predicate> allPredicates = filterByDateField(dateField, startDate, endDate, incidentJoin, cb);
+
+		// find only those incidents that have a response for the relevant incidentFieldId
+		allPredicates.add(cb.equal(fieldJoin.get("id"), incidentFieldId));
+
+		// Apply all predicates
+		if (!allPredicates.isEmpty()) {
+			query.where(cb.and(allPredicates.toArray(new Predicate[0])));
+		}
+
+		var tuples = entityManager.createQuery(query).getResultList();
+
+		Set<String> allValidFields = new HashSet<>(validIncidentFields);
+		allValidFields.addAll(validIncidentResponseFields);
+		allValidFields.addAll(validIncidentFieldFields);
+
+		return tuples.stream()
+				.flatMap(tuple -> mapToupleToMaps(tuple, allValidFields).stream())
+				.toList();
+	}
+
+	private List<Map<String, Object>> mapToupleToMaps(Tuple tuple, Set<String> allValidFields) {
+		Map<String, Object> baseFieldMap = new LinkedHashMap<>();
+		String collectionFieldName = null;
+		Collection<?> collectionValues = null;
+
+		// First pass: collect all values and identify any collection
+		for (String fieldName : allValidFields) {
+			Object value = tuple.get(fieldName);
+
+			if (value instanceof Collection && !((Collection<?>) value).isEmpty()) {
+				// Found a collection - store it separately
+				if (collectionFieldName == null) {
+					collectionFieldName = fieldName;
+					collectionValues = (Collection<?>) value;
+				}
+				else {
+					// Multiple collections found - this approach handles only one collection field
+					// You may want to throw an exception or handle this case differently
+					throw new IllegalArgumentException("Multiple collection fields found. Only one collection field is supported.");
+				}
+			}
+			else {
+				// Non-collection value - add to base map
+				baseFieldMap.put(fieldName, value);
+			}
+		}
+
+		List<Map<String, Object>> resultList = new ArrayList<>();
+
+		if (collectionFieldName == null) {
+			// No collection found - return single map
+			resultList.add(baseFieldMap);
+		}
+		else {
+			// Collection found - create one map for each collection element
+			for (Object collectionItem : collectionValues) {
+				Map<String, Object> itemMap = new LinkedHashMap<>(baseFieldMap);
+				itemMap.put(collectionFieldName, collectionItem);
+				resultList.add(itemMap);
+			}
+		}
+
+		return resultList;
+	}
+
+	private List<Predicate> filterByDateField(String dateField, LocalDateTime startDate, LocalDateTime endDate, From<?, ?> join, CriteriaBuilder cb) {
+		List<Predicate> predicates = new ArrayList<>();
+		if (dateField != null && (startDate != null || endDate != null)) {
+			if (startDate != null) {
+				predicates.add(cb.greaterThanOrEqualTo(join.get(dateField), startDate));
+			}
+			if (endDate != null) {
+				predicates.add(cb.lessThanOrEqualTo(join.get(dateField), endDate));
+			}
+		}
+		return predicates;
+	}
+
+	private Set<Selection<?>> getSelectionsFromFields(List<String> fieldNames, From<?, ?> join) {
+		Set<Selection<?>> selections = new HashSet<>();
+		for (String field : fieldNames) {
+			selections.add(join.get(field).alias(field)); // does not support dot-seperated attributes (yet)
+		}
+		return selections;
+	}
+
+	private List<String> extractValidFields(Set<String> fieldNames) {
+		return fieldNames.stream()
+				.filter(Objects::nonNull)
+				.filter(s -> !s.equalsIgnoreCase("null"))
 				.toList();
 	}
 
@@ -219,9 +353,10 @@ public class StatisticService {
 			String xField,
 			String yField,
 			AggregationMethod aggregation,
-			Period groupDateBy
+			Period groupDateBy,
+			String stackField
 	) {
-		// First, get all unique x categories
+		// get all unique x categories
 		Set<Object> xCategoriesSet = getUniqueCategoryLabels(rawData, xField);
 
 		// Sort the categories based on their type and grouping
@@ -230,7 +365,7 @@ public class StatisticService {
 		// Group by stack field (yField value), then by formatted x field
 		Map<String, Map<String, List<Object>>> stackData = rawData.stream()
 				.collect(Collectors.groupingBy(
-						row -> String.valueOf(row.get(yField)), // the y-field is always used for stacking with bar chart
+						row -> String.valueOf(row.get(stackField)),
 						Collectors.groupingBy(
 								row -> formatLabel(row.get(xField), groupDateBy),
 								Collectors.mapping(row -> row.get(yField), Collectors.toList())
@@ -655,6 +790,25 @@ public class StatisticService {
 		catch (NoSuchFieldException e) {
 			return Optional.empty();
 		}
+	}
+
+	public String getPrefixForField(Class<?> entityClass) {
+		return "_" + entityClass.getSimpleName().toUpperCase() + "_";
+	}
+
+	public static String removePrefix(String str, String prefix) {
+		// Handle null cases
+		if (str == null || prefix == null) {
+			return str;
+		}
+
+		// Check if string starts with the prefix
+		if (str.startsWith(prefix)) {
+			return str.substring(prefix.length());
+		}
+
+		// Return original string if prefix not found
+		return str;
 	}
 
 }

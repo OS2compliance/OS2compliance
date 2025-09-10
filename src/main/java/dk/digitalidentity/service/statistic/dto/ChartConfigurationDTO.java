@@ -29,4 +29,5 @@ public class ChartConfigurationDTO {
 	private boolean showEndTime;
 	private LocalDateTime defaultEndTime;
 	private boolean yFieldFromXField;
+	private boolean xFieldFromYField;
 }

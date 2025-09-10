@@ -13,7 +13,7 @@
 <div class="form-group" th:hidden="${!config.showYField}">
     <label for="yAxisSelector" class="form-label col-4">Vælg dataakse</label>
     <select id="yAxisSelector" class="form-control col-7">
-        <option th:each="option : ${config.allowedYFieldChoices}" th:value="${option.fieldName}" th:text="${option.label}"></option>
+        <option th:each="option : ${config.allowedYFieldChoices}" th:attr="data-incident-field-id=${option.dataAttribute}" th:value="${option.fieldName}" th:text="${option.label}"></option>
     </select>
 </div>
 

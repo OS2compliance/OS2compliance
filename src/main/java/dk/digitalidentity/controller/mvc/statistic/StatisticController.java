@@ -3,7 +3,6 @@ package dk.digitalidentity.controller.mvc.statistic;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.Incident;
-import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
@@ -51,13 +50,6 @@ public class StatisticController {
 					"dpia".toLowerCase(), DPIA.class,
 					"threatAssessment".toLowerCase(), ThreatAssessment.class
 			);
-
-	@RequireReadAll
-	@GetMapping
-	public String getBaseView(final Model model) {
-
-		return "statistic/base";
-	}
 
 	public record DiagramConfigDTO(String name, String entityName, Long id) {
 	}
