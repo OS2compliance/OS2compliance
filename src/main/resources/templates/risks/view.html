@@ -31,9 +31,7 @@
                         <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>
@@ -73,8 +71,8 @@
                                    <th class="riskViewTh" colspan="5"></th>
                                    <th class="riskViewTh" colspan="3" th:if="${risk.registered}">Konsekvens for den registrerede</th>
                                    <th class="riskViewTh" colspan="3" th:if="${risk.organisation}">Konsekvens for organisationen</th>
-                                   <th class="riskViewTh" colspan="3" th:if="${risk.society AND !risk.authenticity}">Konsekvens for samfundet</th>
-                                   <th class="riskViewTh" colspan="4" th:if="${risk.society AND risk.authenticity}">Konsekvens for samfundet</th>
+                                   <th class="riskViewTh" colspan="3" th:if="${risk.society && !risk.authenticity}">Konsekvens for samfundet</th>
+                                   <th class="riskViewTh" colspan="4" th:if="${risk.society && risk.authenticity}">Konsekvens for samfundet</th>
                                    <th class="riskViewTh" colspan="3"></th>
                                    <th class="riskViewTh" colspan="3">Residualrisiko</th>
                                 </tr>
@@ -264,25 +262,25 @@
                                                 </select>
                                             </td>
                                             <td class="riskViewTd text-center" >
-                                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs"
+                                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs"
                                                         th:onclick="|createTaskClicked(this)|" title="Opgave eller kontrol"
                                                         th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
                                                     Ny opgave
                                                 </button>
-                                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1"
+                                                <button sec:authorize="hasAnyRole('ROLE_delete_all')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1"
                                                         th:onclick="|deleteThreatClicked(this)|" title="Slet"
                                                         th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
                                                     Slet trussel
                                                 </button>
                                             </td>
                                             <td class="riskViewTd riskViewResidual editCell" >
-                                                <select th:id="'residualRiskProbabilityBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_PROBABILITY" th:value="${row.residualRiskProbability}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
+                                                <select th:id="'residualRiskProbabilityBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_PROBABILITY" th:value="${row.residualRiskProbability}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT || row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
                                                     <option value="-1" th:selected="${row.residualRiskProbability} == -1"></option>
                                                     <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskProbability == entry.key}"></option>
                                                 </select>
                                             </td>
                                             <td class="riskViewTd riskViewResidual editCell" >
-                                                <select th:id="'residualRiskConsequenceBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_CONSEQUENCE" th:value="${row.residualRiskConsequence}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT OR row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
+                                                <select th:id="'residualRiskConsequenceBtn' + ${row.index}" class="fullWidth riskNumber residualRisks setField" th:attr="data-rowid=${row.index}, data-dbtype=${row.dataType}, data-id=${row.id}, data-identifier=${row.identifier}" data-setfieldtype="RESIDUAL_RISK_CONSEQUENCE" th:value="${row.residualRiskConsequence}" th:style="${row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).ACCEPT || row.method == T(dk.digitalidentity.model.entity.enums.ThreatMethod).NONE} ? 'display:none' : ''" th:title="${consequenceExplainer}">
                                                     <option value="-1" th:selected="${row.residualRiskConsequence} == -1"></option>
                                                     <option th:each="entry : ${scale}" th:text="${entry.key}" th:value="${entry.key}" th:selected="${row.residualRiskConsequence == entry.key}"></option>
                                                 </select>
@@ -382,13 +380,13 @@
                         </div>
                         <div class="d-flex mb-2">
                             <div class="d-flex flex-fill align-items-start mb-3 p-1">
-                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-success mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
+                                <button sec:authorize="hasAnyRole('ROLE_create_all')" type="button" class="btn btn-success mb-1 me-1" data-bs-toggle="modal" data-bs-target="#customThreatFormDialog">
                                     <i class="ti-plus"></i> <span class="vr"></span> Tilføj ny trussel
                                 </button>
-                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-success me-1" th:onclick="|setRevisionInterval(${risk.id})|">
+                                <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success me-1" th:onclick="|setRevisionInterval(${risk.id})|">
                                     <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
                                 </button>
-                                <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#threatCatalogModal">
+                                <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-success" data-bs-toggle="modal" data-bs-target="#threatCatalogModal">
                                     <i class="pli-files"></i> <span class="vr"></span> Vælg trusselskataloger
                                 </button>
                             </div>

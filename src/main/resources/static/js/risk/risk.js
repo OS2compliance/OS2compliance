@@ -1,27 +1,51 @@
+const columnProperties = [
+    'id',
+    'name',
+    'type',
+    'responsibleOU',
+    'responsibleUser',
+    'relatedAssetsAndRegisters',
+    'tasks',
+    'date',
+    'threatAssessmentReportApprovalStatus',
+    'assessment',
+    'threatCatalogs',
+    'allowedActions',
+    'fromExternalSource',
+    'externalLink']
 
-    const defaultClassName = {
-        table: 'table table-striped',
-        search: "form-control",
-        header: "d-flex justify-content-end"
-    };
+const defaultClassName = {
+    table: 'table table-striped',
+    search: "form-control",
+    header: "d-flex justify-content-end"
+};
 
-    const createRiskService = new CreateRiskService();
-    const copyRiskService = new CopyRiskService();
-    const editRiskService = new EditRiskService();
-    const createTable = new CreateTable();
-    const preselect = new Preselect();
-    let registerView = true;
+let createExternalRiskassessmentService;
+const createRiskService = new CreateRiskService();
+const copyRiskService = new CopyRiskService();
+const editRiskService = new EditRiskService();
+const createTable = new CreateTable();
+const preselect = new Preselect();
+let registerView = true;
 
-    document.addEventListener("DOMContentLoaded", function(event) {
-        const table = document.getElementById("risksDatatable");
-        if (table) {
-            registerView = false;
-            createTable.init();
-        } else {
-            preselect.init();
-        }
-        createRiskService.init();
-    });
+document.addEventListener("DOMContentLoaded", function (event) {
+    if (typeof CreateExternalRiskassessmentService === "function") {
+        // CreateExternalRiskassessmentService might not always be defined
+        createExternalRiskassessmentService = new CreateExternalRiskassessmentService()
+    }
+
+    const table = document.getElementById("risksDatatable");
+    if (table) {
+        registerView = false;
+        createTable.init();
+        initTableActions()
+    } else {
+        preselect.init();
+    }
+    createRiskService.init();
+
+    initPageTopButtons()
+});
 
 function Preselect() {
     this.init = function () {
@@ -30,6 +54,20 @@ function Preselect() {
         type.value = "REGISTER";
         type.dispatchEvent(new Event("change"));
     }
+}
+
+function initTableActions() {
+    delegateListItemActions('risksDatatable',
+        (id, elem) => {
+            if (elem.dataset.external === 'true') {
+                createExternalRiskassessmentService.editExternalClicked(id)
+            } else {
+                editRiskService.showEditDialog(id)
+            }
+        },
+        (id, name, elem) => deleteClicked(id, name),
+        (id, elem) => copyRiskService.showCopyDialog(id),
+    )
 }
 
 function CreateTable() {
@@ -49,6 +87,7 @@ function CreateTable() {
                 },
                 {
                     name: "Risikovurdering",
+                    width: '120px',
                     searchable: {
                         searchKey: 'name'
                     },
@@ -56,7 +95,7 @@ function CreateTable() {
                         const external = row.cells[12]['data']
                         const externalLink = row.cells[13]['data']
                         const url = viewUrl + row.cells[0]['data'];
-                        if(external) {
+                        if (external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
                         } else {
                             return gridjs.html(`<a href="${url}">${cell}</a>`);
@@ -67,23 +106,20 @@ function CreateTable() {
                     name: "Type",
                     searchable: {
                         searchKey: 'type',
-                        fieldId :'riskThreatAssessmentSearchSelector'
+                        fieldId: 'riskThreatAssessmentSearchSelector'
                     },
-                    width: '120px',
                 },
                 {
                     name: "Fagområde",
                     searchable: {
                         searchKey: 'responsibleOU.name'
                     },
-                    width: '250px',
                 },
                 {
                     name: "Risikoejer",
                     searchable: {
                         searchKey: 'responsibleUser.name'
                     },
-                    width: '250px',
                 },
                 {
                     name: "Entitet",
@@ -91,7 +127,8 @@ function CreateTable() {
                         searchKey: 'relatedAssetsAndRegisters'
                     },
                     formatter: (cell, row) => {
-                        console.log(cell);
+                        const dbsAssetId = row.cells[0]['data'];
+
                         let items = [];
                         if (typeof cell === "string" && cell.trim() !== "") {
                             items = cell.split("||").map(name => name.trim());
@@ -105,21 +142,18 @@ function CreateTable() {
 
                         return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
                     },
-                    width: '300px'
                 },
                 {
                     name: "Opgaver",
                     searchable: {
                         sortKey: 'tasks'
                     },
-                    width: '120px',
                 },
                 {
                     name: "Dato",
                     searchable: {
                         searchKey: 'date'
                     },
-                    width: '120px',
                 },
                 {
                     name: "Status",
@@ -135,7 +169,6 @@ function CreateTable() {
                         searchKey: 'assessment',
                         fieldId: 'riskAssessmentSearchSelector'
                     },
-                    width: '120px',
                     formatter: (cell, row) => {
                         var status = cell;
                         if (cell === "Grøn") {
@@ -169,9 +202,8 @@ function CreateTable() {
                     searchable: {
                         searchKey: 'threatCatalogs',
                     },
-                    width: '150px',
                     formatter: (cell, row) => {
-                        if (!cell || cell.trim() === '') {
+                        if (!cell || (cell && cell.trim() === '')) {
                             return gridjs.html('<span class="text-muted">Ingen kataloger</span>');
                         }
 
@@ -184,33 +216,18 @@ function CreateTable() {
                     },
                 },
                 {
-                    id: 'handlinger',
+                    id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
-                    width: '100px',
                     formatter: (cell, row) => {
-                        const riskId = row.cells[0]['data'];
+                        const identifier = row.cells[0]['data'];
                         const name = row.cells[1]['data'].replaceAll("'", "\\'");
                         const external = row.cells[12]['data']
-                        const externalLink = row.cells[13]['data']
-                        const changeable = row.cells[11]['data']
-                        let buttonHTML = ''
-
-                        //edit button
-                        if ((superuser || changeable)
-                            && external) {
-                            buttonHTML = buttonHTML + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalRiskassessmentService.editExternalClicked('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
-                        } else if(superuser || changeable) {
-                            buttonHTML = buttonHTML +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="editRiskService.showEditDialog('${riskId}')"><i class="pli-pencil fs-5"></i></button>`
-                                +`<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="copyRiskService.showCopyDialog('${riskId}')"><i class="pli-data-copy fs-5"></i></button>`
-                        }
-                        //delete & copy buttons
-                        if (superuser) {
-                            buttonHTML = buttonHTML +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${riskId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
-                        }
-                        return  gridjs.html(buttonHTML)
+                        const attributeMap = new Map();
+                        attributeMap.set('identifier', identifier);
+                        attributeMap.set('name', name);
+                        attributeMap.set('external', external);
+                        return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                     }
                 },
                 {
@@ -222,7 +239,7 @@ function CreateTable() {
                     hidden: true
                 },
             ],
-            server:{
+            server: {
                 url: gridRisksUrl,
                 method: 'POST',
                 headers: {
@@ -233,7 +250,7 @@ function CreateTable() {
                         for (const property of columnProperties) {
                             result.push(obj[property])
                         }
-                    return result;
+                        return result;
                     }
                 ),
                 total: data => data.totalCount
@@ -254,9 +271,9 @@ function CreateTable() {
                 }
             }
         };
-        const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "risksDatatable" ));
+        const grid = new gridjs.Grid(gridConfig).render(document.getElementById("risksDatatable"));
 
-        grid.on('ready', function() {
+        grid.on('ready', function () {
             // Ensure correct page load behavior
             if (!document.getElementsByClassName("gridjs-currentPage")[0]) {
                 document.getElementsByClassName("gridjs-pages")[0].children[1]?.click();
@@ -267,34 +284,41 @@ function CreateTable() {
                 .map(select => select.id)
                 .forEach(elementId => {
                     let elementById = document.getElementById(elementId);
-                    initSelect(elementById, 'form-control', { readOnly: true });
+                    initSelect(elementById, 'form-control', {readOnly: true});
                 });
         });
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, 'risksDatatable');
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, 'risksDatatable');
 
-        window.customGridFunctions = customGridFunctions;
+        initSaveAsExcelButton(customGridFunctions,  'Risikovurderinger');
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }
 }
 
+function initPageTopButtons() {
+    const createButton = document.getElementById("createExternalThreatassessmentButton");
+    createButton?.addEventListener("click",  () => createExternalRiskassessmentService.createExternalClicked())
+}
+
+
+
 function deleteClicked(riskId, name) {
     Swal.fire({
-      text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra risikovurderingen slettes også.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#03a9f4',
-      cancelButtonColor: '#df5645',
-      confirmButtonText: 'Ja',
-      cancelButtonText: 'Nej'
+        text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra risikovurderingen slettes også.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#03a9f4',
+        cancelButtonColor: '#df5645',
+        confirmButtonText: 'Ja',
+        cancelButtonText: 'Nej'
     }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${deleteUrl}${riskId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+        if (result.isConfirmed) {
+            fetch(`${deleteUrl}${riskId}`, {method: 'DELETE', headers: {'X-CSRF-TOKEN': token}})
                 .then(() => {
                     window.location.reload();
                 });
-      }
+        }
     })
 }
 
@@ -304,7 +328,7 @@ function formReset() {
 }
 
 function updateTypeSelect(choices, search, types) {
-    fetch( `/rest/relatable/autocomplete?types=${types}&search=${search}`)
+    fetch(`/rest/relatable/autocomplete?types=${types}&search=${search}`)
         .then(response => response.json()
             .then(data => {
                 choices.setChoices(data.content.map(reg => {
@@ -321,7 +345,7 @@ function initRegisterSelect(registerSelectElement) {
     const registerChoices = initSelect(registerSelectElement);
     updateTypeSelect(registerChoices, "", "REGISTER");
     registerSelectElement.addEventListener("search",
-        function(event) {
+        function (event) {
             updateTypeSelect(registerChoices, event.detail.value, "REGISTER");
         },
         false,
@@ -333,7 +357,7 @@ function initAssetSelectRisk(assetSelectElement) {
     const assetChoices = initSelect(assetSelectElement);
     updateTypeSelect(assetChoices, "", "ASSET");
     assetSelectElement.addEventListener("search",
-        function(event) {
+        function (event) {
             updateTypeSelect(assetChoices, event.detail.value, "ASSET");
         },
         false,
@@ -343,7 +367,7 @@ function initAssetSelectRisk(assetSelectElement) {
 
 function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
     let selectedRegister = selectedRegisterElement.value;
-    fetch( `/rest/risks/register?registerId=${selectedRegister}`)
+    fetch(`/rest/risks/register?registerId=${selectedRegister}`)
         .then(response => response.json()
             .then(data => {
                 var user = data.users[0];
@@ -363,7 +387,7 @@ function loadRegisterResponsible(selectedRegisterElement, userChoicesSelect) {
 }
 
 function EditRiskService() {
-    this.getScopedElementById = function(id) {
+    this.getScopedElementById = function (id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
 
@@ -379,7 +403,7 @@ function EditRiskService() {
             .catch(error => toastService.error(error));
     }
 
-    this.onShown = function() {
+    this.onShown = function () {
         let self = this;
         this.modalContainer = document.getElementById('editModal');
 
@@ -394,7 +418,7 @@ function EditRiskService() {
             () => this.validate());
 
 
-        this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
+        this.userChoicesSelect.passedElement.element.addEventListener('change', function () {
             const userUuid = self.userChoicesSelect.passedElement.element.value;
             self.userChanged(userUuid);
         });
@@ -411,21 +435,21 @@ function EditRiskService() {
         this.editAssessmentModal.show();
     }
 
-    this.validate = function() {
+    this.validate = function () {
         let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
         if (this.assetChoicesSelect != null) {
             result &= checkInputField(this.assetChoicesSelect, true);
         }
-        return result;
+        return result && validateInputFieldLength("editName", 255);
     }
 }
 
 function CopyRiskService() {
-    this.getScopedElementById = function(id) {
+    this.getScopedElementById = function (id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
 
-    this.showCopyDialog = function(threatAssessmentId) {
+    this.showCopyDialog = function (threatAssessmentId) {
         const container = document.getElementById('copyAssessmentContainer');
         fetch(`${baseUrl}${threatAssessmentId}/copy`)
             .then(response => response.text()
@@ -437,7 +461,7 @@ function CopyRiskService() {
             .catch(error => toastService.error(error));
     }
 
-    this.onShown = function() {
+    this.onShown = function () {
         let self = this;
         this.modalContainer = document.getElementById('copyModal');
         const registerSelect = this.getScopedElementById('copyRegisterSelect');
@@ -459,7 +483,7 @@ function CopyRiskService() {
             () => this.validate());
 
 
-        this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
+        this.userChoicesSelect.passedElement.element.addEventListener('change', function () {
             const userUuid = self.userChoicesSelect.passedElement.element.value;
             self.userChanged(userUuid);
         });
@@ -469,15 +493,15 @@ function CopyRiskService() {
     }
 
     this.userChanged = function (userUuid) {
-        fetch( `/rest/ous/user/` + userUuid)
-            .then(response =>  response.json()
+        fetch(`/rest/ous/user/` + userUuid)
+            .then(response => response.json()
                 .then(data => {
                     this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
                     this.ouChoicesSelect.setChoiceByValue(data.uuid);
                 })).catch(error => toastService.error(error));
     }
 
-    this.validate = function() {
+    this.validate = function () {
         let result = validateChoices(this.userChoicesSelect, this.ouChoicesSelect);
         if (this.assetChoicesSelect != null) {
             result &= checkInputField(this.assetChoicesSelect, true);
@@ -505,27 +529,27 @@ function CreateRiskService() {
         this.userChoicesSelect = choiceService.initUserSelect("createRiskUserSelect");
         this.ouChoicesSelect = choiceService.initOUSelect("createRiskOuSelect");
 
-        this.userChoicesSelect.passedElement.element.addEventListener('change', function() {
-             const userUuid = self.userChoicesSelect.passedElement.element.value;
-             self.userChanged(userUuid);
+        this.userChoicesSelect.passedElement.element.addEventListener('change', function () {
+            const userUuid = self.userChoicesSelect.passedElement.element.value;
+            self.userChanged(userUuid);
         });
 
         this.typeChanged(this.getScopedElementById("threatAssessmentType").value);
-        this.getScopedElementById('threatAssessmentType').addEventListener('change', function() {
+        this.getScopedElementById('threatAssessmentType').addEventListener('change', function () {
             self.typeChanged(this.value);
         });
 
-        this.assetChoicesSelect.passedElement.element.addEventListener('change', function() {
+        this.assetChoicesSelect.passedElement.element.addEventListener('change', function () {
             self.clearAssetValidationError();
             self.loadAssetSection();
         });
         let selectedRegisterElement = this.getScopedElementById("registerSelect");
-        this.registerChoicesSelect.passedElement.element.addEventListener('change', function() {
+        this.registerChoicesSelect.passedElement.element.addEventListener('change', function () {
             self.clearRegisterValidationError();
             loadRegisterResponsible(selectedRegisterElement, self.userChoicesSelect);
         });
 
-        this.getScopedElementById('sendEmailcheckbox').addEventListener('change', function() {
+        this.getScopedElementById('sendEmailcheckbox').addEventListener('change', function () {
             self.sendEmailChanged(this.checked);
         });
 
@@ -540,7 +564,7 @@ function CreateRiskService() {
         let societyCheckbox = this.getScopedElementById("society");
         let authenticityCheckbox = this.getScopedElementById("authenticity");
         let authenticitySection = this.getScopedElementById("authenticitySection");
-        societyCheckbox.addEventListener('change', function() {
+        societyCheckbox.addEventListener('change', function () {
             if (societyCheckbox.checked) {
                 // show authenticity checkbox
                 authenticitySection.hidden = false;
@@ -554,7 +578,7 @@ function CreateRiskService() {
         initFormValidationForForm("createRiskModal",
             () => {
                 return this.validateEntitySelection() &&
-                    this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect);
+                    this.validateChoicesAndCheckboxesRisk(this.userChoicesSelect, this.ouChoicesSelect) && validateInputFieldLength("name", 255);
             });
 
     }
@@ -577,20 +601,20 @@ function CreateRiskService() {
     }
 
     this.userChanged = function (userUuid) {
-        fetch( `/rest/ous/user/` + userUuid)
-            .then(response =>  response.json()
+        fetch(`/rest/ous/user/` + userUuid)
+            .then(response => response.json()
                 .then(data => {
                     this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
                     this.ouChoicesSelect.setChoiceByValue(data.uuid);
                 })).catch(error => toastService.error(error));
     }
 
-    this.clearRegisterValidationError = function() {
+    this.clearRegisterValidationError = function () {
         this.getScopedElementById("registerSelect").parentElement.classList.remove('is-invalid');
         this.getScopedElementById("registerError").classList.remove('show');
     }
 
-    this.clearAssetValidationError = function() {
+    this.clearAssetValidationError = function () {
         this.getScopedElementById("assetSelect").parentElement.classList.remove('is-invalid');
         this.getScopedElementById("assetError").classList.remove('show');
     }
@@ -647,7 +671,7 @@ function CreateRiskService() {
 
     this.loadAssetSection = function () {
         const selectedAsset = this.getScopedElementById("assetSelect").value;
-        fetch( `/rest/risks/asset?assetIds=${selectedAsset}`)
+        fetch(`/rest/risks/asset?assetIds=${selectedAsset}`)
             .then(response => response.json()
                 .then(data => {
                     let user = data.users?.users[0];
@@ -684,7 +708,7 @@ function CreateRiskService() {
         this.getScopedElementById('sendEmail').value = checked;
     }
 
-    this.getScopedElementById = function(id) {
+    this.getScopedElementById = function (id) {
         return this.modalContainer.querySelector(`#${id}`);
     }
 }
@@ -732,7 +756,7 @@ function initRegisterSelectWithPreselect(registerSelectElement) {
     const initialName = regi.getAttribute("data-register-name");
     updateTypeSelectWithPreselect(registerChoices, "", "REGISTER", initialName);
     registerSelectElement.addEventListener("search",
-        function(event) {
+        function (event) {
             updateTypeSelectWithPreselect(registerChoices, event.detail.value, "REGISTER");
         },
         false,

@@ -21,10 +21,12 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
@@ -32,13 +34,10 @@ import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.TaskService;
-import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -62,7 +61,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("dpia")
-@RequireUser
+@RequireConfiguration
 @RequiredArgsConstructor
 public class DPIAController {
     private final DPIAService dpiaService;
@@ -74,16 +73,17 @@ public class DPIAController {
     private final AssetService assetService;
     private final RelationService relationService;
 
+	@RequireReadOwnerOnly
     @GetMapping
     public String dpiaList(final Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
         return "dpia/index";
     }
 
 	public record DPIAScreeningDTO(List<DataProtectionImpactScreeningAnswerDTO> questions){}
 	public record DPIADetailAssetDTO(long id, String name) {}
     public record DPIADetailDTO (long id, String name, List<DPIADetailAssetDTO> assets, String comment) {}
+	@RequireReadOwnerOnly
     @GetMapping("{id}")
     public String dpiaDetails(final Model model, @PathVariable Long id) {
 
@@ -136,6 +136,7 @@ public class DPIAController {
                 .collect(Collectors.toList());
 
 		model.addAttribute("changeableAsset", assetService.isEditable(assets));
+		model.addAttribute("changeable", assetService.isEditable(assets));
         model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), dpia.getName(), assets.stream().map(a-> new DPIADetailAssetDTO(a.getId(), a.getName())).toList(), dpia.getComment()));
         model.addAttribute("assets", assets);
 		model.addAttribute("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
@@ -158,10 +159,11 @@ public class DPIAController {
 	public record ExternalDPIAOptionDTO(Long id, String name) {}
 	public record ExternalDPIAUserOptionDTO(String uuid, String name) {}
     public record ExternalDPIADTO (Long dpiaId, String externalLink, List<ExternalDPIAOptionDTO> assets, LocalDate userUpdatedDate, String title, ExternalDPIAUserOptionDTO responsibleUser, ExternalDPIAUserOptionDTO responsibleOu ) {}
+	@RequireUpdateOwnerOnly
     @GetMapping("external/{dpiaId}/edit")
     public String editExternalDPIA(final Model model, @PathVariable Long dpiaId) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
 
         DPIA dpia = dpiaService.find(dpiaId);
 
@@ -179,10 +181,11 @@ public class DPIAController {
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
 
+	@RequireCreateAll
     @GetMapping("external/create")
     public String createExternalDPIA(final Model model) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        model.addAttribute("superuser", authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)));
+
+        model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.CREATE_ALL));
 
         return "dpia/fragments/create_external_dpia_modal :: create_external_dpia_modal";
     }
@@ -190,7 +193,7 @@ public class DPIAController {
 	public record DPIAResponsibleUser(String uuid, String name){}
 	public record DPIAResponsibleOu(String uuid, String name){}
 	public record DPIAAssetDTO(long id, String name){}
-	@RequireSuperuserOrAdministrator
+	@RequireUpdateOwnerOnly
 	@GetMapping("{dpiaId}/edit")
 	public String getEditFragment(final Model model, @PathVariable Long dpiaId) {
 		final DPIA dpia = dpiaService.find(dpiaId);
@@ -204,6 +207,7 @@ public class DPIAController {
 		if (dpia.getResponsibleOu() != null) {
 			model.addAttribute("responsibleOu", new DPIAResponsibleOu(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName()));
 		}
+		model.addAttribute("isResponsible", dpiaService.isResponsibleFor(dpia));
 		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";
 	}
 
@@ -277,6 +281,7 @@ public class DPIAController {
     }
 
     public record RevisionFormDTO(@DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate nextRevision, RevisionInterval revisionInterval) {}
+	@RequireUpdateOwnerOnly
     @GetMapping("{dpiaId}/revision")
     public String revisionForm(final Model model, @PathVariable final long dpiaId) {
          DPIA dpia = dpiaService.find(dpiaId);
@@ -286,15 +291,12 @@ public class DPIAController {
         return "dpia/fragments/revisionIntervalForm";
     }
 
+	@RequireUpdateOwnerOnly
     @PostMapping("{dpiaId}/revision")
     @Transactional
     public String postRevisionForm(@ModelAttribute final RevisionFormDTO revisionFormDTO, @PathVariable final long dpiaId) {
         DPIA dpia = dpiaService.find(dpiaId);
         final List<Asset> assets = dpia.getAssets();
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !isResponsibleForAsset(assets)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 
         dpia.setRevisionInterval(revisionFormDTO.revisionInterval);
         dpia.setNextRevision(revisionFormDTO.nextRevision);

@@ -12,8 +12,10 @@ import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.hamcrest.Matchers.anyOf;
+import static org.hamcrest.Matchers.is;
 
 /**
  * This class checks that no controller allows unauthenticated requests.
@@ -47,7 +49,11 @@ public class MvcSecurityTest {
     private void assertUrlProtected(final String url) throws Exception {
         mockMvc.perform(get(url))
             .andExpect(status().is3xxRedirection())
-            .andExpect(redirectedUrl("http://localhost/login"));
+			.andExpect(header().string("Location",
+						anyOf(
+								is("http://localhost/login"),
+								is("http://localhost/saml2/authenticate?registrationId=IdP")
+						)));
     }
 
 }

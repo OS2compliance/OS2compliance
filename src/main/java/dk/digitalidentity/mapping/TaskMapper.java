@@ -1,25 +1,27 @@
 package dk.digitalidentity.mapping;
 
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
-
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface TaskMapper {
 
-    @SuppressWarnings("Convert2MethodRef")
+	@SuppressWarnings("Convert2MethodRef")
     default TaskDTO toDTO(final TaskGrid taskGrid) {
-        return TaskDTO.builder()
+        TaskDTO taskDTO = TaskDTO.builder()
                 .id(taskGrid.getId())
                 .name(taskGrid.getName())
                 .responsibleUser(nullSafe(() -> taskGrid.getResponsibleUser().getName()))
@@ -32,17 +34,26 @@ public interface TaskMapper {
                 .taskResultOrder(taskGrid.getTaskResultOrder())
                 .completed(nullSafe(taskGrid::isCompleted))
                 .tags(nullSafe(() -> taskGrid.getTags()))
-                .changeable(false)
                 .build();
-    }
 
-    //provides a mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    default TaskDTO toDTO(final TaskGrid taskGrid, boolean superuser, String principalUuid) {
-        TaskDTO taskDTO = toDTO(taskGrid);
-        if(superuser || principalUuid.equals(taskGrid.getResponsibleUser().getUuid())) {
-            taskDTO.setChangeable(true);
-        }
-        return taskDTO;
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		boolean isResponsible =	(taskGrid.getResponsibleUser() != null && taskGrid.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()));
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.CREATE_ALL))) {
+			allowedActions.add(AllowedAction.COPY);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+
+		taskDTO.setAllowedActions(allowedActions);
+
+		return taskDTO;
     }
 
     default List<TaskDTO> toDTO(List<TaskGrid> taskGrid) {
@@ -50,12 +61,4 @@ public interface TaskMapper {
         taskGrid.forEach(a -> taskDTOS.add(toDTO(a)));
         return taskDTOS;
     }
-
-    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    default List<TaskDTO> toDTO(List<TaskGrid> taskGrid, boolean superuser, String principalUuid) {
-        List<TaskDTO> taskDTOS = new ArrayList<>();
-        taskGrid.forEach(a -> taskDTOS.add(toDTO(a, superuser, principalUuid)));
-        return taskDTOS;
-    }
-
 }

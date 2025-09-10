@@ -8,9 +8,12 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.boot.context.properties.NestedConfigurationProperty;
+import org.springframework.data.web.config.EnableSpringDataWebSupport;
 import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.stereotype.Component;
+
+import static org.springframework.data.web.config.EnableSpringDataWebSupport.PageSerializationMode.VIA_DTO;
 
 @Component
 @Getter
@@ -18,6 +21,7 @@ import org.springframework.stereotype.Component;
 @EnableScheduling
 @EnableAsync
 @ConfigurationProperties(prefix = "os2compliance")
+@EnableSpringDataWebSupport(pageSerializationMode = VIA_DTO)
 public class OS2complianceConfiguration {
 	private boolean developmentMode = false;
     private boolean schedulingEnabled = true;
@@ -25,6 +29,8 @@ public class OS2complianceConfiguration {
     private String authorityUser;
     private String authoritySuperuser;
     private String authorityAdministrator;
+    private String authorityLimitedUser;
+    private String authorityReadOnlyUser;
     @NestedConfigurationProperty
     private Municipal municipal = new Municipal();
 	@NestedConfigurationProperty

@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -24,7 +25,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Immutable
-public class TaskGrid  implements HasSingleResponsibleUser{
+public class TaskGrid  implements HasSingleResponsibleUser {
     @Id
     private Long id;
 

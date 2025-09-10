@@ -1,3 +1,11 @@
+
+document.addEventListener("DOMContentLoaded", function (event) {
+    assetDpiaService = new AssetDpiaService()
+    assetDpiaService.init()
+    assetDpiaService.initDpia()
+})
+
+
 function AssetDpiaService() {
     this.screeningBadgeElem = null;
     this.recommendationElem = null;
@@ -187,10 +195,14 @@ function AssetDpiaService() {
 
 
     this.initDpia = ()=> {
+        const readOnly = document.getElementById('changeableInput');
         let editors = document.querySelectorAll('.responses');
         for (let i = 0; i < editors.length; ++i) {
             const textarea = editors[i];
             window.CreateImageCkEditor(`/rest/file/img/upload`,editors[i], editor => {
+                if (readOnly && readOnly.value === 'true') {
+                    editor.enableReadOnlyMode('no-permissions')
+                }
                 editor.editing.view.document.on('blur', () => {
                     setFieldDpiaResponse(textarea.dataset.questionid, "response", editor.getData());
                 });

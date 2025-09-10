@@ -4,8 +4,8 @@ import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.SettingsDTO;
 import dk.digitalidentity.model.dto.enums.KitosField;
-import dk.digitalidentity.security.RequireAdministrator;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireSettings;
 import dk.digitalidentity.service.KitosService;
 import dk.digitalidentity.service.SettingsService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("settings")
-@RequireAdministrator
+@RequireSettings
 @RequiredArgsConstructor
 public class SettingsController {
     private final SettingsService settingsService;
@@ -35,6 +35,7 @@ public class SettingsController {
     private final KitosService kitosService;
     private final OS2complianceConfiguration configuration;
 
+	@RequireUpdateAll
     @Transactional
     @GetMapping("form")
     public String form(final Model model) {
@@ -43,8 +44,8 @@ public class SettingsController {
         model.addAttribute("settings", settings);
 		model.addAttribute("page", getParentType(httpServletRequest.getHeader("Referer")));
 		model.addAttribute("customSystemOwnerInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
-		model.addAttribute("customSystemResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
-		model.addAttribute("customSystemOperationResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
+		model.addAttribute("customSystemResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
+		model.addAttribute("customSystemOperationResponsibleInput", settings.getSettingsList().stream().filter(setting -> Objects.equals(setting.getSettingKey(), KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME)).findFirst().orElse(null));
 		boolean kitosEnabled = configuration.getIntegrations().getKitos().isEnabled();
 		model.addAttribute("kitosEnabled", kitosEnabled);
 		if (kitosEnabled) {
@@ -56,11 +57,10 @@ public class SettingsController {
 			model.addAttribute("kitosFieldsForContractEnd", fields.stream().filter(f -> f.getForField().equals(KitosConstants.KITOS_FIELDS_CONTRACT_END)).collect(Collectors.toSet()));
 		}
 
-
         return "fragments/settings";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateAll
     @Transactional
     @PostMapping("update")
     public String update(@ModelAttribute final SettingsDTO settings) {

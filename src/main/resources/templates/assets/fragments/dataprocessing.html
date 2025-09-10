@@ -17,7 +17,7 @@
 
                 <div class="row mb-3"><!--TABLE 2 -->
                     <div class="col-sm-2">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="newSubsupplier()">
+                        <button type="button" sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" class="btn btn-info hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" onclick="newSubsupplier()">
                             <i class="ti-plus fs-4"></i> <span class="vr"></span> Tilføj leverandør
                         </button>
                     </div>
@@ -60,9 +60,9 @@
                 </div>
 
                 <div class="row mb-3 gap-1">
-                    <button id="editDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataprocessingEditState(true)">Rediger databehandlingsindstillinger</button>
-                    <button id="cancelDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
-                    <button id="saveDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
+                    <button id="editDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="setDataprocessingEditState(true)">Rediger databehandlingsindstillinger</button>
+                    <button id="cancelDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="setDataprocessingEditState(false)" hidden>Annuller</button>
+                    <button id="saveDataProcessingBtn" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
                 </div>
 
 
@@ -125,6 +125,8 @@
         });
 
         function initSubsupplierModal(id) {
+            const dialogElement = document.getElementById('subsupplierDialog')
+            if (!dialogElement) {return}
             let params = new URLSearchParams({asset: [[${asset.id}]]});
 
             if (id) {
@@ -134,7 +136,7 @@
             return fetch(subsupplierUrl + '?' + params.toString())
             .then(response => response.text()
                 .then(data => {
-                    document.getElementById('subsupplierDialog').innerHTML = data;
+                    dialogElement.innerHTML = data;
 
                     //Init modal
                     subsupplierDialog = new bootstrap.Modal(document.getElementById('subsupplierDialog'), {

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="da">
+<html lang="da" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:replace="~{fragments/header :: head (textEditor = true, burgermenu = true)}"></head>
 <body class="jumping">
 <link rel="stylesheet" th:href="@{/css/standard/supporting_view.css}" />
@@ -13,21 +13,17 @@
                         <nav aria-label="breadcrumb">
                             <ol class="breadcrumb mb-0">
                                 <li class="breadcrumb-item"><a th:href="@{/standards}">Standarder</a></li>
-                                <li class="breadcrumb-item"><a th:href="@{/standards/supporting}">Understøttende standarder</a></li>
+                                <li class="breadcrumb-item"><a th:href="@{/standards}">Understøttende standarder</a></li>
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${template.name}"></li>
                             </ol>
                         </nav>
+                        <h1 class="page-title mb-0 mt-2 mb-2" th:text="${template.name}"></h1>
                     </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button st th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openRequirementModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny krav
-                        </button>
-                        <button id="addHeaderButton" type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:data-id="${template.identifier}" onclick="createSectionService.openHeaderModal(this)" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px; margin-right: 10px;">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny gruppe
-                        </button>
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                    <div class="align-self-center d-inline-flex gap-2 mb-2">
+                        <a id="exportStandardToExcel" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
+                        <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='createRequirementButton', text='Ny krav', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='addHeaderButton', text='Ny gruppe', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>
@@ -39,15 +35,24 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div class="row col-lg-12 mb-3">
-                                    <label for="statusFilter" class="col-sm-2 col-form-label">Filtrér på status</label>
-                                    <div class="col-sm-4">
+                                <div class="row align-items-center mb-3">
+                                    <div class="col-6 d-flex align-items-center">
+                                        <label for="statusFilter" class="me-2 mb-0">Filtrér på status</label>
                                         <select class="form-control form-select" id="statusFilter" onChange="filterOnStatusChanged();">
                                             <option th:selected="${statusFilter == null}" value="ALL">Alle</option>
-                                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${statusFilter == status}"></option>
+                                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}"
+                                                    th:value="${status}" th:text="${status.getMessage()}" th:selected="${statusFilter == status}">
+                                            </option>
                                         </select>
                                     </div>
+
+                                    <div class="col-6 d-flex align-items-center justify-content-end">
+                                        <label class="me-2 mb-0">Progression:</label>
+                                        <div class="progress flex-grow-1" style="height: 38px;" id="progressBar">
+                                        </div>
+                                    </div>
                                 </div>
+
                                 <table class="col-lg-12 table">
                                     <thead>
                                     <tr class="bg-light">
@@ -70,9 +75,14 @@
                                                 <td></td>
                                                 <td></td>
                                                 <td></td>
-                                                <td><span><button th:data-id="${sectionParent.identifier}" th:data-header="${template.identifier}" onclick="createSectionService.openHeaderModal(this, true)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button><button th:data-id="${sectionParent.identifier}" onclick="createSectionService.openDeleteSwal(this)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
+                                                <td>
+                                                    <span>
+                                                        <button sec:authorize="hasRole('ROLE_update_all')" th:data-id="${sectionParent.identifier}" th:data-header="${template.identifier}" onclick="createSectionService.openHeaderModal(this, true)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-pen fs-5"></i></button>
+                                                        <button sec:authorize="hasRole('ROLE_delete_all')" th:data-id="${sectionParent.identifier}" onclick="createSectionService.openDeleteSwal(this)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button>
+                                                    </span>
+                                                </td>
                                             </tr>
-                                            <th:block th:if="${statusFilter == null OR section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
+                                            <th:block th:if="${statusFilter == null || section.standardSection.status == statusFilter}" th:each="section, statSection : ${#lists.sort(sectionParent.children, standardTemplateSectionComparator)}">
                                                 <tr class="foldable" th:attr="data-index=${stat.index} + '.' + ${statSection.index}">
                                                     <td style="border-right: 1px solid black; font-weight: bold; color: black;" th:text="${section.section} + ' ' + ${section.description}"></td>
                                                     <td th:unless="${isNSIS}" th:id="'selectedTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.selected} ? 'Tilvalgt' : 'Fravalgt'" style="font-weight: bold;"></td>
@@ -80,79 +90,19 @@
                                                     <td th:id="'reasonTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.reason}" style="font-weight: bold;"></td>
                                                     <td th:id="'dateTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${#temporals.format(section.standardSection.updatedAt, 'dd-MM-yyyy')}" style="font-weight: bold;"></td>
                                                     <td th:id="'responsibleTD' + ${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.responsibleUser} == null ? '' : ${section.standardSection.responsibleUser.name}" style="font-weight: bold;"></td>
-                                                    <td th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}" th:style="${'display: ' + (section.standardSection.selected ? 'block' : 'none')}">
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED == section.standardSection.status} " class="d-block badge bg-yellow-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS == section.standardSection.status} " class="d-block badge bg-blue-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY == section.standardSection.status} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
-                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT == section.standardSection.status} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                    <td th:if="${section.standardSection != null && section.standardSection.status != null}" th:id="'statusTD' + ${stat.index} + '.' + ${statSection.index}" th:style="${'display: ' + (section.standardSection.selected ? 'block' : 'none')}">
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_STARTED.equals(section.standardSection.status)} " class="d-block badge bg-yellow-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).IN_PROGRESS.equals(section.standardSection.status)} " class="d-block badge bg-blue-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).READY.equals(section.standardSection.status)} " class="d-block badge bg-green-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
+                                                        <div th:if="${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).NOT_RELEVANT.equals(section.standardSection.status)} " class="d-block badge bg-gray-500" style="width: 70px" th:text="${section.standardSection.status.getMessage()}"></div>
                                                     </td>
-                                                    <td><span><button th:data-id="${section.identifier}" onclick="createSectionService.openDeleteSwal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
+                                                    <td><span ><button sec:authorize="hasRole('ROLE_delete_all')" th:data-id="${section.identifier}" onclick="createSectionService.openDeleteSwal(this, false)" type="button" class="btn btn-icon btn-outline-light btn-xs"><i class="pli-trash fs-5"></i></button></span></td>
                                                 </tr>
                                                 <tr class="hidden">
                                                     <td style="border-right: 1px solid black;"></td>
                                                     <td colspan="5">
-                                                        <div class="row mt-3">
-                                                            <label class="col-sm-2 col-form-label">Note</label>
-                                                            <div class="col-sm-10">
-                                                                <input class="form-control reasons" th:id="'reason' + ${stat.index} + '.' + ${statSection.index}" th:value="${section.standardSection.reason}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3" th:unless="${isNSIS}">
-                                                            <div class="col-sm-2 col-form-label">Tilvalgt</div>
-                                                            <div class="col-sm-10" style="padding: 8px;">
-                                                                <input class="form-check-input selectedCheckbox" type="checkbox" th:checked="${section.standardSection.selected}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3">
-                                                            <label class="col-sm-2 col-form-label">Ansvarlig</label>
-                                                            <div class="col-sm-4">
-                                                                <select class="form-control form-select choices__input responsibleUserSelect" data-trigger="" th:id="'userSelect' + ${stat.index} + '.' + ${statSection.index}" tabindex="-1" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
-                                                                    <option th:if="${section.standardSection.responsibleUser} != null" th:value="${section.standardSection.responsibleUser.uuid}" th:text="'(' + ${section.standardSection.responsibleUser.userId} + ') ' + ${section.standardSection.responsibleUser.name}"></option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3">
-                                                            <label class="col-sm-2 col-form-label">Status</label>
-                                                            <div class="col-sm-4">
-                                                                <select class="form-control statusSelect" data-trigger="" th:id="'statusSelect' + ${stat.index} + '.' + ${statSection.index}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
-                                                                    <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${section.standardSection.status == status}"></option>
-                                                                </select>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3" th:unless="${isNSIS}">
-                                                            <label class="col-sm-2 col-form-label">Efterlevelse af kravet</label>
-                                                            <div class="col-sm-10" onclick="editField(this)" data-type="DESCRIPTION" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
-                                                                <div class="editor-container" th:id="'editorDescriptionContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
-                                                                    <textarea th:id="'description' + ${stat.index} + '.' + ${statSection.index}" data-type="DESCRIPTION" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.description}"></textarea>
-                                                                </div>
-                                                                <div class="editDescription" th:id="'descriptionRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.description}"></div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3" th:if="${isNSIS}">
-                                                            <label class="col-sm-2 col-form-label">Anmelders beskrivelse af opfyldelse (Praksis)</label>
-                                                            <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_PRACTICE" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
-                                                                <div class="editor-container" th:id="'editorPracticeContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
-                                                                    <textarea th:id="'practice' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_PRACTICE" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisPractice}"></textarea>
-                                                                </div>
-                                                                <div class="editDescription" th:id="'practiceRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisPractice}"></div>
-                                                            </div>
-                                                        </div>
-                                                        <div class="row mt-3" th:if="${isNSIS}">
-                                                            <label class="col-sm-2 col-form-label">Anmelders beskrivelse af kontrolmål (SMART)</label>
-                                                            <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_SMART" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
-                                                                <div class="editor-container" th:id="'editorSmartContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
-                                                                    <textarea th:id="'smart' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_SMART" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisSmart}"></textarea>
-                                                                </div>
-                                                                <div class="editDescription" th:id="'smartRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisSmart}"></div>
-                                                            </div>
-                                                        </div>
-
-
-                                                      <div class="row mt-3">
-                                                            <th:block th:each="mapEntry : ${relationMap}" th:if="${mapEntry.key} == ${section.standardSection.id}">
-                                                                <div th:replace="~{fragments/relations :: relationsfragment (statIndex=${stat.index} + '.' + ${statSection.index}, relations=${mapEntry.value}, completed=false, relatableId=${section.standardSection.id}, customDelete=true)}"></div>
-                                                            </th:block>
-                                                      </div>
+                                                        <div sec:authorize="hasRole('update_all')" th:replace="~{standards/fragments/sectionFragment :: editable-section}"></div>
+                                                        <div sec:authorize="!hasRole('update_all')" th:replace="~{standards/fragments/sectionFragment :: readonly-section}"></div>
                                                     </td>
                                                 </tr>
                                                 <tr>
@@ -186,8 +136,10 @@
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
+        const progressUrl = [[@{/standards/supporting/__${template.identifier}__/progress}]];
         var viewUrl = [[@{/standards/supporting/}]];
         var today = [[${today}]];
+        var success = [[${successMessage}]];
         var templateIdentifier = [[${template.identifier}]];
         var testMap = [[${relationMap}]]
         var modalError = [[${headerModalError}]]
@@ -200,8 +152,20 @@
             document.getElementById('addHeaderButton').click();
             toastService.error(modalError);
         }
-        choiceService.initHeaderSelect("headerSelect");
+        initPageTopButtons()
+        if (success) {
+            toastService.info(success);
+        }
+        // choiceService.initHeaderSelect("headerSelect");
     });
+
+    function initPageTopButtons() {
+        const createGroupButton = document.getElementById("addHeaderButton");
+        createGroupButton.addEventListener("click",  () => createSectionService.openHeaderModal(createGroupButton))
+
+        const createReqButton = document.getElementById("createRequirementButton");
+        createReqButton.addEventListener("click",  () => createSectionService.openRequirementModal(createReqButton))
+    }
     /*]]>*/
 </script>
 

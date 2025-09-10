@@ -1,11 +1,14 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 import java.util.List;
 
@@ -38,6 +41,8 @@ public class RiskDTO {
     private boolean fromExternalSource;
 	@ExcludeFromExport
     private String externalLink;
+	@ExcludeFromExport
+	private Set<AllowedAction> allowedActions;
 	@ExcelColumn(headerName = "Entitet", order = 5)
 	private String relatedAssetsAndRegisters;
 	@ExcelColumn(headerName = "Trusselskataloger", order = 9)

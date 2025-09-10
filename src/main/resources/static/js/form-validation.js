@@ -17,7 +17,7 @@ function initFormValidationForForm(formId, extraValidationFunction) {
             e.stopPropagation()
         }
 
-        if ( !form.checkValidity() ) {
+        if ( !form.checkValidity()) {
             e.preventDefault()
             e.stopPropagation()
         }

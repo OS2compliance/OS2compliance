@@ -3,7 +3,6 @@
 <head th:replace="~{fragments/header :: head (burgermenu = true)}"></head>
 <body class="jumping">
 
-<script th:src="@{/js/task/view.js}" defer></script>
 <script th:src="@{/js/oversight/oversight-service.js}" defer></script>
 <script th:src="@{/js/tag-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
@@ -25,14 +24,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createStandardService.openStandardModal()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny Standard
-                        </button>
-                    </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>
@@ -54,9 +46,9 @@
                         <div id="_dm-tabsOpgave" class="tab-pane fade active show" role="tabpanel" aria-labelledby="opgave-tab">
                                 <div class="row mb-3">
                                     <button th:unless="${completed}" th:if="${changeableTask}" id="saveEditTaskBtn" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="viewTaskService.setEditMode(true);">Rediger stamdata</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask}" id="editTaskBtn" type="button" class="btn btn-secondary btn-md col-md-2 btn-right">Rediger stamdata</button>
                                     <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.empty}" id="completeBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" data-bs-toggle="modal" data-bs-target="#completeTaskModal">Udfør <span th:text="${#strings.toLowerCase(task.taskType.getMessage())}"></span></button>
-                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.present}" id="oversightBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" onclick="viewTaskService.showOversightDialog(this)" th:attr="data-asset-id=${oversightAsset.get().id}">Udfør tilsyn</button>
+                                    <button th:unless="${completed}" th:if="${changeableTask && oversightAsset.present}" id="oversightBtn" type="button" class="btn btn-secondary btn-md col-md-2" style="margin-left: 10px;" th:attr="data-asset-id=${oversightAsset.get().id}">Udfør tilsyn</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">
@@ -82,6 +74,15 @@
                                             <option th:if="${task.responsibleOu} != null" th:value="*{responsibleOu.uuid}" th:text="*{responsibleOu.name}" selected></option>
                                         </select>
                                         <div class="invalid-feedback">Der skal vælges en ansvarlig afdeling</div>
+                                    </div>
+                                </div>
+
+                                <div class="row mb-3">
+                                    <label for="ouSelect" class="col-sm-2 col-form-label">Forvaltning</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField" th:field="*{department}" data-trigger="" name="forvaltning" id="departmentOuSelect" tabindex="-1" hidden>
+                                            <option th:if="${task.department} != null" th:value="*{department.uuid}" th:text="*{department.name}" selected></option>
+                                        </select>
                                     </div>
                                 </div>
 
@@ -121,10 +122,40 @@
                                 </div>
 
                                 <div class="row mb-3">
-                                    <label for="taskType" class="col-sm-2 col-form-label">Link</label>
+                                    <label for="taskType" class="col-sm-2 col-form-label">Links</label>
                                     <div class="col-sm-10">
-                                        <a id="realLink" th:text="*{link}" th:href="*{link}" target="_blank"></a>
-                                        <input class="form-control editField" id="linkField" th:field="*{link}" hidden>
+                                        <!-- view mode -->
+                                        <div id="linksViewContainer" class="editField">
+                                            <div th:each="link : *{links}" class="mb-1">
+                                                <a th:href="${link.url}"
+                                                   th:text="${link.url}"
+                                                   class="form-control-link"
+                                                   target="_blank"
+                                                   rel="noopener noreferrer"
+                                                   style="word-wrap: break-word;
+                                                                      overflow-wrap: break-word;
+                                                                      word-break: break-all;
+                                                                      display: inline-block;
+                                                                      max-width: 100%;
+                                                                      white-space: normal;"
+                                                >
+                                                </a>
+                                            </div>
+                                        </div>
+
+                                        <!-- edit mode -->
+                                        <div id="linksEditContainer" hidden>
+                                            <div th:each="link, iterStat : *{links}" class="input-group mb-2">
+                                                <input type="text"
+                                                       th:name="'links[' + ${iterStat.index} + '].url'"
+                                                       th:value="${link.url}"
+                                                       class="form-control editField">
+                                                <button type="button" class="btn btn-danger editField" onclick="taskLinkService.removeLink(this)">-</button>
+                                            </div>
+                                        </div>
+
+                                        <button id="addLinkBtn" class="btn btn-secondary editField" type="button"
+                                                onclick="taskLinkService.addLink()" hidden>+ Tilføj link</button>
                                     </div>
                                 </div>
 
@@ -197,7 +228,7 @@
             </div>
         </div>
     </section>
-                            </form>
+    </form>
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='opgavecenter')}"></nav>
 </div>
@@ -221,6 +252,8 @@
     +]*/
     /*]]>*/
 </script>
+
+<script type="module" th:src="@{/js/task/view.js}" defer></script>
 
 </body>
 

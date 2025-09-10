@@ -1,8 +1,32 @@
+import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 
+let onUnSubmittedService = new OnUnSubmittedService();
 let userChoicesEditSelect = null;
 
+document.addEventListener("DOMContentLoaded", function(event) {
+    loadViewAndEditForm();
+    addRelationFormLoaded();
+    choiceService.initTagSelect("tagsSelect");
+
+    initEditButton();
+
+    const saveEditBtn = document.getElementById("saveEditBtn");
+    saveEditBtn?.addEventListener("click", () => {
+        onUnSubmittedService.reset();
+    });
+});
+
+function initEditButton() {
+    const editButton = document.getElementById("editBtn");
+    editButton?.addEventListener("click", function () {
+        const responsibleFieldsChangeable = editButton.getAttribute('responsible-changeable');
+        editMode(true, responsibleFieldsChangeable);
+        onUnSubmittedService.setChangesMade();
+    })
+}
+
 function formReset() {
-const form = document.querySelector('form');
+    const form = document.querySelector('form');
     form.reset();
 }
 
@@ -13,33 +37,40 @@ function loadViewAndEditForm() {
     userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(userChoicesEditSelect);
     });
+
     document.querySelectorAll('.editField').forEach(elem => {
-      elem.disabled = true;
+        elem.disabled = true;
     });
+
     userChoicesEditSelect.disable();
 
     initFormValidationForForm("editForm", () => validateChoices(userChoicesEditSelect));
 }
 
-function editMode(enabled) {
+function editMode(enabled, responsibleFieldsChangeable = false) {
     if (enabled) {
         document.querySelectorAll('.editField').forEach(elem => {
-          elem.disabled = false;
+            elem.disabled = false;
         });
-        userChoicesEditSelect.enable();
+
+        if (responsibleFieldsChangeable) {
+            userChoicesEditSelect.enable();
+        }
+
         document.getElementById('saveEditBtn').hidden = false;
         document.getElementById('editBtn').hidden = true;
-        document.querySelector('.clickableDocLink').style.display = 'none'
-        document.querySelector('.editableDocLink').style.display = ''
+        document.querySelector('.clickableDocLink').style.display = 'none';
+        document.querySelector('.editableDocLink').style.display = '';
     } else {
         document.querySelectorAll('.editField').forEach(elem => {
           elem.disabled = true;
         });
+
         userChoicesEditSelect.disable();
         document.getElementById('saveEditBtn').hidden = true;
         document.getElementById('editBtn').hidden = false;
-                document.querySelector('.clickableDocLink').style.display = ''
-                document.querySelector('.editableDocLink').style.display = 'none'
+        document.querySelector('.clickableDocLink').style.display = '';
+        document.querySelector('.editableDocLink').style.display = 'none';
     }
 }
 

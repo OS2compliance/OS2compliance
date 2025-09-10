@@ -1,7 +1,7 @@
 package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Controller
 @RequestMapping("admin/tags")
-@RequireAdministrator
+@RequireAdmin
 @RequiredArgsConstructor
 public class TagsController {
     private final TagService tagService;

@@ -1,5 +1,7 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.enums.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
@@ -20,7 +22,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class RegisterGrid implements HasMultipleResponsibleUsers {
+public class RegisterGrid implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers {
     @Id
     private Long id;
 

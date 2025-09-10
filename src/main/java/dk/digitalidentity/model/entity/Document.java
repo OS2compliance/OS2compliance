@@ -27,7 +27,7 @@ import java.util.List;
 @Table(name = "documents")
 @Getter
 @Setter
-public class Document extends Relatable {
+public class Document extends Relatable implements HasSingleResponsibleUser {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)

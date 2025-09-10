@@ -3,7 +3,6 @@
 <head th:replace="~{fragments/header :: head (sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
 <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
-<script th:src="@{/js/document/document.js}" defer></script>
 <script th:src="@{/js/form-validation.js}" defer></script>
 <script th:src="@{/js/tag-service.js}" defer></script>
 
@@ -30,9 +29,7 @@
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>
@@ -56,7 +53,7 @@
                                   method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button id="saveEditBtn" th:if="${changeableDocument}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                    <button id="editBtn" th:if="${changeableDocument}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger</button>
+                                    <button id="editBtn" th:if="${changeableDocument}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right"  th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger</button>
                                 </div>
                                 <input th:field="*{id}" hidden>
                                 <div class="row mb-3">
@@ -183,20 +180,7 @@
 <div th:replace="~{fragments/addTags :: addTags(relatableId=${document.id})}"/>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"/>
 
-<script th:inline="javascript">
-    /*<![CDATA[*/
-
-    /*[+
-    +]*/
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        loadViewAndEditForm();
-        addRelationFormLoaded();
-        choiceService.initTagSelect("tagsSelect");
-    });
-
-    /*]]>*/
-</script>
+<script type="module" th:src="@{/js/document/document.js}" defer></script>
 
 </body>
 

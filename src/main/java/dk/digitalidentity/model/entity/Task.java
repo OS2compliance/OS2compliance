@@ -16,8 +16,10 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import jakarta.validation.constraints.NotNull;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -30,7 +32,7 @@ import java.util.Set;
 @Table(name = "tasks")
 @Getter
 @Setter
-public class Task extends Relatable {
+public class Task extends Relatable implements HasSingleResponsibleUser{
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -44,6 +46,10 @@ public class Task extends Relatable {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOu;
+
+	@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "department_uuid")
+	private OrganisationUnit department;
 
     @Column
     @DateTimeFormat(pattern = "dd/MM-yyyy")
@@ -63,8 +69,10 @@ public class Task extends Relatable {
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
-    @Column
-    private String link;
+	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
+	@ToString.Exclude
+	@EqualsAndHashCode.Exclude
+	private List<TaskLink> links = new ArrayList<>();
 
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskLog> logs  = new HashSet<>();

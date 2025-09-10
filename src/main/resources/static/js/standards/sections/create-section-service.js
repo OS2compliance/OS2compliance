@@ -77,8 +77,12 @@ function CreateSectionService() {
             if (result.isConfirmed) {
                 fetch("/rest/standards/" + path + "delete/" + id, { method: 'POST', headers: { 'X-CSRF-TOKEN': token} })
                     .then(() => {
-                        window.location.reload();
-                    });
+                        toastService.info("krav slettet");
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 250);
+                    })
+                .catch(error => toastService.error(error));
             }
         })
     }

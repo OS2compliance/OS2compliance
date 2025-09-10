@@ -3,31 +3,46 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.dao.RegisterDao;
+import dk.digitalidentity.dao.grid.RegisterGridDao;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.grid.RegisterGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 @RequiredArgsConstructor
 public class RegisterService {
     private final RegisterDao registerDao;
+	private final RegisterGridDao registerGridDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
     private final DataProcessingDao dataProcessingDao;
 	private final RelationService relationService;
 
-	public Optional<Register> findById(final Long id) {
+	public boolean isResponsibleFor(Register register) {
+		return register.getResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()))
+				|| register.getCustomResponsibleUsers().stream().anyMatch(user -> user.getUuid().equals(SecurityUtil.getPrincipalUuid()));
+	}
+
+    public Optional<Register> findById(final Long id) {
         return registerDao.findById(id);
     }
 
@@ -105,9 +120,12 @@ public class RegisterService {
 
     @Transactional
     public void delete(final Register register) {
-        dataProcessingDao.delete(register.getDataProcessing());
-        consequenceAssessmentDao.delete(register.getConsequenceAssessment());
 		relationService.deleteRelatedTo(register.getId());
+		register.setDataProcessing(null);
+		if (register.getConsequenceAssessment() != null) {
+			register.getConsequenceAssessment().setRegister(null);
+			register.setConsequenceAssessment(null);
+		}
         registerDao.delete(register);
     }
 
@@ -117,5 +135,27 @@ public class RegisterService {
 
 	public boolean isInUseOnConsequenceAssessment(Long existingId) {
 		return consequenceAssessmentDao.existsByOrganisationAssessmentColumnsChoiceValueId(existingId);
+	}
+
+	public Page<RegisterGrid> getRegisters(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<RegisterGrid> registers;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged-in user can see all
+			registers = registerGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RegisterGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					RegisterGrid.class
+			);
+		}
+		else {
+			// Logged-in user can see only own
+			registers = registerGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, RegisterGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					RegisterGrid.class
+			);
+		}
+		return registers;
 	}
 }

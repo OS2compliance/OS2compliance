@@ -3,7 +3,7 @@
 <!DOCTYPE html>
 <html lang="da">
 <head th:replace="~{fragments/header :: head }"></head>
-<script th:src="@{/js/incidents/incident-service.js}" defer></script>
+<script type="module" th:src="@{/js/incidents/incident-service.js}" defer></script>
 <script th:src="@{/js/incidents/incident-view-service.js}" defer></script>
 
 <body class="jumping">
@@ -25,13 +25,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createIncidentDialog">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny hændelse
-                        </button>
-                        <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createIncidentButton', text='Ny hændelse', iconClass='ti-plus', target='#createIncidentDialog')}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>
@@ -51,8 +47,8 @@
                             <div class="card-header toolbar">
                                 <h5 class="toolbar-start m-0"></h5>
                                 <div class="toolbar-end">
-                                    <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-xs" onclick="incidentViewService.setEditable('_dm-tabsIncident', true)">Rediger</button>
-                                    <button id="cancelBtn" th:if="${changeableIncident}" type="button" onclick="incidentViewService.setEditable('_dm-tabsIncident', false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                                    <button id="editDescBtn" th:if="${changeableIncident}" type="button" class="btn btn-secondary btn-xs">Rediger</button>
+                                    <button id="cancelBtn" th:if="${changeableIncident}" type="button" class="btn btn-light btn-xs" style="display: none">Annuller</button>
                                     <button id="saveBtn" th:if="${changeableIncident}" th:form="${formId}" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                                 </div>
                             </div>
@@ -68,10 +64,10 @@
                                         <th:block th:replace="${response.incidentType.name() == 'ASSETS'} ? ~{incidents/logs/form_fields :: assetsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'USER'} ? ~{incidents/logs/form_fields :: userField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'USERS'} ? ~{incidents/logs/form_fields :: usersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
-                                        <th:block th:replace="${response.incidentType.name() == 'SUPPLIER'} ? ~{incidents/logs/form_fields :: supplierField(response = ${response}, idx = ${idx.index})} : _"></th:block>
-                                        <th:block th:replace="${response.incidentType.name() == 'SUPPLIERS'} ? ~{incidents/logs/form_fields :: suppliersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'ORGANIZATION'} ? ~{incidents/logs/form_fields :: organizationField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'ORGANIZATIONS'} ? ~{incidents/logs/form_fields :: organizationsField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'SUPPLIER'} ? ~{incidents/logs/form_fields :: supplierField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                                        <th:block th:replace="${response.incidentType.name() == 'SUPPLIERS'} ? ~{incidents/logs/form_fields :: suppliersField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'CHOICE_LIST'} ? ~{incidents/logs/form_fields :: choiceListField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                         <th:block th:replace="${response.incidentType.name() == 'CHOICE_LIST_MULTIPLE'} ? ~{incidents/logs/form_fields :: choiceListMultipleField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                                     </div>
@@ -107,6 +103,8 @@
 
     /*]]>*/
 </script>
+
+<script type="module" th:src="@{/js/incidents/incident-view-service.js}" defer></script>
 
 </body>
 

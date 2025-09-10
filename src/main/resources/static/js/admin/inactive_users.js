@@ -1,5 +1,14 @@
 let transferToChoice, transferFromChoice, transferFromSelect, transferToSelect, transferResponsibilityModal;
 
+token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    pageLoaded()
+
+
+    initSaveAsExcelButtonWithDefaultGrid('inactiveUsersDatatable', 'Inaktive_ansvarlige')
+});
+
 function transferResponsibility() {
     let transferFrom = transferFromSelect.value;
     let transferTo = transferToSelect.value;
@@ -47,7 +56,7 @@ function pageLoaded() {
     }
 
     transferResponsibilityModal = document.getElementById('transferResponsibilityModal');
-    transferResponsibilityModal.addEventListener('hidden.bs.modal', function () {
+    transferResponsibilityModal?.addEventListener('hidden.bs.modal', function () {
         transferFromChoice.removeActiveItems();
         transferToChoice.removeActiveItems();
         transferFromChoice.enable();

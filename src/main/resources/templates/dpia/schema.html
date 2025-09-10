@@ -23,13 +23,9 @@
                             <h1 class="page-title mb-0">Skema til konsekvensanalyse</h1>
                         </div>
                     </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button type="button" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal" data-bs-target="#createQuestionDialog">
-                            <i class="ti-plus"></i> <span class="vr"></span> Nyt spørgsmål
-                        </button>
-                        <button type="button" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createQuestionButton', text='Nyt spørgsmål', iconClass='ti-plus', target='#createQuestionDialog')}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>

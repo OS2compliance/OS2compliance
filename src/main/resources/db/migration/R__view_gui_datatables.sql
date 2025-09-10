@@ -111,8 +111,10 @@ SELECT
     a.name,
     s.name as supplier,
     cv.caption as asset_type,
-    GROUP_CONCAT(u.name SEPARATOR ', ') as responsible_user_names,
-    GROUP_CONCAT(u.uuid SEPARATOR ',') as responsible_user_uuids,
+    GROUP_CONCAT(DISTINCT u.name SEPARATOR ',')  as responsible_user_names,
+    GROUP_CONCAT(DISTINCT u.uuid SEPARATOR ',')   as responsible_user_uuids,
+    GROUP_CONCAT(DISTINCT mu.uuid SEPARATOR ',')  as manager_uuids,
+    GROUP_CONCAT(DISTINCT mu.name SEPARATOR ',')  as manager_user_names,
     a.updated_at,
     a.asset_status,
     (CASE WHEN a.asset_status = 'NOT_STARTED' THEN 1
@@ -156,6 +158,8 @@ FROM assets a
     LEFT JOIN assets_responsible_users_mapping ru ON ru.asset_id = a.id
     LEFT JOIN users u ON ru.user_uuid = u.uuid
     LEFT JOIN choice_values cv ON a.asset_type = cv.id
+    LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
+    LEFT JOIN users mu ON aum.user_uuid = mu.uuid
 WHERE a.deleted = false
 GROUP BY a.id;
 
@@ -168,6 +172,7 @@ SELECT
     t.responsible_uuid,
     t.responsible_ou_uuid,
     t.threat_assessment_type as type,
+    t.threat_assessment_report_user_uuid as signer_uuid,
     t.threat_assessment_report_approval_status,
     t.updated_at as date,
     t.assessment,
@@ -400,12 +405,15 @@ SELECT
     d.id,
     d.name,
     (SELECT us.name FROM users us WHERE us.uuid = d.responsible_user_uuid) AS responsible_user_name,
+    (SELECT us.uuid FROM users us WHERE us.uuid = d.responsible_user_uuid) AS responsible_user_uuid,
     (SELECT ou.name FROM ous ou WHERE ou.uuid = d.responsible_ou_uuid) AS responsible_ou_name,
     d.user_updated_date,
     (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = d.id OR r.relation_b_id = d.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS task_count,
     (SELECT dr.dpia_report_approval_status FROM dpia_report dr WHERE dr.dpia_id = d.id order by dr.id desc limit 1) AS report_approval_status,
     (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id) as screening_conclusion,
-    d.from_external_source as is_external
+    d.from_external_source as is_external,
+    dr.report_approver_uuid AS approver_uuid
 FROM
     dpia d
+LEFT JOIN dpia_report dr ON d.id = dr.dpia_id
 WHERE d.deleted = false;

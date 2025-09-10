@@ -1,0 +1,131 @@
+
+<th:block th:fragment="editable-section">
+    <div class="row mt-3">
+        <label class="col-sm-2 col-form-label">Note</label>
+        <div class="col-sm-10">
+            <input class="form-control reasons" th:id="'reason' + ${stat.index} + '.' + ${statSection.index}" th:value="${section.standardSection.reason}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+        </div>
+    </div>
+    <div class="row mt-3" th:unless="${isNSIS}">
+        <div class="col-sm-2 col-form-label">Tilvalgt</div>
+        <div class="col-sm-10" style="padding: 8px;">
+            <input class="form-check-input selectedCheckbox" type="checkbox" th:checked="${section.standardSection.selected}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+        </div>
+    </div>
+    <div class="row mt-3">
+        <label class="col-sm-2 col-form-label">Ansvarlig</label>
+        <div class="col-sm-4">
+            <select class="form-control form-select choices__input responsibleUserSelect" data-trigger="" th:id="'userSelect' + ${stat.index} + '.' + ${statSection.index}" tabindex="-1" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+                <option th:if="${section.standardSection.responsibleUser} != null" th:value="${section.standardSection.responsibleUser.uuid}" th:text="'(' + ${section.standardSection.responsibleUser.userId} + ') ' + ${section.standardSection.responsibleUser.name}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <label class="col-sm-2 col-form-label">Status</label>
+        <div class="col-sm-4">
+            <select class="form-control statusSelect" data-trigger="" th:id="'statusSelect' + ${stat.index} + '.' + ${statSection.index}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}">
+                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${section.standardSection.status == status}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="row mt-3" th:unless="${isNSIS}">
+        <label class="col-sm-2 col-form-label">Efterlevelse af kravet</label>
+        <div class="col-sm-10" onclick="editField(this)" data-type="DESCRIPTION" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+            <div class="editor-container" th:id="'editorDescriptionContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                <textarea th:id="'description' + ${stat.index} + '.' + ${statSection.index}" data-type="DESCRIPTION" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.description}"></textarea>
+            </div>
+            <div class="editDescription" th:id="'descriptionRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.description}"></div>
+        </div>
+    </div>
+    <div class="row mt-3" th:if="${isNSIS}">
+        <label class="col-sm-2 col-form-label">Anmelders beskrivelse af opfyldelse (Praksis)</label>
+        <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_PRACTICE" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+            <div class="editor-container" th:id="'editorPracticeContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                <textarea th:id="'practice' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_PRACTICE" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisPractice}"></textarea>
+            </div>
+            <div class="editDescription" th:id="'practiceRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisPractice}"></div>
+        </div>
+    </div>
+    <div class="row mt-3" th:if="${isNSIS}">
+        <label class="col-sm-2 col-form-label">Anmelders beskrivelse af kontrolmål (SMART)</label>
+        <div class="col-sm-10" onclick="editField(this)" data-type="NSIS_SMART" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+            <div class="editor-container" th:id="'editorSmartContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                <textarea th:id="'smart' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_SMART" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisSmart}"></textarea>
+            </div>
+            <div class="editDescription" th:id="'smartRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisSmart}"></div>
+        </div>
+    </div>
+
+
+    <div class="row mt-3">
+        <th:block th:each="mapEntry : ${relationMap}" th:if="${mapEntry.key} == ${section.standardSection.id}">
+            <div th:replace="~{fragments/relations :: relationsfragment (statIndex=${stat.index} + '.' + ${statSection.index}, relations=${mapEntry.value}, completed=false, relatableId=${section.standardSection.id}, customDelete=true)}"></div>
+        </th:block>
+    </div>
+</th:block>
+
+
+<th:block th:fragment="readonly-section">
+    <div class="row mt-3">
+        <label class="col-sm-2 col-form-label">Note</label>
+        <div class="col-sm-10">
+            <input class="form-control reasons" th:id="'reason' + ${stat.index} + '.' + ${statSection.index}" th:value="${section.standardSection.reason}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" readonly="readonly"/>
+        </div>
+    </div>
+    <div class="row mt-3" th:unless="${isNSIS}">
+        <div class="col-sm-2 col-form-label">Tilvalgt</div>
+        <div class="col-sm-10" style="padding: 8px;">
+            <input class="form-check-input selectedCheckbox" type="checkbox" th:checked="${section.standardSection.selected}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" disabled="disabled"/>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <label class="col-sm-2 col-form-label">Ansvarlig</label>
+        <div class="col-sm-4">
+            <select class="form-control form-select choices__input responsibleUserSelect" data-trigger="" th:id="'userSelect' + ${stat.index} + '.' + ${statSection.index}" tabindex="-1" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" disabled="disabled">
+                <option th:if="${section.standardSection.responsibleUser} != null" th:value="${section.standardSection.responsibleUser.uuid}" th:text="'(' + ${section.standardSection.responsibleUser.userId} + ') ' + ${section.standardSection.responsibleUser.name}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="row mt-3">
+        <label class="col-sm-2 col-form-label">Status</label>
+        <div class="col-sm-4">
+            <select class="form-control statusSelect" data-trigger="" th:id="'statusSelect' + ${stat.index} + '.' + ${statSection.index}" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" disabled="disabled">
+                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.StandardSectionStatus).values()}" th:value="${status}" th:text="${status.getMessage()}" th:selected="${section.standardSection.status == status}"></option>
+            </select>
+        </div>
+    </div>
+    <div class="row mt-3" th:unless="${isNSIS}">
+        <label class="col-sm-2 col-form-label">Efterlevelse af kravet</label>
+        <div class="col-sm-10"  data-type="DESCRIPTION" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+            <div class="editor-container" th:id="'editorDescriptionContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                <textarea th:id="'description' + ${stat.index} + '.' + ${statSection.index}" data-type="DESCRIPTION" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.description}" readonly></textarea>
+            </div>
+            <div class="editDescription" th:id="'descriptionRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.description}" disabled=""></div>
+        </div>
+    </div>
+    <div class="row mt-3" th:if="${isNSIS}">
+        <label class="col-sm-2 col-form-label">Anmelders beskrivelse af opfyldelse (Praksis)</label>
+        <div class="col-sm-10" data-type="NSIS_PRACTICE" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+            <div class="editor-container" th:id="'editorPracticeContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                <textarea th:id="'practice' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_PRACTICE" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisPractice}" readonly></textarea>
+            </div>
+            <div class="editDescription" th:id="'practiceRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisPractice}" disabled=""></div>
+        </div>
+    </div>
+    <div class="row mt-3" th:if="${isNSIS}">
+        <label class="col-sm-2 col-form-label">Anmelders beskrivelse af kontrolmål (SMART)</label>
+        <div class="col-sm-10" data-type="NSIS_SMART" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" style="cursor: pointer;">
+            <div class="editor-container" th:id="'editorSmartContainer' + ${stat.index} + '.' + ${statSection.index}" hidden="hidden">
+                <textarea th:id="'smart' + ${stat.index} + '.' + ${statSection.index}" data-type="NSIS_SMART" class="p-2 descriptions" th:attr="data-id=${section.standardSection.id}, data-index=${stat.index} + '.' + ${statSection.index}" th:text="${section.standardSection.nsisSmart}" readonly></textarea>
+            </div>
+            <div class="editDescription" th:id="'smartRead' + ${stat.index} + '.' + ${statSection.index}" style="display: block; width: 100%; padding: 8px" th:attr="data-index=${stat.index} + '.' + ${statSection.index}" th:utext="${section.standardSection.nsisSmart}" disabled=""></div>
+        </div>
+    </div>
+
+
+    <div class="row mt-3">
+        <th:block th:each="mapEntry : ${relationMap}" th:if="${mapEntry.key} == ${section.standardSection.id}">
+            <div th:replace="~{fragments/relations :: relationsfragment (statIndex=${stat.index} + '.' + ${statSection.index}, relations=${mapEntry.value}, completed=false, relatableId=${section.standardSection.id}, customDelete=true)}"></div>
+        </th:block>
+    </div>
+</th:block>

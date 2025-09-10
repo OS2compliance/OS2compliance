@@ -1,13 +1,18 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.DocumentDao;
+import dk.digitalidentity.dao.grid.DocumentGridDao;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.grid.DocumentGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -16,24 +21,35 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 public class DocumentService {
 
+	private final DocumentGridDao documentGridDao;
 	private final DocumentDao documentDao;
     private final TaskService taskService;
     private final RelationService relationService;
     private final UserService userService;
 
-	public DocumentService(final DocumentDao documentDao, final TaskService taskService, final RelationService relationService, final UserService userService) {
+	public DocumentService(final DocumentDao documentDao, final TaskService taskService, final RelationService relationService, final UserService userService, DocumentGridDao documentGridDao) {
 		this.documentDao = documentDao;
         this.taskService = taskService;
         this.relationService = relationService;
         this.userService = userService;
+		this.documentGridDao = documentGridDao;
     }
+
+	public boolean isResponsibleFor(Document document) {
+		return (document.getResponsibleUser() != null
+				&& SecurityUtil.getPrincipalUuid().equals(document.getResponsibleUser().getUuid())
+		);
+	}
 
 	public Optional<Document> get(final Long id) {
 		return documentDao.findById(id);
@@ -121,5 +137,24 @@ public class DocumentService {
             case NONE -> task.setRepetition(TaskRepetition.NONE);
         }
     }
+
+	public Page<DocumentGrid> getDocuments(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<DocumentGrid> documents;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			documents = documentGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DocumentGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DocumentGrid.class
+			);
+		} else {
+			documents = documentGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, DocumentGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DocumentGrid.class
+			);
+		}
+		return documents;
+	}
 
 }

@@ -1,6 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,14 +17,15 @@ import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.io.InputStream;
 
+@RequireAuthenticated
 @Slf4j
 @Controller
 @RequestMapping("file")
-@RequireUser
 @RequiredArgsConstructor
 public class FileController {
     private final S3Service s3Service;
 
+	@RequireReadOwnerOnly
     @GetMapping(value = "img")
     public @ResponseBody ResponseEntity <ByteArrayResource> getImage (@RequestParam String key) throws java.io.IOException {
         try (InputStream inputStream = s3Service.downloadAsStream(key)) {

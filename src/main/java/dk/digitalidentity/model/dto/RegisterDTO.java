@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
@@ -59,4 +60,7 @@ public class RegisterDTO {
 	@ExcludeFromExport
 	@Builder.Default
 	private Set<String> kleGroups = new HashSet<>();
+	@ExcludeFromExport
+	@Builder.Default
+	private Set<AllowedAction> allowedActions = new HashSet<>();
 }

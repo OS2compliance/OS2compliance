@@ -7,8 +7,11 @@ import dk.digitalidentity.model.dto.ChoiceListDTO;
 import dk.digitalidentity.model.dto.ChoiceValueDTO;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +33,7 @@ import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
-@RequireSuperuserOrAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/choice-lists", consumes = "application/json", produces = "application/json")
 public class ChoiceListRestController {
@@ -38,6 +41,7 @@ public class ChoiceListRestController {
     private final ChoiceListDao choiceListDao;
     private final ChoiceValueDao choiceValueDao;
 
+	@RequireUpdateAll
     @PostMapping("values")
     @Transactional
     public List<ChoiceValueDTO> createValues(@RequestBody @Valid final List<ChoiceValueDTO> choiceValueEO) {
@@ -54,6 +58,7 @@ public class ChoiceListRestController {
                 .collect(Collectors.toList());
     }
 
+	@RequireDeleteAll
     @DeleteMapping("values/{identifier}")
     @Transactional
     public void deleteValue(@PathVariable("identifier") final String identifier) {
@@ -62,6 +67,7 @@ public class ChoiceListRestController {
         choiceValueDao.delete(choiceValue);
     }
 
+	@RequireCreateAll
     @PostMapping
     @Transactional
     public ChoiceListDTO createList(@RequestBody @Valid final ChoiceListDTO choiceList) {
@@ -74,7 +80,7 @@ public class ChoiceListRestController {
         return mapper.toDTO(savedEntity);
     }
 
-    @RequireUser
+    @RequireReadAll
     @GetMapping("{identifier}")
     public ChoiceListDTO getList(@PathVariable("identifier") final String identifier) {
         final ChoiceList foundList = choiceListDao.findByIdentifier(identifier)
@@ -83,6 +89,7 @@ public class ChoiceListRestController {
     }
 
 
+	@RequireDeleteAll
     @DeleteMapping("{identifier}")
     @Transactional
     public void deleteList(@PathVariable("identifier") final String identifier) {

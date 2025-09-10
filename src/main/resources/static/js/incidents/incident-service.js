@@ -1,11 +1,15 @@
-const incidentService = new IncidentService();
+import FormValidationService from "../FormValidationService.js";
+
+window.incidentService = new IncidentService();
 document.addEventListener("DOMContentLoaded", function(event) {
     incidentService.init();
 });
 
 function IncidentService() {
     this.init = () => {
-        this.fetchDialog(formUrl, "createIncidentDialog");
+        if (document.getElementById('createIncidentDialog')) {
+            this.fetchDialog(formUrl, "createIncidentDialog");
+        }
     }
 
     this.fetchDialog = (url, targetId) => {
@@ -30,13 +34,16 @@ function IncidentService() {
     }
 
     this.editIncident = (targetId, incidentId) => {
-        document.getElementById(targetId).innerText = '';
-        this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
-            .then(() => {
-                let dialog = document.getElementById(targetId);
-                let editDialog = new bootstrap.Modal(dialog);
-                editDialog.show();
-            })
+        const container = document.getElementById(targetId)
+        if (container) {
+            container.innerText = '';
+            this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
+                .then(() => {
+                    let dialog = document.getElementById(targetId);
+                    let editDialog = new bootstrap.Modal(dialog);
+                    editDialog.show();
+                })
+        }
     }
 
     this.deleteIncident = (grid, targetId, name) => {
@@ -190,6 +197,13 @@ function IncidentService() {
             }
             incidentService.setFieldValidity(input, feedback, isValid);
         });
+
+        // Validate obligatory fields
+        const fvs = new FormValidationService(form)
+        fvs.removeValidationMessages()
+        if (!fvs.validate_isNotEmpty()) {
+            valid = false;
+        }
 
         if (!valid) {
             event.preventDefault();

@@ -1,6 +1,7 @@
-const incidentQuestionService = new IncidentQuestionService();
 
-function IncidentQuestionService() {
+export default function IncidentQuestionService() {
+    const formUrl = "/incidents/questionForm"
+    const restUrl = "/rest/incidents/questions"
 
     this.init = (dialogId) => {
         let dialog = document.getElementById(dialogId);

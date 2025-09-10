@@ -1,0 +1,10 @@
+<div th:each="entry : ${progressbarValues}"
+     class="progress-bar"
+     th:classappend="${statusColors[entry.key.name()]}"
+     role="progressbar"
+     th:style="'width: ' + (${entry.value} * 100 / ${totalCount}) + '%'"
+     th:attr="aria-valuenow=${entry.value}, aria-valuemin=0, aria-valuemax=${totalCount}"
+     th:title="${statusTranslations[entry.key.name()]} + ': ' + ${entry.value}"
+     data-bs-toggle="tooltip"
+     th:data-bs-title="${entry.key} + ': ' + ${entry.value}">
+</div>

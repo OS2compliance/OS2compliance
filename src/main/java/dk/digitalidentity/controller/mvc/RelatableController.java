@@ -9,12 +9,11 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.RelationProperty;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
@@ -23,8 +22,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.HttpStatus;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -46,7 +43,6 @@ import java.util.stream.Collectors;
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
 @Controller
-@RequireUser
 @RequestMapping("relatables")
 @RequiredArgsConstructor
 public class RelatableController {
@@ -63,7 +59,7 @@ public class RelatableController {
         }
     }
 
-    @RequireUser
+    @RequireUpdateOwnerOnly
 	@Transactional
 	@PostMapping("relations/add")
 	public String addRelations(@ModelAttribute final AddRelationDTO dto) {
@@ -98,7 +94,7 @@ public class RelatableController {
         }
     }
 
-    @RequireUser
+    @RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("{id}/relations/{relatedId}/{relatedType}/update")
     public String updateRelation(@ModelAttribute final UpdateRelationDTO dto,
@@ -111,7 +107,7 @@ public class RelatableController {
         return getReturnPath(id, relatedTo);
     }
 
-    @RequireUser
+    @RequireDeleteOwnerOnly
     @DeleteMapping("{id}/relations/{relatedId}/{relatedType}/remove")
 	@ResponseStatus(value = HttpStatus.OK)
 	@Transactional
@@ -124,7 +120,7 @@ public class RelatableController {
 	}
 
     record AddTagsDTO(long id, List<Long> tags) {}
-    @RequireSuperuserOrAdministrator
+    @RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("tags/add")
     public String addTags(@ModelAttribute final AddTagsDTO dto) {
@@ -167,7 +163,7 @@ public class RelatableController {
         return getReturnPath(dto.id(), relateTo);
     }
 
-    @RequireUser
+    @RequireDeleteOwnerOnly
     @DeleteMapping("{id}/tags/{tagId}/remove")
     @ResponseStatus(value = HttpStatus.OK)
     @Transactional
@@ -212,17 +208,15 @@ public class RelatableController {
      * Check if the current user is responsible for the given relatable, if not an exception is thrown
      */
     private void ensureModificationIsAllowed(final Relatable relateTo) {
-        final Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream()
-            .noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER) || r.getAuthority().equals(Roles.ADMINISTRATOR))) {
-            final List<User> responsibleUsers = relatableService.findResponsibleUsers(relateTo);
-            final String principalUuid = SecurityUtil.getPrincipalUuid();
-            if (responsibleUsers.stream()
-                .map(User::getUuid)
-                .noneMatch(u -> u.equals(principalUuid))) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
-        }
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			return;
+		}
+
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && relatableService.isOwner(relateTo)) {
+			return;
+		}
+
+		throw new ResponseStatusException(HttpStatus.FORBIDDEN);
     }
 
     private void setRelationProperties(final Relation relation, final Map<String, String> properties) {

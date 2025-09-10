@@ -2,13 +2,14 @@
     <table id="dpiaSchema" style="width: 100%">
         <tbody>
             <th:block th:each="section : ${dpiaSections}">
+                <input id="changeableInput" type="hidden" name="readOnly" th:value="${!changeable}"/>
                 <tr class="dpiaSchemaSectionTr"  th:data-sectionid="${section.id}">
                     <th class="dpiaSchemaTh">
                         <em class="pli-arrow-up fs-4" th:id="'sectionIcon' + ${section.id}"></em> &nbsp;
                         <span th:text="${section.heading}"></span>
                         <span style="float:right;">
                             <th:block th:if="${section.canOptOut}">
-                                <input type="checkbox" class="form-check-input" th:checked="${section.hasOptedOutResponse}" autocomplete="off" th:id="'sectionCheckbox' + ${section.id}" th:data-sectionid="${section.id}" />
+                                <input type="checkbox" class="form-check-input" th:checked="${section.hasOptedOutResponse}" autocomplete="off" th:id="'sectionCheckbox' + ${section.id}" th:data-sectionid="${section.id}" th:disabled="${!changeable}"/>
                                 <label style="margin-left: 5px;">Undlades</label> &nbsp;
                             </th:block>
                         </span>
@@ -60,7 +61,7 @@
                                 <td>
 <!--                                    <div th:if="${question.templateAnswer != null} AND ${question.templateAnswer != ''}" th:utext="${question.templateAnswer}"></div>-->
                                     <div class="editor-container" style="max-width: 100%">
-                                        <textarea class="responses p-2" style="max-width: 100%" th:value="${question.response}" th:text="${question.response}" rows="4" th:data-questionid="${question.id}"></textarea>
+                                        <textarea class="responses p-2" style="max-width: 100%" th:value="${question.response}" th:text="${question.response}" rows="4" th:data-questionid="${question.id}" th:readonly="${!changeable}"></textarea>
                                     </div>
                                 </td>
                             </tr>
@@ -93,7 +94,7 @@
                         <tbody>
                             <tr th:each="threatAssessment : ${dpiaThreatAssesments}">
                                 <td style="text-align: center;">
-                                    <input type="checkbox" class="form-check-input selectThreatAssessment" th:checked="${threatAssessment.selected}" autocomplete="off" th:data-threatid="${threatAssessment.threatAssessmentId}" />
+                                    <input type="checkbox" class="form-check-input selectThreatAssessment" th:checked="${threatAssessment.selected}" autocomplete="off" th:data-threatid="${threatAssessment.threatAssessmentId}" th:disabled="${!changeable}"/>
                                 </td>
                                 <td>
                                     <a th:href="'/risks/' + ${threatAssessment.threatAssessmentId}" th:text="${threatAssessment.threatAssessmentName}"></a>
@@ -115,7 +116,7 @@
             <tr class="sectionRowConclusions" style="border: 0.5px solid #E8E8E8;">
                 <td style="padding: 30px;">
                     <div class="editor-container" style="max-width: 100%">
-                        <textarea id="conclusion" class="p-2" style="max-width: 100%" th:value="${conclusion}" th:text="${conclusion}" rows="4"></textarea>
+                        <textarea id="conclusion" class="p-2" style="max-width: 100%" th:value="${conclusion}" th:text="${conclusion}" rows="4" th:readonly="${!changeable}"></textarea>
                     </div>
                 </td>
             </tr>

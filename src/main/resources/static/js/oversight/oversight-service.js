@@ -13,6 +13,9 @@ function OversightService() {
     }
 
     this.initOversightModal = (oversightId, entityType, entityId) => {
+        const dialog = document.getElementById('oversightDialog');
+        if (!dialog) {return;}
+
         if (entityType === undefined) {
             let isAsset = window.location.href.indexOf('assets') > 0;
             entityType = isAsset ? 'asset' : 'supplier';
@@ -68,18 +71,15 @@ function OversightService() {
                 }
 
                 //choices.js
-                const oversightSelect = document.getElementById('oversightUserSelect');
-                oversightResponsibleUserChoices = initSelect(oversightSelect);
-                choiceService.updateUsers(oversightResponsibleUserChoices, "");
-                oversightSelect.addEventListener("search",
-                    function(event) {
-                        choiceService.updateUsers(oversightResponsibleUserChoices, event.detail.value);
-                    },
-                    false,
-                );
+                const oversightResponsibleUserChoices = choiceService.initUserSelect('oversightUserSelect');
                 oversightResponsibleUserChoices.passedElement.element.addEventListener('change', function() {
                     checkInputField(oversightResponsibleUserChoices);
                 });
+
+                const assetSelect = document.getElementById("multipleAssetSelect");
+                if (assetSelect) {
+                    const assetChoices = initSelect(assetSelect);
+                }
 
                 const form = document.getElementById("createEditOversightForm");
                 if (form) {
