@@ -4,10 +4,9 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.model.dto.DBSOversightDTO;
-import dk.digitalidentity.model.dto.RegisterDTO;
-import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.sections.RequireDBS;
 import dk.digitalidentity.service.ExcelExportService;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.domain.Page;
@@ -30,13 +29,14 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/dbs/oversight")
-@RequireUser
+@RequireDBS
 @RequiredArgsConstructor
 public class DBSOversightRestController {
 	private final DBSOversightGridDao dbsOversightGridDao;
 	private final DBSOversightMapper mapper;
 	private final ExcelExportService excelExportService;
 
+	@RequireReadOwnerOnly
 	@PostMapping("list")
 	@Transactional
 	public Object list(
@@ -44,26 +44,8 @@ public class DBSOversightRestController {
 			@RequestParam(value = "limit", defaultValue = "50") int limit,
 			@RequestParam(value = "order", required = false) String sortColumn,
 			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-			@RequestParam(value = "export", defaultValue = "false") boolean export,
-			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
-			@RequestParam Map<String, String> filters,
-			HttpServletResponse response
-	) throws IOException {
-
-		// For export mode, get ALL records (no pagination)
-		if (export) {
-			Page<DBSOversightGrid> allOversights = dbsOversightGridDao.findAllWithColumnSearch(
-					validateSearchFilters(filters, DBSOversightGrid.class),
-					buildPageable(page, Integer.MAX_VALUE, sortColumn, sortDirection),
-					DBSOversightGrid.class
-			);
-
-			List<DBSOversightDTO> allData = mapper.toDTO(allOversights.getContent());
-			excelExportService.exportToExcel(allData, fileName, response);
-			return null;
-		}
-
-		// Normal mode - return paginated JSON
+			@RequestParam Map<String, String> filters
+	) {
         Page<DBSOversightGrid> oversights =  dbsOversightGridDao.findAllWithColumnSearch(
             validateSearchFilters(filters, DBSOversightGrid.class),
             buildPageable(page, limit, sortColumn, sortDirection),
@@ -71,6 +53,26 @@ public class DBSOversightRestController {
         );
 
         return new PageDTO<>(oversights.getTotalElements(), mapper.toDTO(oversights.getContent()));
+	}
+
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		// Fetch all records (no pagination)
+		Page<DBSOversightGrid> oversights = dbsOversightGridDao.findAllWithColumnSearch(
+			validateSearchFilters(filters, DBSOversightGrid.class),
+			buildPageable(0, Integer.MAX_VALUE, sortColumn, sortDirection),
+			DBSOversightGrid.class
+		);
+
+		List<DBSOversightDTO> allData = mapper.toDTO(oversights.getContent());
+		excelExportService.exportToExcel(allData, DBSOversightDTO.class, fileName, response);
 	}
 
 }

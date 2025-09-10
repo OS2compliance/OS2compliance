@@ -2,7 +2,9 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RelationService;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +27,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("precautions")
-@RequireAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 public class PrecautionController {
     private final PrecautionService precautionService;
@@ -33,6 +35,7 @@ public class PrecautionController {
 
     record AssetRelationDTO(long precautionId, String assetName, long assetId) {}
 	@Transactional
+	@RequireReadAll
     @GetMapping
     public String precautionList(final Model model) {
         final List<Precaution> precautions = precautionService.findAll();
@@ -47,6 +50,7 @@ public class PrecautionController {
         return "precautions/index";
     }
 
+	@RequireCreateAll
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
         model.addAttribute("action", "precautions/form");
@@ -64,6 +68,7 @@ public class PrecautionController {
         return "precautions/form";
     }
 
+	@RequireCreateAll
     @Transactional
     @PostMapping("form")
     public String formPost(@ModelAttribute final Precaution precaution) {

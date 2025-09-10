@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
 <head th:replace="~{fragments/header :: head (gridjs = true, burgermenu = true)}"></head>
 
@@ -19,8 +19,8 @@
                         <h1 class="page-title mb-0 mt-2" th:text="'Hej ' + ${user?.name}"></h1>
                         <p class="lead">Velkommen til OS2Compliance</p>
                     </div>
-                    <div class="align-self-center d-inline-flex"
-                    th:if="${isSystemOwner != null && isSystemOwner}">
+                    <div class="align-self-center d-inline-flex" sec:authorize="@accessEvaluator.report()"
+                         th:if="${isSystemOwner != null && isSystemOwner}">
                         <button id="systemOwnerRapportButton" type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="pli-download-2"></i> <span class="vr"></span><span class="btn-text"> Systemejer rapport</span>
                         </button>
@@ -28,7 +28,7 @@
                 </div>
             </div>
         </div>
-        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="content__boxed">
+        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" sec:authorize="hasRole('ROLE_s_dashboard')" class="content__boxed">
             <div class="content__wrap">
 
                 <div class="tab-base">

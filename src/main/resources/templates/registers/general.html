@@ -8,8 +8,8 @@
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
-                    <button id="editBtn" th:if="${changeableRegister}" type="button" class="btn btn-secondary btn-xs" onclick="registerGeneralService.setGenereltEditState(true)">Rediger</button>
-                    <button id="cancelBtn" th:if="${changeableRegister}" type="button" onclick="registerGeneralService.setGenereltEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="editBtn" th:if="${changeableRegister}" type="button" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" class="btn btn-secondary btn-xs">Rediger</button>
+                    <button id="cancelBtn" th:if="${changeableRegister}" type="button" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" class="btn btn-light btn-xs" style="display: none">Annuller</button>
                     <button id="saveBtn" th:if="${changeableRegister}" form="editDescId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                 </div>
             </div>

@@ -1,8 +1,10 @@
 package dk.digitalidentity.dao.grid;
 
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.HasMultipleResponsibleUsers;
-import dk.digitalidentity.model.entity.grid.HasSingleResponsibleUser;
+import dk.digitalidentity.model.entity.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.HasManagers;
+import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.persistence.TypedQuery;
@@ -51,7 +53,7 @@ public class SearchRepositoryImpl implements SearchRepository {
 		final Root<T> root = criteriaQuery.from(entityClass);
 
 		List<Predicate> predicates = new ArrayList<>();
-		predicates.add(buildSearchPredicates(searchableProperties, criteriaBuilder, root));
+		predicates.add(buildSearchPredicates(searchableProperties, criteriaBuilder, root, false));
 
 		if (additionalANDConditions != null && !additionalANDConditions.isEmpty()) {
 			// Additional AND conditions
@@ -87,14 +89,15 @@ public class SearchRepositoryImpl implements SearchRepository {
 		return new PageImpl<>(query.getResultList(), page, totalRows);
 	}
 
-	private <T> Predicate buildSearchPredicates(final Map<String, String> searchableProperties, CriteriaBuilder criteriaBuilder, Root<T> root) {
+	private <T> Predicate buildSearchPredicates(final Map<String, String> searchableProperties, CriteriaBuilder criteriaBuilder, Root<T> root, boolean orSearch) {
 		final List<Predicate> predicates = new ArrayList<>();
 		for (final Map.Entry<String, String> searchEntry : searchableProperties.entrySet()) {
 			final Path<String> propertyPath;
+			String value = searchEntry.getValue();
 
 			propertyPath = getPropertyPath(searchEntry, root);
 
-			//Special case for Date type
+			// Special case for Date type
 			if (propertyPath.getJavaType().isAssignableFrom(LocalDate.class) || propertyPath.getJavaType().isAssignableFrom(LocalDateTime.class)) {
 				predicates.add(handleDate(propertyPath, searchEntry, criteriaBuilder));
 			}
@@ -106,11 +109,20 @@ public class SearchRepositoryImpl implements SearchRepository {
 			else if (propertyPath.getJavaType().isAssignableFrom(Boolean.class)) {
 				predicates.add(handleBoolean(propertyPath, searchEntry, criteriaBuilder));
 			}
+			else if ("EMPTY".equals(value)) {
+				predicates.add(criteriaBuilder.or(criteriaBuilder.isNull(propertyPath), criteriaBuilder.equal(propertyPath.as(String.class), "")));
+			}
 			else {
 				predicates.add(criteriaBuilder.like(criteriaBuilder.lower(propertyPath), "%" + searchEntry.getValue().toLowerCase() + "%"));
 			}
 		}
-		return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+
+		if (orSearch) {
+			return criteriaBuilder.or(predicates.toArray(new Predicate[0]));
+		} else {
+			return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+		}
+
 	}
 
 	private <T> Path<String> getPropertyPath(Map.Entry<String, String> searchEntry, Root<T> root) {
@@ -182,6 +194,24 @@ public class SearchRepositoryImpl implements SearchRepository {
 		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
 	}
 
+	@Override
+	public <T> Page<T> findAllWithAssignedUser(final Map<String, String> searchableProperties, final User user, final Pageable page, final Class<T> entityClass) {
+		Map<String, Object> orMap = new HashMap<>();
+		if (HasMultipleResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			orMap.put("responsibleUserUuids", user.getUuid());
+		}
+		if (HasSingleResponsibleUser.class.isAssignableFrom(entityClass)) {
+			orMap.put("responsibleUser", user);
+		}
+		if (HasManagers.class.isAssignableFrom(entityClass)) {
+			orMap.put("managerUuids", user.getUuid());
+		}
+		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			orMap.put("customResponsibleUserUuids", user.getUuid());
+		}
+		return findAllWithColumnSearch(searchableProperties, null, orMap, page, entityClass);
+	}
+
 	private static <T> List<Order> buildOrderBy(final Pageable page, CriteriaBuilder cb, final Root<T> root) {
 		final List<Order> orderByList = new ArrayList<>();
 
@@ -214,6 +244,74 @@ public class SearchRepositoryImpl implements SearchRepository {
 			}
 		}
 		return Optional.empty();
+	}
+
+	@Override
+	public <T> Page<T> findAllWithGlobalSearchAndUserFilter(
+			final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final User user,
+			final boolean filterOnUser) {
+
+		final CriteriaBuilder criteriaBuilder = entityManager.getCriteriaBuilder();
+		final CriteriaQuery<T> criteriaQuery = criteriaBuilder.createQuery(entityClass);
+		final Root<T> root = criteriaQuery.from(entityClass);
+
+		List<Predicate> predicates = new ArrayList<>();
+
+		// Add OR search conditions if search properties exist
+		if (searchableProperties != null && !searchableProperties.isEmpty()) {
+			Predicate searchPredicate = buildSearchPredicates(searchableProperties, criteriaBuilder, root, true);
+			predicates.add(searchPredicate);
+		}
+
+		if (filterOnUser) {
+			addUserPredicates(entityClass, user, root, criteriaBuilder, predicates);
+		}
+
+		criteriaQuery.select(root).where(predicates.toArray(new Predicate[0])).distinct(true);
+		criteriaQuery.orderBy(buildOrderBy(page, criteriaBuilder, root));
+
+		final TypedQuery<T> query = entityManager.createQuery(criteriaQuery);
+
+		// Get total count
+		final int totalRows = query.getResultList().size();
+
+		query.setFirstResult(page.getPageNumber() * page.getPageSize());
+		query.setMaxResults(page.getPageSize());
+
+		return new PageImpl<>(query.getResultList(), page, totalRows);
+	}
+
+	private static <T> void addUserPredicates(Class<T> entityClass, User user, Root<T> root, CriteriaBuilder criteriaBuilder, List<Predicate> predicates) {
+		// Add user permission filter (user must match at least one role)
+		List<Predicate> userPredicates = new ArrayList<>();
+
+		// Check if entity supports responsible users (like Asset.responsibleUsers)
+		if (HasMultipleResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			Join<T, User> responsibleUsersJoin = root.join("responsibleUsers", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(responsibleUsersJoin.get("uuid"), user.getUuid()));
+		} else if (HasSingleResponsibleUser.class.isAssignableFrom(entityClass)) {
+			userPredicates.add(criteriaBuilder.equal(root.get("responsibleUser"), user));
+		}
+
+		// Check if entity supports managers (like Asset.managers)
+		if (HasManagers.class.isAssignableFrom(entityClass)) {
+			Join<T, User> managersJoin = root.join("managers", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(managersJoin.get("uuid"), user.getUuid()));
+		}
+
+		// Check if entity supports custom responsible users
+		if (HasCustomResponsibleUsers.class.isAssignableFrom(entityClass)) {
+			Join<T, User> customResponsibleUsersJoin = root.join("customResponsibleUsers", JoinType.LEFT);
+			userPredicates.add(criteriaBuilder.equal(customResponsibleUsersJoin.get("uuid"), user.getUuid()));
+		}
+
+		// User must match at least one permission
+		if (!userPredicates.isEmpty()) {
+			predicates.add(criteriaBuilder.or(userPredicates.toArray(new Predicate[0])));
+		}
 	}
 
 }

@@ -34,6 +34,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
@@ -43,7 +44,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Setter
 @SQLDelete(sql = "UPDATE registers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Register extends Relatable {
+public class Register extends Relatable implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers {
 
     @ManyToMany
     @JoinTable(
@@ -140,7 +141,7 @@ public class Register extends Relatable {
 	@Column
 	private String supplementalLegalBasis;
 
-    @OneToOne(mappedBy = "register")
+	@OneToOne(mappedBy = "register", cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
     private ConsequenceAssessment consequenceAssessment;
 
@@ -182,4 +183,14 @@ public class Register extends Relatable {
         return (status != null ? status.getMessage() : "") +
             (consequenceAssessment != null ? nullSafe(() -> consequenceAssessment.getAssessment().getMessage(), "") : "");
     }
+
+	@Override
+	public String getCustomResponsibleUserUuids() {
+		return customResponsibleUsers.stream().map(c -> c.getUuid()).collect(Collectors.joining(","));
+	}
+
+	@Override
+	public String getResponsibleUserUuids() {
+		return responsibleUsers.stream().map(u -> u.getUuid()).collect(Collectors.joining(","));
+	}
 }

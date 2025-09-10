@@ -1,7 +1,8 @@
 package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.model.entity.KitosRole;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.KitosService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,11 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequestMapping("rest/kitos")
-@RequireUser
+@RequireAuthenticated
 @RequiredArgsConstructor
 public class KitosRestController {
     private final KitosService kitosService;
 
+	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
     public Page<KitosRole> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());

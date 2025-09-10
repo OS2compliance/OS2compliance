@@ -4,7 +4,8 @@ import dk.digitalidentity.dao.ChoiceMeasuresDao;
 import dk.digitalidentity.mapping.ChoiceMeasuresMapper;
 import dk.digitalidentity.model.dto.ChoiceMeasureDTO;
 import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -20,12 +21,13 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequestMapping("rest/measures")
 @RequiredArgsConstructor
-@RequireUser
+@RequireAuthenticated
 public class MeasuresRestController {
 
     private final ChoiceMeasuresDao measuresDao;
     private final ChoiceMeasuresMapper choiceMeasuresMapper;
 
+	@RequireReadAll
     @GetMapping("autocomplete")
     public PageDTO<ChoiceMeasureDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());

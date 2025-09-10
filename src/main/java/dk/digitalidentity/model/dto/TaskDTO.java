@@ -2,11 +2,14 @@ package dk.digitalidentity.model.dto;
 
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import java.util.Set;
 
 @Data
 @Builder
@@ -37,5 +40,5 @@ public class TaskDTO {
 	@ExcelColumn(headerName = "Tags", order = 5)
     private String tags;
 	@ExcludeFromExport
-    private boolean changeable;
+    private Set<AllowedAction> allowedActions;
 }

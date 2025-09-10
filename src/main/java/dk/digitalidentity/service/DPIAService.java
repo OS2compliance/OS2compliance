@@ -1,6 +1,7 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.DPIADao;
+import dk.digitalidentity.dao.grid.DPIAGridDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
 import dk.digitalidentity.model.entity.DPIAResponseSection;
@@ -12,12 +13,16 @@ import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
+import dk.digitalidentity.model.entity.grid.DPIAGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
 import lombok.RequiredArgsConstructor;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
 import org.htmlcleaner.HtmlCleaner;
 import org.htmlcleaner.TagNode;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,13 +32,18 @@ import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
+
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 @RequiredArgsConstructor
 public class DPIAService {
     private final DPIADao dpiaDao;
-    private final DPIATemplateSectionService dpiaTemplateSectionService;
+	private final DPIAGridDao dpiaGridDao;
     private final AssetService assetService;
     private final DPIATemplateQuestionService dpiaTemplateQuestionService;
     private final DPIAResponseSectionService dpiaResponseSectionService;
@@ -46,6 +56,13 @@ public class DPIAService {
         return dpiaDao.findById(dpiaId)
             .orElseThrow();
     }
+
+	public boolean isResponsibleFor(DPIA dpia) {
+		String userUuid = SecurityUtil.getPrincipalUuid();
+		return dpia.getResponsibleUser() != null && Objects.equals(dpia.getResponsibleUser().getUuid(),userUuid )
+				|| dpia.getAssets().stream().anyMatch(assetService::isResponsibleFor)
+				|| dpia.getDpiaReports().stream().anyMatch(r -> r.getReportApproverUuid().equals(userUuid));
+	}
 
 	public List<DPIA> findAll() {
 		return dpiaDao.findAll();
@@ -235,5 +252,31 @@ public class DPIAService {
 			return DPIAScreeningConclusion.RED;
 		}
 		return DPIAScreeningConclusion.GREEN;
+	}
+
+	public Set<DPIA> findByOwnedAsset(String userUuid) {
+		return dpiaDao.findByAssets_ResponsibleUsers_UuidContainsOrAssets_Managers_UuidContains(userUuid, userUuid);
+	}
+
+	public Page<DPIAGrid> getDPIAs(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<DPIAGrid> dpiaGrids;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged-in user can see all
+			dpiaGrids = dpiaGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, DPIAGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DPIAGrid.class
+			);
+		}
+		else {
+			// Logged-in user can see only own
+			dpiaGrids = dpiaGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, DPIAGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					DPIAGrid.class
+			);
+		}
+		return dpiaGrids;
 	}
 }

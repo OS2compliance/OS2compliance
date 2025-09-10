@@ -11,10 +11,10 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DBSOversight;
 import dk.digitalidentity.model.entity.DBSSupplier;
-import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -63,8 +63,12 @@ public class DBSService {
     public void sync(final List<Supplier> allDbsSuppliers, final List<ItSystem> allItSystems, final String cvr) {
         //Filter only itSystems related to this cvr
         final List<ItSystem> relevantItSystems = allItSystems.stream()
-            .filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
-            .toList();
+				.filter(i ->
+						   "on_going".equals(i.getStatus().getValue())
+						|| "waiting".equals(i.getStatus().getValue())
+						|| "published".equals(i.getStatus().getValue()))
+				.filter(i -> i.getMunicipalities() != null && i.getMunicipalities().stream().anyMatch(m -> Objects.equals(m.getCvr(), cvr)))
+				.toList();
         log.debug("Found {} relevant itSystems in DBS", relevantItSystems.size());
 
         // First synchronize all suppliers
@@ -89,12 +93,13 @@ public class DBSService {
                     .orElseThrow(() -> new DBSSynchronizationException("Supplier not found for it-system with uuid: " + itSystem.getUuid())));
                 asset.setLastSync(lastSync);
                 asset.setStatus(itSystem.getStatus().getValue());
-				mapKitosAssetsToDBS(itSystem, asset);
 				if (itSystem.getNextRevision() != null) {
-                    asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
-                }
-                dbsAssetDao.save(asset);
-            })
+					asset.setNextRevision(nextRevisionQuarterToDate(itSystem.getNextRevision().getValue()));
+				}
+				dbsAssetDao.save(asset);
+				// Call this here to assure that asset is saved in the DB already
+				mapKitosAssetsToDBS(itSystem, asset);
+			})
             .count();
 
         // Update existing
@@ -134,7 +139,7 @@ public class DBSService {
 
 	private void mapKitosAssetsToDBS(ItSystem itSystem, @NotNull DBSAsset dbsAsset) {
 		Set<Long> assetIds = assetService.findByProperty(KITOS_UUID_PROPERTY_KEY, itSystem.getKitosUuid()).stream().map(Asset::getId).collect(Collectors.toSet());
-		if (assetIds != null && !assetIds.isEmpty()) {
+		if (!assetIds.isEmpty()) {
 			relationService.setRelationsAbsolute(dbsAsset, assetIds);
 			assetOversightService.setAssetsToDbsOversight(assetService.findAllById(assetIds));
 		}
@@ -210,7 +215,7 @@ public class DBSService {
                     existingDBSOversight.setName(document.getName());
                     changes = true;
                 }
-                if (document.getLocked() != null && !Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
+                if (!Objects.equals(existingDBSOversight.isLocked(), document.getLocked())) {
                     existingDBSOversight.setLocked(document.getLocked());
                     changes = true;
                 }
@@ -280,7 +285,10 @@ public class DBSService {
                                     task.setDescription(task.getDescription() + "\n - " + dbsOversight.getName());
 
                                     //set link to the folder containing the documents
-                                    task.setLink("https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId());
+									String url = "https://www.dbstilsyn.dk/document?area=TILSYNSRAPPORTER&supplierId=" + dbsAsset.getSupplier().getDbsId();
+									if (task.getLinks().stream().noneMatch(l -> l.getUrl().equals(url))) {
+										task.getLinks().add(new TaskLink(null, url, task));
+									}
                                 },
                                 () -> {
                                     // Create a new task

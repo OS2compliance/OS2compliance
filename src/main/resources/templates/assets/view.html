@@ -45,9 +45,7 @@
                             <p class="lead"></p>
                         </div>
                         <div class="align-self-center d-inline-flex">
-                            <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                                <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                            </button>
+                            <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                         </div>
                     </div>
                 </div>
@@ -86,8 +84,8 @@
                                     <!-- buttons row -->
                                     <div class="row mb-3 gap-1">
                                         <button id="saveEditAssetBtn" th:if="${changeableAsset}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
-                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" onclick="editMode(false);" hidden>Annuller</button>
-                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" onclick="editMode(true);">Rediger stamdata</button>
+                                        <button id="cancelBtn" th:if="${changeableAsset}" type="button" class="btn btn-danger btn-md col-md-1 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" hidden>Annuller</button>
+                                        <button id="editAssetBtn" th:if="${changeableAsset}" type="button" class="btn btn-secondary btn-md col-md-2 btn-right" th:attr="data-responsible-changeable=${responsibleFieldChangeable}">Rediger stamdata</button>
                                     </div>
                                     <div class="row mb-3">
                                         <!-- Column 1 -->
@@ -96,7 +94,11 @@
 
                                             <div class="row mb-3">
                                                 <label for="responsibleUsers"
-                                                    class="col-sm-3 col-form-label" th:text="${customSystemOwnerInput.settingValue}"></label>
+                                                    class="col-sm-3 col-form-label">
+                                                    <span th:text="${customSystemOwnerInput.settingValue}"></span>
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                             data-trigger="" id="responsibleUsers" th:field="*{responsibleUsers}" hidden=""
@@ -135,7 +137,11 @@
 
                                             <div class="row mb-3">
                                                 <label for="managers"
-                                                    class="col-sm-3 col-form-label" th:text="${customSystemResponsibleInput.settingValue}"></label>
+                                                    class="col-sm-3 col-form-label">
+                                                    <span th:text="${customSystemResponsibleInput.settingValue}"></span>
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                         data-trigger="" id="managers" th:field="*{managers}" hidden=""
@@ -143,6 +149,16 @@
                                                         <option th:each="user : *{managers}" th:value="${user.uuid}"
                                                             th:text="'(' + ${user.userId} + ') ' + ${user.name}"
                                                             selected></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
+                                                <label for="departmentSelect" class="col-sm-3 col-form-label">Ansvarlige forvaltninger</label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-select choices__input" th:field="*{departments}"
+                                                            data-trigger="" name="forvaltning" id="departmentSelect" tabindex="-1" multiple="multiple" disabled>
+                                                        <option th:each="department : *{departments}" th:value="${department.uuid}" th:text="${department.name}" selected></option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -190,7 +206,11 @@
 
                                             <div class="row mb-3">
                                                 <label for="managers"
-                                                       class="col-sm-3 col-form-label" th:text="${customSystemOperationResponsibleInput.settingValue}"></label>
+                                                       class="col-sm-3 col-form-label">
+                                                    <span th:text="${customSystemOperationResponsibleInput.settingValue}"></span>
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
                                                 <div class="col-sm-9">
                                                     <select class="form-control form-select choices__input"
                                                             data-trigger="" id="operationResponsible" th:field="*{operationResponsibleUsers}" hidden=""
@@ -210,35 +230,6 @@
                                                             tabindex="-1" disabled>
                                                         <option th:value="true">Aktiv</option>
                                                         <option th:value="false">Inaktiv</option>
-                                                    </select>
-                                                </div>
-                                            </div>
-                                            <div class="row mb-3">
-                                                <label for="aiStatus"
-                                                       class="col-sm-3 col-form-label">Anvender løsningen AI?</label>
-                                                <div class="col-sm-9">
-                                                    <select class="form-control form-select editField"
-                                                            th:field="*{aiStatus}" name="assetCategory" id="aiStatus"
-                                                            tabindex="-1" disabled>
-                                                        <option value=""></option>
-                                                        <option
-                                                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
-                                                                th:value="${status}" th:text="${status.danishName}"></option>
-                                                    </select>
-                                                </div>
-                                            </div>
-
-                                            <div class="row mb-3" id="riskFactorContainer">
-                                                <label for="riskFactor"
-                                                       class="col-sm-3 col-form-label">Vurdering af risiko ved AI-brug</label>
-                                                <div class="col-sm-9">
-                                                    <select class="form-control form-select editField"
-                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
-                                                            tabindex="-1" disabled>
-                                                        <option value=""></option>
-                                                        <option
-                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
-                                                                th:value="${risk}" th:text="${risk.message}"></option>
                                                     </select>
                                                 </div>
                                             </div>
@@ -313,6 +304,42 @@
                                             </div>
 
                                             <div class="row mb-3">
+                                                <label for="aiStatus" class="col-sm-3 col-form-label">
+                                                    Anvender løsningen AI?
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{aiStatus}" name="assetCategory" id="aiStatus"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="status : ${T(dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum).values()}"
+                                                                th:value="${status}" th:text="${status.danishName}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3" id="riskFactorContainer">
+                                                <label for="riskFactor" class="col-sm-3 col-form-label">
+                                                    Vurdering af risiko ved AI-brug
+                                                    &nbsp;
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                </label>
+                                                <div class="col-sm-9">
+                                                    <select class="form-control form-select editField"
+                                                            th:field="*{aiRisk}" name="assetCategory" id="riskFactor"
+                                                            tabindex="-1" disabled>
+                                                        <option value=""></option>
+                                                        <option
+                                                                th:each="risk : ${T(dk.digitalidentity.model.entity.enums.AiRiskFactor).values()}"
+                                                                th:value="${risk}" th:text="${risk.message}"></option>
+                                                    </select>
+                                                </div>
+                                            </div>
+
+                                            <div class="row mb-3">
                                                 <label for="emergencyPlanLink"
                                                     class="col-sm-3 col-form-label">Nødplan</label>
                                                 <div class="col-sm-9">
@@ -353,7 +380,7 @@
                                                 <label for="contractDate"
                                                     class="col-sm-3 col-form-label">
                                                     Kontraktdato &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <div th:if="${isKitos}" th:hidden="*{contractDate == null}">
@@ -381,7 +408,7 @@
                                                 <label for="contractTermination"
                                                     class="col-sm-3 col-form-label">
                                                     Kontraktophør &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <div th:if="${isKitos}" th:hidden="*{contractTermination == null}">
@@ -409,7 +436,7 @@
                                                 <label for="terminationNotice"
                                                     class="col-sm-3 col-form-label">
                                                     Opsigelsesvarsel &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9">
                                                     <input th:if="${isKitos}" class="form-control" id="terminationNotice"
@@ -429,7 +456,7 @@
                                                     Systemet skal arkiveres
                                                     <span th:if="${isKitos}" class="pli-exclamation" style="color: orange; font-weight: bold;" title="Denne værdi synkroniseres til OS2kitos, når den ændres"></span>
                                                     &nbsp;
-                                                    <img th:if="${isKitos}" src="/img/kitos_icon.svg" alt="OS2kitos Logo" style="width:60px;" th:classappend="${isOldKitos} ? 'grayscale' : ''">
+                                                    <img th:if="${isKitos}" class="kitosLogo" src="/img/kitos_icon.svg" alt="OS2kitos Logo" th:classappend="${isOldKitos} ? 'grayscale' : ''">
                                                 </label>
                                                 <div class="col-sm-9 my-auto">
                                                     <select class="form-control form-select editField" th:field="*{archive}" name="archive" id="archive" tabindex="-1" disabled>
@@ -447,7 +474,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Behandlingsaktivitet</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#RegisterRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -475,7 +502,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Foranstaltninger</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#PrecautionRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -501,7 +528,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Relaterede aktiver</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}"
                                                             data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
@@ -527,7 +554,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Dokumenter</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#DocumentRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -552,7 +579,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Opgaver</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#TaskRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -578,7 +605,7 @@
                                             <div class="card-header toolbar">
                                                 <h5 class="toolbar-start m-0">Hændelser</h5>
                                                 <div class="toolbar-end">
-                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
+                                                    <button type="button" sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${asset.id}" data-bs-toggle="modal" data-bs-target="#IncidentRelationModal">Tilføj</button>
                                                 </div>
                                             </div>
                                             <div class="card-body">
@@ -711,16 +738,16 @@
         </div>
     </div>
 
-    <div class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
-    <div class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
+    <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="subsupplierDialog" tabindex="-1" aria-labelledby="subsupplierLabel" aria-hidden="true"></div>
+    <div sec:authorize="hasAnyRole('ROLE_update_all','ROLE_update_owner_only')" class="modal fade" id="oversightDialog" tabindex="-1" aria-labelledby="oversightLabel" aria-hidden="true"></div>
 
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal)}"></div>
-    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=AssetRelationModal, relationType=aktiver)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=DocumentRelationModal, relationType=dokumenter)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=TaskRelationModal, relationType=opgaver)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=RegisterRelationModal, relationType=fortegnelser)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal, relationType=foranstaltninger)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=PrecautionRelationModal, relationType=foranstaltninger)}"></div>
+    <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${asset.id}, modalId=IncidentRelationModal, relationType=hændelser)}"></div>
     <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
     <div th:replace="~{assets/fragments/riskAssessmentKitosModal :: riskAssessmentKitosModalFragment}"></div>
@@ -742,365 +769,9 @@
             let newestRiskAssessmentDate = [[${risk?.createdAt}]];
             let asset = [[${asset}]];
         +]*/
-
-        let managersChoicesEditSelect = null;
-        let suppliersChoicesEditSelect = null;
-        let responsibleChoicesEditSelect = null;
-
-        let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
-        document.addEventListener("DOMContentLoaded", function (event) {
-            initDatePickers();
-            suppliersChoicesEditSelect = initSuppliersSelect();
-            suppliersChoicesEditSelect.disable();
-            managersChoicesEditSelect = choiceService.initUserSelect("managers", false);
-            managersChoicesEditSelect.disable();
-            responsibleChoicesEditSelect = choiceService.initUserSelect("responsibleUsers", false);
-            responsibleChoicesEditSelect.disable();
-            operationResponsibleChoicesEditSelect = choiceService.initUserSelect("operationResponsible", false);
-            operationResponsibleChoicesEditSelect.disable();
-            editMode(false);
-            initDpia();
-
-            addRelationFormLoaded();
-            initTabs();
-            rememberSelectedTab();
-
-            if (threatExists) {
-                profilePageLoaded();
-            }
-
-            const aiStatusSelect = document.getElementById('aiStatus');
-            const riskFactorContainer = document.getElementById('riskFactorContainer');
-
-            function toggleRiskFactorContainer() {
-                if (aiStatusSelect.value === 'YES') {
-                    riskFactorContainer.style.display = '';
-                } else {
-                    riskFactorContainer.style.display = 'none';
-                }
-            }
-            toggleRiskFactorContainer();
-            aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
-        });
-
-
-        function initTabs() {
-            const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
-            const panes = document.querySelectorAll(".tab-pane");
-            const tabAction = Object.keys(myTabs).map((tab) => {
-                myTabs[tab].addEventListener("click", (e) => {
-
-                    makeInactive(myTabs);
-                    activateTab(e);
-                    makeInactive(panes);
-                    activateTabContent(e);
-                    //save selected tab
-                    window.localStorage.setItem('activeTab', '#' + myTabs[tab].getAttribute('data-bs-target').substr(1));
-                    e.preventDefault();
-                });
-            });
-
-        }
-
-        function initAssetRelationSelect() {
-            const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
-            let relationsChoice = initSelect(relationsSelect);
-            // choiceService.updateRelationsAssetsOnly(relationsChoice, "");
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsAssetsOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-        relationsSelect.addEventListener("change",
-            function(event) {
-                choiceService.updateRelationsAssetsOnly(relationsChoice, "");
-            },
-            false,
-            );
-        }
-
-        function addRelationFormLoaded() {
-            initAssetRelationSelect();
-            initDocumentRelationSelectPrivate();
-            initTaskRelationSelectPrivate();
-            initRegisterRelationSelectPrivate();
-            initPrecautionRelationSelectPrivate();
-            initIncidentRelationSelectPrivate();
-        }
-
-        function initRegisterRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('RegisterRelationModalrelationsSelect')
-            let relationsChoice = initSelect(relationsSelect);
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsRegistersOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-            relationsSelect.addEventListener("change",
-                function(event) {
-                    choiceService.updateRelationsRegistersOnly(relationsChoice, "");
-                },
-                false,
-            );
-        }
-
-         function initPrecautionRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('PrecautionRelationModalrelationsSelect')
-            let relationsChoice = initSelect(relationsSelect);
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsPrecautionsOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-            relationsSelect.addEventListener("change",
-                function(event) {
-                    choiceService.updateRelationsPrecautionsOnly(relationsChoice, "");
-                },
-                false,
-            );
-        }
-
-        function initDocumentRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
-            let relationsChoice = initSelect(relationsSelect);
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-            relationsSelect.addEventListener("change",
-                function(event) {
-                    choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
-                },
-                false,
-            );
-        }
-
-        function initTaskRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
-            let relationsChoice = initSelect(relationsSelect);
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-            relationsSelect.addEventListener("change",
-            function(event) {
-                choiceService.updateRelationsTasksOnly(relationsChoice, "");
-            },
-            false,
-            );
-        }
-
-        function initIncidentRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('IncidentRelationModalrelationsSelect');
-            let relationsChoice = initSelect(relationsSelect);
-            relationsSelect.addEventListener("search", (event) => {
-                    choiceService.updateRelationsIncidentsOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-            relationsSelect.addEventListener("change", (event) => {
-                    choiceService.updateRelationsIncidentsOnly(relationsChoice, "");
-                },
-                false,
-            );
-        }
-
-        function rememberSelectedTab() {
-            // on load of the page: switch to the currently selected tab
-            //var hash = window.location.hash;
-            var hash = window.localStorage.getItem('activeTab');
-
-            if (hash != null && hash !== "") {
-                //Inactivate all tabs
-                const myTabs = document.querySelectorAll("ul.nav-tabs > li > button");
-                makeInactive(myTabs);
-
-                //Hide all contentTabs
-                const panes = document.querySelectorAll(".tab-pane");
-                makeInactive(panes);
-
-                const activeTab = document.querySelector('button[data-bs-target="' + hash + '"]');
-                activeTab?.classList.add("active");
-
-                const activePane = document.querySelector(hash);
-                activePane?.classList.add("active");
-                activePane?.classList.add("show");
-            }
-
-        }
-
-        function initDatePickers() {
-            if (!isKitos) {
-                const contractDatePicker = MCDatepicker.create({
-                    el: '#contractDate',
-                    autoClose: true,
-                    dateFormat: 'dd/mm-yyyy',
-                    closeOnBlur: true,
-                    firstWeekday: 1,
-                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                    customClearBTN: "Ryd",
-                    customCancelBTN: "Annuller"
-                });
-                document.querySelector( "#contractDateBtn" ).addEventListener( "click", () => {
-                    contractDatePicker.open();
-                });
-
-                const contractTerminationPicker = MCDatepicker.create({
-                    el: '#contractTermination',
-                    autoClose: true,
-                    dateFormat: 'dd/mm-yyyy',
-                    closeOnBlur: true,
-                    firstWeekday: 1,
-                    customWeekDays: ["sø", "ma", "ti", "on", "to", "fr", "lø"],
-                    customMonths: ["Januar", "Februar", "Marts", "April", "Maj", "Juni", "Juli", "August", "September", "Oktober", "November", "December"],
-                    customClearBTN: "Ryd",
-                    customCancelBTN: "Annuller"
-                });
-                document.querySelector( "#contractTerminationBtn" ).addEventListener( "click", () => {
-                    contractTerminationPicker.open();
-                });
-            }
-        }
-
-        function removeChoiceByUserUuid(arr, uuid) {
-            const objWithIdIndex = arr.findIndex((obj) => obj.uuid === uuid);
-
-            if (objWithIdIndex > -1) {
-                arr.splice(objWithIdIndex, 1);
-            }
-
-            return arr;
-        }
-
-        function removeChoiceByRegisterId(arr, id) {
-            const objWithIdIndex = arr.findIndex((obj) => obj.id === id);
-            if (objWithIdIndex > -1) {
-                arr.splice(objWithIdIndex, 1);
-            }
-
-            return arr;
-        }
-
-        function updateSuppliers(choices, search) {
-            fetch( `/rest/suppliers/autocomplete?search=${search}`)
-                .then(response => response.json()
-                    .then(data => {
-                        alreadySelected = []
-                        var sel = choices.passedElement.element;
-                        for (var i=0, n=sel.options.length;i<n;i++) {
-                            if (sel.options[i].value) alreadySelected.push(sel.options[i].value);
-                        }
-                        alreadySelected.forEach((id) => removeChoiceByRegisterId(data.content, id));
-
-                        choices.setChoices(data.content.map(e => {
-                            return {
-                                value: e.id,
-                                label: `${e.name}`}
-                        }), 'value', 'label', true); //false to not override already selected choices
-                    }))
-                .catch(error => toastService.error(error));
-        }
-
-        function initSuppliersSelect() {
-            let supplierSelect = document.getElementById('supplier');
-            const supplierChoices = initSelect(supplierSelect);
-            supplierSelect.addEventListener("search",
-                function(event) {
-                    updateSuppliers(supplierChoices, event.detail.value);
-                },
-                false,
-            );
-            supplierChoices.setChoiceByValue(supplierId)
-            return supplierChoices;
-        }
-
-        function editMode(enabled) {
-            const rootElement = document.getElementById('editForm');
-            const aiStatus = document.getElementById('aiStatus');
-            const active = document.getElementById('activeAsset');
-            const aiRiskFactor = document.getElementById('riskFactor');
-            if (enabled) {
-                rootElement.querySelectorAll('.editField').forEach(elem => {
-                    elem.disabled = false;
-                    if (elem.tagName === "A") {
-                        elem.hidden = true;
-                        if (elem.nextElementSibling) {
-                            elem.nextElementSibling.hidden = false;
-                        }
-                    }
-
-                    if (elem.classList.contains("datepicker")) {
-                        elem.parentElement.hidden = false; // show the datepicker
-                        if (elem.parentElement.nextElementSibling) {
-                            elem.parentElement.nextElementSibling.hidden = true; // hide the "ingen" textfield
-                        }
-                    }
-                });
-
-                document.getElementById('saveEditAssetBtn').hidden = false;
-                document.getElementById('cancelBtn').hidden = false;
-                document.getElementById('editAssetBtn').hidden = true;
-
-                if (!isKitos) {
-                    managersChoicesEditSelect.enable();
-                    active.disabled = false;
-                    document.getElementById("productLinksViewContainer").hidden = true;
-                    document.getElementById("productLinksEditContainer").hidden = false;
-                    document.getElementById("addProductLinkBtn").hidden = false;
-                }
-
-                suppliersChoicesEditSelect.enable();
-                responsibleChoicesEditSelect.enable();
-            } else {
-                rootElement.querySelectorAll('.editField').forEach(elem => {
-                    elem.disabled = true;
-                    if (elem.tagName === "A") {
-                        elem.hidden = false;
-                        elem.nextElementSibling.hidden = true;
-                    }
-
-                    if (elem.classList.contains("datepicker")) {
-                        if (elem.value == null || elem.value === "") {
-                            elem.parentElement.hidden = true; // hide the datepicker
-                            elem.parentElement.nextElementSibling.hidden = false; // show the "ingen" textfield
-                        }
-                    }
-                });
-
-                document.getElementById('saveEditAssetBtn').hidden = true;
-                document.getElementById('cancelBtn').hidden = true;
-                document.getElementById('editAssetBtn').hidden = false;
-
-                suppliersChoicesEditSelect.disable();
-                managersChoicesEditSelect.disable();
-                responsibleChoicesEditSelect.disable();
-
-                if (!isKitos) {
-                    active.disabled = true;
-                    document.getElementById("productLinksViewContainer").hidden = false;
-                    document.getElementById("productLinksEditContainer").hidden = true;
-                    document.getElementById("addProductLinkBtn").hidden = true;
-                }
-            }
-            if (isKitos) {
-                aiStatus.disabled = true;
-                aiRiskFactor.disabled = true;
-            }
-        }
-
-
         /*]]>*/
     </script>
-
+    <script type="module" th:src="@{/js/asset/view.js}" defer></script>
 </body>
 
 </html>

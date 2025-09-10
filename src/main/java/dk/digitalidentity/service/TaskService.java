@@ -3,6 +3,7 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.TaskDao;
 import dk.digitalidentity.dao.TaskLogDao;
+import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
 import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Document;
@@ -11,13 +12,17 @@ import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.grid.TaskGrid;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.TaskDTO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -27,6 +32,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
@@ -36,6 +42,8 @@ import static dk.digitalidentity.Constants.ASSOCIATED_ASSET_DPIA_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
+import static dk.digitalidentity.service.FilterService.buildPageable;
+import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 @Slf4j
@@ -44,9 +52,13 @@ public class TaskService {
     private final DocumentDao documentDao;
     private final TaskDao taskDao;
     private final TaskLogDao taskLogDao;
-	private final SettingsService settingsService;
+	private final TaskGridDao taskGridDao;
     private final RelationService relationService;
     private final RelatableService relatableService;
+
+	public boolean isResponsibleFor(Task task) {
+		return task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid());
+	}
 
     public List<Task> findAll() {
         return taskDao.findAll();
@@ -324,5 +336,27 @@ public class TaskService {
 
 	public Set<Task> findAllUnrelatedTasksForResponsibleUser (String userUuid) {
 		return taskDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(userUuid);
+	}
+
+	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<TaskGrid> tasks;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged-in user can see all
+			tasks = taskGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, TaskGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					TaskGrid.class
+			);
+		}
+		else {
+			// Logged-in user can see only own
+			tasks = taskGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, TaskGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					TaskGrid.class
+			);
+		}
+		return tasks;
 	}
 }

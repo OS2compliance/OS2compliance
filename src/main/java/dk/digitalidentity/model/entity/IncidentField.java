@@ -48,4 +48,8 @@ public class IncidentField {
     @Convert(converter = StringListNullSafeConverter.class)
     private List<String> definedList;
 
+	@NotNull
+	@Column
+	private boolean obligatoryAnswer;
+
 }

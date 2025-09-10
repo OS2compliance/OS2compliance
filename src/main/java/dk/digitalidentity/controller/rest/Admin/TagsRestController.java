@@ -1,7 +1,8 @@
 package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -13,7 +14,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RestController
-@RequireAdministrator
+@RequireAdmin
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/tags", consumes = "application/json", produces = "application/json")
 public class TagsRestController {
@@ -24,6 +25,7 @@ public class TagsRestController {
      * @param tagId
      * @return
      */
+	@RequireDeleteAll
     @Transactional
     @DeleteMapping(value = "{tagId}")
     public ResponseEntity<?> delete(@PathVariable("tagId") final Long tagId) {

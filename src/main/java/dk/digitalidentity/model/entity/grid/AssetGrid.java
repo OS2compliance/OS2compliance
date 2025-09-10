@@ -1,5 +1,7 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.HasManagers;
+import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
@@ -21,7 +23,7 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @Immutable
-public class AssetGrid implements HasMultipleResponsibleUsers {
+public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 	@Id
 	private Long id;
 
@@ -39,6 +41,12 @@ public class AssetGrid implements HasMultipleResponsibleUsers {
 
     @Column
     private String responsibleUserUuids;
+
+	@Column
+	private String managerUuids;
+
+	@Column
+	private String managerUserNames;
 
 	@Column
 	private LocalDate updatedAt;

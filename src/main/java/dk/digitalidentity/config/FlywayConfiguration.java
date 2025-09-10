@@ -24,6 +24,7 @@ public class FlywayConfiguration {
 				.target(MigrationVersion.LATEST)
 				.dataSource(dataSource)
 				.baselineOnMigrate(true)
+				.outOfOrder(true) // TMP remove when 1.79 has been applied on all customers
 				.table("flyway_schema_history")
 				.locations("classpath:/db/migration")
 				.load();

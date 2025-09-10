@@ -9,6 +9,7 @@ import dk.digitalidentity.model.api.SupplierShallowEO;
 import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetProductLink;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -17,6 +18,8 @@ import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import org.apache.commons.lang3.BooleanUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -28,6 +31,7 @@ import org.springframework.data.domain.Page;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -48,48 +52,46 @@ public interface AssetMapper {
     }
 
     default AssetDTO toDTO(final AssetGrid assetGrid) {
-        return AssetDTO.builder()
+        AssetDTO assetDTO = AssetDTO.builder()
             .id(assetGrid.getId())
             .name(assetGrid.getName())
-            .supplier(nullSafe(() -> assetGrid.getSupplier()))
+            .supplier(nullSafe(assetGrid::getSupplier))
             .assetType(assetGrid.getAssetType())
-            .responsibleUsers(nullSafe(() -> assetGrid.getResponsibleUserNames()))
+            .ownedByUsers(nullSafe(assetGrid::getResponsibleUserNames))
+            .responsibleUsers(nullSafe(assetGrid::getManagerUserNames))
             .updatedAt(nullSafe(() -> assetGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
             .assessment(nullSafe(() -> assetGrid.getAssessment().getMessage()))
             .assessmentOrder(assetGrid.getAssessmentOrder())
             .assetStatus(nullSafe(() -> assetGrid.getAssetStatus().getMessage()))
             .assetCategory(nullSafe(() -> assetGrid.getAssetCategory().getMessage()))
-            .assetCategoryOrder(nullSafe(() -> assetGrid.getAssetCategoryOrder()))
+            .assetCategoryOrder(nullSafe(assetGrid::getAssetCategoryOrder))
 
             .kitos(nullSafe(() -> BooleanUtils.toStringTrueFalse(assetGrid.isKitos() || assetGrid.isOldKitos())))
-            .registers(nullSafe(() -> assetGrid.getRegisters()))
+			.registers(nullSafe(assetGrid::getRegisters))
             .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
-            .changeable(false)
 			.oldKitos(assetGrid.isOldKitos())
 			.active(assetGrid.isActive())
             .build();
-    }
 
-    //provides a mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    default AssetDTO toDTO(final AssetGrid assetGrid, boolean superuser, String principalUuid) {
-        AssetDTO assetDTO = toDTO(assetGrid);
-        if (superuser || principalUuid.equals(assetGrid.getResponsibleUserUuids())) {
-            assetDTO.setChangeable(true);
-        }
-        return assetDTO;
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		boolean isResponsible =	(assetGrid.getResponsibleUserNames() != null && assetGrid.getResponsibleUserUuids().contains(SecurityUtil.getPrincipalUuid()))
+				|| (assetGrid.getManagerUuids() != null && assetGrid.getManagerUuids().contains(SecurityUtil.getPrincipalUuid()));
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+
+		assetDTO.setAllowedActions(allowedActions);
+		return assetDTO;
     }
 
     default List<AssetDTO> toDTO(List<AssetGrid> assetGrids) {
         List<AssetDTO> assetDTOS = new ArrayList<>();
         assetGrids.forEach(a -> assetDTOS.add(toDTO(a)));
-        return assetDTOS;
-    }
-
-    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    //List<AssetDTO> toDTO(List<AssetGrid> assetGrids, boolean superuser, String principalUuid);
-    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids, boolean superuser, String principalUuid) {
-        List<AssetDTO> assetDTOS = new ArrayList<>();
-        assetGrids.forEach(a -> assetDTOS.add(toDTO(a, superuser, principalUuid)));
         return assetDTOS;
     }
 
@@ -103,6 +105,7 @@ public interface AssetMapper {
     @Mappings({
         @Mapping(source = "responsibleUsers", target = "systemOwners"),
         @Mapping(source = "managers", target = "responsibleUsers"),
+        @Mapping(source = "departments", target = "departments"),
         @Mapping(source = "suppliers", target = "subSuppliers"),
         @Mapping(source = "assetType", target = "assetType"),
         @Mapping(source = "productLinks", target = "productLinks"),
@@ -200,7 +203,8 @@ public interface AssetMapper {
 		@Mapping(target = "aiStatus", ignore = true),
 		@Mapping(target = "aiRisk", ignore = true),
 		@Mapping(target = "active", ignore = true),
-		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks")
+		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks"),
+		@Mapping(target = "departments", source = "departments")
 	})
     Asset fromEO(AssetCreateEO assetCreateEO);
 

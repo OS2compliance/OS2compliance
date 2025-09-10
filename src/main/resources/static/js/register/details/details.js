@@ -2,6 +2,7 @@ import RegisterPurposeService from "./purposeView.js";
 import RegisterGeneralService from "./generalView.js";
 import RegisterDataprocessingService from "./dataprocessingView.js";
 import RegisterAssessmentService from "./assessmentView.js";
+import KLEView from "./kleView.js";
 
 
 // Global variable to support onclick functionality. Should be removed when be have moved to addEventListeners
@@ -15,6 +16,9 @@ document.addEventListener("DOMContentLoaded", function () {
     registerPurposeService.init();
     registerAssessmentService.init();
     registerDataprocessingService.init();
+
+    const kleView = new KLEView();
+    kleView.init()
 });
 
 

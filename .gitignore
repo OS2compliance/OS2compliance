@@ -9,6 +9,7 @@ application-dev.properties
 .idea/
 *.iml
 .env
+*.env
 
 target/
 .factorypath

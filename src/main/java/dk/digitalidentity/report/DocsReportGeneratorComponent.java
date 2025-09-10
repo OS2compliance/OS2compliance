@@ -1,5 +1,6 @@
 package dk.digitalidentity.report;
 
+import dk.digitalidentity.model.entity.StandardTemplate;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.springframework.stereotype.Component;
 
@@ -14,9 +15,9 @@ public class DocsReportGeneratorComponent {
         this.docxService = docxService;
     }
 
-    public XWPFDocument generateDocument(final String inputFileName, final Map<String, String> parameters) throws IOException {
+    public XWPFDocument generateDocument(final String inputFileName, final Map<String, String> parameters, StandardTemplate template) throws IOException {
         final XWPFDocument document = docxService.readDocument(inputFileName);
-        docxService.replacePlaceHolders(document, parameters);
+        docxService.replacePlaceHolders(document, parameters, template);
         document.enforceUpdateFields();
         return document;
     }
