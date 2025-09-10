@@ -10,7 +10,7 @@ CREATE TABLE kle_keyword
     handlingsfacet_nr VARCHAR(100)
 ) COLLATE = utf8mb4_danish_ci;;
 
-CREATE INDEX idx_kle_keyword_text ON kle_keyword (text);
+CREATE INDEX idx_kle_keyword_text ON kle_keyword (`text`(191));;
 
 CREATE TABLE kle_group_keyword
 (

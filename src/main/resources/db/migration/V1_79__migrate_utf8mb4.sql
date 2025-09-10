@@ -99,7 +99,3 @@ ALTER TABLE register_kle_legal_reference
         FOREIGN KEY (accession_number)
             REFERENCES kle_legal_reference (accession_number)
             ON DELETE CASCADE;
-
--- 5) Genskab indeks (hvis nødvendigt)
-CREATE INDEX IF NOT EXISTS idx_kle_group_main_group ON kle_group (main_group_number);
-CREATE INDEX IF NOT EXISTS idx_kle_subject_group ON kle_subject (group_number);
