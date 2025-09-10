@@ -240,7 +240,9 @@ public class RiskController {
         }
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.copy(sourceId);
         savedThreatAssessment.setName(assessment.getName());
-        savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
+		if (presentUserUuids != null && !presentUserUuids.isEmpty()) {
+			savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
+		}
         if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
             relateAssets(selectedAsset, savedThreatAssessment);
         } else if (assessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
@@ -425,8 +427,13 @@ public class RiskController {
     public void riskDelete(@PathVariable final Long id) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
         // All related checks should be deleted along with the threatAssessment
-        final List<Task> tasks = taskService.findRelatedTasks(threatAssessment, t -> t.getTaskType() == TaskType.CHECK);
-        taskDao.deleteAll(tasks);
+		final List<Task> tasksToDelete = new ArrayList<>(
+				taskService.findRelatedTasks(threatAssessment, t -> t.getTaskType() == TaskType.CHECK)
+		);
+		threatAssessment.getThreatAssessmentResponses().forEach(threatAssessmentResponse -> {
+			tasksToDelete.addAll(taskService.findRelatedTasks(threatAssessmentResponse, a -> true));
+		});
+        taskDao.deleteAll(tasksToDelete);
 
         threatAssessmentService.deleteById(id);
     }

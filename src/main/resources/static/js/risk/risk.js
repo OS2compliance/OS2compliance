@@ -87,6 +87,7 @@ function CreateTable() {
                 },
                 {
                     name: "Risikovurdering",
+                    width: '120px',
                     searchable: {
                         searchKey: 'name'
                     },

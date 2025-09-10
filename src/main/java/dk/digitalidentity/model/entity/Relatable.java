@@ -46,11 +46,10 @@ abstract public class Relatable {
 	@Column(nullable = false)
 	private int version;
 
+	private RelationType relationType;
 	@Column(name = "relation_type", nullable = false, updatable = false)
 	@Enumerated(EnumType.STRING)
-    @Access(AccessType.PROPERTY)
-	private RelationType relationType;
-
+	@Access(AccessType.PROPERTY)
 	public abstract RelationType getRelationType();
 
     /**
@@ -58,30 +57,35 @@ abstract public class Relatable {
      */
     public abstract String getLocalizedEnumValues();
 
-	@NotEmpty
-	@Column(nullable = false)
-    @Access(AccessType.PROPERTY)
 	private String name;
 
-	@CreationTimestamp
+	@NotEmpty
 	@Column(nullable = false)
-    @Access(AccessType.PROPERTY)
+	@Access(AccessType.PROPERTY)
+	public String getName() { return name; }
+
 	private LocalDateTime createdAt;
+	@CreationTimestamp
+	@Access(AccessType.PROPERTY)
+	@Column(name = "created_at", nullable = false, updatable = false)
+	public LocalDateTime getCreatedAt() { return createdAt; }
 
-	@CreatedBy
-	@Column(nullable = false)
-    @Access(AccessType.PROPERTY)
 	private String createdBy;
+	@Column(name = "created_by", nullable = false)
+	@Access(AccessType.PROPERTY)
+	public String getCreatedBy() { return createdBy; }
 
+	private LocalDateTime updatedAt;
 	@Column
 	@UpdateTimestamp
-    @Access(AccessType.PROPERTY)
-	private LocalDateTime updatedAt;
+	@Access(AccessType.PROPERTY)
+	public LocalDateTime getUpdatedAt() { return updatedAt; }
 
+	private String updatedBy;
 	@Column
 	@LastModifiedBy
-    @Access(AccessType.PROPERTY)
-	private String updatedBy;
+	@Access(AccessType.PROPERTY)
+	public String getUpdatedBy() { return updatedBy; }
 
     @Column
     private boolean deleted = false;
@@ -98,6 +102,15 @@ abstract public class Relatable {
 	protected void onCreate() {
 		relationType = getRelationType();
         localizedEnums = getLocalizedEnumValues();
+		if (createdAt == null) {
+			createdAt = LocalDateTime.now();
+		}
+		if (updatedAt == null) {
+			updatedAt = createdAt;
+		}
+		if (createdBy == null) {
+			createdBy = "system";
+		}
 	}
 
     @PreUpdate

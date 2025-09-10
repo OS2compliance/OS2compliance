@@ -27,6 +27,7 @@ import org.hibernate.annotations.Where;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -54,7 +55,7 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
 			joinColumns = { @JoinColumn(name = "threat_assessment_id") },
 			inverseJoinColumns = { @JoinColumn(name = "threat_catalog_identifier") }
 	)
-	private List<ThreatCatalog> threatCatalogs;
+	private List<ThreatCatalog> threatCatalogs = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "threat_assessment_report_s3_document_id")
@@ -135,10 +136,10 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
     private List<User> presentAtMeeting;
 
     @OneToMany(mappedBy = "threatAssessment",  orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<CustomThreat> customThreats;
+    private List<CustomThreat> customThreats = new ArrayList<>();
 
     @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ThreatAssessmentResponse> threatAssessmentResponses;
+    private List<ThreatAssessmentResponse> threatAssessmentResponses = new ArrayList<>();
 
     @Column
     private boolean fromExternalSource;
