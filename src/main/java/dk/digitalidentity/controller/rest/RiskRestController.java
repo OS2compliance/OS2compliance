@@ -61,8 +61,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -320,18 +318,10 @@ public class RiskRestController {
     @PostMapping("{id}/threats/setfield")
     public ResponseEntity<HttpStatus> setField(@PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
+		checkUpdateAccess(threatAssessment);
 
-        if (threatAssessment.getThreatAssessmentResponses() == null) {
-            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
-        }
-
-        final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
+		final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
         if (response == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -370,22 +360,26 @@ public class RiskRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
-    record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
+	private void checkUpdateAccess(ThreatAssessment threatAssessment) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+		}
+	}
+
+	record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
 	@RequireUpdateOwnerOnly
     @PostMapping("{id}/threats/setPrecautions")
     public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
-			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
+		checkUpdateAccess(threatAssessment);
 
-        if (threatAssessment.getThreatAssessmentResponses() == null) {
-            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
-        }
-
-        final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
+		final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
         if (response == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }

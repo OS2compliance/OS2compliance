@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.enums.DPIACompletionStatus;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.ThreatAssessmentCompletionStatus;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.Ownable;
@@ -271,4 +272,22 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
 	private DPIACompletionStatus dpiaCompletionStatus;
+
+	@StatisticLabel("Status for risikovurdering")
+	@Formula("(SELECT CASE " +
+			"WHEN a.threat_assessment_opt_out THEN 'OPTED_OUT' " +
+			"WHEN EXISTS (" +
+			"SELECT 1 FROM relations r " +
+			"JOIN threat_assessments ta ON (" +
+			"(r.relation_a_type = 'ASSET' AND r.relation_b_type = 'THREAT_ASSESSMENT' AND r.relation_a_id = id AND r.relation_b_id = ta.id) OR " +
+			"(r.relation_b_type = 'ASSET' AND r.relation_a_type = 'THREAT_ASSESSMENT' AND r.relation_b_id = id AND r.relation_a_id = ta.id)" +
+			") " +
+			"WHERE ta.assessment IS NOT NULL" +
+			") THEN 'COMPLETED' " +
+			"ELSE 'PENDING' " +
+			"END " +
+			"FROM assets a " +
+			"WHERE a.id = id)")
+	@Enumerated(EnumType.STRING)
+	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
 }

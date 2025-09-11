@@ -179,10 +179,10 @@ public class StatisticService {
 		var root = query.from(entityClass);
 
 		// Build selections (remove nulls)
-		List<String> validFields = Arrays.stream(fieldNames)
+		Set<String> validFields = Arrays.stream(fieldNames)
 				.filter(Objects::nonNull)
 				.filter(s -> !s.equalsIgnoreCase("null"))
-				.toList();
+				.collect(Collectors.toSet());
 
 		Set<Selection<?>> selections = new HashSet<>(); // Set to filter out duplicates
 		for (String field : validFields) {
@@ -206,7 +206,7 @@ public class StatisticService {
 		var tuples = entityManager.createQuery(query).getResultList();
 
 		return tuples.stream()
-				.flatMap(tuple -> mapToupleToMaps(tuple, new HashSet<>(validFields)).stream())
+				.flatMap(tuple -> mapToupleToMaps(tuple, validFields).stream())
 				.toList();
 	}
 
@@ -648,7 +648,7 @@ public class StatisticService {
 	 */
 	private String formatLabel(Object value, Period groupDateBy) {
 		if (value == null) {
-			return "Ukendt";
+			return "Ingen værdi";
 		}
 
 		switch (value) {

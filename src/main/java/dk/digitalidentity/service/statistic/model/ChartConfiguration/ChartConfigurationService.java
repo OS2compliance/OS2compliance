@@ -98,7 +98,7 @@ public class ChartConfigurationService {
 		boolean yFieldFromXField = allowedYFieldChoices.isEmpty();
 		boolean xFieldFromYField = allowedXFieldChoices.isEmpty();
 
-		boolean showGroupTime = showStartTime || showEndTime;
+		boolean showGroupTime = chartConfig.getGroupTimeByField() != null && (showStartTime || showEndTime);
 
 		return ChartConfigurationDTO.builder()
 				.id(chartConfig.getId())

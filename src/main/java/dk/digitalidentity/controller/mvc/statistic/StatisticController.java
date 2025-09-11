@@ -58,11 +58,12 @@ public class StatisticController {
 	@GetMapping("{section}")
 	public String getModal(final Model model, @PathVariable("section") String section) {
 
-		if (section == null || !statisticSupportedSections.contains(section)) {
+		String lowercaseSection = section.toLowerCase();
+		if (lowercaseSection == null || !statisticSupportedSections.contains(lowercaseSection)) {
 			throw new IllegalArgumentException();
 		}
 
-		List<ChartConfiguration> chartConfigs = chartConfigurationService.getChartConfigurationsForSection(section);
+		List<ChartConfiguration> chartConfigs = chartConfigurationService.getChartConfigurationsForSection(lowercaseSection);
 
 		model.addAttribute("availableDiagrams", chartConfigs.stream()
 				.map(chartConfig -> new DiagramConfigDTO(
@@ -72,7 +73,7 @@ public class StatisticController {
 				.toList()
 		);
 
-		return "statistic/pageView/" + section;
+		return "statistic/pageView/" + lowercaseSection;
 	}
 
 	@GetMapping("chart/{entityName}/{id}")
