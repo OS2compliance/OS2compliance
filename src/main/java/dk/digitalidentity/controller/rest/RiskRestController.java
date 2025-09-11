@@ -321,7 +321,11 @@ public class RiskRestController {
 
 		checkUpdateAccess(threatAssessment);
 
-		final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+		}
+
+        final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
         if (response == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -365,13 +369,9 @@ public class RiskRestController {
 				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
-
-		if (threatAssessment.getThreatAssessmentResponses() == null) {
-			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
-		}
 	}
 
-	record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
+    record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
 	@RequireUpdateOwnerOnly
     @PostMapping("{id}/threats/setPrecautions")
     public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
@@ -379,7 +379,11 @@ public class RiskRestController {
 
 		checkUpdateAccess(threatAssessment);
 
-		final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+		}
+
+        final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
         if (response == null) {
             return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
         }
@@ -562,8 +566,8 @@ public class RiskRestController {
 	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
