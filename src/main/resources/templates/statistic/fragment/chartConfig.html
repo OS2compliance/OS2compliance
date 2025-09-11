@@ -4,14 +4,14 @@
 
 <!--x & y axis choices-->
 <div class="form-group" th:hidden="${!config.showXField}">
-    <label for="xAxisSelector" class="form-label col-4">Vælg grupperingsakse</label>
+    <label for="xAxisSelector" class="col-form-label col-4">Vælg grupperingsakse (x)</label>
     <select id="xAxisSelector" class="form-control col-7">
         <option th:each="option : ${config.allowedXFieldChoices}" th:attr="data-incident-field-id=${option.dataAttribute}" th:value="${option.fieldName}" th:text="${option.label}"></option>
     </select>
 </div>
 
 <div class="form-group" th:hidden="${!config.showYField}">
-    <label for="yAxisSelector" class="form-label col-4">Vælg dataakse</label>
+    <label for="yAxisSelector" class="col-form-label col-4">Vælg dataakse (y)</label>
     <select id="yAxisSelector" class="form-control col-7">
         <option th:each="option : ${config.allowedYFieldChoices}" th:attr="data-incident-field-id=${option.dataAttribute}" th:value="${option.fieldName}" th:text="${option.label}"></option>
     </select>
@@ -19,21 +19,32 @@
 
 <!--Time period-->
 <div id="timePeriodContainer">
-    <div class="form-group" th:hidden="${!config.showStartTime}">
-        <label for="fromTimePicker" class="form-label col-4">Fra tidspunkt</label>
-        <input id="fromTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultStartTime, 'dd/MM-yyyy')}"/>
+    <div class="row">
+        <div class="col-6" th:hidden="${!config.showStartTime}">
+            <div class="form-group">
+                <label for="fromTimePicker" class="col-form-label col-4">Fra tidspunkt</label>
+                <div>
+                    <input id="fromTimePicker" type="text" class="form-control datepicker  flex-grow-1" th:value="${#temporals.format(config.defaultStartTime, 'dd/MM-yyyy')}"/>
+                </div>
+            </div>
+        </div>
+        <div class="col-6 " th:hidden="${!config.showEndTime}">
+            <div class="form-group">
+                <label for="toTimePicker" class="col-form-label col-4">Til tidspunkt</label>
+                <div>
+                    <input id="toTimePicker" type="text" class="form-control datepicker flex-grow-1" th:value="${#temporals.format(config.defaultEndTime, 'dd/MM-yyyy')}"/>
+                </div>
+            </div>
+        </div>
     </div>
 
-    <div class="form-group" th:hidden="${!config.showEndTime}">
-        <label for="toTimePicker" class="form-label col-4">Til tidspunkt</label>
-        <input id="toTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultEndTime, 'dd/MM-yyyy')}"/>
-    </div>
-
-    <div class="form-group" th:hidden="${!config.showGroupTime}">
-        <label for="periodGroupingSelector" class="form-label col-4">Vælg gruppering af datoer</label>
-        <select id="periodGroupingSelector" class="form-control col-7">
-            <option th:each="period : ${T(dk.digitalidentity.statistic.enumerable.Period).values()}" th:value="${period}" th:text="${period.getName()}"></option>
-        </select>
+    <div class="form-group col-6" th:hidden="${!config.showGroupTime}">
+        <label for="periodGroupingSelector" class="col-form-label col-4">Vælg gruppering af datoer</label>
+        <div>
+            <select id="periodGroupingSelector" class="form-control">
+                <option th:each="period : ${T(dk.digitalidentity.statistic.enumerable.Period).values()}" th:value="${period}" th:text="${period.getName()}"></option>
+            </select>
+        </div>
     </div>
 </div>
 </body>
