@@ -499,8 +499,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 						.selectableDateField(false)
 						.allowedDateFieldChoices(List.of("nextDeadline"))
 						.groupTimeByField(Period.MONTH)
-						.defaultStartTime(DateTimePreset.NONE)
-						.defaultEndTime(DateTimePreset.NONE)
+						.defaultStartTime(DateTimePreset.YEAR_START)
+						.defaultEndTime(DateTimePreset.YEAR_END)
 						.build(),
 				ChartConfiguration.builder()
 						.entityName("Task")

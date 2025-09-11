@@ -3,6 +3,7 @@ package dk.digitalidentity.statistic;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.IncidentType;
@@ -71,8 +72,8 @@ public class StatisticService {
 			boolean ownerOnly,
 			Period groupTimeBy,
 			String dateField,
-			LocalDateTime startDate,
-			LocalDateTime endDate
+			LocalDate startDate,
+			LocalDate endDate
 	) {
 
 		// if the entity field is of type relation, get its name for the label field
@@ -95,14 +96,15 @@ public class StatisticService {
 
 	/**
 	 * Specific implementation for Incident-related charts
-	 * @param chartType type of chart
-	 * @param xField field name for x-axis
-	 * @param yField field name for y-axis
-	 * @param aggregation type of aggregation to perform
-	 * @param groupTimeBy type of time period grouping to implement
-	 * @param dateField field name used for filtering by date
-	 * @param startDate date used for start-date of filtering
-	 * @param endDate date used for end-date of filtering
+	 *
+	 * @param chartType       type of chart
+	 * @param xField          field name for x-axis
+	 * @param yField          field name for y-axis
+	 * @param aggregation     type of aggregation to perform
+	 * @param groupTimeBy     type of time period grouping to implement
+	 * @param dateField       field name used for filtering by date
+	 * @param startDate       date used for start-date of filtering
+	 * @param endDate         date used for end-date of filtering
 	 * @param incidentFieldId the id of the IncidentField selected
 	 * @return DTO with data for a ChartJS chart
 	 */
@@ -113,8 +115,8 @@ public class StatisticService {
 			AggregationMethod aggregation,
 			Period groupTimeBy,
 			String dateField,
-			LocalDateTime startDate,
-			LocalDateTime endDate,
+			LocalDate startDate,
+			LocalDate endDate,
 			Long incidentFieldId
 	) {
 		String answerChoicesFieldName = "answerChoiceValues";
@@ -158,7 +160,8 @@ public class StatisticService {
 
 	/**
 	 * Checks for presence of a prefix and add the non-prefixed string to the relevant Incident field list.
-	 * @param field field
+	 *
+	 * @param field     field
 	 * @param prefixMap map of prefixes and list
 	 * @return the value without prefix, no matter if it was added to a list or not
 	 */
@@ -190,8 +193,8 @@ public class StatisticService {
 			Class<? extends StatisticEnabled> entityClass,
 			boolean ownerOnly,
 			String dateField,
-			LocalDateTime startDate,
-			LocalDateTime endDate,
+			LocalDate startDate,
+			LocalDate endDate,
 			String... fieldNames) {
 		var cb = entityManager.getCriteriaBuilder();
 		var query = cb.createTupleQuery();
@@ -231,20 +234,21 @@ public class StatisticService {
 
 	/**
 	 * Specific implementation for getting data from Incident-related classes
-	 * @param incidentFieldId ID of the Incidentfield (question) that has been selected
-	 * @param dateField Name of field to use for filtering by date
-	 * @param startDate Starting date to filter by
-	 * @param endDate Ending date to filter by
-	 * @param fieldNamesForIncidents List of field names to mget from the Incidents class
-	 * @param fieldNamesForIncidentsFields List of field names to mget from the IncidentField class
+	 *
+	 * @param incidentFieldId                      ID of the Incidentfield (question) that has been selected
+	 * @param dateField                            Name of field to use for filtering by date
+	 * @param startDate                            Starting date to filter by
+	 * @param endDate                              Ending date to filter by
+	 * @param fieldNamesForIncidents               List of field names to mget from the Incidents class
+	 * @param fieldNamesForIncidentsFields         List of field names to mget from the IncidentField class
 	 * @param fieldNamesForIncidentsFieldResponses List of field names to mget from the IncidentFieldResponse class
 	 * @return a list of Maps corresponding to data rows with the requested columns
 	 */
 	private List<Map<String, Object>> getFilteredFieldDataForIncidents(
 			Long incidentFieldId,
 			String dateField,
-			LocalDateTime startDate,
-			LocalDateTime endDate,
+			LocalDate startDate,
+			LocalDate endDate,
 			Set<String> fieldNamesForIncidents,
 			Set<String> fieldNamesForIncidentsFields,
 			Set<String> fieldNamesForIncidentsFieldResponses
@@ -298,7 +302,8 @@ public class StatisticService {
 
 	/**
 	 * Maps a single Tuple to one or more Maps. If the Tuple contains a column with a list, a map is created for each value in the list.
-	 * @param tuple The Tuple holding the data
+	 *
+	 * @param tuple          The Tuple holding the data
 	 * @param allValidFields Valid fields to use as key for extracting data
 	 * @return One Map of the data in most cases. Multiple maps if a column of data contains a list.
 	 */
@@ -347,7 +352,7 @@ public class StatisticService {
 		return resultList;
 	}
 
-	private List<Predicate> filterByDateField(String dateField, LocalDateTime startDate, LocalDateTime endDate, From<?, ?> join, CriteriaBuilder cb) {
+	private List<Predicate> filterByDateField(String dateField, LocalDate startDate, LocalDate endDate, From<?, ?> join, CriteriaBuilder cb) {
 		List<Predicate> predicates = new ArrayList<>();
 		if (dateField != null && (startDate != null || endDate != null)) {
 			if (startDate != null) {
@@ -678,6 +683,7 @@ public class StatisticService {
 
 	/**
 	 * Formats a label for the chart
+	 *
 	 * @param value       value of the label
 	 * @param groupDateBy field specifying how dates should be grouped.
 	 * @return a formatted label
@@ -814,7 +820,9 @@ public class StatisticService {
 
 			Class<?> fieldType = field.getType();
 			// if the field is relatable or a User, return the 'name' of the relatable
-			if (User.class.isAssignableFrom(fieldType) || fieldType.isAssignableFrom(Relatable.class)) {
+			if (OrganisationUnit.class.isAssignableFrom(fieldType)
+					|| User.class.isAssignableFrom(fieldType)
+					|| fieldType.isAssignableFrom(Relatable.class)) {
 				return Optional.of(fieldName + ".name");
 			}
 			return Optional.empty();
@@ -826,6 +834,7 @@ public class StatisticService {
 
 	/**
 	 * Returns a prefix used spoecifically to indicate which Incident-related entity should be used as source for a data field
+	 *
 	 * @param entityClass
 	 * @return
 	 */
@@ -835,6 +844,7 @@ public class StatisticService {
 
 	/**
 	 * Removes any Incident-related prefix from the string
+	 *
 	 * @param str
 	 * @param prefix
 	 * @return

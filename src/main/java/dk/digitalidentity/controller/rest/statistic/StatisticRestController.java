@@ -22,6 +22,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Map;
 import java.util.NoSuchElementException;
@@ -49,8 +50,8 @@ public class StatisticRestController {
 			@RequestParam(required = false) final String x, // X-axis field, usually for label
 			@RequestParam(required = false) final String y, // Y-axis field, usually for values
 			@RequestParam(required = false) final Period groupTimeBy,
-			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy HH:mm:ss") final LocalDateTime startDate,
-			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy HH:mm:ss") final LocalDateTime endDate,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate startDate,
+			@RequestParam(required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate endDate,
 			@RequestParam(required = false) final Long incidentFieldId
 	) {
 		// find the relevant chart config

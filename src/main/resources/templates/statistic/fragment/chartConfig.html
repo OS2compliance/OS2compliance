@@ -21,12 +21,12 @@
 <div id="timePeriodContainer">
     <div class="form-group" th:hidden="${!config.showStartTime}">
         <label for="fromTimePicker" class="form-label col-4">Fra tidspunkt</label>
-        <input id="fromTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultStartTime, 'dd/MM-yyyy HH:mm:ss')}"/>
+        <input id="fromTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultStartTime, 'dd/MM-yyyy')}"/>
     </div>
 
     <div class="form-group" th:hidden="${!config.showEndTime}">
         <label for="toTimePicker" class="form-label col-4">Til tidspunkt</label>
-        <input id="toTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultEndTime, 'dd/MM-yyyy HH:mm:ss')}"/>
+        <input id="toTimePicker" type="text" class="form-control datepicker col-7" th:value="${#temporals.format(config.defaultEndTime, 'dd/MM-yyyy')}"/>
     </div>
 
     <div class="form-group" th:hidden="${!config.showGroupTime}">

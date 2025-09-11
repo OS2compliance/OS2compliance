@@ -10,8 +10,7 @@ import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
+import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
 import java.util.List;
 import java.util.Optional;
@@ -79,8 +78,8 @@ public class ChartConfigurationService {
 		}
 
 		// Calculate time fields
-		LocalDateTime defaultStartTime = toLocalDateTime(chartConfig.getDefaultStartTime());
-		LocalDateTime defaultEndTime = toLocalDateTime(chartConfig.getDefaultEndTime());
+		LocalDate defaultStartTime = toLocalDate(chartConfig.getDefaultStartTime());
+		LocalDate defaultEndTime = toLocalDate(chartConfig.getDefaultEndTime());
 		boolean showStartTime = false;
 		boolean showEndTime = false;
 		switch (chartConfig.getSelectablePeriod()) {
@@ -122,23 +121,24 @@ public class ChartConfigurationService {
 				.build();
 	}
 
-	private LocalDateTime toLocalDateTime(DateTimePreset preset) {
-		LocalDateTime now = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS);
-		LocalDateTime startOfDay = now.withHour(0).withMinute(0).withSecond(0).withNano(0);
-		LocalDateTime endOfDay = now.withHour(23).withMinute(59).withSecond(59).withNano(999999999);
+	/**
+	 * Maps a preset to a local date relative to right now
+	 * @param preset DateTimePreset
+	 * @return LocalDate relative to time right now
+	 */
+	private LocalDate toLocalDate(DateTimePreset preset) {
+		LocalDate now = LocalDate.now();
 		int quarterStartMonth = ((now.getMonthValue() - 1) / 3) * 3 + 1;
 		return switch (preset) {
-			case YEAR_START -> startOfDay.with(TemporalAdjusters.firstDayOfYear());
-			case YEAR_END -> endOfDay.with(TemporalAdjusters.lastDayOfYear());
-			case QUARTER_START -> startOfDay.withMonth(quarterStartMonth)
+			case YEAR_START -> now.with(TemporalAdjusters.firstDayOfYear());
+			case YEAR_END -> now.with(TemporalAdjusters.lastDayOfYear());
+			case QUARTER_START -> now.withMonth(quarterStartMonth)
 					.with(TemporalAdjusters.firstDayOfMonth());
-			case QUARTER_END -> endOfDay.withMonth(quarterStartMonth)
+			case QUARTER_END -> now.withMonth(quarterStartMonth)
 					.plusMonths(2)
 					.with(TemporalAdjusters.lastDayOfMonth());
-			case MONTH_START -> startOfDay.with(TemporalAdjusters.firstDayOfMonth());
-			case MONTH_END -> endOfDay.with(TemporalAdjusters.lastDayOfMonth());
-			case DAY_START -> startOfDay;
-			case DAY_END -> endOfDay;
+			case MONTH_START -> now.with(TemporalAdjusters.firstDayOfMonth());
+			case MONTH_END -> now.with(TemporalAdjusters.lastDayOfMonth());
 			case CURRENT_TIME -> now;
 			default -> null;
 		};

@@ -6,7 +6,7 @@ import dk.digitalidentity.statistic.enumerable.Period;
 import lombok.Builder;
 import lombok.Getter;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 
 @Getter
@@ -25,9 +25,9 @@ public class ChartConfigurationDTO {
 	private List<EntityFieldChoiceDTO> allowedYFieldChoices;
 	private Period groupTimeByField;
 	private boolean showStartTime;
-	private LocalDateTime defaultStartTime;
+	private LocalDate defaultStartTime;
 	private boolean showEndTime;
-	private LocalDateTime defaultEndTime;
+	private LocalDate defaultEndTime;
 	private boolean yFieldFromXField;
 	private boolean xFieldFromYField;
 }
