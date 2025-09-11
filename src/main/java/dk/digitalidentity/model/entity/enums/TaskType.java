@@ -1,9 +1,10 @@
 package dk.digitalidentity.model.entity.enums;
 
+import dk.digitalidentity.model.entity.interfaces.HasMessage;
 import lombok.Getter;
 
 @Getter
-public enum TaskType {
+public enum TaskType implements HasMessage {
     CHECK("Kontrol"),
     TASK("Opgave");
 

@@ -8,6 +8,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.IncidentType;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMessage;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.security.SecurityUtil;
@@ -641,7 +642,6 @@ public class StatisticService {
 
 	/**
 	 * Formats a label for the chart
-	 *
 	 * @param value       value of the label
 	 * @param groupDateBy field specifying how dates should be grouped.
 	 * @return a formatted label
@@ -658,6 +658,9 @@ public class StatisticService {
 			case LocalDateTime parsedLocalDateTime -> {
 				LocalDate localDate = parsedLocalDateTime.toLocalDate();
 				return formatDateLabel(localDate, groupDateBy);
+			}
+			case HasMessage messageEnum -> {
+				return messageEnum.getMessage();
 			}
 			default -> {
 				return String.valueOf(value); // not a date

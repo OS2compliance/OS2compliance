@@ -1,12 +1,12 @@
 package dk.digitalidentity.model.entity.enums;
 
+import dk.digitalidentity.model.entity.interfaces.HasMessage;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.RequiredArgsConstructor;
 
 @Getter
 @AllArgsConstructor
-public enum DPIACompletionStatus {
+public enum DPIACompletionStatus implements HasMessage {
 	COMPLETED("Gennemført"),
 	OPTED_OUT("Fravalgt"),
 	PENDING("Ikke Gennemført");

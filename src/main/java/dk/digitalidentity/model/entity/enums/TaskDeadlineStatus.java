@@ -1,9 +1,10 @@
 package dk.digitalidentity.model.entity.enums;
 
+import dk.digitalidentity.model.entity.interfaces.HasMessage;
 import lombok.Getter;
 
 @Getter
-public enum TaskDeadlineStatus {
+public enum TaskDeadlineStatus implements HasMessage {
     FUTURE("Kommende"),
     EXCEEDED("Overskredet"),
     COMPLETED("Udført");

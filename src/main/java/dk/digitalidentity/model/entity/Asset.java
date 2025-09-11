@@ -15,6 +15,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.Ownable;
+import dk.digitalidentity.service.statistic.StatisticLabel;
 import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
 import jakarta.annotation.Nullable;
 import jakarta.persistence.CascadeType;
@@ -260,6 +261,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 		return this.responsibleUsers.contains(user) || this.managers.contains(user);
 	}
 
+	@StatisticLabel("Status for konsekvensanalyse")
 	@Formula("(SELECT CASE " +
 			"WHEN a.dpia_opt_out THEN 'OPTED_OUT' " +
 			"WHEN EXISTS (SELECT 1 FROM dpia_asset da WHERE da.asset_id = id) THEN 'COMPLETED' " +
