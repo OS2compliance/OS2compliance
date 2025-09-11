@@ -1,4 +1,4 @@
-package dk.digitalidentity.service.statistic.dto.chartJS;
+package dk.digitalidentity.statistic.dto.chartJS;
 
 import lombok.Getter;
 import lombok.Setter;

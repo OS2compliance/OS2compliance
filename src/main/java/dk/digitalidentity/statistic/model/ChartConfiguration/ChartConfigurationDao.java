@@ -1,4 +1,4 @@
-package dk.digitalidentity.service.statistic.model.ChartConfiguration;
+package dk.digitalidentity.statistic.model.ChartConfiguration;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

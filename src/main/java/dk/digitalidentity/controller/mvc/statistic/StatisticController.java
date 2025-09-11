@@ -6,9 +6,9 @@ import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
-import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
-import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfiguration;
-import dk.digitalidentity.service.statistic.model.ChartConfiguration.ChartConfigurationService;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
+import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfiguration;
+import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfigurationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
@@ -59,7 +59,7 @@ public class StatisticController {
 	public String getModal(final Model model, @PathVariable("section") String section) {
 
 		String lowercaseSection = section.toLowerCase();
-		if (lowercaseSection == null || !statisticSupportedSections.contains(lowercaseSection)) {
+		if (!statisticSupportedSections.contains(lowercaseSection)) {
 			throw new IllegalArgumentException();
 		}
 

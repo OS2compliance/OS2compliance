@@ -1,4 +1,4 @@
-package dk.digitalidentity.service.statistic.dto;
+package dk.digitalidentity.statistic.dto;
 
 public record EntityFieldChoiceDTO(
 	String fieldName,

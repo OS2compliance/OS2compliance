@@ -1,8 +1,8 @@
-package dk.digitalidentity.service.statistic.dto;
+package dk.digitalidentity.statistic.dto;
 
-import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
-import dk.digitalidentity.service.statistic.enumerable.ChartType;
-import dk.digitalidentity.service.statistic.enumerable.Period;
+import dk.digitalidentity.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.statistic.enumerable.ChartType;
+import dk.digitalidentity.statistic.enumerable.Period;
 import lombok.Builder;
 import lombok.Getter;
 

@@ -32,7 +32,7 @@
     <div class="form-group" th:hidden="${!config.showGroupTime}">
         <label for="periodGroupingSelector" class="form-label col-4">Vælg gruppering af datoer</label>
         <select id="periodGroupingSelector" class="form-control col-7">
-            <option th:each="period : ${T(dk.digitalidentity.service.statistic.enumerable.Period).values()}" th:value="${period}" th:text="${period.getName()}"></option>
+            <option th:each="period : ${T(dk.digitalidentity.statistic.enumerable.Period).values()}" th:value="${period}" th:text="${period.getName()}"></option>
         </select>
     </div>
 </div>

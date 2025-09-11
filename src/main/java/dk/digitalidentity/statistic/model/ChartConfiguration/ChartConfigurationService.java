@@ -1,12 +1,12 @@
-package dk.digitalidentity.service.statistic.model.ChartConfiguration;
+package dk.digitalidentity.statistic.model.ChartConfiguration;
 
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.service.IncidentService;
-import dk.digitalidentity.service.statistic.StatisticService;
-import dk.digitalidentity.service.statistic.dto.ChartConfigurationDTO;
-import dk.digitalidentity.service.statistic.dto.EntityFieldChoiceDTO;
-import dk.digitalidentity.service.statistic.enumerable.DateTimePreset;
-import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
+import dk.digitalidentity.statistic.StatisticService;
+import dk.digitalidentity.statistic.dto.ChartConfigurationDTO;
+import dk.digitalidentity.statistic.dto.EntityFieldChoiceDTO;
+import dk.digitalidentity.statistic.enumerable.DateTimePreset;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 

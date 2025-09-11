@@ -1,4 +1,4 @@
-package dk.digitalidentity.service.statistic;
+package dk.digitalidentity.statistic;
 
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
@@ -14,15 +14,15 @@ import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.UserService;
-import dk.digitalidentity.service.statistic.interfaces.StatisticEnabled;
-import dk.digitalidentity.service.statistic.enumerable.AggregationMethod;
-import dk.digitalidentity.service.statistic.interfaces.ChartJSDatasetable;
-import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsDataDTO;
-import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsDataPointDTO;
-import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsGeneralDatasetDTO;
-import dk.digitalidentity.service.statistic.dto.chartJS.ChartJsPieDatasetDTO;
-import dk.digitalidentity.service.statistic.enumerable.ChartType;
-import dk.digitalidentity.service.statistic.enumerable.Period;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
+import dk.digitalidentity.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.statistic.interfaces.ChartJSDatasetable;
+import dk.digitalidentity.statistic.dto.chartJS.ChartJsDataDTO;
+import dk.digitalidentity.statistic.dto.chartJS.ChartJsDataPointDTO;
+import dk.digitalidentity.statistic.dto.chartJS.ChartJsGeneralDatasetDTO;
+import dk.digitalidentity.statistic.dto.chartJS.ChartJsPieDatasetDTO;
+import dk.digitalidentity.statistic.enumerable.ChartType;
+import dk.digitalidentity.statistic.enumerable.Period;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Tuple;
 import jakarta.persistence.criteria.CriteriaBuilder;
@@ -93,6 +93,19 @@ public class StatisticService {
 		};
 	}
 
+	/**
+	 * Specific implementation for Incident-related charts
+	 * @param chartType type of chart
+	 * @param xField field name for x-axis
+	 * @param yField field name for y-axis
+	 * @param aggregation type of aggregation to perform
+	 * @param groupTimeBy type of time period grouping to implement
+	 * @param dateField field name used for filtering by date
+	 * @param startDate date used for start-date of filtering
+	 * @param endDate date used for end-date of filtering
+	 * @param incidentFieldId the id of the IncidentField selected
+	 * @return DTO with data for a ChartJS chart
+	 */
 	public ChartJsDataDTO generateIncidentChart(
 			ChartType chartType,
 			String xField,
@@ -143,6 +156,12 @@ public class StatisticService {
 				;
 	}
 
+	/**
+	 * Checks for presence of a prefix and add the non-prefixed string to the relevant Incident field list.
+	 * @param field field
+	 * @param prefixMap map of prefixes and list
+	 * @return the value without prefix, no matter if it was added to a list or not
+	 */
 	private String removePrefixAndAddToRelevantList(String field, Map<String, Set<String>> prefixMap) {
 		for (Map.Entry<String, Set<String>> entry : prefixMap.entrySet()) {
 			if (field.startsWith(entry.getKey())) {
@@ -210,6 +229,17 @@ public class StatisticService {
 				.toList();
 	}
 
+	/**
+	 * Specific implementation for getting data from Incident-related classes
+	 * @param incidentFieldId ID of the Incidentfield (question) that has been selected
+	 * @param dateField Name of field to use for filtering by date
+	 * @param startDate Starting date to filter by
+	 * @param endDate Ending date to filter by
+	 * @param fieldNamesForIncidents List of field names to mget from the Incidents class
+	 * @param fieldNamesForIncidentsFields List of field names to mget from the IncidentField class
+	 * @param fieldNamesForIncidentsFieldResponses List of field names to mget from the IncidentFieldResponse class
+	 * @return a list of Maps corresponding to data rows with the requested columns
+	 */
 	private List<Map<String, Object>> getFilteredFieldDataForIncidents(
 			Long incidentFieldId,
 			String dateField,
@@ -266,6 +296,12 @@ public class StatisticService {
 				.toList();
 	}
 
+	/**
+	 * Maps a single Tuple to one or more Maps. If the Tuple contains a column with a list, a map is created for each value in the list.
+	 * @param tuple The Tuple holding the data
+	 * @param allValidFields Valid fields to use as key for extracting data
+	 * @return One Map of the data in most cases. Multiple maps if a column of data contains a list.
+	 */
 	private List<Map<String, Object>> mapToupleToMaps(Tuple tuple, Set<String> allValidFields) {
 		Map<String, Object> baseFieldMap = new LinkedHashMap<>();
 		String collectionFieldName = null;
@@ -788,10 +824,21 @@ public class StatisticService {
 		}
 	}
 
+	/**
+	 * Returns a prefix used spoecifically to indicate which Incident-related entity should be used as source for a data field
+	 * @param entityClass
+	 * @return
+	 */
 	public String getPrefixForField(Class<?> entityClass) {
 		return "_" + entityClass.getSimpleName().toUpperCase() + "_";
 	}
 
+	/**
+	 * Removes any Incident-related prefix from the string
+	 * @param str
+	 * @param prefix
+	 * @return
+	 */
 	public static String removePrefix(String str, String prefix) {
 		// Handle null cases
 		if (str == null || prefix == null) {
