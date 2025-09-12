@@ -36,6 +36,13 @@ export async function fetchStatistic(config) {
 
 }
 
+export function destroyChart(chartCanvas) {
+    const existingChart = Chart.getChart(chartCanvas);
+    if (existingChart) {
+        existingChart.destroy();
+    }
+}
+
 export async function renderChart(argumentConfig, elementId) {
     const ctx = document.getElementById(elementId);
 
@@ -45,10 +52,7 @@ export async function renderChart(argumentConfig, elementId) {
     }
 
     // destroy any existing instance of a chart
-    const existingChart = Chart.getChart(ctx);
-    if (existingChart) {
-        existingChart.destroy();
-    }
+    destroyChart(ctx)
 
     const config = await fetchStatistic(argumentConfig);
     const data = config.data;
@@ -105,7 +109,12 @@ async function onChartClick(e, entityName) {
         if (entityIds) {
             url += `?entityIds=${entityIds.join(',')}`
         }
-        await fetchHtml(url, "relevantEntityListContainer")
+
+        const entityListcontainer = document.getElementById('relevantEntityListContainer');
+        const networkService = new NetworkService();
+        if (await networkService.GetFragment(url, entityListcontainer)) {
+            // Init here if needed
+        }
     }
 }
 

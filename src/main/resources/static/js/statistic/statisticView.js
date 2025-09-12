@@ -1,4 +1,4 @@
-import {renderChart} from "./statistic-service.js";
+import {renderChart, destroyChart} from "./statistic-service.js";
 
 export async function initStatisticView(domain) {
 
@@ -30,6 +30,13 @@ async function openStatisticModal(domain) {
 }
 
 async function getConfigForChart(chartId, entityName) {
+    // clear entity list, if any
+    clearEntityList()
+
+    // Clear any existing chart
+    const ctx = document.getElementById('diagramCanvas');
+    destroyChart(ctx)
+
     if (!chartId) {
         console.error('No chart id found for chartId');
         return;
@@ -59,6 +66,7 @@ async function initChartPicker() {
         const value = selectedOption.value;
         const entityName = selectedOption.dataset.entityName;
         await getConfigForChart(value, entityName);
+
     })
 
     // Gets fields for for the first in list on load
@@ -66,6 +74,13 @@ async function initChartPicker() {
     const value = selectedOption.value;
     const entityName = selectedOption.dataset.entityName;
     await getConfigForChart(value, entityName);
+}
+
+function clearEntityList() {
+    const entityListcontainer = document.getElementById('relevantEntityListContainer');
+    for (const child of entityListcontainer.children) {
+        child.remove();
+    }
 }
 
 function initFooterButtons() {

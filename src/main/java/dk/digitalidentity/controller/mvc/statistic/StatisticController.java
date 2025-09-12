@@ -117,7 +117,7 @@ public class StatisticController {
 			case "incident" -> incidentService.getByIds(entityIds).stream().map(e -> new EntityListDTO(e.getName(), "/incidents/logs/" + e.getId())).toList();
 			case "task" -> taskService.getByIds(entityIds).stream().map(e -> new EntityListDTO(e.getName(), "/tasks/" + e.getId())).toList();
 			case "dpia" -> dPIAService.getByIds(entityIds).stream().map(e -> new EntityListDTO(e.getName(), "/dpia/" + e.getId())).toList();
-			case "threatAssessment" -> threatAssessmentService.getByIds(entityIds).stream().map(e -> new EntityListDTO(e.getName(), "/risks/" + e.getId())).toList();
+			case "threatassessment" -> threatAssessmentService.getByIds(entityIds).stream().map(e -> new EntityListDTO(e.getName(), "/risks/" + e.getId())).toList();
 			default -> throw new IllegalArgumentException();
 		};
 
