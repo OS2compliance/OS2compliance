@@ -413,7 +413,7 @@ public class StatisticService {
 						row -> String.valueOf(row.get(stackField)),
 						Collectors.groupingBy(
 								row -> formatLabel(row.get(xField), groupDateBy),
-								Collectors.mapping(row -> new GroupingDTO( row.get(yField), row.get("id")), Collectors.toList())
+								Collectors.mapping(row -> new GroupingDTO(row.get(yField), row.get("id")), Collectors.toList())
 						)
 				));
 
@@ -427,7 +427,10 @@ public class StatisticService {
 					.map(category -> {
 						List<GroupingDTO> values = stackEntry.getValue().getOrDefault(category, new ArrayList<>());
 						Double value = aggregateValues(values, aggregation);
-						List<String> ids = stackEntry.getValue().getOrDefault("id", new ArrayList<>()).stream().map(Object::toString).toList();
+						List<String> ids = values.stream()
+								.map(dto -> dto.id)
+								.map(Object::toString)
+								.toList();
 						return toChartDataDTO(value, category, ids);
 					})
 					.toList();
