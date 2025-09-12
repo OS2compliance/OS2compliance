@@ -1,3 +1,7 @@
+// import "../../vendor/date-fns/date-fns.js"
+import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
+
+
 export const CHARTTYPE = {
     BAR: "BAR",
     PIE: "PIE",
@@ -55,17 +59,22 @@ export async function renderChart(argumentConfig, elementId) {
     destroyChart(ctx)
 
     const config = await fetchStatistic(argumentConfig);
+
+    console.log(config)
     const data = config.data;
 
     const chartPicker = document.getElementById('diagramSelector');
     const selectedOption = chartPicker.selectedOptions[0]
     const currentEntityName = selectedOption.dataset.entityName;
 
+    console.log(config)
+
     // Chart configuration based on type
     const chartConfiguration = {
         type: config.type === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : config.type.toLocaleLowerCase(),
         data: data,
         options: {
+            locale: 'da-DK',
             responsive: true,
             maintainAspectRatio: false,
             plugins: {
@@ -83,15 +92,26 @@ export async function renderChart(argumentConfig, elementId) {
                 key: "y",
             },
             onClick: (e) => onChartClick(e, currentEntityName),
+            scales: {
+                x: {},
+                y: {}
+            }
         }
     };
 
+    console.log(config.xscaleDateType)
+    if (config.xscaleDateType) {
+        chartConfiguration.options.scales.x.type = 'time'
+        chartConfiguration.options.scales.x.time = {
+            unit: 'month'
+        }
+    }
+    console.log(chartConfiguration)
+
     // Add stacked configuration for stacked bar charts
     if (config.type === CHARTTYPE.STACKED_BAR) {
-        chartConfiguration.options.scales = {
-            x: {stacked: true},
-            y: {stacked: true}
-        };
+        chartConfiguration.options.scales.x.stacked = true
+        chartConfiguration.options.scales.y.stacked = true
     }
 
     return new Chart(ctx, chartConfiguration);

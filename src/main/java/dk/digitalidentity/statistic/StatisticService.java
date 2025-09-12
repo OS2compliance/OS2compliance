@@ -62,6 +62,9 @@ public class StatisticService {
 	private final UserService userService;
 	private final IncidentService incidentService;
 
+	record DataRow(String id, String key, Object value, String dataSetKey) {
+	}
+
 	public ChartJsDataDTO generateChart(Class<? extends StatisticEnabled> entityClass,
 			ChartType chartType,
 			String xField,
@@ -401,50 +404,67 @@ public class StatisticService {
 			Period groupDateBy,
 			String stackField
 	) {
-		// get all unique x categories
-		Set<Object> xCategoriesSet = getUniqueCategoryLabels(rawData, xField);
+		// map to datarows
+		List<DataRow> dataRows = rawData.stream().map(d -> new DataRow(d.get("id").toString(), d.get(xField).toString(), d.get(yField), d.get(stackField).toString())).toList();
 
-		// Sort the categories based on their type and grouping
-		List<String> xCategories = sortAndFormatCategories(xCategoriesSet, groupDateBy);
-
-		// Group by stack field (yField value), then by formatted x field
-		Map<String, Map<String, List<GroupingDTO>>> stackData = rawData.stream()
-				.collect(Collectors.groupingBy(
-						row -> String.valueOf(row.get(stackField)),
-						Collectors.groupingBy(
-								row -> formatLabel(row.get(xField), groupDateBy),
-								Collectors.mapping(row -> new GroupingDTO(row.get(yField), row.get("id")), Collectors.toList())
-						)
-				));
-
-		ChartJsDataDTO chartData = new ChartJsDataDTO();
+		// group by stack field, to sort into datasets
+		Map<String, List<DataRow>> dataSetMap = dataRows.stream()
+				.collect(Collectors.groupingBy(row -> row.dataSetKey));
 
 		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
-
-		for (Map.Entry<String, Map<String, List<GroupingDTO>>> stackEntry : stackData.entrySet()) {
-			// Create list of ChartJsDataDTO objects belonging to each stack
-			List<ChartJsDataPointDTO> data = xCategories.stream()
-					.map(category -> {
-						List<GroupingDTO> values = stackEntry.getValue().getOrDefault(category, new ArrayList<>());
-						Double value = aggregateValues(values, aggregation);
-						List<String> ids = values.stream()
-								.map(dto -> dto.id)
-								.map(Object::toString)
-								.toList();
-						return toChartDataDTO(value, category, ids);
-					})
-					.toList();
-
-			String parsedDatasetLabel = stackEntry.getKey() == null
-					|| stackEntry.getKey().isEmpty()
-					|| stackEntry.getKey().equalsIgnoreCase("null")
-					? yField : stackEntry.getKey();
-			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(parsedDatasetLabel, data);
-			datasets.add(dataset);
+		for (Map.Entry<String, List<DataRow>> entry : dataSetMap.entrySet()) {
+			datasets.add(toDataSet(entry.getKey(), entry.getValue(), aggregation));
 		}
 
+		ChartJsDataDTO chartData = new ChartJsDataDTO();
 		chartData.setDatasets(datasets);
+		chartData.setLabels(null); // only relevant for pie charts
 		return chartData;
+
+		//		// get all unique x categories
+		//		Set<Object> xCategoriesSet = getUniqueCategoryLabels(rawData, xField);
+		//
+		//		// Sort the categories based on their type and grouping
+		//		List<String> xCategories = sortAndFormatCategories(xCategoriesSet, groupDateBy);
+		//
+		//		// Group by stack field (yField value), then by formatted x field
+		//		Map<String, Map<String, List<GroupingDTO>>> stackData = rawData.stream()
+		//				.collect(Collectors.groupingBy(
+		//						row -> String.valueOf(formatLabel(row.get(stackField), groupDateBy)),
+		//						Collectors.groupingBy(
+		//								row -> formatLabel(row.get(xField), groupDateBy),
+		//								Collectors.mapping(row -> new GroupingDTO(formatLabel(row.get(yField), groupDateBy), row.get("id")), Collectors.toList())
+		//						)
+		//				));
+		//
+		//		ChartJsDataDTO chartData = new ChartJsDataDTO();
+		//
+		//		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
+		//
+		//		for (Map.Entry<String, Map<String, List<GroupingDTO>>> stackEntry : stackData.entrySet()) {
+		//			// Create list of ChartJsDataDTO objects belonging to each stack
+		//			List<ChartJsDataPointDTO> data = xCategories.stream()
+		//					.map(category -> {
+		//						List<GroupingDTO> values = stackEntry.getValue().getOrDefault(category, new ArrayList<>());
+		//						Double value = aggregateValues(values, aggregation);
+		//						List<String> ids = values.stream()
+		//								.map(dto -> dto.id)
+		//								.map(Object::toString)
+		//								.toList();
+		//						return toChartDataDTO(value, category, ids);
+		//					})
+		//					.toList();
+		//
+		//			String parsedDatasetLabel = stackEntry.getKey() == null
+		//					|| stackEntry.getKey().isEmpty()
+		//					|| stackEntry.getKey().equalsIgnoreCase("null")
+		//					? yField : stackEntry.getKey();
+		//			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(parsedDatasetLabel, data);
+		//			datasets.add(dataset);
+		//		}
+		//
+		//		chartData.setDatasets(datasets);
+		//		return chartData;
 	}
 
 	/**
@@ -464,21 +484,35 @@ public class StatisticService {
 			AggregationMethod aggregation,
 			Period groupDateBy
 	) {
-		// Group by formatted x field
-		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
-
-		ChartJsDataDTO chartData = new ChartJsDataDTO();
+		// map to datarows
+		List<DataRow> dataRows = rawData.stream().map(d ->
+						new DataRow(d.get("id").toString(), d.get(xField).toString(), d.get(yField), null))
+				.toList();
 
 		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
+		datasets.add(toDataSet(null ,dataRows, aggregation));
 
-		// Create list of ChartJsDataDTO objects
-		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
-
-		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
-		datasets.add(dataset);
-
+		ChartJsDataDTO chartData = new ChartJsDataDTO();
 		chartData.setDatasets(datasets);
+		chartData.setLabels(null); // only relevant for pie charts
 		return chartData;
+
+		//
+		//		// Group by formatted x field
+		//		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
+		//
+		//		ChartJsDataDTO chartData = new ChartJsDataDTO();
+		//
+		//		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
+		//
+		//		// Create list of ChartJsDataDTO objects
+		//		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
+		//
+		//		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
+		//		datasets.add(dataset);
+		//
+		//		chartData.setDatasets(datasets);
+		//		return chartData;
 	}
 
 	/**
@@ -498,83 +532,89 @@ public class StatisticService {
 			AggregationMethod aggregation,
 			Period groupDateBy
 	) {
-		// Group by formatted x field
-		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
-
-		ChartJsDataDTO chartData = new ChartJsDataDTO();
+		// map to datarows
+		List<DataRow> dataRows = rawData.stream().map(d ->
+						new DataRow(d.get("id").toString(), d.get(xField).toString(), d.get(yField), null))
+				.toList();
 
 		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
 
-		List<Map.Entry<String, List<GroupingDTO>>> sortedAndGroupedData = groupedData.entrySet().stream()
-				.sorted(Map.Entry.comparingByKey())
-				.toList();
+		datasets.add(toDataSet(null, dataRows, aggregation));
 
-		// Create list of ChartJsDataDTO objects
-
-		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
-
-		// create a data array as pie charts can only figure out labels from that structure
-		List<String> labels = sortedAndGroupedData.stream()
-				.map(Map.Entry::getKey)
-				.toList();
-		chartData.setLabels(labels);
-
-		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
-		datasets.add(dataset);
-
+		ChartJsDataDTO chartData = new ChartJsDataDTO();
 		chartData.setDatasets(datasets);
+		chartData.setLabels(datasets.getFirst().getData().stream()
+				.map(ChartJsDataPointDTO::getX).toList()); // only relevant for pie charts
 		return chartData;
+
+		//
+		//
+		//		// Group by formatted x field
+		//		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
+		//
+		//		ChartJsDataDTO chartData = new ChartJsDataDTO();
+		//
+		//		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
+		//
+		//		List<Map.Entry<String, List<GroupingDTO>>> sortedAndGroupedData = groupedData.entrySet().stream()
+		//				.sorted(Map.Entry.comparingByKey())
+		//				.toList();
+		//
+		//		// Create list of ChartJsDataDTO objects
+		//
+		//		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
+		//
+		//		// create a data array as pie charts can only figure out labels from that structure
+		//		List<String> labels = sortedAndGroupedData.stream()
+		//				.map(Map.Entry::getKey)
+		//				.toList();
+		//		chartData.setLabels(labels);
+		//
+		//		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
+		//		datasets.add(dataset);
+		//
+		//		chartData.setDatasets(datasets);
+		//		return chartData;
 	}
 
-	private List<ChartJsDataPointDTO> toChartJSDataPointDTO(AggregationMethod aggregation, Map<String, List<GroupingDTO>> groupedData) {
-		return groupedData.entrySet().stream()
-				.map(entry -> {
-					List<GroupingDTO> values = entry.getValue();
-					Double value = aggregateValues(values, aggregation);
-					List<String> ids = entry.getValue().stream().map(groupingDTO -> groupingDTO.id.toString()).toList();
-					return toChartDataDTO(value, entry.getKey(), ids);
-				})
+	private ChartJsGeneralDatasetDTO toDataSet(String label, List<DataRow> dataRows, AggregationMethod aggregation) {
+		// Group data by label
+		Map<String, List<DataRow>> dataSetData = dataRows.stream()
+				.collect(Collectors.groupingBy(row -> row.key));
+
+		// Map to data points
+		List<ChartJsDataPointDTO> dataPoints = toChartJSDataPointDTO(aggregation, dataSetData);
+
+		// Create dataset
+		return ChartJsGeneralDatasetDTO.builder()
+				.data(dataPoints)
+				.label(formatLabel(label))
+				.build();
+	}
+
+	private List<ChartJsDataPointDTO> toChartJSDataPointDTO(AggregationMethod aggregation, Map<String, List<DataRow>> data) {
+
+		return data.entrySet().stream().map(e ->
+						ChartJsDataPointDTO.builder()
+								.x( formatLabel(e.getKey()))
+								.y(aggregateValues(e.getValue(), aggregation))
+								.entityIds(e.getValue().stream().map(v -> v.id).toList())
+								.build()
+				)
 				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
 				.toList();
+
+		//		return groupedData.entrySet().stream()
+		//				.map(entry -> {
+		//					List<GroupingDTO> values = entry.getValue();
+		//					Double value = aggregateValues(values, aggregation);
+		//					List<String> ids = entry.getValue().stream().map(groupingDTO -> groupingDTO.id.toString()).toList();
+		//					return toChartDataDTO(value, entry.getKey(), ids);
+		//				})
+		//				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
+		//				.toList();
 	}
 
-	record GroupingDTO(Object value, Object id) {
-	}
-
-	/**
-	 * Groups data by the provided x-axis field, with values of the provided y-axis field
-	 *
-	 * @param rawData     data entries from db
-	 * @param xField      name of the field holding the labels for the chart
-	 * @param yField      name of the field holding the values for the chart
-	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
-	 * @return a map of categories containing lists of data
-	 */
-	private Map<String, List<GroupingDTO>> groupData(
-			List<Map<String, Object>> rawData,
-			String xField,
-			String yField,
-			Period groupDateBy) {
-		return rawData.stream()
-				.collect(Collectors.groupingBy(
-								row -> formatLabel(row.get(xField), groupDateBy),
-								Collectors.mapping(row -> new GroupingDTO(row.get(yField), row.get("id")), Collectors.toList())
-						)
-				);
-	}
-
-	/**
-	 * Maps entries to a set of labels
-	 *
-	 * @param rawData entries from db
-	 * @param xField  the field in entries that contains the labels
-	 * @return a set of labels
-	 */
-	private Set<Object> getUniqueCategoryLabels(List<Map<String, Object>> rawData, String xField) {
-		return rawData.stream()
-				.map(row -> row.get(xField))
-				.collect(Collectors.toSet());
-	}
 
 	/**
 	 * Aggregates a list of values by the provided aggregation method
@@ -583,7 +623,7 @@ public class StatisticService {
 	 * @param aggregation the method of aggregation
 	 * @return the aggregation of the provided values
 	 */
-	private Double aggregateValues(List<GroupingDTO> values, AggregationMethod aggregation) {
+	private Double aggregateValues(List<DataRow> values, AggregationMethod aggregation) {
 		if (values.isEmpty())
 			return 0.0;
 
@@ -686,39 +726,36 @@ public class StatisticService {
 	 * @return ChartJsDataDTO conforming to ChartJS data structure
 	 */
 	private ChartJsDataPointDTO toChartDataDTO(Object value, String categoryLabel, List<String> entityIds) {
-		ChartJsDataPointDTO dataPoint = new ChartJsDataPointDTO();
-		dataPoint.setX(categoryLabel);  // Category label
-		dataPoint.setY(value);  // y-axis value
-		dataPoint.setEntityIds(entityIds); // Id for the relevant entity
-
-		return dataPoint;
+		return ChartJsDataPointDTO.builder()
+				.x(categoryLabel)
+				.y(value)
+				.entityIds(entityIds)
+				.build();
 	}
 
 	/**
 	 * Formats a label for the chart
-	 *
 	 * @param value       value of the label
-	 * @param groupDateBy field specifying how dates should be grouped.
 	 * @return a formatted label
 	 */
-	private String formatLabel(Object value, Period groupDateBy) {
+	private String formatLabel(Object value) {
 		if (value == null) {
-			return "Ingen værdi";
+			return null;
 		}
 
 		switch (value) {
-			case LocalDate parsedLocalDate -> {
-				return formatDateLabel(parsedLocalDate, groupDateBy);
-			}
-			case LocalDateTime parsedLocalDateTime -> {
-				LocalDate localDate = parsedLocalDateTime.toLocalDate();
-				return formatDateLabel(localDate, groupDateBy);
-			}
+			//			case LocalDate parsedLocalDate -> {
+			//				return formatDateLabel(parsedLocalDate, groupDateBy);
+			//			}
+			//			case LocalDateTime parsedLocalDateTime -> {
+			//				LocalDate localDate = parsedLocalDateTime.toLocalDate();
+			//				return formatDateLabel(localDate, groupDateBy);
+			//			}
 			case HasMessage messageEnum -> {
 				return messageEnum.getMessage();
 			}
 			default -> {
-				return String.valueOf(value); // not a date
+				return String.valueOf(value);
 			}
 		}
 	}
@@ -757,18 +794,18 @@ public class StatisticService {
 				.findFirst()
 				.orElse(null);
 
-		boolean isDateField = firstValue instanceof LocalDate || firstValue instanceof LocalDateTime;
-
-		if (isDateField && groupDateBy != null && groupDateBy != Period.ALL) {
-			return sortDateCategories(categories, groupDateBy);
-		}
-		else {
-			// For non-date fields or ungrouped dates, sort naturally
-			return categories.stream()
-					.sorted()
-					.map(Object::toString)
-					.toList();
-		}
+		//		boolean isDateField = firstValue instanceof LocalDate || firstValue instanceof LocalDateTime;
+		//
+		//		if (isDateField && groupDateBy != null && groupDateBy != Period.ALL) {
+		//			return sortDateCategories(categories, groupDateBy);
+		//		}
+		//		else {
+		// For non-date fields or ungrouped dates, sort naturally
+		return categories.stream()
+				.sorted()
+				.map(Object::toString)
+				.toList();
+		//		}
 	}
 
 	/**

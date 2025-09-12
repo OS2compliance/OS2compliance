@@ -90,6 +90,7 @@ public class StatisticRestController {
 		return ResponseEntity.ok(ChartJsConfigDTO.builder()
 				.title(chartConfig.getName())
 				.type(chartConfig.getType())
+				.xScaleDateType(groupTimeBy != null && groupTimeBy != Period.ALL)
 				.data(chartData)
 				.build());
 

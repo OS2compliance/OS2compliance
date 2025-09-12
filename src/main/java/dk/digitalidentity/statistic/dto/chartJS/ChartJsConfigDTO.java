@@ -12,5 +12,6 @@ public class ChartJsConfigDTO {
 	private String title;
 	private ChartType type;
 	private ChartJsDataDTO data;
+	private boolean xScaleDateType = false	;
 	private List<String> labels; // Only used for pie-charts and should be in same order as the data
 }
