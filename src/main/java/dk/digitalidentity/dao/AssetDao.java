@@ -47,4 +47,5 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
 
 	Set<Asset> findByResponsibleUsers_UuidContainsOrManagers_UuidContains(String uuid, String uuid1);
 
+	List<Asset> findAllById(Long id);
 }

@@ -6,6 +6,7 @@ import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
 import dk.digitalidentity.model.dto.enums.StatusColor;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -358,5 +359,9 @@ public class TaskService {
 			);
 		}
 		return tasks;
+	}
+
+	public List<Task> getByIds (List<Long> ids) {
+		return taskDao.findAllById(ids);
 	}
 }

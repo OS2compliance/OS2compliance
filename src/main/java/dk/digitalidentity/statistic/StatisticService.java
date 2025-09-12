@@ -17,11 +17,9 @@ import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import dk.digitalidentity.statistic.enumerable.AggregationMethod;
-import dk.digitalidentity.statistic.interfaces.ChartJSDatasetable;
 import dk.digitalidentity.statistic.dto.chartJS.ChartJsDataDTO;
 import dk.digitalidentity.statistic.dto.chartJS.ChartJsDataPointDTO;
 import dk.digitalidentity.statistic.dto.chartJS.ChartJsGeneralDatasetDTO;
-import dk.digitalidentity.statistic.dto.chartJS.ChartJsPieDatasetDTO;
 import dk.digitalidentity.statistic.enumerable.ChartType;
 import dk.digitalidentity.statistic.enumerable.Period;
 import jakarta.persistence.EntityManager;
@@ -206,6 +204,8 @@ public class StatisticService {
 				.filter(s -> !s.equalsIgnoreCase("null"))
 				.collect(Collectors.toSet());
 
+		validFields.add("id"); // Always get the id
+
 		Set<Selection<?>> selections = new HashSet<>(); // Set to filter out duplicates
 		for (String field : validFields) {
 			selections.add(getPropertyPath(field, root).alias(field));
@@ -275,6 +275,8 @@ public class StatisticService {
 		selections.addAll(getSelectionsFromFields(validIncidentFields, incidentJoin));
 		selections.addAll(getSelectionsFromFields(validIncidentFieldFields, fieldJoin));
 
+		selections.add(incidentJoin.get("id").alias("id")); // Always get id of incident
+
 		query.multiselect(new ArrayList<>(selections));
 
 		// Create predicates
@@ -294,6 +296,7 @@ public class StatisticService {
 		Set<String> allValidFields = new HashSet<>(validIncidentFields);
 		allValidFields.addAll(validIncidentResponseFields);
 		allValidFields.addAll(validIncidentFieldFields);
+		allValidFields.add("id");
 
 		return tuples.stream()
 				.flatMap(tuple -> mapToupleToMaps(tuple, allValidFields).stream())
@@ -405,26 +408,27 @@ public class StatisticService {
 		List<String> xCategories = sortAndFormatCategories(xCategoriesSet, groupDateBy);
 
 		// Group by stack field (yField value), then by formatted x field
-		Map<String, Map<String, List<Object>>> stackData = rawData.stream()
+		Map<String, Map<String, List<GroupingDTO>>> stackData = rawData.stream()
 				.collect(Collectors.groupingBy(
 						row -> String.valueOf(row.get(stackField)),
 						Collectors.groupingBy(
 								row -> formatLabel(row.get(xField), groupDateBy),
-								Collectors.mapping(row -> row.get(yField), Collectors.toList())
+								Collectors.mapping(row -> new GroupingDTO( row.get(yField), row.get("id")), Collectors.toList())
 						)
 				));
 
 		ChartJsDataDTO chartData = new ChartJsDataDTO();
 
-		List<ChartJSDatasetable> datasets = new ArrayList<>();
+		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
 
-		for (Map.Entry<String, Map<String, List<Object>>> stackEntry : stackData.entrySet()) {
+		for (Map.Entry<String, Map<String, List<GroupingDTO>>> stackEntry : stackData.entrySet()) {
 			// Create list of ChartJsDataDTO objects belonging to each stack
 			List<ChartJsDataPointDTO> data = xCategories.stream()
 					.map(category -> {
-						List<Object> values = stackEntry.getValue().getOrDefault(category, new ArrayList<>());
-						Object value = aggregateValues(values, aggregation);
-						return toChartDataDTO(value, category);
+						List<GroupingDTO> values = stackEntry.getValue().getOrDefault(category, new ArrayList<>());
+						Double value = aggregateValues(values, aggregation);
+						List<String> ids = stackEntry.getValue().getOrDefault("id", new ArrayList<>()).stream().map(Object::toString).toList();
+						return toChartDataDTO(value, category, ids);
 					})
 					.toList();
 
@@ -458,21 +462,14 @@ public class StatisticService {
 			Period groupDateBy
 	) {
 		// Group by formatted x field
-		Map<String, List<Object>> groupedData = groupData(rawData, xField, yField, groupDateBy);
+		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
 
 		ChartJsDataDTO chartData = new ChartJsDataDTO();
 
-		List<ChartJSDatasetable> datasets = new ArrayList<>();
+		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
 
 		// Create list of ChartJsDataDTO objects
-		List<ChartJsDataPointDTO> data = groupedData.entrySet().stream()
-				.map(entry -> {
-					List<Object> values = entry.getValue();
-					Object value = aggregateValues(values, aggregation);
-					return toChartDataDTO(value, entry.getKey());
-				})
-				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
-				.toList();
+		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
 
 		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
 		datasets.add(dataset);
@@ -499,34 +496,46 @@ public class StatisticService {
 			Period groupDateBy
 	) {
 		// Group by formatted x field
-		Map<String, List<Object>> groupedData = groupData(rawData, xField, yField, groupDateBy);
+		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
 
 		ChartJsDataDTO chartData = new ChartJsDataDTO();
 
-		List<ChartJSDatasetable> datasets = new ArrayList<>();
+		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
 
-		List<Map.Entry<String, List<Object>>> sortedAndGroupedData = groupedData.entrySet().stream()
+		List<Map.Entry<String, List<GroupingDTO>>> sortedAndGroupedData = groupedData.entrySet().stream()
 				.sorted(Map.Entry.comparingByKey())
 				.toList();
 
 		// Create list of ChartJsDataDTO objects
-		List<Double> data = sortedAndGroupedData.stream()
-				.map(entry -> {
-					List<Object> values = entry.getValue();
-					return aggregateValues(values, aggregation);
-				})
-				.toList();
 
+		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
+
+		// create a data array as pie charts can only figure out labels from that structure
 		List<String> labels = sortedAndGroupedData.stream()
 				.map(Map.Entry::getKey)
 				.toList();
 		chartData.setLabels(labels);
 
-		ChartJsPieDatasetDTO dataset = new ChartJsPieDatasetDTO(data);
+		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
 		datasets.add(dataset);
 
 		chartData.setDatasets(datasets);
 		return chartData;
+	}
+
+	private List<ChartJsDataPointDTO> toChartJSDataPointDTO(AggregationMethod aggregation, Map<String, List<GroupingDTO>> groupedData) {
+		return groupedData.entrySet().stream()
+				.map(entry -> {
+					List<GroupingDTO> values = entry.getValue();
+					Double value = aggregateValues(values, aggregation);
+					List<String> ids = entry.getValue().stream().map(groupingDTO -> groupingDTO.id.toString()).toList();
+					return toChartDataDTO(value, entry.getKey(), ids);
+				})
+				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
+				.toList();
+	}
+
+	record GroupingDTO(Object value, Object id) {
 	}
 
 	/**
@@ -538,7 +547,7 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return a map of categories containing lists of data
 	 */
-	private Map<String, List<Object>> groupData(
+	private Map<String, List<GroupingDTO>> groupData(
 			List<Map<String, Object>> rawData,
 			String xField,
 			String yField,
@@ -546,7 +555,7 @@ public class StatisticService {
 		return rawData.stream()
 				.collect(Collectors.groupingBy(
 								row -> formatLabel(row.get(xField), groupDateBy),
-								Collectors.mapping(row -> row.get(yField), Collectors.toList())
+								Collectors.mapping(row -> new GroupingDTO(row.get(yField), row.get("id")), Collectors.toList())
 						)
 				);
 	}
@@ -571,28 +580,28 @@ public class StatisticService {
 	 * @param aggregation the method of aggregation
 	 * @return the aggregation of the provided values
 	 */
-	private Double aggregateValues(List<Object> values, AggregationMethod aggregation) {
+	private Double aggregateValues(List<GroupingDTO> values, AggregationMethod aggregation) {
 		if (values.isEmpty())
 			return 0.0;
 
 		return switch (aggregation) {
 			case AggregationMethod.SUM -> values.stream()
 					.filter(Objects::nonNull)
-					.mapToDouble(v -> v instanceof Number number ? number.doubleValue() : 0.0)
+					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : 0.0)
 					.sum();
 			case AggregationMethod.AVERAGE -> values.stream()
 					.filter(Objects::nonNull)
-					.mapToDouble(v -> v instanceof Number number ? number.doubleValue() : 0.0)
+					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : 0.0)
 					.average()
 					.orElse(0.0);
 			case AggregationMethod.MAX -> values.stream()
 					.filter(Objects::nonNull)
-					.mapToDouble(v -> v instanceof Number number ? number.doubleValue() : Double.MIN_VALUE)
+					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : Double.MIN_VALUE)
 					.max()
 					.orElse(0.0);
 			case AggregationMethod.MIN -> values.stream()
 					.filter(Objects::nonNull)
-					.mapToDouble(v -> v instanceof Number number ? number.doubleValue() : Double.MAX_VALUE)
+					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : Double.MAX_VALUE)
 					.min()
 					.orElse(0.0);
 			default -> (double) values.size(); // Default to count
@@ -673,10 +682,11 @@ public class StatisticService {
 	 * @param categoryLabel label for the data point
 	 * @return ChartJsDataDTO conforming to ChartJS data structure
 	 */
-	private ChartJsDataPointDTO toChartDataDTO(Object value, String categoryLabel) {
+	private ChartJsDataPointDTO toChartDataDTO(Object value, String categoryLabel, List<String> entityIds) {
 		ChartJsDataPointDTO dataPoint = new ChartJsDataPointDTO();
 		dataPoint.setX(categoryLabel);  // Category label
 		dataPoint.setY(value);  // y-axis value
+		dataPoint.setEntityIds(entityIds); // Id for the relevant entity
 
 		return dataPoint;
 	}

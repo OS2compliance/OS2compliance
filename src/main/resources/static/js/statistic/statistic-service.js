@@ -1,4 +1,3 @@
-
 export const CHARTTYPE = {
     BAR: "BAR",
     PIE: "PIE",
@@ -54,6 +53,10 @@ export async function renderChart(argumentConfig, elementId) {
     const config = await fetchStatistic(argumentConfig);
     const data = config.data;
 
+    const chartPicker = document.getElementById('diagramSelector');
+    const selectedOption = chartPicker.selectedOptions[0]
+    const currentEntityName = selectedOption.dataset.entityName;
+
     // Chart configuration based on type
     const chartConfiguration = {
         type: config.type === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : config.type.toLocaleLowerCase(),
@@ -69,7 +72,13 @@ export async function renderChart(argumentConfig, elementId) {
                 legend: {
                     display: config.type !== CHARTTYPE.BAR
                 }
-            }
+            },
+            parsing: {
+                xAxisKey: 'x',
+                yAxisKey: 'y',
+                key: "y",
+            },
+            onClick: (e) => onChartClick(e, currentEntityName),
         }
     };
 
@@ -82,6 +91,22 @@ export async function renderChart(argumentConfig, elementId) {
     }
 
     return new Chart(ctx, chartConfiguration);
+}
+
+async function onChartClick(e, entityName) {
+    const chart = e.chart
+    const elements = chart.getElementsAtEventForMode(e, 'nearest', {intersect: true}, true);
+    if (elements.length > 0) {
+        const element = elements[0];
+        const dataPoint = chart.data.datasets[element.datasetIndex].data[element.index];
+        const entityIds = dataPoint.entityIds
+
+        let url = `/statistic/chart/${entityName}/entityList`
+        if (entityIds) {
+            url += `?entityIds=${entityIds.join(',')}`
+        }
+        await fetchHtml(url, "relevantEntityListContainer")
+    }
 }
 
 export function buildUrl(config = defaultConfig) {

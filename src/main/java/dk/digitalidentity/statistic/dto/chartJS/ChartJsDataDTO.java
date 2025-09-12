@@ -1,6 +1,5 @@
 package dk.digitalidentity.statistic.dto.chartJS;
 
-import dk.digitalidentity.statistic.interfaces.ChartJSDatasetable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -11,7 +10,7 @@ import java.util.List;
 @Setter
 public class ChartJsDataDTO {
 	private List<String> labels;
-	private List<ChartJSDatasetable> datasets;
+	private List<ChartJsGeneralDatasetDTO> datasets;
 
 	public ChartJsDataDTO() {
 		this.datasets = new ArrayList<>();
