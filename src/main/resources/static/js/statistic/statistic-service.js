@@ -145,7 +145,7 @@ function getConfigFor(chartType, groupedByDate, data, title, currentEntityName) 
                             text: title
                         },
                         legend: {
-                            display:false
+                            display: false
                         }
                     },
                     parsing: {
@@ -157,7 +157,7 @@ function getConfigFor(chartType, groupedByDate, data, title, currentEntityName) 
                     scales: {
                         y: {
                             beginAtZero: true,
-                            stepSize:  1 ,
+                            stepSize: 1,
                         }
                     }
                 }
@@ -237,7 +237,7 @@ function getConfigFor(chartType, groupedByDate, data, title, currentEntityName) 
                 }
             },
             TIME: {
-                type:CHARTTYPE.PIE.toLocaleLowerCase() ,
+                type: CHARTTYPE.PIE.toLocaleLowerCase(),
                 data: data,
                 options: {
                     locale: 'da-DK',
@@ -258,6 +258,21 @@ function getConfigFor(chartType, groupedByDate, data, title, currentEntityName) 
                         key: "y",
                     },
                     onClick: (e) => onChartClick(e, currentEntityName),
+                    scales: {
+                        r: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                round: 'month',
+                                displayFormats: {
+                                    month: 'MMM'
+                                },
+                                minUnit: 'month'
+                            },
+                            min: new Date(currentYear, 0, 1),
+                            max: new Date(currentYear, 11, 31),
+                        },
+                    }
                 }
             }
         },
@@ -291,7 +306,7 @@ function getConfigFor(chartType, groupedByDate, data, title, currentEntityName) 
                         y: {
                             stacked: true,
                             beginAtZero: true,
-                            stepSize:  1 ,
+                            stepSize: 1,
                         }
                     }
                 }
@@ -350,7 +365,6 @@ function getConfigFor(chartType, groupedByDate, data, title, currentEntityName) 
     }
 
 
-    console.log(chartType, groupedByDate);
     switch (chartType) {
         case CHARTTYPE.BAR:
             if (groupedByDate) {

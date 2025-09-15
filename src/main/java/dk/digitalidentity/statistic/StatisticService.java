@@ -81,7 +81,7 @@ public class StatisticService {
 		List<Map<String, Object>> rawData = getFilteredFieldData(entityClass, ownerOnly, dateField, startDate, endDate, parsedLabel, yField);
 
 		return switch (chartType) {
-			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
+			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation);
 			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
 			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, dateField, yField);
 		};
@@ -118,7 +118,7 @@ public class StatisticService {
 		// Y values are assumed  to be incidentField entities and are only used for post-data fetching processing
 		String xFieldNoPrefix = removePrefixAndAddToRelevantList(xField, prefixMap);
 
-			fieldNamesForIncidentsFields.add("indexColumnName"); // column Name of the incident question
+		fieldNamesForIncidentsFields.add("indexColumnName"); // column Name of the incident question
 		if (isChoiceListType) {
 			fieldNamesForIncidentsFieldResponses.add(answerChoicesFieldName); // chosen values for choicelist type of question
 		}
@@ -127,7 +127,7 @@ public class StatisticService {
 		List<Map<String, Object>> rawData = getFilteredFieldDataForIncidents(incidentFieldId, dateField, startDate, endDate, fieldNamesForIncidents, fieldNamesForIncidentsFields, fieldNamesForIncidentsFieldResponses);
 
 		return switch (chartType) {
-			case ChartType.BAR -> generateBarChart(rawData, xFieldNoPrefix, yField, aggregation, groupTimeBy);
+			case ChartType.BAR -> generateBarChart(rawData, xFieldNoPrefix, yField, aggregation);
 			case ChartType.PIE -> generatePieChart(rawData, isChoiceListType ? answerChoicesFieldName : xFieldNoPrefix, yField, aggregation, groupTimeBy);
 			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xFieldNoPrefix, yField, aggregation, dateField, isChoiceListType ? answerChoicesFieldName : "indexColumnName");
 		}
@@ -343,7 +343,6 @@ public class StatisticService {
 	 * @param xField      name of the field holding the labels for the chart
 	 * @param yField      name of the field holding the values for the chart
 	 * @param aggregation what type of aggregation should be performed on the data
-	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
 	private ChartJsDataDTO generateStackedBarChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, String dateField, String stackField) {
@@ -354,7 +353,8 @@ public class StatisticService {
 			if (dateString.contains("T")) {
 				// Parse as LocalDateTime and extract the date part
 				groupByDate = LocalDateTime.parse(dateString).toLocalDate();
-			} else {
+			}
+			else {
 				// Parse as LocalDate directly
 				groupByDate = LocalDate.parse(dateString);
 			}
@@ -388,10 +388,9 @@ public class StatisticService {
 	 * @param xField      name of the field holding the labels for the chart
 	 * @param yField      name of the field holding the values for the chart
 	 * @param aggregation what type of aggregation should be performed on the data
-	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsDataDTO generateBarChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, Period groupDateBy) {
+	private ChartJsDataDTO generateBarChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation) {
 		// map to datarows
 		List<DataRow> dataRows = rawData.stream().map(d -> new DataRow(d.get("id").toString(), formatLabel(d.get(xField)), d.get(yField))).toList();
 
@@ -417,6 +416,17 @@ public class StatisticService {
 	private ChartJsDataDTO generatePieChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, Period groupDateBy) {
 		// map to datarows
 		List<DataRow> dataRows = rawData.stream().map(d -> new DataRow(d.get("id").toString(), formatLabel(d.get(xField)), d.get(yField))).toList();
+
+		if (groupDateBy == Period.YEAR) {
+			dataRows = rawData.stream()
+					.map(d -> new DataRow(d.get("id").toString(), String.valueOf(LocalDateTime.parse(d.get(xField).toString()).getYear()), d.get(yField)))
+					.toList();
+		}
+		else if (groupDateBy == Period.MONTH) {
+			dataRows = rawData.stream()
+					.map(d -> new DataRow(d.get("id").toString(), LocalDateTime.parse(d.get(xField).toString()).getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH), d.get(yField)))
+					.toList();
+		}
 
 		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
 
@@ -570,28 +580,6 @@ public class StatisticService {
 			case YEAR -> String.valueOf(localDate.getYear());
 			default -> localDate.toString(); // No grouping, show full date
 		};
-	}
-
-	/**
-	 * Sorts the provided categories (labels), according to their type
-	 *
-	 * @param categories  set of categories to sort
-	 * @param groupDateBy field specifying how dates should be grouped. Null if categories are not dates
-	 * @return a list of formatted and sorted labels based on the categories
-	 */
-	private List<String> sortAndFormatCategories(Set<Object> categories, Period groupDateBy) {
-		// Check if we're dealing with dates by examining the first non-null value
-		Object firstValue = categories.stream().filter(Objects::nonNull).findFirst().orElse(null);
-
-		//		boolean isDateField = firstValue instanceof LocalDate || firstValue instanceof LocalDateTime;
-		//
-		//		if (isDateField && groupDateBy != null && groupDateBy != Period.ALL) {
-		//			return sortDateCategories(categories, groupDateBy);
-		//		}
-		//		else {
-		// For non-date fields or ungrouped dates, sort naturally
-		return categories.stream().sorted().map(Object::toString).toList();
-		//		}
 	}
 
 	/**
