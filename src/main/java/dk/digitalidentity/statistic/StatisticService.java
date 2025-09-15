@@ -440,7 +440,9 @@ public class StatisticService {
 
 	private ChartJsGeneralDatasetDTO toDataSet(String label, List<DataRow> dataRows, AggregationMethod aggregation) {
 		// Group data by label
-		Map<String, List<DataRow>> dataSetData = dataRows.stream().collect(Collectors.groupingBy(row -> row.key));
+		Map<String, List<DataRow>> dataSetData = dataRows.stream()
+				.filter(r -> r != null && r.key != null)
+				.collect(Collectors.groupingBy(r -> r.key));
 
 		// Map to data points
 		List<ChartJsDataPointDTO> dataPoints = toChartJSDataPointDTO(aggregation, dataSetData);
