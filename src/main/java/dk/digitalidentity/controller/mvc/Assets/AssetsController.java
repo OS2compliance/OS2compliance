@@ -187,6 +187,7 @@ public class AssetsController {
 			asset.setAiStatus(ContainsAITechnologyEnum.UNDECIDED);
             asset.setCriticality(Criticality.NON_CRITICAL);
             asset.setDataProcessingAgreementStatus(DataProcessingAgreementStatus.NO);
+			asset.setActive(true);
             final Asset newAsset = assetService.create(asset);
             return "redirect:/assets/" + newAsset.getId();
         }

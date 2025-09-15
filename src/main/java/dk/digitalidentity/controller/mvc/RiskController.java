@@ -157,7 +157,7 @@ public class RiskController {
 
 		model.addAttribute("threatCatalogs", catalogService.findAllVisible());
         model.addAttribute("risk", threatAssessment);
-		model.addAttribute("isResponsible", threatAssessmentService.isResponsibleFor(threatAssessment));
+		model.addAttribute("isResponsible", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(threatAssessment));
         return "risks/editForm";
     }
 
@@ -170,7 +170,8 @@ public class RiskController {
 								@RequestParam(name = "selectedAssets", required = false) final Set<Long> selectedAssets
 	) {
         final ThreatAssessment editedAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) ||
+				(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !editedAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())))) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		if (editedAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET) && (selectedAssets == null || selectedAssets.isEmpty())) {
@@ -184,7 +185,7 @@ public class RiskController {
         editedAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
         editedAssessment.setResponsibleOu(assessment.getResponsibleOu());
 
-		if (!threatAssessmentService.isResponsibleFor(editedAssessment)) {
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(editedAssessment)) {
 			editedAssessment.setResponsibleUser(assessment.getResponsibleUser());
 		}
 
@@ -584,7 +585,7 @@ public class RiskController {
 		);
 
         model.addAttribute("risk", externalDTO);
-		model.addAttribute("isResponsible", threatAssessmentService.isResponsibleFor(riskassessment));
+		model.addAttribute("isResponsible", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || threatAssessmentService.isResponsibleFor(riskassessment));
         return "risks/fragments/edit_external_riskassessment_modal :: create_external_riskassessment_modal";
     }
 
