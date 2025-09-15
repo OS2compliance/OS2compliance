@@ -75,23 +75,25 @@ public class StatisticRestController {
 			xField = yField;
 		}
 
+		Period parsedGroupTimeBy = groupTimeBy == null || chartConfig.getGroupTimeByField() == null || chartConfig.getGroupTimeByField() != groupTimeBy ? null : groupTimeBy;
+
 		ChartJsDataDTO chartData;
 		if (chartConfig.getEntityName().equalsIgnoreCase("Incident")) {
 			// Special case for incidents, where it should only show data for those that contains the specific Incident field selected
 			if (incidentFieldId == null) {
 				throw new NoSuchElementException("Incident field id is required");
 			}
-			chartData = statisticService.generateIncidentChart(chartConfig.getType(), xField, yField, chartConfig.getAggregation(), groupTimeBy, chartConfig.getAllowedDateFieldChoices().stream().findFirst().orElse(null), startDate, endDate, incidentFieldId);
+			chartData = statisticService.generateIncidentChart(chartConfig.getType(), xField, yField, chartConfig.getAggregation(), parsedGroupTimeBy, chartConfig.getAllowedDateFieldChoices().stream().findFirst().orElse(null), startDate, endDate, incidentFieldId);
 		}
 		else {
-			chartData = statisticService.generateChart(entityClass, chartConfig.getType(), xField, yField, chartConfig.getAggregation(), chartConfig.getOwnerOnly(), groupTimeBy, chartConfig.getAllowedDateFieldChoices().stream().findFirst().orElse(null), startDate, endDate);
+			chartData = statisticService.generateChart(entityClass, chartConfig.getType(), xField, yField, chartConfig.getAggregation(), chartConfig.getOwnerOnly(), parsedGroupTimeBy, chartConfig.getAllowedDateFieldChoices().stream().findFirst().orElse(null), startDate, endDate);
 		}
 
 		return ResponseEntity.ok(ChartJsConfigDTO.builder()
 				.title(chartConfig.getName())
 				.type(chartConfig.getType())
-				.xScaleDateType(groupTimeBy != null && groupTimeBy != Period.ALL)
 				.data(chartData)
+				.dateGrouping(groupTimeBy)
 				.build());
 
 	}

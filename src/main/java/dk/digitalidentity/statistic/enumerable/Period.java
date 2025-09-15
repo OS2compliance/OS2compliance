@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 @Getter
 public enum Period {
 	MONTH("Måned"),
-	QUARTER("Kvartal"),
 	YEAR("År"),
 	ALL("Ingen");
 

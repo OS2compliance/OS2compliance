@@ -44,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -62,36 +63,27 @@ public class StatisticService {
 	private final UserService userService;
 	private final IncidentService incidentService;
 
-	record DataRow(String id, String key, Object value, String dataSetKey) {
+	record DataRow(String id, String key, Object value) {
 	}
 
-	public ChartJsDataDTO generateChart(Class<? extends StatisticEnabled> entityClass,
-			ChartType chartType,
-			String xField,
-			String yField,
-			AggregationMethod aggregation,
-			boolean ownerOnly,
-			Period groupTimeBy,
-			String dateField,
-			LocalDate startDate,
-			LocalDate endDate
-	) {
+	record StackedDataRow(String id, String key, Object value, String dataSetKey, LocalDate groupingDate) {
+	}
+
+	public ChartJsDataDTO generateChart(Class<? extends StatisticEnabled> entityClass, ChartType chartType, String xField, String yField, AggregationMethod aggregation, boolean ownerOnly, Period groupTimeBy, String dateField, LocalDate startDate, LocalDate endDate) {
 
 		// if the entity field is of type relation, get its name for the label field
 		String parsedLabel = null;
 		if (xField != null) {
-			parsedLabel = getLabelAttributeForField(entityClass, xField)
-					.orElse(xField);
+			parsedLabel = getLabelAttributeForField(entityClass, xField).orElse(xField);
 		}
 
 		// Get filtered raw data
-		List<Map<String, Object>> rawData = getFilteredFieldData(
-				entityClass, ownerOnly, dateField, startDate, endDate, parsedLabel, yField);
+		List<Map<String, Object>> rawData = getFilteredFieldData(entityClass, ownerOnly, dateField, startDate, endDate, parsedLabel, yField);
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
 			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, groupTimeBy, yField);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, dateField, yField);
 		};
 	}
 
@@ -109,20 +101,9 @@ public class StatisticService {
 	 * @param incidentFieldId the id of the IncidentField selected
 	 * @return DTO with data for a ChartJS chart
 	 */
-	public ChartJsDataDTO generateIncidentChart(
-			ChartType chartType,
-			String xField,
-			String yField,
-			AggregationMethod aggregation,
-			Period groupTimeBy,
-			String dateField,
-			LocalDate startDate,
-			LocalDate endDate,
-			Long incidentFieldId
-	) {
+	public ChartJsDataDTO generateIncidentChart(ChartType chartType, String xField, String yField, AggregationMethod aggregation, Period groupTimeBy, String dateField, LocalDate startDate, LocalDate endDate, Long incidentFieldId) {
 		String answerChoicesFieldName = "answerChoiceValues";
-		IncidentField incidentField = incidentService.findField(incidentFieldId)
-				.orElseThrow();
+		IncidentField incidentField = incidentService.findField(incidentFieldId).orElseThrow();
 
 		IncidentType type = incidentField.getIncidentType();
 		boolean isChoiceListType = type == IncidentType.CHOICE_LIST || type == IncidentType.CHOICE_LIST_MULTIPLE;
@@ -131,29 +112,24 @@ public class StatisticService {
 		Set<String> fieldNamesForIncidentsFields = new HashSet<>();
 		Set<String> fieldNamesForIncidentsFieldResponses = new HashSet<>();
 
-		Map<String, Set<String>> prefixMap = Map.of(
-				getPrefixForField(Incident.class), fieldNamesForIncidents,
-				getPrefixForField(IncidentField.class), fieldNamesForIncidentsFields,
-				getPrefixForField(IncidentFieldResponse.class), fieldNamesForIncidentsFieldResponses
-		);
+		Map<String, Set<String>> prefixMap = Map.of(getPrefixForField(Incident.class), fieldNamesForIncidents, getPrefixForField(IncidentField.class), fieldNamesForIncidentsFields, getPrefixForField(IncidentFieldResponse.class), fieldNamesForIncidentsFieldResponses);
 
 		// Only x-values are  prefixed with the entity to search.
 		// Y values are assumed  to be incidentField entities and are only used for post-data fetching processing
 		String xFieldNoPrefix = removePrefixAndAddToRelevantList(xField, prefixMap);
 
-		if (isChoiceListType) {
 			fieldNamesForIncidentsFields.add("indexColumnName"); // column Name of the incident question
+		if (isChoiceListType) {
 			fieldNamesForIncidentsFieldResponses.add(answerChoicesFieldName); // chosen values for choicelist type of question
 		}
 
 		// Fetch data
-		List<Map<String, Object>> rawData = getFilteredFieldDataForIncidents(
-				incidentFieldId, dateField, startDate, endDate, fieldNamesForIncidents, fieldNamesForIncidentsFields, fieldNamesForIncidentsFieldResponses);
+		List<Map<String, Object>> rawData = getFilteredFieldDataForIncidents(incidentFieldId, dateField, startDate, endDate, fieldNamesForIncidents, fieldNamesForIncidentsFields, fieldNamesForIncidentsFieldResponses);
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, xFieldNoPrefix, yField, aggregation, groupTimeBy);
 			case ChartType.PIE -> generatePieChart(rawData, isChoiceListType ? answerChoicesFieldName : xFieldNoPrefix, yField, aggregation, groupTimeBy);
-			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xFieldNoPrefix, yField, aggregation, groupTimeBy, isChoiceListType ? answerChoicesFieldName : yField);
+			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xFieldNoPrefix, yField, aggregation, dateField, isChoiceListType ? answerChoicesFieldName : "indexColumnName");
 		}
 
 				;
@@ -170,9 +146,7 @@ public class StatisticService {
 		for (Map.Entry<String, Set<String>> entry : prefixMap.entrySet()) {
 			if (field.startsWith(entry.getKey())) {
 				String noPrefix = removePrefix(field, getPrefixForField(Incident.class));
-				entry.getValue().add(
-						noPrefix
-				);
+				entry.getValue().add(noPrefix);
 				return noPrefix;
 			}
 		}
@@ -190,22 +164,13 @@ public class StatisticService {
 	 * @param fieldNames  Names of the fields that should be fetched from db
 	 * @return requested data as a list of maps
 	 */
-	private List<Map<String, Object>> getFilteredFieldData(
-			Class<? extends StatisticEnabled> entityClass,
-			boolean ownerOnly,
-			String dateField,
-			LocalDate startDate,
-			LocalDate endDate,
-			String... fieldNames) {
+	private List<Map<String, Object>> getFilteredFieldData(Class<? extends StatisticEnabled> entityClass, boolean ownerOnly, String dateField, LocalDate startDate, LocalDate endDate, String... fieldNames) {
 		var cb = entityManager.getCriteriaBuilder();
 		var query = cb.createTupleQuery();
 		var root = query.from(entityClass);
 
 		// Build selections (remove nulls)
-		Set<String> validFields = Arrays.stream(fieldNames)
-				.filter(Objects::nonNull)
-				.filter(s -> !s.equalsIgnoreCase("null"))
-				.collect(Collectors.toSet());
+		Set<String> validFields = Arrays.stream(fieldNames).filter(Objects::nonNull).filter(s -> !s.equalsIgnoreCase("null")).collect(Collectors.toSet());
 
 		validFields.add("id"); // Always get the id
 
@@ -230,9 +195,7 @@ public class StatisticService {
 
 		var tuples = entityManager.createQuery(query).getResultList();
 
-		return tuples.stream()
-				.flatMap(tuple -> mapToupleToMaps(tuple, validFields).stream())
-				.toList();
+		return tuples.stream().flatMap(tuple -> mapToupleToMaps(tuple, validFields).stream()).toList();
 	}
 
 	/**
@@ -247,15 +210,7 @@ public class StatisticService {
 	 * @param fieldNamesForIncidentsFieldResponses List of field names to mget from the IncidentFieldResponse class
 	 * @return a list of Maps corresponding to data rows with the requested columns
 	 */
-	private List<Map<String, Object>> getFilteredFieldDataForIncidents(
-			Long incidentFieldId,
-			String dateField,
-			LocalDate startDate,
-			LocalDate endDate,
-			Set<String> fieldNamesForIncidents,
-			Set<String> fieldNamesForIncidentsFields,
-			Set<String> fieldNamesForIncidentsFieldResponses
-	) {
+	private List<Map<String, Object>> getFilteredFieldDataForIncidents(Long incidentFieldId, String dateField, LocalDate startDate, LocalDate endDate, Set<String> fieldNamesForIncidents, Set<String> fieldNamesForIncidentsFields, Set<String> fieldNamesForIncidentsFieldResponses) {
 
 		Class<? extends StatisticEnabled> entityClass = IncidentFieldResponse.class;
 
@@ -301,9 +256,7 @@ public class StatisticService {
 		allValidFields.addAll(validIncidentFieldFields);
 		allValidFields.add("id");
 
-		return tuples.stream()
-				.flatMap(tuple -> mapToupleToMaps(tuple, allValidFields).stream())
-				.toList();
+		return tuples.stream().flatMap(tuple -> mapToupleToMaps(tuple, allValidFields).stream()).toList();
 	}
 
 	/**
@@ -380,10 +333,7 @@ public class StatisticService {
 	}
 
 	private List<String> extractValidFields(Set<String> fieldNames) {
-		return fieldNames.stream()
-				.filter(Objects::nonNull)
-				.filter(s -> !s.equalsIgnoreCase("null"))
-				.toList();
+		return fieldNames.stream().filter(Objects::nonNull).filter(s -> !s.equalsIgnoreCase("null")).toList();
 	}
 
 	/**
@@ -396,23 +346,32 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsDataDTO generateStackedBarChart(
-			List<Map<String, Object>> rawData,
-			String xField,
-			String yField,
-			AggregationMethod aggregation,
-			Period groupDateBy,
-			String stackField
-	) {
+	private ChartJsDataDTO generateStackedBarChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, String dateField, String stackField) {
 		// map to datarows
-		List<DataRow> dataRows = rawData.stream().map(d -> new DataRow(d.get("id").toString(), d.get(xField).toString(), d.get(yField), d.get(stackField).toString())).toList();
+		List<StackedDataRow> dataRows = rawData.stream().map(d -> {
+			String dateString = d.get(dateField).toString();
+			LocalDate groupByDate;
+			if (dateString.contains("T")) {
+				// Parse as LocalDateTime and extract the date part
+				groupByDate = LocalDateTime.parse(dateString).toLocalDate();
+			} else {
+				// Parse as LocalDate directly
+				groupByDate = LocalDate.parse(dateString);
+			}
+
+			return new StackedDataRow(d.get("id").toString(), formatLabel(d.get(xField)), d.get(yField), formatLabel(d.get(stackField)), groupByDate);
+		}).toList();
 
 		// group by stack field, to sort into datasets
-		Map<String, List<DataRow>> dataSetMap = dataRows.stream()
-				.collect(Collectors.groupingBy(row -> row.dataSetKey));
+		Map<String, List<StackedDataRow>> dataSetMap = dataRows.stream().collect(Collectors.groupingBy(row -> row.dataSetKey));
+
+		// I groupByDate is set, group by the chosen date method
+
+		Map<String, List<DataRow>> data = new HashMap<>();
+		data = dataSetMap.entrySet().stream().collect(Collectors.toMap(Map.Entry::getKey, e -> e.getValue().stream().map(l -> new DataRow(l.id, l.key, l.value)).toList()));
 
 		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
-		for (Map.Entry<String, List<DataRow>> entry : dataSetMap.entrySet()) {
+		for (Map.Entry<String, List<DataRow>> entry : data.entrySet()) {
 			datasets.add(toDataSet(entry.getKey(), entry.getValue(), aggregation));
 		}
 
@@ -420,51 +379,6 @@ public class StatisticService {
 		chartData.setDatasets(datasets);
 		chartData.setLabels(null); // only relevant for pie charts
 		return chartData;
-
-		//		// get all unique x categories
-		//		Set<Object> xCategoriesSet = getUniqueCategoryLabels(rawData, xField);
-		//
-		//		// Sort the categories based on their type and grouping
-		//		List<String> xCategories = sortAndFormatCategories(xCategoriesSet, groupDateBy);
-		//
-		//		// Group by stack field (yField value), then by formatted x field
-		//		Map<String, Map<String, List<GroupingDTO>>> stackData = rawData.stream()
-		//				.collect(Collectors.groupingBy(
-		//						row -> String.valueOf(formatLabel(row.get(stackField), groupDateBy)),
-		//						Collectors.groupingBy(
-		//								row -> formatLabel(row.get(xField), groupDateBy),
-		//								Collectors.mapping(row -> new GroupingDTO(formatLabel(row.get(yField), groupDateBy), row.get("id")), Collectors.toList())
-		//						)
-		//				));
-		//
-		//		ChartJsDataDTO chartData = new ChartJsDataDTO();
-		//
-		//		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
-		//
-		//		for (Map.Entry<String, Map<String, List<GroupingDTO>>> stackEntry : stackData.entrySet()) {
-		//			// Create list of ChartJsDataDTO objects belonging to each stack
-		//			List<ChartJsDataPointDTO> data = xCategories.stream()
-		//					.map(category -> {
-		//						List<GroupingDTO> values = stackEntry.getValue().getOrDefault(category, new ArrayList<>());
-		//						Double value = aggregateValues(values, aggregation);
-		//						List<String> ids = values.stream()
-		//								.map(dto -> dto.id)
-		//								.map(Object::toString)
-		//								.toList();
-		//						return toChartDataDTO(value, category, ids);
-		//					})
-		//					.toList();
-		//
-		//			String parsedDatasetLabel = stackEntry.getKey() == null
-		//					|| stackEntry.getKey().isEmpty()
-		//					|| stackEntry.getKey().equalsIgnoreCase("null")
-		//					? yField : stackEntry.getKey();
-		//			ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(parsedDatasetLabel, data);
-		//			datasets.add(dataset);
-		//		}
-		//
-		//		chartData.setDatasets(datasets);
-		//		return chartData;
 	}
 
 	/**
@@ -477,42 +391,17 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsDataDTO generateBarChart(
-			List<Map<String, Object>> rawData,
-			String xField,
-			String yField,
-			AggregationMethod aggregation,
-			Period groupDateBy
-	) {
+	private ChartJsDataDTO generateBarChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, Period groupDateBy) {
 		// map to datarows
-		List<DataRow> dataRows = rawData.stream().map(d ->
-						new DataRow(d.get("id").toString(), d.get(xField).toString(), d.get(yField), null))
-				.toList();
+		List<DataRow> dataRows = rawData.stream().map(d -> new DataRow(d.get("id").toString(), formatLabel(d.get(xField)), d.get(yField))).toList();
 
 		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
-		datasets.add(toDataSet(null ,dataRows, aggregation));
+		datasets.add(toDataSet(null, dataRows, aggregation));
 
 		ChartJsDataDTO chartData = new ChartJsDataDTO();
 		chartData.setDatasets(datasets);
 		chartData.setLabels(null); // only relevant for pie charts
 		return chartData;
-
-		//
-		//		// Group by formatted x field
-		//		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
-		//
-		//		ChartJsDataDTO chartData = new ChartJsDataDTO();
-		//
-		//		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
-		//
-		//		// Create list of ChartJsDataDTO objects
-		//		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
-		//
-		//		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
-		//		datasets.add(dataset);
-		//
-		//		chartData.setDatasets(datasets);
-		//		return chartData;
 	}
 
 	/**
@@ -525,17 +414,9 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsDataDTO generatePieChart(
-			List<Map<String, Object>> rawData,
-			String xField,
-			String yField,
-			AggregationMethod aggregation,
-			Period groupDateBy
-	) {
+	private ChartJsDataDTO generatePieChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, Period groupDateBy) {
 		// map to datarows
-		List<DataRow> dataRows = rawData.stream().map(d ->
-						new DataRow(d.get("id").toString(), d.get(xField).toString(), d.get(yField), null))
-				.toList();
+		List<DataRow> dataRows = rawData.stream().map(d -> new DataRow(d.get("id").toString(), formatLabel(d.get(xField)), d.get(yField))).toList();
 
 		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
 
@@ -543,44 +424,13 @@ public class StatisticService {
 
 		ChartJsDataDTO chartData = new ChartJsDataDTO();
 		chartData.setDatasets(datasets);
-		chartData.setLabels(datasets.getFirst().getData().stream()
-				.map(ChartJsDataPointDTO::getX).toList()); // only relevant for pie charts
+		chartData.setLabels(datasets.getFirst().getData().stream().map(ChartJsDataPointDTO::getX).toList()); // only relevant for pie charts
 		return chartData;
-
-		//
-		//
-		//		// Group by formatted x field
-		//		Map<String, List<GroupingDTO>> groupedData = groupData(rawData, xField, yField, groupDateBy);
-		//
-		//		ChartJsDataDTO chartData = new ChartJsDataDTO();
-		//
-		//		List<ChartJsGeneralDatasetDTO> datasets = new ArrayList<>();
-		//
-		//		List<Map.Entry<String, List<GroupingDTO>>> sortedAndGroupedData = groupedData.entrySet().stream()
-		//				.sorted(Map.Entry.comparingByKey())
-		//				.toList();
-		//
-		//		// Create list of ChartJsDataDTO objects
-		//
-		//		List<ChartJsDataPointDTO> data = toChartJSDataPointDTO(aggregation, groupedData);
-		//
-		//		// create a data array as pie charts can only figure out labels from that structure
-		//		List<String> labels = sortedAndGroupedData.stream()
-		//				.map(Map.Entry::getKey)
-		//				.toList();
-		//		chartData.setLabels(labels);
-		//
-		//		ChartJsGeneralDatasetDTO dataset = new ChartJsGeneralDatasetDTO(null, data);
-		//		datasets.add(dataset);
-		//
-		//		chartData.setDatasets(datasets);
-		//		return chartData;
 	}
 
 	private ChartJsGeneralDatasetDTO toDataSet(String label, List<DataRow> dataRows, AggregationMethod aggregation) {
 		// Group data by label
-		Map<String, List<DataRow>> dataSetData = dataRows.stream()
-				.collect(Collectors.groupingBy(row -> row.key));
+		Map<String, List<DataRow>> dataSetData = dataRows.stream().collect(Collectors.groupingBy(row -> row.key));
 
 		// Map to data points
 		List<ChartJsDataPointDTO> dataPoints = toChartJSDataPointDTO(aggregation, dataSetData);
@@ -588,33 +438,13 @@ public class StatisticService {
 		// Create dataset
 		return ChartJsGeneralDatasetDTO.builder()
 				.data(dataPoints)
-				.label(formatLabel(label))
-				.build();
+				.label(formatLabel(label)).build();
 	}
 
 	private List<ChartJsDataPointDTO> toChartJSDataPointDTO(AggregationMethod aggregation, Map<String, List<DataRow>> data) {
 
-		return data.entrySet().stream().map(e ->
-						ChartJsDataPointDTO.builder()
-								.x( formatLabel(e.getKey()))
-								.y(aggregateValues(e.getValue(), aggregation))
-								.entityIds(e.getValue().stream().map(v -> v.id).toList())
-								.build()
-				)
-				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
-				.toList();
-
-		//		return groupedData.entrySet().stream()
-		//				.map(entry -> {
-		//					List<GroupingDTO> values = entry.getValue();
-		//					Double value = aggregateValues(values, aggregation);
-		//					List<String> ids = entry.getValue().stream().map(groupingDTO -> groupingDTO.id.toString()).toList();
-		//					return toChartDataDTO(value, entry.getKey(), ids);
-		//				})
-		//				.sorted(Comparator.comparing(ChartJsDataPointDTO::getX))
-		//				.toList();
+		return data.entrySet().stream().map(e -> ChartJsDataPointDTO.builder().x(formatLabel(e.getKey())).y(aggregateValues(e.getValue(), aggregation)).entityIds(e.getValue().stream().map(v -> v.id).toList()).build()).sorted(Comparator.comparing(ChartJsDataPointDTO::getX)).toList();
 	}
-
 
 	/**
 	 * Aggregates a list of values by the provided aggregation method
@@ -628,25 +458,10 @@ public class StatisticService {
 			return 0.0;
 
 		return switch (aggregation) {
-			case AggregationMethod.SUM -> values.stream()
-					.filter(Objects::nonNull)
-					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : 0.0)
-					.sum();
-			case AggregationMethod.AVERAGE -> values.stream()
-					.filter(Objects::nonNull)
-					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : 0.0)
-					.average()
-					.orElse(0.0);
-			case AggregationMethod.MAX -> values.stream()
-					.filter(Objects::nonNull)
-					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : Double.MIN_VALUE)
-					.max()
-					.orElse(0.0);
-			case AggregationMethod.MIN -> values.stream()
-					.filter(Objects::nonNull)
-					.mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : Double.MAX_VALUE)
-					.min()
-					.orElse(0.0);
+			case AggregationMethod.SUM -> values.stream().filter(Objects::nonNull).mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : 0.0).sum();
+			case AggregationMethod.AVERAGE -> values.stream().filter(Objects::nonNull).mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : 0.0).average().orElse(0.0);
+			case AggregationMethod.MAX -> values.stream().filter(Objects::nonNull).mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : Double.MIN_VALUE).max().orElse(0.0);
+			case AggregationMethod.MIN -> values.stream().filter(Objects::nonNull).mapToDouble(v -> v.value instanceof Number number ? number.doubleValue() : Double.MAX_VALUE).min().orElse(0.0);
 			default -> (double) values.size(); // Default to count
 		};
 	}
@@ -683,8 +498,7 @@ public class StatisticService {
 	 */
 	private <T> List<Predicate> buildOwnerPredicates(Class<? extends StatisticEnabled> entityClass, Root<T> root, CriteriaBuilder criteriaBuilder) {
 
-		User user = userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
-				.orElseThrow();
+		User user = userService.findByUuid(SecurityUtil.getLoggedInUserUuid()).orElseThrow();
 
 		// Add user permission filter (user must match at least one role)
 		List<Predicate> userPredicates = new ArrayList<>();
@@ -719,23 +533,9 @@ public class StatisticService {
 	}
 
 	/**
-	 * Constructs a DTO conforming to ChartJS data structure, used for most charts (PIE is exception)
-	 *
-	 * @param value         value of the data point
-	 * @param categoryLabel label for the data point
-	 * @return ChartJsDataDTO conforming to ChartJS data structure
-	 */
-	private ChartJsDataPointDTO toChartDataDTO(Object value, String categoryLabel, List<String> entityIds) {
-		return ChartJsDataPointDTO.builder()
-				.x(categoryLabel)
-				.y(value)
-				.entityIds(entityIds)
-				.build();
-	}
-
-	/**
 	 * Formats a label for the chart
-	 * @param value       value of the label
+	 *
+	 * @param value value of the label
 	 * @return a formatted label
 	 */
 	private String formatLabel(Object value) {
@@ -744,13 +544,6 @@ public class StatisticService {
 		}
 
 		switch (value) {
-			//			case LocalDate parsedLocalDate -> {
-			//				return formatDateLabel(parsedLocalDate, groupDateBy);
-			//			}
-			//			case LocalDateTime parsedLocalDateTime -> {
-			//				LocalDate localDate = parsedLocalDateTime.toLocalDate();
-			//				return formatDateLabel(localDate, groupDateBy);
-			//			}
 			case HasMessage messageEnum -> {
 				return messageEnum.getMessage();
 			}
@@ -774,7 +567,6 @@ public class StatisticService {
 
 		return switch (groupDateBy) {
 			case MONTH -> localDate.getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH);
-			case QUARTER -> String.format("%d-Q%d", localDate.getYear(), (localDate.getMonthValue() + 2) / 3);
 			case YEAR -> String.valueOf(localDate.getYear());
 			default -> localDate.toString(); // No grouping, show full date
 		};
@@ -789,10 +581,7 @@ public class StatisticService {
 	 */
 	private List<String> sortAndFormatCategories(Set<Object> categories, Period groupDateBy) {
 		// Check if we're dealing with dates by examining the first non-null value
-		Object firstValue = categories.stream()
-				.filter(Objects::nonNull)
-				.findFirst()
-				.orElse(null);
+		Object firstValue = categories.stream().filter(Objects::nonNull).findFirst().orElse(null);
 
 		//		boolean isDateField = firstValue instanceof LocalDate || firstValue instanceof LocalDateTime;
 		//
@@ -801,10 +590,7 @@ public class StatisticService {
 		//		}
 		//		else {
 		// For non-date fields or ungrouped dates, sort naturally
-		return categories.stream()
-				.sorted()
-				.map(Object::toString)
-				.toList();
+		return categories.stream().sorted().map(Object::toString).toList();
 		//		}
 	}
 
@@ -817,17 +603,14 @@ public class StatisticService {
 	 */
 	private List<String> sortDateCategories(Set<Object> categories, Period groupDateBy) {
 		return categories.stream().map(c -> {
-					if (c instanceof LocalDate localDate) {
-						return localDate;
-					}
-					else if (c instanceof LocalDateTime localDateTime) {
-						return localDateTime.toLocalDate();
-					}
-					return LocalDate.now();
-				})
-				.sorted()
-				.map(date -> formatDateLabel(date, groupDateBy))
-				.toList();
+			if (c instanceof LocalDate localDate) {
+				return localDate;
+			}
+			else if (c instanceof LocalDateTime localDateTime) {
+				return localDateTime.toLocalDate();
+			}
+			return LocalDate.now();
+		}).sorted().map(date -> formatDateLabel(date, groupDateBy)).toList();
 	}
 
 	/**
@@ -870,9 +653,7 @@ public class StatisticService {
 
 			Class<?> fieldType = field.getType();
 			// if the field is relatable or a User, return the 'name' of the relatable
-			if (OrganisationUnit.class.isAssignableFrom(fieldType)
-					|| User.class.isAssignableFrom(fieldType)
-					|| fieldType.isAssignableFrom(Relatable.class)) {
+			if (OrganisationUnit.class.isAssignableFrom(fieldType) || User.class.isAssignableFrom(fieldType) || fieldType.isAssignableFrom(Relatable.class)) {
 				return Optional.of(fieldName + ".name");
 			}
 			return Optional.empty();
@@ -915,3 +696,5 @@ public class StatisticService {
 	}
 
 }
+
+

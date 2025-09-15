@@ -1,6 +1,6 @@
-// import "../../vendor/date-fns/date-fns.js"
 import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
 
+const currentYear = new Date().getFullYear();
 
 export const CHARTTYPE = {
     BAR: "BAR",
@@ -67,52 +67,10 @@ export async function renderChart(argumentConfig, elementId) {
     const selectedOption = chartPicker.selectedOptions[0]
     const currentEntityName = selectedOption.dataset.entityName;
 
-    console.log(config)
+    console.log(config.groupedByDate)
 
     // Chart configuration based on type
-    const chartConfiguration = {
-        type: config.type === CHARTTYPE.STACKED_BAR ? CHARTTYPE.BAR.toLocaleLowerCase() : config.type.toLocaleLowerCase(),
-        data: data,
-        options: {
-            locale: 'da-DK',
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                title: {
-                    display: true,
-                    text: config.title
-                },
-                legend: {
-                    display: config.type !== CHARTTYPE.BAR
-                }
-            },
-            parsing: {
-                xAxisKey: 'x',
-                yAxisKey: 'y',
-                key: "y",
-            },
-            onClick: (e) => onChartClick(e, currentEntityName),
-            scales: {
-                x: {},
-                y: {}
-            }
-        }
-    };
-
-    console.log(config.xscaleDateType)
-    if (config.xscaleDateType) {
-        chartConfiguration.options.scales.x.type = 'time'
-        chartConfiguration.options.scales.x.time = {
-            unit: 'month'
-        }
-    }
-    console.log(chartConfiguration)
-
-    // Add stacked configuration for stacked bar charts
-    if (config.type === CHARTTYPE.STACKED_BAR) {
-        chartConfiguration.options.scales.x.stacked = true
-        chartConfiguration.options.scales.y.stacked = true
-    }
+    const chartConfiguration = getConfigFor(config.type, !!config.dateGrouping, data, config.title, currentEntityName)
 
     return new Chart(ctx, chartConfiguration);
 }
@@ -169,4 +127,251 @@ export function buildUrl(config = defaultConfig) {
     }
 
     return url;
+}
+
+function getConfigFor(chartType, groupedByDate, data, title, currentEntityName) {
+    const configs = {
+        BAR: {
+            DEFAULT: {
+                type: CHARTTYPE.BAR.toLocaleLowerCase(),
+                data: data,
+                options: {
+                    locale: 'da-DK',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        legend: {
+                            display:false
+                        }
+                    },
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y',
+                        key: "y",
+                    },
+                    onClick: (e) => onChartClick(e, currentEntityName),
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            stepSize:  1 ,
+                        }
+                    }
+                }
+            },
+            TIME: {
+                type: CHARTTYPE.BAR.toLocaleLowerCase(),
+                data: data,
+                options: {
+                    locale: 'da-DK',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y',
+                        key: "y",
+                    },
+                    onClick: (e) => onChartClick(e, currentEntityName),
+                    scales: {
+                        x: {
+                            type: 'time',
+                            time: {
+                                unit: 'month',
+                                round: 'month',
+                                displayFormats: {
+                                    month: 'MMM'
+                                },
+                                minUnit: 'month'
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                stepSize: 1,
+                                maxTicksLimit: 12
+                            },
+                            min: new Date(currentYear, 0, 1),
+                            max: new Date(currentYear, 11, 31),
+                        },
+                        y: {
+                            beginAtZero: true,
+                            stepSize: 1,
+                        }
+                    }
+                }
+            }
+        },
+        PIE: {
+            DEFAULT: {
+                type: CHARTTYPE.PIE.toLocaleLowerCase(),
+                data: data,
+                options: {
+                    locale: 'da-DK',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        legend: {
+                            display: true
+                        }
+                    },
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y',
+                        key: "y",
+                    },
+                    onClick: (e) => onChartClick(e, currentEntityName),
+                }
+            },
+            TIME: {
+                type:CHARTTYPE.PIE.toLocaleLowerCase() ,
+                data: data,
+                options: {
+                    locale: 'da-DK',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        legend: {
+                            display: true
+                        }
+                    },
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y',
+                        key: "y",
+                    },
+                    onClick: (e) => onChartClick(e, currentEntityName),
+                }
+            }
+        },
+        STACKED_BAR: {
+            DEFAULT: {
+                type: CHARTTYPE.BAR.toLocaleLowerCase(),
+                data: data,
+                options: {
+                    locale: 'da-DK',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        legend: {
+                            display: true
+                        }
+                    },
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y',
+                        key: "y",
+                    },
+                    onClick: (e) => onChartClick(e, currentEntityName),
+                    scales: {
+                        x: {
+                            stacked: true,
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            stepSize:  1 ,
+                        }
+                    }
+                }
+            },
+            TIME: {
+                type: CHARTTYPE.BAR.toLocaleLowerCase(),
+                data: data,
+                options: {
+                    locale: 'da-DK',
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: title
+                        },
+                        legend: {
+                            display: true
+                        }
+                    },
+                    parsing: {
+                        xAxisKey: 'x',
+                        yAxisKey: 'y',
+                        key: "y",
+                    },
+                    onClick: (e) => onChartClick(e, currentEntityName),
+                    scales: {
+                        x: {
+                            type: 'time',
+                            stacked: true,
+                            time: {
+                                unit: 'month',
+                                round: 'month',
+                                displayFormats: {
+                                    month: 'MMM'
+                                },
+                                minUnit: 'month'
+                            },
+                            ticks: {
+                                autoSkip: false,
+                                stepSize: 1,
+                                maxTicksLimit: 12
+                            },
+                            min: new Date(currentYear, 0, 1),
+                            max: new Date(currentYear, 11, 31),
+                        },
+                        y: {
+                            stacked: true,
+                            beginAtZero: true,
+                            stepSize: 1,
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+
+    console.log(chartType, groupedByDate);
+    switch (chartType) {
+        case CHARTTYPE.BAR:
+            if (groupedByDate) {
+                return configs.BAR.TIME
+            } else {
+                return configs.BAR.DEFAULT
+            }
+        case CHARTTYPE.STACKED_BAR:
+            if (groupedByDate) {
+                return configs.STACKED_BAR.TIME
+            } else {
+                return configs.STACKED_BAR.DEFAULT
+            }
+        case CHARTTYPE.PIE:
+            if (groupedByDate) {
+                return configs.PIE.TIME
+            } else {
+                return configs.PIE.DEFAULT
+            }
+        default:
+            return null;
+
+    }
 }
