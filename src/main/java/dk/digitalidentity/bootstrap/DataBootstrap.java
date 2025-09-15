@@ -7,6 +7,7 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatCatalog;
@@ -23,6 +24,15 @@ import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
 import dk.digitalidentity.service.kle.KLEService;
+import dk.digitalidentity.statistic.StatisticService;
+import dk.digitalidentity.statistic.enumerable.DateTimePreset;
+import dk.digitalidentity.statistic.enumerable.SelectableAxis;
+import dk.digitalidentity.statistic.enumerable.SelectablePeriod;
+import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfiguration;
+import dk.digitalidentity.statistic.model.ChartConfiguration.ChartConfigurationService;
+import dk.digitalidentity.statistic.enumerable.AggregationMethod;
+import dk.digitalidentity.statistic.enumerable.ChartType;
+import dk.digitalidentity.statistic.enumerable.Period;
 import lombok.RequiredArgsConstructor;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -61,84 +71,93 @@ import static dk.digitalidentity.Constants.DATA_MIGRATION_VERSION_SETTING;
 @Component
 @RequiredArgsConstructor
 public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent> {
-    private final ChoiceListImporter choiceImporter;
-    private final StandardTemplateImporter templateImporter;
-    private final TagDao tagDao;
-    private final RegisterImporter registerImporter;
-    private final OS2complianceConfiguration config;
-    private final SettingsService settingsService;
-    private final StandardTemplateSectionDao standardTemplateSectionDao;
-    private final CatalogService catalogService;
-    private final ChoiceValueDao valueDao;
-    private final PlatformTransactionManager transactionManager;
-    private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
+	private final ChoiceListImporter choiceImporter;
+	private final StandardTemplateImporter templateImporter;
+	private final TagDao tagDao;
+	private final RegisterImporter registerImporter;
+	private final OS2complianceConfiguration config;
+	private final SettingsService settingsService;
+	private final StandardTemplateSectionDao standardTemplateSectionDao;
+	private final CatalogService catalogService;
+	private final ChoiceValueDao valueDao;
+	private final PlatformTransactionManager transactionManager;
+	private final DPIATemplateSectionImporter dpiaTemplateSectionImporter;
 	private final DPIAService dpiaService;
 	private final ChoiceService choiceService;
 	private final RegisterService registerService;
 	private final KLEService kleService;
+	private final ChartConfigurationService chartConfigurationService;
+	private final StatisticService statisticService;
 
 	@Value("classpath:data/registers/*.json")
-    private Resource[] registers;
+	private Resource[] registers;
 
-    @Override
-    public void onApplicationEvent(final ApplicationReadyEvent event) {
-        if (!config.isSeedData()) {
-            return;
-        }
-        incrementAndPerformIfVersion(0, this::seedV0);
-        incrementAndPerformIfVersion(1, this::seedV1);
-        incrementAndPerformIfVersion(2, this::seedV2);
-        incrementAndPerformIfVersion(3, this::seedV3);
-        incrementAndPerformIfVersion(4, this::seedV4);
-        incrementAndPerformIfVersion(5, this::seedV5);
-        incrementAndPerformIfVersion(6, this::seedV6);
-        incrementAndPerformIfVersion(7, this::seedV7);
-        incrementAndPerformIfVersion(8, this::seedV8);
-        incrementAndPerformIfVersion(9, this::seedV9);
-        incrementAndPerformIfVersion(10, this::seedV10);
-        incrementAndPerformIfVersion(11, this::seedV11);
-        incrementAndPerformIfVersion(12, this::seedV12);
-        incrementAndPerformIfVersion(13, this::seedV13);
-        incrementAndPerformIfVersion(14, this::seedV14);
-        incrementAndPerformIfVersion(15, this::seedV15);
-        incrementAndPerformIfVersion(16, this::seedV16);
-        incrementAndPerformIfVersion(17, this::seedV17);
-        incrementAndPerformIfVersion(18, this::seedV18);
-        incrementAndPerformIfVersion(19, this::seedV19);
-        incrementAndPerformIfVersion(20, this::seedV20);
-        incrementAndPerformIfVersion(21, this::seedV21);
-        incrementAndPerformIfVersion(22, this::seedV22);
-        incrementAndPerformIfVersion(23, this::seedV23);
-        incrementAndPerformIfVersion(24, this::seedV24);
-        incrementAndPerformIfVersion(25, this::seedV25);
-        incrementAndPerformIfVersion(26, this::seedV26);
-        incrementAndPerformIfVersion(27, this::seedV27);
-        incrementAndPerformIfVersion(28, this::seedV28);
-        incrementAndPerformIfVersion(29, this::seedV29);
-        incrementAndPerformIfVersion(30, this::seedV30);
-    }
+	@Override
+	public void onApplicationEvent(final ApplicationReadyEvent event) {
+		if (!config.isSeedData()) {
+			return;
+		}
+		incrementAndPerformIfVersion(0, this::seedV0);
+		incrementAndPerformIfVersion(1, this::seedV1);
+		incrementAndPerformIfVersion(2, this::seedV2);
+		incrementAndPerformIfVersion(3, this::seedV3);
+		incrementAndPerformIfVersion(4, this::seedV4);
+		incrementAndPerformIfVersion(5, this::seedV5);
+		incrementAndPerformIfVersion(6, this::seedV6);
+		incrementAndPerformIfVersion(7, this::seedV7);
+		incrementAndPerformIfVersion(8, this::seedV8);
+		incrementAndPerformIfVersion(9, this::seedV9);
+		incrementAndPerformIfVersion(10, this::seedV10);
+		incrementAndPerformIfVersion(11, this::seedV11);
+		incrementAndPerformIfVersion(12, this::seedV12);
+		incrementAndPerformIfVersion(13, this::seedV13);
+		incrementAndPerformIfVersion(14, this::seedV14);
+		incrementAndPerformIfVersion(15, this::seedV15);
+		incrementAndPerformIfVersion(16, this::seedV16);
+		incrementAndPerformIfVersion(17, this::seedV17);
+		incrementAndPerformIfVersion(18, this::seedV18);
+		incrementAndPerformIfVersion(19, this::seedV19);
+		incrementAndPerformIfVersion(20, this::seedV20);
+		incrementAndPerformIfVersion(21, this::seedV21);
+		incrementAndPerformIfVersion(22, this::seedV22);
+		incrementAndPerformIfVersion(23, this::seedV23);
+		incrementAndPerformIfVersion(24, this::seedV24);
+		incrementAndPerformIfVersion(25, this::seedV25);
+		incrementAndPerformIfVersion(26, this::seedV26);
+		incrementAndPerformIfVersion(27, this::seedV27);
+		incrementAndPerformIfVersion(28, this::seedV28);
+		incrementAndPerformIfVersion(29, this::seedV29);
+		incrementAndPerformIfVersion(30, this::seedV30);
+		incrementAndPerformIfVersion(31, this::seedV31);
+	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
-        final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
-        transactionTemplate.execute(status -> {
-            final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
-            if (currentVersion == version) {
-                applier.run();
-                settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
-            }
-            return 0;
-        });
-    }
+		final TransactionTemplate transactionTemplate = new TransactionTemplate(transactionManager);
+		transactionTemplate.execute(status -> {
+			final int currentVersion = settingsService.getInt(DATA_MIGRATION_VERSION_SETTING, 0);
+			if (currentVersion == version) {
+				applier.run();
+				settingsService.setInt(DATA_MIGRATION_VERSION_SETTING, version + 1);
+			}
+			return 0;
+		});
+	}
+
+	private void seedV31() {
+		chartConfigurationService.saveAll(
+				buildChartConfigurations()
+		);
+	}
 
 	@SneakyThrows
 	private void seedV30() {
 		// Make sure we have all kitos settings available
-		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY, "" , "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "" , "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY, "" , "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_FIELDS_CONTRACT_END, "" , "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_FIELDS_CONTRACT_DATE, "" , "kitos", true);
-		settingsService.createSetting(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, "" , "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_KEY, "", "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_KEY, "", "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY, "", "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_FIELDS_CONTRACT_END, "", "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_FIELDS_CONTRACT_DATE, "", "kitos", true);
+		settingsService.createSetting(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE, "", "kitos", true);
 	}
 
 	// TODO 2025/08/18 Remove when all is migrated
@@ -169,16 +188,15 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		kleService.loadFromClassPath();
 	}
 
-
-	private void seedV26 () {
+	private void seedV26() {
 		for (ReportSetting setting : ReportSetting.values()) {
 			settingsService.createSetting(setting.getKey(), "", "report", true);
 		}
 	}
 
-	private void seedV25 () {
+	private void seedV25() {
 		// Update each of these specific lists to be editable
-		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list","dp-person-categories-list",  "dp-person-storage-duration-list", "dp-receiver-list");
+		Set<String> listIdentifiers = Set.of("dp-access-who-list", "dp-access-count-list", "dp-count-processing-list", "dp-categories-list", "dp-person-categories-list", "dp-person-storage-duration-list", "dp-receiver-list");
 		for (String identifier : listIdentifiers) {
 			Optional<ChoiceList> list = choiceService.findChoiceList(identifier);
 			if (list.isEmpty()) {
@@ -187,18 +205,18 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
 			list.get().setCustomizable(true);
 		}
-		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "Systemejer" , "asset", true);
-		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Systemansvarlig" , "asset", true);
-		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Driftsansvarlig" , "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME, "Systemejer", "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Systemansvarlig", "asset", true);
+		settingsService.createSetting(KitosConstants.KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME, "Driftsansvarlig", "asset", true);
 	}
 
-	private void seedV24 () {
+	private void seedV24() {
 		ChoiceList choiceList = choiceService.saveChoiceList(ChoiceList.builder()
-						.identifier("record-of-processing-activity-regarding")
-						.name("Fortegnelse over behandlingsaktivitet angående")
-						.multiSelect(true)
-						.customizable(true)
-						.values(new ArrayList<>())
+				.identifier("record-of-processing-activity-regarding")
+				.name("Fortegnelse over behandlingsaktivitet angående")
+				.multiSelect(true)
+				.customizable(true)
+				.values(new ArrayList<>())
 				.build());
 
 		// Migrate data from existing column to choicelists
@@ -213,7 +231,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 								.noneMatch(v -> v.getIdentifier().equals(choices.get(oldValue).getIdentifier()))) {
 							choiceList.getValues().add(choices.get(oldValue));
 						}
-					} else {
+					}
+					else {
 						final ChoiceValue oldValueChoice = ChoiceValue.builder()
 								.caption(oldValue)
 								.description(oldValue)
@@ -226,8 +245,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 				});
 	}
 
-	private void seedV23 () {
-		settingsService.createSetting(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse" , "register", true);
+	private void seedV23() {
+		settingsService.createSetting(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse", "register", true);
 	}
 
 	private void seedV22() {
@@ -240,226 +259,385 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 				});
 	}
 
-    private void seedV21() {
-        settingsService.createSetting(NotificationSetting.SEVENDAYSBEFORE.getValue(), "true" , "notification", true);
-        settingsService.createSetting(NotificationSetting.ONEDAYBEFORE.getValue(), "false" , "notification", true);
-        settingsService.createSetting(NotificationSetting.ONDAY.getValue(), "false" , "notification", true);
-        settingsService.createSetting(NotificationSetting.EVERYSEVENDAYSAFTER.getValue(), "false" , "notification", true);
-    }
+	private void seedV21() {
+		settingsService.createSetting(NotificationSetting.SEVENDAYSBEFORE.getValue(), "true", "notification", true);
+		settingsService.createSetting(NotificationSetting.ONEDAYBEFORE.getValue(), "false", "notification", true);
+		settingsService.createSetting(NotificationSetting.ONDAY.getValue(), "false", "notification", true);
+		settingsService.createSetting(NotificationSetting.EVERYSEVENDAYSAFTER.getValue(), "false", "notification", true);
+	}
 
 	private void seedV20() {
 
 	}
 
-    private void seedV19() {
-        try {
-            dpiaTemplateSectionImporter.importDPIATemplateSections("./data/dpia/dpia_template_sections.json");
-            choiceImporter.importValues("./data/choices/dpia-quality-values.json");
-            choiceImporter.importList("./data/choices/dpia-quality-list.json");
-        }
-        catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private void seedV19() {
+		try {
+			dpiaTemplateSectionImporter.importDPIATemplateSections("./data/dpia/dpia_template_sections.json");
+			choiceImporter.importValues("./data/choices/dpia-quality-values.json");
+			choiceImporter.importList("./data/choices/dpia-quality-list.json");
+		}
+		catch (IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
+	private void seedV18() {
+		settingsService.createSetting("inactiveResponsibleEmail", "", "general", true);
+	}
 
-    private void seedV18() {
-        settingsService.createSetting("inactiveResponsibleEmail","" , "general", true);
-    }
+	private void seedV15() {
+		valueDao.findByIdentifier("register-gdpr-p6-f")
+				.ifPresent(c -> c.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. <b>Første afsnit, litra f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"));
+	}
 
-    private void seedV15() {
-        valueDao.findByIdentifier("register-gdpr-p6-f")
-            .ifPresent(c -> c.setDescription("Behandling er nødvendig for, at den dataansvarlige eller en tredjemand kan forfølge en legitim interesse, medmindre den registreredes interesser eller grundlæggende rettigheder og frihedsrettigheder, der kræver beskyttelse af personoplysninger, går forud herfor, navnlig hvis den registrerede er et barn. <b>Første afsnit, litra f), gælder ikke for behandling, som offentlige myndigheder foretager som led i udførelsen af deres opgaver.</b>"));
-    }
-
-    private void seedV16() {
-        // No longer needed
-    }
-
-    private void seedV17() {
+	private void seedV16() {
 		// No longer needed
-    }
+	}
 
-    private void seedV14() {
-        // No longer needed
-    }
+	private void seedV17() {
+		// No longer needed
+	}
 
-    private void seedV13() {
-        // No longer needed
-    }
+	private void seedV14() {
+		// No longer needed
+	}
 
-    private void seedV12() {
-        // No longer needed
-    }
+	private void seedV13() {
+		// No longer needed
+	}
 
-    private void seedV11() {
-        // No longer needed
-    }
+	private void seedV12() {
+		// No longer needed
+	}
 
-    /*
-    * Add sort key by extracting digits from the threats identifier.
-    */
-    private void seedV10() {
-        final List<ThreatCatalog> catalogList = catalogService.findAll();
-        for (final ThreatCatalog catalog : catalogList) {
-            catalog.getThreats()
-                .forEach(threat -> {
-                    final String identifierDigits = StringUtils.getDigits(threat.getIdentifier());
-                    if (identifierDigits != null && !identifierDigits.isEmpty()) {
-                        threat.setSortKey(Long.parseLong(identifierDigits));
-                    }
-                });
-        }
-    }
+	private void seedV11() {
+		// No longer needed
+	}
 
-    private void seedV9() {
-        // No longer needed
-    }
+	/*
+	 * Add sort key by extracting digits from the threats identifier.
+	 */
+	private void seedV10() {
+		final List<ThreatCatalog> catalogList = catalogService.findAll();
+		for (final ThreatCatalog catalog : catalogList) {
+			catalog.getThreats()
+					.forEach(threat -> {
+						final String identifierDigits = StringUtils.getDigits(threat.getIdentifier());
+						if (identifierDigits != null && !identifierDigits.isEmpty()) {
+							threat.setSortKey(Long.parseLong(identifierDigits));
+						}
+					});
+		}
+	}
 
-    private void seedV8() {
-        // No longer needed
-    }
+	private void seedV9() {
+		// No longer needed
+	}
 
-    private void seedV7() {
-        // All non iso 27002 should be selected by default
-        standardTemplateSectionDao.findByIdentifierStartsWith("nsis").stream()
-            .map(StandardTemplateSection::getStandardSection)
-            .filter(Objects::nonNull)
-            .forEach(s -> s.setSelected(true));
-    }
+	private void seedV8() {
+		// No longer needed
+	}
 
-    private void seedV6() {
-        // No longer needed
-    }
+	private void seedV7() {
+		// All non iso 27002 should be selected by default
+		standardTemplateSectionDao.findByIdentifierStartsWith("nsis").stream()
+				.map(StandardTemplateSection::getStandardSection)
+				.filter(Objects::nonNull)
+				.forEach(s -> s.setSelected(true));
+	}
 
-    private void seedV5() {
-        // No longer needed
-    }
+	private void seedV6() {
+		// No longer needed
+	}
 
-    private void seedV4() {
-        // No longer needed
-    }
+	private void seedV5() {
+		// No longer needed
+	}
 
-    private void seedV3() {
-        // No longer needed
-    }
+	private void seedV4() {
+		// No longer needed
+	}
 
-    private void seedV2() {
-        // No longer needed
-    }
+	private void seedV3() {
+		// No longer needed
+	}
 
-    private void seedV1() {
-        // NSIS 4.1.4 was missing in the initial release
-        try {
-            templateImporter.importStandardSections("./data/standards/nsis2_missing_section.json");
-            // And 5+ from 4.1.3 should actually have been in 4.1.4
-            final StandardTemplateSection newParent = standardTemplateSectionDao.findById("nsis_2_0_2a_414").orElseThrow();
-            standardTemplateSectionDao.findById("nsis_2_0_2a_413_5").ifPresent(s -> {
-                s.setSection("1");
-                s.setSortKey(1);
-                s.setParent(newParent);
-                newParent.getChildren().add(s);
-            });
-            standardTemplateSectionDao.findById("nsis_2_0_2a_413_6").ifPresent(s -> {
-                s.setSection("2");
-                s.setSortKey(2);
-                s.setParent(newParent);
-                newParent.getChildren().add(s);
-            });
-            standardTemplateSectionDao.findById("nsis_2_0_2a_413_7").ifPresent(s -> {
-                s.setSection("3");
-                s.setSortKey(3);
-                s.setParent(newParent);
-                newParent.getChildren().add(s);
-            });
-            standardTemplateSectionDao.findById("nsis_2_0_2a_413_Q").ifPresent(s -> {
-                s.setSection("4");
-                s.setSortKey(4);
-                s.setParent(newParent);
-                newParent.getChildren().add(s);
-            });
-            standardTemplateSectionDao.findById("nsis_2_0_2a_413_QQ").ifPresent(s -> {
-                s.setSection("5");
-                s.setSortKey(5);
-                s.setParent(newParent);
-                newParent.getChildren().add(s);
-            });
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+	private void seedV2() {
+		// No longer needed
+	}
 
-    private void seedV0() {
-        try {
-            choiceImporter.importValues("./data/choices/measures-values.json");
-            choiceImporter.importMeasuresList("./data/choices/measures-list.json");
+	private void seedV1() {
+		// NSIS 4.1.4 was missing in the initial release
+		try {
+			templateImporter.importStandardSections("./data/standards/nsis2_missing_section.json");
+			// And 5+ from 4.1.3 should actually have been in 4.1.4
+			final StandardTemplateSection newParent = standardTemplateSectionDao.findById("nsis_2_0_2a_414").orElseThrow();
+			standardTemplateSectionDao.findById("nsis_2_0_2a_413_5").ifPresent(s -> {
+				s.setSection("1");
+				s.setSortKey(1);
+				s.setParent(newParent);
+				newParent.getChildren().add(s);
+			});
+			standardTemplateSectionDao.findById("nsis_2_0_2a_413_6").ifPresent(s -> {
+				s.setSection("2");
+				s.setSortKey(2);
+				s.setParent(newParent);
+				newParent.getChildren().add(s);
+			});
+			standardTemplateSectionDao.findById("nsis_2_0_2a_413_7").ifPresent(s -> {
+				s.setSection("3");
+				s.setSortKey(3);
+				s.setParent(newParent);
+				newParent.getChildren().add(s);
+			});
+			standardTemplateSectionDao.findById("nsis_2_0_2a_413_Q").ifPresent(s -> {
+				s.setSection("4");
+				s.setSortKey(4);
+				s.setParent(newParent);
+				newParent.getChildren().add(s);
+			});
+			standardTemplateSectionDao.findById("nsis_2_0_2a_413_QQ").ifPresent(s -> {
+				s.setSection("5");
+				s.setSortKey(5);
+				s.setParent(newParent);
+				newParent.getChildren().add(s);
+			});
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-            choiceImporter.importValues("./data/choices/dpia-values.json");
-            choiceImporter.importDPIAList("./data/choices/dpia-questions.json");
+	private void seedV0() {
+		try {
+			choiceImporter.importValues("./data/choices/measures-values.json");
+			choiceImporter.importMeasuresList("./data/choices/measures-list.json");
 
-            choiceImporter.importValues("./data/choices/register-values.json");
-            choiceImporter.importList("./data/choices/register-gdpr.json");
-            choiceImporter.importList("./data/choices/register-gdpr-p6.json");
-            choiceImporter.importList("./data/choices/register-gdpr-p7.json");
+			choiceImporter.importValues("./data/choices/dpia-values.json");
+			choiceImporter.importDPIAList("./data/choices/dpia-questions.json");
 
-            choiceImporter.importValues("./data/choices/data-processing-values.json");
-            choiceImporter.importList("./data/choices/data-processing-access-count-list.json");
-            choiceImporter.importList("./data/choices/data-processing-access-who-list.json");
-            choiceImporter.importList("./data/choices/data-processing-categories-list.json");
-            choiceImporter.importList("./data/choices/data-processing-person-categories-list.json");
-            choiceImporter.importList("./data/choices/data-processing-person-categories-sensitive-list.json");
-            choiceImporter.importList("./data/choices/data-processing-person-count-list.json");
-            choiceImporter.importList("./data/choices/data-processing-person-storage-duration-list.json");
-            choiceImporter.importList("./data/choices/data-processing-receiver-list.json");
-            choiceImporter.importList("./data/choices/data-processing-supplier-accept-list.json");
+			choiceImporter.importValues("./data/choices/register-values.json");
+			choiceImporter.importList("./data/choices/register-gdpr.json");
+			choiceImporter.importList("./data/choices/register-gdpr-p6.json");
+			choiceImporter.importList("./data/choices/register-gdpr-p7.json");
 
-            templateImporter.importStandardTemplate("./data/standards/iso27001.json");
-            templateImporter.importStandardSections("./data/standards/iso27001_sections.json");
-            templateImporter.importStandardTemplate("./data/standards/iso27002.json");
-            templateImporter.importStandardSections("./data/standards/iso27002_sections.json");
-            templateImporter.importStandardTemplate("./data/standards/iso27002_2017.json");
-            templateImporter.importStandardSections("./data/standards/iso27002_2017_sections.json");
-            templateImporter.importStandardTemplate("./data/standards/nsis2.json");
-            templateImporter.importStandardSections("./data/standards/nsis2_sections.json");
+			choiceImporter.importValues("./data/choices/data-processing-values.json");
+			choiceImporter.importList("./data/choices/data-processing-access-count-list.json");
+			choiceImporter.importList("./data/choices/data-processing-access-who-list.json");
+			choiceImporter.importList("./data/choices/data-processing-categories-list.json");
+			choiceImporter.importList("./data/choices/data-processing-person-categories-list.json");
+			choiceImporter.importList("./data/choices/data-processing-person-categories-sensitive-list.json");
+			choiceImporter.importList("./data/choices/data-processing-person-count-list.json");
+			choiceImporter.importList("./data/choices/data-processing-person-storage-duration-list.json");
+			choiceImporter.importList("./data/choices/data-processing-receiver-list.json");
+			choiceImporter.importList("./data/choices/data-processing-supplier-accept-list.json");
 
-            addRegistersV0();
-            addTagsV0();
-        } catch (final IOException e) {
-            throw new RuntimeException(e);
-        }
-    }
+			templateImporter.importStandardTemplate("./data/standards/iso27001.json");
+			templateImporter.importStandardSections("./data/standards/iso27001_sections.json");
+			templateImporter.importStandardTemplate("./data/standards/iso27002.json");
+			templateImporter.importStandardSections("./data/standards/iso27002_sections.json");
+			templateImporter.importStandardTemplate("./data/standards/iso27002_2017.json");
+			templateImporter.importStandardSections("./data/standards/iso27002_2017_sections.json");
+			templateImporter.importStandardTemplate("./data/standards/nsis2.json");
+			templateImporter.importStandardSections("./data/standards/nsis2_sections.json");
 
-    private void addRegistersV0() throws IOException {
-        final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
-        sortedResources.sort(Comparator.comparing(Resource::getFilename));
-        for (final Resource register : sortedResources) {
-            registerImporter.importRegister(register);
-        }
-    }
+			addRegistersV0();
+			addTagsV0();
+		}
+		catch (final IOException e) {
+			throw new RuntimeException(e);
+		}
+	}
 
-    private void addTagsV0() {
-        if (tagDao.findByValue("NSIS").isEmpty()) {
-            final Tag nsis = new Tag();
-            nsis.setValue("NSIS");
-            tagDao.save(nsis);
-        }
+	private void addRegistersV0() throws IOException {
+		final List<Resource> sortedResources = new ArrayList<>(Arrays.asList(registers));
+		sortedResources.sort(Comparator.comparing(Resource::getFilename));
+		for (final Resource register : sortedResources) {
+			registerImporter.importRegister(register);
+		}
+	}
 
-        if (tagDao.findByValue("RA-revision").isEmpty()) {
-            final Tag ra = new Tag();
-            ra.setValue("RA-revision");
-            tagDao.save(ra);
-        }
+	private void addTagsV0() {
+		if (tagDao.findByValue("NSIS").isEmpty()) {
+			final Tag nsis = new Tag();
+			nsis.setValue("NSIS");
+			tagDao.save(nsis);
+		}
 
-        if (tagDao.findByValue("IT-revision").isEmpty()) {
-            final Tag it = new Tag();
-            it.setValue("IT-revision");
-            tagDao.save(it);
-        }
+		if (tagDao.findByValue("RA-revision").isEmpty()) {
+			final Tag ra = new Tag();
+			ra.setValue("RA-revision");
+			tagDao.save(ra);
+		}
 
-        if (tagDao.findByValue("NIS2").isEmpty()) {
-            final Tag nis2 = new Tag();
-            nis2.setValue("NIS2");
-            tagDao.save(nis2);
-        }
-    }
+		if (tagDao.findByValue("IT-revision").isEmpty()) {
+			final Tag it = new Tag();
+			it.setValue("IT-revision");
+			tagDao.save(it);
+		}
+
+		if (tagDao.findByValue("NIS2").isEmpty()) {
+			final Tag nis2 = new Tag();
+			nis2.setValue("NIS2");
+			tagDao.save(nis2);
+		}
+	}
+
+	private List<ChartConfiguration> buildChartConfigurations() {
+		return List.of(
+				ChartConfiguration.builder()
+						.entityName("Task")
+						.section("Dashboard")
+						.name("Fordeling af opgaver")
+						.type(ChartType.STACKEDBAR)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(true)
+						.selectableAxis(SelectableAxis.NONE)
+						.allowedXFieldChoices(List.of("nextDeadline"))
+						.allowedYFieldChoices(List.of("taskType"))
+						.selectablePeriod(SelectablePeriod.BOTH)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(List.of("nextDeadline"))
+						.groupTimeByField(Period.MONTH)
+						.defaultStartTime(DateTimePreset.YEAR_START)
+						.defaultEndTime(DateTimePreset.YEAR_END)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Task")
+						.section("Task")
+						.name("Øjebliksbillede af opgaver")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.NONE)
+						.allowedXFieldChoices(List.of("status"))
+						.allowedYFieldChoices(new ArrayList<>())
+						.selectablePeriod(SelectablePeriod.NONE)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(new ArrayList<>())
+						.groupTimeByField(null)
+						.defaultStartTime(DateTimePreset.NONE)
+						.defaultEndTime(DateTimePreset.NONE)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Task")
+						.section("Task")
+						.name("Overskredne opgaver")
+						.type(ChartType.BAR)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.X_ONLY)
+						.allowedXFieldChoices(List.of("responsibleUser", "responsibleOu"))
+						.allowedYFieldChoices(new ArrayList<>())
+						.selectablePeriod(SelectablePeriod.NONE)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(List.of("nextDeadline"))
+						.groupTimeByField(null)
+						.defaultStartTime(DateTimePreset.NONE)
+						.defaultEndTime(DateTimePreset.CURRENT_TIME)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Incident")
+						.section("Incident")
+						.name("Hændelser (Søjlediagram)")
+						.type(ChartType.STACKEDBAR)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.Y_ONLY)
+						.allowedXFieldChoices(List.of(statisticService.getPrefixForField(Incident.class) + "createdAt"))
+						.allowedYFieldChoices(new ArrayList<>()) // This chart is special, with allowed choices generated from obligatory incident fields at runtime
+						.selectablePeriod(SelectablePeriod.BOTH)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(List.of("createdAt"))
+						.groupTimeByField(Period.MONTH)
+						.defaultStartTime(DateTimePreset.YEAR_START)
+						.defaultEndTime(DateTimePreset.YEAR_END)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Incident")
+						.section("Incident")
+						.name("Hændelser (Cirkeldiagram)")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.Y_ONLY)
+						.allowedXFieldChoices(List.of(statisticService.getPrefixForField(Incident.class) + "createdAt"))
+						.allowedYFieldChoices(new ArrayList<>()) // This chart is special, with allowed choices generated from obligatory incident fields at runtime
+						.selectablePeriod(SelectablePeriod.NONE)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(List.of("createdAt"))
+						.groupTimeByField(Period.MONTH)
+						.defaultStartTime(DateTimePreset.YEAR_START)
+						.defaultEndTime(DateTimePreset.YEAR_END)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Asset")
+						.section("DPIA")
+						.name("Fordeling af konsekvensanalyser")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.NONE)
+						.allowedXFieldChoices(List.of("dpiaCompletionStatus"))
+						.allowedYFieldChoices(List.of("dpiaCompletionStatus"))
+						.selectablePeriod(SelectablePeriod.NONE)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(new ArrayList<>())
+						.groupTimeByField(null)
+						.defaultStartTime(DateTimePreset.NONE)
+						.defaultEndTime(DateTimePreset.NONE)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("DPIA")
+						.section("DPIA")
+						.name("Screening af konsekvensanalyser")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.NONE)
+						.allowedXFieldChoices(List.of("dpiaScreening.conclusion"))
+						.allowedYFieldChoices(List.of("dpiaScreening.conclusion"))
+						.selectablePeriod(SelectablePeriod.NONE)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(new ArrayList<>())
+						.groupTimeByField(null)
+						.defaultStartTime(DateTimePreset.NONE)
+						.defaultEndTime(DateTimePreset.NONE)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("ThreatAssessment")
+						.section("ThreatAssessment")
+						.name("Fordeling af risikovurderinger")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.NONE)
+						.allowedXFieldChoices(List.of("assessment"))
+						.allowedYFieldChoices(List.of("assessment"))
+						.selectablePeriod(SelectablePeriod.BOTH)
+						.selectableDateField(true)
+						.allowedDateFieldChoices(List.of("updatedAt"))
+						.groupTimeByField(null)
+						.defaultStartTime(DateTimePreset.MONTH_START)
+						.defaultEndTime(DateTimePreset.MONTH_END)
+						.build(),
+				ChartConfiguration.builder()
+						.entityName("Asset")
+						.section("ThreatAssessment")
+						.name("Status på udførelse")
+						.type(ChartType.PIE)
+						.aggregation(AggregationMethod.COUNT)
+						.ownerOnly(false)
+						.selectableAxis(SelectableAxis.NONE)
+						.allowedXFieldChoices(List.of("threatAssessmentCompletionStatus"))
+						.allowedYFieldChoices(List.of("threatAssessmentCompletionStatus"))
+						.selectablePeriod(SelectablePeriod.BOTH)
+						.selectableDateField(false)
+						.allowedDateFieldChoices(List.of("updatedAt"))
+						.groupTimeByField(null)
+						.defaultStartTime(DateTimePreset.MONTH_START)
+						.defaultEndTime(DateTimePreset.MONTH_END)
+						.build()
+		);
+	}
 }

@@ -35,32 +35,30 @@
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsTask"
-                                    type="button" role="tab" aria-controls="task" aria-selected="true">Mine
-                                Opgaver
+                                    type="button" role="tab" aria-controls="task" aria-selected="true">Mine Opgaver
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsAssets"
-                                    type="button" role="tab" aria-controls="assets" aria-selected="false">Mine
-                                Aktiver
+                                    type="button" role="tab" aria-controls="assets" aria-selected="false">Mine Aktiver
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsRegisters"
-                                    type="button" role="tab" aria-controls="registers" aria-selected="false">Mine
-                                Fortegnelser
+                                    type="button" role="tab" aria-controls="registers" aria-selected="false">Mine Fortegnelser
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsDocuments"
-                                    type="button" role="tab" aria-controls="documents" aria-selected="false">Mine
-                                Dokumenter
+                                    type="button" role="tab" aria-controls="documents" aria-selected="false">Mine Dokumenter
                             </button>
                         </li>
                     </ul>
                     <div class="tab-content">
-                        <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel"
-                             aria-labelledby="task-tab">
+                        <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel" aria-labelledby="task-tab">
+                            <div class="d-flex gap-2">
+                                <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                            </div>
                             <div id="tasksDatatable"></div>
 
                             <!-- Custom search selector-->
@@ -153,7 +151,7 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='hjem')}"></nav>
 </div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, statistic = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -172,7 +170,7 @@
 
     /*]]>*/
 </script>
-<script th:src="@{/js/dashboard.js}" defer></script>
+<script type="module" th:src="@{/js/dashboard.js}" defer></script>
 
 </body>
 

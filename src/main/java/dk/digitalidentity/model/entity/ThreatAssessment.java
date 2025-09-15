@@ -5,6 +5,8 @@ import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -34,7 +36,7 @@ import java.util.List;
 @Setter
 @SQLDelete(sql = "UPDATE threat_assessments SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class ThreatAssessment extends Relatable implements HasSingleResponsibleUser{
+public class ThreatAssessment extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
     @Column
     @Enumerated(EnumType.STRING)
     private ThreatAssessmentType threatAssessmentType;

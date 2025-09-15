@@ -35,8 +35,11 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
-                                <div class="mt-5" id="tasksDatatable"></div>
+                                <div class="d-flex gap-2">
+                                    <div th:replace="~{fragments/gridOptions :: dropdown(customStyle='')}"></div>
+                                    <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                                </div>
+                                <div id="tasksDatatable"></div>
 
                                 <!-- Custom search selector-->
                                 <select class="form-control form-select editField" data-trigger="" name="assignmentTypeSelector" id="assignmentTypeSelector" tabindex="-1" required >
@@ -64,7 +67,7 @@
 
 <div id="copyTaskContainer"></div>
 <div class="modal fade" id="editTaskDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, statistic = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -76,11 +79,9 @@
         var baseUrl = [[@{/tasks/}]];
         var superuser = [[${superuser}]];
     +]*/
-    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
     /*]]>*/
 </script>
-<script th:src="@{/js/task/task-center.js}" defer></script>
+<script type="module" th:src="@{/js/task/task-center.js}" defer></script>
 </body>
 
 </html>

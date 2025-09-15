@@ -1,3 +1,5 @@
+import {initStatisticView} from "../statistic/statisticView.js";
+
 const columnProperties = [
     'id',
     'name',
@@ -28,7 +30,7 @@ const createTable = new CreateTable();
 const preselect = new Preselect();
 let registerView = true;
 
-document.addEventListener("DOMContentLoaded", function (event) {
+document.addEventListener("DOMContentLoaded", async function (event) {
     if (typeof CreateExternalRiskassessmentService === "function") {
         // CreateExternalRiskassessmentService might not always be defined
         createExternalRiskassessmentService = new CreateExternalRiskassessmentService()
@@ -45,6 +47,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
     createRiskService.init();
 
     initPageTopButtons()
+
+    await initStatisticView('ThreatAssessment')
 });
 
 function Preselect() {

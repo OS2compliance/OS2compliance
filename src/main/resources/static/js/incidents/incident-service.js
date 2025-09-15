@@ -1,8 +1,17 @@
 import FormValidationService from "../FormValidationService.js";
+import {initStatisticView} from "../statistic/statisticView.js";
+import IncidentGridService from "./incident-grid-service.js";
 
-window.incidentService = new IncidentService();
 document.addEventListener("DOMContentLoaded", function(event) {
+});
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    window.incidentGridService = new IncidentGridService();
+    window.incidentService = new IncidentService();
     incidentService.init();
+    incidentGridService.init();
+
+    initStatisticView('incident')
 });
 
 function IncidentService() {

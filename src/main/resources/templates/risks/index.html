@@ -3,8 +3,6 @@
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
-<script th:src="@{/js/risk/risk.js}" defer></script>
-<script th:src="@{/js/export-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/risks/risks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -40,7 +38,10 @@
                             <div class="card-body">
                                 <div class="d-flex justify-content-end mb-3">
                                 </div>
-                                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                    <div class="d-flex gap-2">
+                                        <div th:replace="~{fragments/gridOptions :: dropdown(customStyle='')}"></div>
+                                        <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                                    </div>
                                     <div id="risksDatatable" class="mt-5"></div>
 
                                     <!-- Custom search selectors-->
@@ -80,7 +81,9 @@
 <div id="copyAssessmentContainer"></div>
 <div id="editAssessmentContainer"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, statistic = true)}"></div>
+<script type="module" th:src="@{/js/risk/risk.js}" defer></script>
+<script th:src="@{/js/export-service.js}" defer></script>
 <script th:src="@{/js/risk/createExternalRiskassessmentService.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/

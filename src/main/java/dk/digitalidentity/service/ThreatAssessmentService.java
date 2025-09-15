@@ -1007,4 +1007,7 @@ public class ThreatAssessmentService {
         }
     }
 
+	public List<ThreatAssessment> getByIds (List<Long> ids) {
+		return threatAssessmentDao.findAllById(ids);
+	}
 }

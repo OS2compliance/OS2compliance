@@ -1,3 +1,5 @@
+import {initStatisticView} from "../statistic/statisticView.js";
+
 const columnProperties = [
     'id',
     'name',
@@ -16,16 +18,23 @@ const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
 
-document.addEventListener("DOMContentLoaded", function(event) {
+document.addEventListener("DOMContentLoaded", async function(event) {
     createDPIAService = new CreateDPIAService()
     createDPIAService.init()
     editDPIAService = new EditDPIAService()
 
     createExternalDPIAService = new CreateExternalDPIAService()
 
+    // These global variables are only nessacary until onclick events depending on them have been eliminated
+    window.createDPIAService = createDPIAService
+    window.createExternalDPIAService= createExternalDPIAService
+    window.editDPIAService =editDPIAService
+
     initGrid()
 
     initPageTopButtons()
+
+    await initStatisticView("dpia")
 });
 
 function initPageTopButtons() {
@@ -171,8 +180,6 @@ function initGrid() {
                 sort: 0,
                 width: '100px',
                 formatter: (cell, row) => {
-                    console.log(cell)
-                    console.log(row)
                     const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
                     const external = row.cells[8]['data']
@@ -229,7 +236,6 @@ function initGrid() {
 function initGridListItemButtons() {
     delegateListItemActions('dpiaDatatable',
         (id, elem) => {
-        console.log(elem.dataset.external)
             if (elem.dataset.external === 'true') {
                 createExternalDPIAService.editExternalClicked(id)
             } else {

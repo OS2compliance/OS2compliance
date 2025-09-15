@@ -1,4 +1,4 @@
-
+import {initStatisticView} from "./statistic/statisticView.js";
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -13,6 +13,8 @@ const updateUrl = (prev, query) => {
 document.addEventListener("DOMContentLoaded", function (event) {
 
     initSystemOwnerRapportButton()
+
+    initStatisticView('dashboard')
 
     const showDashboard = document.getElementById('tasksDatatable');
     if (showDashboard) {
@@ -78,27 +80,27 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         sortKey: 'completed'
                     },
                     formatter: (cell, row) => {
-                        var status = "";
+                        let status = "";
 
                         // Null-safe access to row cells and data
-                        var type = row?.cells?.[2]?.data || null;
-                        var deadline = row?.cells?.[5]?.data || null;
+                        let type = row?.cells?.[2]?.data || null;
+                        let deadline = row?.cells?.[5]?.data || null;
 
                         // if completed and task type opgave
                         if (cell && type === "Opgave") {
                             status = '<div class="d-block badge bg-success">Udført</div>';
                         } else if (deadline) {
                             // Only process deadline if it exists
-                            var dateString = deadline.replace(" ", "/");
+                            let dateString = deadline.replace(" ", "/");
                             dateString = dateString.replace("-", "/");
-                            var dateSplit = dateString.split("/");
+                            let dateSplit = dateString.split("/");
 
                             // Validate that we have enough date parts
                             if (dateSplit.length >= 3) {
-                                var deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
+                                let deadlineAsDate = new Date(dateSplit[2] + "-" + dateSplit[1] + "-" + dateSplit[0] + "T23:59:59");
 
                                 // Make sure today is defined (you might need to define this elsewhere if not already)
-                                var today = new Date();
+                                let today = new Date();
 
                                 if (deadlineAsDate < today) {
                                     status = '<div class="d-block badge bg-danger">Overskredet</div>';

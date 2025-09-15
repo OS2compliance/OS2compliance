@@ -731,4 +731,8 @@ public record ScreeningDTO(Long dpiaId, List<ScreeningCategoryDTO> categories, S
 		}
 		return assets;
 	}
+
+	public List<Asset> getByIds (List<Long> ids) {
+		return assetDao.findAllById(ids);
+	}
 }

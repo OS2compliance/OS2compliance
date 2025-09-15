@@ -2,7 +2,11 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
+import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
+import dk.digitalidentity.statistic.StatisticLabel;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -20,6 +24,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
+import org.hibernate.annotations.Formula;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -32,17 +37,20 @@ import java.util.Set;
 @Table(name = "tasks")
 @Getter
 @Setter
-public class Task extends Relatable implements HasSingleResponsibleUser{
+public class Task extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
 
+	@StatisticLabel("Type")
     @Column
     @Enumerated(EnumType.STRING)
     private TaskType taskType = TaskType.TASK;
 
+	@StatisticLabel("Ansvarlig Bruger")
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsible_uuid")
     private User responsibleUser;
 
+	@StatisticLabel("Ansvarlig Afdeling")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOu;
@@ -51,6 +59,7 @@ public class Task extends Relatable implements HasSingleResponsibleUser{
     @JoinColumn(name = "department_uuid")
 	private OrganisationUnit department;
 
+	@StatisticLabel("Næste deadline")
     @Column
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     @NotNull
@@ -109,7 +118,15 @@ public class Task extends Relatable implements HasSingleResponsibleUser{
         notifyResponsible = bool;
     }
 
-    public void setNextDeadline(final LocalDate date){
-        nextDeadline = date;
-    }
+	@Formula("(SELECT CASE " +
+			"WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = id) THEN 'COMPLETED' " +
+			"WHEN t.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE' " +
+			"ELSE 'EXCEEDED' " +
+			"END " +
+			"FROM tasks t " +
+			"WHERE t.id = id)")
+	@Enumerated(EnumType.STRING)
+	private TaskDeadlineStatus status;
+
+
 }

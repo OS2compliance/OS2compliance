@@ -279,4 +279,8 @@ public class DPIAService {
 		}
 		return dpiaGrids;
 	}
+
+	public List<DPIA> getByIds (List<Long> ids) {
+		return dpiaDao.findAllById(ids);
+	}
 }

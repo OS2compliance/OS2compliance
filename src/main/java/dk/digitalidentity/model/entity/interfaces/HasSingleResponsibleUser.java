@@ -1,4 +1,6 @@
-package dk.digitalidentity.model.entity;
+package dk.digitalidentity.model.entity.interfaces;
+
+import dk.digitalidentity.model.entity.User;
 
 /**
  * Marks a grid view entity with a field for a single responsible user

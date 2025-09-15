@@ -1,6 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.DocumentType;
