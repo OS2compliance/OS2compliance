@@ -35,6 +35,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -266,6 +267,8 @@ public class KitosSyncService {
 			} else {
 				log.warn("Unexpected number of users found for kitos uuid {}, found {}", ownerUuid, userEntities.size());
 			}
+		} else {
+			asset.setResponsibleUsers(Collections.emptyList());
 		}
 	}
 
