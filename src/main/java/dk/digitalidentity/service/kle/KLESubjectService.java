@@ -39,8 +39,8 @@ public class KLESubjectService implements KLESyncableService<KLESubject, String>
 	}
 
 	@Override
-	public void saveAllSyncables(Collection<KLESubject> entities) {
-		kleSubjectDao.saveAll(entities);
+	public List<KLESubject> saveAllSyncables(Collection<KLESubject> entities) {
+		return kleSubjectDao.saveAll(entities);
 	}
 
 	@Override

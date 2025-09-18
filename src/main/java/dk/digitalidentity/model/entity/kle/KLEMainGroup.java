@@ -89,8 +89,7 @@ public class KLEMainGroup  implements Persistable<String>, Syncable<String> {
 		this.isNew = false;
 	}
 
-	// Helper method for your sync logic
-	public void markAsExisting() {
-		this.isNew = false;
+	public void markNew() {
+		this.isNew = true;
 	}
 }

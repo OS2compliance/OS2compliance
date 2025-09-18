@@ -3,7 +3,6 @@ package dk.digitalidentity.service.kle;
 import dk.digitalidentity.dao.kle.KLEKeywordDao;
 import dk.digitalidentity.model.entity.kle.KLEKeyword;
 import dk.digitalidentity.model.entity.kle.KLESyncableService;
-import dk.digitalidentity.model.entity.kle.Syncable;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -46,8 +45,8 @@ public class KLEKeywordService implements KLESyncableService<KLEKeyword, String>
 	}
 
 	@Override
-	public void saveAllSyncables(Collection<KLEKeyword> entities) {
-		kleKeywordDao.saveAll(entities);
+	public List<KLEKeyword> saveAllSyncables(Collection<KLEKeyword> entities) {
+		return kleKeywordDao.saveAll(entities);
 	}
 
 	public void deleteAllById(Collection<String> hashedIds) {

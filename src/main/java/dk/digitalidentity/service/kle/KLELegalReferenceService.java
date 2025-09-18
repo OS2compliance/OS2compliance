@@ -38,8 +38,8 @@ public class KLELegalReferenceService implements KLESyncableService<KLELegalRefe
 	}
 
 	@Override
-	public void saveAllSyncables(Collection<KLELegalReference> entities) {
-		kleLegalReferenceDao.saveAll(entities);
+	public List<KLELegalReference> saveAllSyncables(Collection<KLELegalReference> entities) {
+		return kleLegalReferenceDao.saveAll(entities);
 	}
 
 	@Override

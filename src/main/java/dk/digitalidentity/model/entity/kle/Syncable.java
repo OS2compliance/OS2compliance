@@ -2,5 +2,5 @@ package dk.digitalidentity.model.entity.kle;
 
 public interface Syncable<ID> {
 	ID getId();
-	void markAsExisting();
+	void markNew();
 }

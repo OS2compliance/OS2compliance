@@ -41,8 +41,8 @@ public class KLEMainGroupService implements KLESyncableService<KLEMainGroup, Str
 	}
 
 	@Override
-	public void saveAllSyncables(Collection<KLEMainGroup> entities) {
-		kleMainGroupDao.saveAll(entities);
+	public List<KLEMainGroup> saveAllSyncables(Collection<KLEMainGroup> entities) {
+		return kleMainGroupDao.saveAll(entities);
 	}
 
 	@Override
