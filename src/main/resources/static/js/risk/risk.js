@@ -212,11 +212,11 @@ function CreateTable() {
                         }
 
                         const catalogs = cell.split(',').map(catalog => catalog.trim()).filter(catalog => catalog !== '');
-                        const badges = catalogs.map(catalog =>
-                            `<span class="badge bg-info me-1 mb-1">${catalog}</span>`
-                        );
-
-                        return gridjs.html(`<div class="d-flex flex-wrap">${badges.join('')}</div>`);
+                        const badges = catalogs.map(catalog => {
+                            const truncated = catalog.length > 20 ? catalog.substring(0, 19) + '...' : catalog;
+                            return `<span class="badge bg-info me-1 mb-1 small" title="${catalog}">${truncated}</span>`;
+                        });
+                        return gridjs.html(`<div class="d-flex flex-wrap" style="max-height: 50px; overflow: hidden;">${badges.join('')}</div>`);
                     },
                 },
                 {
