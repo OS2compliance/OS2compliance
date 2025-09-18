@@ -26,7 +26,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_keyword")
-public class KLEKeyword implements Persistable<String> {
+public class KLEKeyword implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column

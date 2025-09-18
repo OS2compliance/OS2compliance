@@ -2,6 +2,7 @@ package dk.digitalidentity.service.kle;
 
 import dk.digitalidentity.dao.kle.KLEMainGroupDao;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESyncableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,7 @@ import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
-public class KLEMainGroupService {
+public class KLEMainGroupService implements KLESyncableService<KLEMainGroup, String> {
 	private final KLEMainGroupDao kleMainGroupDao;
 
 	public List<KLEMainGroup> getAll() {
@@ -32,5 +33,25 @@ public class KLEMainGroupService {
 
 	public List<KLEMainGroup> saveAll(List<KLEMainGroup> mainGroups) {
 		return kleMainGroupDao.saveAll(mainGroups);
+	}
+
+	@Override
+	public Set<String> findAllIds() {
+		return kleMainGroupDao.findAllIds();
+	}
+
+	@Override
+	public void saveAllSyncables(Collection<KLEMainGroup> entities) {
+		kleMainGroupDao.saveAll(entities);
+	}
+
+	@Override
+	public void deleteAllById(Collection<String> strings) {
+		kleMainGroupDao.softDeleteByMainGroupNumbers(strings);
+	}
+
+	@Override
+	public List<KLEMainGroup> findAllById(Collection<String> strings) {
+		return kleMainGroupDao.findAllById(strings);
 	}
 }

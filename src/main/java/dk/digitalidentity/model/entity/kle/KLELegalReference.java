@@ -27,7 +27,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_legal_reference")
-public class KLELegalReference implements Persistable<String> {
+public class KLELegalReference implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column(name = "accession_number")

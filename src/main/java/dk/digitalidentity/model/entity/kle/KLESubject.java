@@ -34,7 +34,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_subject")
-public class KLESubject implements Persistable<String> {
+public class KLESubject implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column(name = "subject_number")

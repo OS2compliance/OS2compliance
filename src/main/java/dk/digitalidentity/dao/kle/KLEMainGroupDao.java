@@ -19,4 +19,7 @@ public interface KLEMainGroupDao extends JpaRepository<KLEMainGroup, String> {
 	@Query("UPDATE KLEMainGroup k SET k.deleted = true WHERE k.mainGroupNumber NOT IN :mainGroupNumbers AND k.deleted = false")
 	@Transactional
 	void softDeleteByMainGroupNumbers(Collection<String> mainGroupNumbers);
+
+	@Query("SELECT k.mainGroupNumber FROM KLEMainGroup k")
+	Set<String> findAllIds();
 }

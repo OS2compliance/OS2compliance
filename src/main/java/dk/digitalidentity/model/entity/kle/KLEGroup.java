@@ -32,7 +32,7 @@ import java.util.Set;
 @Table(name = "KLE_group")
 @NoArgsConstructor
 @AllArgsConstructor
-public class KLEGroup  implements Persistable<String> {
+public class KLEGroup  implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column(name = "group_number")

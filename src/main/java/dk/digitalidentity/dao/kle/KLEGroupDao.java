@@ -22,4 +22,7 @@ public interface KLEGroupDao extends JpaRepository<KLEGroup, String> {
 	Set<KLEGroup> findByMainGroup_MainGroupNumberIn(Collection<String> mainGroupNumbers);
 
 	Set<KLEGroup> findAllByMainGroupIn(Collection<KLEMainGroup> mainGroups);
+
+	@Query("SELECT k.groupNumber FROM KLEGroup k")
+	Set<String> findAllIds();
 }

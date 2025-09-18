@@ -35,13 +35,17 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Slf4j
 @Service
@@ -51,12 +55,16 @@ public class KLEService {
 	private final KLEClient kLEClient;
 	private final KLEDatabaseService kLEDatabaseService;
 
-	private final Map<String, KLEMainGroup> mainGroupCache = new ConcurrentHashMap<>();
-	private final Map<String, KLEGroup> groupCache = new ConcurrentHashMap<>();
-	private final Map<String, KLESubject> subjectCache = new ConcurrentHashMap<>();
-	private Map<String, KLELegalReference> kleLegalReferenceCache = new ConcurrentHashMap<>();
-	private Map<String, KLEKeyword> kleKeywordCache = new ConcurrentHashMap<>();
 	private Marshaller htmlTextMarshaller = null;
+
+	@RequiredArgsConstructor
+	private static class MappingContext {
+		final Map<String, KLEMainGroup> mainGroups = new ConcurrentHashMap<>();
+		final Map<String, KLEGroup> groups = new ConcurrentHashMap<>();
+		final Map<String, KLESubject> subjects = new ConcurrentHashMap<>();
+		final Map<String, KLELegalReference> legalReferences = new ConcurrentHashMap<>();
+		final Map<String, KLEKeyword> keywords = new ConcurrentHashMap<>();
+	}
 
 	/**
 	 * Fetches an Emneplan containing all data from KLE API
@@ -94,20 +102,50 @@ public class KLEService {
 	 */
 	@Transactional
 	public void syncToDatabase(KLEEmneplanKomponent emneplan) {
+		MappingContext mappingContext = new MappingContext();
 
-		// Map and persist
-		kleLegalReferenceCache = new ConcurrentHashMap<>(); // Reset cache used for legalreferences
-		kleKeywordCache = new ConcurrentHashMap<>(); // Reset cache used for legalreferences
+		// map
+		final List<KLEMainGroup> importedMainGroups = new ArrayList<>();
+		for (HovedgruppeKomponent hovedgruppe : emneplan.getHovedgruppe()) {
+			importedMainGroups.add(mapToMainGroup(hovedgruppe, mappingContext));
+		}
 
-		emneplan.getHovedgruppe()
-				.forEach(this::mapToMainGroup);
+		Map<String, KLEMainGroup> allImportedMainGroups = importedMainGroups.stream()
+				.collect(Collectors.toMap(KLEMainGroup::getId, k -> k, (existing, replacement) -> existing));
 
-		kLEDatabaseService.syncWithDatabase(mainGroupCache, groupCache, subjectCache, kleLegalReferenceCache, kleKeywordCache);
+		Map<String, KLEGroup> allImportedKLEGroups = importedMainGroups.stream()
+				.filter(Objects::nonNull)
+				.flatMap(kleMainGroup -> kleMainGroup.getKleGroups().stream())
+				.collect(Collectors.toMap(KLEGroup::getId, k -> k, (existing, replacement) -> existing));
+
+		Map<String, KLESubject> allImportedKLESubjects = allImportedKLEGroups.values().stream()
+				.filter(Objects::nonNull)
+				.flatMap(group -> group.getSubjects().stream())
+				.collect(Collectors.toMap(KLESubject::getId, k -> k, (existing, replacement) -> existing));
+
+		Map<String, KLELegalReference> allImportedKLELegalReferences = Stream.concat(
+				allImportedKLEGroups.values().stream().filter(Objects::nonNull).flatMap(g -> g.getLegalReferences().stream()),
+				allImportedKLESubjects.values().stream().filter(Objects::nonNull).flatMap(s -> s.getLegalReferences().stream())
+		).collect(Collectors.toMap(KLELegalReference::getId, k -> k, (existing, replacement) -> existing));
+
+		Map<String, KLEKeyword> allImportedKLEKeywords = Stream.concat(
+				allImportedKLEGroups.values().stream().filter(Objects::nonNull).flatMap(g -> g.getKeywords().stream()),
+				allImportedKLESubjects.values().stream().filter(Objects::nonNull).flatMap(s -> s.getKeywords().stream())
+		).collect(Collectors.toMap(KLEKeyword::getId, k -> k, (existing, replacement) -> existing));
+
+		// sync
+		kLEDatabaseService.syncKeywords( allImportedKLEKeywords);
+		kLEDatabaseService.syncLegalReferences( allImportedKLELegalReferences);
+		kLEDatabaseService.syncSubjects( allImportedKLESubjects);
+		kLEDatabaseService.syncGroups( allImportedKLEGroups);
+		kLEDatabaseService.syncMaingroups( allImportedMainGroups);
 	}
 
-	private void mapToMainGroup(HovedgruppeKomponent hovedgruppe) {
+	private KLEMainGroup mapToMainGroup(HovedgruppeKomponent hovedgruppe,MappingContext mappingContext) {
+
+
 		Optional<XMLGregorianCalendar> lastChanged = hovedgruppe.getHovedgruppeAdministrativInfo().getRettetDato().stream().max(XMLGregorianCalendar::compare);
-		KLEMainGroup current = mainGroupCache.get(hovedgruppe.getHovedgruppeNr());
+		KLEMainGroup current = mappingContext.mainGroups.get(hovedgruppe.getHovedgruppeNr());
 		if (current == null) {
 
 			current = KLEMainGroup.builder()
@@ -120,16 +158,19 @@ public class KLEService {
 					.deleted(false)
 					.build();
 
-			mainGroupCache.put(current.getMainGroupNumber(), current);
+			mappingContext.mainGroups.put(current.getMainGroupNumber(), current);
 		}
 		KLEMainGroup mainGroup = current;
 
-		mainGroup.setKleGroups(hovedgruppe.getGruppe().stream().map(g -> mapToGroup(g, mainGroup)).collect(Collectors.toSet()));
+		mainGroup.setKleGroups(hovedgruppe.getGruppe().stream().map(g -> mapToGroup(g, mainGroup, mappingContext)).collect(Collectors.toSet()));
+		return mainGroup;
 	}
 
-	private KLEGroup mapToGroup(GruppeKomponent gruppe, KLEMainGroup mainGroup) {
+	private KLEGroup mapToGroup(GruppeKomponent gruppe, KLEMainGroup mainGroup,MappingContext mappingContext) {
+
+
 		Optional<XMLGregorianCalendar> lastChanged = gruppe.getGruppeAdministrativInfo().getRettetDato().stream().max(XMLGregorianCalendar::compare);
-		KLEGroup current = groupCache.get(gruppe.getGruppeNr());
+		KLEGroup current = mappingContext.groups.get(gruppe.getGruppeNr());
 		if (current == null) {
 			current = KLEGroup.builder()
 					.groupNumber(gruppe.getGruppeNr())
@@ -142,22 +183,22 @@ public class KLEService {
 					.deleted(false)
 					.build();
 
-			groupCache.put(current.getGroupNumber(), current);
+			mappingContext.groups.put(current.getGroupNumber(), current);
 		}
 		KLEGroup kleGroup = current;
 
-		kleGroup.setSubjects(gruppe.getEmne().stream().map(e -> mapToSubject(e, kleGroup)).collect(Collectors.toSet()));
+		kleGroup.setSubjects(gruppe.getEmne().stream().map(e -> mapToSubject(e, kleGroup, mappingContext)).collect(Collectors.toSet()));
 
-		gruppe.getGruppeRetskildeReference().forEach(l -> addKLELegalReference(l, kleGroup, null));
+		gruppe.getGruppeRetskildeReference().forEach(l -> addKLELegalReference(l, kleGroup, null, mappingContext));
 
-		gruppe.getGruppeStikord().forEach(s -> addKLEkeyword(s, kleGroup, null));
+		gruppe.getGruppeStikord().forEach(s -> addKLEkeyword(s, kleGroup, null, mappingContext));
 
 		return kleGroup;
 	}
 
-	private KLESubject mapToSubject(EmneKomponent emne, KLEGroup group) {
+	private KLESubject mapToSubject(EmneKomponent emne, KLEGroup group, MappingContext mappingContext) {
 		Optional<XMLGregorianCalendar> lastChanged = emne.getEmneAdministrativInfo().getRettetDato().stream().max(XMLGregorianCalendar::compare);
-		KLESubject current = subjectCache.get(emne.getEmneNr());
+		KLESubject current = mappingContext.subjects.get(emne.getEmneNr());
 		if (current == null) {
 			current = KLESubject.builder()
 					.subjectNumber(emne.getEmneNr())
@@ -172,30 +213,29 @@ public class KLEService {
 					.deleted(false)
 					.build();
 
-			subjectCache.put(current.getSubjectNumber(), current);
+			mappingContext.subjects.put(current.getSubjectNumber(), current);
 		}
 
 		KLESubject subject = current;
-		Set<KLELegalReference> legalReferences = emne.getEmneRetskildeReference().stream().map(r -> addKLELegalReference(r, null, subject)).collect(Collectors.toSet());
-		current.setLegalReferences(legalReferences);
+		Set<KLELegalReference> legalReferences = emne.getEmneRetskildeReference().stream().map(r -> addKLELegalReference(r, null, subject, mappingContext)).collect(Collectors.toSet());
+		subject.setLegalReferences(legalReferences);
 
-		emne.getEmneStikord().forEach(s -> addKLEkeyword(s, null, subject));
-		emne.getEmneOgHandlingsfacetStikord().forEach(s -> addKLEkeyword(s, subject));
+		emne.getEmneStikord().forEach(s -> addKLEkeyword(s, null, subject, mappingContext));
+		emne.getEmneOgHandlingsfacetStikord().forEach(s -> addKLEkeyword(s, subject, mappingContext));
 
 		return current;
 	}
 
-	private KLELegalReference addKLELegalReference(RetskildeReferenceKomponent kleLegalReference, KLEGroup group, KLESubject subject) {
-		KLELegalReference current = kleLegalReferenceCache.get(kleLegalReference.getRetsinfoAccessionsNr());
+	private KLELegalReference addKLELegalReference(RetskildeReferenceKomponent kleLegalReference, KLEGroup group, KLESubject subject,MappingContext mappingContext) {
+		KLELegalReference current = mappingContext.legalReferences.get(kleLegalReference.getRetsinfoAccessionsNr());
 		if (current == null) {
 			current = mapToLegalReference(kleLegalReference);
-			kleLegalReferenceCache.put(current.getAccessionNumber(), current);
+			mappingContext.legalReferences.put(current.getAccessionNumber(), current);
 		}
 		if (group != null) {
 			if (group.getLegalReferences() == null) {
 				group.setLegalReferences(new HashSet<>());
 			}
-			group.getLegalReferences().add(current);
 			if (current.getGroups() == null) {
 				current.setGroups(new HashSet<>());
 			}
@@ -206,7 +246,6 @@ public class KLEService {
 			if (subject.getLegalReferences() == null) {
 				subject.setLegalReferences(new HashSet<>());
 			}
-			subject.getLegalReferences().add(current);
 			if (current.getSubjects() == null) {
 				current.setSubjects(new HashSet<>());
 			}
@@ -227,15 +266,15 @@ public class KLEService {
 				.build();
 	}
 
-	private void addKLEkeyword(StikordKomponent stikord, KLEGroup group, KLESubject subject) {
+	private void addKLEkeyword(StikordKomponent stikord, KLEGroup group, KLESubject subject, MappingContext mappingContext) {
 		if (stikord == null || stikord.getTekst() == null || stikord.getTekst().isEmpty()) {
 			return;
 		}
 		String hashedId = generateHashId(stikord.getTekst());
-		KLEKeyword current = kleKeywordCache.get(hashedId);
+		KLEKeyword current = mappingContext.keywords.get(hashedId);
 		if (current == null) {
 			current = mapToKeyword(stikord, hashedId);
-			kleKeywordCache.put(hashedId, current);
+			mappingContext.keywords.put(hashedId, current);
 		}
 		if (group != null) {
 			if (group.getKeywords() == null) {
@@ -260,15 +299,15 @@ public class KLEService {
 
 	}
 
-	private void addKLEkeyword(EmneOgHandlingsfacetStikordKomponent stikord, KLESubject subject) {
+	private void addKLEkeyword(EmneOgHandlingsfacetStikordKomponent stikord, KLESubject subject,MappingContext mappingContext) {
 		if (stikord == null || stikord.getTekst() == null || stikord.getTekst().isEmpty()) {
 			return;
 		}
 		String hashedId = generateHashId(stikord.getTekst());
-		KLEKeyword current = kleKeywordCache.get(hashedId);
+		KLEKeyword current = mappingContext.keywords.get(hashedId);
 		if (current == null) {
 			current = mapToKeyword(stikord, hashedId);
-			kleKeywordCache.put(hashedId, current);
+			mappingContext.keywords.put(hashedId, current);
 		}
 		if (subject != null) {
 			if (subject.getKeywords() == null) {

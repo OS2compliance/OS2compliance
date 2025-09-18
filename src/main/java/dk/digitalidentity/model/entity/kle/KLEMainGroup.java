@@ -30,7 +30,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_main_group")
-public class KLEMainGroup  implements Persistable<String> {
+public class KLEMainGroup  implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column(name = "main_group_number")
