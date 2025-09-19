@@ -3,8 +3,9 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.RelationService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
 @Controller
-@RequireUser
+@RequireConfiguration
 @RequestMapping("contacts")
 @RequiredArgsConstructor
 public class ContactController {
@@ -30,6 +31,7 @@ public class ContactController {
     private final ContactDao contactDao;
     private final HttpServletRequest httpServletRequest;
 
+	@RequireReadAll
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final String id,
                        @RequestParam(name = "sourceRelationId", required = false) final String sourceRelationId,
@@ -43,7 +45,7 @@ public class ContactController {
         return "contacts/form";
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireCreateAll
     @Transactional
     @PostMapping("form")
     public String formPost(@ModelAttribute final Contact contact,

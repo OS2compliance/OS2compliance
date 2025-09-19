@@ -1,12 +1,13 @@
 import KLESelectionService from "./kleSelectionService.js";
+import OnUnSubmittedService from "../../on-unsubmitted-changes-service.js";
 
+let onUnSubmittedService = new OnUnSubmittedService();
 let ouChoices;
 let departmentChoices;
 let userChoices;
 let customResponsibleUserChoices;
 let registerRegardingChoices;
-let kleService
-let dataProtectionOfficerChoice;
+let kleService;
 
 /**
  * Functionality related to the "Generelt" page of the register detail view
@@ -17,6 +18,28 @@ export default function RegisterGeneralService() {
         this.initAssetRelationSelect();
         this.initDocumentRelationSelectPrivate();
         this.initTaskRelationSelectPrivate();
+        this.initGeneralEditButtons()
+    }
+
+    this.initGeneralEditButtons = function () {
+        const editButton = document.getElementById('editBtn');
+        const cancelButton = document.getElementById('cancelBtn');
+        const saveButton = document.getElementById("saveBtn");
+
+        editButton?.addEventListener('click', (e) =>{
+            const isResponsibleChangeable = editButton.dataset.responsibleChangeable;
+            this.setGenereltEditState(true, isResponsibleChangeable);
+            onUnSubmittedService.setChangesMade();
+        })
+
+        cancelButton?.addEventListener('click', (e) =>{
+            this.setGenereltEditState(false, false);
+            onUnSubmittedService.reset();
+        })
+
+        saveBtn?.addEventListener('click', () => {
+            onUnSubmittedService.reset();
+        });
     }
 
 
@@ -27,7 +50,6 @@ export default function RegisterGeneralService() {
         ouChoices = choiceService.initOUSelect('ouSelect', false);
         userChoices = choiceService.initUserSelect('userSelect', false);
         customResponsibleUserChoices = choiceService.initUserSelect('customUserField', false);
-        dataProtectionOfficerChoice = choiceService.initUserSelect('dataProtectionOfficer', false);
 
         const registerRegardingElement = document.getElementById('registerRegarding');
         registerRegardingChoices = initSelect(registerRegardingElement);
@@ -105,7 +127,7 @@ export default function RegisterGeneralService() {
         );
     }
 
-    this.setGenereltEditState = function (editable) {
+    this.setGenereltEditState = function (editable, isResponsibleFieldEditable) {
         const editBtn = document.querySelector('#editBtn');
         const cancelBtn = document.querySelector('#cancelBtn');
         const saveBtn = document.querySelector('#saveBtn');
@@ -142,16 +164,16 @@ export default function RegisterGeneralService() {
             registerRegardingChoices.disable();
             kleService.mainGroupSelectorInstance.disable();
             kleService.groupSelectorInstance.disable();
-            dataProtectionOfficerChoice.disable()
         } else {
-            userChoices.enable();
-            customResponsibleUserChoices.enable();
+            if (isResponsibleFieldEditable === 'true') {
+                userChoices.enable();
+                customResponsibleUserChoices.enable();
+            }
             ouChoices.enable();
             departmentChoices.enable();
             registerRegardingChoices.enable();
             kleService.mainGroupSelectorInstance.enable();
             kleService.groupSelectorInstance.enable();
-            dataProtectionOfficerChoice.enable()
         }
     }
 

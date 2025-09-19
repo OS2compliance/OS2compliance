@@ -1,19 +1,14 @@
-const incidentGridService = new IncidentGridService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    incidentGridService.init();
-});
-function IncidentGridService() {
+
+export default function IncidentGridService() {
     this.filterFrom = '';
     this.filterTo = '';
 
     this.init = () => {
-        var rerender = false;
         let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom' );
         let filterFrom = localStorage.getItem("incidentFilterFrom");
         if (filterFrom != null && filterFrom !== "null") {
             fromPicker.setFullDate(new Date(filterFrom));
             this.filterFrom = fromPicker.getFormatedDate();
-            rerender = true;
         }
         fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
 
@@ -22,15 +17,13 @@ function IncidentGridService() {
         if (filterTo != null && filterTo !== "null") {
             toPicker.setFullDate(new Date(filterTo));
             this.filterTo = toPicker.getFormatedDate();
-            rerender = true;
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
         incidentService.fetchColumnName()
             .then(columnNames => {
                 this.initGrid(columnNames);
-                if (rerender) {
-                    this.incidentGrid.forceRender();
-                }
+                this.updateSort(this.incidentGrid);
+                this.incidentGrid.updateConfig(this.currentConfig).forceRender();
             });
     }
 
@@ -63,6 +56,7 @@ function IncidentGridService() {
             formattedDate = '';
         }
         this.filterFrom = formattedDate;
+        this.updateSort(this.incidentGrid);
         this.incidentGrid.updateConfig(this.currentConfig).forceRender();
         localStorage.setItem("incidentFilterFrom", date);
     }
@@ -72,6 +66,7 @@ function IncidentGridService() {
             formattedDate = '';
         }
         this.filterTo = formattedDate;
+        this.updateSort(this.incidentGrid);
         this.incidentGrid.updateConfig(this.currentConfig).forceRender();
         localStorage.setItem("incidentFilterTo", date);
     }
@@ -119,7 +114,8 @@ function IncidentGridService() {
                 headers: {
                     'X-CSRF-TOKEN': token
                 },
-                then: data => { this.data = data;
+                then: data => {
+                    this.data = data;
                     return data.content.map(field => this.mapRow(field));
                 },
                 total: data => data.totalCount
@@ -128,13 +124,18 @@ function IncidentGridService() {
         this.incidentGrid = new gridjs.Grid(this.currentConfig);
         this.incidentGrid.render(document.getElementById("incidentsTable"));
         searchService.initSearch(this.incidentGrid, this.currentConfig);
+        const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', restUrl + 'export', incidentsTable);
+
         gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
+
+        initGridActions()
+        initSaveAsExcelButton(customGridFunctions, 'Hændelseslog')
     }
 
     this.mapRow = (field) => {
         let columnValues = [];
         let customColumns = this.columns.filter((c) =>
-            c.id !== 'id' && c.id !== 'title' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'actions');
+            c.id !== 'id' && c.id !== 'name' && c.id !== 'createdAt' && c.id !== 'updatedAt' && c.id !== 'allowedActions');
         customColumns.forEach(c => {
             let added = false;
             field.responses.forEach(response => {
@@ -147,56 +148,83 @@ function IncidentGridService() {
                 columnValues.push("");
             }
         });
-        return [field.id, field.name, field.createdAt, ...columnValues, field.updatedAt];
+        return [field.id, field.name, field.createdAt, ...columnValues, field.updatedAt, field.allowedActions];
     }
 
     this.buildColumns = (columnNames) => {
-        this.columns = [{
+        const columns = [
+            {
                 id: "id",
-                hidden: true
+                hidden: true,
             },
             {
-                id: "title",
+                id: "name",
                 name: "Titel",
                 formatter: (cell, row) => {
                     const url = viewUrl + row.cells[0]['data'];
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
                 },
-                width: '250px'
+                width: '250px',
+                canSortFlag: true
             },
             {
                 id: "createdAt",
                 name: "Oprettet",
-                width: '120px'
-            }];
+                width: '120px',
+                sort: {
+                    enabled: true
+                },
+                canSortFlag: true
+            }
+        ]
+
         columnNames.forEach(c => {
-            this.columns.push({
+            columns.push({
                 id: c,
                 name: c,
-                sort: 0
+                sort: {
+                    enabled: false
+                }
             })
         });
-        this.columns.push(
+        columns.push(
             {
                 id: "updatedAt",
-                name: "Opdateret"
-            },
+                name: "Opdateret",
+                canSortFlag: true
+            }
+        )
+        columns.push(
             {
-                id: "actions",
+                id: "allowedActions",
                 name: "Handlinger",
-                sort: 0,
+                sort: false,
                 width: '90px',
                 formatter: (cell, row) => {
-                    const id = row.cells[0]['data'];
-                    const name = row.cells[1]['data'];
-                    if(superuser) {
-                        return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentService.editIncident('editIncidentDialog', '${id}')"><i class="pli-pencil fs-5"></i></button>`
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="incidentService.deleteIncident(incidentGridService.incidentGrid, '${id}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                    }
+                    const identifier = row.cells[0]['data'];
+                    const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    attributeMap.set('name', name);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
-            });
+            }
+        );
+
+        this.columns = columns;
+    }
+
+    this.updateSort = () => {
+        this.currentConfig.columns.forEach(column => {
+            column.columns.forEach(subcolumn => {subcolumn.sort = column.canSortFlag !== undefined})
+        })
     }
 
 }
 
+function initGridActions() {
+    delegateListItemActions('incidentsTable',
+        (id, elem) => incidentService.editIncident('editIncidentDialog', id),
+        (id, name, elem) => incidentService.deleteIncident(incidentGridService.incidentGrid, id, name),
+        )
+}

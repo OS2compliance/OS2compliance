@@ -5,6 +5,8 @@ import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
@@ -18,7 +20,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
@@ -34,6 +35,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.util.NullSafe.nullSafe;
 
@@ -43,7 +45,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Setter
 @SQLDelete(sql = "UPDATE registers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Register extends Relatable {
+public class Register extends Relatable implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers {
 
     @ManyToMany
     @JoinTable(
@@ -140,7 +142,7 @@ public class Register extends Relatable {
 	@Column
 	private String supplementalLegalBasis;
 
-    @OneToOne(mappedBy = "register")
+	@OneToOne(mappedBy = "register", cascade = CascadeType.ALL, orphanRemoval = true)
     @PrimaryKeyJoinColumn
     private ConsequenceAssessment consequenceAssessment;
 
@@ -172,10 +174,6 @@ public class Register extends Relatable {
 	)
 	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 
-	@ManyToOne(cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH })
-	@JoinColumn(name = "data_protection_officer")
-	private User dataProtectionOfficer;
-
 	@Override
     public RelationType getRelationType() {
         return RelationType.REGISTER;
@@ -186,4 +184,14 @@ public class Register extends Relatable {
         return (status != null ? status.getMessage() : "") +
             (consequenceAssessment != null ? nullSafe(() -> consequenceAssessment.getAssessment().getMessage(), "") : "");
     }
+
+	@Override
+	public String getCustomResponsibleUserUuids() {
+		return customResponsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
+	}
+
+	@Override
+	public String getResponsibleUserUuids() {
+		return responsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
+	}
 }

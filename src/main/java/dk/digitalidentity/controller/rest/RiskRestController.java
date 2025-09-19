@@ -17,7 +17,6 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
-import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
@@ -31,20 +30,27 @@ import dk.digitalidentity.model.entity.enums.ThreatDatabaseType;
 import dk.digitalidentity.model.entity.enums.ThreatMethod;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.EmailTemplateService;
+import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.PrecautionService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.RequiredArgsConstructor;
@@ -55,8 +61,6 @@ import org.springframework.core.env.Environment;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -73,7 +77,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -82,7 +85,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
@@ -94,7 +96,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/risks")
-@RequireUser
+@RequireRisk
 @RequiredArgsConstructor
 public class RiskRestController {
     private final ApplicationEventPublisher eventPublisher;
@@ -112,28 +114,86 @@ public class RiskRestController {
     private final Environment environment;
     private final EmailTemplateService emailTemplateService;
 	private final OrganisationService organisationService;
+	private final ExcelExportService excelExportService;
+	private final SecurityUserService securityUserService;
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
-    public PageDTO<RiskDTO> list(
-        @RequestParam(value = "page", defaultValue = "0") int page,
-        @RequestParam(value = "limit", defaultValue = "50") int limit,
-        @RequestParam(value = "order", required = false) String sortColumn,
-        @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
-        @RequestParam Map<String, String> filters // Dynamic filters for search fields
-    ) {
-        Page<RiskGrid> risks =  riskGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, RiskGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            RiskGrid.class
-        );
+	public PageDTO<RiskDTO> list(
+			@RequestParam(value = "page", defaultValue = "0") int page,
+			@RequestParam(value = "limit", defaultValue = "50") int limit,
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam Map<String, String> filters // Dynamic filters for search fields
+	) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		String uuid = user.getUuid();
 
-        assert risks != null;
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), authentication.getAuthorities().stream().anyMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)), SecurityUtil.getPrincipalUuid()));
+		// Assets user is responsible for
+		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
+				.map(Relatable::getName)
+				.collect(Collectors.toSet());
+
+		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, page, limit, user);
+
+		assert risks != null;
+
+		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid));
     }
 
-    record ResponsibleUserDTO(String uuid, String name, String userId) {}
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+		String uuid = user.getUuid();
+
+		int pageLimit = Integer.MAX_VALUE;
+
+		// Assets user is responsible for
+		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
+				.map(Relatable::getName)
+				.collect(Collectors.toSet());
+
+		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, 0, pageLimit, user);
+
+		assert risks != null;
+
+		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid);
+		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
+	}
+
+	// Should be in Service class but risks doesn't have one???
+	private Page<RiskGrid> getRisks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
+		Page<RiskGrid> risks = null;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			// Logged-in user can see all
+			risks = riskGridDao.findAllWithColumnSearch(
+					validateSearchFilters(filters, RiskGrid.class),
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+		}
+		else {
+			// Logged-in user can see only own
+			risks = riskGridDao.findAllWithAssignedUser(
+					validateSearchFilters(filters, RiskGrid.class),
+					user,
+					buildPageable(page, pageLimit, sortColumn, sortDirection),
+					RiskGrid.class
+			);
+		}
+		return risks;
+	}
+
+	record ResponsibleUserDTO(String uuid, String name, String userId) {}
     record ResponsibleUsersWithElementNameDTO(String elementName, List<ResponsibleUserDTO> users) {}
+	@RequireReadOwnerOnly
     @GetMapping("register")
     public ResponsibleUsersWithElementNameDTO getRegisterResponsibleUserAndName(@RequestParam final long registerId) {
         final Register register = registerService.findById(registerId)
@@ -147,6 +207,7 @@ public class RiskRestController {
     }
 
     record RiskUIDTO(String elementName, int rf, int of, int sf, int ri, int oi, int si, int rt, int ot, int st, int sa, ResponsibleUsersWithElementNameDTO users) {}
+	@RequireReadOwnerOnly
     @GetMapping("asset")
     public RiskUIDTO getRelatedAsset(@RequestParam final Set<Long> assetIds) {
         final List<Asset> assets = assetService.findAllById(assetIds);
@@ -158,15 +219,17 @@ public class RiskRestController {
     }
 
     record MailReportDTO(String message, String sendTo, ReportFormat format, boolean sign) {}
+	@RequireCreateOwnerOnly
     @Transactional
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        ThreatAssessment finalThreatAssessment = threatAssessment;
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !finalThreatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+
+		if (!SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         final User responsibleUser = userService.findByUuid(dto.sendTo).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Den valgte bruger kunne ikke findes, og rapporten kan derfor ikke sendes."));
         if (responsibleUser.getEmail() == null || responsibleUser.getEmail().isBlank()) {
             return new ResponseEntity<>("Den valgte bruger har ikke nogen email tilknyttet, og rapporten kan derfor ikke sendes.", HttpStatus.BAD_REQUEST);
@@ -184,7 +247,7 @@ public class RiskRestController {
 
         if (dto.format.equals(ReportFormat.WORD)) {
             try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(RISK_ASSESSMENT_TEMPLATE_DOC,
-                Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id))) {
+                Map.of(PARAM_RISK_ASSESSMENT_ID, "" + id), null)) {
                 final File outputFile = File.createTempFile(UUID.randomUUID().toString(), ".docx");
                 myDocument.write(new FileOutputStream(outputFile));
                 emailEvent.getAttachments().add(new EmailEvent.EmailAttachement(outputFile.getAbsolutePath(),
@@ -251,17 +314,16 @@ public class RiskRestController {
     }
 
     record SetFieldDTO(@NotNull SetFieldType setFieldType, @NotNull ThreatDatabaseType dbType, Long id, String identifier, @NotNull String value) {}
+	@RequireUpdateOwnerOnly
     @PostMapping("{id}/threats/setfield")
     public ResponseEntity<HttpStatus> setField(@PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 
-        if (threatAssessment.getThreatAssessmentResponses() == null) {
-            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
-        }
+		checkUpdateAccess(threatAssessment);
+
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+		}
 
         final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.dbType, dto.id, dto.identifier);
         if (response == null) {
@@ -302,18 +364,24 @@ public class RiskRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	private void checkUpdateAccess(ThreatAssessment threatAssessment) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+	}
+
     record SetPrecautionsDTO(@NotNull ThreatDatabaseType threatType, Long threatId, String threatIdentifier, @NotNull List<Long> precautionIds) {}
+	@RequireUpdateOwnerOnly
     @PostMapping("{id}/threats/setPrecautions")
     public ResponseEntity<HttpStatus> setPrecautions(@PathVariable final long id, @Valid @RequestBody final SetPrecautionsDTO dto) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 
-        if (threatAssessment.getThreatAssessmentResponses() == null) {
-            threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
-        }
+		checkUpdateAccess(threatAssessment);
+
+		if (threatAssessment.getThreatAssessmentResponses() == null) {
+			threatAssessment.setThreatAssessmentResponses(new ArrayList<>());
+		}
 
         final ThreatAssessmentResponse response = getRelevantResponse(threatAssessment, dto.threatType, dto.threatId, dto.threatIdentifier);
         if (response == null) {
@@ -362,7 +430,11 @@ public class RiskRestController {
     private ThreatAssessmentResponse getRelevantResponse(final ThreatAssessment threatAssessment, final ThreatDatabaseType threatType, final Long threatId, final String threatIdentifier) {
         ThreatAssessmentResponse response = null;
         if (threatType.equals(ThreatDatabaseType.CATALOG)) {
-            final ThreatCatalogThreat threat = threatAssessment.getThreatCatalog().getThreats().stream().filter(t -> t.getIdentifier().equals(threatIdentifier)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+			final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+					.flatMap(catalog -> catalog.getThreats().stream())
+					.filter(t -> t.getIdentifier().equals(threatIdentifier))
+					.findAny()
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
             response = threatAssessment.getThreatAssessmentResponses().stream()
                 .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(threat.getIdentifier()))
                 .findAny()
@@ -384,11 +456,17 @@ public class RiskRestController {
         return response;
     }
 
-    @RequireSuperuserOrAdministrator
+    @RequireDeleteOwnerOnly
     @Transactional
     @DeleteMapping("{id}/threats/{threatId}")
     public ResponseEntity<HttpStatus> deleteCustomThread(@PathVariable final long id, @PathVariable final long threatId) {
         final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) ||
+				!(SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
         final CustomThreat customThreat = threatAssessment.getCustomThreats().stream()
             .filter(c -> c.getId() == threatId)
             .findFirst().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -396,6 +474,7 @@ public class RiskRestController {
             .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId() == threatId)
             .findFirst().ifPresent(r -> {
                 relationService.deleteRelatedTo(r.getId());
+				r.setCustomThreat(null);
                 threatAssessment.getThreatAssessmentResponses().remove(r);
             });
         threatAssessment.getCustomThreats().remove(customThreat);
@@ -433,12 +512,10 @@ public class RiskRestController {
 
     public record CreateExternalRiskassessmentDTO(Long riskId, Set<Long> assetIds, String link, String name, ThreatAssessmentType type, Long registerId, String responsibleUserUuid, String responsibleOuUuid) {
     }
+	@RequireCreateAll
     @PostMapping("external/create")
     public ResponseEntity<HttpStatus> createExternalDpia(@RequestBody final CreateExternalRiskassessmentDTO createExternalDTO) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if (authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER))) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-		}
+
 		User responsibleUser = null;
 		OrganisationUnit responsibleOu = null;
 		if (createExternalDTO.responsibleUserUuid != null) {
@@ -484,13 +561,16 @@ public class RiskRestController {
     }
 
 	public record CommentUpdateDTO(Long riskId, String comment){}
+	@RequireUpdateOwnerOnly
 	@PostMapping("comment/update")
 	public ResponseEntity<HttpStatus> updateDPIAComment(@RequestBody final CommentUpdateDTO commentUpdateDTO) {
 		final ThreatAssessment threatAssessment = threatAssessmentService.findById(commentUpdateDTO.riskId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-		if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && !threatAssessment.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+
+		if (!(SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
+				|| (SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
+
 		threatAssessment.setComment(commentUpdateDTO.comment);
 		threatAssessmentService.save(threatAssessment);
 
@@ -621,7 +701,7 @@ public class RiskRestController {
 					.filter(assessment -> assessment.getCreatedAt().isBefore(cutoffDate) ||
 							assessment.getCreatedAt().isEqual(cutoffDate))
 					.collect(Collectors.toMap(
-							assessment -> getAssessmentKey(assessment),
+							this::getAssessmentKey,
 							assessment -> assessment,
 							(existing, replacement) -> existing.getCreatedAt().isAfter(replacement.getCreatedAt()) ?
 									existing : replacement

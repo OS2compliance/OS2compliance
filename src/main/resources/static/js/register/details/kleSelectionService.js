@@ -17,7 +17,7 @@ export default class KLESelectionService {
         }
 
         const mainGroupSelect = document.getElementById(this.mainGroupSelectId);
-        this.mainGroupSelectorInstance = initSelect(mainGroupSelect);
+        this.mainGroupSelectorInstance = initSelect(mainGroupSelect, 'form-control', {searchChoices: true});
 
         mainGroupSelect.addEventListener('change', async (e) => {
             await this.#getGroupOptionsFragment()
@@ -46,7 +46,7 @@ export default class KLESelectionService {
 
     #initGroupSelect() {
         const groupSelect = document.getElementById(this.groupSelectId)
-        this.groupSelectorInstance = initSelect(groupSelect);
+        this.groupSelectorInstance = initSelect(groupSelect, 'form-control', {searchChoices: true});
     }
 
 
@@ -56,6 +56,6 @@ export default class KLESelectionService {
         }
 
         const legalRefSelect = document.getElementById(this.legalReferenceSelectId);
-        this.legalReferenceSelectorInstance = initSelect(legalRefSelect);
+        this.legalReferenceSelectorInstance = initSelect(legalRefSelect, 'form-control', {searchChoices: true});
     }
 }

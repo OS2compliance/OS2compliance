@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
@@ -62,6 +63,9 @@ public class RiskGrid  implements HasSingleResponsibleUser {
     @Column
     private String localizedEnums;
 
+	@Column
+	private String signerUuid;
+
     @Column
     @Enumerated(EnumType.STRING)
     private ThreatAssessmentReportApprovalStatus threatAssessmentReportApprovalStatus;
@@ -71,4 +75,7 @@ public class RiskGrid  implements HasSingleResponsibleUser {
 
     @Column
     private String externalLink;
+
+	@Column
+	private String threatCatalogs;
 }

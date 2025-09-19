@@ -9,4 +9,5 @@ public interface AssetGridDao extends JpaRepository<AssetGrid, Long>, SearchRepo
 	Page<AssetGrid> findAll(final Pageable pageable);
     Page<AssetGrid> findAllByResponsibleUserUuidsContaining(String uuid, final Pageable pageable);
 
+
 }

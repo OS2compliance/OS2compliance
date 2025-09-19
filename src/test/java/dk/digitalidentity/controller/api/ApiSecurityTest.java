@@ -49,7 +49,7 @@ public class ApiSecurityTest extends BaseIntegrationTest {
         doReturn(Page.empty()).when(supplierServiceMock).getPaged(anyInt(), anyInt());
         doReturn(Page.empty()).when(organisationServiceMock).getPaged(anyInt(), anyInt());
         doReturn(Page.empty()).when(documentServiceMock).getPaged(anyInt(), anyInt());
-        doReturn(Page.empty()).when(assetServiceMock).getPaged(anyInt(), anyInt());
+        doReturn(Page.empty()).when(assetServiceMock).getPagedNonDeleted(anyInt(), anyInt());
         doReturn(Optional.empty()).when(apiClientService).getClientByApiKey(anyString());
         doReturn(Optional.of(ApiClient.builder()
             .applicationIdentifier("some-app")

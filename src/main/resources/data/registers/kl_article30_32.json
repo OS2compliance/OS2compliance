@@ -1,1 +1,18 @@
-{"packageName":"kl_article30","name":"33. Behandling af personoplysninger i forbindelse med kollektiv trafik samt individuel handicapkørsel","description":"Behandlingen af personoplysninger sker i forbindelse med etablering, drift og organisering af trafikselskaber, herunder udstedelse af rejsekort, kontrolafgifter, samt i forbindelse med trafikselskabers forpligtelse til at sikre indiviuel handicapkørsel","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11","register-gdpr-p7-f","register-gdpr-valp7"]}
+{
+  "packageName": "kl_article30",
+  "name": "33. Behandling af personoplysninger i forbindelse med kollektiv trafik samt individuel handicapkørsel",
+  "description": "Behandlingen af personoplysninger sker i forbindelse med etablering, drift og organisering af trafikselskaber, herunder udstedelse af rejsekort, kontrolafgifter, samt i forbindelse med trafikselskabers forpligtelse til at sikre indiviuel handicapkørsel",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11",
+    "register-gdpr-p7-f",
+    "register-gdpr-valp7"
+  ],
+  "kleMainGroups": [
+    "13"
+  ],
+  "kleGroups": [
+    "13.05"
+  ]
+}

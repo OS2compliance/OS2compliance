@@ -12,6 +12,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public class CatalogService {
     }
 
     public boolean inUse(final ThreatCatalog threatCatalog) {
-        return threatAssessmentDao.countByThreatCatalog(threatCatalog) > 0;
+        return threatAssessmentDao.countByThreatCatalogsContains(threatCatalog) > 0;
     }
 
     @Transactional
@@ -87,4 +88,8 @@ public class CatalogService {
         threat.setThreatType(source.getThreatType());
         return threatCatalogThreatDao.save(threat);
     }
+
+	public List<ThreatCatalog> findByIdentifierIn(Set<String> catalogIdentifiers) {
+		return threatCatalogDao.findByIdentifierIn(catalogIdentifiers);
+	}
 }

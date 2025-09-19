@@ -1,8 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
@@ -14,6 +14,8 @@ import org.springframework.boot.web.servlet.error.ErrorController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.saml2.provider.service.authentication.Saml2AuthenticationException;
+import org.springframework.security.web.WebAttributes;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -34,7 +36,7 @@ public class DefaultController implements ErrorController {
 
 	@Transactional
     @GetMapping("/dashboard")
-    @RequireUser
+    @RequireReadOwnerOnly
 	public String index(final Model model) {
         if (SecurityUtil.isLoggedIn()) {
             final var userUuid = SecurityUtil.getLoggedInUserUuid();
@@ -53,15 +55,15 @@ public class DefaultController implements ErrorController {
 
 	@RequestMapping(value = "/error", produces = "text/html")
 	public String errorPage(final Model model, final HttpServletRequest request) {
+		Exception authException = (Exception) request.getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+		if (authException == null && request.getSession() != null) {
+			authException = (Exception) request.getSession().getAttribute(WebAttributes.AUTHENTICATION_EXCEPTION);
+		}
 		final Map<String, Object> body = getErrorAttributes(new ServletWebRequest(request));
         model.addAllAttributes(body);
-        if (model.containsAttribute("EXCEPTION")) {
-            final Exception ex = (Exception) model.getAttribute("EXCEPTION");
-            if (ex instanceof UsernameNotFoundException) {
-                return "errors/userNotFound";
-            }
+        if (authException instanceof Saml2AuthenticationException && authException.getCause() instanceof UsernameNotFoundException) {
+			return "errors/userNotFound";
         }
-
 		return "error";
 	}
 

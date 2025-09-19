@@ -54,26 +54,45 @@ public class ISO27002Replacer implements PlaceHolderReplacer {
 
     @Override
     @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
-        final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
+		if (template != null) {
+			final XWPFParagraph standardNamePlaceholder = findParagraphToReplace(document, PlaceHolder.STANDARD_NAME.getPlaceHolder());
+			log.info(standardNamePlaceholder != null ? "found" : "not found");
+			if (standardNamePlaceholder != null) {
+				replaceStandardName(standardNamePlaceholder, PlaceHolder.STANDARD_NAME.getPlaceHolder(), template.getName());
+			}
+		}
+		final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
-            replaceParagraph(paragraph, placeHolder.getPlaceHolder());
+            replaceParagraph(paragraph, placeHolder.getPlaceHolder(), template);
         }
     }
 
-    private void replaceParagraph(final XWPFParagraph p, final String placeHolder) {
+	private void replaceStandardName(XWPFParagraph p, String placeHolder, String name) {
+		final XWPFDocument document = p.getDocument();
+		p.getRuns().stream()
+				.filter(xwpfRun -> placeHolder.equalsIgnoreCase(xwpfRun.getText(0)))
+				.findFirst()
+				.ifPresent(xwpfRun -> {
+					xwpfRun.setText(name + " rapport", 0);
+				});
+	}
+
+	private void replaceParagraph(final XWPFParagraph p, final String placeHolder, StandardTemplate template) {
         p.getRuns().stream()
             .filter(r -> placeHolder.equalsIgnoreCase(r.getText(0)))
             .findFirst()
-            .ifPresent(xwpfRun -> insertISO27002(p, xwpfRun));
+            .ifPresent(xwpfRun -> insertISO27002(p, xwpfRun, template));
     }
 
-    private void insertISO27002(final XWPFParagraph p, final XWPFRun placeHolderRun) {
+    private void insertISO27002(final XWPFParagraph p, final XWPFRun placeHolderRun, StandardTemplate template) {
         final XWPFDocument document = p.getDocument();
-        final StandardTemplate standardTemplate = standardTemplateDao.findByIdentifier("iso27002_2022");
+		if (template == null) {
+			template = standardTemplateDao.findByIdentifier("iso27002_2022");
+		}
         placeHolderRun.setText("", 0); // clear existing text(placeholder)
         try (final XmlCursor cursor = setCursorToNextStartToken(p.getCTP())) {
-            final List<StandardTemplateSection> stdTemplateSectionsOrdered = standardTemplate.getStandardTemplateSections();
+            final List<StandardTemplateSection> stdTemplateSectionsOrdered = template.getStandardTemplateSections();
             stdTemplateSectionsOrdered.sort(Comparator.comparing(StandardTemplateSection::getSortKey));
             for (final StandardTemplateSection section : stdTemplateSectionsOrdered) {
                 if (section.getParent() == null) {

@@ -60,9 +60,9 @@
             </td>
             <td style="text-align: right">
                 <div class="ms-2 toolbar-end">
-                    <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:id="${'editSectionBtn' + section.id}" type="button" class="btn btn-secondary btn-xs" th:data-id="${section.id}" onclick="setEditState(this, true)">Rediger</button>
-                    <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" th:id="${'cancelSectionBtn' + section.id}" type="button" class="btn btn-light btn-xs" th:data-id="${section.id}" onclick="setEditState(this, false)" style="display: none">Anuller</button>
-                    <button sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" name="test" th:id="${'saveSectionBtn' + section.id}" type="button" onclick="submitForm(event, this, false)" th:form="${'sectionForm' + section.id}" class="btn btn-secondary btn-xs" th:data-id="${section.id}" style="display: none">Gem</button>
+                    <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" th:id="${'editSectionBtn' + section.id}" type="button" class="btn btn-secondary btn-xs" th:data-id="${section.id}" onclick="setEditState(this, true)">Rediger</button>
+                    <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')"th:id="${'cancelSectionBtn' + section.id}" type="button" class="btn btn-light btn-xs" th:data-id="${section.id}" onclick="setEditState(this, false)" style="display: none">Anuller</button>
+                    <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" name="test" th:id="${'saveSectionBtn' + section.id}" type="button" onclick="submitForm(event, this, false)" th:form="${'sectionForm' + section.id}" class="btn btn-secondary btn-xs" th:data-id="${section.id}" style="display: none">Gem</button>
                 </div>
             </td>
         </tr>

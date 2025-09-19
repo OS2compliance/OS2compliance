@@ -2,7 +2,11 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireAdmin;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.CatalogService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,11 +31,12 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("catalogs")
-@RequireAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 public class CatalogController {
     private final CatalogService threatCatalogService;
 
+	@RequireReadAll
     @GetMapping
     public String riskList(final Model model) {
         final List<ThreatCatalog> catalogList = threatCatalogService.findAll();
@@ -41,6 +46,7 @@ public class CatalogController {
         return "catalogs/index";
     }
 
+	@RequireReadAll
     @GetMapping("{identifier}")
     public String view(final Model model, @PathVariable final String identifier) {
         final ThreatCatalog threatCatalog = threatCatalogService.get(identifier)
@@ -49,6 +55,7 @@ public class CatalogController {
         return "catalogs/view";
     }
 
+	@RequireReadAll
     @GetMapping("threatForm")
     public String threatForm(final Model model, @RequestParam(name = "catalogIdentifier") final String catalogIdentifier, @RequestParam(name = "identifier", required = false) final String identifier) {
         final ThreatCatalog catalog = threatCatalogService.get(catalogIdentifier)
@@ -70,6 +77,7 @@ public class CatalogController {
         return "catalogs/threatForm";
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("threatForm")
     public String threatFormPost(@RequestParam(name = "catalogIdentifier") final String catalogIdentifier, @ModelAttribute final ThreatCatalogThreat threat) {
@@ -102,7 +110,7 @@ public class CatalogController {
             .filter(Objects::nonNull)
             .max().orElse(0L);
     }
-
+	@RequireReadAll
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final String id) {
         model.addAttribute("action", "catalogs/form");
@@ -120,6 +128,7 @@ public class CatalogController {
         return "catalogs/form";
     }
 
+	@RequireCreateAll
     @GetMapping("copy")
     public String copyForm(final Model model, @RequestParam(name = "id") final String id) {
         final ThreatCatalog catalog = threatCatalogService.get(id)
@@ -131,6 +140,7 @@ public class CatalogController {
         return "catalogs/form";
     }
 
+	@RequireCreateAll
     @Transactional
     @PostMapping("form")
     public String formPost(@ModelAttribute final ThreatCatalog catalog) {
@@ -146,6 +156,7 @@ public class CatalogController {
         return "redirect:/catalogs";
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("copy")
     public String copyPost(@ModelAttribute final ThreatCatalog catalog) {

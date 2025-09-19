@@ -5,6 +5,8 @@ import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
+import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -25,6 +27,7 @@ import org.hibernate.annotations.Where;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -33,7 +36,7 @@ import java.util.List;
 @Setter
 @SQLDelete(sql = "UPDATE threat_assessments SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class ThreatAssessment extends Relatable {
+public class ThreatAssessment extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
     @Column
     @Enumerated(EnumType.STRING)
     private ThreatAssessmentType threatAssessmentType;
@@ -46,9 +49,13 @@ public class ThreatAssessment extends Relatable {
     @JoinColumn(name = "responsible_ou_uuid")
     private OrganisationUnit responsibleOu;
 
-    @ManyToOne
-    @JoinColumn(name = "threat_catalog_identifier")
-    private ThreatCatalog threatCatalog;
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "threat_assessment_catalogs",
+			joinColumns = { @JoinColumn(name = "threat_assessment_id") },
+			inverseJoinColumns = { @JoinColumn(name = "threat_catalog_identifier") }
+	)
+	private List<ThreatCatalog> threatCatalogs = new ArrayList<>();
 
     @ManyToOne
     @JoinColumn(name = "threat_assessment_report_s3_document_id")
@@ -129,10 +136,10 @@ public class ThreatAssessment extends Relatable {
     private List<User> presentAtMeeting;
 
     @OneToMany(mappedBy = "threatAssessment",  orphanRemoval = true, fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<CustomThreat> customThreats;
+    private List<CustomThreat> customThreats = new ArrayList<>();
 
     @OneToMany(mappedBy = "threatAssessment", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
-    private List<ThreatAssessmentResponse> threatAssessmentResponses;
+    private List<ThreatAssessmentResponse> threatAssessmentResponses = new ArrayList<>();
 
     @Column
     private boolean fromExternalSource;

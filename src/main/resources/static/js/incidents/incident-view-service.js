@@ -1,4 +1,8 @@
+import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+
+let onUnSubmittedService = new OnUnSubmittedService();
 const incidentViewService = new IncidentViewService();
+
 document.addEventListener("DOMContentLoaded", function(event) {
     incidentViewService.init();
 });
@@ -9,6 +13,24 @@ function IncidentViewService() {
     this.init = () => {
         const form = document.getElementById(formId);
         form.addEventListener("submit", (event) => incidentService.validateFormBeforeSubmit(event, form));
+
+        const editDescBtn = document.getElementById("editDescBtn");
+        const cancelBtn = document.getElementById("cancelBtn");
+        const saveBtn = document.getElementById("saveBtn");
+
+        editDescBtn?.addEventListener("click", () => {
+            this.setEditable('_dm-tabsIncident', true);
+            onUnSubmittedService.setChangesMade();
+        });
+
+        cancelBtn?.addEventListener("click", () => {
+            this.setEditable('_dm-tabsIncident', false);
+            onUnSubmittedService.reset();
+        });
+
+        saveBtn?.addEventListener("click", () => {
+            onUnSubmittedService.reset();
+        });
     }
 
     this.setEditable = (dialogId, editable) => {

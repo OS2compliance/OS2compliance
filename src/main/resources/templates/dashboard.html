@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
 <head th:replace="~{fragments/header :: head (gridjs = true, burgermenu = true)}"></head>
 
@@ -19,8 +19,8 @@
                         <h1 class="page-title mb-0 mt-2" th:text="'Hej ' + ${user?.name}"></h1>
                         <p class="lead">Velkommen til OS2Compliance</p>
                     </div>
-                    <div class="align-self-center d-inline-flex"
-                    th:if="${isSystemOwner != null && isSystemOwner}">
+                    <div class="align-self-center d-inline-flex" sec:authorize="@accessEvaluator.report()"
+                         th:if="${isSystemOwner != null && isSystemOwner}">
                         <button id="systemOwnerRapportButton" type="button" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
                             <i class="pli-download-2"></i> <span class="vr"></span><span class="btn-text"> Systemejer rapport</span>
                         </button>
@@ -28,39 +28,37 @@
                 </div>
             </div>
         </div>
-        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isUser}" class="content__boxed">
+        <div th:if="${T(dk.digitalidentity.security.SecurityUtil).isAuthenticated()}" sec:authorize="hasRole('ROLE_s_dashboard')" class="content__boxed">
             <div class="content__wrap">
 
                 <div class="tab-base">
                     <ul class="nav nav-tabs" role="tablist">
                         <li class="nav-item" role="presentation">
                             <button class="nav-link active" data-bs-toggle="tab" data-bs-target="#_dm-tabsTask"
-                                    type="button" role="tab" aria-controls="task" aria-selected="true">Mine
-                                Opgaver
+                                    type="button" role="tab" aria-controls="task" aria-selected="true">Mine Opgaver
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsAssets"
-                                    type="button" role="tab" aria-controls="assets" aria-selected="false">Mine
-                                Aktiver
+                                    type="button" role="tab" aria-controls="assets" aria-selected="false">Mine Aktiver
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsRegisters"
-                                    type="button" role="tab" aria-controls="registers" aria-selected="false">Mine
-                                Fortegnelser
+                                    type="button" role="tab" aria-controls="registers" aria-selected="false">Mine Fortegnelser
                             </button>
                         </li>
                         <li class="nav-item" role="presentation">
                             <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsDocuments"
-                                    type="button" role="tab" aria-controls="documents" aria-selected="false">Mine
-                                Dokumenter
+                                    type="button" role="tab" aria-controls="documents" aria-selected="false">Mine Dokumenter
                             </button>
                         </li>
                     </ul>
                     <div class="tab-content">
-                        <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel"
-                             aria-labelledby="task-tab">
+                        <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel" aria-labelledby="task-tab">
+                            <div class="d-flex gap-2">
+                                <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                            </div>
                             <div id="tasksDatatable"></div>
 
                             <!-- Custom search selector-->
@@ -153,7 +151,7 @@
     <header th:replace="~{fragments/header :: header}"></header>
     <nav th:replace="~{fragments/navbar :: main (page='hjem')}"></nav>
 </div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, statistic = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -172,7 +170,7 @@
 
     /*]]>*/
 </script>
-<script th:src="@{/js/dashboard.js}" defer></script>
+<script type="module" th:src="@{/js/dashboard.js}" defer></script>
 
 </body>
 

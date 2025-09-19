@@ -107,4 +107,6 @@ public class AssetEO {
     private Set<PropertyEO> properties;
 	@Schema(description = "Product links", example = ASSET_PRODUCT_LINKS_EXAMPLE)
 	private List<String> productLinks;
+	@Schema(description = "Departments")
+	private List<OrganisationUnitEO> departments;
 }

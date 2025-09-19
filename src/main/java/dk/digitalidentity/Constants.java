@@ -34,6 +34,7 @@ public interface Constants {
     String ISO27002_REPORT_TEMPLATE_DOC = "reports/ISO27002/ISO27002.docx";
     String ISO27001_REPORT_TEMPLATE_DOC = "reports/ISO27001/ISO27001.docx";
     String ARTICLE_30_REPORT_TEMPLATE_DOC = "reports/article30/main.docx";
+	String STANDARD_TEMPLATE_DOC = "reports/default/default.docx";
 
     String RISK_SCALE_PROPERTY_NAME = "riskScale";
     String LAST_NOTIFY_RUN_DAY_SETTING = "lastNotifyRunDay";

@@ -1,1 +1,21 @@
-{"packageName":"kl_article30","name":"46. Behandling af personoplysninger i forbindelse med personaleudvikling og jobrotation (både internt og eksternt)","description":"Behandlingen af personoplysninger sker med henblik på at gennemføre MUS-samtaler, lederudviklingssamtaler, jobrotation samt ansattes deltagelse i eks. kongresser, årsmøder og seminarer","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11","register-gdpr-p7-f","register-gdpr-valp7"]}
+{
+  "packageName": "kl_article30",
+  "name": "46. Behandling af personoplysninger i forbindelse med personaleudvikling og jobrotation (både internt og eksternt)",
+  "description": "Behandlingen af personoplysninger sker med henblik på at gennemføre MUS-samtaler, lederudviklingssamtaler, jobrotation samt ansattes deltagelse i eks. kongresser, årsmøder og seminarer",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11",
+    "register-gdpr-p7-f",
+    "register-gdpr-valp7"
+  ],
+  "kleMainGroups": [
+    "81"
+  ],
+  "kleGroups": [
+    "81.04",
+    "81.06",
+    "81.44",
+    "81.45"
+  ]
+}

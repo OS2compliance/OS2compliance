@@ -5,7 +5,7 @@
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
         <div class="modal-body">
-            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post">
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/incidents/log}" th:object="${incident}" method="post" novalidate>
                 <input id="id" th:field="*{id}" type="hidden">
                 <div class="row mt-2" >
                     <label for="title" class="col-sm-4 col-form-label">Titel</label>

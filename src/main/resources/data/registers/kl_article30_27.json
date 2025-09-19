@@ -1,1 +1,27 @@
-{"packageName":"kl_article30","name":"28. Behandling af personoplysninger i forbindelse med kommunens administration af og borgernes benyttelse af veje, stier mv.","description":"Behandlingen af personoplysninger sker i forbindelse med kommunens administration og vedligehold af stier, veje og parkeringsanlæg mv. samt borgernes benyttelse af disse.  Herunder også ansøgninger om benyttelse af veje, stier og parkeringsanlæg til eks. placering af genstande, kørselsdispensationer og sager om valgplakater mv. samt kommunens statisik eks. ulykkesstatistik","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "28. Behandling af personoplysninger i forbindelse med kommunens administration af og borgernes benyttelse af veje, stier mv.",
+  "description": "Behandlingen af personoplysninger sker i forbindelse med kommunens administration og vedligehold af stier, veje og parkeringsanlæg mv. samt borgernes benyttelse af disse.  Herunder også ansøgninger om benyttelse af veje, stier og parkeringsanlæg til eks. placering af genstande, kørselsdispensationer og sager om valgplakater mv. samt kommunens statisik eks. ulykkesstatistik",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "05"
+  ],
+  "kleGroups": [
+    "05.00",
+    "05.01",
+    "05.02",
+    "05.04",
+    "05.05",
+    "05.07",
+    "05.09",
+    "05.13",
+    "05.14",
+    "05.18",
+    "05.23",
+    "05.26"
+  ]
+}

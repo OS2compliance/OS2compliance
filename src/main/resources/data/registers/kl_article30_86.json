@@ -1,1 +1,16 @@
-{"packageName":"kl_article30","name":"87. Behandling af personoplysninger i forbindelse med kommunenes vejledning","description":"Behandlingen af personoplysninger sker ifm. kommunens vejledning af borgere på Udbetaling Danmarks sagsområde","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "87. Behandling af personoplysninger i forbindelse med kommunenes vejledning",
+  "description": "Behandlingen af personoplysninger sker ifm. kommunens vejledning af borgere på Udbetaling Danmarks sagsområde",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "32"
+  ],
+  "kleGroups": [
+    "32.64"
+  ]
+}

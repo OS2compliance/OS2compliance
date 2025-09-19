@@ -6,7 +6,8 @@ import dk.digitalidentity.model.dto.OrganisationUnitDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Position;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.UserService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -26,13 +27,14 @@ import org.springframework.web.server.ResponseStatusException;
 @Slf4j
 @RestController
 @RequestMapping("rest/ous")
-@RequireUser
+@RequireAuthenticated
 @RequiredArgsConstructor
 public class OrganisationRestController {
     private final OrganisationUnitDao organisationUnitDao;
     private final OrganisationUnitMapper mapper;
     private final UserService userService;
 
+	@RequireReadOwnerOnly
     @GetMapping("autocomplete")
     public PageDTO<OrganisationUnitDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());
@@ -43,6 +45,7 @@ public class OrganisationRestController {
         }
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("/user/{id}")
     public ResponseEntity<OrganisationUnitDTO> getOrgUuidByUser(@PathVariable final String id) {
         final User user = userService.findByUuid(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));

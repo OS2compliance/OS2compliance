@@ -13,4 +13,13 @@ public interface SearchRepository {
                                         final Pageable page, final Class<T> entityClass);
 
 	<T> Page<T> findAllForResponsibleUserOrCustomResponsibleUser(Map<String, String> searchableProperties, Pageable page, Class<T> entityClass, User user);
+
+	<T> Page<T> findAllWithAssignedUser (Map<String, String> searchableProperties, User user, Pageable page, Class<T> entityClass);
+
+	<T> Page<T> findAllWithGlobalSearchAndUserFilter(
+			final Map<String, String> searchableProperties,
+			final Pageable page,
+			final Class<T> entityClass,
+			final User user,
+			final boolean filterOnUser);
 }

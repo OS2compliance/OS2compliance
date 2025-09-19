@@ -6,7 +6,7 @@
                 <p class="ms-2 fst-italic">Videregives personoplysningerne?</p>
             </div>
             <div class="col-sm-4 col-lg-2">
-                <select class="infoPassedOnSelect form-control form-select editField ms-1" disabled>
+                <select id="isInformationPassedOnSelect" class="infoPassedOnSelect form-control form-select editField ms-1" disabled>
                     <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.InformationPassedOn).values()}"
                             th:value="${status}" th:text="${status.message}"></option>
                 </select>

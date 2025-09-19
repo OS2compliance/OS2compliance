@@ -3,6 +3,7 @@ package dk.digitalidentity.model.entity;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -29,7 +30,7 @@ import java.util.List;
 @Setter
 @SQLDelete(sql = "UPDATE suppliers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Supplier extends Relatable {
+public class Supplier extends Relatable implements HasSingleResponsibleUser {
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "responsible_uuid")

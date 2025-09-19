@@ -2,7 +2,8 @@ package dk.digitalidentity.controller.rest;
 
 import dk.digitalidentity.mapping.ThreatMapper;
 import dk.digitalidentity.model.entity.Precaution;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.PrecautionService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -17,13 +18,14 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Slf4j
 @RestController
-@RequireAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/precautions", consumes = "application/json", produces = "application/json")
 public class PrecautionRestController {
     private final PrecautionService precautionService;
     private final ThreatMapper threatMapper;
 
+	@RequireDeleteAll
     @Transactional
     @DeleteMapping(value = "{precautionIdentifier}")
     public ResponseEntity<?> delete(@PathVariable("precautionIdentifier") final Long precautionIdentifier) {

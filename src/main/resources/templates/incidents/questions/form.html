@@ -31,6 +31,14 @@
                 </div>
                 <div class="row mt-4">
                     <div class="col-sm-4 col-form-label">
+                        <input type="checkbox" th:checked="${field.obligatoryAnswer}" name="obligatoryAnswer" class="form-check-input" id="obligatoryAnswerSelection">
+                        <label for="obligatoryAnswerSelection">Svar er obligatorisk</label>
+                    </div>
+                    <div class="col-sm-8">
+                    </div>
+                </div>
+                <div class="row mt-4">
+                    <div class="col-sm-4 col-form-label">
                         <input type="checkbox" th:checked="${field.indexColumnName != null && field.indexColumnName != ''}" onchange="incidentQuestionService.toggleColumnVisibility(this)" class="form-check-input indexColumn" id="indexColumn">
                         <label for="indexColumn">Vis på oversigt</label>
                     </div>

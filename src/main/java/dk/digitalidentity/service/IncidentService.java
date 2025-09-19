@@ -2,6 +2,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.IncidentDao;
 import dk.digitalidentity.dao.IncidentFieldDao;
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
@@ -12,11 +13,16 @@ import dk.digitalidentity.model.entity.enums.IncidentType;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.collections4.IterableUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.stereotype.Service;
+import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -52,6 +58,10 @@ public class IncidentService {
 
     public List<IncidentField> getAllFields() {
         return IterableUtils.toList(incidentFieldDao.findAllByOrderBySortKeyAsc());
+    }
+
+    public List<IncidentField> getAllObligatoryFields() {
+        return incidentFieldDao.findAllByObligatoryAnswerTrue();
     }
 
     public void deleteField(final IncidentField incidentField) {
@@ -215,4 +225,22 @@ public class IncidentService {
             .sortKey(f.getSortKey())
             .build();
     }
+
+	// Helper method to get incidents and avoid duplicated code in export and list endpoints
+	public Page<Incident> getIncidents(@RequestParam(name = "search", required = false) String search, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "fromDate", required = false) LocalDate fromDateParam, @DateTimeFormat(pattern = "dd/MM-yyyy") @RequestParam(name = "toDate", required = false) LocalDate toDateParam, Pageable sortAndPage) {
+		final LocalDateTime fromDate = fromDateParam != null ? fromDateParam.atStartOfDay() : LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
+		final LocalDateTime toDate = toDateParam != null ? toDateParam.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0);
+
+		return StringUtils.isNotEmpty(search)
+				? search(search, fromDate, toDate, sortAndPage)
+				: listIncidents(fromDate, toDate, sortAndPage);
+	}
+
+	public List<Incident> getIncidentsMatching(Long incidentFieldId, LocalDateTime fromDate, LocalDateTime toDate) {
+		return incidentDao.findByResponses_IncidentField_IdAndCreatedAtAfterAndCreatedAtBefore(incidentFieldId, fromDate, toDate);
+	}
+
+	public List<Incident> getByIds (List<Long> ids) {
+		return incidentDao.findAllById(ids);
+	}
 }

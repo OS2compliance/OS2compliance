@@ -35,6 +35,8 @@ import {
     Undo
 } from 'ckeditor5';
 
+var token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
 const editorConfig = {
     toolbar: {
         items: [

@@ -42,6 +42,54 @@ const initSelect = (element, containerInner = 'form-control', extraOptions = {})
     return choices;
 }
 
+const initSelectWithConfirmation = (element, containerInner = 'form-control') => {
+    let choices = new Choices(element, {
+        searchChoices: false,
+        removeItemButton: true,
+        allowHTML: true,
+        searchFloor: 0,
+        searchPlaceholderValue: 'Søg...',
+        itemSelectText: 'Vælg',
+        noChoicesText: 'Søg...',
+        classNames: {
+            containerInner: containerInner
+        },
+        duplicateItemsAllowed: false,
+    });
+
+    element.addEventListener("removeItem", function(event) {
+        event.preventDefault(); // Stop the removal temporarily
+
+        const removedItem = event.detail;
+        const removedCatalogName = removedItem.label;
+
+        Swal.fire({
+            title: 'Bekræft fjernelse',
+            text: `Er du sikker på at du vil fjerne trusselskataloget "${removedCatalogName}"? Alle besvarelser relateret til dette katalog vil blive slettet.`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ja, fjern det!',
+            cancelButtonText: 'Annuller'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // User confirmed - actually remove the item
+                choices.removeActiveItemsByValue(removedItem.value);
+            } else {
+                // User cancelled - restore the item by re-adding it
+                choices.setChoiceByValue(removedItem.value);
+            }
+        });
+    }, false);
+
+    element.addEventListener("change", function(event) {
+        choices.hideDropdown();
+    }, false);
+
+    return choices;
+}
+
 function initDatepicker(elementQuerySelector, inputField) {
     const datePicker = MCDatepicker.create({
         el: inputField,
@@ -105,6 +153,28 @@ function checkInputField(my_choices, atleastOne = false) {
         }
         return false;
     }
+}
+
+function validateInputFieldLength(inputFieldId, maxLength) {
+    const nameInput = document.getElementById(inputFieldId);
+    const tooLongFeedback = document.getElementById("threatAssesmentTooLongText");
+    const noNameInputFeedback = document.getElementById("noThreatAssesmentName");
+
+    tooLongFeedback.style.display = "none";
+    noNameInputFeedback.style.display = "none";
+    nameInput.classList.remove("is-invalid");
+
+    if (!nameInput.value.trim()) {
+        noNameInputFeedback.style.display = "block";
+        nameInput.classList.add("is-invalid");
+        return false;
+    }
+    else if (nameInput.value.length > maxLength) {
+        tooLongFeedback.style.display = "block";
+        nameInput.classList.add("is-invalid");
+        return false;
+    }
+    return true;
 }
 
 function sessionExpiredHandler() {
@@ -413,4 +483,14 @@ class NetworkService {
         return await response.json()
     }
 
+}
+
+function initSaveAsExcelButton(customGridFunctions, filename) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton?.addEventListener("click",  () => exportGridServerSide(customGridFunctions, filename))
+}
+
+function initSaveAsExcelButtonWithDefaultGrid(tableId, filename) {
+    const saveAsExcelButton = document.getElementById("saveAsExcelButton");
+    saveAsExcelButton.addEventListener("click", () => exportHtmlTableToExcel(tableId, filename))
 }

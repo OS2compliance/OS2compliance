@@ -7,10 +7,13 @@ import dk.digitalidentity.model.api.UserEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.DocumentDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -18,7 +21,9 @@ import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -27,7 +32,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public interface DocumentMapper {
 
     default DocumentDTO toDTO(final DocumentGrid documentGrid) {
-        return DocumentDTO.builder()
+        DocumentDTO documentDTO = DocumentDTO.builder()
                 .id(documentGrid.getId())
                 .name(documentGrid.getName())
                 .documentType(nullSafe(() -> documentGrid.getDocumentType().getMessage()))
@@ -36,29 +41,24 @@ public interface DocumentMapper {
                 .nextRevision(nullSafe(() -> documentGrid.getNextRevision().format(DK_DATE_FORMATTER)))
                 .status(nullSafe(() -> documentGrid.getStatus().getMessage()))
                 .statusOrder(documentGrid.getStatusOrder())
-                .tags(nullSafe(() -> documentGrid.getTags()))
-                .changeable(false)
+                .tags(nullSafe(documentGrid::getTags))
                 .build();
-    }
 
-    default DocumentDTO toDTO(final DocumentGrid documentGrid, boolean superuser, String principalUuid) {
-        DocumentDTO documentDTO = toDTO(documentGrid);
-        if(superuser || principalUuid.equals(documentGrid.getResponsibleUser().getUuid())) {
-            documentDTO.setChangeable(true);
-        }
-        return documentDTO;
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		boolean isResponsible =	(documentGrid.getResponsibleUser() != null && documentGrid.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()));
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
+				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+
+		documentDTO.setAllowedActions(allowedActions);
+		return documentDTO;
+
     }
 
     default List<DocumentDTO> toDTO(List<DocumentGrid> documentGrid) {
         List<DocumentDTO> documentDTOS = new ArrayList<>();
         documentGrid.forEach(a -> documentDTOS.add(toDTO(a)));
-        return documentDTOS;
-    }
-
-    //provides a list of mapping that's set changeable to true if user is at least a superuser or uuid matches current user's uuid.
-    default List<DocumentDTO> toDTO(List<DocumentGrid> documentGrid, boolean superuser, String principalUuid) {
-        List<DocumentDTO> documentDTOS = new ArrayList<>();
-        documentGrid.forEach(a -> documentDTOS.add(toDTO(a, superuser, principalUuid)));
         return documentDTOS;
     }
 

@@ -1,7 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.dto.SelectionDTO;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.kle.KLEGroupService;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Controller;
@@ -15,7 +16,7 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Set;
 
-@RequireUser
+@RequireRegister
 @AllArgsConstructor
 @Controller
 @RequestMapping("kle")
@@ -34,6 +35,7 @@ public class KLEController {
 		}
 	}
 
+	@RequireReadOwnerOnly
 	@GetMapping("maingroup/groups")
 	public String getGroupsForMainGroup(@RequestParam Set<String> mainGroupNumbers, @RequestParam(required = false) Set<String> selectedGroups, Model model) {
 

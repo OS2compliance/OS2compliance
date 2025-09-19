@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 @Transactional
@@ -15,6 +16,10 @@ import java.util.Set;
 @Service
 public class KLEGroupService {
 	private final KLEGroupDao kleGroupdao;
+
+	public List<KLEGroup> getAll() {
+		return kleGroupdao.findAll();
+	}
 
 	public Set<KLEGroup> getAllForMainGroups(Collection<KLEMainGroup> mainGroups) {
 		return kleGroupdao.findAllByMainGroupIn(mainGroups);
@@ -28,8 +33,8 @@ public class KLEGroupService {
 		return kleGroupdao.save(group);
 	}
 
-	public void softDeleteAllNotMatching(Collection<String> groupNumbers) {
-		kleGroupdao.softDeleteByGroupNumbers(groupNumbers);
+	public void saveAll(Collection<KLEGroup> groups) {
+		kleGroupdao.saveAll(groups);
 	}
 
 	public Set<KLEGroup> findAllByMainGroupNumbers(Collection<String> mainGroupNumbers) {

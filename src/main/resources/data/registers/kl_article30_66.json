@@ -1,1 +1,21 @@
-{"packageName":"kl_article30","name":"67. Behandling af personoplysninger i forbindelse med regulering af private erhverv","description":"Behandlingen af personoplysninger sker med henblik på regulering af privat erhverv, herunder butikker, hotel- og restauration","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp10","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "67. Behandling af personoplysninger i forbindelse med regulering af private erhverv",
+  "description": "Behandlingen af personoplysninger sker med henblik på regulering af privat erhverv, herunder butikker, hotel- og restauration",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp10",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "22"
+  ],
+  "kleGroups": [
+    "22.00",
+    "22.01",
+    "22.03",
+    "22.09",
+    "22.11"
+  ]
+}

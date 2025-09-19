@@ -2,7 +2,8 @@ package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RegisterService;
@@ -23,7 +24,7 @@ import java.util.List;
 
 @Slf4j
 @RestController
-@RequireAdministrator
+@RequireAdmin
 @RequiredArgsConstructor
 @RequestMapping(value = "rest/choicelists/custom", consumes = "application/json", produces = "application/json")
 public class CustomChoiceListRestController {
@@ -35,6 +36,7 @@ public class CustomChoiceListRestController {
     record CustomChoiceListDTO(Long id, String value) {
     }
 
+	@RequireUpdateAll
     @Transactional
     @PutMapping("{listId}/update")
     public ResponseEntity<?> updateList(@PathVariable final Long listId, @RequestBody List<CustomChoiceListDTO> customChoiceListDTOs) {

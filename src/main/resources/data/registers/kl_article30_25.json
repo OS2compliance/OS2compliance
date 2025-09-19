@@ -1,1 +1,27 @@
-{"packageName":"kl_article30","name":"26. Behandling af personoplysninger i forbindelse med borgernes brug af naturen.","description":"Behandlingen af personoplysninger sker med henblik på borgernes benyttelse af fx parker, skove, indendørs anlæg mv.","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e"]}
+{
+  "packageName": "kl_article30",
+  "name": "26. Behandling af personoplysninger i forbindelse med borgernes brug af naturen.",
+  "description": "Behandlingen af personoplysninger sker med henblik på borgernes benyttelse af fx parker, skove, indendørs anlæg mv.",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e"
+  ],
+  "kleMainGroups": [
+    "04"
+  ],
+  "kleGroups": [
+    "04.00",
+    "04.01",
+    "04.03",
+    "04.04",
+    "04.05",
+    "04.08",
+    "04.10",
+    "04.11",
+    "04.12",
+    "04.14",
+    "04.16",
+    "04.20",
+    "04.31"
+  ]
+}

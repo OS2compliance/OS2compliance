@@ -4,13 +4,17 @@ import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
 import dk.digitalidentity.model.dto.RelatedDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireStandard;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.StandardSectionService;
 import dk.digitalidentity.service.StandardsService;
@@ -36,10 +40,9 @@ import java.text.DecimalFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -51,7 +54,7 @@ import java.util.stream.Collectors;
 @Slf4j
 @Controller
 @RequestMapping("standards")
-@RequireUser
+@RequireStandard
 @RequiredArgsConstructor
 public class StandardController {
     private final StandardsService standardsService;
@@ -68,6 +71,7 @@ public class StandardController {
     record StandardTemplateSectionDTO(StandardTemplateSection standardTemplateSection,
                                       List<StandardSectionDTO> standardSectionDTOs) {}
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("section/{sectionId}")
     public String lookup(@PathVariable final Long sectionId) {
@@ -93,6 +97,7 @@ public class StandardController {
         throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("plan")
     public String planPage(final Model model) {
@@ -107,6 +112,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("act")
     public String actPage(final Model model) {
@@ -118,6 +124,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("do")
     public String doPage(final Model model) {
@@ -129,6 +136,7 @@ public class StandardController {
         return "standards/iso27001";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("check")
     public String checkPage(final Model model) {
@@ -140,32 +148,31 @@ public class StandardController {
         return "standards/iso27001";
     }
 
-    record StandardTemplateListDTO(String identifier, String name, String compliance) {}
+    record StandardTemplateListDTO(String identifier, String name, String compliance, Set<AllowedAction> allowedActions) {}
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping
     public String supportingPage(final Model model) {
         final List<StandardTemplateListDTO> templates = new ArrayList<>();
-        for (final StandardTemplate standardTemplate : standardTemplateDao.findAll().stream().filter(StandardTemplate::isSupporting).toList()) {
-            final List<StandardTemplateSection> collect = standardTemplate.getStandardTemplateSections().stream()
-                .flatMap(s -> s.getChildren().stream())
-                .filter(s -> s.getStandardSection().isSelected())
-                .toList();
-            final double readyCounter = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.READY)).count();
-            final double notRelevantCount = collect.stream().filter(s -> Objects.equals(s.getStandardSection().getStatus(), StandardSectionStatus.NOT_RELEVANT)).count();
+		Set<AllowedAction> allowedActions = supportingStandardService.calculateAllowedActions();
+        for (final StandardTemplate standardTemplate : standardTemplateDao.findAllBySupportingIsTrue()) {
+            final List<StandardTemplateSection> collect = standardTemplateSectionDao.findSelectedChildSectionsByTemplate(standardTemplate);
+			final double readyCounter = standardTemplateSectionDao.countByTemplateAndStatus(standardTemplate, StandardSectionStatus.READY);
+            final double notRelevantCount = standardTemplateSectionDao.countByTemplateAndStatus(standardTemplate, StandardSectionStatus.NOT_RELEVANT);
             final double relevantCount = collect.size() - notRelevantCount;
             final DecimalFormat decimalFormat = new DecimalFormat("0.00");
-
-            if (relevantCount == 0 ) {
-                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%"));
+			if (relevantCount == 0 ) {
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(100) + "%", allowedActions));
             } else {
                 final double compliance = collect.isEmpty() ? 0 : 100 * (readyCounter / relevantCount);
-                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%"));
+                templates.add(new StandardTemplateListDTO(standardTemplate.getIdentifier(), standardTemplate.getName(), decimalFormat.format(compliance) + "%",  allowedActions));
             }
         }
         model.addAttribute("templates", templates);
         return "standards/supporting";
     }
 
+	@RequireReadOwnerOnly
     @Transactional
     @GetMapping("supporting/{id}")
     public String supportingPage(final Model model, @PathVariable final String id, @RequestParam(required = false) final StandardSectionStatus status) {
@@ -176,31 +183,62 @@ public class StandardController {
         model.addAttribute("isNSIS", template.getIdentifier().toLowerCase().startsWith("nsis"));
         model.addAttribute("standardTemplateSectionComparator", Comparator.comparing(StandardTemplateSection::getSortKey));
         model.addAttribute("statusFilter", status);
-
         final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd-MM-yyyy");
         model.addAttribute("today", LocalDate.now().format(formatter));
         return "standards/supporting_view";
     }
 
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("/create")
-	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+	public String newStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
 		standard.setIdentifier(standard.getIdentifier()	.replaceAll("[.,\\s-]", "_"));
 		standard.setSupporting(true);
 		standardTemplateDao.save(standard);
+		redirectAttributes.addFlashAttribute("successMessage", "Standard gemt!");
+
 		return "redirect:/standards";
 	}
 
+	@RequireReadOwnerOnly
+	@Transactional(readOnly = true)
+	@GetMapping("supporting/{id}/progress")
+	public String standardProgress(final Model model, @PathVariable final String id) {
+		final StandardTemplate template = supportingStandardService.lookup(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		Map<StandardSectionStatus, Integer> progressBarValues = getProgressBarValues(template);
+		model.addAttribute("progressbarValues", progressBarValues);
+		model.addAttribute("totalCount", progressBarValues.values().stream().mapToInt(Integer::intValue).sum());
+		model.addAttribute("statusColors", Map.of(
+				"READY", "bg-green-500",
+				"IN_PROGRESS", "bg-blue-500",
+				"NOT_STARTED", "bg-yellow-500",
+				"NOT_RELEVANT", "bg-gray-500"
+		));
+		model.addAttribute("statusTranslations", Map.of(
+				"READY", "Færdigt",
+				"IN_PROGRESS", "I gang",
+				"NOT_STARTED", "Ikke startet",
+				"NOT_RELEVANT", "Ikke relevant"
+		));
+
+		return "standards/progress";
+	}
+
+	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/update")
-	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard) {
+	public String updateStandard(@Valid @ModelAttribute final StandardTemplate standard, RedirectAttributes redirectAttributes) {
 		StandardTemplate template = supportingStandardService.lookup(standard.getIdentifier())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 		template.setName(standard.getName());
 		standardTemplateDao.save(template);
+		redirectAttributes.addFlashAttribute("successMessage", "Standard opdateret");
+
 		return "redirect:/standards";
 	}
 
+	@RequireCreateAll
 	@GetMapping("/form")
 	public String createStandardForm(final Model model) {
 		model.addAttribute("action", "standards/create");
@@ -211,6 +249,7 @@ public class StandardController {
 		return "standards/form";
 	}
 
+	@RequireUpdateAll
 	@GetMapping("/form/{id}")
 	public String editStandardForm(final Model model, @PathVariable final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -224,7 +263,7 @@ public class StandardController {
 		return "standards/form";
 	}
 
-
+	@RequireCreateAll
 	@GetMapping("/section/form/{id}")
 	public String sectionForm(final Model model, @PathVariable(name = "id") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -238,6 +277,7 @@ public class StandardController {
 		return "standards/sections/create_section_form";
 	}
 
+	@RequireCreateAll
 	@GetMapping("/section/header/form/{id}")
 	public String createHeaderForm(final Model model, @PathVariable(name = "id") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -251,6 +291,7 @@ public class StandardController {
 		return "standards/sections/create_header_form";
 	}
 
+	@RequireUpdateAll
 	@GetMapping("/section/header/form/{id}/{headerIdentifier}")
 	public String editHeaderForm(final Model model, @PathVariable(name = "id") final String headerIdentifier, @PathVariable(name = "headerIdentifier") final String id) {
 		StandardTemplate template = supportingStandardService.lookup(id)
@@ -268,6 +309,7 @@ public class StandardController {
 		return "standards/sections/create_header_form";
 	}
 
+	@RequireUpdateAll
 	@Transactional
 	@PostMapping("/headers/update/{identifier}")
 	public String editHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
@@ -314,14 +356,16 @@ public class StandardController {
 		if (!Objects.equals(header.getDescription(), standardTemplateSection.getDescription())) {
 			header.setDescription(standardTemplateSection.getDescription());
 			standardTemplateSectionDao.save(header);
+			redirectAttributes.addFlashAttribute("successMessage", "Gruppe opdateret!");
 		}
 
 		return "redirect:/standards/supporting/" + id;
 	}
 
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("/sections/create/{identifier}")
-	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier) {
+	public String createSection(@Valid @ModelAttribute final StandardSection standardSection, @PathVariable(name = "identifier") final String identifier, RedirectAttributes redirectAttributes) {
 		StandardTemplateSection parentsTemplateSection = standardSection.getTemplateSection();
 		Set<StandardTemplateSection> existingChildren = parentsTemplateSection.getChildren();
 
@@ -345,9 +389,11 @@ public class StandardController {
 		standardSection.setTemplateSection(save);
 		standardSectionService.save(standardSection);
 
+		redirectAttributes.addFlashAttribute("successMessage", "Krav gemt!");
 		return "redirect:/standards/supporting/" + identifier;
 	}
 
+	@RequireCreateAll
 	@Transactional
 	@PostMapping("/headers/create/{identifier}")
 	public String createHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
@@ -362,11 +408,13 @@ public class StandardController {
 			return "redirect:/standards/supporting/" + id;
 		}
 		String identifier = id.toLowerCase() + "_" + standardTemplateSection.getSection();
-		String sortKey = standardTemplateSection.getSection().replace(".", "").replaceAll("[^0-9]", "");;
+		String sortKey = standardTemplateSection.getSection().replace(".", "").replaceAll("[^0-9]", "");
 		standardTemplateSection.setSortKey(Integer.parseInt(sortKey));
 		standardTemplateSection.setIdentifier(identifier);
 		standardTemplateSection.setStandardTemplate(template);
 		standardTemplateSectionDao.save(standardTemplateSection);
+
+		redirectAttributes.addFlashAttribute("successMessage", "Gruppe gemt!");
 		return "redirect:/standards/supporting/" + id;
 	}
 
@@ -393,14 +441,14 @@ public class StandardController {
                     filterRelations(relatedTo, RelationType.DOCUMENT),
                     filterRelations(relatedTo, RelationType.STANDARD_SECTION));
             })
-            .collect(Collectors.toList());
+				.toList();
         return new StandardTemplateSectionDTO(parent, standardSectionDTOs);
     }
 
     private static List<Relatable> filterRelations(final List<Relatable> relatables, final RelationType relationType) {
         return relatables.stream()
             .filter(r -> r.getRelationType().equals(relationType))
-            .collect(Collectors.toList());
+            .toList();
     }
 
 	private String getHighestVersionNumber(String parentSection, Set<StandardTemplateSection> allSections) {
@@ -440,6 +488,16 @@ public class StandardController {
 		}
 
 		return prefix + (max + 1);
+	}
+
+	private Map<StandardSectionStatus, Integer> getProgressBarValues(final StandardTemplate template) {
+		Map<StandardSectionStatus, Integer> result = new HashMap<>();
+		for (StandardTemplateSection standardTemplateSection : template.getStandardTemplateSections()) {
+			standardTemplateSection.getChildren().forEach(child -> {
+				result.put(child.getStandardSection().getStatus(), result.getOrDefault(child.getStandardSection().getStatus(), 0) + 1);
+			});
+		}
+		return result;
 	}
 
 }

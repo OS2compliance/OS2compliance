@@ -8,8 +8,8 @@
             <div class="card-header toolbar border-0 pb-0">
                 <div class="toolbar-start"></div>
                 <div class="toolbar-end">
-                    <button id="editBtn" th:if="${changeableRegister}" type="button" class="btn btn-secondary btn-xs" onclick="registerGeneralService.setGenereltEditState(true)">Rediger</button>
-                    <button id="cancelBtn" th:if="${changeableRegister}" type="button" onclick="registerGeneralService.setGenereltEditState(false)" class="btn btn-light btn-xs" style="display: none">Annuller</button>
+                    <button id="editBtn" th:if="${changeableRegister}" type="button" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" class="btn btn-secondary btn-xs">Rediger</button>
+                    <button id="cancelBtn" th:if="${changeableRegister}" type="button" th:attr="data-responsible-changeable=${responsibleFieldChangeable}" class="btn btn-light btn-xs" style="display: none">Annuller</button>
                     <button id="saveBtn" th:if="${changeableRegister}" form="editDescId" type="submit" class="btn btn-secondary btn-xs" style="display: none">Gem</button>
                 </div>
             </div>
@@ -92,14 +92,6 @@
                         <div class="form-group row">
                             <label for="informationResponsible" class="col-form-label">Hvem er ansvarlig for behandling af personoplysningerne</label>
                             <input class="form-control" id="informationResponsible" name="informationResponsible" th:field="*{informationResponsible}" type="text" readonly>
-                        </div>
-
-                        <div class="form-group row">
-                            <label for="informationResponsible" class="col-form-label">Navn på DPO</label>
-                            <select class="form-select choices__input" th:field="*{dataProtectionOfficer}"
-                                    data-trigger="" id="dataProtectionOfficer" tabindex="-1" disabled>
-                                <option th:value="*{dataProtectionOfficer.uuid}" th:text="*{dataProtectionOfficer.name}" selected></option>
-                            </select>
                         </div>
 
                         <div class="form-group row">

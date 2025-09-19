@@ -25,7 +25,8 @@ import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
@@ -59,25 +60,32 @@ import org.springframework.web.servlet.mvc.method.annotation.StreamingResponseBo
 import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
 import static dk.digitalidentity.Constants.ARTICLE_30_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
-import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
+import static dk.digitalidentity.Constants.STANDARD_TEMPLATE_DOC;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 
 @Slf4j
 @Controller
-@RequireUser
+@RequireReport
 @RequestMapping("reports")
 @RequiredArgsConstructor
 public class ReportController {
-    private final RelationService relationService;
+	private final RelationService relationService;
     private final StandardTemplateDao standardTemplateDao;
     private final TagDao tagDao;
     private final DocsReportGeneratorComponent docsReportGeneratorComponent;
@@ -92,12 +100,14 @@ public class ReportController {
 	private final SystemOwnerOverviewService systemOwnerOverviewService;
 	private final RiskImageService riskImageService;
 
+	@RequireReadOwnerOnly
 	@GetMapping
     public String reportList(final Model model) {
         model.addAttribute("tags", tagDao.findAll());
         return "reports/index";
     }
 
+	@RequireReadOwnerOnly
 	@GetMapping("overview/systemowner")
 	public ModelAndView systemOwnerOverview(final HttpServletResponse response) {
 
@@ -134,6 +144,7 @@ public class ReportController {
 		return new ModelAndView(new SystemOwnerOverviewView(), model);
 	}
 
+	@RequireReadOwnerOnly
     @GetMapping("incidents")
     public String incidents(final Model model,
                             @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
@@ -147,6 +158,7 @@ public class ReportController {
         return "reports/incidentReport";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("incidents/excel")
     public ModelAndView incidentsExcel(final HttpServletResponse response,
                                        @RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
@@ -166,6 +178,7 @@ public class ReportController {
         return new ModelAndView(new IncidentsXlsView(), model);
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("tags")
     public String tagReport(final Model model,
                             @RequestParam(name = "tags") final List<Long> tagIds,
@@ -190,6 +203,7 @@ public class ReportController {
         return "reports/tagReport";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("taskLog/{taskId}")
     public String taskLogReport(final Model model, @PathVariable("taskId") final Long taskId,
                                 @RequestParam(value = "from", required = false) final LocalDate from,
@@ -202,6 +216,7 @@ public class ReportController {
         return "reports/taskLogReport";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("yearwheel")
     public ModelAndView yearWheel(final HttpServletResponse response) {
         final LocalDate cutOff = LocalDateTime.now().minusYears(1).with(lastDayOfYear()).toLocalDate();
@@ -219,6 +234,7 @@ public class ReportController {
         return new ModelAndView(new YearWheelView(), model);
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("sheet")
     public ModelAndView sheet(@RequestParam(name = "identifier", required = true) final String identifier, final HttpServletResponse response) {
         final StandardTemplate template = standardTemplateDao.findByIdentifier(identifier);
@@ -243,29 +259,37 @@ public class ReportController {
         return new ModelAndView(view, model);
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("word")
     public @ResponseBody ResponseEntity<?> word(@RequestParam(name = "identifier") final String identifier,
                                                 @RequestParam(name = "riskId", required = false) final Long riskId,
                                                 @RequestParam(name = "type", required = false, defaultValue = "WORD") String type,
                                                 final HttpServletResponse response) {
-        if ("article30".equals(identifier)) {
-            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap(), false, null);
+		if ("article30".equals(identifier)) {
+            generateDocument(response, ARTICLE_30_REPORT_TEMPLATE_DOC, "artikel30.docx", Collections.emptyMap(), false, null, null);
         } else if ("iso27001".equals(identifier)) {
-            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap(), false, null);
+            generateDocument(response, ISO27001_REPORT_TEMPLATE_DOC, "iso27001.docx", Collections.emptyMap(), false, null, null);
         } else if ("iso27002_2022".equals(identifier)) {
-            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap(), false, null);
+            generateDocument(response, ISO27002_REPORT_TEMPLATE_DOC, "iso27002.docx", Collections.emptyMap(), false, null, null);
         } else if ("risk".equals(identifier)) {
             if (type.equals("WORD")) {
                 generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.docx",
-                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), false, riskId);
+                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), false, riskId, null);
             } else if (type.equals("PDF")) {
                 generateDocument(response, RISK_ASSESSMENT_TEMPLATE_DOC, "risikovurdering.pdf",
-                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), true, riskId);
+                    Map.of(PARAM_RISK_ASSESSMENT_ID, "" + riskId), true, riskId, null);
             }
         }
+		else {
+			StandardTemplate template = standardTemplateDao.findByIdentifier(identifier);
+			if (template != null) {
+				generateDocument(response, STANDARD_TEMPLATE_DOC, (identifier + "_standard.docx"), Collections.emptyMap(), false, null, template);
+			}
+		}
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("dpia")
     public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaReport(@RequestParam(name = "dpiaId") final Long dpiaId,
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
@@ -319,6 +343,7 @@ public class ReportController {
         return new ResponseEntity<>(HttpStatus.NOT_FOUND);
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("dpia/screening")
     public @ResponseBody ResponseEntity<StreamingResponseBody> dpiaScreeningReport(@RequestParam(name = "dpiaId") final Long dpiaId,
                                                                           @RequestParam(name = "type", required = false, defaultValue = "PDF") String type,
@@ -373,6 +398,7 @@ public class ReportController {
     }
 
 
+	@RequireReadOwnerOnly
 	@GetMapping("riskimage")
 	public ModelAndView getRiskImageReport(
 			final HttpServletResponse response,
@@ -403,7 +429,7 @@ public class ReportController {
 
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
-                                  final Map<String, String> parameters, final boolean toPDF, Long riskId) throws ResponseStatusException {
+                                  final Map<String, String> parameters, final boolean toPDF, Long riskId, StandardTemplate template) throws ResponseStatusException {
         try {
             final long start = System.currentTimeMillis();
             if (toPDF) {
@@ -414,7 +440,7 @@ public class ReportController {
                 response.getOutputStream().write(byteData);
                 response.flushBuffer();
             } else {
-                try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters)) {
+				try (final XWPFDocument myDocument = docsReportGeneratorComponent.generateDocument(inputFilename, parameters, template)) {
                     response.addHeader("Content-disposition", "attachment;filename=" + outputFilename);
                     response.setContentType("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
                     myDocument.write(response.getOutputStream());

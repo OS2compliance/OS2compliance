@@ -15,7 +15,7 @@ import java.util.List;
 
 public interface ThreatAssessmentDao extends JpaRepository<ThreatAssessment, Long> {
 
-    long countByThreatCatalog(final ThreatCatalog threatCatalog);
+    long countByThreatCatalogsContains(final ThreatCatalog threatCatalog);
     ThreatAssessment findByThreatAssessmentReportS3DocumentId(long id);
 
 	@Query("""

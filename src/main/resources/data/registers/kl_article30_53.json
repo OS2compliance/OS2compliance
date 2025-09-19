@@ -1,1 +1,28 @@
-{"packageName":"kl_article30","name":"54. Behandling af personoplysninger i forbindelse med kommunens arbejdsmiljø","description":"Behandlingen af personoplysninger sker ifm. kommunens arbejde vedr. arbejdsmiljø, herunder arbejdspladsvurderinger, rygepolitik og lægeundersøgelser, psykisk arbejdsmiljø , trusler mod personale og journalisering af konkrete sager om vold og trusler mod personalet. Desuden registreres adgangsforbud overfor truende borgere","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11","register-gdpr-p7-f","register-gdpr-valp7"]}
+{
+  "packageName": "kl_article30",
+  "name": "54. Behandling af personoplysninger i forbindelse med kommunens arbejdsmiljø",
+  "description": "Behandlingen af personoplysninger sker ifm. kommunens arbejde vedr. arbejdsmiljø, herunder arbejdspladsvurderinger, rygepolitik og lægeundersøgelser, psykisk arbejdsmiljø , trusler mod personale og journalisering af konkrete sager om vold og trusler mod personalet. Desuden registreres adgangsforbud overfor truende borgere",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11",
+    "register-gdpr-p7-f",
+    "register-gdpr-valp7"
+  ],
+  "kleMainGroups": [
+    "87"
+  ],
+  "kleGroups": [
+    "87.00",
+    "87.01",
+    "87.05",
+    "87.06",
+    "87.07",
+    "87.08",
+    "87.10",
+    "87.11",
+    "87.12",
+    "87.15",
+    "87.20"
+  ]
+}

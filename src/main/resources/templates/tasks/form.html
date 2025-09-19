@@ -46,7 +46,8 @@
                 <div class="row mt-3">
                     <label th:for="${formId + 'TaskUserSelect'}" class="col-sm-4 col-form-label">Ansvarlig</label>
                     <div class="col-sm-8">
-                        <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" th:id="${formId + 'TaskUserSelect'}" hidden="" tabindex="-1" required>
+                        <input th:if="${!responsibleChooseable}" type="hidden" th:field="*{responsibleUser}" />
+                        <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" th:id="${formId + 'TaskUserSelect'}" hidden="" tabindex="-1" required th:disabled="${!responsibleChooseable}">
                             <option th:if="${task.responsibleUser} != null" th:value="${task.responsibleUser.uuid}" th:text="${task.responsibleUser.name}"></option>
                         </select>
                         <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
@@ -60,6 +61,15 @@
                             <option th:if="${task.responsibleOu} != null" th:value="${task.responsibleOu.uuid}" th:text="${task.responsibleOu.name}"></option>
                         </select>
                         <div class="invalid-feedback">Der skal vælges en ansvarlig afdeling</div>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <label th:for="${formId + 'TaskDepartmentSelect'}" class="col-sm-4 col-form-label">Forvaltning</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" th:field="*{department}" data-trigger="" th:id="${formId + 'TaskDepartmentSelect'}" hidden="" tabindex="-1">
+                            <option th:if="${task.department} != null" th:value="${task.department.uuid}" th:text="${task.department.name}"></option>
+                        </select>
                     </div>
                 </div>
 
@@ -102,9 +112,20 @@
                 </div>
 
                 <div class="row mt-3">
-                    <label for="link" class="col-sm-4 col-form-label">Link</label>
+                    <label class="col-sm-4 col-form-label">Links</label>
                     <div class="col-sm-8">
-                        <input id="link" th:field="*{link}" type="text" class="form-control">
+                        <div id="linksEditContainer">
+                            <div th:each="link, iterStat : *{links}" class="input-group mb-2">
+                                <input type="text"
+                                       th:name="'links[' + ${iterStat.index} + '].url'"
+                                       th:value="${link.url}"
+                                       class="form-control">
+                                <button type="button" class="btn btn-danger" style="z-index: auto;" onclick="taskLinkService.removeLink(this)">-</button>
+                            </div>
+                        </div>
+
+                        <button id="addLinkBtn" class="btn btn-secondary" type="button"
+                                onclick="taskLinkService.addLink()">+ Tilføj link</button>
                     </div>
                 </div>
 

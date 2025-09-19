@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.Precaution;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Setting;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
@@ -99,7 +100,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
     }
 
     @Override
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
         final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
             if (!parameters.containsKey(PARAM_RISK_ASSESSMENT_ID)) {

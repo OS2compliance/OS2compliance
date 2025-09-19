@@ -4,7 +4,7 @@ function CreateStandardService() {
     token = document.getElementsByName("_csrf")[0].getAttribute("content");
     this.standardModalDialog = null;
 
-    this.openStandardModal = function(id, edit=false) {
+    this.openStandardModal = function (id, edit = false) {
         let url = "/standards/form"
 
         if (edit) {
@@ -33,10 +33,14 @@ function CreateStandardService() {
                 cancelButtonText: 'Nej'
             }).then((result) => {
                 if (result.isConfirmed) {
-                    fetch("/rest/standards/delete/" + id, { method: 'POST', headers: { 'X-CSRF-TOKEN': token} })
+                    fetch("/rest/standards/delete/" + id, {method: 'POST', headers: {'X-CSRF-TOKEN': token}})
                         .then(() => {
-                            window.location.reload();
-                        });
+                            toastService.info("Standard slettet");
+                            setTimeout(() => {
+                                window.location.reload()
+                            }, 250);
+                        })
+                        .catch(error => toastService.error(error));
                 }
             })
         }

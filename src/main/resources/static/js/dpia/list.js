@@ -1,14 +1,70 @@
-const defaultClassName = {
-    table: 'table table-striped',
-    search: "form-control",
-    header: "d-flex justify-content-end"
-};
+import {initStatisticView} from "../statistic/statisticView.js";
+
+const columnProperties = [
+    'id',
+    'name',
+    'responsibleOUName',
+    'responsibleUserName',
+    'userUpdatedDate',
+    'taskCount',
+    'reportApprovalStatus',
+    'screeningConclusion',
+    'isExternal',
+    'allowedActions'
+];
+let createDPIAService, createExternalDPIAService, editDPIAService;
 
 const updateUrl = (prev, query) => {
     return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
 };
 
-document.addEventListener("DOMContentLoaded", function(event) {
+document.addEventListener("DOMContentLoaded", async function(event) {
+    createDPIAService = new CreateDPIAService()
+    createDPIAService.init()
+    editDPIAService = new EditDPIAService()
+
+    createExternalDPIAService = new CreateExternalDPIAService()
+
+    // These global variables are only nessacary until onclick events depending on them have been eliminated
+    window.createDPIAService = createDPIAService
+    window.createExternalDPIAService= createExternalDPIAService
+    window.editDPIAService =editDPIAService
+
+    initGrid()
+
+    initPageTopButtons()
+
+    await initStatisticView("dpia")
+});
+
+function initPageTopButtons() {
+    const createExternalButton = document.getElementById("createExternalDPIAButton");
+    createExternalButton?.addEventListener("click",  () => createExternalDPIAService.createExternalClicked())
+
+    const createButton = document.getElementById("createDPIAButton");
+    createButton?.addEventListener("click",  () => createDPIAService.formReset())
+}
+
+function deleteClicked(dpiaId, name) {
+    Swal.fire({
+      text: `Er du sikker på du vil slette "${name}"?\nReferencer afhængige af konsekvensvurderingen slettes også.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#03a9f4',
+      cancelButtonColor: '#df5645',
+      confirmButtonText: 'Ja',
+      cancelButtonText: 'Nej'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        fetch(`${deleteUrl}/${dpiaId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.reload();
+                });
+      }
+    })
+}
+
+function initGrid() {
     const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
@@ -115,27 +171,23 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 },
             },
             {
-                id: 'handlinger',
+                id: 'isExternal',
+                hidden: true,
+            },
+            {
+                id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
                 width: '100px',
                 formatter: (cell, row) => {
-                    const dpiaId = row.cells[0]['data'];
+                    const identifier = row.cells[0]['data'];
                     const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                    const isExternal = row.cells[8]['data'];
-                    let buttonHTML = ""
-                    if(superuser) {
-                        buttonHTML = buttonHTML
-                        + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="deleteClicked('${dpiaId}', '${name.replaceAll('\"', '')}')"><i class="pli-trash fs-5"></i></button>`
-                        if(!isExternal) {
-                            buttonHTML = buttonHTML
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="editDPIAService.openModal('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
-                        } else {
-                            buttonHTML = buttonHTML
-                            + `<button type="button" class="btn btn-icon btn-outline-light btn-xs ms-1" onclick="createExternalDPIAService.editExternalClicked('${dpiaId}')"><i class="pli-pencil fs-5"></i></button>`
-                        }
-                    }
-                    return gridjs.html(buttonHTML);
+                    const external = row.cells[8]['data']
+                    const attributeMap = new Map();
+                    attributeMap.set('identifier', identifier);
+                    attributeMap.set('name', name);
+                    attributeMap.set('external', external);
+                    return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                 }
             }
         ],
@@ -172,25 +224,24 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     };
     const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "dpiaDatatable" ));
-    new CustomGridFunctions(grid, listDataUrl, 'dpiaDatatable')
-    gridOptions.init(grid, document.getElementById("gridOptions"));
-});
+    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, exportDataUrl, 'dpiaDatatable');
 
-function deleteClicked(dpiaId, name) {
-    Swal.fire({
-      text: `Er du sikker på du vil slette "${name}"?\nReferencer afhængige af konsekvensvurderingen slettes også.`,
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#03a9f4',
-      cancelButtonColor: '#df5645',
-      confirmButtonText: 'Ja',
-      cancelButtonText: 'Nej'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        fetch(`${deleteUrl}/${dpiaId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                .then(() => {
-                    window.location.reload();
-                });
-      }
-    })
+    gridOptions.init(grid, document.getElementById("gridOptions"));
+
+    initSaveAsExcelButton(customGridFunctions, 'Konsekvensanalyser')
+
+    initGridListItemButtons()
+}
+
+function initGridListItemButtons() {
+    delegateListItemActions('dpiaDatatable',
+        (id, elem) => {
+            if (elem.dataset.external === 'true') {
+                createExternalDPIAService.editExternalClicked(id)
+            } else {
+                editDPIAService.openModal(id)
+            }
+        },
+        (id, name, elem) => deleteClicked(id, name)
+        )
 }

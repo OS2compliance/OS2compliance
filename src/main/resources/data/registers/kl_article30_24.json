@@ -1,1 +1,17 @@
-{"packageName":"kl_article30","name":"25. Behandling af personoplysninger i forbindelse med sundhedsydelser til asylansøgere","description":"Behandlingenaf personoplysninger sker ifm. sundhedsydelser til asylansøgere herunder sundhedsbetjening, bevilling af hjælpemidler samt indgåelse af sundhedskontrakt med styrelsen","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-p7-f","register-gdpr-valp7"]}
+{
+  "packageName": "kl_article30",
+  "name": "25. Behandling af personoplysninger i forbindelse med sundhedsydelser til asylansøgere",
+  "description": "Behandlingenaf personoplysninger sker ifm. sundhedsydelser til asylansøgere herunder sundhedsbetjening, bevilling af hjælpemidler samt indgåelse af sundhedskontrakt med styrelsen",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-p7-f",
+    "register-gdpr-valp7"
+  ],
+  "kleMainGroups": [
+    "29"
+  ],
+  "kleGroups": [
+    "29.35"
+  ]
+}

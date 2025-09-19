@@ -1,9 +1,66 @@
 
 const createTaskService = new CreateTaskService();
+const taskLinkService = new TaskLinkService();
+
+document.addEventListener('DOMContentLoaded', (e) => {
+    // Find create task button ( if it exists) and add event listener
+    const createTaskButton = document.getElementById('createTaskButton');
+    if (createTaskButton) {
+        createTaskButton.addEventListener('click', (e) => {
+            createTaskService.show()
+        })
+    }
+})
+
+function TaskLinkService() {
+    this.addLink = function() {
+        const container = document.getElementById("linksEditContainer");
+        const index = container.children.length;
+
+        const div = document.createElement("div");
+        div.className = "input-group mb-2";
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = `links[${index}].url`;
+        input.className = "form-control editField";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn btn-danger editField";
+        removeBtn.textContent = "-";
+        removeBtn.addEventListener("click", function () {
+            taskLinkService.removeLink(removeBtn);
+        });
+
+        div.appendChild(input);
+        div.appendChild(removeBtn);
+        container.appendChild(div);
+    }
+
+    this.removeLink = function(btn) {
+        const div = btn.parentNode;
+        div.remove();
+        taskLinkService.reindexLinks();
+    }
+
+    this.reindexLinks = function() {
+        const container = document.getElementById("linksEditContainer");
+        const children = container.children;
+
+        for (let i = 0; i < children.length; i++) {
+            const input = children[i].querySelector('input[name^="links"]');
+            if (input) {
+                input.name = `links[${i}].url`;
+            }
+        }
+    }
+}
 
 function CreateTaskService() {
     this.taskModalDialog = null;
     this.createTaskOuChoicesEditSelect = null;
+    this.createTaskDepartmentChoicesEditSelect = null;
 
     this.selectCreateTaskOption = function(value) {
         const form = document.querySelector('#taskCreateForm');
@@ -19,6 +76,7 @@ function CreateTaskService() {
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
          this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
+         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
 
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {

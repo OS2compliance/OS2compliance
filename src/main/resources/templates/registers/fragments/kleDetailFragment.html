@@ -11,26 +11,76 @@
 
                     <!--Group accordion-->
                     <div class="accordion-flush" th:id="${'maingroup_accordion_'+mainGroupStat.index}">
-                        <div th:each="group, groupStat : ${mainGroup.groups}" class="accordion-item">
-                            <div class="accordion-header">
-                                <button class="accordion-button bg-light shadow-none " type="button" data-bs-toggle="collapse" aria-expanded="true"
-                                        th:attr="data-bs-target=${'#group_'+groupStat.index}, aria-controls=${'group_'+groupStat.index}"
-                                        th:text="${group.groupNumber + ' ' + group.title}"></button>
+                        <div th:each="group, groupStat : ${mainGroup.groups}" class="accordion-item gap-1">
+                            <div class="accordion-header ">
+                                <div class="accordion-button bg-light shadow-none d-flex justify-content-between gap-3"
+                                     aria-expanded="true"
+                                     th:attr="data-bs-target=${'#group_'+groupStat.index}, aria-controls=${'group_'+groupStat.index}">
+                                    <span type="button" th:text="${group.groupNumber + ' ' + group.title}"></span>
+                                    <span class="d-flex gap-1 flex-grow-1 justify-content-end">
+                                        <button th:unless="${#strings.isEmpty(group.instructionText)}"
+                                                th:attr="data-instruction-text-id=${'instr_id_'+group.groupNumber}" class="instructionTextToggle btn btn-secondary btn-xs btn-outline-dark btn-icon">
+                                            <i class="pli-information fa-xs"></i>
+                                        </button>
+                                        <button th:if="${group.keywords != null && !group.keywords.isEmpty()}"
+                                                th:attr="data-keyword-id=${'keywrd_id_'+group.groupNumber}" class="keywordToggle btn btn-secondary btn-xs btn-outline-dark btn-icon">
+                                            <i class="pli-bulleted-list fa-xs"></i>
+                                        </button>
+                                    </span>
+                                </div>
                             </div>
                             <div th:id="${'group_'+groupStat.index}" class="accordion-collapse collapse" th:attr="data-bs-parent=${'#maingroup_accordion_'+mainGroupStat.index}">
-                                <div class="accordion-body p-1 ps-3">
+                                <div class="accordion-body p-1 ps-3 d-flex flex-column gap-2">
+                                    <div class="d-flex flex-wrap gap-1">
+                                        <div th:unless="${#strings.isEmpty(group.instructionText)}"
+                                             th:id="${'instr_id_'+group.groupNumber}" class="col-lg card rounded border shadow-sm" hidden>
+                                            <div class="card-body h-100">
+                                                <h5 class="card-title">Servicetekst</h5>
+                                                <div class="card-text" th:utext="${group.instructionText}"></div>
+                                            </div>
+                                        </div>
+                                        <div th:if="${group.keywords != null && !group.keywords.isEmpty()}"
+                                             th:id="${'keywrd_id_'+group.groupNumber}" class="col-lg card rounded border shadow-sm" hidden>
+                                            <div class="card-body h-100">
+                                                <h5 class="card-title">Stikord</h5>
+                                                <ul class="card-text">
+                                                    <li th:each="keyword : ${group.keywords}"
+                                                        th:text="${keyword.actionFacetNr != null && keyword.actionFacetNr.length > 0 ? keyword.text + ' [' + keyword.actionFacetNr + ']' : keyword.text }"></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+                                    </div>
 
                                     <!--subject accordion-->
                                     <div class="accordion-flush" th:id="${'group_accordion_'+mainGroupStat.index+'_'+groupStat.index}">
-                                        <div th:each="subject, subjectStat : ${group.subjects}" class="accordion-item">
+                                        <div th:each="subject, subjectStat : ${group.subjects}" class="accordion-item gap-1">
                                             <div class="accordion-header">
-                                                <button class="accordion-button bg-light shadow-none " type="button" data-bs-toggle="collapse" aria-expanded="true"
-                                                        th:attr="data-bs-target=${'#subject_'+groupStat.index+'_'+subjectStat.index}, aria-controls=${'subject_'+subjectStat.index}"
-                                                        th:text="${subject.subjectNumber + ' ' + subject.title + ' [' + subject.preservationCode + ']'}"></button>
+                                                <div class="accordion-button bg-light shadow-none d-flex justify-content-between gap-3"
+                                                     aria-expanded="true"
+                                                     th:attr="data-bs-target=${'#subject_'+groupStat.index+'_'+subjectStat.index}, aria-controls=${'subject_'+subjectStat.index}">
+                                                    <span type="button" th:text="${subject.subjectNumber + ' ' + subject.title + ' [' + subject.preservationCode + ']'}"></span>
+                                                    <span class="d-flex gap-1 flex-grow-1 justify-content-end">
+                                                        <button th:unless="${#strings.isEmpty(subject.instructionText)}"
+                                                                th:attr="data-instruction-text-id=${'instr_id_'+subject.subjectNumber}" class="instructionTextToggle btn btn-secondary btn-xs btn-outline-dark btn-icon">
+                                                            <i class="pli-information fa-xs"></i>
+                                                        </button>
+                                                        <button th:if="${subject.keywords != null && !subject.keywords.isEmpty()}"
+                                                                th:attr="data-keyword-id=${'keywrd_id_'+subject.subjectNumber}" class="keywordToggle btn btn-secondary btn-xs btn-outline-dark btn-icon">
+                                                            <i class="pli-bulleted-list fa-xs"></i>
+                                                        </button>
+                                                    </span>
+                                                </div>
                                             </div>
                                             <div th:id="${'subject_'+groupStat.index+'_'+subjectStat.index}" class="accordion-collapse collapse" th:attr="data-bs-parent=${'#group_accordion_'+mainGroupStat.index+'_'+groupStat.index}">
-                                                <div class="accordion-body ps-3">
-                                                    <div class="row gap-1">
+                                                <div class="accordion-body p-1 ps-3 d-flex flex-column gap-2">
+                                                    <div class="d-flex flex-wrap gap-1">
+                                                        <div th:unless="${#strings.isEmpty(subject.instructionText)}"
+                                                             th:id="${'instr_id_'+subject.subjectNumber}" class="col-lg card rounded border shadow-sm" hidden>
+                                                            <div class="card-body h-100">
+                                                                <h5 class="card-title">Servicetekst</h5>
+                                                                <div class="card-text" th:utext="${subject.instructionText}"></div>
+                                                            </div>
+                                                        </div>
 
                                                         <div class="col-lg card rounded border shadow-sm ">
                                                             <div class="card-body h-100">
@@ -48,23 +98,27 @@
                                                                 <div class="card-text" th:text="${subject.durationBeforeDeletion}"></div>
                                                             </div>
                                                         </div>
-
+                                                        <div th:if="${subject.keywords != null && !subject.keywords.isEmpty()}"
+                                                             th:id="${'keywrd_id_'+subject.subjectNumber}" class="col-lg card rounded border shadow-sm" hidden>
+                                                            <div class="card-body h-100">
+                                                                <h5 class="card-title">Stikord</h5>
+                                                                <ul class="card-text">
+                                                                    <li th:each="keyword : ${subject.keywords}"
+                                                                        th:text="${keyword.actionFacetNr != null && keyword.actionFacetNr.length > 0 ? keyword.text + ' [' + keyword.actionFacetNr + ']' : keyword.text }"></li>
+                                                                </ul>
+                                                            </div>
+                                                        </div>
                                                     </div>
-
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-
                                 </div>
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
         </div>
     </div>
-
-
 </div>

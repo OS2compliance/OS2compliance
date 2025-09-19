@@ -1,6 +1,7 @@
 package dk.digitalidentity.report;
 
 import dk.digitalidentity.model.PlaceHolder;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.report.replacers.PlaceHolderReplacer;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -25,11 +26,11 @@ public class DocxService {
     public XWPFDocument readDocument(final String filename) throws IOException {
         return new XWPFDocument(Objects.requireNonNull(this.getClass().getClassLoader().getResourceAsStream(filename)));
     }
-    public void replacePlaceHolders(final XWPFDocument document, final Map<String, String> parameters) {
+    public void replacePlaceHolders(final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
         Arrays.stream(PlaceHolder.values())
                 .forEach(p -> replacers.stream()
                     .filter(r -> r.supports(p))
-                    .forEach(r -> r.replace(p, document, parameters)));
+                    .forEach(r -> r.replace(p, document, parameters, template)));
     }
 
 }

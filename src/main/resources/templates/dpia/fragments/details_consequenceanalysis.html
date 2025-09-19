@@ -23,7 +23,7 @@
                         <strong>Tjekliste til kvalitetssikring</strong>
                         <fieldset id="qualityCheckboxesContainer">
                             <div class="mt-2" th:each="question : ${dpiaQualityCheckList.values}">
-                                <input class="form-check-input qualityCheck" type="checkbox" name="dpiaQuality[]" th:checked="${#lists.contains(qualityassuranceCheckedValues, question.identifier)}" th:value="${question.identifier}">&nbsp;<span th:text="${question.caption}"></span>
+                                <input class="form-check-input qualityCheck" type="checkbox" name="dpiaQuality[]" th:checked="${#lists.contains(qualityassuranceCheckedValues, question.identifier)}" th:value="${question.identifier}" th:disabled="${!changeable}">&nbsp;<span th:text="${question.caption}"></span>
                             </div>
                         </fieldset>
 

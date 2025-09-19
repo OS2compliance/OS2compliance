@@ -3,11 +3,14 @@ package dk.digitalidentity.mapping;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.IncidentFieldResponseDTO;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
 import dk.digitalidentity.model.entity.IncidentFieldResponse;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RelatableService;
 import dk.digitalidentity.service.UserService;
@@ -16,8 +19,11 @@ import org.mapstruct.Mapping;
 import org.mapstruct.ReportingPolicy;
 import org.springframework.beans.factory.annotation.Autowired;
 
+import java.time.format.DateTimeFormatter;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -48,9 +54,37 @@ public abstract class IncidentMapper {
         return user.getName();
     }
 
-    @Mapping(target = "createdAt", dateFormat = "dd/MM-yyyy")
-    @Mapping(target = "updatedAt", dateFormat = "dd/MM-yyyy")
-    public abstract IncidentDTO toDTO(final Incident incident);
+	public IncidentDTO toDTO (final Incident incident) {
+		if (incident == null) {
+			return null;
+		}
+
+		DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
+
+		IncidentDTO incidentDTO = IncidentDTO.builder()
+				.id(incident.getId())
+				.name(incident.getName())
+				.createdBy(incident.getCreatedBy())
+				.createdAt(incident.getCreatedAt() != null ? incident.getCreatedAt().format(formatter) : null)
+				.updatedAt(incident.getUpdatedAt() != null ? incident.getUpdatedAt().format(formatter) : null)
+				.responses(toResponseFieldDTOs(incident.getResponses()))
+				.build();
+
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+
+		incidentDTO.setAllowedActions(allowedActions);
+		return incidentDTO;
+
+	}
+
+
+	public abstract List<IncidentFieldResponseDTO> toResponseFieldDTOs(final List<IncidentFieldResponse> incidentFieldResponseDTOs);
 
     public abstract List<IncidentDTO> toDTOs(final List<Incident> incidentDTOs);
 

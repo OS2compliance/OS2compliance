@@ -1,1 +1,25 @@
-{"packageName":"kl_article30","name":"38. Behandling af personoplysninger i forbindelse med kultur","description":"Behandlingen af personoplysninger sker med henblik på at yde tilskud til kulturlivet, herunder teater, biografer, kunst-, musik- og filmvirksomheder, samt tildeling af sendetilladelser til lokal tv og radio.","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11","register-gdpr-p7-f","register-gdpr-valp7"]}
+{
+  "packageName": "kl_article30",
+  "name": "38. Behandling af personoplysninger i forbindelse med kultur",
+  "description": "Behandlingen af personoplysninger sker med henblik på at yde tilskud til kulturlivet, herunder teater, biografer, kunst-, musik- og filmvirksomheder, samt tildeling af sendetilladelser til lokal tv og radio.",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11",
+    "register-gdpr-p7-f",
+    "register-gdpr-valp7"
+  ],
+  "kleMainGroups": [
+    "00",
+    "20"
+  ],
+  "kleGroups": [
+    "00.17",
+    "20.00",
+    "20.01",
+    "20.02",
+    "20.03",
+    "20.04",
+    "20.05"
+  ]
+}

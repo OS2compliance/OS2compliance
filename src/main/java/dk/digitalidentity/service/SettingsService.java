@@ -114,4 +114,8 @@ public class SettingsService {
 	public Setting findBySettingKey(final String key) {
 		return settingDao.findBySettingKey(key).orElse(null);
 	}
+
+	public boolean existsBySettingKey(final String key) {
+		return settingDao.existsBySettingKey(key);
+	}
 }

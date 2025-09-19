@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -24,7 +25,7 @@ import lombok.Setter;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class StandardSection extends Relatable {
+public class StandardSection extends Relatable implements HasSingleResponsibleUser {
 
     @OneToOne
     @JoinColumn(name = "template_section_identifier")

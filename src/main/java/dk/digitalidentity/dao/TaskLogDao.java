@@ -12,9 +12,9 @@ import java.util.List;
 
 public interface TaskLogDao extends JpaRepository<TaskLog, Long> {
 
-    @Query("select tl from TaskLog tl where tl.task=:task and (tl.completed >= :from or :from is null) and (tl.completed <= :to or :to is null)")
-    List<TaskLog> findAllByTaskFiltered(@Param("task") final Task task, @Param("from") final LocalDate from, @Param("to") final LocalDate to);
-
+	@Query("select tl from TaskLog tl where tl.task=:task and (tl.completed >= :from or :from is null) and (tl.completed <= :to or :to is null) ORDER BY tl.completed DESC")
+	List<TaskLog> findAllByTaskFiltered(@Param("task") final Task task, @Param("from") final LocalDate from, @Param("to") final LocalDate to);
+	
     /**
      * Finds all TaskLogs for the given Task Ids
      * @param ids

@@ -22,8 +22,10 @@ import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
-import dk.digitalidentity.security.RequireUser;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.service.DPIAReportService;
 import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
@@ -55,9 +57,9 @@ import java.security.cert.Certificate;
 import java.time.LocalDate;
 import java.util.Objects;
 
+@RequireAuthenticated
 @Slf4j
 @Controller
-@RequireUser
 @RequestMapping("sign")
 @RequiredArgsConstructor
 public class SigningController {
@@ -69,6 +71,7 @@ public class SigningController {
     private final DPIAReportService dpiaReportService;
     private DPIAReport dpiaReport;
 
+	@RequireReadOwnerOnly
     @GetMapping("view/{S3DocumentId}")
     public String viewDocumentToSign(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -95,6 +98,7 @@ public class SigningController {
         return "sign/view";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("preview/{S3DocumentId}")
     public String previewDocumentToSign(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -125,6 +129,7 @@ public class SigningController {
         return "sign/preview";
     }
 
+	@RequireUpdateOwnerOnly
     @GetMapping("{S3DocumentId}")
     public String signDocument(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) throws IOException, GeneralSecurityException {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -166,6 +171,7 @@ public class SigningController {
         return "sign/signed";
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("pdf/{S3DocumentId}")
     public ResponseEntity<ByteArrayResource> getPdf(@PathVariable("S3DocumentId") final long s3DocumentId, HttpServletResponse response) throws IOException, DocumentException {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -186,6 +192,7 @@ public class SigningController {
             .body(resource);
     }
 
+	@RequireReadOwnerOnly
     @GetMapping("pdf/signed/{S3DocumentId}")
     public ResponseEntity<ByteArrayResource> getSignedPdf(@PathVariable("S3DocumentId") final long s3DocumentId, HttpServletResponse response) throws IOException, GeneralSecurityException {
         final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -206,6 +213,7 @@ public class SigningController {
             .body(resource);
     }
 
+	@RequireUpdateOwnerOnly
     private byte[] signPdf(S3Document s3Document) throws IOException, GeneralSecurityException {
         final User user = userService.currentUser();
         final String loggedInUserName = user != null ? user.getName() : "";

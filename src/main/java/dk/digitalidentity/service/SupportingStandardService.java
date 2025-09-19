@@ -2,15 +2,20 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.StandardSectionDao;
 import dk.digitalidentity.dao.StandardTemplateDao;
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.StandardSection;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
+import dk.digitalidentity.security.Roles;
+import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
+import java.util.HashSet;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Slf4j
@@ -36,5 +41,16 @@ public class SupportingStandardService {
         }
         return found;
     }
+
+	public Set<AllowedAction> calculateAllowedActions() {
+		Set<AllowedAction> actions = new HashSet<>();
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			actions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
+			actions.add(AllowedAction.DELETE);
+		}
+		return actions;
+	}
 
 }

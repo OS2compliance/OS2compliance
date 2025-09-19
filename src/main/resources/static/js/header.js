@@ -1,4 +1,37 @@
 document.addEventListener("DOMContentLoaded", function() {
+
+    // search
+    const searchForm = document.querySelector('.searchbox');
+    const searchInput = document.getElementById('header-search-input');
+    const searchButton = document.querySelector('.searchbox__btn');
+
+    // handle enter
+    if (searchForm) {
+        searchForm.addEventListener('submit', function(e) {
+            e.preventDefault(); // Forhindrer standard form submit
+            performSearch();
+        });
+    }
+
+    // handle click on search button
+    if (searchButton) {
+        searchButton.addEventListener('click', function(e) {
+            e.preventDefault();
+            performSearch();
+        });
+    }
+
+    // perform search
+    function performSearch() {
+        const searchTerm = searchInput.value.trim();
+
+        if (searchTerm) {
+            window.location.href = `/search-results?q=${encodeURIComponent(searchTerm)}`;
+        }
+    }
+
+
+    // burgerMenu
     const burgerBtn = document.getElementById("burger-menu");
     const nav = document.getElementById("mainnav-container");
     let links = document.getElementsByClassName("nav-link");
@@ -40,6 +73,12 @@ document.addEventListener("DOMContentLoaded", function() {
                 links[i].classList.add('active2');
                 links[i].classList.remove('inactive');
             }
+
+            // Close all submenus in mini mode
+            hasSubItems.forEach(function(item) {
+                item.querySelector('.mininav-content').classList.remove('show');
+            });
+
         } else {
             nav.classList.remove('mini');
             nav.classList.add('full');
@@ -49,6 +88,17 @@ document.addEventListener("DOMContentLoaded", function() {
                 links[i].classList.add('inactive');
                 links[i].classList.remove('active2');
             }
+
+            // Open submenu if it has an active subitem
+            hasSubItems.forEach(function(item) {
+                const subMenu = item.querySelector('.mininav-content');
+                const activeSubItem = subMenu.querySelector('.active');
+                if (activeSubItem) {
+                    subMenu.classList.add('show');
+                } else {
+                    subMenu.classList.remove('show');
+                }
+            });
         }
 
         // Close any open submenus when changing state
@@ -95,11 +145,13 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 
     document.addEventListener('click', function(e) {
-        const isNavClick = e.target.closest('.mainnav');
-        if (!isNavClick) {
-            hasSubItems.forEach(function(item) {
-                item.querySelector('.mininav-content').classList.remove('show');
-            });
+        if (nav.classList.contains('mini')) {
+            const isNavClick = e.target.closest('.mainnav');
+            if (!isNavClick) {
+                hasSubItems.forEach(function(item) {
+                    item.querySelector('.mininav-content').classList.remove('show');
+                });
+            }
         }
     });
 

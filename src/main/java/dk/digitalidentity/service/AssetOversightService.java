@@ -53,14 +53,16 @@ public class AssetOversightService {
             asset.setNextInspection(NextInspection.DBS);
             asset.setNextInspectionDate(null);
             asset.setSupervisoryModel(ChoiceOfSupervisionModel.DBS);
-            if (asset.getOversightResponsibleUser() == null) {
-                if (asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
-                    asset.setOversightResponsibleUser(asset.getResponsibleUsers().get(0));
-                } else {
-                    asset.setOversightResponsibleUser(userService.currentUser());
-                }
-            }
-            createOrUpdateAssociatedOversightCheck(asset);
+			User user = userService.currentUser();
+			if (asset.getOversightResponsibleUser() == null) {
+				if (asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
+					asset.setOversightResponsibleUser(asset.getResponsibleUsers().get(0));
+					createOrUpdateAssociatedOversightCheck(asset);
+				} else if (user != null) {
+					asset.setOversightResponsibleUser(user);
+					createOrUpdateAssociatedOversightCheck(asset);
+				}
+			}
         });
     }
 

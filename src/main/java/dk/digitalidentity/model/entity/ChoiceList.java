@@ -51,5 +51,6 @@ public class ChoiceList {
             joinColumns = { @JoinColumn(name = "choice_list_id") },
             inverseJoinColumns = { @JoinColumn(name = "choice_value_id") }
     )
+	@Builder.Default
     private List<ChoiceValue> values = new ArrayList<>();
 }

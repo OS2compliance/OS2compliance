@@ -2,6 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <script th:src="@{/js/register/form.js}" defer></script>
+<script th:src="@{/js/export-service.js}" defer></script>
 <body class="jumping">
     <link rel="stylesheet" th:href="@{/css/register.css}" />
 	<div id="root" class="root mn--max hd--expanded">
@@ -19,13 +20,10 @@
 							<h1 class="page-title mb-0 mt-2">Fortegnelse</h1>
 							<p class="lead"></p>
 						</div>
-						<div class="align-self-center d-inline-flex">
-							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createRegisterService.show()" class="btn btn-info btn-lg hstack gap-2" style="margin-bottom: 8px; margin-right: 14px; height: 45px">
-								<i class="ti-plus fs-4"></i> <span class="vr"></span>Ny behandlingsaktivitet
-							</button>
-							<button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')" onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-								<i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-							</button>
+						<div class="align-self-center d-inline-flex gap-2">
+                            <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='saveAsExcelButton', text='Gem som Excel', iconClass='ti-bookmark')}"></div>
+                            <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='createRegisterButton', text='Ny behandlingsaktivitet', iconClass='ti-plus')}"></div>
+                            <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
 						</div>
 					</div>
 				</div>
@@ -85,6 +83,7 @@
 
 		/*[+
 			var gridRegistersUrl = [[@{/rest/registers/list}]];
+			var exportRegistersUrl = [[@{/rest/registers/export}]];
 			var viewUrl = [[@{/registers/}]];
 			var formUrl = [[@{/registers/form}]];
 			var restUrl = [[@{/rest/registers}]];

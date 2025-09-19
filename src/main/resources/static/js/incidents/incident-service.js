@@ -1,11 +1,24 @@
-const incidentService = new IncidentService();
+import FormValidationService from "../FormValidationService.js";
+import {initStatisticView} from "../statistic/statisticView.js";
+import IncidentGridService from "./incident-grid-service.js";
+
 document.addEventListener("DOMContentLoaded", function(event) {
+});
+
+document.addEventListener("DOMContentLoaded", function(event) {
+    window.incidentGridService = new IncidentGridService();
+    window.incidentService = new IncidentService();
     incidentService.init();
+    incidentGridService.init();
+
+    initStatisticView('incident')
 });
 
 function IncidentService() {
     this.init = () => {
-        this.fetchDialog(formUrl, "createIncidentDialog");
+        if (document.getElementById('createIncidentDialog')) {
+            this.fetchDialog(formUrl, "createIncidentDialog");
+        }
     }
 
     this.fetchDialog = (url, targetId) => {
@@ -30,13 +43,16 @@ function IncidentService() {
     }
 
     this.editIncident = (targetId, incidentId) => {
-        document.getElementById(targetId).innerText = '';
-        this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
-            .then(() => {
-                let dialog = document.getElementById(targetId);
-                let editDialog = new bootstrap.Modal(dialog);
-                editDialog.show();
-            })
+        const container = document.getElementById(targetId)
+        if (container) {
+            container.innerText = '';
+            this.fetchDialog(`${formUrl}?id=${incidentId}`, targetId)
+                .then(() => {
+                    let dialog = document.getElementById(targetId);
+                    let editDialog = new bootstrap.Modal(dialog);
+                    editDialog.show();
+                })
+        }
     }
 
     this.deleteIncident = (grid, targetId, name) => {
@@ -190,6 +206,13 @@ function IncidentService() {
             }
             incidentService.setFieldValidity(input, feedback, isValid);
         });
+
+        // Validate obligatory fields
+        const fvs = new FormValidationService(form)
+        fvs.removeValidationMessages()
+        if (!fvs.validate_isNotEmpty()) {
+            valid = false;
+        }
 
         if (!valid) {
             event.preventDefault();

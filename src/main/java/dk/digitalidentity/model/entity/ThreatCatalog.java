@@ -5,6 +5,7 @@ import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
@@ -27,9 +28,9 @@ public class ThreatCatalog {
     @Column(nullable = false, unique = true)
     private String identifier;
 
-    @OneToMany(mappedBy = "threatCatalog")
-    @JsonIgnore
-    private List<ThreatAssessment> assessments;
+	@ManyToMany(mappedBy = "threatCatalogs")
+	@JsonIgnore
+	private List<ThreatAssessment> assessments;
 
     @OneToMany(mappedBy = "threatCatalog", cascade = CascadeType.ALL)
     @OrderBy(value = "threatType ASC, sortKey ASC")

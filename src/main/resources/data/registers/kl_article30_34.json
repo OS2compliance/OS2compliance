@@ -1,1 +1,16 @@
-{"packageName":"kl_article30","name":"35. Behandling af personoplysninger i forbindelse med udvikling af landdistrikterne.","description":"Behandlingen af personoplysninger sker til understøttelse af kommunens  arbejde med etablering af lokale aktionsgrupper for udvikling af landdistrikterne. \nBehandling af personoplysninger sker desuden for at sikre opbevaring af dokumentation til kontrol af de foranstaltninger der har fået tildelt midler.","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "35. Behandling af personoplysninger i forbindelse med udvikling af landdistrikterne.",
+  "description": "Behandlingen af personoplysninger sker til understøttelse af kommunens  arbejde med etablering af lokale aktionsgrupper for udvikling af landdistrikterne. \nBehandling af personoplysninger sker desuden for at sikre opbevaring af dokumentation til kontrol af de foranstaltninger der har fået tildelt midler.",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "04"
+  ],
+  "kleGroups": [
+    "04.21"
+  ]
+}

@@ -6,10 +6,14 @@ import dk.digitalidentity.model.dto.IncidentFieldDTO;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.IncidentField;
-import dk.digitalidentity.security.RequireAdministrator;
-import dk.digitalidentity.security.RequireSuperuserOrAdministrator;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadAll;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireConfiguration;
 import dk.digitalidentity.service.IncidentService;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -30,6 +34,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
@@ -38,18 +43,20 @@ import java.util.List;
 @Slf4j
 @RestController
 @RequestMapping("rest/incidents")
-@RequireSuperuserOrAdministrator
+@RequireConfiguration
 @RequiredArgsConstructor
 public class IncidentRestController {
     private final IncidentService incidentService;
     private final IncidentMapper incidentMapper;
+	private final ExcelExportService excelExportService;
 
-    @RequireAdministrator
+    @RequireReadAll
     @GetMapping("questions")
     public List<IncidentFieldDTO> list() {
         return incidentMapper.toFieldDTOs(incidentService.getAllFields());
     }
 
+	@RequireDeleteAll
     @DeleteMapping("questions/{id}")
     @Transactional
     public ResponseEntity<?> deleteQuestion(@PathVariable final Long id) {
@@ -59,6 +66,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("questions/{id}/up")
     public ResponseEntity<?> questionReorderUp(@PathVariable("id") final Long id) {
@@ -68,6 +76,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireUpdateAll
     @Transactional
     @PostMapping("questions/{id}/down")
     public ResponseEntity<?> questionReorderDown(@PathVariable("id") final Long id) {
@@ -77,6 +86,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+	@RequireDeleteAll
     @DeleteMapping("{id}")
     @Transactional
     public ResponseEntity<?> deleteIncident(@PathVariable final Long id) {
@@ -86,7 +96,7 @@ public class IncidentRestController {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @RequireUser
+    @RequireReadAll
     @PostMapping("list")
     public PageDTO<IncidentDTO> list(
         @RequestParam(name = "search", required = false) final String search,
@@ -95,8 +105,9 @@ public class IncidentRestController {
         @RequestParam(name = "order", required = false) final String order,
         @RequestParam(name = "dir", required = false) final String dir,
         @RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
-        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam) {
-        Sort sort = null;
+        @RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam
+	) {
+        Sort sort;
         if (StringUtils.isNotEmpty(order)) {
             final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
             sort = Sort.by(direction, order);
@@ -104,17 +115,40 @@ public class IncidentRestController {
             sort = Sort.by(Sort.Direction.DESC, "createdAt");
         }
         final Pageable sortAndPage = PageRequest.of(page, size, sort);
-        final LocalDateTime fromDate = fromDateParam != null ? fromDateParam.atStartOfDay() : LocalDateTime.ofEpochSecond(0, 0, ZoneOffset.UTC);
-        final LocalDateTime toDate = toDateParam != null ? toDateParam.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0);
-        final Page<Incident> incidents = StringUtils.isNotEmpty(search)
-            ? incidentService.search(search, fromDate, toDate, sortAndPage)
-            : incidentService.listIncidents(fromDate, toDate, sortAndPage);
+		Page<Incident> incidents = incidentService.getIncidents(search, fromDateParam, toDateParam, sortAndPage);
 
-        assert incidents != null;
-        return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
+		assert incidents != null;
+		return new PageDTO<>(incidents.getTotalElements(), incidentMapper.toDTOs(incidents.getContent()));
     }
 
-    @RequireUser
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(name = "search", required = false) final String search,
+			@RequestParam(name = "order", required = false) final String order,
+			@RequestParam(name = "dir", required = false) final String dir,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam(name = "fromDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate fromDateParam,
+			@RequestParam(name = "toDate", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate toDateParam,
+			HttpServletResponse response
+	) throws IOException {
+		Sort sort;
+		if (StringUtils.isNotEmpty(order)) {
+			final Sort.Direction direction = Sort.Direction.fromOptionalString(dir).orElse(Sort.Direction.ASC);
+			sort = Sort.by(direction, order);
+		} else {
+			sort = Sort.by(Sort.Direction.DESC, "createdAt");
+		}
+		final Pageable sortAndPage = PageRequest.of(0, Integer.MAX_VALUE, sort);
+		Page<Incident> incidents = incidentService.getIncidents(search, fromDateParam, toDateParam, sortAndPage);
+
+		assert incidents != null;
+
+		List<IncidentDTO> allData = incidentMapper.toDTOs(incidents.getContent());
+		excelExportService.exportToExcel(allData, IncidentDTO.class, fileName, response);
+	}
+
+	@RequireReadAll
     @GetMapping("columns")
     public List<String> visibleColumns() {
         return incidentService.getAllFields().stream()

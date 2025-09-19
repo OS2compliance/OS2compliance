@@ -7,6 +7,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.List;
 
 @Transactional
 @RequiredArgsConstructor
@@ -14,11 +15,15 @@ import java.util.Collection;
 public class KLESubjectService {
 	private final KLESubjectDao kleSubjectDao;
 
+	public List<KLESubject> getAll() {
+		return kleSubjectDao.findAll();
+	}
+
 	public KLESubject save(KLESubject kleSubject) {
 		return kleSubjectDao.save(kleSubject);
 	}
 
-	public void softDeleteAllNotMatching(Collection<String> subjectNumbers) {
-		kleSubjectDao.softDeleteBySubjectNumbers(subjectNumbers);
+	public void saveAll(Collection<KLESubject> kleSubjects) {
+		kleSubjectDao.saveAll(kleSubjects);
 	}
 }

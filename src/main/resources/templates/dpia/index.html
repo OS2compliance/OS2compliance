@@ -3,6 +3,7 @@
       xmlns:th="http://www.thymeleaf.org"
       xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
+<script th:src="@{/js/export-service.js}"></script>
 <body class="jumping">
 
 <div id="root" class="root mn--max hd--expanded">
@@ -20,24 +21,11 @@
                         <h1 class="page-title mb-0 mt-2">konsekvensanalyser</h1>
                         <p class="lead"></p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                class="btn btn-info btn-lg hstack gap-2"
-                                style="margin-bottom: 8px; margin-right: 14px; height: 45px"
-                                onclick="createExternalDPIAService.createExternalClicked()">
-                            <i class="ti-plus"></i> <span class="vr"></span> Tilknyt Ekstern DPIA
-                        </button>
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                class="btn btn-info btn-lg hstack gap-2"
-                                style="margin-bottom: 8px; margin-right: 14px; height: 45px" data-bs-toggle="modal"
-                                data-bs-target="#createDPIAModal" onclick="createDPIAService.formReset()">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny konsekvensanalyse
-                        </button>
-                        <button type="button" sec:authorize="hasAnyRole('ROLE_administrator','ROLE_forandre')"
-                                onclick="createTaskService.show()" class="btn btn-success btn-lg hstack gap-2"
-                                style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-plus"></i> <span class="vr"></span> Ny opgave
-                        </button>
+                    <div class="align-self-center d-inline-flex gap-2">
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='saveAsExcelButton', text='Gem som Excel', iconClass='ti-bookmark')}"></div>
+                        <div th:replace="~{fragments/component/pageTopButton :: infoButton(id='createExternalDPIAButton', text='Tilknyt Ekstern DPIA', iconClass='ti-plus')}"></div>
+                        <div th:replace="~{fragments/component/pageTopButton :: openModalInfoButton(id='createDPIAButton', text='Ny konsekvensanalyse', iconClass='ti-plus', target='#createDPIAModal')}"></div>
+                        <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
                     </div>
                 </div>
             </div>
@@ -49,7 +37,10 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
+                                <div class="d-flex gap-2">
+                                    <div th:replace="~{fragments/gridOptions :: dropdown(customStyle='')}"></div>
+                                    <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
+                                </div>
                                 <div id="dpiaDatatable" class="mt-5"></div>
 
                                 <!-- Custom search selectors-->
@@ -81,8 +72,8 @@
 </div>
 <div id="edit_dpia_modal_container"></div>
 <div
-    th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
-<script th:src="@{/js/dpia/list.js}" defer></script>
+    th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, statistic = true)}"></div>
+<script type="module" th:src="@{/js/dpia/list.js}" defer></script>
 <script th:src="@{/js/dpia/createDPIAService.js}" defer></script>
 <script th:src="@{/js/dpia/editDPIAService.js}" defer></script>
 <script th:src="@{/js/dpia/createExternalDPIAService.js}" defer></script>
@@ -92,20 +83,12 @@
         const baseUrl = [[@{/dpia}]];
         const restUrl = [[@{/rest/dpia}]];
         const listDataUrl = restUrl + "/list";
+        const exportDataUrl = restUrl + "/export";
         const deleteUrl = restUrl+"/delete";
         const superuser = [[${superuser}]];
         let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-        const columnProperties = ['id', 'name', 'responsibleOUName', 'responsibleUserName',  'userUpdatedDate', 'taskCount', 'reportApprovalStatus', 'screeningConclusion', 'isExternal'];
-        let createDPIAService, createExternalDPIAService, editDPIAService;
+
     +]*/
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        createDPIAService = new CreateDPIAService()
-        createDPIAService.init()
-        editDPIAService = new EditDPIAService()
-
-        createExternalDPIAService = new CreateExternalDPIAService()
-    })
     /*]]>*/
 </script>
 

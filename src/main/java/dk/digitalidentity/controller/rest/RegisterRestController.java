@@ -6,9 +6,15 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.sections.RequireRegister;
+import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -20,6 +26,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.io.IOException;
+import java.util.List;
 import java.util.Map;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -28,13 +36,17 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Slf4j
 @RestController
 @RequestMapping("rest/registers")
-@RequireUser
+@RequireRegister
 @RequiredArgsConstructor
 public class RegisterRestController {
-    private final RegisterGridDao registerGridDao;
+	private final RegisterGridDao registerGridDao;
     private final RegisterMapper mapper;
     private final UserService userService;
+	private final RegisterService registerService;
+	private final ExcelExportService excelExportService;
+	private final SecurityUserService securityUserService;
 
+	@RequireReadOwnerOnly
     @PostMapping("list")
     public PageDTO<RegisterDTO> list(
             @RequestParam(value = "page", defaultValue = "0") int page,
@@ -43,16 +55,35 @@ public class RegisterRestController {
             @RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
             @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
-        Page<RegisterGrid> registers =  registerGridDao.findAllWithColumnSearch(
-            validateSearchFilters(filters, RegisterGrid.class),
-            buildPageable(page, limit, sortColumn, sortDirection),
-            RegisterGrid.class
-        );
+		User user = securityUserService.getCurrentUserOrThrow();
 
-        assert registers != null;
-        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
+		Page<RegisterGrid> registers;
+		registers = registerService.getRegisters(sortColumn, sortDirection, filters, page, limit, user);
+
+		assert registers != null;
+        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
     }
 
+	@RequireReadOwnerOnly
+	@PostMapping("export")
+	public void export(
+			@RequestParam(value = "order", required = false) String sortColumn,
+			@RequestParam(value = "dir", defaultValue = "ASC") String sortDirection,
+			@RequestParam(value = "fileName", defaultValue = "export.xlsx") String fileName,
+			@RequestParam Map<String, String> filters,
+			HttpServletResponse response
+	) throws IOException {
+		User user = securityUserService.getCurrentUserOrThrow();
+
+		// Fetch all records (no pagination)
+		Page<RegisterGrid> registers = registerService.getRegisters(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
+
+		assert registers != null;
+		List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), registerService);
+		excelExportService.exportToExcel(allData, RegisterDTO.class, fileName, response);
+	}
+
+	@RequireReadOwnerOnly
     @PostMapping("list/{id}")
     public PageDTO<RegisterDTO> list(
         @PathVariable(name = "id") final String uuid,
@@ -64,27 +95,14 @@ public class RegisterRestController {
     ) {
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if (!SecurityUtil.isSuperUser() && !uuid.equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-
-		Map<String, String> customSearchFilters = validateSearchFilters(filters, RegisterGrid.class);
-		Page<RegisterGrid> registers = registerGridDao.findAllForResponsibleUserOrCustomResponsibleUser(
-				customSearchFilters,
+		Page<RegisterGrid> registers = registerGridDao.findAllWithAssignedUser(
+				validateSearchFilters(filters, RegisterGrid.class),
+				user,
 				buildPageable(page, limit, sortColumn, sortDirection),
-				RegisterGrid.class,
-				user
+				RegisterGrid.class
 		);
 
-
         assert registers != null;
-        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent()));
-    }
-
-
-    private boolean containsField(final String fieldName) {
-        return fieldName.equals("name") || fieldName.equals("responsibleUserNames") || fieldName.equals("responsibleOUNames")
-                || fieldName.equals("updatedAt") || fieldName.equals("consequenceOrder") || fieldName.equals("riskOrder") || fieldName.equals("departmentNames") || fieldName.equals("assetAssessmentOrder")
-                || fieldName.equals("statusOrder") || fieldName.equals("assetCount");
+        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
     }
 }

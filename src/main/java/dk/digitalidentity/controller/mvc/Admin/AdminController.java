@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.dto.EmailTemplateDTO;
 import dk.digitalidentity.model.entity.EmailTemplate;
-import dk.digitalidentity.security.RequireAdministrator;
+import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.ResponsibleUserViewService;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @Controller
-@RequireAdministrator
+@RequireAdmin
 @RequestMapping("admin")
 @RequiredArgsConstructor
 public class AdminController {

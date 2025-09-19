@@ -43,7 +43,7 @@ public class ISO27001Replacer implements PlaceHolderReplacer {
 
     @Override
     @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
         final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
             replaceParagraph(paragraph, placeHolder.getPlaceHolder());

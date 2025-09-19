@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html xmlns="http://www.w3.org/1999/html">
+<html xmlns="http://www.w3.org/1999/html"  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity4">
 
 <head th:fragment="head">
 
@@ -63,13 +63,29 @@
 
 			<!-- Content Header - Left Side: -->
 			<div class="header__content-start">
+                <div class="header-searchbox">
 
+                    <!-- Searchbox toggler for small devices -->
+                    <label for="header-search-input" class="header__btn d-md-none btn btn-icon rounded-pill shadow-none border-0 btn-sm" type="button">
+                        <i class="pli-magnifi-glass"></i>
+                    </label>
+
+                    <!-- Searchbox input -->
+                    <form class="searchbox searchbox--auto-expand searchbox--hide-btn input-group">
+                        <input id="header-search-input" class="m-2 searchbox__input form-control bg-transparent" type="search" placeholder="Søg" aria-label="Search">
+                        <div class="searchbox__backdrop">
+                            <button class="searchbox__btn header__btn btn btn-icon rounded shadow-none border-0 btn-sm" type="button">
+                                <i class="pli-magnifi-glass"></i>
+                            </button>
+                        </div>
+                    </form>
+                </div>
 			</div>
 			<!-- End - Content Header - Left Side -->
 
 			<!-- Content Header - Right Side: -->
 			<div class="header__content-end">
-				<div th:if="${T(dk.digitalidentity.security.SecurityUtil).administrator}">
+				<div sec:authorize="@accessEvaluator.settings()">
 					<a style="margin-bottom: 2px; margin-right: 14px; height: 45px; margin-top: 50px;" onclick="settingsService.show()">
 						<i class="ti-settings fs-4"></i>
 					</a>

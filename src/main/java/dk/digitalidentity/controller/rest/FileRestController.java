@@ -1,6 +1,7 @@
 package dk.digitalidentity.controller.rest;
 
-import dk.digitalidentity.security.RequireUser;
+import dk.digitalidentity.security.annotations.RequireAuthenticated;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.service.S3Service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,7 +19,7 @@ import java.io.IOException;
 @Slf4j
 @RestController
 @RequestMapping("rest/file")
-@RequireUser
+@RequireAuthenticated
 @RequiredArgsConstructor
 public class FileRestController {
     private final S3Service s3Service;
@@ -26,6 +27,7 @@ public class FileRestController {
     public record UploadDTO (MultipartFile upload ) {}
     public record CKEditorImageResponse(String url){}
     public record CKEditorImageError(String error){}
+	@RequireCreateOwnerOnly
     @PostMapping(value = "img/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<?> uploadImage(@RequestParam("upload") MultipartFile file) throws IOException {
         try {

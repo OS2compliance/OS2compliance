@@ -10,9 +10,11 @@ import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.StandardSectionStatus;
-import dk.digitalidentity.security.RequireUser;
-import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
+import dk.digitalidentity.security.annotations.sections.RequireStandard;
+import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.service.RelationService;
 import jakarta.transaction.Transactional;
 import jakarta.validation.Valid;
@@ -22,8 +24,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -34,12 +34,11 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Slf4j
 @RestController
 @RequestMapping("rest/standards")
-@RequireUser
+@RequireStandard
 @RequiredArgsConstructor
 public class StandardRestController {
     private final StandardSectionDao standardSectionDao;
@@ -49,13 +48,10 @@ public class StandardRestController {
 	private final StandardTemplateDao standardTemplateDao;
 
 	record SetFieldDTO(@NotNull SetFieldStandardType setFieldType, @NotNull String value) {}
+	@RequireUpdateAll
     @PostMapping("{templateIdentifier}/supporting/standardsection/{id}")
     public ResponseEntity<HttpStatus> setField(@PathVariable final String templateIdentifier, @PathVariable final long id, @Valid @RequestBody final SetFieldDTO dto) {
         final StandardSection standardSection = standardSectionDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && standardSection.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
 
         switch (dto.setFieldType()) {
             case RESPONSIBLE -> handleResponsibleUser(standardSection, dto.value());
@@ -71,15 +67,16 @@ public class StandardRestController {
 
         return new ResponseEntity<>(HttpStatus.OK);
     }
-    record StandardSectionRecord(Long id, String description, Long[] documents, Long[] relations, StandardSectionStatus status){}
 
+    record StandardSectionRecord(Long id, String description, Long[] documents, Long[] relations, StandardSectionStatus status){}
+	@RequireCreateOwnerOnly
     @Transactional
     @PostMapping(value = "save", consumes = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<?> save(@RequestBody StandardSectionRecord record) {
         final StandardSection section = standardSectionDao.findById(record.id)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        if(authentication.getAuthorities().stream().noneMatch(r -> r.getAuthority().equals(Roles.SUPERUSER)) && section.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+
+        if(section.getResponsibleUser() != null &&  section.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         final HashSet<Long> combinedRelations = new HashSet<>();
@@ -96,6 +93,7 @@ public class StandardRestController {
         return new ResponseEntity<>(HttpStatus.OK);
     }
 
+	@RequireDeleteOwnerOnly
 	@Transactional
 	@PostMapping("/section/delete/{identifier}")
 	public ResponseEntity<?> deleteSection(@PathVariable(name = "identifier") final String identifier) {
@@ -135,7 +133,7 @@ public class StandardRestController {
 
 	@Transactional
 	@PostMapping("/header/delete/{identifier}")
-	public ResponseEntity<?> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
+	public ResponseEntity<HttpStatus> deleteHeader(@PathVariable(name = "identifier") final String identifier) {
 		StandardTemplateSection section =  standardTemplateSectionDao.findById(identifier).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		standardTemplateSectionDao.delete(section);
 		return new ResponseEntity<>(HttpStatus.OK);
@@ -143,7 +141,7 @@ public class StandardRestController {
 
 	@Transactional
 	@PostMapping("/delete/{id}")
-	public ResponseEntity<?> deleteStandard(@PathVariable(name = "id") final String id) {
+	public ResponseEntity<HttpStatus> deleteStandard(@PathVariable(name = "id") final String id) {
 		StandardTemplate template = standardTemplateDao.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST));
 		standardTemplateDao.delete(template);
 		return new ResponseEntity<>(HttpStatus.OK);

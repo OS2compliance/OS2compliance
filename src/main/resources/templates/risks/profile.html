@@ -33,7 +33,13 @@
                             <div class="col-lg-6">
                                 <p th:text="'Type: ' + ${risk.threatAssessmentType.getMessage()}" style="margin-bottom: 0px;"></p>
                                 <p th:unless="${risk.threatAssessmentType == T(dk.digitalidentity.model.entity.enums.ThreatAssessmentType).SCENARIO}" th:text="'Element: ' + ${elementName}" style="margin-bottom: 0px;"></p>
-                                <p th:text="'Trusselskatalog: ' + ${risk.threatCatalog.name}" style="margin-bottom: 0px;"></p>
+                                <p style="margin-bottom: 0px;">
+                                    Trusselskataloger:
+                                    <span th:each="catalog, iterStat : ${risk.threatCatalogs}">
+                                        <span th:text="${catalog.name}"></span>
+                                        <span th:if="!${iterStat.last}">, </span>
+                                    </span>
+                                </p>
                             </div>
                             <div class="col-lg-6">
                                 <p th:text="'Vurdering for den registrerede: ' + (${risk.registered} ? 'ja' : 'nej')" style="margin-bottom: 0px;"></p>

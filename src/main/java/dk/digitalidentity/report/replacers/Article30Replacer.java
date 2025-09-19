@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Setting;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
@@ -78,7 +79,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
 
     @Override
     @Transactional
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
         final XWPFParagraph paragraph = findParagraphToReplace(document, placeHolder.getPlaceHolder());
         if (paragraph != null) {
             replaceParagraph(paragraph, placeHolder);
@@ -357,8 +358,6 @@ public class Article30Replacer implements PlaceHolderReplacer {
             nullSafe(() -> register.getResponsibleOus().stream().map(OrganisationUnit::getName).collect(Collectors.joining(", ")), "Ikke angivet"));
         insertStandard(document, cursor, "Hvem er ansvarlig for behandling af personoplysningerne: ",
             nullSafe(register::getInformationResponsible, "Ikke angivet"));
-		insertStandard(document, cursor, "Navn på DPO: ",
-				nullSafe( () -> register.getDataProtectionOfficer().getName(), "Ikke angivet"));
         insertStandard(document, cursor, "Fortegnelse over behandlingsaktivitet angående: ",
             nullSafe(() -> register.getRegisterRegarding().stream().map(v -> v.getCaption()).collect(Collectors.joining(", ")), "Ikke angivet"));
 		insertStandard(document, cursor, "Sikkerhedsforanstaltninger: ",

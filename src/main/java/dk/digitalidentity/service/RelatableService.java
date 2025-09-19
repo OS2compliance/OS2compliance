@@ -13,6 +13,7 @@ import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -54,5 +55,33 @@ public class RelatableService {
             case DPIA -> ((DPIA) relatable).getAssets().stream().flatMap(a -> a.getResponsibleUsers().stream()).toList();
         };
     }
+
+	public boolean isOwner (final Relatable relatable) {
+		String userUuid = SecurityUtil.getPrincipalUuid();
+		boolean isResponsible = switch (relatable.getRelationType()) {
+			case SUPPLIER -> ((Supplier)relatable).getResponsibleUser().getUuid().equals(userUuid);
+			case TASK -> ((Task)relatable).getResponsibleUser().getUuid().equals(userUuid);
+			case DOCUMENT -> ((Document)relatable).getResponsibleUser().getUuid().equals(userUuid);
+			case TASK_LOG -> ((TaskLog)relatable).getTask().getResponsibleUser().getUuid().equals(userUuid);
+			case REGISTER -> ((Register)relatable).getResponsibleUsers().stream().anyMatch(u -> u.getUuid().equals(userUuid));
+			case ASSET -> ((Asset)relatable).getResponsibleUsers().stream().anyMatch(u -> u.getUuid().equals(userUuid));
+			case STANDARD_SECTION -> ((StandardSection)relatable).getResponsibleUser().getUuid().equals(userUuid);
+			case THREAT_ASSESSMENT -> ((ThreatAssessment)relatable).getResponsibleUser().getUuid().equals(userUuid);
+			case THREAT_ASSESSMENT_RESPONSE -> ((ThreatAssessmentResponse)relatable).getThreatAssessment().getResponsibleUser().getUuid().equals(userUuid);
+			case DPIA -> ((DPIA) relatable).getAssets().stream().flatMap(a -> a.getResponsibleUsers().stream()).anyMatch(u -> u.getUuid().equals(userUuid));
+			default -> false;
+		};
+
+		boolean isManager = switch (relatable.getRelationType()) {
+			case REGISTER -> ((Register)relatable).getCustomResponsibleUsers().stream().anyMatch(u -> u.getUuid().equals(userUuid));
+			case ASSET -> ((Asset)relatable).getManagers().stream().anyMatch(u -> u.getUuid().equals(userUuid));
+			case STANDARD_SECTION -> ((StandardSection)relatable).getResponsibleUser().getUuid().equals(userUuid);
+			case THREAT_ASSESSMENT -> ((ThreatAssessment)relatable).getThreatAssessmentReportApprover().getUuid().equals(userUuid);
+			case DPIA -> ((DPIA) relatable).getAssets().stream().flatMap(a -> a.getManagers().stream()).anyMatch(u -> u.getUuid().equals(userUuid));
+			default -> false;
+		};
+
+		return isResponsible || isManager;
+	}
 
 }

@@ -1,1 +1,22 @@
-{"packageName":"kl_article30","name":"89. Behandling af personoplysninger i forbindelse med beredskab","description":"Behandlingen af personoplysninger sker i forbindelse med beredskabets indsats, bl.a. vedr. materiel, lokalitet, udrykningstjeneste, forplejning, genhusning","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-e","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "89. Behandling af personoplysninger i forbindelse med beredskab",
+  "description": "Behandlingen af personoplysninger sker i forbindelse med beredskabets indsats, bl.a. vedr. materiel, lokalitet, udrykningstjeneste, forplejning, genhusning",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-e",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "14"
+  ],
+  "kleGroups": [
+    "14.01",
+    "14.02",
+    "14.05",
+    "14.09",
+    "14.12",
+    "14.14",
+    "14.18"
+  ]
+}

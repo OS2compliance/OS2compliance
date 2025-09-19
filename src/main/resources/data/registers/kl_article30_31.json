@@ -1,1 +1,18 @@
-{"packageName":"kl_article30","name":"32. Behandling af personoplysninger i forbindelse med udlejning, kommunikationsnet, fællesantenne og laboratorieydelser","description":"Behandlingen af personoplysninger sker i forbindelse med udlån af materiale, fx olietanke samt udlån af bycykler. Desuden behandles personoplysninger i forbindelse med fællesantenne, herunder tvangslicens, samt i forbindelse med laboratorieydelser, herunder analyse af olie og kul","gdprChoices":["register-gdpr-valp6","register-gdpr-p6-c","register-gdpr-valp11"]}
+{
+  "packageName": "kl_article30",
+  "name": "32. Behandling af personoplysninger i forbindelse med udlejning, kommunikationsnet, fællesantenne og laboratorieydelser",
+  "description": "Behandlingen af personoplysninger sker i forbindelse med udlån af materiale, fx olietanke samt udlån af bycykler. Desuden behandles personoplysninger i forbindelse med fællesantenne, herunder tvangslicens, samt i forbindelse med laboratorieydelser, herunder analyse af olie og kul",
+  "gdprChoices": [
+    "register-gdpr-valp6",
+    "register-gdpr-p6-c",
+    "register-gdpr-valp11"
+  ],
+  "kleMainGroups": [
+    "13"
+  ],
+  "kleGroups": [
+    "13.09",
+    "13.10",
+    "13.16"
+  ]
+}

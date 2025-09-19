@@ -27,7 +27,7 @@
                         <select class="form-control form-select editField" th:id="${question.choice.identifier}"
                                 onchange="assetDpiaService.handleAnswerChange(event)"
                                 th:attr="data-category=${question.choice.category}"
-                                th:name="|questions[${itemStat.index}].answer|" tabindex="-1">
+                                th:name="|questions[${itemStat.index}].answer|" tabindex="-1" th:disabled="${!changeable}">
                             <option value=""></option>
                             <option th:each="choice: ${question.choice.values}" th:value="${choice.identifier}"
                                     th:selected="${question.answer == choice.identifier}"
@@ -52,7 +52,7 @@
                                 onchange="assetDpiaService.handleAnswerChange(event)"
                                 th:name="|questions[${itemStat.index + 3}].answer|"
                                 th:attr="data-category=${question.choice.category}"
-                                tabindex="-1">
+                                tabindex="-1" th:disabled="${!changeable}">
                             <option value=""></option>
                             <option th:each="choice: ${question.choice.values}" th:value="${choice.identifier}"
                                     th:selected="${question.answer == choice.identifier}"
@@ -77,7 +77,7 @@
                         <select class="form-control form-select editField" th:id="${question.choice.identifier}"
                                 onchange="assetDpiaService.handleAnswerChange(event)"
                                 th:attr="data-category=${question.choice.category}"
-                                th:name="|questions[${itemStat.index + 9}].answer|" tabindex="-1">
+                                th:name="|questions[${itemStat.index + 9}].answer|" tabindex="-1" th:disabled="${!changeable}">
                             <option value=""></option>
                             <option th:each="choice: ${question.choice.values}" th:value="${choice.identifier}"
                                     th:selected="${question.answer == choice.identifier}"

@@ -49,5 +49,6 @@ public class Relation {
     @OneToMany(orphanRemoval = true,
         cascade = {CascadeType.ALL},
         mappedBy = "relation")
+	@Builder.Default
     private Set<RelationProperty> properties = new HashSet<>();
 }

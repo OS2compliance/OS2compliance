@@ -129,9 +129,7 @@ function ChoiceService() {
     }
 
     this.initTagSelect = (id) => {
-        console.log('initTagSelect ' + id)
         const tagsSelect = document.getElementById(id);
-        console.log(tagsSelect)
         const tagsChoice = initSelect(tagsSelect);
         this.updateTags(tagsChoice, "");
         tagsSelect.addEventListener("search",
@@ -229,7 +227,7 @@ function ChoiceService() {
     }
 
     this.updateRelationsDocumentsOnly = (choices, search) => {
-        this.updateAssets(choices, `/rest/relatable/autocomplete?types=DOCUMENT&search=${search}`);
+        this.updateRelationsFor(choices, `/rest/relatable/autocomplete?types=DOCUMENT&search=${search}`);
     }
 
 

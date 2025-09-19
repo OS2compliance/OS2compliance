@@ -2,6 +2,7 @@ package dk.digitalidentity.report.replacers;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.PlaceHolder;
+import dk.digitalidentity.model.entity.StandardTemplate;
 import org.apache.commons.lang3.ObjectUtils;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.apache.poi.xwpf.usermodel.XWPFParagraph;
@@ -29,7 +30,7 @@ public class CommonPropertiesReplacer implements PlaceHolderReplacer {
     }
 
     @Override
-    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters) {
+    public void replace(final PlaceHolder placeHolder, final XWPFDocument document, final Map<String, String> parameters, StandardTemplate template) {
         document.getBodyElementsIterator().forEachRemaining(
                 part -> {
                     if (part.getBody() != null) {

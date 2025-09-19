@@ -9,21 +9,71 @@
     };
 
     document.addEventListener("DOMContentLoaded", function(event) {
-        fetch(formUrl)
-            .then(response => {
-                if (response.ok) {
-                    response.text()
-                        .then(data => {
-                            document.getElementById('formDialog').innerHTML = data;
-                            formLoaded();
-                            //initFormValidationForForm('formDialog');
-                        })
-                }
-            })
-            .catch(error => {
-                toastService.error(error)
-            })
+        const dialog = document.getElementById('formDialog')
+        if (dialog) {
+            fetch(formUrl)
+                .then(response => {
+                    if (response.ok) {
+                        response.text()
+                            .then(data => {
+                                dialog.innerHTML = data;
+                                formLoaded();
+                                //initFormValidationForForm('formDialog');
+                            })
+                    }
+                })
+                .catch(error => {
+                    toastService.error(error)
+                })
+        }
 
+        initGrid()
+
+        initGridActionButtons()
+
+    });
+
+    function deleteClicked(assetId, name) {
+        Swal.fire({
+          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
+          icon: 'warning',
+          showCancelButton: true,
+          confirmButtonColor: '#03a9f4',
+          cancelButtonColor: '#df5645',
+          confirmButtonText: 'Ja',
+          cancelButtonText: 'Nej'
+        }).then((result) => {
+          if (result.isConfirmed) {
+            fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
+                    .then(() => {
+                        window.location.reload();
+                    });
+          }
+        })
+    }
+
+    async function onEditclicked(assetId) {
+        const response = await fetch(`${formUrl}?id=${assetId}`, {
+            headers: {
+                'X-CSRF-TOKEN': token
+            }
+        })
+
+        if (!response.ok) {
+            toastService.error(response.error)
+            console.error("Could not load edit fragment for asset")
+        }
+
+        const responseText = await response.text()
+
+        let dialog = document.getElementById('formDialog');
+        dialog.innerHTML = responseText;
+        editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
+        editDialog.show();
+
+    }
+
+    function initGrid() {
         let assetGridConfig = {
             className: defaultClassName,
             columns: [
@@ -43,6 +93,9 @@
                     formatter: (cell, row) => {
                         const url = viewUrl + row.cells[0]['data'];
                         if(row.cells[1]['data'] == 'true') {
+                            if (row.cells[12]['data'] == true) {
+                                return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" class="grayscale">`);
+                            }
                             return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40" >`);
                         } else {
                             return gridjs.html(`<a href="${url}">${cell}</a>`);
@@ -52,15 +105,30 @@
                 {
                     name: "Leverandør",
                     searchable: {
-                          searchKey: 'supplier'
+                        searchKey: 'supplier'
+                    }
+                },
+                {
+                    name: "Aktiv/Inaktiv",
+                    searchable: {
+                        searchKey: 'active',
+                        fieldId : 'activeAssetSelector'
+                    },
+                    width: '150px',
+                    formatter: (cell, row) => {
+                        if (cell) {
+                            return 'Ja';
+                        } else {
+                            return 'Nej';
+                        }
                     }
                 },
                 {
                     name: "Tredjelandsoverførsel",
-                     searchable: {
-                         searchKey: 'hasThirdCountryTransfer',
-                         fieldId : 'assetThirdCountrySelector'
-                     },
+                    searchable: {
+                        searchKey: 'hasThirdCountryTransfer',
+                        fieldId : 'assetThirdCountrySelector'
+                    },
                     width: '150px',
                     formatter: (cell, row) => {
                         if (cell) {
@@ -82,6 +150,12 @@
                     searchable: {
                         searchKey: 'responsibleUserNames'
                     },
+                },
+                {
+                    name: "Systemansvarlig",
+                    searchable: {
+                        searchKey: 'managerUserNames'
+                    }
                 },
                 {
                     name: "Opdateret",
@@ -150,18 +224,17 @@
                     },
                 },
                 {
-                    id: 'handlinger',
+                    id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
                     width: '90px',
                     formatter: (cell, row) => {
-                        if(row.cells[11]['data']) {
-                            const assetId = row.cells[0]['data'];
-                            const name = row.cells[2]['data'].replaceAll("'", "\\'");
-                            return gridjs.html(
-                            `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="onEditclicked('${assetId}')"><i class="pli-pen-5 fs-5"></i></button>` +
-                                `<button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="deleteClicked('${assetId}', '${name}')"><i class="pli-trash fs-5"></i></button>`);
-                        }
+                        const attributeMap = new Map();
+                        const identifier = row.cells[0]['data'];
+                        attributeMap.set('identifier', identifier);
+                        const name = row.cells[2]['data'];
+                        attributeMap.set('name', name);
+                        return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                     }
                 }
             ],
@@ -172,7 +245,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.hasThirdCountryTransfer, asset.assetType, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.changeable ],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },
@@ -194,47 +267,16 @@
         };
         const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
 
-        new CustomGridFunctions(grid, gridAssetsUrl, 'assetsDatatable')
-
+        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, 'assetsDatatable');
         gridOptions.init(grid, document.getElementById("gridOptions"));
-    });
 
-    function deleteClicked(assetId, name) {
-        Swal.fire({
-          text: `Er du sikker på du vil slette "${name}"?\nReferencer til og fra aktivet slettes også.`,
-          icon: 'warning',
-          showCancelButton: true,
-          confirmButtonColor: '#03a9f4',
-          cancelButtonColor: '#df5645',
-          confirmButtonText: 'Ja',
-          cancelButtonText: 'Nej'
-        }).then((result) => {
-          if (result.isConfirmed) {
-            fetch(`${deleteUrl}${assetId}`, { method: 'DELETE', headers: { 'X-CSRF-TOKEN': token} })
-                    .then(() => {
-                        window.location.reload();
-                    });
-          }
-        })
+        initSaveAsExcelButton(customGridFunctions,'Aktiver')
     }
 
-    async function onEditclicked(assetId) {
-        const response = await fetch(`${formUrl}?id=${assetId}`, {
-            headers: {
-                'X-CSRF-TOKEN': token
-            }
-        })
-
-        if (!response.ok) {
-            toastService.error(response.error)
-            console.error("Could not load edit fragment for asset")
-        }
-
-        const responseText = await response.text()
-
-        let dialog = document.getElementById('formDialog');
-        dialog.innerHTML = responseText;
-        editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
-        editDialog.show();
-
+    function initGridActionButtons() {
+        delegateListItemActions(
+            "assetsDatatable",
+            (id) => onEditclicked(id),
+            (id, name)=> deleteClicked(id, name)
+        )
     }
