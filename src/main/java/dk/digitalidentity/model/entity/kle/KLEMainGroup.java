@@ -30,7 +30,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_main_group")
-public class KLEMainGroup  implements Persistable<String> {
+public class KLEMainGroup  implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column(name = "main_group_number")
@@ -89,8 +89,7 @@ public class KLEMainGroup  implements Persistable<String> {
 		this.isNew = false;
 	}
 
-	// Helper method for your sync logic
-	public void markAsExisting() {
-		this.isNew = false;
+	public void markNew() {
+		this.isNew = true;
 	}
 }

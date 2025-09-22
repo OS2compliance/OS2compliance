@@ -27,7 +27,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_legal_reference")
-public class KLELegalReference implements Persistable<String> {
+public class KLELegalReference implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column(name = "accession_number")
@@ -81,8 +81,7 @@ public class KLELegalReference implements Persistable<String> {
 		this.isNew = false;
 	}
 
-	// Helper method for your sync logic
-	public void markAsExisting() {
-		this.isNew = false;
+	public void markNew() {
+		this.isNew = true;
 	}
 }

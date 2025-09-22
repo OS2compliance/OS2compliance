@@ -2,6 +2,7 @@ package dk.digitalidentity.service.kle;
 
 import dk.digitalidentity.dao.kle.KLELegalReferenceDao;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
+import dk.digitalidentity.model.entity.kle.KLESyncableService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -11,7 +12,7 @@ import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
-public class KLELegalReferenceService {
+public class KLELegalReferenceService implements KLESyncableService<KLELegalReference, String> {
 	private final KLELegalReferenceDao kleLegalReferenceDao;
 
 	public List<KLELegalReference> getAll() {
@@ -29,5 +30,25 @@ public class KLELegalReferenceService {
 
 	public void saveAll(Collection<KLELegalReference> kleLegalReferences) {
 		kleLegalReferenceDao.saveAll(kleLegalReferences);
+	}
+
+	@Override
+	public Set<String> findAllIds() {
+		return kleLegalReferenceDao.findAllIds();
+	}
+
+	@Override
+	public List<KLELegalReference> saveAllSyncables(Collection<KLELegalReference> entities) {
+		return kleLegalReferenceDao.saveAll(entities);
+	}
+
+	@Override
+	public void deleteAllById(Collection<String> strings) {
+		kleLegalReferenceDao.softDeleteByAccessionNumbers(strings);
+	}
+
+	@Override
+	public List<KLELegalReference> findAllById(Collection<String> strings) {
+		return kleLegalReferenceDao.findAllById(strings);
 	}
 }
