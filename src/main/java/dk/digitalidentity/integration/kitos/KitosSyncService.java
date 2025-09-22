@@ -39,7 +39,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.NEEDS_CVR_UPDATE_PROPERTY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.*;
@@ -455,7 +454,7 @@ public class KitosSyncService {
 				responseDTO.getExternalReferences().stream()
 						.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
 						.map(e -> new AssetProductLink(null, e.getUrl(), asset))
-					.collect(Collectors.toList())
+					.toList()
 			);
 		}
 	}

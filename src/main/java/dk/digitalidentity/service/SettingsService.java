@@ -25,7 +25,11 @@ public class SettingsService {
 	}
 
 	public String getString(final String key, final String defaultVal) {
-		return settingDao.findBySettingKey(key).map(Setting::getSettingValue).orElse(defaultVal);
+		String settingString = settingDao.findBySettingKey(key).map(Setting::getSettingValue).orElse(defaultVal);
+		if (settingString.trim().isEmpty()) {
+			return defaultVal;
+		}
+		return settingString;
 	}
 
     public ZonedDateTime getZonedDateTime(final String key, final ZonedDateTime defaultVal) {
