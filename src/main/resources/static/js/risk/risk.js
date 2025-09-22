@@ -31,10 +31,8 @@ const preselect = new Preselect();
 let registerView = true;
 
 document.addEventListener("DOMContentLoaded", async function (event) {
-    if (typeof CreateExternalRiskassessmentService === "function") {
-        // CreateExternalRiskassessmentService might not always be defined
-        createExternalRiskassessmentService = new CreateExternalRiskassessmentService()
-    }
+    createExternalRiskassessmentService = new CreateExternalRiskassessmentService(initAssetSelectRisk, initRegisterSelect)
+    window.createExternalRiskassessmentService = createExternalRiskassessmentService;
 
     const table = document.getElementById("risksDatatable");
     if (table) {
@@ -294,7 +292,7 @@ function CreateTable() {
 
         const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, 'risksDatatable');
 
-        initSaveAsExcelButton(customGridFunctions,  'Risikovurderinger');
+        initSaveAsExcelButton(customGridFunctions, 'Risikovurderinger');
 
         gridOptions.init(grid, document.getElementById("gridOptions"));
     }
@@ -302,9 +300,8 @@ function CreateTable() {
 
 function initPageTopButtons() {
     const createButton = document.getElementById("createExternalThreatassessmentButton");
-    createButton?.addEventListener("click",  () => createExternalRiskassessmentService.createExternalClicked())
+    createButton?.addEventListener("click", () => createExternalRiskassessmentService.createExternalClicked())
 }
-
 
 
 function deleteClicked(riskId, name) {

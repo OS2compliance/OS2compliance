@@ -5,20 +5,24 @@ class CreateExternalRiskassessmentService {
     createResponsibleOuChoice = null
     editResponsibleUserChoice = null
     editResponsibleOUChoice = null
+    initAssetSelectRisk
+    initRegisterSelect
 
-    constructor () {
+    constructor (initAssetSelectRisk, initRegisterSelect) {
+        this.initAssetSelectRisk = initAssetSelectRisk
+        this.initRegisterSelect = initRegisterSelect
     }
 
     initCreateModal() {
         const assetSelect = document.getElementById('externalCreateRiskassessmentAssetSelect');
-        this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        this.assetChoicesSelect = this.initAssetSelectRisk(assetSelect);
         this.createResponsibleOuChoice = this.#initSearchOus('externalCreateOuSelect')
         this.createResponsibleUserChoice = this.#initSearchUsers('externalCreateUserSelect')
 
 
         const registerSelect = document.getElementById('createRegisterSelect');
 
-        this.registerChoicesSelect = initRegisterSelect(registerSelect);
+        this.registerChoicesSelect = this.initRegisterSelect(registerSelect);
 
         const self = this
         const modalContainerElement = document.getElementById("createExternalRiskassessmentModal")
@@ -39,7 +43,7 @@ class CreateExternalRiskassessmentService {
 
     initEditModal() {
         const assetSelect = document.getElementById('externalEditRiskassessmentAssetSelect');
-        this.assetChoicesSelect = initAssetSelectRisk(assetSelect);
+        this.assetChoicesSelect = this.initAssetSelectRisk(assetSelect);
         this.editResponsibleOUChoice = this.#initSearchOus('externalEditOuSelect')
         this.editResponsibleUserChoice = this.#initSearchUsers('externalEditUserSelect')
 
@@ -84,6 +88,7 @@ class CreateExternalRiskassessmentService {
         const linkInput = document.getElementById('linkInput');
         const typeElement = document.getElementById('editThreatAssessmentType')
         const nameElement = document.getElementById('editName')
+        const registerSelect = document.getElementById('registerSelect')
 
         const responsibleUserUuid = this.editResponsibleUserChoice.getValue(true)
         const responsibleOuUuid = this.editResponsibleOUChoice.getValue(true)
