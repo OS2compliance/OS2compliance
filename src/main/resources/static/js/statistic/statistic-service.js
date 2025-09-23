@@ -60,17 +60,15 @@ export async function renderChart(argumentConfig, elementId) {
 
     const config = await fetchStatistic(argumentConfig);
 
-    console.log(config)
     const data = config.data;
 
     const chartPicker = document.getElementById('diagramSelector');
     const selectedOption = chartPicker.selectedOptions[0]
     const currentEntityName = selectedOption.dataset.entityName;
-
-    console.log(config.groupedByDate)
-
+    
     // Chart configuration based on type
-    const chartConfiguration = getConfigFor(config.type, !!config.dateGrouping, data, config.title, currentEntityName)
+    const isTimeChart = data.datasets[0]?.data?.every(item => item.x instanceof Date || (!isNaN(Date.parse(item.x)) && typeof item.x !== 'string'));
+    const chartConfiguration = getConfigFor(config.type, isTimeChart, data, config.title, currentEntityName)
 
     return new Chart(ctx, chartConfiguration);
 }
