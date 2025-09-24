@@ -12,16 +12,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -89,7 +85,7 @@ public class KLEDatabaseService {
 		Set<String> importedLegalRefIds = allImportedKLEGroups.values().stream().flatMap(s -> s.getLegalReferences().stream().map(KLELegalReference::getId)).collect(Collectors.toSet());
 		contextCache.legalReferences = kLELegalReferenceService.findAllById(importedLegalRefIds).stream().collect(Collectors.toMap(KLELegalReference::getId, Function.identity()));
 
-		Set<String> importedSubjectIds = allImportedKLEGroups.values().stream().map(s -> s.getGroupNumber()).collect(Collectors.toSet());
+		Set<String> importedSubjectIds = allImportedKLEGroups.values().stream().flatMap(g -> g.getSubjects().stream().map(KLESubject::getId)).collect(Collectors.toSet());
 		contextCache.subjects = kLESubjectService.findAllById(importedSubjectIds).stream().collect(Collectors.toMap(KLESubject::getId, Function.identity()));
 
 		sync(allImportedKLEGroups, kLEGroupService, this::updateGroup, this::createBlankPersistedGroup, contextCache);
@@ -175,7 +171,11 @@ public class KLEDatabaseService {
 	private void updateMainGroupAssociations(KLEMainGroup existing, KLEMainGroup imported, ContextCache contextCache) {
 		existing.getKleGroups().clear();
 		Set<KLEGroup> groups = new HashSet<>(kLEGroupService.findAllById(imported.getKleGroups().stream().map(KLEGroup::getId).collect(Collectors.toSet())));
-		existing.setKleGroups(groups);
+		existing.getKleGroups().clear();
+		for (KLEGroup group : groups) {
+			group.setMainGroup(existing);
+			existing.getKleGroups().add(group);
+		}
 	}
 
 	public KLESubject updateSubject(KLESubject existing, KLESubject imported, ContextCache contextCache) {
@@ -216,11 +216,15 @@ public class KLEDatabaseService {
 		existing.getSubjects().clear();
 		if (!imported.getSubjects().isEmpty()) {
 			Set<KLESubject> subjects = imported.getSubjects().stream()
-					.map(imp -> contextCache.subjects.get(imp.getId()))
+					.map(sub -> contextCache.subjects.get(sub.getId()))
 					.filter(Objects::nonNull)
 					.collect(Collectors.toSet());
 
-			existing.setSubjects(subjects);
+			existing.getSubjects().clear();
+			for (KLESubject subject : subjects) {
+				existing.getSubjects().add(subject);
+				subject.setGroup(existing);
+			}
 		}
 	}
 
