@@ -145,6 +145,7 @@ public class KLEService {
 		kLEDatabaseService.syncLegalReferences(allImportedKLELegalReferences);
 		kLEDatabaseService.syncSubjects(allImportedKLESubjects);
 		kLEDatabaseService.syncGroups(allImportedKLEGroups);
+		kLEDatabaseService.syncMaingroups(allImportedMainGroups);
 
 		log.info("KLE synced successfully");
 	}
