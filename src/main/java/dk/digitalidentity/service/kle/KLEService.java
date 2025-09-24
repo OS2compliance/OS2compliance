@@ -188,19 +188,12 @@ public class KLEService {
 					.mainGroup(mainGroup)
 					.deleted(false)
 					.build();
-			System.out.println("group: " + mainGroup.getMainGroupNumber());
 
 			mappingContext.groups.put(current.getGroupNumber(), current);
 		}
 		KLEGroup kleGroup = current;
 
 		kleGroup.setSubjects(gruppe.getEmne().stream().map(e -> mapToSubject(e, kleGroup, mappingContext)).collect(Collectors.toSet()));
-//		kleGroup.getSubjects().clear();
-//		kleGroup.getSubjects().addAll(
-//				gruppe.getEmne().stream()
-//						.map(e -> mapToSubject(e, kleGroup, mappingContext))
-//						.collect(Collectors.toSet())
-//		);
 
 		gruppe.getGruppeRetskildeReference().forEach(l -> addKLELegalReference(l, kleGroup, null, mappingContext));
 
@@ -225,7 +218,6 @@ public class KLEService {
 					.group(group)
 					.deleted(false)
 					.build();
-			System.out.println("group: " + group.getGroupNumber());
 
 			mappingContext.subjects.put(current.getSubjectNumber(), current);
 		}

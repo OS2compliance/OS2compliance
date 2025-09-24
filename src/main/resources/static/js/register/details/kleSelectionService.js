@@ -7,6 +7,7 @@ export default class KLESelectionService {
     legalReferenceSelectId = 'relevantLegalReferencesSelector'
     mainGroupSelectorInstance = null
     groupSelectorInstance = null
+    subjectSelectorInstance = null
     legalReferenceSelectorInstance = null
 
     constructor() {
@@ -52,7 +53,7 @@ export default class KLESelectionService {
 
     initSubjectSelect() {
         const subjectSelect = document.getElementById(this.subjectSelectId)
-        this.groupSelectorInstance = initSelect(subjectSelect, 'form-control', {searchChoices: true});
+        this.subjectSelectorInstance = initSelect(subjectSelect, 'form-control', {searchChoices: true});
     }
 
 

@@ -7,6 +7,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 public interface KLESubjectDao extends JpaRepository<KLESubject, String> {
@@ -18,4 +19,6 @@ public interface KLESubjectDao extends JpaRepository<KLESubject, String> {
 
 	@Query("SELECT k.subjectNumber FROM KLESubject k")
 	Set<String> findAllIds();
+
+    Set<KLESubject> findAllBySubjectNumberIn(Collection<String> subjectNumbers);
 }

@@ -53,6 +53,7 @@ import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.kle.KLEGroupService;
 import dk.digitalidentity.service.kle.KLELegalReferenceService;
 import dk.digitalidentity.service.kle.KLEMainGroupService;
+import dk.digitalidentity.service.kle.KLESubjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -107,6 +108,7 @@ public class RegisterController {
 	private final SettingsService settingsService;
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
+	private final KLESubjectService kleSubjectService;
 	private final KLELegalReferenceService kLELegalReferenceService;
 	private final CatalogService catalogService;
 
@@ -261,7 +263,8 @@ public class RegisterController {
 			@RequestParam(required = false) final String section,
 			@RequestParam(value = "status", required = false) final RegisterStatus status,
 			@RequestParam(value = "mainGroups", required = false) final Set<String> mainGroupIds,
-			@RequestParam(value = "groups", required = false) final Set<String> groupIds
+			@RequestParam(value = "groups", required = false) final Set<String> groupIds,
+			@RequestParam(value = "subjects", required = false) final Set<String> subjectIds
 			) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -323,6 +326,11 @@ public class RegisterController {
 			register.setKleGroups(kLEGroupService.getAllByGroupNumbers(groupIds));
 		} else {
 			register.setKleGroups(new HashSet<>());
+		}
+		if (subjectIds != null && !subjectIds.isEmpty()) {
+			register.setKleSubjects(kleSubjectService.findAllBySubjectNumbers(subjectIds));
+		} else {
+			register.setKleSubjects(new HashSet<>());
 		}
 
         registerService.save(register);

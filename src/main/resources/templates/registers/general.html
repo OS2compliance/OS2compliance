@@ -38,7 +38,7 @@
 
                             <div class="col-sm-12">
                                 <label for="secondaryGroupSelector" class="col-form-label">KLE Niveau 3 grupper</label>
-                                <select class="form-control form-select" multiple="multiple" id="secondaryGroupSelector" name="groups"  disabled>
+                                <select class="form-control form-select" multiple="multiple" id="secondaryGroupSelector" name="subjects"  disabled>
                                     <option th:each="group : ${groupSubjects}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
                                 </select>
                             </div>
