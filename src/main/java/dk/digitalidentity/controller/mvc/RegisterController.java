@@ -84,7 +84,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 
@@ -478,7 +477,7 @@ public class RegisterController {
 				.collect(Collectors.toSet());
 		model.addAttribute("kleLegalReferences", kleLegalReferences);
 
-		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups()));
+		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups(), register.getKleSubjects()));
 
 
 
@@ -558,17 +557,18 @@ public class RegisterController {
 	record SelectedKLEGroupDTO (String groupNumber, String title, String instructionText, List<KLEKeywordDTO> keywords, List<SelectedKLESubjectDTO> subjects) {}
 	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
 
-	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
+	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups, Set<KLESubject> kleSubjects) {
 		return mainGroups.stream().map(mg ->
 						new SelectedKleMainGroupDTO(mg.getMainGroupNumber(), mg.getTitle(), mg.getKleGroups().stream()
 								.filter(groups::contains)
-								.map(this::toSelectedKLEGroupDTO)
+								.map(group -> toSelectedKLEGroupDTO(group, kleSubjects))
 								.sorted(Comparator.comparing(SelectedKLEGroupDTO::groupNumber))
 								.toList()))
 				.sorted(Comparator.comparing(SelectedKleMainGroupDTO::mainGroupNumber))
 				.toList();
 	}
-	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group) {
+
+	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group, Set<KLESubject> kleSubjects) {
 		return new SelectedKLEGroupDTO(
 				group.getGroupNumber(),
 				group.getTitle(),
@@ -577,6 +577,7 @@ public class RegisterController {
 						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
 						.toList(),
 				group.getSubjects().stream()
+						.filter(kleSubjects::contains)
 						.map(this::toSelectedKLESubjectDTO )
 						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
 						.toList());
