@@ -67,8 +67,7 @@ export async function renderChart(argumentConfig, elementId) {
     const currentEntityName = selectedOption.dataset.entityName;
     
     // Chart configuration based on type
-    const isTimeChart = data.datasets[0]?.data?.every(item => item.x instanceof Date || (!isNaN(Date.parse(item.x)) && typeof item.x !== 'string'));
-    const chartConfiguration = getConfigFor(config.type, isTimeChart, data, config.title, currentEntityName)
+    const chartConfiguration = getConfigFor(config.type, !!config.dateGrouping, data, config.title, currentEntityName)
 
     return new Chart(ctx, chartConfiguration);
 }
