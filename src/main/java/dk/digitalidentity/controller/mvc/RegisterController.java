@@ -475,6 +475,12 @@ public class RegisterController {
 				.flatMap(g -> g.getLegalReferences().stream())
 				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(lr.getAccessionNumber())))
 				.collect(Collectors.toSet());
+
+		kleLegalReferences.addAll(register.getKleSubjects().stream()
+				.flatMap(kleSubject -> kleSubject.getLegalReferences().stream())
+				.map(kleLegalReference -> new SelectionDTO(kleLegalReference.getTitle(), kleLegalReference.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(kleLegalReference.getAccessionNumber())))
+				.collect(Collectors.toSet()));
+
 		model.addAttribute("kleLegalReferences", kleLegalReferences);
 
 		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups(), register.getKleSubjects()));
