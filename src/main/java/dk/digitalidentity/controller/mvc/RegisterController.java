@@ -83,6 +83,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static dk.digitalidentity.util.ComplianceStringUtils.asNumber;
 
@@ -449,9 +450,18 @@ public class RegisterController {
 		model.addAttribute("mainGroups", mainGroups);
 
 		final Set<KLEGroup> kleGroups = kLEGroupService.getAllForMainGroups(register.getKleMainGroups());
-		model.addAttribute("kleGroups", kleGroups.stream()
+		List<SelectionDTO> selection = kleGroups.stream()
 				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
-				.map(g -> new SelectionDTO(g.getGroupNumber() +" " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))));
+				.map(g -> new SelectionDTO(g.getGroupNumber() + " " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))).toList();
+		model.addAttribute("kleGroups", selection);
+		model.addAttribute("groupSubjects", kleGroups.stream()
+				.flatMap(kleGroup -> kleGroup.getSubjects().stream())
+				.sorted(Comparator.comparing(KLESubject::getSubjectNumber))
+				.map(subject -> new SelectionDTO(
+						subject.getSubjectNumber() + " " + subject.getTitle(),
+						subject.getSubjectNumber(),
+						register.getKleSubjects().contains(subject)))
+				.collect(Collectors.toList()));
 
 		final Set<String> selectedLegalReferenceAccessionNumbers = register.getRelevantKLELegalReferences().stream().map(KLELegalReference::getAccessionNumber).collect(Collectors.toSet());
 		final Set<SelectionDTO> kleLegalReferences = register.getKleGroups().stream()

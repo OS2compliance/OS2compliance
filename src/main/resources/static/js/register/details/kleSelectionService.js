@@ -3,6 +3,7 @@
 export default class KLESelectionService {
     mainGroupSelectId = 'mainGroupSelector'
     groupSelectId = 'groupSelector'
+    subjectSelectId = 'secondaryGroupSelector'
     legalReferenceSelectId = 'relevantLegalReferencesSelector'
     mainGroupSelectorInstance = null
     groupSelectorInstance = null
@@ -24,7 +25,6 @@ export default class KLESelectionService {
         })
 
         this.#initGroupSelect()
-
     }
 
     async #getGroupOptionsFragment() {
@@ -47,6 +47,12 @@ export default class KLESelectionService {
     #initGroupSelect() {
         const groupSelect = document.getElementById(this.groupSelectId)
         this.groupSelectorInstance = initSelect(groupSelect, 'form-control', {searchChoices: true});
+        this.initSubjectSelect()
+    }
+
+    initSubjectSelect() {
+        const subjectSelect = document.getElementById(this.subjectSelectId)
+        this.groupSelectorInstance = initSelect(subjectSelect, 'form-control', {searchChoices: true});
     }
 
 

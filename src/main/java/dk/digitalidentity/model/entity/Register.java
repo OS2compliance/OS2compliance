@@ -10,6 +10,7 @@ import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -174,6 +175,14 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 	)
 	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@JoinTable(
+			name = "register_kle_subject_mapping",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "subject_number")
+	)
+	private Set<KLESubject> kleSubjects = new HashSet<>();
+
 	@Override
     public RelationType getRelationType() {
         return RelationType.REGISTER;
@@ -193,5 +202,9 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 	@Override
 	public String getResponsibleUserUuids() {
 		return responsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
+	}
+
+	public boolean containsSubject(KLESubject subject) {
+		return kleGroups.stream().anyMatch(kleGroup -> kleGroup.getSubjects().contains(subject));
 	}
 }
