@@ -17,17 +17,17 @@ public class KLEApiTask {
 	private final KLEService kleService;
 	private final OS2complianceConfiguration configuration;
 
-//	@Scheduled(cron = "${os2compliance.integrations.kleclient.allCron:0 #{new java.util.Random().nextInt(55)} 3 * * ?}") // Default 02.30 each day
-	@Scheduled(initialDelay = 2000, fixedDelay = Long.MAX_VALUE) // Enable to run at startup
+	@Scheduled(cron = "${os2compliance.integrations.kleclient.allCron:0 #{new java.util.Random().nextInt(55)} 3 * * ?}") // Default 02.30 each day
+//	@Scheduled(initialDelay = 2000, fixedDelay = Long.MAX_VALUE) // Enable to run at startup
 	public void fetchAllFromKLEAPI() {
-//		if (!configuration.isSchedulingEnabled()) {
-//			log.info("Not syncing with KLE API; Scheduling is disabled.");
-//			return;
-//		}
-//
-//		if (!configuration.getIntegrations().getKleClient().isEnabled()) {
-//			return;
-//		}
+		if (!configuration.isSchedulingEnabled()) {
+			log.info("Not syncing with KLE API; Scheduling is disabled.");
+			return;
+		}
+
+		if (!configuration.getIntegrations().getKleClient().isEnabled()) {
+			return;
+		}
 
 		log.info("Syncing data from KLE API");
 
