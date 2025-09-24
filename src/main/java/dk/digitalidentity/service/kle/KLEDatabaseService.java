@@ -14,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
@@ -36,7 +37,7 @@ public class KLEDatabaseService {
 	public record DifferenceHolder<I>(Set<I> toCreate, Set<I> toDelete, Set<I> toUpdate) {
 	}
 
-	protected static class ContextCache {
+	public static class ContextCache {
 		Map<String, KLEKeyword> keywords = new ConcurrentHashMap<>();
 		Map<String, KLELegalReference> legalReferences = new ConcurrentHashMap<>();
 		Map<String, KLESubject> subjects = new ConcurrentHashMap<>();
@@ -51,27 +52,30 @@ public class KLEDatabaseService {
 	@Transactional
 	public void syncKeywords(final Map<String, KLEKeyword> allImportedKLEKeywords) {
 		ContextCache contextCache = new ContextCache();
-		sync(allImportedKLEKeywords, kleKeywordService, this::updateKeyword, this::createBlankPersistedKeywords, contextCache);
+		sync(allImportedKLEKeywords, kleKeywordService, this::updateKeyword, this::createBlankPersistedKeywords, null, contextCache);
 		log.info("Synced {} keywords", allImportedKLEKeywords.size());
 	}
 
 	@Transactional
 	public void syncLegalReferences(final Map<String, KLELegalReference> allImportedKLELegalReferences) {
 		ContextCache contextCache = new ContextCache();
-		sync(allImportedKLELegalReferences, kLELegalReferenceService, this::updateLegalReference, this::createBlankPersistedLegalrefs, contextCache);
+		sync(allImportedKLELegalReferences, kLELegalReferenceService, this::updateLegalReference, this::createBlankPersistedLegalrefs, null, contextCache);
 		log.info("Synced {} legal references", allImportedKLELegalReferences.size());
 	}
 
 	@Transactional
 	public void syncSubjects(final Map<String, KLESubject> allImportedKLESubjects) {
 		ContextCache contextCache = new ContextCache();
-		Set<String> importedKeywordIds = allImportedKLESubjects.values().stream().flatMap(s -> s.getKeywords().stream().map(KLEKeyword::getId)).collect(Collectors.toSet());
-		contextCache.keywords = kleKeywordService.findAllById(importedKeywordIds).stream().collect(Collectors.toMap(KLEKeyword::getId, Function.identity()));
+		Set<String> importedKeywordIds = allImportedKLESubjects.values().stream()
+				.flatMap(s -> s.getKeywords().stream().map(KLEKeyword::getId))
+				.collect(Collectors.toSet());
+		contextCache.keywords = kleKeywordService.findAllById(importedKeywordIds).stream()
+				.collect(Collectors.toMap(KLEKeyword::getId, Function.identity()));
 
 		Set<String> importedLegalRefIds = allImportedKLESubjects.values().stream().flatMap(s -> s.getLegalReferences().stream().map(KLELegalReference::getId)).collect(Collectors.toSet());
 		contextCache.legalReferences = kLELegalReferenceService.findAllById(importedLegalRefIds).stream().collect(Collectors.toMap(KLELegalReference::getId, Function.identity()));
 
-		sync(allImportedKLESubjects, kLESubjectService, this::updateSubject, this::createBlankPersistedSubject, contextCache);
+		sync(allImportedKLESubjects, kLESubjectService, this::updateSubject, this::createBlankPersistedSubject, this::updateSubjectAssociations, contextCache);
 		log.info("Synced {} subjects", allImportedKLESubjects.size());
 	}
 
@@ -88,18 +92,24 @@ public class KLEDatabaseService {
 		Set<String> importedSubjectIds = allImportedKLEGroups.values().stream().flatMap(g -> g.getSubjects().stream().map(KLESubject::getId)).collect(Collectors.toSet());
 		contextCache.subjects = kLESubjectService.findAllById(importedSubjectIds).stream().collect(Collectors.toMap(KLESubject::getId, Function.identity()));
 
-		sync(allImportedKLEGroups, kLEGroupService, this::updateGroup, this::createBlankPersistedGroup, contextCache);
+		sync(allImportedKLEGroups, kLEGroupService, this::updateGroup, this::createBlankPersistedGroup, this::updateGroupAssociations, contextCache);
 		log.info("Synced {} groups", allImportedKLEGroups.size());
 	}
 
 	@Transactional
 	public void syncMaingroups(final Map<String, KLEMainGroup> allImportedMainGroups) {
 		ContextCache contextCache = new ContextCache();
-		sync(allImportedMainGroups, kLEMainGroupService, this::updateMainGroup, this::createBlankPersistedMainGroup, contextCache);
+		sync(allImportedMainGroups, kLEMainGroupService, this::updateMainGroup, this::createBlankPersistedMainGroup, this::updateMainGroupAssociations, contextCache);
 		log.info("Synced {} maingroups", allImportedMainGroups.size());
 	}
 
-	protected <T extends Syncable<ID>, ID> void sync(Map<ID, T> importedKLEObjects, KLESyncableService<T, ID> service, TriFunction<T, T, ContextCache, T> updateFunction, Function<Collection<ID>, Collection<T>> createFunction, ContextCache contextCache) {
+	protected <T extends Syncable<ID>, ID> void sync(
+			Map<ID, T> importedKLEObjects,
+			KLESyncableService<T, ID> service,
+			TriFunction<T, T, ContextCache, T> updateFunction,
+			Function<Collection<ID>, Collection<T>> createFunction,
+			TriFunction<T, T, ContextCache, T> updateAssociationFunction,
+			ContextCache contextCache) {
 		DifferenceHolder<ID> differenceHolder = determineDifferences(
 				importedKLEObjects.keySet(),
 				service.findAllIds());
@@ -122,7 +132,14 @@ public class KLEDatabaseService {
 		for (Map.Entry<ID, T> entry : toUpdate.entrySet()) {
 			updatedEntities.add(updateFunction.apply(entry.getValue(), importedKLEObjects.get(entry.getKey()), contextCache));
 		}
-		service.saveAllSyncables(updatedEntities);
+		List<T> persistedUpdatedEntitied = service.saveAllSyncables(updatedEntities);
+		if (updateAssociationFunction != null) {
+			Set<T> associationUpdatedEntities = new HashSet<>();
+			for (T updatedEntity : persistedUpdatedEntitied) {
+				associationUpdatedEntities.add(updateAssociationFunction.apply(updatedEntity, importedKLEObjects.get(updatedEntity.getId()), contextCache));
+			}
+			service.saveAllSyncables(associationUpdatedEntities);
+		}
 		log.info("{} updated entities", differenceHolder.toUpdate.size());
 	}
 
@@ -150,8 +167,6 @@ public class KLEDatabaseService {
 		existing.setInstructionText(imported.getInstructionText());
 		existing.setUuid(imported.getUuid());
 
-		updateMainGroupAssociations(existing, imported, contextCache);
-
 		return existing;
 	}
 
@@ -168,7 +183,7 @@ public class KLEDatabaseService {
 		return existing;
 	}
 
-	private void updateMainGroupAssociations(KLEMainGroup existing, KLEMainGroup imported, ContextCache contextCache) {
+	private KLEMainGroup updateMainGroupAssociations(KLEMainGroup existing, KLEMainGroup imported, ContextCache contextCache) {
 		existing.getKleGroups().clear();
 		Set<KLEGroup> groups = new HashSet<>(kLEGroupService.findAllById(imported.getKleGroups().stream().map(KLEGroup::getId).collect(Collectors.toSet())));
 		existing.getKleGroups().clear();
@@ -176,6 +191,7 @@ public class KLEDatabaseService {
 			group.setMainGroup(existing);
 			existing.getKleGroups().add(group);
 		}
+		return existing;
 	}
 
 	public KLESubject updateSubject(KLESubject existing, KLESubject imported, ContextCache contextCache) {
@@ -192,7 +208,7 @@ public class KLEDatabaseService {
 		return existing;
 	}
 
-	private void updateGroupAssociations(KLEGroup existing, KLEGroup imported, ContextCache contextCache) {
+	private KLEGroup updateGroupAssociations(KLEGroup existing, KLEGroup imported, ContextCache contextCache) {
 		existing.getKeywords().clear();
 		if (!imported.getKeywords().isEmpty()) {
 			Set<KLEKeyword> keywords = imported.getKeywords().stream()
@@ -226,9 +242,10 @@ public class KLEDatabaseService {
 				subject.setGroup(existing);
 			}
 		}
+		return existing;
 	}
 
-	private void updateSubjectAssociations(KLESubject existing, KLESubject imported, ContextCache contextCache) {
+	private KLESubject updateSubjectAssociations(KLESubject existing, KLESubject imported, ContextCache contextCache) {
 		existing.getKeywords().clear();
 		if (!imported.getKeywords().isEmpty()) {
 			Set<KLEKeyword> keywords = imported.getKeywords().stream()
@@ -248,6 +265,7 @@ public class KLEDatabaseService {
 
 			existing.setLegalReferences(legalReferences);
 		}
+		return existing;
 	}
 
 	private KLELegalReference updateLegalReference(KLELegalReference existing, KLELegalReference imported, ContextCache contextCache) {
@@ -264,40 +282,40 @@ public class KLEDatabaseService {
 		return existing;
 	}
 
-	private Collection<KLEKeyword> createBlankPersistedKeywords (Collection<String> importedIds) {
-		return importedIds.stream().map(id ->  KLEKeyword.builder()
-					.hashedId(id)
-					.isNew(true)
-					.build())
+	private Collection<KLEKeyword> createBlankPersistedKeywords(Collection<String> importedIds) {
+		return importedIds.stream().map(id -> KLEKeyword.builder()
+						.hashedId(id)
+						.isNew(true)
+						.build())
 				.collect(Collectors.toSet());
 	}
 
-	private Collection<KLELegalReference> createBlankPersistedLegalrefs (Collection<String> importedIds) {
-		return importedIds.stream().map(id ->  KLELegalReference.builder()
+	private Collection<KLELegalReference> createBlankPersistedLegalrefs(Collection<String> importedIds) {
+		return importedIds.stream().map(id -> KLELegalReference.builder()
 						.accessionNumber(id)
 						.isNew(true)
 						.build())
 				.collect(Collectors.toSet());
 	}
 
-	private Collection<KLESubject> createBlankPersistedSubject (Collection<String> importedIds) {
-		return importedIds.stream().map(id ->  KLESubject.builder()
+	private Collection<KLESubject> createBlankPersistedSubject(Collection<String> importedIds) {
+		return importedIds.stream().map(id -> KLESubject.builder()
 						.subjectNumber(id)
 						.isNew(true)
 						.build())
 				.collect(Collectors.toSet());
 	}
 
-	private Collection<KLEGroup> createBlankPersistedGroup (Collection<String> importedIds) {
-		return importedIds.stream().map(id ->  KLEGroup.builder()
+	private Collection<KLEGroup> createBlankPersistedGroup(Collection<String> importedIds) {
+		return importedIds.stream().map(id -> KLEGroup.builder()
 						.groupNumber(id)
 						.isNew(true)
 						.build())
 				.collect(Collectors.toSet());
 	}
 
-	private Collection<KLEMainGroup> createBlankPersistedMainGroup (Collection<String> importedIds) {
-		return importedIds.stream().map(id ->  KLEMainGroup.builder()
+	private Collection<KLEMainGroup> createBlankPersistedMainGroup(Collection<String> importedIds) {
+		return importedIds.stream().map(id -> KLEMainGroup.builder()
 						.mainGroupNumber(id)
 						.isNew(true)
 						.build())
