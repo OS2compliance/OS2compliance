@@ -7,6 +7,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [2.4.0] - 2025-09-10
 ### Added
+- (https://os2web.atlassian.net/browse/COMPLY-253) (Risikostyring/Forside) Mulighed for at lave et udtræk af listen med alle risikovurderinger.
 - (https://os2web.atlassian.net/browse/COMPLY-100) Global søgning
 - (https://os2web.atlassian.net/browse/COMPLY-136) Tilføjelse af felter til ansvarlig forvaltning
 - (https://os2web.atlassian.net/browse/COMPLY-224) Man skal kunne sætte flere links ind på en opgave
