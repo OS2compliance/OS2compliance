@@ -69,6 +69,8 @@ export default function RegisterGeneralService() {
 
         kleService = new KLESelectionService()
         kleService.initKLEMainGroupSelect()
+        kleService.initGroupSelect()
+        kleService.initSubjectSelect()
     };
 
 
@@ -164,6 +166,7 @@ export default function RegisterGeneralService() {
             registerRegardingChoices.disable();
             kleService.mainGroupSelectorInstance.disable();
             kleService.groupSelectorInstance.disable();
+            kleService.subjectSelectorInstance.disable();
         } else {
             if (isResponsibleFieldEditable === 'true') {
                 userChoices.enable();
@@ -174,6 +177,7 @@ export default function RegisterGeneralService() {
             registerRegardingChoices.enable();
             kleService.mainGroupSelectorInstance.enable();
             kleService.groupSelectorInstance.enable();
+            kleService.subjectSelectorInstance.enable();
         }
     }
 
