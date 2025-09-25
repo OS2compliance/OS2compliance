@@ -467,8 +467,7 @@ public class RegisterController {
 				.map(subject -> new SelectionDTO(
 						subject.getSubjectNumber() + " " + subject.getTitle(),
 						subject.getSubjectNumber(),
-						register.getKleSubjects().contains(subject)))
-				.collect(Collectors.toList()));
+						register.getKleSubjects().contains(subject))).toList());
 
 		final Set<String> selectedLegalReferenceAccessionNumbers = register.getRelevantKLELegalReferences().stream().map(KLELegalReference::getAccessionNumber).collect(Collectors.toSet());
 		final Set<SelectionDTO> kleLegalReferences = register.getKleGroups().stream()

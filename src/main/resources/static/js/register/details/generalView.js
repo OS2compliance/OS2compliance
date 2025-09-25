@@ -69,6 +69,8 @@ export default function RegisterGeneralService() {
 
         kleService = new KLESelectionService()
         kleService.initKLEMainGroupSelect()
+        kleService.initGroupSelect()
+        kleService.initSubjectSelect()
     };
 
 
