@@ -30,14 +30,14 @@
                             </div>
 
                             <div class="col-sm-12">
-                                <label for="groupSelector" class="col-form-label">KLE Niveau 2 grupper</label>
+                                <label for="groupSelector" class="col-form-label">KLE Grupper</label>
                                 <select class="form-control form-select" multiple="multiple" id="groupSelector" name="groups"  disabled>
                                     <option th:each="group : ${kleGroups}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
                                 </select>
                             </div>
 
                             <div class="col-sm-12">
-                                <label for="secondaryGroupSelector" class="col-form-label">KLE Niveau 3 grupper</label>
+                                <label for="secondaryGroupSelector" class="col-form-label">KLE Emner</label>
                                 <select class="form-control form-select" multiple="multiple" id="secondaryGroupSelector" name="subjects"  disabled>
                                     <option th:each="group : ${groupSubjects}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
                                 </select>
