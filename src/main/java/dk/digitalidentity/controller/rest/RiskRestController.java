@@ -636,7 +636,7 @@ public class RiskRestController {
 		}
 
 		// calculate the highest scores the same way its calculated when setting the threatAssessment.assessment
-		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment);
+		ThreatAssessmentService.RiskScoreDTO result = threatAssessmentService.findHighestRiskScore(threatAssessment, true);
 
 		return new RiskLevel(result.globalHighestprobability(), result.globalHighestConsequence());
 	}
