@@ -461,7 +461,7 @@ public class ThreatAssessmentService {
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
-		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment);
+		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment, false);
 
 		if (result.highestRiskNotAcceptedRiskScore() != -1) {
             final RiskAssessment assessment =
@@ -474,13 +474,22 @@ public class ThreatAssessmentService {
         threatAssessmentDao.save(savedThreatAssessment);
     }
 
-	public RiskScoreDTO findHighestRiskScore(ThreatAssessment savedThreatAssessment) {
+	public RiskScoreDTO findHighestRiskScore(ThreatAssessment savedThreatAssessment, boolean useResidualRiskIfPresent) {
 		int highestRiskNotAcceptedRiskScore = -1;
 		int globalHighestprobability = -1;
 		int globalHighestConsequence = -1;
 		for (final ThreatAssessmentResponse threatAssessmentResponse : savedThreatAssessment.getThreatAssessmentResponses()) {
-			final int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation(), threatAssessmentResponse.getConfidentialitySociety(), threatAssessmentResponse.getIntegritySociety(), threatAssessmentResponse.getAvailabilitySociety(), threatAssessmentResponse.getAuthenticitySociety());
-			final int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
+			int highestConsequence = findHighestConsequence(threatAssessmentResponse.getConfidentialityRegistered(), threatAssessmentResponse.getIntegrityRegistered(), threatAssessmentResponse.getAvailabilityRegistered(), threatAssessmentResponse.getConfidentialityOrganisation(), threatAssessmentResponse.getIntegrityOrganisation(), threatAssessmentResponse.getAvailabilityOrganisation(), threatAssessmentResponse.getConfidentialitySociety(), threatAssessmentResponse.getIntegritySociety(), threatAssessmentResponse.getAvailabilitySociety(), threatAssessmentResponse.getAuthenticitySociety());
+			int probability = threatAssessmentResponse.getProbability() == null ? 0 : threatAssessmentResponse.getProbability();
+
+			if (useResidualRiskIfPresent) {
+				if (threatAssessmentResponse.getResidualRiskProbability() != null && threatAssessmentResponse.getResidualRiskProbability() != 0) {
+					probability = threatAssessmentResponse.getResidualRiskProbability();
+				}
+				if (threatAssessmentResponse.getResidualRiskConsequence() != null && threatAssessmentResponse.getResidualRiskConsequence() != 0) {
+					highestConsequence = threatAssessmentResponse.getResidualRiskConsequence();
+				}
+			}
 
 			if (probability < 1 || highestConsequence < 1) {
 				continue;
