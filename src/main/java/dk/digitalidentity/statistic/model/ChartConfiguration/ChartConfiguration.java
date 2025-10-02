@@ -60,16 +60,19 @@ public class ChartConfiguration {
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
+	@Builder.Default
 	private ChartType type = ChartType.BAR;
 
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
+	@Builder.Default
 	private AggregationMethod aggregation = AggregationMethod.COUNT;
 
 	/**
 	 * In which axes can the user select the field?
 	 */
+	@Builder.Default
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
@@ -78,6 +81,7 @@ public class ChartConfiguration {
 	/**
 	 * Can the user select start- and/or end-date?
 	 */
+	@Builder.Default
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
@@ -93,6 +97,7 @@ public class ChartConfiguration {
 	/**
 	 * List of field names valid for choice as Y axis
 	 */
+	@Builder.Default
 	@Column(name = "allowed_y_field_choices")
 	@Convert(converter = StringListNullSafeConverter.class)
 	private List<String> allowedYFieldChoices = new ArrayList<>();
@@ -102,11 +107,13 @@ public class ChartConfiguration {
 	 */
 	@NotNull
 	@Column
+	@Builder.Default
 	private Boolean selectableDateField = false;
 
 	/**
 	 * List of field names that can be used for filtering by date
 	 */
+	@Builder.Default
 	@Column(name = "allowed_date_field_choices")
 	@Convert(converter = StringListNullSafeConverter.class)
 	private List<String> allowedDateFieldChoices = new ArrayList<>();
@@ -119,11 +126,13 @@ public class ChartConfiguration {
 	@Enumerated(EnumType.STRING)
 	private Period groupTimeByField;
 
+	@Builder.Default
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
 	private DateTimePreset defaultStartTime = DateTimePreset.NONE;
 
+	@Builder.Default
 	@NotNull
 	@Column
 	@Enumerated(EnumType.STRING)
@@ -132,6 +141,7 @@ public class ChartConfiguration {
 	/**
 	 * If true, only shows data for the currently logged in user
 	 */
+	@Builder.Default
 	@NotNull
 	@Column
 	private Boolean ownerOnly = false;

@@ -1,6 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
+import dk.digitalidentity.mapping.KLEMapper;
+import dk.digitalidentity.model.KLELegalReferenceDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
@@ -109,6 +111,7 @@ public class RegisterController {
 	private final KLEGroupService kLEGroupService;
 	private final KLESubjectService kleSubjectService;
 	private final KLELegalReferenceService kLELegalReferenceService;
+	private final KLEMapper kleMapper;
 	private final CatalogService catalogService;
 
 	@RequireReadOwnerOnly
@@ -470,21 +473,20 @@ public class RegisterController {
 						register.getKleSubjects().contains(subject))).toList());
 
 		final Set<String> selectedLegalReferenceAccessionNumbers = register.getRelevantKLELegalReferences().stream().map(KLELegalReference::getAccessionNumber).collect(Collectors.toSet());
-		final Set<SelectionDTO> kleLegalReferences = register.getKleGroups().stream()
+		final Set<KLELegalReferenceDTO> kleLegalReferences = register.getKleGroups().stream()
 				.flatMap(g -> g.getLegalReferences().stream())
-				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(lr.getAccessionNumber())))
+				.map(kleMapper::toDTO)
+				.peek(lr -> lr.setSelected(selectedLegalReferenceAccessionNumbers.contains(lr.getValue())))
 				.collect(Collectors.toSet());
 
 		kleLegalReferences.addAll(register.getKleSubjects().stream()
 				.flatMap(kleSubject -> kleSubject.getLegalReferences().stream())
-				.map(kleLegalReference -> new SelectionDTO(kleLegalReference.getTitle(), kleLegalReference.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(kleLegalReference.getAccessionNumber())))
+				.map(kleMapper::toDTO)
+				.peek(lr -> lr.setSelected(selectedLegalReferenceAccessionNumbers.contains(lr.getValue())))
 				.collect(Collectors.toSet()));
 
 		model.addAttribute("kleLegalReferences", kleLegalReferences);
-
 		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups(), register.getKleSubjects()));
-
-
 
 		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
 

@@ -3,6 +3,7 @@ require 'json'
 
 kle_main_map = Hash.new
 kle_group_map = Hash.new
+kle_subject_map = Hash.new
 CSV.foreach("kle-mapping.csv", headers: true, col_sep: ';', encoding: 'utf-8') do |row|
   key = "#{row[0]}. #{row[1]}".gsub(/[\r\n]/, "")
 
@@ -14,6 +15,10 @@ CSV.foreach("kle-mapping.csv", headers: true, col_sep: ';', encoding: 'utf-8') d
   kle_group_map[key] = kle_group_map[key] + [row[3][0..5].gsub(/[ ]/, "")]
   kle_group_map[key] = kle_group_map[key].uniq
 
+  kle_subject_map[key] = [] unless kle_subject_map.key?(key)
+  kle_subject_map[key] = kle_subject_map[key] + [row[4][0..7].gsub(/[ ]/, "")]
+  kle_subject_map[key] = kle_subject_map[key].uniq
+
 end
 
 Dir.glob("../src/main/resources/data/registers/*.json").each do |path|
@@ -22,6 +27,7 @@ Dir.glob("../src/main/resources/data/registers/*.json").each do |path|
   puts "#{name} Have no KLE" unless kle_main_map.has_key?(name)
   data['kleMainGroups'] = kle_main_map[name]
   data['kleGroups'] = kle_group_map[name]
+  data['kleSubjects'] = kle_subject_map[name]
   File.open(path, "w") do |f|
     f.write(JSON.pretty_generate(data))
   end
