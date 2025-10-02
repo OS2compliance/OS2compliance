@@ -20,6 +20,7 @@ import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.SettingsService;
+import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.importer.DPIATemplateSectionImporter;
 import dk.digitalidentity.service.importer.RegisterImporter;
 import dk.digitalidentity.service.importer.StandardTemplateImporter;
@@ -88,6 +89,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private final KLEService kleService;
 	private final ChartConfigurationService chartConfigurationService;
 	private final StatisticService statisticService;
+	private final ThreatAssessmentService threatAssessmentService;
 
 	@Value("classpath:data/registers/*.json")
 	private Resource[] registers;
@@ -131,6 +133,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(31, this::seedV31);
 		incrementAndPerformIfVersion(32, this::seedV32);
 		incrementAndPerformIfVersion(33, this::seedV33);
+		incrementAndPerformIfVersion(34, this::seedV34);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -143,6 +146,10 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 			}
 			return 0;
 		});
+	}
+
+	private void seedV34() {
+		threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
 	}
 
 	private void seedV33() {

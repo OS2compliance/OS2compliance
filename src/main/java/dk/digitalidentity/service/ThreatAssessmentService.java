@@ -461,7 +461,7 @@ public class ThreatAssessmentService {
     }
 
     public void setThreatAssessmentColor(final ThreatAssessment savedThreatAssessment) {
-		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment, false);
+		RiskScoreDTO result = findHighestRiskScore(savedThreatAssessment, true);
 
 		if (result.highestRiskNotAcceptedRiskScore() != -1) {
             final RiskAssessment assessment =
