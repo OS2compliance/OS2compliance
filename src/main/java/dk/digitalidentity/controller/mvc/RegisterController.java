@@ -1,6 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
+import dk.digitalidentity.mapping.KLEMapper;
+import dk.digitalidentity.model.KLELegalReferenceDTO;
 import dk.digitalidentity.model.dto.DataProcessingDTO;
 import dk.digitalidentity.model.dto.RegisterAssetRiskDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
@@ -53,6 +55,7 @@ import dk.digitalidentity.service.UserService;
 import dk.digitalidentity.service.kle.KLEGroupService;
 import dk.digitalidentity.service.kle.KLELegalReferenceService;
 import dk.digitalidentity.service.kle.KLEMainGroupService;
+import dk.digitalidentity.service.kle.KLESubjectService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -106,7 +109,9 @@ public class RegisterController {
 	private final SettingsService settingsService;
 	private final KLEMainGroupService kLEMainGroupService;
 	private final KLEGroupService kLEGroupService;
+	private final KLESubjectService kleSubjectService;
 	private final KLELegalReferenceService kLELegalReferenceService;
+	private final KLEMapper kleMapper;
 	private final CatalogService catalogService;
 
 	@RequireReadOwnerOnly
@@ -260,7 +265,8 @@ public class RegisterController {
 			@RequestParam(required = false) final String section,
 			@RequestParam(value = "status", required = false) final RegisterStatus status,
 			@RequestParam(value = "mainGroups", required = false) final Set<String> mainGroupIds,
-			@RequestParam(value = "groups", required = false) final Set<String> groupIds
+			@RequestParam(value = "groups", required = false) final Set<String> groupIds,
+			@RequestParam(value = "subjects", required = false) final Set<String> subjectIds
 			) {
         final Register register = registerService.findById(id)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -322,6 +328,11 @@ public class RegisterController {
 			register.setKleGroups(kLEGroupService.getAllByGroupNumbers(groupIds));
 		} else {
 			register.setKleGroups(new HashSet<>());
+		}
+		if (subjectIds != null && !subjectIds.isEmpty()) {
+			register.setKleSubjects(kleSubjectService.findAllBySubjectNumbers(subjectIds));
+		} else {
+			register.setKleSubjects(new HashSet<>());
 		}
 
         registerService.save(register);
@@ -449,20 +460,33 @@ public class RegisterController {
 		model.addAttribute("mainGroups", mainGroups);
 
 		final Set<KLEGroup> kleGroups = kLEGroupService.getAllForMainGroups(register.getKleMainGroups());
-		model.addAttribute("kleGroups", kleGroups.stream()
+		List<SelectionDTO> selection = kleGroups.stream()
 				.sorted(Comparator.comparing(KLEGroup::getGroupNumber))
-				.map(g -> new SelectionDTO(g.getGroupNumber() +" " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))));
+				.map(g -> new SelectionDTO(g.getGroupNumber() + " " + g.getTitle(), g.getGroupNumber(), register.getKleGroups().contains(g))).toList();
+		model.addAttribute("kleGroups", selection);
+		model.addAttribute("groupSubjects", kleGroups.stream()
+				.flatMap(kleGroup -> kleGroup.getSubjects().stream())
+				.sorted(Comparator.comparing(KLESubject::getSubjectNumber))
+				.map(subject -> new SelectionDTO(
+						subject.getSubjectNumber() + " " + subject.getTitle(),
+						subject.getSubjectNumber(),
+						register.getKleSubjects().contains(subject))).toList());
 
 		final Set<String> selectedLegalReferenceAccessionNumbers = register.getRelevantKLELegalReferences().stream().map(KLELegalReference::getAccessionNumber).collect(Collectors.toSet());
-		final Set<SelectionDTO> kleLegalReferences = register.getKleGroups().stream()
+		final Set<KLELegalReferenceDTO> kleLegalReferences = register.getKleGroups().stream()
 				.flatMap(g -> g.getLegalReferences().stream())
-				.map(lr -> new SelectionDTO(lr.getTitle(), lr.getAccessionNumber(), selectedLegalReferenceAccessionNumbers.contains(lr.getAccessionNumber())))
+				.map(kleMapper::toDTO)
+				.peek(lr -> lr.setSelected(selectedLegalReferenceAccessionNumbers.contains(lr.getValue())))
 				.collect(Collectors.toSet());
+
+		kleLegalReferences.addAll(register.getKleSubjects().stream()
+				.flatMap(kleSubject -> kleSubject.getLegalReferences().stream())
+				.map(kleMapper::toDTO)
+				.peek(lr -> lr.setSelected(selectedLegalReferenceAccessionNumbers.contains(lr.getValue())))
+				.collect(Collectors.toSet()));
+
 		model.addAttribute("kleLegalReferences", kleLegalReferences);
-
-		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups()));
-
-
+		model.addAttribute("selectedKleMainGroups", toSelectedMainGroupDTOs(register.getKleMainGroups(), register.getKleGroups(), register.getKleSubjects()));
 
 		model.addAttribute("customResponsibleUserFieldName", settingsService.getString(RegisterSetting.CUSTOMRESPONSIBLEUSERFIELDNAME.getValue(), "Ansvarlig for udfyldelse"));
 
@@ -540,17 +564,18 @@ public class RegisterController {
 	record SelectedKLEGroupDTO (String groupNumber, String title, String instructionText, List<KLEKeywordDTO> keywords, List<SelectedKLESubjectDTO> subjects) {}
 	record SelectedKleMainGroupDTO(String mainGroupNumber, String title, List<SelectedKLEGroupDTO> groups) {}
 
-	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups) {
+	private List<SelectedKleMainGroupDTO> toSelectedMainGroupDTOs(Set<KLEMainGroup> mainGroups, Set<KLEGroup> groups, Set<KLESubject> kleSubjects) {
 		return mainGroups.stream().map(mg ->
 						new SelectedKleMainGroupDTO(mg.getMainGroupNumber(), mg.getTitle(), mg.getKleGroups().stream()
 								.filter(groups::contains)
-								.map(this::toSelectedKLEGroupDTO)
+								.map(group -> toSelectedKLEGroupDTO(group, kleSubjects))
 								.sorted(Comparator.comparing(SelectedKLEGroupDTO::groupNumber))
 								.toList()))
 				.sorted(Comparator.comparing(SelectedKleMainGroupDTO::mainGroupNumber))
 				.toList();
 	}
-	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group) {
+
+	private SelectedKLEGroupDTO toSelectedKLEGroupDTO(KLEGroup group, Set<KLESubject> kleSubjects) {
 		return new SelectedKLEGroupDTO(
 				group.getGroupNumber(),
 				group.getTitle(),
@@ -559,6 +584,7 @@ public class RegisterController {
 						.map(k -> new KLEKeywordDTO(k.getText(), k.getHandlingsfacetNr()))
 						.toList(),
 				group.getSubjects().stream()
+						.filter(kleSubjects::contains)
 						.map(this::toSelectedKLESubjectDTO )
 						.sorted(Comparator.comparing(SelectedKLESubjectDTO::subjectNumber))
 						.toList());

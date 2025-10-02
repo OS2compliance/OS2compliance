@@ -29,7 +29,6 @@ public class KLEGroupService implements KLESyncableService<KLEGroup, String> {
 	public Set<KLEGroup> getAllByGroupNumbers(Collection<String> groupNumbers) {
 		return kleGroupdao.findAllByDeletedFalseAndGroupNumberIn(groupNumbers);
 	}
-
 	public KLEGroup save(KLEGroup group) {
 		return kleGroupdao.save(group);
 	}

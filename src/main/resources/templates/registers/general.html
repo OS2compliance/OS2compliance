@@ -35,6 +35,13 @@
                                     <option th:each="group : ${kleGroups}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
                                 </select>
                             </div>
+
+                            <div class="col-sm-12">
+                                <label for="secondaryGroupSelector" class="col-form-label">KLE Emner</label>
+                                <select class="form-control form-select" multiple="multiple" id="secondaryGroupSelector" name="subjects"  disabled>
+                                    <option th:each="group : ${groupSubjects}" th:selected="${group.selected}" th:text="${group.display}" th:value="${group.value}"></option>
+                                </select>
+                            </div>
                         </div>
 
                         <div class="form-group row">

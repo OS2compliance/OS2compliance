@@ -52,4 +52,8 @@ public class KLESubjectService implements KLESyncableService<KLESubject, String>
 	public List<KLESubject> findAllById(Collection<String> strings) {
 		return findAllByIdIn(strings);
 	}
+
+	public Set<KLESubject> findAllBySubjectNumbers(Set<String> subjectIds) {
+		return kleSubjectDao.findAllBySubjectNumberIn(subjectIds);
+	}
 }

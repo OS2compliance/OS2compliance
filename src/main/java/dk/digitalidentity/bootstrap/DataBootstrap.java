@@ -129,6 +129,8 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(29, this::seedV29);
 		incrementAndPerformIfVersion(30, this::seedV30);
 		incrementAndPerformIfVersion(31, this::seedV31);
+		incrementAndPerformIfVersion(32, this::seedV32);
+		incrementAndPerformIfVersion(33, this::seedV33);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -141,6 +143,15 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 			}
 			return 0;
 		});
+	}
+
+	private void seedV33() {
+		choiceService.findChoiceList("dp-person-categories-sensitive-list").ifPresent(list -> list.setCustomizable(true));
+	}
+
+	private void seedV32() {
+		// Repeat 29... we was missing subjects
+		seedV29();
 	}
 
 	private void seedV31() {

@@ -3,9 +3,11 @@
 export default class KLESelectionService {
     mainGroupSelectId = 'mainGroupSelector'
     groupSelectId = 'groupSelector'
+    subjectSelectId = 'secondaryGroupSelector'
     legalReferenceSelectId = 'relevantLegalReferencesSelector'
     mainGroupSelectorInstance = null
     groupSelectorInstance = null
+    subjectSelectorInstance = null
     legalReferenceSelectorInstance = null
 
     constructor() {
@@ -22,9 +24,6 @@ export default class KLESelectionService {
         mainGroupSelect.addEventListener('change', async (e) => {
             await this.#getGroupOptionsFragment()
         })
-
-        this.#initGroupSelect()
-
     }
 
     async #getGroupOptionsFragment() {
@@ -41,12 +40,16 @@ export default class KLESelectionService {
         // fetch groupSelectOptions
         const url = `/kle/maingroup/groups?mainGroupNumbers=${selectedMainGroups}&selectedGroups=${selectedGroups}`;
         await fetchHtml(url, this.groupSelectId);
-        this.#initGroupSelect()
     }
 
-    #initGroupSelect() {
+    initGroupSelect() {
         const groupSelect = document.getElementById(this.groupSelectId)
         this.groupSelectorInstance = initSelect(groupSelect, 'form-control', {searchChoices: true});
+    }
+
+    initSubjectSelect() {
+        const subjectSelect = document.getElementById(this.subjectSelectId)
+        this.subjectSelectorInstance = initSelect(subjectSelect, 'form-control', {searchChoices: true});
     }
 
 
