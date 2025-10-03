@@ -115,6 +115,7 @@ public class SecurityUtil {
 	public static Set<String> getAdminRoles () {
 		return Set.of(
 				Roles.ADMINISTRATOR,
+				Roles.SUPER_USER,
 				Roles.CREATE_ALL,
 				Roles.READ_ALL,
 				Roles.UPDATE_ALL,

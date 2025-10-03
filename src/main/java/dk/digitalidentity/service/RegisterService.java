@@ -100,7 +100,7 @@ public class RegisterService {
 	}
 
     public Optional<Register> findByName(final String name) {
-        return registerDao.findByName(name);
+        return registerDao.findByNameAndDeletedFalse(name);
     }
 
     @Transactional
