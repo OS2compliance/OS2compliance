@@ -94,6 +94,7 @@ public class TaskRestController {
     ) {
 
         final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		log.info("Listing tasks for user {} with principal id {}", user.getUuid(), SecurityUtil.getPrincipalUuid());
 
         Page<TaskGrid> tasks = taskGridDao.findAllWithAssignedUser(
 				validateSearchFilters(filters, TaskGrid.class),
