@@ -33,8 +33,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 formatter: (cell, row) => {
                     const id = row.cells[0]['data'];
                     const tag = row.cells[1]['data'];
-                    const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="tags.deleteTag('${id}', '${tag}')"><i class="pli-trash fs-5"></i></button>`;
-                    return gridjs.html(deleteButton);
+                    const buttons = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="tags.editTag('${id}', '${tag}')"><i class="pli-pencil fs-5"></i></button> <button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="tags.deleteTag('${id}', '${tag}')"><i class="pli-trash fs-5"></i></button>`;
+                    return gridjs.html(buttons);
                 }
             }
         ],
@@ -78,5 +78,13 @@ function TagService () {
                     .catch(error => toastService.error(error));
             }
         });
+    }
+
+    this.editTag = (id, value) => {
+        document.getElementById('editIdentifier').value = id;
+        document.getElementById('redigerNavn').value = value;
+
+        editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
+        editDialog.show();
     }
 }
