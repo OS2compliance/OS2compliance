@@ -124,6 +124,7 @@
 
     <table class="generalInfoTable">
         <tbody>
+            <tr><td class="generalInfoFirstColumn" th:if="${purpose != null}">Formål:</td><td th:text="${purpose}"></td></tr>
             <tr><td class="generalInfoFirstColumn" th:if="${systemType != null}">Systemtype:</td><td th:text="${systemType}"></td></tr>
             <tr><td class="generalInfoFirstColumn" th:if="${systemOwners != null}" th:text="${customSystemOwnerInput + ':'}"></td><td th:text="${systemOwners}"></td></tr>
             <tr><td class="generalInfoFirstColumn" th:if="${systemResponsible != null}" th:text="${customSystemResponsibleInput + ':'}"></td><td th:text="${systemResponsible}"></td></tr>
