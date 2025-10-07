@@ -140,6 +140,7 @@ SELECT
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos,
     IF(old_kitos_prop.prop_value IS NULL, 0, 1) AS old_kitos,
+    MAX(ao.creation_date) AS last_oversight_date,
     CASE
         WHEN EXISTS (
             SELECT 1
@@ -163,6 +164,7 @@ FROM assets a
     LEFT JOIN choice_values cv ON a.asset_type = cv.id
     LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
     LEFT JOIN users mu ON aum.user_uuid = mu.uuid
+    LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
 WHERE a.deleted = false
 GROUP BY a.id;
 

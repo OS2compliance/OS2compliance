@@ -165,6 +165,13 @@
                     width: '100px'
                 },
                 {
+                    name: "Sidste tilsyn",
+                    searchable: {
+                        searchKey: 'lastOversightDate'
+                    },
+                    width: '100px'
+                },
+                {
                     name: "Antal beh.",
                     width: '95px',
                     searchable: {
@@ -245,7 +252,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },
