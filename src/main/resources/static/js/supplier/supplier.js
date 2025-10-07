@@ -102,6 +102,13 @@ function initGrid() {
                 width: '100px'
             },
             {
+                name: "Sidste tilsyn",
+                searchable: {
+                    searchKey: 'lastOversightDate'
+                },
+                width: '100px'
+            },
+            {
                 name: "Status",
                 searchable: {
                     searchKey: 'status',
@@ -145,7 +152,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.status, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.allowedActions]
             ),
             total: data => data.count
         },

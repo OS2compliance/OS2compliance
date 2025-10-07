@@ -1,14 +1,17 @@
 CREATE OR REPLACE
-VIEW view_gridjs_suppliers AS
+    VIEW view_gridjs_suppliers AS
 SELECT
-	s.id,
-	TRIM(s.name) as name,
-	(SELECT COUNT(1) FROM assets a WHERE a.supplier_id=s.id) AS solution_count,
+    s.id,
+    TRIM(s.name) as name,
+    (SELECT COUNT(1) FROM assets a WHERE a.supplier_id=s.id) AS solution_count,
     s.updated_at AS updated,
     s.status,
-    s.localized_enums
+    s.localized_enums,
+    MAX(ao.creation_date) AS last_oversight_date
 FROM
-	suppliers s
+    suppliers s
+    LEFT JOIN assets a ON a.supplier_id = s.id
+    LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
 WHERE s.deleted = false;
 
 CREATE OR REPLACE
