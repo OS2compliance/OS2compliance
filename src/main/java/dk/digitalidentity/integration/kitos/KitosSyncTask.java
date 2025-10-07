@@ -53,36 +53,37 @@ public class KitosSyncTask {
         log.info("Starting Kitos synchronisation");
         
         try {
-		final UUID municipalUuid = kitosClientService.lookupMunicipalUuid(configuration.getMunicipal().getCvr());
-		final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
-		final boolean reimport = !changedItSystemUsages.isEmpty();
-		// We need to fetch associated entities
-		final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
-		    .map(usage -> usage.getSystemContext().getUuid())
-		    .map(kitosClientService::fetchItSystem)
-		    .filter(Objects::nonNull)
-		    .toList();
-		final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
-		final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
+			final UUID municipalUuid = kitosClientService.lookupMunicipalUuid(configuration.getMunicipal().getCvr());
+			final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
+			final boolean reimport = !changedItSystemUsages.isEmpty();
+			// We need to fetch associated entities
+			final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
+				.map(usage -> usage.getSystemContext().getUuid())
+				.map(kitosClientService::fetchItSystem)
+				.filter(Objects::nonNull)
+				.toList();
+			final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
+			final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
 
-		if (!changedItSystemUsages.isEmpty() || !changedContracts.isEmpty()) {
-		    final List<RoleOptionResponseDTO> roles = kitosClientService.listRoles(municipalUuid);
-		    final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);
-		    kitosService.syncRoles(roles);
-		    kitosService.syncUsers(users);
-		    kitosService.syncItSystems(mergeUniqueItSystems(assocItSystems, changedItSystems));
-		    kitosService.syncItSystemUsages(changedItSystemUsages);
-		    kitosService.syncItContracts(changedContracts);
+			if (!changedItSystemUsages.isEmpty() || !changedContracts.isEmpty()) {
+				final List<RoleOptionResponseDTO> roles = kitosClientService.listRoles(municipalUuid);
+				final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);
+				kitosService.syncRoles(roles);
+				kitosService.syncUsers(users);
+				kitosService.syncItSystems(mergeUniqueItSystems(assocItSystems, changedItSystems));
+				kitosService.syncItSystemUsages(changedItSystemUsages);
+				kitosService.syncItContracts(changedContracts);
+			}
 		}
-	}
-	catch (Exception ex) {
-		log.error("Error during Kitos synchronisation", ex);
-	}
+		catch (Exception ex) {
+			log.error("Error during Kitos synchronisation", ex);
+		}
 
         log.info("Finished Kitos synchronisation");
     }
 
     @Scheduled(cron = "${os2compliance.integrations.kitos.deletion.cron}")
+//	@Scheduled(initialDelay = 1000, fixedRate = 100000000)
     public void syncDeletions() {
         if (taskDisabled()) {
             return;
