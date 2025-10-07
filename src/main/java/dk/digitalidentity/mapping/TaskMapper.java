@@ -34,6 +34,7 @@ public interface TaskMapper {
                 .taskResultOrder(taskGrid.getTaskResultOrder())
                 .completed(nullSafe(taskGrid::isCompleted))
                 .tags(nullSafe(() -> taskGrid.getTags()))
+				.lastCompletionDate(taskGrid.getLastCompletionDate())
                 .build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();

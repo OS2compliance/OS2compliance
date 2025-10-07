@@ -143,6 +143,13 @@ function initGrid() {
                 hidden: true,
             },
             {
+                name: "Sidst udført",
+                searchable: {
+                    searchKey: 'lastCompletion',
+                },
+                width: '90px'
+            },
+            {
                 name: "Status",
                 searchable: {
                     sortKey: 'completed'
@@ -207,7 +214,7 @@ function initGrid() {
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType,
                     task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
-                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed, task.allowedActions ]
+                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions ]
             ),
             total: data => data.totalCount
         },
