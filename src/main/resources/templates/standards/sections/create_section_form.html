@@ -20,7 +20,7 @@
                                 th:field="*{templateSection}">
                             <option th:each="header : ${standard.standardTemplateSections}"
                                     th:value="${header.identifier}"
-                            th:text="${header.description}">
+                            th:text="${header.section != null ? '(' + header.section + ') ' + header.description : header.description}">
                             </option>
                         </select>
                     </div>
