@@ -19,7 +19,7 @@ public interface RegisterDao extends JpaRepository<Register, Long> {
 
     boolean existsByName(final String name);
 
-    Optional<Register> findByName(final String name);
+    Optional<Register> findByNameAndDeletedFalse(final String name);
 
 	Optional<Register> findFirstByNameStartingWithIgnoreCase(final String name);
 

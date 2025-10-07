@@ -144,7 +144,7 @@ public class AssetsRestController {
         @RequestParam Map<String, String> filters // Dynamic filters for search fields
     ) {
         final User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
+		log.info("Listing assets for user {} with principal id {}", user.getUuid(), SecurityUtil.getPrincipalUuid());
         if ( !uuid.equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
