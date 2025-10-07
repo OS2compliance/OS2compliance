@@ -457,6 +457,10 @@ function deleteThreatClicked(elem) {
     });
 }
 
+function editThreatClicked(elem) {
+
+}
+
 let revisionDialog;
 function setRevisionInterval(assessmentId) {
     fetch( `/risks/${assessmentId}/revision`)
