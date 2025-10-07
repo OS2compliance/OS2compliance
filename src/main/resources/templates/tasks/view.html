@@ -212,43 +212,6 @@
                                         </div>
                                     </div>
                                 </th:block>
-<!--                                TODO: Is this even necessary? Given we have the history on another tab...-->
-                                <th:block th:if="${taskLogs != null && !taskLogs.isEmpty()}">
-                                    <div class="row mb-3">
-                                        <label for="completedDate" class="col-sm-2 col-form-label">Sidst udført</label>
-                                        <div class="col-sm-10">
-                                            <input th:unless="${taskLogs.get(0).daysAfterDeadline} == 0" class="form-control" id="completedDate" th:value="${#temporals.format(taskLogs.get(0).completedDate, 'dd/MM-yyyy')} + ' (' + ${taskLogs.get(0).daysAfterDeadline} + ')'" style="color: red;" disabled readonly>
-                                            <input th:if="${taskLogs.get(0).daysAfterDeadline} == 0" class="form-control" id="completedDate" th:value="${#temporals.format(taskLogs.get(0).completedDate, 'dd/MM-yyyy')}" disabled readonly>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-3">
-                                        <label for="performedBy" class="col-sm-2 col-form-label">Udført af</label>
-                                        <div class="col-sm-10">
-                                            <input class="form-control" id="performedBy" th:value="${taskLogs.get(0).performedBy}" disabled readonly>
-                                        </div>
-                                    </div>
-                                    <div class="row mb-3">
-                                        <label for="completedComment" class="col-sm-2 col-form-label">Kommentar til udførsel</label>
-                                        <div class="col-sm-10">
-                                            <div class="input-group">
-                                                <textarea class="form-control" id="completedComment" th:text="${taskLogs.get(0).comment}" rows="3" disabled readonly></textarea>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    <div th:unless="${taskLogs.get(0).documentationLink} == null" class="row mb-3">
-                                        <label for="completedDocumentationLink" class="col-sm-2 col-form-label">Link til dokumentation</label>
-                                        <div class="col-sm-10" style="padding-top: 10px;">
-                                            <a id="completedDocumentationLink" th:text="${taskLogs.get(0).documentationLink}" th:href="${taskLogs.get(0).documentationLink}"></a>
-                                        </div>
-                                    </div>
-                                    <div th:unless="${taskLogs.get(0).documentName} == null" class="row mb-3">
-                                        <label for="documentRelationLink" class="col-sm-2 col-form-label">Relation ved dokument</label>
-                                        <div class="col-sm-10" style="padding-top: 10px;">
-                                            <a id="documentRelationLink" th:text="${taskLogs.get(0).documentName}" th:href="'/documents/' + ${taskLogs.get(0).documentId}"></a>
-                                        </div>
-                                    </div>
-                                </th:block>
-
                             <div class="row">
                                 <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
                             </div>
