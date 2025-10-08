@@ -24,7 +24,7 @@ public interface TaskMapper {
         TaskDTO taskDTO = TaskDTO.builder()
                 .id(taskGrid.getId())
                 .name(taskGrid.getName())
-                .responsibleUser(nullSafe(() -> taskGrid.getResponsibleUser().getName()))
+                .responsibleUser(nullSafe(() -> taskGrid.getResponsibleNames()))
                 .responsibleOU(nullSafe(() -> taskGrid.getResponsibleOU().getName()))
                 .nextDeadline(nullSafe(() -> taskGrid.getNextDeadline().format(DK_DATE_FORMATTER)))
                 .taskRepetition(nullSafe(() -> taskGrid.getTaskRepetition().getMessage()))
@@ -37,7 +37,7 @@ public interface TaskMapper {
                 .build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
-		boolean isResponsible =	(taskGrid.getResponsibleUser() != null && taskGrid.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()));
+		boolean isResponsible =	(taskGrid.getResponsibleUserUuids() != null && taskGrid.getResponsibleUserUuids().equals(SecurityUtil.getPrincipalUuid()));
 		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
 				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
 			allowedActions.add(AllowedAction.UPDATE);

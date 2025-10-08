@@ -1,8 +1,6 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
-import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -25,7 +23,7 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @Immutable
-public class TaskGrid  implements HasSingleResponsibleUser {
+public class TaskGrid {
     @Id
     private Long id;
 
@@ -36,9 +34,11 @@ public class TaskGrid  implements HasSingleResponsibleUser {
     @Enumerated(EnumType.STRING)
     private TaskType taskType;
 
-    @ManyToOne
-    @JoinColumn(name = "responsible_uuid")
-    private User responsibleUser;
+	@Column(name = "responsible_uuid")
+	private String responsibleUserUuids;
+
+	@Column(name = "responsible_names")
+	private String responsibleNames;
 
     @ManyToOne
     @JoinColumn(name = "responsible_ou_uuid")

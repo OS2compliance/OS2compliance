@@ -17,7 +17,8 @@ SELECT
     t.id,
     t.name,
     t.task_type,
-    t.responsible_uuid,
+    GROUP_CONCAT(DISTINCT tru.user_uuid SEPARATOR ',') as responsible_uuid,
+    GROUP_CONCAT(DISTINCT u.name SEPARATOR ', ') as responsible_names,
     t.responsible_ou_uuid,
     t.next_deadline,
     t.repetition,
@@ -36,8 +37,10 @@ SELECT
         END) as task_result_order,
     (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
-    GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tags
+    GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') SEPARATOR ',') as tags
 FROM tasks t
+    LEFT JOIN task_responsible_users tru ON tru.task_id = t.id
+    LEFT JOIN users u ON u.uuid = tru.user_uuid
     LEFT JOIN task_logs ts on ts.task_id = t.id
     LEFT JOIN relatable_tags rt on rt.relatable_id = t.id
     LEFT JOIN tags tg on rt.tag_id = tg.id
