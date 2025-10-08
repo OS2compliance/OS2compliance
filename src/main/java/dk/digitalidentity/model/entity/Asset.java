@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.enums.DPIACompletionStatus;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentCompletionStatus;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
@@ -290,4 +291,9 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
 	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
+
+	public boolean hasThirdCountryTransfer() {
+		return suppliers.stream()
+				.anyMatch(mapping -> mapping.getThirdCountryTransfer() == ThirdCountryTransfer.YES);
+	}
 }
