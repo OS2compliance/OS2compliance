@@ -273,8 +273,8 @@
                                                     Slet trussel
                                                 </button>
                                                 <button sec:authorize="hasAnyRole('ROLE_update_all')" th:id="'editThreatBtn' + ${row.index}" type="button" class="btn btn-secondary btn-xs mt-1"
-                                                        th:onclick="|deleteThreatClicked(this)|" title="Ret"
-                                                        th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
+                                                        th:onclick="|editThreatClicked(this)|" title="Ret"
+                                                        th:attr="data-customid=${row.id}, data-riskid=${risk.id}, data-type=${row.type()}, data-description=${row.threat()}" th:if="${row.dataType.name == 'CUSTOM'}">
                                                     Ret trussel
                                                 </button>
                                             </td>
@@ -468,7 +468,8 @@
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
-                <form id="editCustomThreatModal" class="row g-3 needs-validation" action="#" th:action="'/risks/' + ${risk.id} + '/customthreats/edit'" th:object="${customThreat}" method="post" novalidate>
+                <form id="editCustomThreatModal" class="row g-3 needs-validation" action="#" th:action="@{'/risks/' + ${risk.id} + '/customthreats/edit'}" th:object="${customThreat}" method="post" novalidate>
+                    <input type="hidden" id="customThreatId" name="id" th:field="*{id}">
                     <div class="row mt-3">
                         <label for="threatType" class="col-sm-4 col-form-label">Type af trussel</label>
                         <div class="col-sm-8">
@@ -487,7 +488,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
-                <button type="submit" form="createCustomThreatModal" class="btn btn-primary">Gem</button>
+                <button type="submit" form="editCustomThreatModal" class="btn btn-primary">Gem</button>
             </div>
         </div>
     </div>

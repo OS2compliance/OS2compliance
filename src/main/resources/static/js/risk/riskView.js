@@ -458,7 +458,12 @@ function deleteThreatClicked(elem) {
 }
 
 function editThreatClicked(elem) {
+    document.getElementById('customThreatId').value = elem.dataset.customid;
+    document.getElementById('threatType').value = elem.dataset.type;
+    document.getElementById('threatDescription').value = elem.dataset.description;
 
+    editDialog = new bootstrap.Modal(document.getElementById('editCustomThreatFormDialog'));
+    editDialog.show();
 }
 
 let revisionDialog;
