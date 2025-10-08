@@ -58,7 +58,9 @@ public class TaskService {
     private final RelatableService relatableService;
 
 	public boolean isResponsibleFor(Task task) {
-		return task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid());
+		return task.getResponsibleUsers().stream()
+				.map(User::getUuid)
+				.anyMatch(SecurityUtil.getPrincipalUuid()::equals);
 	}
 
     public List<Task> findAll() {
@@ -138,7 +140,7 @@ public class TaskService {
         task.setName(oldTask.getName());
         task.setTaskType(oldTask.getTaskType());
         task.setNextDeadline(oldTask.getNextDeadline());
-        task.setResponsibleUser(oldTask.getResponsibleUser());
+        task.setResponsibleUsers(oldTask.getResponsibleUsers());
         task.setResponsibleOu(oldTask.getResponsibleOu());
         task.setRepetition(oldTask.getRepetition());
         task.setTags(oldTask.getTags());
@@ -201,7 +203,7 @@ public class TaskService {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;
             }
-            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUser().getName(), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
+            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
         }
         return relatedTasks;
     }
@@ -213,7 +215,7 @@ public class TaskService {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;
             }
-            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUser().getName(), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
+            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
         }
         return relatedTasks;
     }
@@ -335,8 +337,8 @@ public class TaskService {
         return taskLogDao.findByTaskIdIn(taskList.stream().map(Relatable::getId).toList());
     }
 
-	public Set<Task> findAllUnrelatedTasksForResponsibleUser (String userUuid) {
-		return taskDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(userUuid);
+	public Set<Task> findAllUnrelatedTasksForResponsibleUser (User user) {
+		return taskDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(user);
 	}
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {

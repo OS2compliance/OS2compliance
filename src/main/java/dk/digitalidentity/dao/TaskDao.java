@@ -1,6 +1,7 @@
 package dk.digitalidentity.dao;
 
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -25,9 +26,9 @@ public interface TaskDao extends JpaRepository<Task, Long> {
     @Query("select t from Task t join t.tags tags where tags.id=:tagId")
     List<Task> findByTag(@Param("tagId") final Long tagId);
 
-	@Query("SELECT task FROM Task task WHERE task.responsibleUser.uuid = :userUuid AND task.id NOT IN " +
+	@Query("SELECT task FROM Task task WHERE :user MEMBER OF task.responsibleUsers AND task.id NOT IN " +
 			"(SELECT t.id FROM Task t INNER JOIN Relation r ON " +
 			"(t.id = r.relationAId AND r.relationAType = 'TASK' AND r.relationBType = 'ASSET') " +
 			"OR (t.id = r.relationBId AND r.relationBType = 'TASK' AND r.relationAType = 'ASSET'))")
-	Set<Task> findAllByResponsibleUserAndNotRelatedToAnyAsset(@Param("userUuid") final String responsibleUserUuid);
+	Set<Task> findAllByResponsibleUserAndNotRelatedToAnyAsset(@Param("user") final User responsibleUser);
 }

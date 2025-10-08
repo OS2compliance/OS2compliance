@@ -269,7 +269,7 @@ public class AssetService {
         if (tasks == null || tasks.isEmpty()) {
             return Optional.empty();
         }
-        return Optional.of(tasks.get(0));
+        return Optional.of(tasks.getFirst());
     }
 
     @Transactional
@@ -281,7 +281,7 @@ public class AssetService {
 			name +=  (dpia.getAssets().size() > 1) ? " med flere" : "";
 			task.setName(name);
             task.setNextDeadline(dpia.getNextRevision());
-            task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
+            task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Set.of(userService.currentUser()));
             task.setDescription("Revider DPIA for " + String.join(", ",  dpia.getAssets().stream().map(Relatable::getName).toList()));
             setTaskRevisionInterval(dpia, task);
             return task;
@@ -307,7 +307,7 @@ public class AssetService {
             .build()
         );
         task.setTaskType(TaskType.CHECK);
-		task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
+		task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Set.of(userService.currentUser()));
         task.setNextDeadline(dpia.getNextRevision());
         task.setNotifyResponsible(true);
         final Task savedTask = taskService.saveTask(task);

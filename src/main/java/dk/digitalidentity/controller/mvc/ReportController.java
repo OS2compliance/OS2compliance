@@ -132,7 +132,7 @@ public class ReportController {
 		}
 
 		// Handle tasks not related to assets, but with matching responsible user
-		Set<Task> assetUnrelatedTasks = taskService.findAllUnrelatedTasksForResponsibleUser(currentUser.getUuid());
+		Set<Task> assetUnrelatedTasks = taskService.findAllUnrelatedTasksForResponsibleUser(currentUser);
 
 		// Handle registers not related to assets, but with matching responsible user
 		Set<Register> assetUnrelatedRegisters = registerService.findAllUnrelatedRegistersForResponsibleUser(currentUser);

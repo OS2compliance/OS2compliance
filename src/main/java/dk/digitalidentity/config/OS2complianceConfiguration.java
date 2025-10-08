@@ -26,6 +26,7 @@ public class OS2complianceConfiguration {
 	private boolean developmentMode = false;
     private boolean schedulingEnabled = true;
     private boolean seedData = true;
+    private boolean allowMultipleTaskResponsibleEnabled = true;
     private String authorityUser;
     private String authoritySuperuser;
     private String authorityAdministrator;

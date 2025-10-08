@@ -216,9 +216,8 @@ public class ThreatAssessmentService {
         if (deadline != null && assessment.getRevisionInterval() != null) {
             final Task task = findAssociatedCheck(assessment).orElseGet(() -> createAssociatedCheck(assessment));
             task.setName("Risikovurdering af " + assessment.getName());
-            task.setResponsibleUser(assessment.getResponsibleUser());
             task.setNextDeadline(assessment.getNextRevision());
-            task.setResponsibleUser(assessment.getResponsibleUser() != null ? assessment.getResponsibleUser() : userService.currentUser());
+            task.setResponsibleUsers(assessment.getResponsibleUser() != null ? Set.of(assessment.getResponsibleUser()) : Set.of(userService.currentUser()));
             task.setDescription("Revider risikovurdering af " + assessment.getName());
             setTaskRevisionInterval(assessment, task);
             return task;
@@ -237,7 +236,7 @@ public class ThreatAssessmentService {
             .build()
         );
         task.setTaskType(TaskType.CHECK);
-        task.setResponsibleUser(assessment.getResponsibleUser());
+        task.setResponsibleUsers(Set.of(assessment.getResponsibleUser()));
         task.setNextDeadline(assessment.getNextRevision());
         task.setNotifyResponsible(true);
         final Task savedTask = taskService.saveTask(task);
@@ -251,7 +250,7 @@ public class ThreatAssessmentService {
             Task task = new Task();
             task.setName("Udfyld risikovurdering: " + assessment.getName());
             task.setTaskType(TaskType.TASK);
-            task.setResponsibleUser(assessment.getResponsibleUser());
+			task.setResponsibleUsers(Set.of(assessment.getResponsibleUser()));
             task.setNextDeadline(LocalDate.now().plusMonths(1));
             task.setRepetition(TaskRepetition.NONE);
             task = taskService.saveTask(task);
@@ -451,7 +450,9 @@ public class ThreatAssessmentService {
         final List<Task> relatedTasks = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType() == RelationType.TASK).map(r -> (Task) r).toList();
         final List<TaskDTO> taskDTOS = new ArrayList<>();
         for (final Task relatedTask : relatedTasks) {
-            taskDTOS.add(new TaskDTO(relatedTask.getId(), relatedTask.getName(), relatedTask.getTaskType(), relatedTask.getResponsibleUser().getName(), relatedTask.getNextDeadline().format(DK_DATE_FORMATTER), relatedTask.getNextDeadline().isBefore(LocalDate.now()), taskService.findHtmlStatusBadgeForTask(relatedTask)));
+            taskDTOS.add(new TaskDTO(relatedTask.getId(), relatedTask.getName(), relatedTask.getTaskType(), relatedTask.getResponsibleUsers().stream()
+					.map(User::getName)
+					.collect(Collectors.joining(", ")), relatedTask.getNextDeadline().format(DK_DATE_FORMATTER), relatedTask.getNextDeadline().isBefore(LocalDate.now()), taskService.findHtmlStatusBadgeForTask(relatedTask)));
         }
         dto.setTasks(taskDTOS);
     }
@@ -884,7 +885,9 @@ public class ThreatAssessmentService {
                     task.getDescription(),
                     task.getTaskType().getMessage(),
                     DK_DATE_FORMATTER.format(task.getNextDeadline()),
-                    nullSafe(() -> task.getResponsibleUser().getName()),
+                    nullSafe(() -> task.getResponsibleUsers().stream()
+							.map(User::getName)
+							.collect(Collectors.joining(", "))),
                     nullSafe(() -> task.getResponsibleOu().getName())
                 ));
             }

@@ -45,6 +45,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -290,4 +291,10 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
 	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
+
+	protected LocalDate getLastOverSightDate() {
+		return assetOversights.stream()
+				.sorted((a, b) -> b.getCreationDate().compareTo(a.getCreationDate()))
+				.toList().getFirst().getCreationDate();
+	}
 }

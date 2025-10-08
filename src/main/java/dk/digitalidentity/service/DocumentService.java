@@ -23,6 +23,7 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -111,11 +112,10 @@ public class DocumentService {
         final Task task = new Task();
         task.setTaskType(TaskType.CHECK);
         task.setName("Revision af " + document.getName());
-        task.setResponsibleUser(document.getResponsibleUser());
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(document.getNextRevision());
         task.setNotifyResponsible(false);
-        task.setResponsibleUser(document.getResponsibleUser() != null ? document.getResponsibleUser() : userService.currentUser());
+        task.setResponsibleUsers(document.getResponsibleUser() != null ? Set.of(document.getResponsibleUser()) : Set.of(userService.currentUser()));
         task.setDescription("Revider dokumentet " + document.getName());
         task.getProperties().add(Property.builder()
             .entity(task)
