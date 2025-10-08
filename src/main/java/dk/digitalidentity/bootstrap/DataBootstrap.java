@@ -1,5 +1,6 @@
 package dk.digitalidentity.bootstrap;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.StandardTemplateSectionDao;
@@ -134,6 +135,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(32, this::seedV32);
 		incrementAndPerformIfVersion(33, this::seedV33);
 		incrementAndPerformIfVersion(34, this::seedV34);
+		incrementAndPerformIfVersion(35, this::seedV35);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -150,6 +152,9 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
 	private void seedV34() {
 		threatAssessmentService.findAll().forEach(threatAssessmentService::setThreatAssessmentColor);
+	}
+	private void seedV35() {
+		settingsService.createSetting(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS, String.valueOf(true), "general", true);
 	}
 
 	private void seedV33() {

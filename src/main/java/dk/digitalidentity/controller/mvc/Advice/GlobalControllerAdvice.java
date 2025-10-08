@@ -1,6 +1,7 @@
 package dk.digitalidentity.controller.mvc.Advice;
 
-import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.Constants;
+import dk.digitalidentity.service.SettingsService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ModelAttribute;
@@ -9,10 +10,10 @@ import org.springframework.web.bind.annotation.ModelAttribute;
 @ControllerAdvice
 public class GlobalControllerAdvice {
 
-	private final OS2complianceConfiguration configuration;
+	private final SettingsService settingsService;
 
 	@ModelAttribute("allowMultipleTaskResponsible")
 	public boolean allowMultipleTaskResponsible() {
-		return configuration.isAllowMultipleTaskResponsibleEnabled();
+		return Boolean.parseBoolean(settingsService.getString(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS, "true"));
 	}
 }
