@@ -719,8 +719,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 			// Purpose
 			setCellTextSmall(row, 0, "Formål:");
-			setCellTextSmall(row, 1, context.register.getPurpose() != null ? context.register.getPurpose() : "Ikke angivet");
-
+			setCellTextSmall(row, 1, context.register != null && context.register.getPurpose() != null ? context.register.getPurpose() : "Ikke angivet");
 			//System type
 			final XWPFTableRow row1 = table.getRow(1);
 			setCellTextSmall(row1, 0, "Systemtype:");
