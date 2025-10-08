@@ -291,10 +291,4 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
 	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
-
-	protected LocalDate getLastOverSightDate() {
-		return assetOversights.stream()
-				.sorted((a, b) -> b.getCreationDate().compareTo(a.getCreationDate()))
-				.toList().getFirst().getCreationDate();
-	}
 }

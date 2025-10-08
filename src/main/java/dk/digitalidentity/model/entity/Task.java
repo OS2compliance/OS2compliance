@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tasks")
@@ -135,6 +136,6 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 
 	@Override
 	public String getResponsibleUserUuids() {
-		return "";
+		return responsibleUsers.stream().map(User::getName).collect(Collectors.joining(","));
 	}
 }

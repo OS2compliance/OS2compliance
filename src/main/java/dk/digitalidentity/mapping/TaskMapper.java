@@ -9,6 +9,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -37,7 +38,9 @@ public interface TaskMapper {
                 .build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
-		boolean isResponsible =	(taskGrid.getResponsibleUserUuids() != null && taskGrid.getResponsibleUserUuids().equals(SecurityUtil.getPrincipalUuid()));
+		boolean isResponsible = (taskGrid.getResponsibleUserUuids() != null &&
+				Arrays.asList(taskGrid.getResponsibleUserUuids().split(","))
+						.contains(SecurityUtil.getPrincipalUuid()));
 		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
 				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
 			allowedActions.add(AllowedAction.UPDATE);
