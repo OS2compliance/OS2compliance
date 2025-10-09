@@ -1,22 +1,22 @@
 package dk.digitalidentity.service;
 
-import dk.digitalidentity.dao.SettingDao;
-import dk.digitalidentity.model.entity.Setting;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
+import dk.digitalidentity.dao.SettingDao;
+import dk.digitalidentity.model.entity.Setting;
+
 @Service
-@Slf4j
 public class SettingsService {
+	
 	@Autowired
-	SettingDao settingDao;
+	private SettingDao settingDao;
 
 	public int getInt(final String key, final int defaultVal) {
 		return settingDao.findBySettingKey(key)
@@ -25,10 +25,11 @@ public class SettingsService {
 	}
 
 	public String getString(final String key, final String defaultVal) {
-		String settingString = settingDao.findBySettingKey(key).map(Setting::getSettingValue).orElse(defaultVal);
-		if (settingString.trim().isEmpty()) {
+		String settingString = settingDao.findBySettingKey(key).map(Setting::getSettingValue).orElse(defaultVal);		
+		if (settingString == null || settingString.trim().isEmpty()) {
 			return defaultVal;
 		}
+
 		return settingString;
 	}
 
@@ -50,14 +51,19 @@ public class SettingsService {
 	public Setting setString(final String key, final String value) {
 		if (settingDao.existsBySettingKey(key)) {
 			final Setting result = settingDao.findBySettingKey(key).get();
+			
 			result.setLastUpdated(LocalDateTime.now());
 			result.setSettingValue(value);
+			
 			return settingDao.save(result);
-		} else {
+		}
+		else {
 			final Setting setting = new Setting();
+			
 			setting.setSettingKey(key);
 			setting.setSettingValue(value);
 			setting.setLastUpdated(LocalDateTime.now());
+			
 			return settingDao.save(setting);
 		}
 	}
@@ -76,7 +82,7 @@ public class SettingsService {
 
     //association should probably be an enum
     public Setting createSetting(final String key, final String value, final String association, final boolean editable){
-        if(!settingDao.existsBySettingKey(key)) {
+        if (!settingDao.existsBySettingKey(key)) {
             final Setting setting = new Setting();
             setting.setSettingKey(key);
             setting.setSettingValue(value);
@@ -86,6 +92,7 @@ public class SettingsService {
 
             return settingDao.save(setting);
         }
+        
         return null;
     }
 
@@ -104,8 +111,10 @@ public class SettingsService {
 		for(final Setting setting : settings) {
 			setString(setting.getSettingKey(), setting.getSettingValue());
 		}
+		
 		return this.getAll();
 	}
+	
 	public List<Setting> getAll() {
 		return settingDao.findAll();
 	}
