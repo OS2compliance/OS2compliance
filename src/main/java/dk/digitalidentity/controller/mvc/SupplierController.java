@@ -138,7 +138,7 @@ public class SupplierController {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-            if(!existingSupplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
             existingSupplier.setName(supplier.getName());
