@@ -788,7 +788,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			setCellTextSmall(row11, 1, dataProcessing.getUserManagementProcedureLink() != null ? dataProcessing.getUserManagementProcedureLink() : "");
 
 			// sociallyCritical
-			int nextRowIndex = 12; // CHANGED FROM 11 TO 12
+			int nextRowIndex = 12;
 			if (isAsset) {
 				final XWPFTableRow row12 = table.getRow(12);
 				setCellTextSmall(row12, 0, "Samfundskritisk:");
@@ -798,7 +798,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 			// Registered data categories
 			for (int i = 0; i < categories.size(); i++) {
-				final XWPFTableRow catRow = table.getRow(i + nextRowIndex); // Add magic number of previous rows to start at the current row
+				final XWPFTableRow catRow = table.getRow(i + nextRowIndex);
 				if (i == 0) {
 					setCellTextSmall(catRow, 0, "Registrerede persondatakategorier:");
 				}
