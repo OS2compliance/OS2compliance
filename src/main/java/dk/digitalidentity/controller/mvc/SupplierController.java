@@ -173,7 +173,7 @@ public class SupplierController {
                                                                        @RequestParam("cvr") final String cvr) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+        if(supplier.getResponsibleUser() != null && !supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		supplier.setDescription(description);
