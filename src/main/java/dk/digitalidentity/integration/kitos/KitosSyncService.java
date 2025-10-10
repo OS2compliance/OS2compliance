@@ -280,24 +280,6 @@ public class KitosSyncService {
         return Optional.empty();
     }
 
-	// TODO: Refactor when eliminating mapping tables in the future
-	private void setAssetOperationResponsible(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
-		final String operationResponsibleRoleUuid = settingsService.getString(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY, "");
-		asset.getOperationResponsibleUsers().clear();
-		itSystemUsageResponseDTO.getRoles().stream()
-				.filter(r -> operationResponsibleRoleUuid.equalsIgnoreCase(r.getRole().getUuid().toString()))
-				.map(r -> r.getUser().getUuid())
-				.forEach(r -> {
-					final Optional<User> user = findUser(r.toString());
-					user.ifPresent(value -> {
-						// Make sure to only add managers once
-						if (asset.getOperationResponsibleUsers().stream().noneMatch(u -> value.getUuid().equals(u.getUuid()))) {
-							asset.getOperationResponsibleUsers().add(value);
-						}
-					});
-				});
-	}
-
     private void updateAsset(final Asset asset, final ItSystemResponseDTO responseDTO) {
         asset.setName(responseDTO.getName());
         asset.setDescription(responseDTO.getDescription());

@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.dto;
 
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
+import dk.digitalidentity.model.entity.enums.UserManagementProcedure;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
@@ -23,4 +24,6 @@ public class DataProcessingDTO {
     private String elaboration;
     private String typesOfPersonalInformationFreetext;
 	private boolean deletionAppliesToAll;
+	private UserManagementProcedure userManagementProcedure;
+	private String userManagementProcedureLink;
 }

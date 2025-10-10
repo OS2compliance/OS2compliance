@@ -58,11 +58,11 @@
             <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/tags/create}" th:object="${tag}"
                   method="post">
                 <div class="modal-body">
-                    <input id="identifier" th:field="*{id}" type="hidden">
+                    <input id="createIdentifier" th:field="*{id}" type="hidden">
                     <div class="row mt-4">
-                        <label for="navn" class="col-sm-4 col-form-label">Navn</label>
+                        <label for="opretNavn" class="col-sm-4 col-form-label">Navn</label>
                         <div class="col-sm-8">
-                            <input id="navn" th:field="*{value}" type="text" class="form-control" required>
+                            <input id="opretNavn" th:field="*{value}" type="text" class="form-control" required>
                         </div>
                     </div>
 
@@ -70,6 +70,35 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
                     <button type="submit" class="btn btn-primary" th:form="${formId}">Tilføj</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editTagModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rediger Tag</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/tags/update}" th:object="${tag}"
+                  method="post">
+                <div class="modal-body">
+                    <input id="editIdentifier" th:field="*{id}" type="hidden">
+                    <div class="row mt-4">
+                        <label for="redigerNavn" class="col-sm-4 col-form-label">Navn</label>
+                        <div class="col-sm-8">
+                            <input id="redigerNavn" th:field="*{value}" th:value="${value}" type="text" class="form-control" required>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                    <button type="submit" class="btn btn-primary" th:form="${formId}">Gem</button>
                 </div>
             </form>
 
