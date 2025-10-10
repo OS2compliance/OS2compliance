@@ -777,6 +777,8 @@ public class ThreatAssessmentService {
             context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
             context.setVariable("sociallyCritical", riskAsset.isSociallyCritical());
+			context.setVariable("userManagementProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getManagementProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("userManagementProcedureLink", riskAsset.getDataProcessing().getUserManagementProcedureLink());
             String dataAccessPersons = riskAsset.getDataProcessing().getAccessWhoIdentifiers().stream()
                 .map(identifier ->
                 {
@@ -811,6 +813,8 @@ public class ThreatAssessmentService {
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
             context.setVariable("deletionProcedureCreated", riskRegister.getDataProcessing().getDeletionProcedure() != null ? riskRegister.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskRegister.getDataProcessing().getDeletionProcedureLink());
+			context.setVariable("userManagementProcedureCreated", riskRegister.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getManagementProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("userManagementProcedureLink", riskRegister.getDataProcessing().getUserManagementProcedureLink());
             String dataAccessPersons = riskRegister.getDataProcessing().getAccessWhoIdentifiers().stream()
                 .map(identifier ->
                 {
