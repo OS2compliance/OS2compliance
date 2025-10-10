@@ -224,9 +224,8 @@ public class RiskRestController {
     @PostMapping("{id}/mailReport")
     public ResponseEntity<?> mailReportToSystemOwner(@PathVariable final long id, @RequestBody final MailReportDTO dto) throws IOException {
         ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-		if (!SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
-				!(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && !threatAssessmentService.isResponsibleFor(threatAssessment))) {
+		if (!(SecurityUtil.isOperationAllowed(Roles.CREATE_ALL) ||
+				(SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(threatAssessment)))) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 

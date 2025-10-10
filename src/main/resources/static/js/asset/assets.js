@@ -109,7 +109,7 @@
                     }
                 },
                 {
-                    name: "Aktiv/Inaktiv",
+                    name: "Aktiv",
                     searchable: {
                         searchKey: 'active',
                         fieldId : 'activeAssetSelector'
