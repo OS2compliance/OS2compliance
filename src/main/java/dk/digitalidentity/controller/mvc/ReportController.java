@@ -33,6 +33,7 @@ import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
@@ -100,7 +101,7 @@ public class ReportController {
 	private final RegisterService registerService;
 	private final SystemOwnerOverviewService systemOwnerOverviewService;
 	private final RiskImageService riskImageService;
-	private final ReportThreatAssessmentXlsView reportThreatAssessmentXlsView;
+	private final SettingsService settingsService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -182,23 +183,23 @@ public class ReportController {
 
 
 	@RequireReadOwnerOnly
-	@GetMapping("incidents/excel")
-	public ModelAndView riskViewToExcel(final HttpServletResponse response,
-			@RequestParam(value = "from", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate from,
-			@RequestParam(value = "to", required = false) @DateTimeFormat(pattern = "dd/MM-yyyy") final LocalDate to) {
-//		final LocalDateTime fromDT = from != null ? from.atStartOfDay() : LocalDateTime.of(2000, 1, 1, 0, 0, 0);
-//		final LocalDateTime toDT = to != null ? to.plusDays(1).atStartOfDay() : LocalDateTime.of(3000, 1, 1, 0, 0, 0);
-//		final Page<Incident> allIncidents = incidentService.listIncidents(fromDT, toDT, Pageable.ofSize(1000));
-//		final List<IncidentDTO> allIncidentDTOs = incidentMapper.toDTOs(allIncidents.getContent());
-//		response.setContentType("application/ms-excel");
-//		response.setHeader("Content-Disposition", "attachment; filename=\"Incidents.xls\"");
-		final Map<String, Object> model = new HashMap<>();
-//		model.put("incidents", allIncidentDTOs);
-//		model.put("fields", incidentService.getAllFields());
-//		model.put("from", fromDT);
-//		model.put("to", toDT);
+	@GetMapping("/threat-assessment/{id}/excel")
+	public ModelAndView exportThreatAssessmentToExcel(final HttpServletResponse response, @PathVariable("id") final Long threatAssessmentId) {
+		// Fetch the ThreatAssessment
+		ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
 
-		return new ModelAndView(new IncidentsXlsView(), model);
+		if (threatAssessment == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ThreatAssessment not found");
+		}
+
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		response.setHeader("Content-Disposition", "attachment; filename=\"threat_assessment_" + threatAssessmentId + ".xlsx\"");
+
+		final Map<String, Object> model = new HashMap<>();
+		model.put("threatAssessment", threatAssessment);
+		model.put("settingsService", settingsService);
+
+		return new ModelAndView(new ReportThreatAssessmentXlsView(), model);
 	}
 
 	@RequireReadOwnerOnly
