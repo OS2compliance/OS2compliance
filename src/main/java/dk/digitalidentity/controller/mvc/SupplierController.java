@@ -4,6 +4,7 @@ import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
+import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Supplier;
@@ -11,6 +12,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -19,6 +21,7 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.AssetSupplierMappingService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
@@ -58,6 +61,7 @@ public class SupplierController {
     private final RelationService relationService;
     private final AssetService assetService;
     private final TaskService taskService;
+	private final AssetSupplierMappingService assetSupplierMappingService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -87,6 +91,7 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
 
+		// TODO: Use the method from AssetSupplierMappingService
 
         model.addAttribute("oversights", assetOversights);
         model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );

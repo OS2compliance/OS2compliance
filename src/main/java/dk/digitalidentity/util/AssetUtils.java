@@ -8,9 +8,13 @@ import org.springframework.stereotype.Component;
 public class AssetUtils {
 
 	public boolean hasThirdCountryTransfer(Object relatable) {
-		if (relatable instanceof Asset) {
+		if (isAsset(relatable)) {
 			Asset asset = (Asset) relatable;
 			return asset.getSuppliers().stream()
+					.filter(sp -> {
+						assert asset.getSupplier() != null;
+						return sp.getId() == asset.getSupplier().getId();
+					})
 					.anyMatch(mapping -> mapping.getThirdCountryTransfer() == ThirdCountryTransfer.YES);
 		}
 		return false;
