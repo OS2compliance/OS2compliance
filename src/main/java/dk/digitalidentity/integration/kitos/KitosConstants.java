@@ -39,7 +39,7 @@ public interface KitosConstants {
 
     Integer PAGE_SIZE = 100;
 
-    Integer MAX_PAGE_REQUEST = 50;
+    Integer MAX_PAGE_REQUEST = 100;
 
 
 }

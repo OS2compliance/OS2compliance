@@ -154,7 +154,7 @@ function initGrid() {
             then: data => data.content.map(supplier =>
                 [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.allowedActions]
             ),
-            total: data => data.count
+            total: data => data.totalCount
         },
         language: {
             'search': {
