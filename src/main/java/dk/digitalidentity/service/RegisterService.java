@@ -115,7 +115,7 @@ public class RegisterService {
             consequenceAssessment = consequenceAssessmentDao.save(consequenceAssessment);
             savedRegister.setConsequenceAssessment(consequenceAssessment);
         }
-        return registerDao.saveAndFlush(register);
+        return registerDao.saveAndFlush(savedRegister);
     }
 
     @Transactional
