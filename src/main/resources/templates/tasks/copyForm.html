@@ -108,7 +108,7 @@
                                 <input class="form-check-input mt-0"
                                        type="checkbox"
                                        th:name="'subTasks[' + ${iterStat.index} + '].completed'"
-                                       th:checked="${subTask.completed}" disabled>
+                                       th:checked="false" disabled>
                             </div>
                             <input type="text"
                                    th:name="'subTasks[' + ${iterStat.index} + '].name'"

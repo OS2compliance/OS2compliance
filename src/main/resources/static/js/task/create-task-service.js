@@ -22,7 +22,7 @@ function SubTaskLinkService() {
         div.className = 'input-group mb-2';
         div.innerHTML = `
         <div class="input-group-text">
-            <input class="form-check-input mt-0" type="checkbox" name="subTasks[${index}].completed">
+            <input class="form-check-input mt-0" type="checkbox" name="subTasks[${index}].completed" disabled>
         </div>
         <input type="text" name="subTasks[${index}].name" class="form-control" placeholder="Indtast underopgave...">
         <button type="button" class="btn btn-danger" onclick="subTaskLinkService.removeSubTask(this)">-</button>`;
