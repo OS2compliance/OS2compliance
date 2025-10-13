@@ -5,6 +5,7 @@ import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Setting;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.ChoiceValue;
@@ -13,7 +14,6 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SettingsService;
-import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -24,37 +24,33 @@ import org.apache.poi.ss.usermodel.IndexedColors;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.report.XlsUtil.createCell;
+import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Component
 public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
-	@Autowired
-	private ChoiceService choiceService;
-
-	@Autowired
-	private RelationService relationService;
-
-	@Autowired
-	private ThreatAssessmentService threatAssessmentService;
-
-	@Autowired
-	private SettingsService settingsService;
-
 	@Override
 	protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) throws Exception {
 		final ThreatAssessment threatAssessment = (ThreatAssessment) model.get("threatAssessment");
+		ChoiceService choiceService = (ChoiceService) model.get("choiceService");
+		SettingsService settingsService = (SettingsService) model.get("settingsService");
+		RelationService relationService = (RelationService) model.get("relationService");
+
 
 		if (threatAssessment == null) {
 			throw new IllegalArgumentException("ThreatAssessment not found in model");
@@ -64,7 +60,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		Font headerFont = createExcelFont(workbook);
 		CellStyle headerStyle = setSheetStyle(workbook, headerFont);
 
-		createHeader(workbook, sheet, headerStyle);
+		createHeader(workbook, sheet, headerStyle, settingsService);
 
 		// Create normal cell style for data rows
 		CellStyle normalStyle = workbook.createCellStyle();
@@ -88,8 +84,11 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 					.findFirst();
 			riskRegister = register.orElse(null);
 		}
+		List<Task> riskAssessmentTasks = relations.stream().filter(t -> t.getRelationType() == RelationType.TASK)
+				.map(Task.class::cast)
+				.toList();
 
-		inputThreatAssessment(sheet, normalStyle, threatAssessment, riskAsset, riskRegister, choiceService);
+		inputThreatAssessment(sheet, normalStyle, threatAssessment, riskAsset, riskRegister, riskAssessmentTasks, choiceService);
 
 		// Auto-size columns after data is added
 		for (int i = 0; i < 18; i++) {
@@ -97,7 +96,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		}
 	}
 
-	private void createHeader(Workbook workbook, Sheet sheet, CellStyle headerStyle) {
+	private void createHeader(Workbook workbook, Sheet sheet, CellStyle headerStyle, SettingsService settingsService) {
 		final Row header = sheet.createRow(0);
 		Setting customOwnerName = settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME);
 		Setting customResponsibleName = settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
@@ -121,10 +120,11 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(header, 15, "Hvem har adgang til personoplysningerne", headerStyle);
 		createCell(header, 16, "Hvor mange har adgang til personoplysningerne?", headerStyle);
 		createCell(header, 17, "Kategorier af registrerede og typer af personoplysninger", headerStyle);
+		createCell(header, 18, "Opgaver oprettet under risikovurderingen", headerStyle);
 	}
 
 	private void inputThreatAssessment(Sheet sheet, CellStyle cellStyle, ThreatAssessment threatAssessment,
-			Asset riskAsset, Register riskRegister, ChoiceService choiceService) {
+			Asset riskAsset, Register riskRegister, List<Task> tasks, ChoiceService choiceService) {
 		final Row row = sheet.createRow(1);
 
 		// Column 0: Titel
@@ -156,6 +156,10 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 				createCell(row, i, "", cellStyle);
 			}
 		}
+		// Column 10: Risk areas
+		createCell(row, 10, String.join(",", buildRiskAreas(threatAssessment)), cellStyle);
+		// Column 18: Related tasks
+		createCell(row, 18, tasks.stream().map(Task::getName).collect(Collectors.joining(",")), cellStyle);
 	}
 
 	private void fillAssetData(Row row, CellStyle cellStyle, Asset riskAsset, ChoiceService choiceService) {
@@ -181,11 +185,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		createCell(row, 8, riskAsset.getAssetType().getCaption(), cellStyle);
 
 		// Column 9: Formål
-		String purpose = "";
-		createCell(row, 9, purpose != null ? purpose : "", cellStyle);
-
-		// Column 10: Medtagne konsekvensområder
-		createCell(row, 10, "", cellStyle); // TODO: Fill if needed
+		createCell(row, 9, "Ikke udfyldt", cellStyle);
 
 		// Column 11: Leverandør
 		createCell(row, 11, riskAsset.getSupplier() != null ? riskAsset.getSupplier().getName() : "Ukendt", cellStyle);
@@ -198,7 +198,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
 		// Column 13: Link til Sletteprocedure
 		String deletionLink = riskAsset.getDataProcessing().getDeletionProcedureLink();
-		createCell(row, 13, deletionLink != null ? deletionLink : "", cellStyle);
+		createCell(row, 13, deletionLink != null ? deletionLink : "Ikke angivet", cellStyle);
 
 		// Column 14: Samfundskritisk
 		createCell(row, 14, riskAsset.isSociallyCritical() ? "Ja" : "Nej", cellStyle);
@@ -237,9 +237,6 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
 		// Column 9: Formål
 		createCell(row, 9, riskRegister.getPurpose() != null ? riskRegister.getPurpose() : "", cellStyle);
-
-		// Column 10: Medtagne konsekvensområder
-		createCell(row, 10, "", cellStyle);
 
 		// Column 11: Leverandør (not applicable for Register)
 		createCell(row, 11, "", cellStyle);
@@ -320,6 +317,20 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 			stringBuilder.append(register.getEmergencyPlanLink() != null ? register.getEmergencyPlanLink() : "Ikke udfyldt");
 		}
 		return stringBuilder.toString();
+	}
+
+	private Set<String> buildRiskAreas(ThreatAssessment threatAssessment) {
+		Set<String> result = new HashSet<>();
+		if (threatAssessment.isOrganisation()) {
+			result.add("Organisationen");
+		}
+		if (threatAssessment.isRegistered()) {
+			result.add("Den registrerede");
+		}
+		if (threatAssessment.isSociety()) {
+			result.add("Samfundet");
+		}
+		return result;
 	}
 
 	private static Font createExcelFont(Workbook workbook) {

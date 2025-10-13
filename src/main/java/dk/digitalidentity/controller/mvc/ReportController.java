@@ -29,6 +29,7 @@ import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
@@ -102,6 +103,7 @@ public class ReportController {
 	private final SystemOwnerOverviewService systemOwnerOverviewService;
 	private final RiskImageService riskImageService;
 	private final SettingsService settingsService;
+	private final ChoiceService choiceService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -198,6 +200,8 @@ public class ReportController {
 		final Map<String, Object> model = new HashMap<>();
 		model.put("threatAssessment", threatAssessment);
 		model.put("settingsService", settingsService);
+		model.put("relationService", relationService);
+		model.put("choiceService", choiceService);
 
 		return new ModelAndView(new ReportThreatAssessmentXlsView(), model);
 	}
