@@ -82,24 +82,21 @@ public class SupplierController {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 
-        final List<Asset> assetsDirect = assetService.findBySupplier(supplier);
-        final List<Relatable> assetRelated = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
-        final List<Relatable> documents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
-        final List<Relatable> tasks = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
-        final List<Relatable> incidents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.INCIDENT).toList();
+		List<AssetWithMappingsDTO> assetsWithMappings = assetSupplierMappingService.getSupplierWithAssetMappings(supplier.getId());
+		final List<Relatable> assetRelated = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
+		final List<Relatable> documents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
+		final List<Relatable> tasks = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
+		final List<Relatable> incidents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.INCIDENT).toList();
 
-        final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
+		final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
-
-		List<AssetWithMappingsDTO> assetsWithMappings = assetSupplierMappingService.getSupplierWithAssetMappings(supplier.getId());
 
         model.addAttribute("oversights", assetOversights);
         model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);
-        model.addAttribute("assetsDirect", assetsDirect);
         model.addAttribute("assetsRelated", assetRelated);
 		model.addAttribute("assetsWithMappings", assetsWithMappings);
         model.addAttribute("incidents", incidents);

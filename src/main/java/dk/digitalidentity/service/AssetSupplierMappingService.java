@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.Supplier;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +24,7 @@ public class AssetSupplierMappingService {
 	private final SupplierDao supplierDao;
 	private final AssetDao assetDao;
 
+	@Transactional
 	public List<AssetWithMappingsDTO> getSupplierWithAssetMappings(Long supplierId) {
 		if (supplierId == null) {
 			return Collections.emptyList();
