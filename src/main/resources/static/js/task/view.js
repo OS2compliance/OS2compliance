@@ -36,7 +36,7 @@ function ViewTaskService() {
         this.initTaskDocumentRelationSelect();
         choiceService.initTagSelect("tagsSelect");
         initFormValidationForForm('editForm');
-        initFormValidationForForm('completeTaskForm');
+        initFormValidationForForm('completeTaskForm', this.validateSubTasksCompletion.bind(this));
         initDatepicker("#deadlineBtn", "#deadline");
 
         var textarea = document.getElementById('description');
@@ -59,6 +59,42 @@ function ViewTaskService() {
             .then(() => {oversightDialog.show()});
     }
 
+    this.validateSubTasksCompletion = function() {
+        const subTaskCheckboxes = document.querySelectorAll('#completeTaskForm input[name="subTasksCompleted"]');
+
+        // If there are no subtasks, validation passes
+        if (subTaskCheckboxes.length === 0) {
+            return true;
+        }
+
+        // Check if all subtasks are checked
+        const allChecked = Array.from(subTaskCheckboxes).every(checkbox => checkbox.checked);
+
+        const errorMessageDiv = document.getElementById('subTaskValidationError');
+
+        if (!allChecked) {
+            // Show error message
+            if (!errorMessageDiv) {
+                const errorDiv = document.createElement('div');
+                errorDiv.id = 'subTaskValidationError';
+                errorDiv.className = 'alert alert-danger mt-2';
+                errorDiv.textContent = 'Alle underopgaver skal være fuldført før opgaven kan afsluttes.';
+
+                const subTaskContainer = document.querySelector('#completeTaskForm .border.rounded.p-3.bg-light');
+                if (subTaskContainer) {
+                    subTaskContainer.parentElement.appendChild(errorDiv);
+                }
+            }
+            return false;
+        } else {
+            // Remove error message if it exists
+            if (errorMessageDiv) {
+                errorMessageDiv.remove();
+            }
+            return true;
+        }
+    }
+
     this.fitDescription = function (textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
@@ -78,8 +114,11 @@ function ViewTaskService() {
             performButton.hidden = true;
             this.nameField.disabled = false
             document.getElementById("linksViewContainer").hidden = true;
+            document.getElementById("subTaskViewContainer").hidden = true;
             document.getElementById("linksEditContainer").hidden = false;
+            document.getElementById("subTaskEditContainer").hidden = false;
             document.getElementById("addLinkBtn").hidden = false;
+            document.getElementById("subTaskAddLinkBtn").hidden = false;
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -92,8 +131,11 @@ function ViewTaskService() {
             performButton.hidden = false;
             this.nameField.disabled = true
             document.getElementById("linksViewContainer").hidden = false;
+            document.getElementById("subTaskViewContainer").hidden = false;
             document.getElementById("linksEditContainer").hidden = true;
+            document.getElementById("subTaskEditContainer").hidden = true;
             document.getElementById("addLinkBtn").hidden = true;
+            document.getElementById("subTaskAddLinkBtn").hidden = true;
         }
     }
 

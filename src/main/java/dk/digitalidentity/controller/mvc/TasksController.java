@@ -4,6 +4,7 @@ import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.SubTask;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.TaskLog;
@@ -57,6 +58,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -147,6 +149,11 @@ public class TasksController {
 		for (TaskLink link : task.getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
 		}
+		List<SubTask> subTasks = new ArrayList<>();
+		for (SubTask subTask : task.getSubTasks()) {
+			subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
+		}
+		task.setSubTasks(subTasks);
 		task.setLinks(links);
 		final Task savedTask = taskService.saveTask(task);
         relationService.setRelationsAbsolute(savedTask, relations);
@@ -239,13 +246,19 @@ public class TasksController {
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUser(task.getResponsibleUser());
-
+		existingTask.getSubTasks().clear();
 		existingTask.getLinks().clear();
 		for (TaskLink link : task.getLinks()) {
 			if (link.getUrl() != null && !link.getUrl().isBlank()) {
 				link.setTask(existingTask);
 				link.setUrl(linkify(link.getUrl()));
 				existingTask.getLinks().add(link);
+			}
+		}
+		for (SubTask subTask : task.getSubTasks()) {
+			if (subTask.getName() != null && !subTask.getName().isBlank()) {
+				subTask.setTask(existingTask);
+				existingTask.getSubTasks().add(subTask);
 			}
 		}
 
@@ -259,7 +272,7 @@ public class TasksController {
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
-    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
+    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult, List<Long> subTasksCompleted) {}
     @RequireReadOwnerOnly
 	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
@@ -274,7 +287,7 @@ public class TasksController {
         model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
         model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
-        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
+        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null, null));
 
         if (task.getTaskType().equals(TaskType.TASK)) {
             final boolean completed = calculateCompleted(task);
@@ -379,6 +392,15 @@ public class TasksController {
         taskLog.setResponsibleUserName(user.getName());
         taskLog.setResponsibleUserUserId(user.getUserId());
         taskLog.setTaskResult(dto.taskResult());
+		if (task.getSubTasks() != null && !task.getSubTasks().isEmpty()) {
+			Set<Long> completedIds = dto.subTasksCompleted() != null ?
+					new HashSet<>(dto.subTasksCompleted()) :
+					Collections.emptySet();
+
+			for (SubTask subTask : task.getSubTasks()) {
+				subTask.setCompleted(completedIds.contains(subTask.getId()));
+			}
+		}
 
         if (!StringUtils.isEmpty(dto.documentLink().trim())) {
             taskLog.setDocumentationLink(dto.documentLink());
@@ -414,7 +436,24 @@ public class TasksController {
                                         ) {
         final Task task = taskService.copyTask(taskForm);
         setupRelations(task, relations);
-        taskService.saveTask(task);
+		if (task.getSubTasks() == null) {
+			task.setSubTasks(new ArrayList<>());
+		} else {
+			task.getSubTasks().clear();
+		}
+
+		if (taskForm.getSubTasks() != null && !taskForm.getSubTasks().isEmpty()) {
+			for (SubTask subTask : taskForm.getSubTasks()) {
+				if (subTask.getName() != null && !subTask.getName().trim().isEmpty()) {
+					SubTask newSubTask = new SubTask();
+					newSubTask.setName(subTask.getName());
+					newSubTask.setCompleted(subTask.isCompleted());
+					newSubTask.setTask(task);
+					task.getSubTasks().add(newSubTask);
+				}
+			}
+		}
+		taskService.saveTask(task);
         if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
             EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
             if (template.isEnabled()) {

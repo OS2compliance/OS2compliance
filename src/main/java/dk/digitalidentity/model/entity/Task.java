@@ -86,6 +86,9 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskLog> logs  = new HashSet<>();
 
+	@OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
+	private List<SubTask> subTasks  = new ArrayList<>();
+
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "relatable_tags", joinColumns = { @JoinColumn(name = "relatable_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
     private List<Tag> tags = new ArrayList<>();

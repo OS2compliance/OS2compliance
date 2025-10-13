@@ -1,6 +1,7 @@
 
 const createTaskService = new CreateTaskService();
 const taskLinkService = new TaskLinkService();
+const subTaskLinkService = new SubTaskLinkService();
 
 document.addEventListener('DOMContentLoaded', (e) => {
     // Find create task button ( if it exists) and add event listener
@@ -11,6 +12,82 @@ document.addEventListener('DOMContentLoaded', (e) => {
         })
     }
 })
+
+function SubTaskLinkService() {
+    this.addSubTask = function() {
+        const container = document.getElementById('subTasksContainer');
+        const index = container.children.length;
+
+        const div = document.createElement('div');
+        div.className = 'input-group mb-2';
+        div.innerHTML = `
+        <div class="input-group-text">
+            <input class="form-check-input mt-0" type="checkbox" name="subTasks[${index}].completed">
+        </div>
+        <input type="text" name="subTasks[${index}].name" class="form-control" placeholder="Indtast underopgave...">
+        <button type="button" class="btn btn-danger" onclick="subTaskLinkService.removeSubTask(this)">-</button>`;
+        container.appendChild(div);
+    }
+
+    this.addSubTaskFromView = function () {
+        const container = document.getElementById("subTaskEditContainer");
+        const index = container.children.length;
+
+        const div = document.createElement("div");
+        div.className = "input-group mb-2";
+
+        const inputGroupText = document.createElement("div");
+        inputGroupText.className = "input-group-text";
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.name = `subTasks[${index}].completed`;
+        checkbox.className = "form-check-input mt-0";
+        checkbox.disabled = true
+
+        const input = document.createElement("input");
+        input.type = "text";
+        input.name = `subTasks[${index}].name`;
+        input.className = "form-control editField";
+
+        const removeBtn = document.createElement("button");
+        removeBtn.type = "button";
+        removeBtn.className = "btn btn-danger editField";
+        removeBtn.textContent = "-";
+        removeBtn.addEventListener("click", function () {
+            subTaskLinkService.removeSubTask(removeBtn);
+        });
+
+        inputGroupText.appendChild(checkbox);
+        div.appendChild(inputGroupText);
+        div.appendChild(input);
+        div.appendChild(removeBtn);
+        container.appendChild(div);
+    }
+
+    this.removeSubTask = function(button) {
+        button.parentElement.remove();
+        this.reindexSubTasks();
+    }
+
+    this.reindexSubTasks = function() {
+        const container = document.getElementById('subTasksContainer');
+        const children = container.children;
+
+        for (let i = 0; i < children.length; i++) {
+            const checkbox = children[i].querySelector('input[type="checkbox"]');
+            const textInput = children[i].querySelector('input[type="text"]');
+
+            if (checkbox) {
+                checkbox.name = `subTasks[${i}].completed`;
+            }
+            if (textInput) {
+                textInput.name = `subTasks[${i}].name`;
+            }
+        }
+    }
+
+}
 
 function TaskLinkService() {
     this.addLink = function() {
