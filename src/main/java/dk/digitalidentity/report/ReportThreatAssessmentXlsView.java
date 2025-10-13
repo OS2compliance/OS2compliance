@@ -14,7 +14,6 @@ import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SettingsService;
-import dk.digitalidentity.service.ThreatAssessmentService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.poi.ss.usermodel.CellStyle;
@@ -27,7 +26,6 @@ import org.apache.poi.ss.usermodel.Workbook;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.view.document.AbstractXlsView;
 
-import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -36,10 +34,8 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.report.XlsUtil.createCell;
-import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Component
 public class ReportThreatAssessmentXlsView extends AbstractXlsView {
