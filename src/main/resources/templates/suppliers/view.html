@@ -79,12 +79,12 @@
                                     <table class="col-lg-12">
                                         <thead>
                                         <tr>
-                                            <th style="width: 20%" th:if="${!assetsDirect.isEmpty() || !assetsRelated.isEmpty()}">Navn</th>
-                                            <th style="width: 16%" th:if="${!assetsDirect.isEmpty() || !assetsRelated.isEmpty()}">Ydelse</th>
-                                            <th style="width: 16%" th:if="${!assetsDirect.isEmpty() || !assetsRelated.isEmpty()}">Land</th>
-                                            <th style="width: 16%" th:if="${!assetsDirect.isEmpty() || !assetsRelated.isEmpty()}">Tredjelandsoverførsel</th>
-                                            <th style="width: 16%" th:if="${!assetsDirect.isEmpty() || !assetsRelated.isEmpty()}">Acceptgrundlag</th>
-                                            <th style="width: 16%" th:if="${(!assetsDirect.isEmpty() || !assetsRelated.isEmpty()) && (assetsRelated != null && !assetsRelated.isEmpty())}">Handlinger</th>
+                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Navn</th>
+                                            <th style="width: 16%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Ydelse</th>
+                                            <th style="width: 16%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Land</th>
+                                            <th style="width: 16%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Tredjelandsoverførsel</th>
+                                            <th style="width: 16%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Acceptgrundlag</th>
+                                            <th style="width: 16%" th:if="${(!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()) && (assetsRelated != null && !assetsRelated.isEmpty())}">Handlinger</th>
                                         </tr>
                                         </thead>
                                         <tbody>
