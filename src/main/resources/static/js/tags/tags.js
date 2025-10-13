@@ -33,8 +33,39 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 formatter: (cell, row) => {
                     const id = row.cells[0]['data'];
                     const tag = row.cells[1]['data'];
-                    const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="tags.deleteTag('${id}', '${tag}')"><i class="pli-trash fs-5"></i></button>`;
-                    return gridjs.html(deleteButton);
+
+                    // Create container
+                    const container = document.createElement('div');
+
+                    // Create Edit button
+                    const editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'btn btn-icon btn-outline-light btn-xs me-1';
+                    editBtn.dataset.action = 'edit';
+                    editBtn.dataset.id = id;
+                    editBtn.dataset.tag = tag;
+
+                    const editIcon = document.createElement('i');
+                    editIcon.className = 'pli-pencil fs-5';
+                    editBtn.appendChild(editIcon);
+
+                    // Create Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'btn btn-icon btn-outline-light btn-xs me-1';
+                    deleteBtn.dataset.action = 'delete';
+                    deleteBtn.dataset.id = id;
+                    deleteBtn.dataset.tag = tag;
+
+                    const deleteIcon = document.createElement('i');
+                    deleteIcon.className = 'pli-trash fs-5';
+                    deleteBtn.appendChild(deleteIcon);
+
+                    // Append buttons to container
+                    container.appendChild(editBtn);
+                    container.appendChild(deleteBtn);
+
+                    return gridjs.html(container.outerHTML);
                 }
             }
         ],
@@ -55,6 +86,23 @@ document.addEventListener("DOMContentLoaded", function(event) {
             }
         }
     }).render(document.getElementById("tagsDatatable"));
+
+    document.getElementById("tagsDatatable").addEventListener('click', (e) => {
+        const button = e.target.closest('button[data-action]');
+        if (!button) {
+            return;
+        }
+
+        const action = button.dataset.action;
+        const id = button.dataset.id;
+        const tag = button.dataset.tag;
+
+        if (action === 'edit') {
+            tags.editTag(id, tag);
+        } else if (action === 'delete') {
+            tags.deleteTag(id, tag);
+        }
+    });
 
     initSaveAsExcelButtonWithDefaultGrid('tagsDatatable', 'Tags')
 });
@@ -78,5 +126,13 @@ function TagService () {
                     .catch(error => toastService.error(error));
             }
         });
+    }
+
+    this.editTag = (id, value) => {
+        document.getElementById('editIdentifier').value = id;
+        document.getElementById('redigerNavn').value = value;
+
+        editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
+        editDialog.show();
     }
 }

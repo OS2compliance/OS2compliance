@@ -146,7 +146,7 @@ public class SupplierController {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-            if(!existingSupplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
             existingSupplier.setName(supplier.getName());
@@ -181,7 +181,7 @@ public class SupplierController {
                                                                        @RequestParam("cvr") final String cvr) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		supplier.setDescription(description);
