@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
+import dk.digitalidentity.model.dto.AssetWithMappingsDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
@@ -92,6 +93,7 @@ public class SupplierController {
             .toList();
 
 		// TODO: Use the method from AssetSupplierMappingService
+		List<AssetWithMappingsDTO> assetsWithMappings = assetSupplierMappingService.getSupplierWithAssetMappings(supplier.getId());
 
         model.addAttribute("oversights", assetOversights);
         model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
@@ -100,6 +102,7 @@ public class SupplierController {
         model.addAttribute("documents", documents);
         model.addAttribute("assetsDirect", assetsDirect);
         model.addAttribute("assetsRelated", assetRelated);
+		model.addAttribute("assetsWithMappings", assetsWithMappings);
         model.addAttribute("incidents", incidents);
 		model.addAttribute("contacts", contacts);
 		return "suppliers/view";

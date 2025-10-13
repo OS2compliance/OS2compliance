@@ -291,9 +291,4 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			"WHERE a.id = id)")
 	@Enumerated(EnumType.STRING)
 	private ThreatAssessmentCompletionStatus threatAssessmentCompletionStatus;
-
-	public boolean hasThirdCountryTransfer() {
-		return suppliers.stream()
-				.anyMatch(mapping -> mapping.getThirdCountryTransfer() == ThirdCountryTransfer.YES);
-	}
 }

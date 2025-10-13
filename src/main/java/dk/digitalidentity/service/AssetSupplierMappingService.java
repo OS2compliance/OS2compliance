@@ -3,6 +3,7 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.AssetDao;
 import dk.digitalidentity.dao.AssetSupplierMappingDao;
 import dk.digitalidentity.dao.SupplierDao;
+import dk.digitalidentity.model.dto.AssetWithMappingsDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.Supplier;
@@ -24,7 +25,6 @@ public class AssetSupplierMappingService {
 	private final SupplierDao supplierDao;
 	private final AssetDao assetDao;
 
-	public record AssetWithMappingsDTO(Asset asset, Supplier supplier, String service, ThirdCountryTransfer thirdCountryTransfer, String acceptanceBasis) {}
 	public List<AssetWithMappingsDTO> getSupplierWithAssetMappings(Long supplierId) {
 		Supplier supplier = supplierDao.findById(supplierId).orElse(null);
 		if (supplier == null) {
@@ -49,6 +49,7 @@ public class AssetSupplierMappingService {
 							asset,
 							supplier,
 							mapping.getService(),
+							mapping.getSupplier().getCountry(),
 							mapping.getThirdCountryTransfer(),
 							mapping.getAcceptanceBasis()
 					));
@@ -58,6 +59,7 @@ public class AssetSupplierMappingService {
 				result.add(new AssetWithMappingsDTO(
 						asset,
 						supplier,
+						null,
 						null,
 						null,
 						null
