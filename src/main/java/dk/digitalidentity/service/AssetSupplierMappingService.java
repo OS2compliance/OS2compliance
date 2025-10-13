@@ -7,13 +7,11 @@ import dk.digitalidentity.model.dto.AssetWithMappingsDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.Supplier;
-import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -26,9 +24,13 @@ public class AssetSupplierMappingService {
 	private final AssetDao assetDao;
 
 	public List<AssetWithMappingsDTO> getSupplierWithAssetMappings(Long supplierId) {
+		if (supplierId == null) {
+			return Collections.emptyList();
+		}
+
 		Supplier supplier = supplierDao.findById(supplierId).orElse(null);
 		if (supplier == null) {
-			return null;
+			return Collections.emptyList();
 		}
 
 		List<Asset> assets = assetDao.findBySupplierId(supplierId);

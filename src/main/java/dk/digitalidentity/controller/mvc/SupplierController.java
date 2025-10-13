@@ -92,7 +92,6 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
 
-		// TODO: Use the method from AssetSupplierMappingService
 		List<AssetWithMappingsDTO> assetsWithMappings = assetSupplierMappingService.getSupplierWithAssetMappings(supplier.getId());
 
         model.addAttribute("oversights", assetOversights);

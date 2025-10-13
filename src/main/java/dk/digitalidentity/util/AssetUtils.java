@@ -12,8 +12,10 @@ public class AssetUtils {
 			Asset asset = (Asset) relatable;
 			return asset.getSuppliers().stream()
 					.filter(sp -> {
-						assert asset.getSupplier() != null;
-						return sp.getId() == asset.getSupplier().getId();
+						if (asset.getSupplier() != null) {
+							return sp.getId() == asset.getSupplier().getId();
+						}
+						return false;
 					})
 					.anyMatch(mapping -> mapping.getThirdCountryTransfer() == ThirdCountryTransfer.YES);
 		}
