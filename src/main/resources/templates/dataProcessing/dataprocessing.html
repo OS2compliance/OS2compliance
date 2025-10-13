@@ -117,6 +117,26 @@
                         <input class="form-control" th:value="${dataProcessing.deletionProcedureLink}" name="deletionProcedureLink" hidden>
                     </td>
                 </tr>
+                <tr>
+                    <td>Er der udarbejdet en procedure for brugerstyring</td>
+                    <td>
+                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-8 col-xxl-4">
+                            <select class="form-control form-select editField" name="userManagementProcedure" tabindex="-1" disabled>
+                                <option value=""></option>
+                                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.UserManagementProcedure).values()}"
+                                        th:selected="${dataProcessing.managementProcedure == status}"
+                                        th:value="${status.name}" th:text="${status.message}"></option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Procedure for brugerstyring</td>
+                    <td>
+                        <a class="form-control-static editField" th:href="${dataProcessing.userManagementProcedureLink}" th:text="${dataProcessing.userManagementProcedureLink}" target="_blank"  ></a>
+                        <input class="form-control" th:value="${dataProcessing.userManagementProcedureLink}" name="userManagementProcedureLink" hidden>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>

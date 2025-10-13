@@ -107,7 +107,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
 
 		switch (placeHolder) {
 			case ACTIVITIES -> insertArticle30(paragraph);
-			case DATARESPONSIBLE_SETTINGS -> insertDataresponsibleSettings(paragraph);
+			case DATARESPONSIBLE_SETTINGS -> insertDataResponsibleSettings(paragraph);
 			default -> throw new IllegalArgumentException("Unsupported placeholder: " + placeHolder);
 		}
 	}
@@ -118,7 +118,7 @@ public class Article30Replacer implements PlaceHolderReplacer {
 		}
 	}
 
-	private void insertDataresponsibleSettings(final XWPFParagraph p) {
+	private void insertDataResponsibleSettings(final XWPFParagraph p) {
 
 		Map<String, String> settings = settingsService.getByAssociationAndEditable("report").stream()
 				.collect(Collectors.toMap(Setting::getSettingKey, Setting::getSettingValue));
@@ -431,6 +431,14 @@ public class Article30Replacer implements PlaceHolderReplacer {
             insertStandard(document, cursor,
                 "Link til sletteprocedure: ",
                 nullSafe(() -> register.getDataProcessing().getDeletionProcedureLink(), "")
+            );
+            insertStandard(document, cursor,
+                "Er der udarbejdet en procedure for brugerstyring: ",
+                nullSafe(() -> register.getDataProcessing().getManagementProcedure().getMessage(), "")
+            );
+            insertStandard(document, cursor,
+                "Procedure for brugerstyring: ",
+                nullSafe(() -> register.getDataProcessing().getUserManagementProcedureLink(), "")
             );
         }
     }
