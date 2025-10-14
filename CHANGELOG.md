@@ -18,6 +18,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (https://os2web.atlassian.net/browse/COMPLY-353) (Standarder) Når man opretter et krav står der ”tilhører til” det skal hedde ”tilhører” eller ”gruppe”
 
 ### Fixed
+- (Ad-hoc) Fjern ikke OS2kitos oplysninger fra aktiv når der gemmes
 - (Ad-hoc) Behandlingsansvarlige forsvandt når behandlingsrelation blev gemt, hvor man ikke selv stod som behandlingsansvarlig
 - (Ad-hoc) Statistik overskredne opgaver virkede ikke
 - (Ad-hoc) Tilføjet validering af trusselstype input felt, så der ikke sker server fejl, når man skriver for meget tekst 

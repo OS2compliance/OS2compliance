@@ -500,16 +500,9 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        existingAsset.getManagers().clear();
-        existingAsset.getManagers().addAll(asset.getManagers());
-
         if(!Objects.isNull(asset.getSupplier())) {
             existingAsset.setSupplier(asset.getSupplier());
         }
-		// Add null check because when it's from Kitos the frontend element will be disabled and thus not included in the @ModelAttribute, i.e., be null
-		if (!Objects.isNull(asset.getAiStatus())) {
-			existingAsset.setAiStatus(asset.getAiStatus());
-		}
 		existingAsset.setAssetType(asset.getAssetType());
 		existingAsset.setCriticality(asset.getCriticality());
 		existingAsset.setDescription(asset.getDescription());
@@ -517,16 +510,10 @@ public class AssetsController {
 		existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
 		existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
 		existingAsset.setContractLink(asset.getContractLink());
-		existingAsset.setContractDate(asset.getContractDate());
-		existingAsset.setContractTermination(asset.getContractTermination());
-		existingAsset.setTerminationNotice(asset.getTerminationNotice());
-		existingAsset.setArchive(asset.getArchive());
 		existingAsset.setAssetStatus(asset.getAssetStatus());
 		existingAsset.setAssetCategory(asset.getAssetCategory());
 		existingAsset.setAiRisk(asset.getAiRisk());
-        existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 		existingAsset.setActive(asset.isActive());
-		existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
 		existingAsset.setDepartments(asset.getDepartments());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
@@ -537,6 +524,16 @@ public class AssetsController {
 					existingAsset.getProductLinks().add(link);
 				}
 			}
+			// These fields cannot be changed when the asset is linked to OS2kitos.
+			existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
+			existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
+			existingAsset.getManagers().clear();
+			existingAsset.getManagers().addAll(asset.getManagers());
+			existingAsset.setAiStatus(asset.getAiStatus());
+			existingAsset.setContractDate(asset.getContractDate());
+			existingAsset.setContractTermination(asset.getContractTermination());
+			existingAsset.setTerminationNotice(asset.getTerminationNotice());
+			existingAsset.setArchive(asset.getArchive());
 		}
         eventPublisher.publishEvent(AssetUpdatedEvent.builder()
                 .asset(assetMapper.toEO(existingAsset))
