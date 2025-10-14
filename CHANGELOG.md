@@ -5,6 +5,10 @@ All notable changes to the project MUST be documented in this file.
 The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
+## [2.5.0] - Unreleased
+### Fixex
+- (Ad-hoc) Behandlingsansvarlige forsvandt når behandlingsrelation blev gemt, hvor man ikke selv stod som behandlingsansvarlig
+
 ## [2.4.0] - 2025-09-10
 ### Added
 - (https://os2web.atlassian.net/browse/COMPLY-253) (Risikostyring/Forside) Mulighed for at lave et udtræk af listen med alle risikovurderinger.
