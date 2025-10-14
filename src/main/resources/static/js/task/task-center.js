@@ -145,9 +145,21 @@ function initGrid() {
             {
                 name: "Sidst udført",
                 searchable: {
-                    searchKey: 'lastCompletion',
+                    searchKey: 'lastCompletionDate'
                 },
-                width: '90px'
+                formatter: (cell, row) => {
+                    if (!cell || cell.trim() === '') {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
+                    var dateParts = cell.split('-');
+                    if (dateParts.length === 3) {
+                        var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                        return gridjs.html(`<span>${formattedDate}</span>`);
+                    }
+
+                    return gridjs.html(`<span>${cell}</span>`);
+                }
             },
             {
                 name: "Status",

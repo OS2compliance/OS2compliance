@@ -43,5 +43,5 @@ public class TaskDTO {
 	@ExcludeFromExport
     private Set<AllowedAction> allowedActions;
 	@ExcludeFromExport
-	private LocalDate lastCompletionDate;
+	private String lastCompletionDate;
 }
