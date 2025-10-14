@@ -6,10 +6,14 @@ import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.model.dto.AssetWithMappingsDTO;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetSupplierMapping;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Supplier;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -23,6 +27,7 @@ public class AssetSupplierMappingService {
 	private final AssetSupplierMappingDao assetSupplierMappingDao;
 	private final SupplierDao supplierDao;
 	private final AssetDao assetDao;
+	private final ChoiceService choiceService;
 
 	@Transactional
 	public List<AssetWithMappingsDTO> getSupplierWithAssetMappings(Long supplierId) {
@@ -44,26 +49,36 @@ public class AssetSupplierMappingService {
 
 		List<AssetWithMappingsDTO> result = new ArrayList<>();
 
+		final ChoiceList acceptanceBasisChoices = choiceService.findChoiceList("dp-supplier-accept-list")
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR,
+						"Could not find AcceptanceBasis Choices"));
+
 		for (Asset asset : assets) {
 			List<AssetSupplierMapping> assetMappings = mappingsByAsset.get(asset.getId());
 
 			if (assetMappings != null && !assetMappings.isEmpty()) {
 				for (AssetSupplierMapping mapping : assetMappings) {
+					String acceptanceBasisDisplay = acceptanceBasisChoices.getValues().stream()
+							.filter(choiceValue -> choiceValue.getIdentifier().equals(mapping.getAcceptanceBasis()))
+							.findFirst()
+							.map(ChoiceValue::getCaption)
+							.orElse(mapping.getAcceptanceBasis());
+
 					result.add(new AssetWithMappingsDTO(
-							asset,
-							supplier,
+							asset.getId(),
+							asset.getName(),
+							supplier.getId(),
 							mapping.getService(),
-							mapping.getSupplier().getCountry(),
 							mapping.getThirdCountryTransfer(),
-							mapping.getAcceptanceBasis()
+							acceptanceBasisDisplay
 					));
 				}
 			}
 			else {
 				result.add(new AssetWithMappingsDTO(
-						asset,
-						supplier,
-						null,
+						asset.getId(),
+						asset.getName(),
+						supplier.getId(),
 						null,
 						null,
 						null

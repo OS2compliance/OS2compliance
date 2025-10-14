@@ -40,8 +40,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -78,10 +81,17 @@ public class SupplierController {
 				.collect(Collectors.toList());
 
 		List<AssetWithMappingsDTO> assetsWithMappings = assetSupplierMappingService.getSupplierWithAssetMappings(supplier.getId());
-		final List<Relatable> assetRelated = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
-		final List<Relatable> documents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
-		final List<Relatable> tasks = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
-		final List<Relatable> incidents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.INCIDENT).toList();
+
+		Map<RelationType, List<Relatable>> relatedByType = relationService.findAllRelatedTo(supplier)
+				.stream()
+				.filter(r -> Set.of(RelationType.ASSET, RelationType.DOCUMENT, RelationType.TASK, RelationType.INCIDENT)
+						.contains(r.getRelationType()))
+				.collect(Collectors.groupingBy(Relatable::getRelationType));
+
+		final List<Relatable> assetRelated = relatedByType.getOrDefault(RelationType.ASSET, Collections.emptyList());
+		final List<Relatable> documents = relatedByType.getOrDefault(RelationType.DOCUMENT, Collections.emptyList());
+		final List<Relatable> tasks = relatedByType.getOrDefault(RelationType.TASK, Collections.emptyList());
+		final List<Relatable> incidents = relatedByType.getOrDefault(RelationType.INCIDENT, Collections.emptyList());
 
 		final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
