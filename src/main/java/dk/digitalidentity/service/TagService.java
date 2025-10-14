@@ -47,4 +47,13 @@ public class TagService {
         return tagDao.save(tag);
     }
 
+	/**
+	 * Updates an existing Tag
+	 * @param tag The Tag Object we wish to update
+	 * @return An updated Tag Object
+	 */
+	public Tag update (Tag tag) {
+		return tagDao.save(tag);
+	}
+
 }

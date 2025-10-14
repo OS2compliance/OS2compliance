@@ -37,6 +37,8 @@ public class DataProcessingService {
         dataProcessing.setElaboration(body.getElaboration());
         dataProcessing.setTypesOfPersonalInformationFreetext(body.getTypesOfPersonalInformationFreetext());
 		dataProcessing.setDeletionAppliesToAll(body.isDeletionAppliesToAll());
+		dataProcessing.setManagementProcedure(body.getUserManagementProcedure());
+		dataProcessing.setUserManagementProcedureLink(body.getUserManagementProcedureLink());
 
         if (body.getPersonCategoriesRegistered() != null) {
             dataProcessing.getRegisteredCategories().clear();
