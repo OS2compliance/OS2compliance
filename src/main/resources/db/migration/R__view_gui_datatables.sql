@@ -12,7 +12,8 @@ FROM
     suppliers s
     LEFT JOIN assets a ON a.supplier_id = s.id
     LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
-WHERE s.deleted = false;
+WHERE s.deleted = false
+GROUP BY a.id;
 
 CREATE OR REPLACE
 VIEW view_gridjs_tasks AS
