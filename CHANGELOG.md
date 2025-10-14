@@ -6,8 +6,22 @@ The format can be based on [Keep a Changelog](http://keepachangelog.com/)
 and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 
 ## [2.5.0] - Unreleased
-### Fixex
+### Added
+- (https://os2web.atlassian.net/browse/COMPLY-330) (Aktiver/Databehandling) Nyt felt til brugerstyring
+- (https://os2web.atlassian.net/browse/COMPLY-279) (Rapporter/Årshjul) Rapport over årshjul (i praksis var det bare status der manglede for rapporten)
+- (https://os2web.atlassian.net/browse/COMPLY-314) (Administrativt) Tags - Mulighed for at ændre/rette navn på tag efter oprettelse
+- (https://os2web.atlassian.net/browse/COMPLY-242) (Risikostyring/Risikovurderingsrapport) Tilføjelser til risikovurderingsrapporten
+- (https://os2web.atlassian.net/browse/COMPLY-352) (Standarder) Når man opretter et krav skal tallet i gruppenavnet være med ved ”tilhører til”
+
+### Changed
+- (https://os2web.atlassian.net/browse/COMPLY-351) (Risikostyring/Trusselsbillede) Navnet "Trusselsbillede" skal ændres til "Risikobillede"
+- (https://os2web.atlassian.net/browse/COMPLY-353) (Standarder) Når man opretter et krav står der ”tilhører til” det skal hedde ”tilhører” eller ”gruppe”
+
+### Fixed
 - (Ad-hoc) Behandlingsansvarlige forsvandt når behandlingsrelation blev gemt, hvor man ikke selv stod som behandlingsansvarlig
+- (Ad-hoc) Statistik overskredne opgaver virkede ikke
+- (Ad-hoc) Tilføjet validering af trusselstype input felt, så der ikke sker server fejl, når man skriver for meget tekst 
+- (Ad-hoc) Brug residual risiko i risk matrixen på dashboard
 
 ## [2.4.0] - 2025-09-10
 ### Added
