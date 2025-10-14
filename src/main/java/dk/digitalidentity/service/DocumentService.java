@@ -93,6 +93,7 @@ public class DocumentService {
                 .anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
             ).findFirst().map(Task.class::cast).orElse(null);
         if (task != null) {
+			task.setIncludeInReport(includeInYearWheel);
             if (document.getNextRevision() != null) {
                 task.setNextDeadline(document.getNextRevision());
             } else {
