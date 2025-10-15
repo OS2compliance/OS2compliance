@@ -6,19 +6,25 @@ import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.mapping.IncidentMapper;
 import dk.digitalidentity.model.dto.IncidentDTO;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.DPIA;
+import dk.digitalidentity.model.entity.DataProcessing;
+import dk.digitalidentity.model.entity.DataProcessingCategoriesRegistered;
 import dk.digitalidentity.model.entity.Incident;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.model.entity.StandardTemplate;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
 import dk.digitalidentity.report.ReportNSISXlsView;
+import dk.digitalidentity.report.ReportThreatAssessmentXlsView;
 import dk.digitalidentity.report.riskimage.RiskImageService;
 import dk.digitalidentity.report.riskimage.RiskImageView;
 import dk.digitalidentity.report.riskimage.dto.ThreatRow;
@@ -28,10 +34,12 @@ import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.DPIAService;
 import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelationService;
+import dk.digitalidentity.service.SettingsService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.ThreatAssessmentService;
 import dk.digitalidentity.service.UserService;
@@ -66,6 +74,8 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.zip.ZipEntry;
@@ -76,6 +86,7 @@ import static dk.digitalidentity.Constants.ISO27001_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.RISK_ASSESSMENT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.ISO27002_REPORT_TEMPLATE_DOC;
 import static dk.digitalidentity.Constants.STANDARD_TEMPLATE_DOC;
+import static dk.digitalidentity.integration.kitos.KitosConstants.*;
 import static dk.digitalidentity.report.DocxService.PARAM_RISK_ASSESSMENT_ID;
 import static java.time.temporal.TemporalAdjusters.lastDayOfYear;
 
@@ -99,6 +110,8 @@ public class ReportController {
 	private final RegisterService registerService;
 	private final SystemOwnerOverviewService systemOwnerOverviewService;
 	private final RiskImageService riskImageService;
+	private final SettingsService settingsService;
+	private final ChoiceService choiceService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -177,6 +190,86 @@ public class ReportController {
 
         return new ModelAndView(new IncidentsXlsView(), model);
     }
+
+
+	@RequireReadOwnerOnly
+	@GetMapping("/threat-assessment/{id}/excel")
+	public ModelAndView exportThreatAssessmentToExcel(final HttpServletResponse response, @PathVariable("id") final Long threatAssessmentId) {
+		// Fetch the ThreatAssessment
+		ThreatAssessment threatAssessment = threatAssessmentService.findById(threatAssessmentId).orElse(null);
+
+		if (threatAssessment == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ThreatAssessment not found");
+		}
+
+		response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+		response.setHeader("Content-Disposition", "attachment; filename=\"threat_assessment_" + threatAssessmentId + ".xlsx\"");
+
+		final Map<String, Object> model = new HashMap<>();
+		model.put("threatAssessment", threatAssessment);
+		List<Relatable> relations = relationService.findAllRelatedTo(threatAssessment);
+		model.put("relations", relations);
+		Setting customOwnerSetting = settingsService.findBySettingKey(KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME);
+		Setting customResponsibleSetting = settingsService.findBySettingKey(KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
+		Setting customOperationSetting = settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
+		model.put("customOwnerName", customOwnerSetting != null ? customOwnerSetting.getSettingValue() : null);
+		model.put("customResponsibleName", customResponsibleSetting != null ? customResponsibleSetting.getSettingValue() : null);
+		model.put("customOperationName", customResponsibleSetting != null ? customOperationSetting.getSettingValue() : null);
+		Asset riskAsset = relations.stream()
+				.filter(r -> r.getRelationType() == RelationType.ASSET)
+				.map(Asset.class::cast)
+				.findFirst().orElse(null);
+		model.put("riskAsset", riskAsset);
+		Register riskRegister = relations.stream()
+				.filter(r -> r.getRelationType() == RelationType.REGISTER)
+				.map(Register.class::cast)
+				.findFirst().orElse(null);
+		model.put("riskRegister", riskRegister);
+		if (riskAsset != null) {
+			model.put("dataAccessPersons", Optional.ofNullable(riskAsset.getDataProcessing())
+					.map(DataProcessing::getAccessWhoIdentifiers)
+					.map(identifiers -> identifiers.stream()
+							.map(identifier -> {
+								Optional<ChoiceValue> value = choiceService.getValue(identifier);
+								return value.isPresent() ? value.get().getCaption() : "Ikke udfyldt";
+							})
+							.collect(Collectors.joining(", ")))
+					.orElse(""));
+			model.put("accessCount", Optional.ofNullable(riskAsset.getDataProcessing())
+					.map(DataProcessing::getAccessCountIdentifier)
+					.flatMap(choiceService::getValue)
+					.map(ChoiceValue::getCaption)
+					.orElse("0"));
+
+			model.put("dataCategories", Optional.ofNullable(riskAsset.getDataProcessing())
+					.map(DataProcessing::getRegisteredCategories)
+					.map(this::buildDataCategoriesString)
+					.orElse(""));
+		}
+		if (riskRegister != null) {
+			model.put("dataAccessPersons", Optional.ofNullable(riskRegister.getDataProcessing())
+					.map(DataProcessing::getAccessWhoIdentifiers)
+					.map(identifiers -> identifiers.stream()
+							.map(identifier -> {
+								Optional<ChoiceValue> value = choiceService.getValue(identifier);
+								return value.isPresent() ? value.get().getCaption() : "Ikke udfyldt";
+							})
+							.collect(Collectors.joining(", ")))
+					.orElse(""));
+
+			model.put("accessCount", Optional.ofNullable(riskRegister.getDataProcessing())
+					.map(DataProcessing::getAccessCountIdentifier)
+					.flatMap(choiceService::getValue)
+					.map(ChoiceValue::getCaption)
+					.orElse(""));
+
+			model.put("dataCategories", Optional.ofNullable(riskRegister.getDataProcessing())
+					.map(DataProcessing::getRegisteredCategories)
+					.map(categories -> buildDataCategoriesString(categories))
+					.orElse(""));
+		}
+		return new ModelAndView(new ReportThreatAssessmentXlsView(), model);
+	}
 
 	@RequireReadOwnerOnly
     @GetMapping("tags")
@@ -453,5 +546,30 @@ public class ReportController {
             log.error("Unable to generate document. ", e);
         }
     }
+
+	private String buildDataCategoriesString(List<DataProcessingCategoriesRegistered> registeredCategories) {
+		if (registeredCategories == null) {
+			return "";
+		}
+
+		return registeredCategories.stream()
+				.map(cat -> {
+					Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
+					if (title.isEmpty()) {
+						return null;
+					}
+
+					List<String> types = Optional.ofNullable(cat.getPersonCategoriesInformationIdentifiers())
+							.map(identifiers -> identifiers.stream()
+									.map(type -> choiceService.getValue(type).map(ChoiceValue::getCaption).orElse(null))
+									.filter(Objects::nonNull)
+									.toList())
+							.orElse(List.of());
+
+					return title.get().getCaption() + ": " + String.join(", ", types);
+				})
+				.filter(Objects::nonNull)
+				.collect(Collectors.joining(" : "));
+	}
 
 }

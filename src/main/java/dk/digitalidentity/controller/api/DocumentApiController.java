@@ -118,7 +118,7 @@ public class DocumentApiController {
         document.setDocumentVersion(documentUpdateEO.getDocumentVersion());
         document.setRevisionInterval(nullSafe(() -> DocumentRevisionInterval.valueOf(documentUpdateEO.getRevisionInterval().name())));
         document.setNextRevision(documentUpdateEO.getNextRevision());
-        documentService.update(document);
+        documentService.update(document, documentUpdateEO.isIncludeInYearWheel());
     }
 
     @Operation(summary = "Delete a document", description = "Deletes a document")
