@@ -137,7 +137,7 @@ public class AssetApiController {
         final ChoiceList assetTypeChoiceList = choiceService.findChoiceList("asset-type")
             .orElseThrow( () ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "No asset types found"));
 		final ChoiceList supervisoryModelChoiceList = choiceService.findChoiceList("supervision-model")
-				.orElseThrow( () ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "No asset types found"));
+				.orElseThrow( () ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "No supervision models found"));
         final ChoiceValue assetType = assetTypeChoiceList.getValues().stream()
             .filter(value -> value.getIdentifier().equals(assetUpdateEO.getAssetType().getIdentifier()) )
             .findAny()
