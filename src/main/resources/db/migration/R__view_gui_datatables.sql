@@ -35,6 +35,7 @@ SELECT
           WHEN ts.task_result = 'CRITICAL_ERROR' THEN 3
         END) as task_result_order,
     (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
+    ts.completed as last_completion_date,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
     GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tags
 FROM tasks t
