@@ -36,20 +36,19 @@
                         </select>
                     </td>
                 </tr>
-                <tr><td colspan="2"><b>Databehandleraftale</b></td></tr>
-                <tr>
+                <tr th:if="${asset != null}"><td colspan="2"><b>Databehandleraftale</b></td></tr>
+                <tr th:if="${asset != null}">
                     <td>Er der indgået en databehandleraftale</td>
                     <td>
                         <select class="form-control form-select editField" th:value="${asset?.dataProcessingAgreementStatus}" name="dataProcessingAgreementStatus" tabindex="-1" disabled th:if="${asset != null}">
                             <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}" th:value="${status.name}" th:text="${status.message}" th:selected="${asset.dataProcessingAgreementStatus == status}"></option>
                         </select>
-                        <span th:if="${asset == null}">-</span>
                     </td>
                 </tr>
-                <tr>
+                <tr th:if="${asset != null}">
                     <td>Dato</td>
                     <td>
-                        <div th:if="${asset != null}">
+                        <div>
                             <div class="input-group" th:hidden="${asset.dataProcessingAgreementDate == null}">
                                 <input id="dataProcessingAgreementDateInput"
                                        type="text"
@@ -65,18 +64,18 @@
                         </div>
                     </td>
                 </tr>
-                <tr>
+                <tr th:if="${asset != null}">
                     <td>Link</td>
                     <td>
-                        <div th:if="${asset != null}">
+                        <div>
                             <a class="form-control-static editField" th:href="${asset.dataProcessingAgreementLink}" th:text="${asset.dataProcessingAgreementLink}" target="_blank" rel="noopener"></a>
                             <input class="form-control editField" th:value="${asset.dataProcessingAgreementLink}" name="dataProcessingAgreementLink" hidden>
                         </div>
                     </td>
                 </tr>
-                <tr>
+                <tr th:if="${asset != null}">
                     <td>Bemærkninger</td>
-                    <td th:if="${asset != null}">
+                    <td>
                         <textarea rows="2" class="editField form-control" th:text="${asset.dataProcessing?.remarks}" name="dataProcessingAgreementRemarks" disabled></textarea>
                     </td>
                 </tr>
