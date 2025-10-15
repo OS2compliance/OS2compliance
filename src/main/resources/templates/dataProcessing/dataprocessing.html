@@ -66,18 +66,18 @@
                     </td>
                 </tr>
                 <tr>
-                    <td>Bemærkninger</td>
-                    <td th:if="${asset != null}">
-                        <textarea rows="2" class="editField form-control" th:text="${asset.dataProcessing?.remarks}" name="dataProcessingAgreementRemarks" disabled></textarea>
-                    </td>
-                </tr>
-                <tr>
                     <td>Link</td>
                     <td>
                         <div th:if="${asset != null}">
                             <a class="form-control-static editField" th:href="${asset.dataProcessingAgreementLink}" th:text="${asset.dataProcessingAgreementLink}" target="_blank" rel="noopener"></a>
                             <input class="form-control editField" th:value="${asset.dataProcessingAgreementLink}" name="dataProcessingAgreementLink" hidden>
                         </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Bemærkninger</td>
+                    <td th:if="${asset != null}">
+                        <textarea rows="2" class="editField form-control" th:text="${asset.dataProcessing?.remarks}" name="dataProcessingAgreementRemarks" disabled></textarea>
                     </td>
                 </tr>
                 <tr><td colspan="2"><b>Personoplysninger</b></td></tr>
