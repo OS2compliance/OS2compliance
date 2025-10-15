@@ -101,6 +101,7 @@ import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -409,24 +410,43 @@ public class AssetsController {
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-        dataProcessingService.update(asset.getDataProcessing(), body);
-        final List<DataProcessingCategoriesRegistered> registeredCategories = asset.getDataProcessing().getRegisteredCategories();
-        if (asset.getTia().getRegisteredCategories() == null && registeredCategories != null) {
-            asset.getTia().setRegisteredCategories(registeredCategories.stream()
-                .map(DataProcessingCategoriesRegistered::getPersonCategoriesRegisteredIdentifier)
-                .collect(Collectors.toSet()));
-        }
-        if (asset.getTia().getInformationTypes() == null && registeredCategories != null) {
-            asset.getTia().setInformationTypes(registeredCategories.stream()
-                .flatMap(d -> d.getPersonCategoriesInformationIdentifiers().stream())
-                .collect(Collectors.toSet()));
-        }
+		if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		// Update DataProcessing
+		dataProcessingService.update(asset.getDataProcessing(), body);
+
+		// Update Asset fields
+		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
+
+		// Parse date with proper format and null handling
+		if (body.getDataProcessingAgreementDate() != null && !body.getDataProcessingAgreementDate().trim().isEmpty()) {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
+			String dateStr = body.getDataProcessingAgreementDate().trim();
+			// Remove any leading commas or whitespace
+			dateStr = dateStr.replaceFirst("^[,\\s]+", "");
+			asset.setDataProcessingAgreementDate(LocalDate.parse(dateStr, formatter));
+		} else {
+			asset.setDataProcessingAgreementDate(null);
+		}
+
+		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
+
+		final List<DataProcessingCategoriesRegistered> registeredCategories = asset.getDataProcessing().getRegisteredCategories();
+		if (asset.getTia().getRegisteredCategories() == null && registeredCategories != null) {
+			asset.getTia().setRegisteredCategories(registeredCategories.stream()
+					.map(DataProcessingCategoriesRegistered::getPersonCategoriesRegisteredIdentifier)
+					.collect(Collectors.toSet()));
+		}
+		if (asset.getTia().getInformationTypes() == null && registeredCategories != null) {
+			asset.getTia().setInformationTypes(registeredCategories.stream()
+					.flatMap(d -> d.getPersonCategoriesInformationIdentifiers().stream())
+					.collect(Collectors.toSet()));
+		}
+
 		return "redirect:/assets/" + body.getId();
 	}
-
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("measures")

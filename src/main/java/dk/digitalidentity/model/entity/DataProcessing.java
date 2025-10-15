@@ -75,4 +75,7 @@ public class DataProcessing {
 	@Column
 	private String userManagementProcedureLink;
 
+	@Column
+	private String remarks;
+
 }

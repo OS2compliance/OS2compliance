@@ -14,9 +14,6 @@
                     <table class="table table-striped" style="overflow: visible">
                         <thead>
                             <tr>
-                                <th class="col-lg-1">Er der indgået en databehandleraftale</th>
-                                <th class="col-lg-1">Dato</th>
-                                <th class="col-lg-2">Link</th>
                                 <th class="col-lg-2">Ansvarlig</th>
                                 <th class="col-lg-2">Valg af tilsynsmodel</th>
                                 <th class="col-lg-2">Hyppighed</th>
@@ -25,24 +22,6 @@
                         </thead>
                         <tbody>
                             <tr class="align-middle">
-                                <td>
-                                    <select class="form-control form-select editField" th:field="*{dataProcessingAgreementStatus}" tabindex="-1" disabled>
-                                        <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}" th:value="${status.name}" th:text="${status.message}"></option>
-                                    </select>
-                                </td>
-                                <td>
-                                    <div class="input-group" th:hidden="*{dataProcessingAgreementDate == null}">
-                                        <input id="dataProcessingAgreementDateInput" type="text" class="form-control editField datepicker" th:field="*{dataProcessingAgreementDate}" disabled>
-                                        <button id="dataProcessingAgreementDateBtn" class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;" disabled>
-                                            <i class="pli-calendar-4 fs-5"></i>
-                                        </button>
-                                    </div>
-                                    <div class="form-control-static" th:hidden="*{dataProcessingAgreementDate != null}">Ingen</div>
-                                </td>
-                                <td>
-                                    <a class="form-control-static editField" th:href="*{dataProcessingAgreementLink}" th:text="*{dataProcessingAgreementLink}" target="_blank" rel="noopener" ></a>
-                                    <input class="form-control" th:field="*{dataProcessingAgreementLink}" hidden>
-                                </td>
                                 <td>
                                     <select class="form-control form-select choices__input editField" th:field="*{oversightResponsibleUser}" data-trigger="" id="assetOversightUserSelect" hidden="" disabled>
                                         <option th:value="${asset.oversightResponsibleUser?.uuid}" th:text="'(' + ${asset.oversightResponsibleUser?.userId} + ') ' + ${asset.oversightResponsibleUser?.name}" th:if="${asset.oversightResponsibleUser != null}"></option>
