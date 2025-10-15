@@ -50,6 +50,12 @@
                 </tr>
 
                 <tr>
+                    <td>Note</td>
+                    <td>
+                        <textarea rows="2" class="editField form-control" th:field="${dataProcessing.typesOfPersonalInformationFreetext}" disabled></textarea>
+                    </td>
+                </tr>
+                <tr>
                     <td colspan="2">
                         <div class="row">
                             <div class="col-sm-6 col-lg-4">
@@ -57,13 +63,6 @@
                             </div>
                             <div class="col-sm-6 col-lg-8">
                                 <p>Typer af personoplysninger</p>
-                            </div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-6 col-lg-4">
-                            </div>
-                            <div class="col-sm-6 col-lg-8">
-                                <textarea rows=5 class="editField form-control" th:field="${dataProcessing.typesOfPersonalInformationFreetext}" disabled></textarea>
                             </div>
                         </div>
                         <div class="categoriesTarget"></div>
