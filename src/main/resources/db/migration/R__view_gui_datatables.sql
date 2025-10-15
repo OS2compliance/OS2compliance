@@ -370,33 +370,37 @@ WHERE a.deleted = false
 GROUP BY a.id;
 
 CREATE OR REPLACE
-VIEW view_gridjs_dbs_oversights AS
+    VIEW view_gridjs_dbs_oversights AS
 SELECT
     a.id,
     a.name,
     s.name as supplier,
     s.id as supplier_id,
-    a.supervisory_model,
+    cv_supervisory.caption as supervisory_model,
     GROUP_CONCAT(da.id ORDER BY da.id SEPARATOR ',') AS dbs_assets,
     GROUP_CONCAT(da.name ORDER BY da.name SEPARATOR ',') AS dbs_asset_names,
     a.oversight_responsible_uuid,
-    ao.creation_date as last_inspection,
-    ao.status as last_inspection_status,
+    latest_ao.creation_date as last_inspection,
+    latest_ao.status as last_inspection_status,
     IF(tl.id is null, t.id, null) AS outstanding_task_id,
-    concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ao.localized_enums, '')) as localized_enums
+    concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(latest_ao.localized_enums, '')) as localized_enums
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
-    LEFT JOIN assets_oversight ao on ao.asset_id = a.id and ao.id = (
-    	select ao2.id from assets_oversight ao2
-        where ao2.asset_id = a.id
-        order by ao2.creation_date desc
-        limit 1
-    )
+    LEFT JOIN (
+SELECT ao.*
+    FROM assets_oversight ao
+             INNER JOIN (
+        SELECT asset_id, MAX(creation_date) as max_date
+        FROM assets_oversight
+        GROUP BY asset_id
+    ) ao_max ON ao.asset_id = ao_max.asset_id AND ao.creation_date = ao_max.max_date
+) latest_ao ON latest_ao.asset_id = a.id
+    LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = latest_ao.supervision_model
     LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
     LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id
     LEFT JOIN relations r1 on ((r1.relation_a_id = da.id OR r1.relation_b_id = da.id) AND (r1.relation_a_type = 'TASK' OR r1.relation_b_type = 'TASK'))
-    left join tasks t on r1.relation_a_id = t.id or r1.relation_b_id = t.id
-    left join task_logs tl on tl.task_id = t.id 
+    LEFT JOIN tasks t on r1.relation_a_id = t.id or r1.relation_b_id = t.id
+    LEFT JOIN task_logs tl on tl.task_id = t.id
 WHERE a.deleted = false
 GROUP BY a.id;
 

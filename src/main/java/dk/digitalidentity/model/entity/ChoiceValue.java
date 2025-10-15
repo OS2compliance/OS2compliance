@@ -63,7 +63,18 @@ public class ChoiceValue {
     @Builder.Default
     private List<Asset> assetsWithType = new ArrayList<>();
 
-    @Override
+	@JsonIgnore
+	@OneToMany(mappedBy = "supervisoryModel")
+	@Builder.Default
+	private List<Asset> assetsWithSupervisoryModel = new ArrayList<>();
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "supervisionModel")
+	@Builder.Default
+	private List<AssetOversight> assetOversightsWithSupervisionModel = new ArrayList<>();
+
+
+	@Override
     public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

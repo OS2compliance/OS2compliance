@@ -21,7 +21,7 @@ public interface DBSOversightMapper {
                 .name(oversightGrid.getName())
                 .supplier(nullSafe(() -> oversightGrid.getSupplier()))
                 .supplierId(nullSafe(() -> oversightGrid.getSupplierId()))
-                .supervisoryModel(nullSafe(() -> oversightGrid.getSupervisoryModel().getMessage()))
+                .supervisoryModel(nullSafe(() -> oversightGrid.getSupervisoryModel()))
                 .dbsAssets(nullSafe( () -> oversightGrid.getDbsAssets().stream().map(a -> DBSAssetDTO.builder().id(a.getId()).name(a.getName()).build()).toList()))
                 .oversightResponsible(nullSafe(()-> "(" + oversightGrid.getOversightResponsible().getUserId() + ") " + oversightGrid.getOversightResponsible().getName()))
                 .lastInspection(oversightGrid.getLastInspection())
