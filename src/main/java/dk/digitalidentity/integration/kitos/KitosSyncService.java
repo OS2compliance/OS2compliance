@@ -161,6 +161,7 @@ public class KitosSyncService {
         if (!itContractResponseDTO.getGeneral().getValidity().getValid()) {
             return;
         }
+		findOrCreateSupplier(itContractResponseDTO).ifPresent(asset::setSupplier);
 
 		asset.setTerminationNotice(
 				nullSafe(() -> itContractResponseDTO.getTermination().getTerms().getNoticePeriodMonths().getName())
@@ -336,7 +337,18 @@ public class KitosSyncService {
         }
     }
 
-    private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
+	private Optional<Supplier> findOrCreateSupplier(final ItContractResponseDTO responseDTO) {
+		if (responseDTO.getSupplier().getOrganization() == null) {
+			return Optional.empty();
+		}
+		if (validCvr(responseDTO.getSupplier().getOrganization().getCvr())) {
+			return supplierService.findByCvr(responseDTO.getSupplier().getOrganization().getCvr());
+		} else {
+			return supplierService.findByName(responseDTO.getSupplier().getOrganization().getName());
+		}
+	}
+
+	private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
         assert responseDTO.getRightsHolder() != null;
         final Supplier supplier = new Supplier();
         supplier.setCreatedBy(responseDTO.getCreatedBy().getName());
