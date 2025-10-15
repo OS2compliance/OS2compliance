@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="DA">
 <body>
-<div th:fragment="dataProcessing(dbChoices, dataProcessing, primary)" class="row"
+<div th:fragment="dataProcessing(dbChoices, dataProcessing, primary, asset)" class="row"
      th:id="${'dpForm'+dataProcessing.id}">
     <!--@thymesVar id="dataProcessing" type="dk.digitalidentity.model.entity.DataProcessing"-->
     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
@@ -34,6 +34,41 @@
                                     th:selected="${dataProcessing.accessCountIdentifier == choice.identifier}"
                                     th:text="${choice.caption + ' ' + (choice.description ?: '')}"></option>
                         </select>
+                    </td>
+                </tr>
+                <tr><td colspan="2"><b>Databehandleraftale</b></td></tr>
+                <tr>
+                    <td>Er der indgået en databehandleraftale</td>
+                    <td>
+                        <select class="form-control form-select editField" th:field="${asset.dataProcessingAgreementStatus}" tabindex="-1" disabled th:if="${asset != null}">
+                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}" th:value="${status.name}" th:text="${status.message}"></option>
+                        </select>
+                        <span th:if="${asset == null}">-</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Dato</td>
+                    <td>
+                        <div th:if="${asset != null}">
+                            <div class="input-group" th:hidden="${asset.dataProcessingAgreementDate == null}">
+                                <input id="dataProcessingAgreementDateInput" type="text" class="form-control editField datepicker" th:value="${asset.dataProcessingAgreementDate}" name="dataProcessingAgreementDate" disabled>
+                                <button id="dataProcessingAgreementDateBtn" class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;" disabled>
+                                    <i class="pli-calendar-4 fs-5"></i>
+                                </button>
+                            </div>
+                            <div class="form-control-static" th:hidden="${asset.dataProcessingAgreementDate != null}">Ingen</div>
+                        </div>
+                        <span th:if="${asset == null}">-</span>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Link</td>
+                    <td>
+                        <div th:if="${asset != null}">
+                            <a class="form-control-static editField" th:href="${asset.dataProcessingAgreementLink}" th:text="${asset.dataProcessingAgreementLink}" target="_blank" rel="noopener"></a>
+                            <input class="form-control" th:value="${asset.dataProcessingAgreementLink}" name="dataProcessingAgreementLink" hidden>
+                        </div>
+                        <span th:if="${asset == null}">-</span>
                     </td>
                 </tr>
                 <tr><td colspan="2"><b>Personoplysninger</b></td></tr>
