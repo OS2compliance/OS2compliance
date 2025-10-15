@@ -569,7 +569,7 @@ public class ReportController {
 					return title.get().getCaption() + ": " + String.join(", ", types);
 				})
 				.filter(Objects::nonNull)
-				.collect(Collectors.joining(" | "));
+				.collect(Collectors.joining(" : "));
 	}
 
 }
