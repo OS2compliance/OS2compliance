@@ -414,17 +414,14 @@ public class AssetsController {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-		// Update DataProcessing
 		dataProcessingService.update(asset.getDataProcessing(), body);
 
-		// Update Asset fields
 		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
 
 		// Parse date with proper format and null handling
 		if (body.getDataProcessingAgreementDate() != null && !body.getDataProcessingAgreementDate().trim().isEmpty()) {
 			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
 			String dateStr = body.getDataProcessingAgreementDate().trim();
-			// Remove any leading commas or whitespace
 			dateStr = dateStr.replaceFirst("^[,\\s]+", "");
 			asset.setDataProcessingAgreementDate(LocalDate.parse(dateStr, formatter));
 		} else {
