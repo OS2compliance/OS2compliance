@@ -20,7 +20,8 @@
                         <h1 class="page-title mb-0 mt-2 mb-2" th:text="${template.name}"></h1>
                     </div>
                     <div class="align-self-center d-inline-flex gap-2 mb-2">
-                        <a id="exportStandardToExcel" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
+                        <a id="exportStandardToWord" th:href="@{/reports/word(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv standard</a>
+                        <a th:if="${template.identifier == 'iso27002_2022' || template.identifier == 'iso27002_2017'}" id="exportStandardToExcel" th:href="@{/reports/sheet(identifier=${template.identifier})}" type="button" class="btn btn-success btn-lg hstack gap-2"><i class="ti-printer"></i>Udskriv SoA</a>
                         <div th:if="${template.standardTemplateSections != null && !template.standardTemplateSections.isEmpty()}" th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='createRequirementButton', text='Ny krav', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/pageTopButton :: infoButtonWithDataId(id='addHeaderButton', text='Ny gruppe', dataId=${template.identifier}, iconClass='ti-plus')}"></div>
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>

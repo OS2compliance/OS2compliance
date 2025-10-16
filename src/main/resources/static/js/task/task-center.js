@@ -143,6 +143,25 @@ function initGrid() {
                 hidden: true,
             },
             {
+                name: "Sidst udført",
+                searchable: {
+                    searchKey: 'lastCompletionDate'
+                },
+                formatter: (cell, row) => {
+                    if (!cell || cell.trim() === '') {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
+                    var dateParts = cell.split('-');
+                    if (dateParts.length === 3) {
+                        var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                        return gridjs.html(`<span>${formattedDate}</span>`);
+                    }
+
+                    return gridjs.html(`<span>${cell}</span>`);
+                }
+            },
+            {
                 name: "Status",
                 searchable: {
                     sortKey: 'completed'
@@ -207,7 +226,7 @@ function initGrid() {
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType,
                     task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
-                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed, task.allowedActions ]
+                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions ]
             ),
             total: data => data.totalCount
         },
