@@ -73,10 +73,11 @@ SELECT
           WHEN ta.assessment = 'RED' THEN 5
         END) as risk_order,
     concat(COALESCE(r.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
-    r.status,
-    (CASE WHEN r.status = 'NOT_STARTED' THEN 1
-          WHEN r.status = 'IN_PROGRESS' THEN 2
-          WHEN r.status = 'READY' THEN 3
+    cv_status.caption as status,
+    (CASE
+         WHEN cv_status.identifier = 'register-status-not-started-123456' THEN 1
+         WHEN cv_status.identifier = 'register-status-in-progress-123456' THEN 2
+         WHEN cv_status.identifier = 'register-status-ready-123456' THEN 3
         END) as status_order,
     (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count,
     pr.prop_value as asset_assessment,
@@ -87,6 +88,7 @@ SELECT
           WHEN pr.prop_value = 'RED' THEN 5
         END) as asset_assessment_order
 FROM registers r
+LEFT JOIN choice_values cv_status ON cv_status.id = r.status
 LEFT JOIN consequence_assessments ca on ca.register_id = r.id
 LEFT JOIN threat_assessments ta ON ta.id = (
     SELECT MAX(tb.id) FROM threat_assessments tb

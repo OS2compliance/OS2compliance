@@ -2,6 +2,7 @@ package dk.digitalidentity.bootstrap;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ApiClientDao;
+import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.OrganisationUnitDao;
@@ -41,7 +42,6 @@ import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -107,6 +107,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
     private ApiClientDao apiClientDao;
     @Autowired
     private ChoiceService choiceService;
+	@Autowired
+	private ChoiceValueDao choiceValueDao;
 
     @Override
     @Transactional
@@ -346,8 +348,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r1.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
                 r1.setCreatedBy("");
                 r1.setDataProcessing(new DataProcessing());
-                r1.setStatus(RegisterStatus.READY);
-                registerDao.save(r1);
+				r1.setStatus(choiceValueDao.findByIdentifier("register-status-ready-123456").orElseThrow());
+				registerDao.save(r1);
 
                 final Register r2 = new Register();
                 r2.setName("2. Behandling af personoplysninger i forbindelse med fleksjob, løntillæg, jobrotation, virksomhedspraktik, mentorordning og voksenlærling, ressourceforløb og revalidering");
@@ -357,8 +359,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r2.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
                 r2.setCreatedBy("");
                 r2.setDataProcessing(new DataProcessing());
-                r2.setStatus(RegisterStatus.IN_PROGRESS);
-                registerDao.save(r2);
+				r2.setStatus(choiceValueDao.findByIdentifier("register-status-in-progress-123456").orElseThrow());
+				registerDao.save(r2);
 
                 final Register r3 = new Register();
                 r3.setName("3. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge og seniorjob");
@@ -369,8 +371,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r3.setResponsibleUsers(List.of(testAdmin));
                 r3.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-a", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-a", "register-gdpr-p6-e"));
                 r3.setDataProcessing(new DataProcessing());
-                r3.setStatus(RegisterStatus.NOT_STARTED);
-                registerDao.save(r3);
+				r3.setStatus(choiceValueDao.findByIdentifier("register-status-not-started-123456").orElseThrow());
+				registerDao.save(r3);
 
 
                 final Relation regDoc = new Relation();

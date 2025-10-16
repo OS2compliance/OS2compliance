@@ -63,6 +63,11 @@ public class ChoiceValue {
     @Builder.Default
     private List<Asset> assetsWithType = new ArrayList<>();
 
+	@JsonIgnore
+	@OneToMany(mappedBy = "status")
+	@Builder.Default
+	private List<Register> registersWithStatus = new ArrayList<>();
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
