@@ -38,7 +38,15 @@ function ViewTaskService() {
         initFormValidationForForm('editForm');
         initFormValidationForForm('completeTaskForm', this.validateSubTasksCompletion.bind(this));
         initDatepicker("#deadlineBtn", "#deadline");
-
+        initDatepicker("#TaskDeadlineBtn", "#TaskDeadline");
+        let taskDeadline = document.querySelector("#TaskDeadline");
+        if (taskDeadline) {
+            taskDeadline.value = new Date().toLocaleDateString('da-DK', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).replace(/\./g, '/').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1/$2-$3');
+        }
         var textarea = document.getElementById('description');
         if (textarea) {
             this.fitDescription(textarea);

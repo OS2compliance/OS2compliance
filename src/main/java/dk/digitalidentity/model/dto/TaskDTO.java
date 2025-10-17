@@ -9,6 +9,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
 import java.util.Set;
 
 @Data
@@ -41,4 +42,6 @@ public class TaskDTO {
     private String tags;
 	@ExcludeFromExport
     private Set<AllowedAction> allowedActions;
+	@ExcludeFromExport
+	private String lastCompletionDate;
 }
