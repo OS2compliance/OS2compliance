@@ -491,14 +491,6 @@ document.addEventListener("DOMContentLoaded", function (event) {
     }
 });
 
-// Try multiple times to ensure the element is loaded
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initRolesDisplay);
-} else {
-    // DOM already loaded
-    setTimeout(initRolesDisplay, 100);
-}
-
 function initSystemOwnerRapportButton() {
     const url = "reports/overview/systemowner"
     const button = document.getElementById("systemOwnerRapportButton");

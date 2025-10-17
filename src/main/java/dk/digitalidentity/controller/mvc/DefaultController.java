@@ -25,6 +25,8 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -43,6 +45,7 @@ public class DefaultController implements ErrorController {
             if(userUuid != null) {
                 final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 model.addAttribute("user", user);
+				model.addAttribute("roleString", getUserRoleString());
             }
 
 
@@ -80,5 +83,28 @@ public class DefaultController implements ErrorController {
 
 	private Map<String, Object> getErrorAttributes(final WebRequest request) {
 		return errorAttributes.getErrorAttributes(request, ErrorAttributeOptions.defaults());
+	}
+
+	private String getUserRoleString() {
+		if (!SecurityUtil.isLoggedIn()) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		List<String> roles = new ArrayList<>();
+
+		if (SecurityUtil.isSuperUser()) {
+			roles.add("Superbruger");
+		}
+		if (SecurityUtil.isAdministrator()) {
+			roles.add("Administrator");
+		}
+		if (SecurityUtil.isUser()) {
+			roles.add("Bruger");
+		}
+		if (SecurityUtil.isLimitedUser()) {
+			roles.add("Begrænset bruger");
+		}
+
+		return String.join(", ", roles);
 	}
 }
