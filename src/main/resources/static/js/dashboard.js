@@ -12,7 +12,14 @@ const updateUrl = (prev, query) => {
 
 document.addEventListener("DOMContentLoaded", function (event) {
 
-    initSystemOwnerRapportButton()
+    initSystemOwnerRapportButton();
+
+    const rolesTabButton = document.querySelector('[data-bs-target="#_dm-tabsRoles"]');
+    if (rolesTabButton) {
+        rolesTabButton.addEventListener('click', function() {
+            setTimeout(initRolesDisplay, 50);
+        });
+    }
 
     initStatisticView('dashboard')
 
@@ -490,6 +497,53 @@ document.addEventListener("DOMContentLoaded", function (event) {
         new CustomGridFunctions(gridDocuments, gridDocumentsUrl + "/" + userId, 'documentsDatatable')
     }
 });
+
+function initRolesDisplay() {
+    const rolesContainer = document.getElementById('rolesContainer');
+
+    console.log('Roles container:', rolesContainer);
+    console.log('User roles:', typeof userRoles !== 'undefined' ? userRoles : 'undefined');
+
+    if (!rolesContainer) {
+        console.error('rolesContainer element not found!');
+        return;
+    }
+
+    if (typeof userRoles !== 'undefined' && userRoles) {
+        // userRoles is already an array from the Java Set
+        let rolesArray = [];
+
+        if (Array.isArray(userRoles)) {
+            rolesArray = userRoles.filter(role => role && role.length > 0);
+        } else if (typeof userRoles === 'string') {
+            // Fallback if it's a string
+            rolesArray = userRoles.split(',').map(role => role.trim()).filter(role => role.length > 0);
+        }
+
+        if (rolesArray.length > 0) {
+            rolesArray.forEach(role => {
+                // Create a badge for each role
+                const badge = document.createElement('div');
+                badge.className = 'badge bg-primary fs-6 px-4 py-3';
+                badge.style.fontSize = '1rem';
+                badge.textContent = role;
+                rolesContainer.appendChild(badge);
+            });
+        } else {
+            rolesContainer.innerHTML = '<p class="text-muted">Ingen roller tildelt</p>';
+        }
+    } else {
+        rolesContainer.innerHTML = '<p class="text-muted">Ingen roller tildelt</p>';
+    }
+}
+
+// Try multiple times to ensure the element is loaded
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initRolesDisplay);
+} else {
+    // DOM already loaded
+    setTimeout(initRolesDisplay, 100);
+}
 
 function initSystemOwnerRapportButton() {
     const url = "reports/overview/systemowner"

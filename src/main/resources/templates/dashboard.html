@@ -53,6 +53,11 @@
                                     type="button" role="tab" aria-controls="documents" aria-selected="false">Mine Dokumenter
                             </button>
                         </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" data-bs-toggle="tab" data-bs-target="#_dm-tabsRoles"
+                                    type="button" role="tab" aria-controls="roles" aria-selected="false">Mine Roller
+                            </button>
+                        </li>
                     </ul>
                     <div class="tab-content">
                         <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel" aria-labelledby="task-tab">
@@ -118,6 +123,14 @@
                                         th:value="${option}" th:text="${option.message}"></option>
                             </select>
                         </div>
+                        <div id="_dm-tabsRoles" class="tab-pane fade" role="tabpanel" aria-labelledby="roles-tab">
+                            <div class="mt-4">
+                                <h4 class="mb-3">Dine roller i systemet</h4>
+                                <div id="rolesContainer" class="d-flex flex-wrap gap-3">
+                                    <!-- Roles will be inserted here by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -164,6 +177,7 @@
         var tasksViewUrl = [[@{/tasks/}]];
         var registersViewUrl = [[@{/registers/}]];
         var assetsViewUrl = [[@{/assets/}]];
+        var userRoles = [[${user?.roles}]];
         var documentsViewUrl = [[@{/documents/}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
