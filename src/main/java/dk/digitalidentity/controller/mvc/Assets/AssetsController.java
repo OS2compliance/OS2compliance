@@ -413,8 +413,9 @@ public class AssetsController {
 		if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
-
-		dataProcessingService.update(asset.getDataProcessing(), body);
+		if (body != null && asset.getDataProcessing() != null) {
+			dataProcessingService.update(asset.getDataProcessing(), body);
+		}
 
 		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
 
@@ -651,9 +652,6 @@ public class AssetsController {
         if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-        asset.setDataProcessingAgreementLink(linkify(body.getDataProcessingAgreementLink()));
-        asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setSupervisoryModel(body.getSupervisoryModel());
         asset.setNextInspection(body.getNextInspection());
         if (body.getNextInspectionDate() == null || body.getSupervisoryModel() == ChoiceOfSupervisionModel.DBS) {
