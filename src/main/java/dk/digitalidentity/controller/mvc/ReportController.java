@@ -344,8 +344,8 @@ public class ReportController {
 
         View view = null;
         switch (template.getIdentifier()) {
-            case "iso27002_2022" -> view = new ReportISO27002XlsView();
-            case "nsis_2_0_2a" -> view = new ReportNSISXlsView();
+            case "iso27002_2022", "iso27002_2017" -> view = new ReportISO27002XlsView();
+			case "nsis_2_0_2a" -> view = new ReportNSISXlsView();
             default -> throw new IllegalArgumentException("Unexpected value: " + template.getIdentifier());
         }
 
