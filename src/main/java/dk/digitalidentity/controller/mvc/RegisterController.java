@@ -435,6 +435,7 @@ public class RegisterController {
     }
 
 	@RequireReadOwnerOnly
+	@Transactional
     @GetMapping("{id}")
     public String view(final Model model, @PathVariable final Long id,
                        @RequestParam(required = false) final String section) {
