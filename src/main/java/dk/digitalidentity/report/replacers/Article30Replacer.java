@@ -440,6 +440,10 @@ public class Article30Replacer implements PlaceHolderReplacer {
                 "Procedure for brugerstyring: ",
                 nullSafe(() -> register.getDataProcessing().getUserManagementProcedureLink(), "")
             );
+			insertStandard(document, cursor,
+					"Procedure for logning: ",
+					nullSafe(() -> register.getDataProcessing().getLoggingProcedureLink(), "")
+			);
         }
     }
 
