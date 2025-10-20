@@ -380,7 +380,11 @@ public class ThreatAssessmentService {
                 final int highestConsequence = findHighestConsequence(threat);
                 final int probability = threat.getProbability();
 
-                riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
+				if (probability < 1 || highestConsequence < 1) {
+					continue;
+				}
+
+				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
         return riskProfiles;
@@ -902,7 +906,8 @@ public class ThreatAssessmentService {
                         String method,
                         String elaboration,
                         List<PrecautionDTO> linkedPrecautions,
-                        RiskCalculationDTO residualRisk
+                        RiskCalculationDTO residualRisk,
+						Boolean relevant
     ) {}
     private List<ThreatPDFDTO> buildThreatsForPDF(Map<String, List<ThreatDTO>> threatList, List<RiskProfileDTO> riskProfiles, Map<String, String> colorMap) {
         List<ThreatPDFDTO> result = new ArrayList<>();
@@ -937,9 +942,18 @@ public class ThreatAssessmentService {
                             profile.getResidualProbability(),
                             profile.getResidualConsequence(),
                             residualScore,
-                            residualColor)
+                            residualColor),
+							true
                     ));
                 }
+				else {
+					result.add(new ThreatPDFDTO(
+							t.getIndex() + 1, t.getType(), null, null, null, null, null, null, buildPrecautions(t.getRelatedPrecautions()
+							.stream()
+							.map(Precaution.class::cast)
+							.toList() ), null, false
+					));
+				}
             });
         });
         return result;

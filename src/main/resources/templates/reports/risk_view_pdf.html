@@ -287,7 +287,7 @@
             </thead>
             <tbody>
                 <th:block th:each="threat : ${threatsForPDF}">
-                    <tr>
+                    <tr th:if="${threat.relevant}">
                         <td th:text="${threat.index}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.threatType}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.threat}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
@@ -302,6 +302,11 @@
                         <td th:text="${threat.residualRisk.probability > 0 ? threat.residualRisk.probability : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.residualRisk.consequence > 0 ? threat.residualRisk.consequence : ''}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
                         <td th:text="${threat.residualRisk.score > 0 && threat.residualRisk.color != null ? threat.residualRisk.score : ''}" th:style="'background-color:' + ${threat.residualRisk.color}" th:rowspan="${threat.linkedPrecautions.size()+1}"></td>
+                    </tr>
+                    <tr th:unless="${threat.relevant}">
+                        <td th:text="${threat.index}"></td>
+                        <td th:text="${threat.threatType}"></td>
+                        <td colspan="12" style="text-align: center;">Ikke relevant</td>
                     </tr>
                     <tr th:each="precaution, iterationStatus : ${threat.linkedPrecautions}">
                         <td rowspan="1" style="border-top: 1px dashed gray;"><b th:text="${precaution.name}" ></b></td>
