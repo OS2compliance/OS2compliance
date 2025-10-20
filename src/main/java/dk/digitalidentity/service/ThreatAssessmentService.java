@@ -379,11 +379,6 @@ public class ThreatAssessmentService {
             for (final ThreatDTO threat: entry.getValue()) {
                 final int highestConsequence = findHighestConsequence(threat);
                 final int probability = threat.getProbability();
-
-                if (probability < 1 || highestConsequence < 1) {
-                    continue;
-                }
-
                 riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
@@ -915,7 +910,7 @@ public class ThreatAssessmentService {
                 final RiskProfileDTO profile = riskProfiles.stream()
                     .filter(rp -> rp.getIndex() == t.getIndex())
                     .findFirst().orElse(null);
-                if (profile != null) {
+				if (profile != null) {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
                     final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
