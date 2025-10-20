@@ -379,6 +379,11 @@ public class ThreatAssessmentService {
             for (final ThreatDTO threat: entry.getValue()) {
                 final int highestConsequence = findHighestConsequence(threat);
                 final int probability = threat.getProbability();
+
+				if (probability < 1 || highestConsequence < 1) {
+					continue;
+				}
+
                 riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
