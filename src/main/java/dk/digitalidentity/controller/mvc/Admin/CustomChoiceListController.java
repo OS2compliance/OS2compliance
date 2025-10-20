@@ -60,6 +60,6 @@ public class CustomChoiceListController {
     }
 
 	private boolean isInUse(ChoiceValue choiceValue) {
-		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId());
+		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId());
 	}
 }

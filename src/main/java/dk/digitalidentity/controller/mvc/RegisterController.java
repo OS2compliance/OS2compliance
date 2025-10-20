@@ -1,6 +1,5 @@
 package dk.digitalidentity.controller.mvc;
 
-import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
 import dk.digitalidentity.mapping.KLEMapper;
 import dk.digitalidentity.model.KLELegalReferenceDTO;
@@ -43,6 +42,7 @@ import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RegisterAssetAssessmentService;
@@ -113,7 +113,7 @@ public class RegisterController {
 	private final KLELegalReferenceService kLELegalReferenceService;
 	private final KLEMapper kleMapper;
 	private final CatalogService catalogService;
-	private final ChoiceValueDao choiceValueDao;
+	private final ChoiceValueService choiceValueService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -318,7 +318,7 @@ public class RegisterController {
             register.setCriticality(criticality);
         }
 		if (statusId != null) {
-			ChoiceValue status = choiceValueDao.findById(statusId)
+			ChoiceValue status = choiceValueService.findById(statusId)
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status"));
 			register.setStatus(status);
 		}

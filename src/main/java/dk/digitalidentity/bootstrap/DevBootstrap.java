@@ -53,6 +53,7 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -108,7 +109,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
     @Autowired
     private ChoiceService choiceService;
 	@Autowired
-	private ChoiceValueDao choiceValueDao;
+	private ChoiceValueService choiceValueService;
 
     @Override
     @Transactional
@@ -348,7 +349,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r1.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
                 r1.setCreatedBy("");
                 r1.setDataProcessing(new DataProcessing());
-				r1.setStatus(choiceValueDao.findByIdentifier("register-status-ready-123456").orElseThrow());
+				r1.setStatus(choiceValueService.findByIdentifier("register-status-ready-123456"));
 				registerDao.save(r1);
 
                 final Register r2 = new Register();
@@ -359,7 +360,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r2.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
                 r2.setCreatedBy("");
                 r2.setDataProcessing(new DataProcessing());
-				r2.setStatus(choiceValueDao.findByIdentifier("register-status-in-progress-123456").orElseThrow());
+				r2.setStatus(choiceValueService.findByIdentifier("register-status-in-progress-123456"));
 				registerDao.save(r2);
 
                 final Register r3 = new Register();
@@ -371,7 +372,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r3.setResponsibleUsers(List.of(testAdmin));
                 r3.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-a", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-a", "register-gdpr-p6-e"));
                 r3.setDataProcessing(new DataProcessing());
-				r3.setStatus(choiceValueDao.findByIdentifier("register-status-not-started-123456").orElseThrow());
+				r3.setStatus(choiceValueService.findByIdentifier("register-status-not-started-123456"));
 				registerDao.save(r3);
 
 
