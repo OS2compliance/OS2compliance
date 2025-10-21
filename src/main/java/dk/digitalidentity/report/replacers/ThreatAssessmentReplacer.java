@@ -261,7 +261,14 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         final Map<String, List<ThreatDTO>> threatList = threatAssessmentService.buildThreatList(context.threatAssessment);
-        createTableCells(table, context.riskProfileDTOList.size() + 1, 14);
+		int totalRows = 1;
+		for (List<ThreatDTO> threats : threatList.values()) {
+			for (ThreatDTO threat : threats) {
+				totalRows++;
+				totalRows += threat.getRelatedPrecautions().size();
+			}
+		}
+		createTableCells(table, totalRows, 14);
 
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Nr.");
@@ -343,8 +350,24 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
 					}
 
+					idx[0]++;
+				}
+				else {
+					// When profile is null, merge all columns from 2 onwards to show "Ikke relevant"
+					setCellTextSmall(row, 0, "" + (t.getIndex() + 1));
+					setCellTextSmall(row, 1, threatType);
 
+					for (int i = 3; i <= 13; i++) {
+						clearCell(row.getCell(i));
+					}
 
+					mergeCellHorizontally(table, idx[0], 2, 13);
+
+					XWPFTableCell cell2 = row.getCell(2);
+					XWPFParagraph para = cell2.getParagraphs().get(0);
+					para.setStyle(SMALL_TEXT);
+					para.setAlignment(ParagraphAlignment.CENTER);
+					addTextRun("Ikke relevant", para);
 
                     idx[0]++;
                 }
