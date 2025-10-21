@@ -42,6 +42,7 @@ import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.LoggingProcedure;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -400,6 +401,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 dataProcessing.setAccessWhoIdentifiers(Set.of("dp-access-who-leaders", "dp-access-who-ext"));
                 dataProcessing.setAccessCountIdentifier("dp-access-count-1-10");
                 dataProcessing.setStorageTimeIdentifier("dp-storage-duration-1mth");
+				dataProcessing.setLoggingProcedure(LoggingProcedure.YES);
+				dataProcessing.setLoggingProcedureLink("https://WeLogAllTheTime.nu");
                 dataProcessing.getRegisteredCategories().add(DataProcessingCategoriesRegistered.builder()
                     .personCategoriesRegisteredIdentifier("dp-categories-registered-vuln-children")
                     .dataProcessing(dataProcessing)

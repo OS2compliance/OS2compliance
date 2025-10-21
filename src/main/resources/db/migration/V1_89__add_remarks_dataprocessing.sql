@@ -1,0 +1,1 @@
+ALTER TABLE data_processing ADD COLUMN remarks TEXT NULL DEFAULT NULL;

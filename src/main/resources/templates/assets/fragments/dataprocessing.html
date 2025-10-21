@@ -8,9 +8,6 @@
 
                 <div class="row mb-3" th:object="${asset}"><!--TABLE 1 -->
                     <input th:field="${asset.id}" hidden>
-                    <input th:field="*{dataProcessingAgreementStatus}" hidden>
-                    <input th:field="*{dataProcessingAgreementDate}" hidden>
-                    <input th:Field="*{dataProcessingAgreementLink}"hidden>
                     <input th:field="*{supervisoryModel}" hidden>
                     <input th:field="*{nextInspectionDate}" hidden>
                 </div>
@@ -67,8 +64,7 @@
 
 
                 <input th:field="${asset.id}" type="hidden">
-                <div th:replace="~{dataProcessing/dataprocessing :: dataProcessing(${dpChoices}, ${asset.dataProcessing}, 'true')}"></div>
-
+                <div th:replace="~{dataProcessing/dataprocessing :: dataProcessing(${dpChoices}, ${asset.dataProcessing}, 'true', ${asset})}"></div>
             </div>
         </div>
     </form>

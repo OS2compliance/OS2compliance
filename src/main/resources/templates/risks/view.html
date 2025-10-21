@@ -30,8 +30,11 @@
                         <h1 class="page-title mb-0 mt-2" th:text="${risk.name}"></h1>
                         <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
+                    <div class="align-self-center d-inline-flex gap-2">
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
+                        <button type="button" class="btn btn-success btn-lg hstack" id="toggleAllCategories">
+                            <i class="pli-arrow-up" id="arrowTag"></i> <span class="vr"></span> Fold alle ud/ind
+                        </button>
                     </div>
                 </div>
             </div>
