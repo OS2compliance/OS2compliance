@@ -39,6 +39,8 @@ public class DataProcessingService {
 		dataProcessing.setDeletionAppliesToAll(body.isDeletionAppliesToAll());
 		dataProcessing.setManagementProcedure(body.getUserManagementProcedure());
 		dataProcessing.setUserManagementProcedureLink(body.getUserManagementProcedureLink());
+		dataProcessing.setLoggingProcedureLink(body.getLoggingProcedureLink());
+		dataProcessing.setLoggingProcedure(body.getLoggingProcedure());
 
         if (body.getPersonCategoriesRegistered() != null) {
             dataProcessing.getRegisteredCategories().clear();
