@@ -1,7 +1,9 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -35,6 +37,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.util.List;
 import java.util.Set;
 
+import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
+
 @Slf4j
 @Controller
 @RequireDocument
@@ -57,11 +61,12 @@ public class DocumentsController {
     @RequireCreateOwnerOnly
     @PostMapping("create")
     public String formCreate(@Valid @ModelAttribute final Document document,
-            @RequestParam(name = "relations", required = false) final Set<Long> relations) {
+            @RequestParam(name = "relations", required = false) final Set<Long> relations,
+			@RequestParam(name = "includeInYearWheel", required = false, defaultValue = "false") final Boolean includeInYearWheel) {
         final Document savedDocument = documentService.create(document);
         relationService.setRelationsAbsolute(savedDocument, relations);
         // this will add a relation so make sure to call this after setRelationsAbsolute
-        documentService.createAssociatedCheck(document);
+        documentService.createAssociatedCheck(document, includeInYearWheel);
         return "redirect:/documents/" + savedDocument.getId();
     }
 
@@ -75,6 +80,12 @@ public class DocumentsController {
         model.addAttribute("changeableDocument", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || documentService.isResponsibleFor(document)));
 		model.addAttribute("responsibleFieldChangeable", !documentService.isResponsibleFor(document)); // Those responsible for an asset cannot change who is responsible
         model.addAttribute("relations", relationService.findRelationsAsListDTO(document, false));
+		final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
+		final Task task = relatedTasks.stream()
+				.filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
+						.anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
+				).findFirst().map(Task.class::cast).orElse(null);
+		model.addAttribute("includeInYearWheel", task != null ? task.getIncludeInReport() : false);
         return "documents/view";
     }
 
@@ -95,11 +106,12 @@ public class DocumentsController {
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("edit")
-    public String formEdit(@ModelAttribute final Document document) {
+    public String formEdit(@ModelAttribute final Document document,
+			@RequestParam(name = "includeInYearWheel", required = false, defaultValue = "false") final Boolean includeInYearWheel) {
         final Document excistingDocument = documentService.get(document.getId())
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!documentService.isResponsibleFor(excistingDocument)) {
+        if(!documentService.isResponsibleFor(excistingDocument) && !SecurityUtil.isAdministrator()) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 //        if (document.getNextRevision() != null && document.getNextRevision().isBefore(LocalDate.now())) {
@@ -115,8 +127,8 @@ public class DocumentsController {
         excistingDocument.setResponsibleUser(document.getResponsibleUser());
         excistingDocument.setDocumentVersion(document.getDocumentVersion());
 
-        documentService.update(excistingDocument);
-        documentService.updateAssociatedCheck(excistingDocument);
+        documentService.update(excistingDocument, includeInYearWheel);
+        documentService.updateAssociatedCheck(excistingDocument, includeInYearWheel);
 
         return "redirect:/documents/" + excistingDocument.getId();
     }

@@ -41,12 +41,14 @@ import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
+import dk.digitalidentity.model.entity.enums.LoggingProcedure;
 import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.model.entity.enums.UserManagementProcedure;
 import dk.digitalidentity.samlmodule.model.SamlGrantedAuthority;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -391,9 +393,13 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 final DataProcessing dataProcessing = new DataProcessing();
                 dataProcessing.setDeletionProcedure(DeletionProcedure.YES);
                 dataProcessing.setDeletionProcedureLink("https://WeDeleteEverythinAllTheTime.nu");
+                dataProcessing.setManagementProcedure(UserManagementProcedure.YES);
+				dataProcessing.setUserManagementProcedureLink("https://WeManageUsersAllTheTime.nu");
                 dataProcessing.setAccessWhoIdentifiers(Set.of("dp-access-who-leaders", "dp-access-who-ext"));
                 dataProcessing.setAccessCountIdentifier("dp-access-count-1-10");
                 dataProcessing.setStorageTimeIdentifier("dp-storage-duration-1mth");
+				dataProcessing.setLoggingProcedure(LoggingProcedure.YES);
+				dataProcessing.setLoggingProcedureLink("https://WeLogAllTheTime.nu");
                 dataProcessing.getRegisteredCategories().add(DataProcessingCategoriesRegistered.builder()
                     .personCategoriesRegisteredIdentifier("dp-categories-registered-vuln-children")
                     .dataProcessing(dataProcessing)

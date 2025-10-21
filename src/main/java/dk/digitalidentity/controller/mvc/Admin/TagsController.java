@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc.Admin;
 
+import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.TagService;
@@ -43,4 +44,19 @@ public class TagsController {
         return "redirect:/admin/tags";
     }
 
+	/**
+	 * Updates an existing tag and redirects to the main tag page
+	 * @param tag
+	 * @return redirect to main tags view
+	 */
+	@Transactional
+	@PostMapping("update")
+	public String updateTag(@ModelAttribute final Tag tag) {
+		Tag existingTag = tagService.getByID(tag.getId())
+				.orElseThrow();
+		existingTag.setValue(tag.getValue());
+		tagService.update(existingTag);
+
+		return "redirect:/admin/tags";
+	}
 }

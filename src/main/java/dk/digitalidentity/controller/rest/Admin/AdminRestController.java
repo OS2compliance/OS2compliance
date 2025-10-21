@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.view.ResponsibleUserView;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
@@ -20,6 +21,7 @@ import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.RelatableService;
+import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.ResponsibleUserViewService;
 import dk.digitalidentity.service.StandardSectionService;
 import dk.digitalidentity.service.SupplierService;
@@ -44,6 +46,8 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
+
 @Slf4j
 @RestController
 @RequestMapping("rest/admin")
@@ -62,6 +66,7 @@ public class AdminRestController {
     private final ThreatAssessmentService threatAssessmentService;
     private final EmailTemplateService emailTemplateService;
     private final ApplicationEventPublisher eventPublisher;
+	private final RelationService relationService;
 
 
 	@RequireUpdateAll
@@ -134,8 +139,13 @@ public class AdminRestController {
                     break;
                 case DOCUMENT:
                     Document document = (Document) responsibleFor;
+					final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
+					final Task relatedTask = relatedTasks.stream()
+							.filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
+									.anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
+							).findFirst().map(Task.class::cast).orElse(null);
                     document.setResponsibleUser(userTo);
-                    documentService.update(document);
+                    documentService.update(document, relatedTask != null ? relatedTask.getIncludeInReport() : false);
                     break;
                 case REGISTER:
                     Register register = (Register) responsibleFor;

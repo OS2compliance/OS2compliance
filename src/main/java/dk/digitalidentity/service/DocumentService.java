@@ -63,15 +63,14 @@ public class DocumentService {
 	public List<Document> getAll() {
 		return documentDao.findAll();
 	}
-
     @Transactional
 	public Document create(final Document document) {
         return documentDao.save(document);
 	}
 
     @Transactional
-	public void update(final Document document) {
-        updateAssociatedCheck(document);
+	public void update(final Document document, boolean includeInYearWheel) {
+        updateAssociatedCheck(document, includeInYearWheel);
 		documentDao.saveAndFlush(document);
 	}
 
@@ -88,13 +87,14 @@ public class DocumentService {
     }
 
     @Transactional
-    public void updateAssociatedCheck(final Document document) {
+    public void updateAssociatedCheck(final Document document, boolean includeInYearWheel) {
         final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
         final Task task = relatedTasks.stream()
             .filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
                 .anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
             ).findFirst().map(Task.class::cast).orElse(null);
         if (task != null) {
+			task.setIncludeInReport(includeInYearWheel);
             if (document.getNextRevision() != null) {
                 task.setNextDeadline(document.getNextRevision());
             } else {
@@ -105,7 +105,7 @@ public class DocumentService {
     }
 
     @Transactional
-    public void createAssociatedCheck(final Document document) {
+    public void createAssociatedCheck(final Document document, boolean includeInYearWheel) {
         if (document.getNextRevision() == null) {
             return;
         }
@@ -115,7 +115,8 @@ public class DocumentService {
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(document.getNextRevision());
         task.setNotifyResponsible(false);
-        task.setResponsibleUsers(document.getResponsibleUser() != null ? Set.of(document.getResponsibleUser()) : Set.of(userService.currentUser()));
+		task.setIncludeInReport(includeInYearWheel);
+		task.setResponsibleUsers(document.getResponsibleUser() != null ? Set.of(document.getResponsibleUser()) : Set.of(userService.currentUser()));
         task.setDescription("Revider dokumentet " + document.getName());
         task.getProperties().add(Property.builder()
             .entity(task)

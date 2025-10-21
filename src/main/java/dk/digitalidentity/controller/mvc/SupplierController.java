@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.dao.AssetOversightDao;
 import dk.digitalidentity.dao.ContactDao;
-import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.dto.AssetWithMappingsDTO;
 import dk.digitalidentity.model.entity.AssetOversight;
 import dk.digitalidentity.model.entity.Contact;
 import dk.digitalidentity.model.entity.Relatable;
@@ -19,6 +19,7 @@ import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.AssetSupplierMappingService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SupplierService;
 import dk.digitalidentity.service.TaskService;
@@ -26,8 +27,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
@@ -41,8 +40,11 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -58,6 +60,7 @@ public class SupplierController {
     private final RelationService relationService;
     private final AssetService assetService;
     private final TaskService taskService;
+	private final AssetSupplierMappingService assetSupplierMappingService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -77,24 +80,30 @@ public class SupplierController {
 				.filter(Objects::nonNull)
 				.collect(Collectors.toList());
 
-        final List<Asset> assetsDirect = assetService.findBySupplier(supplier);
-        final List<Relatable> assetRelated = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.ASSET).toList();
-        final List<Relatable> documents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.DOCUMENT).toList();
-        final List<Relatable> tasks = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.TASK).toList();
-        final List<Relatable> incidents = relationService.findAllRelatedTo(supplier).stream().filter(r -> r.getRelationType() == RelationType.INCIDENT).toList();
+		List<AssetWithMappingsDTO> assetsWithMappings = assetSupplierMappingService.getSupplierWithAssetMappings(supplier.getId());
 
-        final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
+		Map<RelationType, List<Relatable>> relatedByType = relationService.findAllRelatedTo(supplier)
+				.stream()
+				.filter(r -> Set.of(RelationType.ASSET, RelationType.DOCUMENT, RelationType.TASK, RelationType.INCIDENT)
+						.contains(r.getRelationType()))
+				.collect(Collectors.groupingBy(Relatable::getRelationType));
+
+		final List<Relatable> assetRelated = relatedByType.getOrDefault(RelationType.ASSET, Collections.emptyList());
+		final List<Relatable> documents = relatedByType.getOrDefault(RelationType.DOCUMENT, Collections.emptyList());
+		final List<Relatable> tasks = relatedByType.getOrDefault(RelationType.TASK, Collections.emptyList());
+		final List<Relatable> incidents = relatedByType.getOrDefault(RelationType.INCIDENT, Collections.emptyList());
+
+		final List<AssetOversight> assetOversights = assetOversightDao.findAll().stream()
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
-
 
         model.addAttribute("oversights", assetOversights);
         model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
 		model.addAttribute("supplier", supplier);
         model.addAttribute("tasks", tasks);
         model.addAttribute("documents", documents);
-        model.addAttribute("assetsDirect", assetsDirect);
         model.addAttribute("assetsRelated", assetRelated);
+		model.addAttribute("assetsWithMappings", assetsWithMappings);
         model.addAttribute("incidents", incidents);
 		model.addAttribute("contacts", contacts);
 		return "suppliers/view";
@@ -138,7 +147,7 @@ public class SupplierController {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-            if(!existingSupplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
                 throw new ResponseStatusException(HttpStatus.FORBIDDEN);
             }
             existingSupplier.setName(supplier.getName());
@@ -173,7 +182,7 @@ public class SupplierController {
                                                                        @RequestParam("cvr") final String cvr) {
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if(!supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid())) {
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 		supplier.setDescription(description);

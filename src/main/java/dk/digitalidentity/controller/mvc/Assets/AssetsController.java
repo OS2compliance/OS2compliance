@@ -101,6 +101,7 @@ import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -409,24 +410,41 @@ public class AssetsController {
 	public String dataprocessing(@Valid @ModelAttribute final DataProcessingDTO body) {
 		final Asset asset = assetService.get(body.getId()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
-        dataProcessingService.update(asset.getDataProcessing(), body);
-        final List<DataProcessingCategoriesRegistered> registeredCategories = asset.getDataProcessing().getRegisteredCategories();
-        if (asset.getTia().getRegisteredCategories() == null && registeredCategories != null) {
-            asset.getTia().setRegisteredCategories(registeredCategories.stream()
-                .map(DataProcessingCategoriesRegistered::getPersonCategoriesRegisteredIdentifier)
-                .collect(Collectors.toSet()));
-        }
-        if (asset.getTia().getInformationTypes() == null && registeredCategories != null) {
-            asset.getTia().setInformationTypes(registeredCategories.stream()
-                .flatMap(d -> d.getPersonCategoriesInformationIdentifiers().stream())
-                .collect(Collectors.toSet()));
-        }
+		if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+		if (body != null && asset.getDataProcessing() != null) {
+			dataProcessingService.update(asset.getDataProcessing(), body);
+		}
+
+		asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
+
+		// Parse date with proper format and null handling
+		if (body.getDataProcessingAgreementDate() != null && !body.getDataProcessingAgreementDate().trim().isEmpty()) {
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM-yyyy");
+			String dateStr = body.getDataProcessingAgreementDate().trim();
+			dateStr = dateStr.replaceFirst("^[,\\s]+", "");
+			asset.setDataProcessingAgreementDate(LocalDate.parse(dateStr, formatter));
+		} else {
+			asset.setDataProcessingAgreementDate(null);
+		}
+
+		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
+
+		final List<DataProcessingCategoriesRegistered> registeredCategories = asset.getDataProcessing().getRegisteredCategories();
+		if (asset.getTia().getRegisteredCategories() == null && registeredCategories != null) {
+			asset.getTia().setRegisteredCategories(registeredCategories.stream()
+					.map(DataProcessingCategoriesRegistered::getPersonCategoriesRegisteredIdentifier)
+					.collect(Collectors.toSet()));
+		}
+		if (asset.getTia().getInformationTypes() == null && registeredCategories != null) {
+			asset.getTia().setInformationTypes(registeredCategories.stream()
+					.flatMap(d -> d.getPersonCategoriesInformationIdentifiers().stream())
+					.collect(Collectors.toSet()));
+		}
+
 		return "redirect:/assets/" + body.getId();
 	}
-
 	@RequireUpdateOwnerOnly
     @Transactional
     @PostMapping("measures")
@@ -500,16 +518,9 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        existingAsset.getManagers().clear();
-        existingAsset.getManagers().addAll(asset.getManagers());
-
         if(!Objects.isNull(asset.getSupplier())) {
             existingAsset.setSupplier(asset.getSupplier());
         }
-		// Add null check because when it's from Kitos the frontend element will be disabled and thus not included in the @ModelAttribute, i.e., be null
-		if (!Objects.isNull(asset.getAiStatus())) {
-			existingAsset.setAiStatus(asset.getAiStatus());
-		}
 		existingAsset.setAssetType(asset.getAssetType());
 		existingAsset.setCriticality(asset.getCriticality());
 		existingAsset.setDescription(asset.getDescription());
@@ -517,16 +528,10 @@ public class AssetsController {
 		existingAsset.setEmergencyPlanLink(asset.getEmergencyPlanLink());
 		existingAsset.setReEstablishmentPlanLink(asset.getReEstablishmentPlanLink());
 		existingAsset.setContractLink(asset.getContractLink());
-		existingAsset.setContractDate(asset.getContractDate());
-		existingAsset.setContractTermination(asset.getContractTermination());
-		existingAsset.setTerminationNotice(asset.getTerminationNotice());
-		existingAsset.setArchive(asset.getArchive());
 		existingAsset.setAssetStatus(asset.getAssetStatus());
 		existingAsset.setAssetCategory(asset.getAssetCategory());
 		existingAsset.setAiRisk(asset.getAiRisk());
-        existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
 		existingAsset.setActive(asset.isActive());
-		existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
 		existingAsset.setDepartments(asset.getDepartments());
 
 		if (existingAsset.getProperties().stream().noneMatch(p -> p.getKey().equals(KitosConstants.KITOS_UUID_PROPERTY_KEY))) {
@@ -537,6 +542,16 @@ public class AssetsController {
 					existingAsset.getProductLinks().add(link);
 				}
 			}
+			// These fields cannot be changed when the asset is linked to OS2kitos.
+			existingAsset.setOperationResponsibleUsers(asset.getOperationResponsibleUsers());
+			existingAsset.setResponsibleUsers(asset.getResponsibleUsers());
+			existingAsset.getManagers().clear();
+			existingAsset.getManagers().addAll(asset.getManagers());
+			existingAsset.setAiStatus(asset.getAiStatus());
+			existingAsset.setContractDate(asset.getContractDate());
+			existingAsset.setContractTermination(asset.getContractTermination());
+			existingAsset.setTerminationNotice(asset.getTerminationNotice());
+			existingAsset.setArchive(asset.getArchive());
 		}
         eventPublisher.publishEvent(AssetUpdatedEvent.builder()
                 .asset(assetMapper.toEO(existingAsset))
@@ -637,9 +652,6 @@ public class AssetsController {
         if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        asset.setDataProcessingAgreementStatus(body.getDataProcessingAgreementStatus());
-        asset.setDataProcessingAgreementLink(linkify(body.getDataProcessingAgreementLink()));
-        asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setSupervisoryModel(body.getSupervisoryModel());
         asset.setNextInspection(body.getNextInspection());
         if (body.getNextInspectionDate() == null || body.getSupervisoryModel() == ChoiceOfSupervisionModel.DBS) {

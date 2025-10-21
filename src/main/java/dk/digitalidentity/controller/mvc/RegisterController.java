@@ -431,6 +431,7 @@ public class RegisterController {
     }
 
 	@RequireReadOwnerOnly
+	@Transactional
     @GetMapping("{id}")
     public String view(final Model model, @PathVariable final Long id,
                        @RequestParam(required = false) final String section) {
@@ -494,8 +495,8 @@ public class RegisterController {
 				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
 
         model.addAttribute("section", section);
-		model.addAttribute("changeableRegister", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)	|| registerService.isResponsibleFor(register)) );
-		model.addAttribute("responsibleFieldChangeable", !registerService.isResponsibleFor(register)); // Those responsible for an asset change change who is responsible
+		model.addAttribute("changeableRegister", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || registerService.isResponsibleFor(register)));
+		model.addAttribute("responsibleFieldChangeable", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || registerService.isResponsibleFor(register)));
 
         model.addAttribute("dpChoices", dataProcessingService.getChoices());
         model.addAttribute("dataProcessing", register.getDataProcessing());

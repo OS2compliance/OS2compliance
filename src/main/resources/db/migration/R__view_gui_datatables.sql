@@ -1,15 +1,19 @@
 CREATE OR REPLACE
-VIEW view_gridjs_suppliers AS
+    VIEW view_gridjs_suppliers AS
 SELECT
-	s.id,
-	TRIM(s.name) as name,
-	(SELECT COUNT(1) FROM assets a WHERE a.supplier_id=s.id) AS solution_count,
+    s.id,
+    TRIM(s.name) as name,
+    (SELECT COUNT(1) FROM assets a WHERE a.supplier_id=s.id) AS solution_count,
     s.updated_at AS updated,
     s.status,
-    s.localized_enums
+    s.localized_enums,
+    MAX(ao.creation_date) AS last_oversight_date
 FROM
-	suppliers s
-WHERE s.deleted = false;
+    suppliers s
+    LEFT JOIN assets a ON a.supplier_id = s.id
+    LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
+WHERE s.deleted = false
+GROUP BY s.id;
 
 CREATE OR REPLACE
 VIEW view_gridjs_tasks AS
@@ -36,6 +40,7 @@ SELECT
           WHEN ts.task_result = 'CRITICAL_ERROR' THEN 3
         END) as task_result_order,
     (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
+    ts.completed as last_completion_date,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
     GROUP_CONCAT(DISTINCT COALESCE(tg.value, '') SEPARATOR ',') as tags
 FROM tasks t
@@ -140,6 +145,7 @@ SELECT
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos,
     IF(old_kitos_prop.prop_value IS NULL, 0, 1) AS old_kitos,
+    MAX(ao.creation_date) AS last_oversight_date,
     CASE
         WHEN EXISTS (
             SELECT 1
@@ -163,6 +169,7 @@ FROM assets a
     LEFT JOIN choice_values cv ON a.asset_type = cv.id
     LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
     LEFT JOIN users mu ON aum.user_uuid = mu.uuid
+    LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
