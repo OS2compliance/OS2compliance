@@ -133,7 +133,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
     private InformationObligationStatus informationObligation;
 
 	@ManyToOne
-	@JoinColumn(name = "status", nullable = false)
+	@JoinColumn(name = "status")
 	private ChoiceValue status;
 
     @Column

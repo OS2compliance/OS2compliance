@@ -78,11 +78,7 @@ SELECT
         END) as risk_order,
     concat(COALESCE(r.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     cv_status.caption as status,
-    (CASE
-         WHEN cv_status.identifier = 'register-status-not-started-123456' THEN 1
-         WHEN cv_status.identifier = 'register-status-in-progress-123456' THEN 2
-         WHEN cv_status.identifier = 'register-status-ready-123456' THEN 3
-        END) as status_order,
+    cv_status.id as status_order,
     (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count,
     pr.prop_value as asset_assessment,
     (CASE WHEN pr.prop_value = 'GREEN' THEN 1

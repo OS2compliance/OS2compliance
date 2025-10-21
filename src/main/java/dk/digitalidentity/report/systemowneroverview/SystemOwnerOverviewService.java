@@ -149,9 +149,10 @@ public class SystemOwnerOverviewService {
 		ChoiceValue status = register.getStatus();
 		StatusCombination statusCombination = new StatusCombination("", StatusColor.GREY);
 		if (status != null) {
-			StatusColor statusColor = switch (status.getCaption()) {
-				case "READY" -> StatusColor.GREEN;
-				case "IN_PROGRESS" -> StatusColor.YELLOW;
+			StatusColor statusColor = switch (status.getIdentifier()) {
+				case "register-status-ready-123456" -> StatusColor.GREEN;
+				case "register-status-in-progress-123456" -> StatusColor.YELLOW;
+				case "register-status-not-started-123456" -> StatusColor.RED;
 				default -> StatusColor.GREY;
 			};
 			statusCombination = new StatusCombination(status.getCaption(), statusColor);
