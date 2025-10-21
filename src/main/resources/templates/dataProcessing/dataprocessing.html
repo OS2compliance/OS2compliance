@@ -179,6 +179,26 @@
                         <input class="form-control" th:value="${dataProcessing.userManagementProcedureLink}" name="userManagementProcedureLink" hidden>
                     </td>
                 </tr>
+                <tr>
+                    <td>Er der udarbejdet en procedure for logning</td>
+                    <td>
+                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-8 col-xxl-4">
+                            <select class="form-control form-select editField" name="loggingProcedure" tabindex="-1" disabled>
+                                <option value=""></option>
+                                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.LoggingProcedure).values()}"
+                                        th:selected="${dataProcessing.loggingProcedure == status}"
+                                        th:value="${status.name}" th:text="${status.message}"></option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Link til procedure for logning</td>
+                    <td>
+                        <a class="form-control-static editField" th:href="${dataProcessing.loggingProcedureLink}" th:text="${dataProcessing.loggingProcedureLink}" target="_blank"  ></a>
+                        <input class="form-control" th:value="${dataProcessing.loggingProcedureLink}" name="loggingProcedureLink" hidden>
+                    </td>
+                </tr>
                 </tbody>
             </table>
         </div>

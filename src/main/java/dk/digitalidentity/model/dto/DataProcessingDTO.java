@@ -2,6 +2,7 @@ package dk.digitalidentity.model.dto;
 
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
+import dk.digitalidentity.model.entity.enums.LoggingProcedure;
 import dk.digitalidentity.model.entity.enums.UserManagementProcedure;
 import lombok.Getter;
 import lombok.Setter;
@@ -31,4 +32,6 @@ public class DataProcessingDTO {
 	private String dataProcessingAgreementDate;
 	private String dataProcessingAgreementLink;
 	private String dataProcessingAgreementRemarks;
+	private LoggingProcedure loggingProcedure;
+	private String loggingProcedureLink;
 }
