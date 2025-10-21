@@ -737,7 +737,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			table.setTableAlignment(TableRowAlign.LEFT);
 
 			int extraRowsForAsset = isAsset ? 1 : 0;
-			createTableCells(table, 12 + categories.size() + extraRowsForAsset, 3);
+			createTableCells(table, 13 + categories.size() + extraRowsForAsset, 3);
 			final XWPFTableRow row = table.getRow(0);
 
 			// Purpose
@@ -810,12 +810,17 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			setCellTextSmall(row11, 0, "Link til brugerstyringsprocedure");
 			setCellTextSmall(row11, 1, dataProcessing.getUserManagementProcedureLink() != null ? dataProcessing.getUserManagementProcedureLink() : "");
 
+			//Logging procedure link
+			final XWPFTableRow row12 = table.getRow(12);
+			setCellTextSmall(row12, 0, "Link til logningsprocedure");
+			setCellTextSmall(row12, 1, dataProcessing.getLoggingProcedureLink() != null ? dataProcessing.getLoggingProcedureLink() : "");
+
 			// sociallyCritical
-			int nextRowIndex = 12;
+			int nextRowIndex = 13;
 			if (isAsset) {
-				final XWPFTableRow row12 = table.getRow(12);
-				setCellTextSmall(row12, 0, "Samfundskritisk:");
-				setCellTextSmall(row12, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
+				final XWPFTableRow row13 = table.getRow(13);
+				setCellTextSmall(row13, 0, "Samfundskritisk:");
+				setCellTextSmall(row13, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
 				nextRowIndex = 13;
 			}
 
@@ -836,8 +841,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				}
 			}
 			if (categories.isEmpty()) {
-				final XWPFTableRow row12 = table.createRow();
-				setCellTextSmall(row12, 0, "Registrerede persondatakategorier:");
+				final XWPFTableRow row13 = table.createRow();
+				setCellTextSmall(row13, 0, "Registrerede persondatakategorier:");
 			}
 
 			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);
