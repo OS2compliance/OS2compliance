@@ -3,9 +3,6 @@
 <!DOCTYPE html>
 <html lang="da">
 <head th:replace="~{fragments/header :: head }"></head>
-<script type="module" th:src="@{/js/incidents/incident-service.js}" defer></script>
-<script th:src="@{/js/incidents/incident-view-service.js}" defer></script>
-
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -95,17 +92,10 @@
     var formId = [[${formId}]];
     +]*/
     let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-    document.addEventListener("DOMContentLoaded", function(event) {
-        const targetId = '_dm-tabsIncident';
-        incidentService.initChoicesAndDatePickers(targetId);
-        incidentViewService.setEditable(targetId, false);
-    });
-
     /*]]>*/
 </script>
 
-<script type="module" th:src="@{/js/incidents/incident-view-service.js}" defer></script>
-
+<script type="module" th:src="@{/js/incidents/incident-view-service.js}"></script>
 </body>
 
 </html>

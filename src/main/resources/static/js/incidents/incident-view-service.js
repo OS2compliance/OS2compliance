@@ -1,4 +1,5 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import { incidentService } from "./incident-service.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 const incidentViewService = new IncidentViewService();
@@ -11,6 +12,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
 function IncidentViewService() {
 
     this.init = () => {
+        const targetId = '_dm-tabsIncident';
+        incidentService.initChoicesAndDatePickers(targetId);
+        incidentViewService.setEditable(targetId, false);
+
         const form = document.getElementById(formId);
         form.addEventListener("submit", (event) => incidentService.validateFormBeforeSubmit(event, form));
 
