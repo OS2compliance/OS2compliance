@@ -23,6 +23,7 @@ function GridOptions() {
             li.classList.add("dropdown-item");
             li.classList.add("cursor-hand");
             li.setAttribute("onclick", "gridOptions.toggleVisibility(this)");
+            li.addEventListener("click", (e)=> gridOptions.toggleVisibility(e.currentTarget))
             li.setAttribute("href", "#");
 
             li.dataset.id = column.id;
