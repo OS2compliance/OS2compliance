@@ -228,6 +228,17 @@ function toggleAllCategories() {
             icon.click();
         }
     });
+
+    const arrowTag = document.getElementById('arrowTag');
+    if (arrowTag) {
+        if (shouldClose) {
+            arrowTag.classList.remove('pli-arrow-up');
+            arrowTag.classList.add('pli-arrow-down');
+        } else {
+            arrowTag.classList.remove('pli-arrow-down');
+            arrowTag.classList.add('pli-arrow-up');
+        }
+    }
 }
 
 function updateAverage() {
