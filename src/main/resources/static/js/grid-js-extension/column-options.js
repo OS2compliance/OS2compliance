@@ -7,6 +7,7 @@ export default class ColumnOptions {
     localStorageKey = `${window.location.pathname}/column-options`;
     itemTemplate = null
     optionsContainer = null;
+    tempState
 
     optionContainerTemplateId = 'columnOptionContainerTemplate'
     optionItemTemplateId = 'columnOptionItemTemplate'
@@ -17,7 +18,8 @@ export default class ColumnOptions {
     toggleOptionsButtonClass = 'toggleColumnOptionsButton';
     confirmButtonClass = 'columnOptionsConfirmButton';
 
-    tempState
+    tableOptionsContainerClass ='tableOptionsContainer'
+
 
     constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id']) {
         if (!tableElementId || !grid) {
@@ -187,7 +189,14 @@ export default class ColumnOptions {
             this.optionsContainer = clone.firstElementChild;
 
             const datatableElement = document.getElementById(this.tableElementId);
-            datatableElement.before(clone);
+            const parentElement =datatableElement.parentElement;
+
+            const existingTableOptionsContainer = parentElement.querySelector(`.${this.tableOptionsContainerClass}`);
+            if (existingTableOptionsContainer) {
+                existingTableOptionsContainer.prepend(clone)
+            } else {
+                datatableElement.before(clone);
+            }
 
             this.initOptions(this.optionsContainer);
         } else {
