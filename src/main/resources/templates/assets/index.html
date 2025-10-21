@@ -36,7 +36,6 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div id="assetsDatatable" class="mt-5"></div>
 
                                 <!-- Custom search selectors-->
@@ -87,14 +86,9 @@
 		var formUrl = [[@{/assets/form}]];
         var viewUrl = [[@{/assets/}]];
     +]*/
-
-    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
-
-
     /*]]>*/
 </script>
-<script th:src="@{/js/asset/assets.js}" defer></script>
+<script type="module" th:src="@{/js/asset/assets.js}" defer></script>
 </body>
 
 </html>

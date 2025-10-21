@@ -1,3 +1,7 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
+
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
     const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
@@ -7,6 +11,7 @@
     const updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
+
 
     document.addEventListener("DOMContentLoaded", function(event) {
         const dialog = document.getElementById('formDialog')
@@ -265,10 +270,14 @@
                 }
             }
         };
-        const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
+        const datatableId ="assetsDatatable"
+        const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( datatableId ));
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, 'assetsDatatable');
-        gridOptions.init(grid, document.getElementById("gridOptions"));
+        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, datatableId);
+
+        new ColumnOptions(datatableId,grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos'])
+
+
 
         initSaveAsExcelButton(customGridFunctions,'Aktiver')
     }
