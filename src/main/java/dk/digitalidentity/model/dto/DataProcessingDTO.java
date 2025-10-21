@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.dto;
 
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
+import dk.digitalidentity.model.entity.enums.LoggingProcedure;
 import dk.digitalidentity.model.entity.enums.UserManagementProcedure;
 import lombok.Getter;
 import lombok.Setter;
@@ -26,4 +27,6 @@ public class DataProcessingDTO {
 	private boolean deletionAppliesToAll;
 	private UserManagementProcedure userManagementProcedure;
 	private String userManagementProcedureLink;
+	private LoggingProcedure loggingProcedure;
+	private String loggingProcedureLink;
 }
