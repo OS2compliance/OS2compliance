@@ -71,6 +71,7 @@ public interface AssetMapper {
             .hasThirdCountryTransfer(assetGrid.isHasThirdCountryTransfer())
 			.oldKitos(assetGrid.isOldKitos())
 			.active(assetGrid.isActive())
+			.lastOversightDate(assetGrid.getLastOversightDate())
             .build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
