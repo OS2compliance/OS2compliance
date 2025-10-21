@@ -83,4 +83,7 @@ public class DataProcessing {
 	@Column
 	private String loggingProcedureLink;
 
+	@Column
+	private String remarks;
+
 }
