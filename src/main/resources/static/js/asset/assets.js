@@ -165,6 +165,26 @@
                     width: '100px'
                 },
                 {
+                    name: "Sidste tilsyn",
+                    searchable: {
+                        searchKey: 'lastOversightDate'
+                    },
+                    width: '90px',
+                    formatter: (cell, row) => {
+                        if (!cell || cell.trim() === '') {
+                            return gridjs.html(`<span>-</span>`);
+                        }
+
+                        var dateParts = cell.split('-');
+                        if (dateParts.length === 3) {
+                            var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                            return gridjs.html(`<span>${formattedDate}</span>`);
+                        }
+
+                        return gridjs.html(`<span>${cell}</span>`);
+                    }
+                },
+                {
                     name: "Antal beh.",
                     width: '95px',
                     searchable: {
@@ -245,7 +265,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },

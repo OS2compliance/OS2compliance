@@ -205,6 +205,42 @@ function validateFieldBeforeSetting(setFieldType, value) {
     return true;
 }
 
+function toggleAllCategories() {
+    const allIcons = document.querySelectorAll('[id^="categoryIcon"]');
+
+    let openCount = 0;
+    let closedCount = 0;
+
+    allIcons.forEach(icon => {
+        if (icon.classList.contains('pli-arrow-down')) {
+            closedCount++;
+        } else {
+            openCount++;
+        }
+    });
+
+    const shouldClose = openCount >= closedCount;
+
+    allIcons.forEach(icon => {
+        const isOpen = icon.classList.contains('pli-arrow-up');
+
+        if ((shouldClose && isOpen) || (!shouldClose && !isOpen)) {
+            icon.click();
+        }
+    });
+
+    const arrowTag = document.getElementById('arrowTag');
+    if (arrowTag) {
+        if (shouldClose) {
+            arrowTag.classList.remove('pli-arrow-up');
+            arrowTag.classList.add('pli-arrow-down');
+        } else {
+            arrowTag.classList.remove('pli-arrow-down');
+            arrowTag.classList.add('pli-arrow-up');
+        }
+    }
+}
+
 function updateAverage() {
 
     // probability
@@ -559,6 +595,7 @@ function pageLoaded() {
     for (var i = 0; i < methodSelects.length; i++) {
         methodSelects[i].addEventListener('change', methodSelectChanged, false);
     }
+    document.getElementById('toggleAllCategories').addEventListener('click', toggleAllCategories);
 
     updateAverage();
 
