@@ -59,6 +59,7 @@ import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
 import dk.digitalidentity.service.DPIATemplateSectionService;
 import dk.digitalidentity.service.DataProcessingService;
@@ -141,7 +142,7 @@ public class AssetsController {
 	private final AssetMapper assetMapper;
 	private final ApplicationEventPublisher eventPublisher;
 	private final OS2complianceConfiguration os2complianceConfiguration;
-	private final ChoiceValueDao choiceValueDao;
+	private final ChoiceValueService choiceValueService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -295,7 +296,7 @@ public class AssetsController {
 		model.addAttribute("managerNames", asset.getManagers().stream().map(u -> u.getName() + "(" + u.getUserId() + ")").collect(Collectors.joining(", ")));
 		model.addAttribute("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
         model.addAttribute("defaultSendReportTo", asset.getResponsibleUsers().stream().filter(u -> StringUtils.hasLength(u.getEmail())).findFirst().orElse(null));
-		ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Supervision Model Choices"));
+		ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Kunne ikke finde valg af tilsynsmodel typer"));
 		List<ChoiceValue> values = list.getValues().stream().filter(v -> v.getIdentifier().startsWith("supervision-model-")).toList();
 		model.addAttribute("supervisions", values);
 		String riskAssessmentKitosLastSyncString = asset.getProperties().stream()
@@ -668,7 +669,7 @@ public class AssetsController {
         return "redirect:/assets/" + asset.getId();
     }
 
-    record AssetOversightDTO (long id, Set<Long> assetIds, User responsibleUser, ChoiceValue supervisionModel, Long supervisionModelId, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
+    record AssetOversightDTO (Long id, Set<Long> assetIds, User responsibleUser, ChoiceValue supervisionModel, Long supervisionModelId, @Size(max = 4096) String conclusion, String dbsLink, String internalDocumentationLink, AssetOversightStatus status, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate creationDate, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate newInspectionDate, String redirect) {
     }
 	@RequireUpdateOwnerOnly
     @Transactional
@@ -680,7 +681,7 @@ public class AssetsController {
 
 		ChoiceValue supervisionModel = null;
 		if (dto.supervisionModelId != null) {
-			supervisionModel = choiceValueDao.findById(dto.supervisionModelId)
+			supervisionModel = choiceValueService.findById(dto.supervisionModelId)
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervision model"));
 		}
 
@@ -764,7 +765,7 @@ public class AssetsController {
             );
 
             if (id == null) {
-                model.addAttribute("oversight", new AssetOversightDTO(0, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : 0L, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
+                model.addAttribute("oversight", new AssetOversightDTO(null, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : 0L, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
                 model.addAttribute("inspectionType", asset.getNextInspection());
             } else {
                 final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), id)).findAny().orElseThrow(() ->
@@ -780,8 +781,8 @@ public class AssetsController {
             final Supplier supplier = supplierService.get(entityId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Det angivne id findes ikke"));
 
             if (id == null) {
-				ChoiceValue choiceValue = choiceValueDao.findByIdentifier("supervision-model-sworn-statement-123456").orElse(null);
-				model.addAttribute("oversight", new AssetOversightDTO(0, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : 0L, "", "","", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
+				ChoiceValue choiceValue = choiceValueService.findByIdentifier("supervision-model-sworn-statement-123456").orElse(null);
+				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : 0L, "", "","", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
                 model.addAttribute("supplier", supplier);
                 model.addAttribute("inspectionType", null);
                 model.addAttribute("supplierAssets", supplier.getAssets());

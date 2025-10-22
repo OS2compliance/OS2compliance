@@ -60,6 +60,6 @@ public class CustomChoiceListController {
     }
 
 	private boolean isInUse(ChoiceValue choiceValue) {
-		return choiceValue.getIdentifier().contains("dbs") || assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId());
+		return choiceValue.getIdentifier().contains("supervision-model-dbs-123456") || assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId());
 	}
 }
