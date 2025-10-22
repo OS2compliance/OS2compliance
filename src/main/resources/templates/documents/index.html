@@ -2,7 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
-<script th:src="@{/js/document/index.js}" defer></script>
+<script type="module" th:src="@{/js/document/index.js}" defer></script>
 <script th:src="@{/js/export-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/documents.css}" />
 
@@ -36,7 +36,6 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                            	<div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div class="mt-3" id="documentsDatatable"></div>
 
                                 <!-- Custom search selectors-->
