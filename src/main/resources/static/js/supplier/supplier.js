@@ -104,6 +104,26 @@ function initGrid() {
                 width: '100px'
             },
             {
+                name: "Sidste tilsyn",
+                searchable: {
+                    searchKey: 'lastOversightDate'
+                },
+                width: '90px',
+                formatter: (cell, row) => {
+                    if (!cell || cell.trim() === '') {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
+                    var dateParts = cell.split('-');
+                    if (dateParts.length === 3) {
+                        var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                        return gridjs.html(`<span>${formattedDate}</span>`);
+                    }
+
+                    return gridjs.html(`<span>${cell}</span>`);
+                }
+            },
+            {
                 name: "Status",
                 searchable: {
                     searchKey: 'status',
@@ -147,7 +167,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.status, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.allowedActions]
             ),
             total: data => data.totalCount
         },
