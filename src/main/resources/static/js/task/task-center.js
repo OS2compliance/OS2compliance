@@ -1,4 +1,5 @@
 import {initStatisticView} from "../statistic/statisticView.js";
+import ColumnOptions from "../grid-js-extension/column-options.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -246,12 +247,18 @@ function initGrid() {
             }
         }
     };
-    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "tasksDatatable" ));
+    const datatableId = 'tasksDatatable';
+    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
 
     //Enables custom column search, serverside sorting and pagination
-    const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, exportTasksUrl, 'tasksDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, exportTasksUrl, datatableId);
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
+    new ColumnOptions(
+        datatableId,
+        grid,
+        ['opgavenavn', 'allowedActions'],
+        ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'deadline', 'status', 'resultat'],
+        ['id'])
 
     initGridActions()
 

@@ -35,8 +35,7 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                                <div class="d-flex gap-2">
-                                    <div th:replace="~{fragments/gridOptions :: dropdown(customStyle='')}"></div>
+                                <div class="d-flex gap-2 tableOptionsContainer">
                                     <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
                                 </div>
                                 <div id="tasksDatatable"></div>
