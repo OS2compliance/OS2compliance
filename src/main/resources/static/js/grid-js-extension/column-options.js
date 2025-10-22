@@ -1,3 +1,6 @@
+/**
+ * Creates an option UI for a GridJS datatable, which allows columns to be hidden and shown based on user preference
+ */
 export default class ColumnOptions {
     tableElementId
     neverShowIds = []
@@ -8,6 +11,7 @@ export default class ColumnOptions {
     itemTemplate = null
     optionsContainer = null;
     tempState
+    buttonContainerSelector = '.tableOptionsContainer'
 
     optionContainerTemplateId = 'columnOptionContainerTemplate'
     optionItemTemplateId = 'columnOptionItemTemplate'
@@ -18,10 +22,17 @@ export default class ColumnOptions {
     toggleOptionsButtonClass = 'toggleColumnOptionsButton';
     confirmButtonClass = 'columnOptionsConfirmButton';
 
-    tableOptionsContainerClass ='tableOptionsContainer'
-
-
-    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id']) {
+    /**
+     * Creates a GridColumn instantiation for the given grid, with the configs provided
+     * @param tableElementId id of the container for the table
+     * @param grid the GridJS instance of the table
+     * @param alwaysShowIds a list of column Id's for columns that should always be shown (and thus not customizable by the user)
+     * @param defaultShowingIds a list of column Ids for columns that should be shown by default
+     * @param neverShowIds a list of column Id's for columns that should always be hidden for the user
+     * @param buttonContainerSelector An optional selector for the container which houses the option toggle.
+     * If the container is not found, the toggle is placed right before the table container
+     */
+    constructor(tableElementId, grid, alwaysShowIds = [], defaultShowingIds = [], neverShowIds = ['id'], buttonContainerSelector = '.tableOptionsContainer') {
         if (!tableElementId || !grid) {
             throw new Error('ColumnOptions was not provided with required arguments');
         }
@@ -31,12 +42,17 @@ export default class ColumnOptions {
         this.alwaysShowIds = alwaysShowIds;
         this.itemTemplate = document.getElementById(this.optionItemTemplateId);
         this.tableElementId = tableElementId
+        this.buttonContainerSelector = buttonContainerSelector
 
         this.getInitialState(defaultShowingIds);
         this.createOptionsContainer()
         this.updateGrid()
     }
 
+    /**
+     * Creates the initial state for the columns
+     * @param defaultShowingIds
+     */
     getInitialState(defaultShowingIds) {
         const localState = this.loadLocally()
         const columns = this.grid.config.columns
@@ -75,6 +91,9 @@ export default class ColumnOptions {
         }
     }
 
+    /**
+     * Updates and re-renders the grid
+     */
     updateGrid() {
         // modify grid to match current state
         const columns = this.grid.config.columns
@@ -92,6 +111,9 @@ export default class ColumnOptions {
         this.grid.forceRender();
     }
 
+    /**
+     * Saves the current state (simplified) to local storage as json
+     */
     saveLocally() {
         // Save minimum
         const minimalState = {}
@@ -106,6 +128,10 @@ export default class ColumnOptions {
         localStorage.setItem(this.localStorageKey, json)
     }
 
+    /**
+     * Loads the simplified column state from localstorage and parses it
+     * @returns {any}
+     */
     loadLocally() {
         // load
         const savedStateString = localStorage.getItem(this.localStorageKey);
@@ -116,6 +142,9 @@ export default class ColumnOptions {
         }
     }
 
+    /**
+     * Populates the option container with options
+     */
     createColumnOptions() {
 
         const optionMenuContainer = this.optionsContainer.querySelector(`.${this.optionsMenuContainerClass}`);
@@ -138,6 +167,13 @@ export default class ColumnOptions {
 
     }
 
+    /**
+     * Creates an option html object
+     * @param id column id for the option item
+     * @param label label to show for the option
+     * @param asColumnShown if true, the option is created for a shown column. Otherwise it represents a hidden column by default.
+     * @returns {Element|null} an option, or null if no template for the item was found
+     */
     createItem(id, label, asColumnShown) {
         if (this.itemTemplate) {
             const clone = this.itemTemplate.content.cloneNode(true).firstElementChild;
@@ -161,6 +197,10 @@ export default class ColumnOptions {
         return null;
     }
 
+    /**
+     * Toggles the given option element between the shown and hidden state, pushing the new state to the temporary state holder
+     * @param element an option element
+     */
     toggleOption(element) {
         if (element) {
             const iconElement = element.querySelector(`.${this.optionIconClass}`)
@@ -181,6 +221,9 @@ export default class ColumnOptions {
         }
     }
 
+    /**
+     * Creates and injects the option container into the document
+     */
     createOptionsContainer() {
         const optionsContainerTemplate = document.getElementById(this.optionContainerTemplateId);
         if (optionsContainerTemplate) {
@@ -190,7 +233,7 @@ export default class ColumnOptions {
 
             const datatableElement = document.getElementById(this.tableElementId);
 
-            const existingTableOptionsContainer = document.querySelector(`.${this.tableOptionsContainerClass}`);
+            const existingTableOptionsContainer = document.querySelector(this.buttonContainerSelector);
             if (existingTableOptionsContainer) {
                 existingTableOptionsContainer.prepend(clone)
             } else {
@@ -203,6 +246,10 @@ export default class ColumnOptions {
         }
     }
 
+    /**
+     * Initializes functionality for the option container0
+     * @param optionsContainer optionscontainer
+     */
     initOptions(optionsContainer) {
         if (!optionsContainer) {
             console.error("Could not initiate column options. No container was passed")
@@ -240,6 +287,9 @@ export default class ColumnOptions {
         }
     }
 
+    /**
+     * Pushes the temporary state to the actual permanent state
+     */
     updateStateFromTempState() {
         for (let [id, state] of Object.entries(this.tempState)) {
             this.state[id].hidden = state

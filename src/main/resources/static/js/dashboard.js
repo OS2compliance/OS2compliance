@@ -177,7 +177,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
             gridTasks,
             ['opgavenavn'],
             ['opgavenavn','deadline','status', 'OpgaveType'],
-            ['id', 'completed'])
+            ['id', 'completed'],
+            '.taskTableOptionsContainer')
 
         let gridConfigAssets = {
             className: defaultClassName,

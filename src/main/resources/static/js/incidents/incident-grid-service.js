@@ -131,8 +131,8 @@ export default function IncidentGridService() {
         new ColumnOptions(
             datatableId,
             this.incidentGrid,
-            ['titel', 'allowedActions'],
-            ['titel', 'allowedActions'],
+            ['name', 'allowedActions'],
+            ['name', 'createdAt', 'updatedAt', 'allowedActions'],
             ['id'])
 
         initGridActions()
