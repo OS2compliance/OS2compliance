@@ -58,7 +58,7 @@
 	<div sec:authorize="hasRole('ROLE_create_all')" class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
 	<div sec:authorize="hasRole('ROLE_update_all')" class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 
 	<script th:inline="javascript">

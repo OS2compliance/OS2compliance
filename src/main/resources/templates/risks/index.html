@@ -80,7 +80,7 @@
 <div id="copyAssessmentContainer"></div>
 <div id="editAssessmentContainer"></div>
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, statistic = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true,  statistic = true)}"></div>
 <script type="module" th:src="@{/js/risk/risk.js}" defer></script>
 <script th:src="@{/js/export-service.js}" defer></script>
 <script th:src="@{/js/risk/createExternalRiskassessmentService.js}" defer></script>
