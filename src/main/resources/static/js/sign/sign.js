@@ -34,7 +34,12 @@ function init(url) {
     document.getElementById('zoomin').addEventListener('click', onZoomIn);
     document.getElementById('zoomout').addEventListener('click', onZoomOut);
     document.getElementById('zoomfit').addEventListener('click', onZoomFit);
-
+    const buttons = document.getElementsByClassName("signButton");
+    for (const button of buttons) {
+        button.addEventListener('click', function() {
+            openSignSwal();
+        });
+    }
 }
 
 //Get page info from document, resize canvas accordingly, and render page.
@@ -142,4 +147,24 @@ function onZoomFit() {
 
 function pageLoaded() {
     init(fetchPdfUrl + documentId);
+}
+
+function openSignSwal() {
+    var token = document.getElementsByName("_csrf")[0].getAttribute("content");
+    Swal.fire({
+        text: `Er du sikker på du vil signére denne rapport?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#03a9f4',
+        cancelButtonColor: '#df5645',
+        confirmButtonText: 'Ja',
+        cancelButtonText: 'Nej'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            fetch(`/sign/${documentId}`, { method: 'GET', headers: { 'X-CSRF-TOKEN': token} })
+                .then(() => {
+                    window.location.href = `/sign/signed/${documentId}`;
+                });
+        }
+    })
 }

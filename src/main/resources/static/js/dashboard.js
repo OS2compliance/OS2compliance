@@ -12,7 +12,7 @@ const updateUrl = (prev, query) => {
 
 document.addEventListener("DOMContentLoaded", function (event) {
 
-    initSystemOwnerRapportButton()
+    initSystemOwnerRapportButton();
 
     initStatisticView('dashboard')
 
