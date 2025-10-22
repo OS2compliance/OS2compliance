@@ -41,11 +41,15 @@ public class ChartConfigurationService {
 		if (chartConfig.getEntityName().equalsIgnoreCase("Incident")) {
 			// special case for incidents, where allowed fields are generated from obligatory incident fields
 			List<IncidentField> incidentFields = incidentService.getAllObligatoryFields();
-			allowedYFieldChoices = incidentFields.stream()
-					.map(i -> new EntityFieldChoiceDTO(
-							i.getIndexColumnName(),
-							i.getIndexColumnName(),
-							i.getId().toString())).toList();
+			if (incidentFields.isEmpty()) {
+				allowedYFieldChoices = List.of(new EntityFieldChoiceDTO(null, "Ingen obligatoriske valgmuligheder at lave statistik på", null));
+			} else {
+				allowedYFieldChoices = incidentFields.stream()
+						.map(i -> new EntityFieldChoiceDTO(
+								i.getIndexColumnName(),
+								i.getIndexColumnName(),
+								i.getId().toString())).toList();
+			}
 
 			allowedXFieldChoices = chartConfig.getAllowedXFieldChoices().stream()
 					.map(s -> new EntityFieldChoiceDTO(
