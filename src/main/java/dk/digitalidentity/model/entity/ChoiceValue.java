@@ -53,6 +53,9 @@ public class ChoiceValue {
     @Column
     private Long limitUpper;
 
+	@Column
+	private boolean editable;
+
     @JsonIgnore
     @ManyToMany(mappedBy = "values")
     @Builder.Default

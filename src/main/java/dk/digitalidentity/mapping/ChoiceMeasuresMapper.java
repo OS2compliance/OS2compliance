@@ -22,6 +22,7 @@ public interface ChoiceMeasuresMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lists", ignore = true)
+    @Mapping(target = "editable", ignore = true)
     @Mapping(target = "assetsWithType", ignore = true)
     @Mapping(target = "registersWithStatus", ignore = true)
     ChoiceValue fromDTO(final ChoiceValueDTO value);
