@@ -372,11 +372,15 @@ function mailReport() {
     var sendReportTo = document.getElementById('sendReportTo').value;
     var reportMessage = document.getElementById('reportMessage').value;
     var signReport = document.getElementById('signReport').checked;
+    let alsoSendTo = document.getElementById('alsoSendTo');
+    let selectedValues = [...alsoSendTo.selectedOptions].map(option => option.value);
+
     var data = {
                  "sendTo": sendReportTo,
                  "message": reportMessage,
-                 "sign": signReport
-               };
+                 "sign": signReport,
+                  "alsoSendTo": selectedValues
+    };
 
     postData(`/rest/dpia/${dpiaId}/mailReport`, data).then((response) => {
         if (!response.ok) {
