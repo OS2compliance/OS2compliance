@@ -35,8 +35,8 @@ function init(url) {
     document.getElementById('zoomout').addEventListener('click', onZoomOut);
     document.getElementById('zoomfit').addEventListener('click', onZoomFit);
     const buttons = document.getElementsByClassName("signButton");
-    for (let i = 0; i < buttons.length; i++) {
-        buttons[i].addEventListener('click', function() {
+    for (const button of buttons) {
+        button.addEventListener('click', function() {
             openSignSwal();
         });
     }
