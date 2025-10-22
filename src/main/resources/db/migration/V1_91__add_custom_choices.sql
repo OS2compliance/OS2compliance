@@ -8,40 +8,40 @@ SET @choice_list_id = LAST_INSERT_ID();
 
 -- Insert into choice_values
 INSERT INTO choice_values (identifier, caption) VALUES
-                                                    ('supervision-model-selfcontrol-123456', 'Egenkontrol'),
-                                                    ('supervision-model-physical-supervision-123456', 'Fysisk tilsyn'),
-                                                    ('supervision-model-isae-3000-123456', 'ISAE 3000'),
-                                                    ('supervision-model-isae-3402-123456', 'ISAE 3402'),
-                                                    ('supervision-model-isrs-4400-123456', 'ISRS 4400'),
-                                                    ('supervision-model-supervision-justified-suspicion-123456', 'Tilsyn udelukkende i tilfælde af begrundet mistanke'),
-                                                    ('supervision-model-management-statement-123456', 'Ledelseserklæring'),
-                                                    ('supervision-model-written-control-123456', 'Skriftlig kontrol'),
-                                                    ('supervision-model-supervision-form-declaration-123456', 'Tilsynsskema med tro- og love erklæring'),
-                                                    ('supervision-model-sworn-statement-123456', 'Tro- og love erklæring'),
-                                                    ('supervision-model-independent-audit-123456', 'Uafhængig revisionserklæring uden typeangivelse'),
-                                                    ('supervision-model-soc-statement-123456', 'SOC-erklæring'),
-                                                    ('supervision-model-dsd-123456', 'DSD'),
-                                                    ('supervision-model-dbs-123456', 'DBS');
+    ('supervision-model-selfcontrol-123456', 'Egenkontrol'),
+    ('supervision-model-physical-supervision-123456', 'Fysisk tilsyn'),
+    ('supervision-model-isae-3000-123456', 'ISAE 3000'),
+    ('supervision-model-isae-3402-123456', 'ISAE 3402'),
+    ('supervision-model-isrs-4400-123456', 'ISRS 4400'),
+    ('supervision-model-supervision-justified-suspicion-123456', 'Tilsyn udelukkende i tilfælde af begrundet mistanke'),
+    ('supervision-model-management-statement-123456', 'Ledelseserklæring'),
+    ('supervision-model-written-control-123456', 'Skriftlig kontrol'),
+    ('supervision-model-supervision-form-declaration-123456', 'Tilsynsskema med tro- og love erklæring'),
+    ('supervision-model-sworn-statement-123456', 'Tro- og love erklæring'),
+    ('supervision-model-independent-audit-123456', 'Uafhængig revisionserklæring uden typeangivelse'),
+    ('supervision-model-soc-statement-123456', 'SOC-erklæring'),
+    ('supervision-model-dsd-123456', 'DSD'),
+    ('supervision-model-dbs-123456', 'DBS');
 
 -- Insert into choice_list_values
 INSERT INTO choice_list_values (choice_list_id, choice_value_id)
 SELECT @choice_list_id, id FROM choice_values
 WHERE identifier IN (
-                     'supervision-model-selfcontrol-123456',
-                     'supervision-model-physical-supervision-123456',
-                     'supervision-model-isae-3000-123456',
-                     'supervision-model-isae-3402-123456',
-                     'supervision-model-isrs-4400-123456',
-                     'supervision-model-supervision-justified-suspicion-123456',
-                     'supervision-model-management-statement-123456',
-                     'supervision-model-written-control-123456',
-                     'supervision-model-supervision-form-declaration-123456',
-                     'supervision-model-sworn-statement-123456',
-                     'supervision-model-independent-audit-123456',
-                     'supervision-model-soc-statement-123456',
-                     'supervision-model-dsd-123456',
-                     'supervision-model-dbs-123456'
-    );
+    'supervision-model-selfcontrol-123456',
+    'supervision-model-physical-supervision-123456',
+    'supervision-model-isae-3000-123456',
+    'supervision-model-isae-3402-123456',
+    'supervision-model-isrs-4400-123456',
+    'supervision-model-supervision-justified-suspicion-123456',
+    'supervision-model-management-statement-123456',
+    'supervision-model-written-control-123456',
+    'supervision-model-supervision-form-declaration-123456',
+    'supervision-model-sworn-statement-123456',
+    'supervision-model-independent-audit-123456',
+    'supervision-model-soc-statement-123456',
+    'supervision-model-dsd-123456',
+    'supervision-model-dbs-123456'
+);
 
 -- CHANGE COLUMN TYPE FOR SUPERVISORY_MODEL IN ASSETS
 -- Add the new bigint column temporarily
