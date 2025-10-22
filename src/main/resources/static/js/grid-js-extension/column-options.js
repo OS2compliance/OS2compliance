@@ -189,9 +189,8 @@ export default class ColumnOptions {
             this.optionsContainer = clone.firstElementChild;
 
             const datatableElement = document.getElementById(this.tableElementId);
-            const parentElement =datatableElement.parentElement;
 
-            const existingTableOptionsContainer = parentElement.querySelector(`.${this.tableOptionsContainerClass}`);
+            const existingTableOptionsContainer = document.querySelector(`.${this.tableOptionsContainerClass}`);
             if (existingTableOptionsContainer) {
                 existingTableOptionsContainer.prepend(clone)
             } else {
