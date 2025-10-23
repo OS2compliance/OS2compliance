@@ -765,13 +765,13 @@ public class AssetsController {
             );
 
             if (id == null) {
-                model.addAttribute("oversight", new AssetOversightDTO(null, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : 0L, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
+                model.addAttribute("oversight", new AssetOversightDTO(null, Set.of(asset.getId()), asset.getOversightResponsibleUser(), asset.getSupervisoryModel(), asset.getSupervisoryModel() != null ? asset.getSupervisoryModel().getId() : null, "", "", "", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "assets"));
                 model.addAttribute("inspectionType", asset.getNextInspection());
             } else {
                 final AssetOversight assetOversight = asset.getAssetOversights().stream().filter(s -> Objects.equals(s.getId(), id)).findAny().orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for oversight findes ikke")
                 );
-                model.addAttribute("oversight", new AssetOversightDTO(assetOversight.getId(), Set.of(asset.getId()), assetOversight.getResponsibleUser(), assetOversight.getSupervisionModel(), assetOversight.getSupervisionModel() != null ? assetOversight.getSupervisionModel().getId() : 0L, assetOversight.getConclusion(), assetOversight.getDbsLink(), assetOversight.getInternalDocumentationLink(), assetOversight.getStatus(), assetOversight.getCreationDate(), assetOversight.getNewInspectionDate(), "assets"));
+                model.addAttribute("oversight", new AssetOversightDTO(assetOversight.getId(), Set.of(asset.getId()), assetOversight.getResponsibleUser(), assetOversight.getSupervisionModel(), assetOversight.getSupervisionModel() != null ? assetOversight.getSupervisionModel().getId() : null, assetOversight.getConclusion(), assetOversight.getDbsLink(), assetOversight.getInternalDocumentationLink(), assetOversight.getStatus(), assetOversight.getCreationDate(), assetOversight.getNewInspectionDate(), "assets"));
                 model.addAttribute("inspectionType", asset.getNextInspection());
             }
 
@@ -782,7 +782,7 @@ public class AssetsController {
 
             if (id == null) {
 				ChoiceValue choiceValue = choiceValueService.findByIdentifier("supervision-model-sworn-statement-123456").orElse(null);
-				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : 0L, "", "","", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
+				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : null, "", "","", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
                 model.addAttribute("supplier", supplier);
                 model.addAttribute("inspectionType", null);
                 model.addAttribute("supplierAssets", supplier.getAssets());
@@ -790,7 +790,7 @@ public class AssetsController {
                 final AssetOversight assetOversight = assetOversightService.findById(id).orElseThrow(() ->
                     new ResponseStatusException(HttpStatus.BAD_REQUEST, "Det angivne id for oversight findes ikke")
                 );
-                model.addAttribute("oversight", new AssetOversightDTO(assetOversight.getId(), Set.of(assetOversight.getAsset().getId()), assetOversight.getResponsibleUser(), assetOversight.getSupervisionModel(), assetOversight.getSupervisionModel() != null ? assetOversight.getSupervisionModel().getId() : 0L, assetOversight.getConclusion(), assetOversight.getDbsLink(), assetOversight.getInternalDocumentationLink(), assetOversight.getStatus(), assetOversight.getCreationDate(), assetOversight.getNewInspectionDate(), "suppliers"));
+                model.addAttribute("oversight", new AssetOversightDTO(assetOversight.getId(), Set.of(assetOversight.getAsset().getId()), assetOversight.getResponsibleUser(), assetOversight.getSupervisionModel(), assetOversight.getSupervisionModel() != null ? assetOversight.getSupervisionModel().getId() : null, assetOversight.getConclusion(), assetOversight.getDbsLink(), assetOversight.getInternalDocumentationLink(), assetOversight.getStatus(), assetOversight.getCreationDate(), assetOversight.getNewInspectionDate(), "suppliers"));
                 model.addAttribute("supplier", supplier);
                 model.addAttribute("inspectionType", null);
                 model.addAttribute("supplierAssets", supplier.getAssets());
