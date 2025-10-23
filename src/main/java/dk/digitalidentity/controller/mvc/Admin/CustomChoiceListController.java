@@ -63,7 +63,6 @@ public class CustomChoiceListController {
 
 	private boolean isInUse(ChoiceValue choiceValue) {
 		if (!choiceValue.isEditable()) {
-			System.out.println("not editable");
 			return true;
 		}
 		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId());
