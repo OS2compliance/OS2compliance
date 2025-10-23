@@ -3,7 +3,6 @@ package dk.digitalidentity.model.entity;
 import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
@@ -21,6 +20,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToOne;
 import jakarta.persistence.PrimaryKeyJoinColumn;
 import jakarta.persistence.Table;
@@ -132,9 +132,9 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
     @Enumerated(EnumType.STRING)
     private InformationObligationStatus informationObligation;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private RegisterStatus status;
+	@ManyToOne
+	@JoinColumn(name = "status")
+	private ChoiceValue status;
 
     @Column
     @Convert(converter = StringSetNullSafeConverter.class)
@@ -190,7 +190,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 
     @Override
     public String getLocalizedEnumValues() {
-        return (status != null ? status.getMessage() : "") +
+        return (status != null ? status.getCaption() : "") +
             (consequenceAssessment != null ? nullSafe(() -> consequenceAssessment.getAssessment().getMessage(), "") : "");
     }
 

@@ -76,6 +76,7 @@ public class CustomChoiceListRestController {
                 return ChoiceValue.builder()
                     .identifier(choiceList.getIdentifier() + "-" + dto.value.toLowerCase().replace(" ", "-")+"-"+ RandomStringUtils.randomAlphanumeric(6))
                     .caption(dto.value)
+					.editable(true)
                     .build();
             }).toList();
 
