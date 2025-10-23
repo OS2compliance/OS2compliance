@@ -31,7 +31,7 @@
                                 </select>
                             </td>
                             <td>
-                                <div class="input-group">
+                                <div class="input-group" th:hidden="*{dataProcessingAgreementDate == null}">
                                     <input id="oversightDataProcessingAgreementDateInput" type="text" class="form-control editField datepicker" th:field="*{dataProcessingAgreementDate}" disabled>
                                     <button id="overSightDataProcessingAgreementDateBtn" class="btn btn-primary editField" type="button" style="z-index: 0; border-top-right-radius: 0.4375rem; border-bottom-right-radius: 0.4375rem;" disabled>
                                         <i class="pli-calendar-4 fs-5"></i>
@@ -100,7 +100,7 @@
         document.addEventListener("DOMContentLoaded", function(event) {
                        //Initialize datepickers
             const dataProcessingAgreementDatePicker = MCDatepicker.create({
-                el: '#overSightDataProcessingAgreementDateInput',
+                el: '#oversightDataProcessingAgreementDateInput',
                 autoClose: true,
                 dateFormat: 'dd/mm-yyyy',
                 //minDate: new Date(),

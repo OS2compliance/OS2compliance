@@ -653,6 +653,7 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         asset.setSupervisoryModel(body.getSupervisoryModel());
+		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
         asset.setNextInspection(body.getNextInspection());
         if (body.getNextInspectionDate() == null || body.getSupervisoryModel() == ChoiceOfSupervisionModel.DBS) {
             asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, LocalDate.now()));
