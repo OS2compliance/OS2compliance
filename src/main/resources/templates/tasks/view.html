@@ -216,7 +216,7 @@
                                 <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
                             </div>
                             <div class="row">
-                                <div th:replace="~{fragments/tags :: tagsfragment (tags=${task.tags}, completed=${completed}, relatableId=${task.id})}"></div>
+                                <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (tags=${task.tags}, parentId=${task.id}, allowAdd=${completed == null || !completed}, allowRemove=${completed == null || !completed})}"></div>
                             </div>
                         </div>
                         <div id="_dm-tabsHistorik" class="tab-pane fade" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">

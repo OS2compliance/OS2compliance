@@ -91,7 +91,7 @@ function initGrid() {
                     if (cell != null && cell.trim() !== '') {
                         let tags = cell.split(',');
                         for (let i =0; i< tags.length; i++) {
-                            result += '<div class=" badge bg-info mb-1">'+tags[i]+'</div>';
+                            result += '<span class="tag-badge">'+tags[i]+'</span>';
                         }
                     }
                     return gridjs.html(result, 'div')
