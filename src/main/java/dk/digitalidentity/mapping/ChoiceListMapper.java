@@ -21,7 +21,9 @@ public interface ChoiceListMapper {
     @Mapping(target = "assetsWithType", ignore = true)
 	@Mapping(target = "assetOversightsWithSupervisionModel", ignore = true)
 	@Mapping(target = "assetsWithSupervisoryModel", ignore = true)
-	ChoiceValue fromDTO(final ChoiceValueDTO value);
+	@Mapping(target = "editable", constant = "true")
+    @Mapping(target = "registersWithStatus", ignore = true)
+    ChoiceValue fromDTO(final ChoiceValueDTO value);
 
     default ChoiceListDTO toDTO(final ChoiceList list) {
         return ChoiceListDTO.builder()
@@ -36,6 +38,6 @@ public interface ChoiceListMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "values", ignore = true)
-    ChoiceList fromDTO(final ChoiceListDTO list);
+	ChoiceList fromDTO(final ChoiceListDTO list);
 
 }

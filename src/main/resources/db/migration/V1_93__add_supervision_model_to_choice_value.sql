@@ -7,21 +7,21 @@ VALUES ('supervision-model', 'Tilsynsmodel', 0, 1);
 SET @choice_list_id = LAST_INSERT_ID();
 
 -- Insert into choice_values
-INSERT INTO choice_values (identifier, caption) VALUES
-    ('supervision-model-selfcontrol-123456', 'Egenkontrol'),
-    ('supervision-model-physical-supervision-123456', 'Fysisk tilsyn'),
-    ('supervision-model-isae-3000-123456', 'ISAE 3000'),
-    ('supervision-model-isae-3402-123456', 'ISAE 3402'),
-    ('supervision-model-isrs-4400-123456', 'ISRS 4400'),
-    ('supervision-model-supervision-justified-suspicion-123456', 'Tilsyn udelukkende i tilfælde af begrundet mistanke'),
-    ('supervision-model-management-statement-123456', 'Ledelseserklæring'),
-    ('supervision-model-written-control-123456', 'Skriftlig kontrol'),
-    ('supervision-model-supervision-form-declaration-123456', 'Tilsynsskema med tro- og love erklæring'),
-    ('supervision-model-sworn-statement-123456', 'Tro- og love erklæring'),
-    ('supervision-model-independent-audit-123456', 'Uafhængig revisionserklæring uden typeangivelse'),
-    ('supervision-model-soc-statement-123456', 'SOC-erklæring'),
-    ('supervision-model-dsd-123456', 'DSD'),
-    ('supervision-model-dbs-123456', 'DBS');
+INSERT INTO choice_values (identifier, caption, editable) VALUES
+    ('supervision-model-selfcontrol-123456', 'Egenkontrol', true),
+    ('supervision-model-physical-supervision-123456', 'Fysisk tilsyn', true),
+    ('supervision-model-isae-3000-123456', 'ISAE 3000', true),
+    ('supervision-model-isae-3402-123456', 'ISAE 3402', true),
+    ('supervision-model-isrs-4400-123456', 'ISRS 4400', true),
+    ('supervision-model-supervision-justified-suspicion-123456', 'Tilsyn udelukkende i tilfælde af begrundet mistanke', true),
+    ('supervision-model-management-statement-123456', 'Ledelseserklæring', true),
+    ('supervision-model-written-control-123456', 'Skriftlig kontrol', true),
+    ('supervision-model-supervision-form-declaration-123456', 'Tilsynsskema med tro- og love erklæring', true),
+    ('supervision-model-sworn-statement-123456', 'Tro- og love erklæring', true),
+    ('supervision-model-independent-audit-123456', 'Uafhængig revisionserklæring uden typeangivelse', true),
+    ('supervision-model-soc-statement-123456', 'SOC-erklæring', true),
+    ('supervision-model-dsd-123456', 'DSD', true),
+    ('supervision-model-dbs-123456', 'DBS', false);
 
 -- Insert into choice_list_values
 INSERT INTO choice_list_values (choice_list_id, choice_value_id)

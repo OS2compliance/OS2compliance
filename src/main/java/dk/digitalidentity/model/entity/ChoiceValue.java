@@ -53,6 +53,9 @@ public class ChoiceValue {
     @Column
     private Long limitUpper;
 
+	@Column
+	private boolean editable;
+
     @JsonIgnore
     @ManyToMany(mappedBy = "values")
     @Builder.Default
@@ -73,8 +76,12 @@ public class ChoiceValue {
 	@Builder.Default
 	private List<AssetOversight> assetOversightsWithSupervisionModel = new ArrayList<>();
 
+	@JsonIgnore
+	@OneToMany(mappedBy = "status")
+	@Builder.Default
+	private List<Register> registersWithStatus = new ArrayList<>();
 
-	@Override
+    @Override
     public boolean equals(final Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;

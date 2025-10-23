@@ -297,7 +297,7 @@ public class AssetsController {
 		model.addAttribute("supplierName", asset.getSupplier() == null ? "" : asset.getSupplier().getName());
         model.addAttribute("defaultSendReportTo", asset.getResponsibleUsers().stream().filter(u -> StringUtils.hasLength(u.getEmail())).findFirst().orElse(null));
 		ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Kunne ikke finde valg af tilsynsmodel typer"));
-		List<ChoiceValue> values = list.getValues().stream().filter(v -> v.getIdentifier().startsWith("supervision-model-")).toList();
+		List<ChoiceValue> values = list.getValues().stream().toList();
 		model.addAttribute("supervisions", values);
 		String riskAssessmentKitosLastSyncString = asset.getProperties().stream()
 				.filter(p -> p.getKey().equals(KITOS_RISK_LAST_SYNC_PROPERTY_KEY))
@@ -781,7 +781,7 @@ public class AssetsController {
             final Supplier supplier = supplierService.get(entityId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Det angivne id findes ikke"));
 
             if (id == null) {
-				ChoiceValue choiceValue = choiceValueService.findByIdentifier("supervision-model-sworn-statement-123456").orElse(null);
+				ChoiceValue choiceValue = choiceValueService.findByIdentifier("supervision-model-sworn-statement-123456");
 				model.addAttribute("oversight", new AssetOversightDTO(null, null, new User(), choiceValue, choiceValue != null ? choiceValue.getId() : null, "", "","", AssetOversightStatus.RED, LocalDate.now(), LocalDate.now(), "suppliers"));
                 model.addAttribute("supplier", supplier);
                 model.addAttribute("inspectionType", null);

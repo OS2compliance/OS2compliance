@@ -3,7 +3,7 @@ package dk.digitalidentity.model.dto;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
-import dk.digitalidentity.model.entity.kle.KLEGroup;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;

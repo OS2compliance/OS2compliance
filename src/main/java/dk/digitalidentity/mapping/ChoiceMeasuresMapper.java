@@ -22,9 +22,11 @@ public interface ChoiceMeasuresMapper {
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "lists", ignore = true)
+    @Mapping(target = "editable", ignore = true)
     @Mapping(target = "assetsWithType", ignore = true)
     @Mapping(target = "assetOversightsWithSupervisionModel", ignore = true)
     @Mapping(target = "assetsWithSupervisoryModel", ignore = true)
+    @Mapping(target = "registersWithStatus", ignore = true)
     ChoiceValue fromDTO(final ChoiceValueDTO value);
 
     default ChoiceMeasureDTO toDTO(final ChoiceMeasure measure) {
