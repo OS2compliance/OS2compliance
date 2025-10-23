@@ -1,5 +1,7 @@
 package dk.digitalidentity.controller.mvc.Admin;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.dto.enums.TagColor;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
@@ -11,6 +13,8 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Set;
+
 @Slf4j
 @Controller
 @RequestMapping("admin/tags")
@@ -19,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 public class TagsController {
     private final TagService tagService;
 
+	public record TagListDTO(Long id, String title, TagColor color) {}
     /**
      * Main endpoint for Tags view
      * @param model
@@ -27,7 +32,9 @@ public class TagsController {
     @GetMapping()
     public String tagAdmin(final Model model){
         model.addAttribute("tag", new Tag());
-        model.addAttribute("tags",tagService.findAll());
+        model.addAttribute("tags",tagService.findAll().stream()
+				.map(t -> new TagListDTO(t.getId(), t.getValue(), t.getColor()))
+				.toList());
         return "tags/tags_view";
     }
 

@@ -9,7 +9,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
         header: "d-flex justify-content-end"
     };
 
-    new gridjs.Grid({
+    const grid = new gridjs.Grid({
         className: defaultClassName,
         sort: {
             enabled: true,
@@ -22,8 +22,12 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 hidden: true
             },
             {
-                id: "value",
+                id: "title",
                 name: "Tag"
+            },
+            {
+                id: "color",
+                name: "Farve",
             },
             {
                 id: "actions",
@@ -85,9 +89,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 'page': (page) => `Side ${page}`
             }
         }
-    }).render(document.getElementById("tagsDatatable"));
+    })
 
-    document.getElementById("tagsDatatable").addEventListener('click', (e) => {
+    const datatableId = "tagsDatatable"
+    const datatableContainerElement = document.getElementById(datatableId)
+    grid.render(datatableContainerElement);
+
+    datatableContainerElement.addEventListener('click', (e) => {
         const button = e.target.closest('button[data-action]');
         if (!button) {
             return;

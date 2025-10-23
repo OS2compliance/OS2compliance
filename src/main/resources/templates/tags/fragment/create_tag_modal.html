@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <title>Create tag</title>
+</head>
+<body>
+<div th:fragment="create_tag_modal" class="modal fade" id="addTagModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Nyt Tag</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form th:id="${formId}" class="row g-3" action="#" th:action="@{/admin/tags/create}" th:object="${tag}"
+                  method="post">
+                <div class="modal-body">
+                    <input id="createIdentifier" th:field="*{id}" type="hidden">
+                    <div class="row mt-4">
+                        <label for="opretNavn" class="col-sm-4 col-form-label">Navn</label>
+                        <div class="col-sm-8">
+                            <input id="opretNavn" th:field="*{value}" type="text" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mt-4">
+                        <label for="colorPicker" class="col-sm-4 col-form-label">Farve</label>
+                        <div class="col-sm-8">'
+                            <select class="form-select" id="colorPicker" th:field="*{color}">
+                                <option th:each="color : ${T(dk.digitalidentity.model.dto.enums.TagColor).values()}"
+                                        th:value="${color}" th:text="${color.message}"
+                                        th:style="'background-color: ' + ${color.hexCode}"></option>
+                            </select>
+                        </div>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                    <button type="submit" class="btn btn-primary" th:form="${formId}">Tilføj</button>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+</body>
+</html>
