@@ -2,7 +2,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head (gridjs = true, sweetalerts = true, burgermenu = true)}"></head>
 <body class="jumping">
-<script th:src="@{/js/tags/tags.js}" defer></script>
+<script type="module" th:src="@{/js/tags/tags.js}" defer></script>
 <script th:src="@{/js/export-service.js}" defer></script>
 
 <div id="root" class="root mn--max hd--expanded">
@@ -49,7 +49,7 @@
 </div>
 
 <th:block th:replace="~{tags/fragment/create_tag_modal :: create_tag_modal}"></th:block>
-<th:block th:replace="~{tags/fragment/edit_tag_modal :: edit_Tag_modal}"></th:block>
+<th:block th:replace="~{tags/fragment/edit_tag_modal :: edit_tag_modal}"></th:block>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 

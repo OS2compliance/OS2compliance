@@ -1,8 +1,5 @@
 package dk.digitalidentity.controller.mvc.Admin;
 
-import dk.digitalidentity.model.dto.enums.AllowedAction;
-import dk.digitalidentity.model.dto.enums.TagColor;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.TagService;
@@ -13,8 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Set;
-
 @Slf4j
 @Controller
 @RequestMapping("admin/tags")
@@ -23,7 +18,8 @@ import java.util.Set;
 public class TagsController {
     private final TagService tagService;
 
-	public record TagListDTO(Long id, String title, TagColor color) {}
+	public record ColorDTO(String label, String colorCode, String contrastCode) {}
+	public record TagListDTO(Long id, String title, ColorDTO color) {}
     /**
      * Main endpoint for Tags view
      * @param model
@@ -33,7 +29,14 @@ public class TagsController {
     public String tagAdmin(final Model model){
         model.addAttribute("tag", new Tag());
         model.addAttribute("tags",tagService.findAll().stream()
-				.map(t -> new TagListDTO(t.getId(), t.getValue(), t.getColor()))
+				.map(t -> new TagListDTO(
+						t.getId(),
+						t.getValue(),
+						new ColorDTO(
+								t.getColor().getMessage(),
+								t.getColor().getHexCode(),
+								t.getColor().getContrastHexCode())
+				))
 				.toList());
         return "tags/tags_view";
     }
@@ -61,8 +64,8 @@ public class TagsController {
 	public String updateTag(@ModelAttribute final Tag tag) {
 		Tag existingTag = tagService.getByID(tag.getId())
 				.orElseThrow();
-		existingTag.setValue(tag.getValue());
-		tagService.update(existingTag);
+
+		tagService.update(existingTag, tag);
 
 		return "redirect:/admin/tags";
 	}

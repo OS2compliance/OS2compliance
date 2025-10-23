@@ -5,7 +5,7 @@
     <title>Title</title>
 </head>
 <body>
-<div th:fragment="edit_Tag_modal" class="modal fade" id="editTagModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+<div th:fragment="edit_tag_modal" class="modal fade" id="editTagModal" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg">
         <div class="modal-content">
             <div class="modal-header">
@@ -23,12 +23,15 @@
                         </div>
                     </div>
                     <div class="row mt-4">
-                        <label for="colorPicker" class="col-sm-4 col-form-label">Farve</label>
-                        <div class="col-sm-8">'
-                            <select class="form-select" id="colorPicker" th:field="*{color}">
-                                <option th:each="color : ${T(dk.digitalidentity.model.dto.enums.TagColor).values()}"
-                                        th:value="${color}" th:text="${color.message}"
-                                        th:style="'background-color: ' + ${color.hexCode}"></option>
+                        <label for="editTagColorPicker" class="col-sm-4 col-form-label">Farve</label>
+                        <div class="d-flex gap-3 justify-content-between align-items-center col-sm-8">
+                            <select class="form-select" id="editTagColorPicker" th:field="*{color}">
+                                <option th:each="colorOption : ${T(dk.digitalidentity.model.dto.enums.TagColor).values()}"
+                                        th:value="${colorOption}"
+                                        th:text="${colorOption.message}"
+                                        th:style="'background-color: ' + ${colorOption.hexCode} + '; color: ' + ${colorOption.contrastHexCode}"
+                                        th:selected="${color != null && color == colorOption}">
+                                </option>
                             </select>
                         </div>
                     </div>

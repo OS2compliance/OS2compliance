@@ -23,12 +23,15 @@
                         </div>
                     </div>
                     <div class="row mt-4">
-                        <label for="colorPicker" class="col-sm-4 col-form-label">Farve</label>
-                        <div class="col-sm-8">'
-                            <select class="form-select" id="colorPicker" th:field="*{color}">
-                                <option th:each="color : ${T(dk.digitalidentity.model.dto.enums.TagColor).values()}"
-                                        th:value="${color}" th:text="${color.message}"
-                                        th:style="'background-color: ' + ${color.hexCode}"></option>
+                        <label for="createTagColorPicker" class="col-sm-4 col-form-label">Farve</label>
+                        <div class="d-flex gap-3 justify-content-between align-items-center col-sm-8">
+                            <select class="form-select" id="createTagColorPicker" th:field="*{color}">
+                                <option th:each="colorOption : ${T(dk.digitalidentity.model.dto.enums.TagColor).values()}"
+                                        th:value="${colorOption}"
+                                        th:text="${colorOption.message}"
+                                        th:style="'background-color: ' + ${colorOption.hexCode} + '; color: ' + ${colorOption.contrastHexCode}"
+                                        th:selected="${color != null && color == colorOption}">
+                                </option>
                             </select>
                         </div>
                     </div>

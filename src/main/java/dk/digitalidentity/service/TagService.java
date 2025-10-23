@@ -48,12 +48,15 @@ public class TagService {
     }
 
 	/**
-	 * Updates an existing Tag
-	 * @param tag The Tag Object we wish to update
-	 * @return An updated Tag Object
+	 * Updates an existing tag
+	 * @param existing existing Tag from database
+	 * @param updated Tag with updated values
+	 * @return the existing Tag with the updated values, persisted to db
 	 */
-	public Tag update (Tag tag) {
-		return tagDao.save(tag);
+	public Tag update (Tag existing, Tag updated) {
+		existing.setValue(updated.getValue());
+		existing.setColor(updated.getColor());
+		return tagDao.save(existing);
 	}
 
 }

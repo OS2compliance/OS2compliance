@@ -1,8 +1,14 @@
+import {initColorPickerListener} from "./tag-color-picker.js";
+
 const tags = new TagService()
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
+
+    initColorPickerListener('createTagColorPicker')
+    initColorPickerListener('editTagColorPicker')
+
     const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
@@ -28,6 +34,14 @@ document.addEventListener("DOMContentLoaded", function(event) {
             {
                 id: "color",
                 name: "Farve",
+                formatter: (cell, row) => {
+                    const span = document.createElement("span");
+                    span.className = 'tag-badge'
+                    span.textContent = cell.label;
+                    span.style.backgroundColor = cell.colorCode
+                    span.style.color = cell.contrastCode
+                    return gridjs.html(span.outerHTML)
+                }
             },
             {
                 id: "actions",
@@ -140,7 +154,7 @@ function TagService () {
         document.getElementById('editIdentifier').value = id;
         document.getElementById('redigerNavn').value = value;
 
-        editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
+        let editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
         editDialog.show();
     }
 }
