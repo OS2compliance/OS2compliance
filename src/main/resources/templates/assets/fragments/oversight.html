@@ -56,7 +56,7 @@
                             </td>
                             <td>
                                 <div>
-                                    <select id="nextInspectionSelectId" class="form-control form-select editField" th:field="*{nextInspection}" tabindex="-1" disabled  onchange="nextInspectionSelect()">
+                                    <select id="nextInspectionSelectId" class="form-control form-select editField" th:field="*{nextInspection}" tabindex="-1" disabled>
                                         <option value=""></option>
                                         <option th:each="inspection : ${T(dk.digitalidentity.model.entity.enums.NextInspection).values()}" th:value="${inspection.name}" th:text="${inspection.message}"></option>
                                     </select>
