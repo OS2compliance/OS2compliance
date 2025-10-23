@@ -83,6 +83,10 @@ function initGrid() {
                 },
                 formatter: (cell, row) => {
                     const url = viewUrl + row.cells[0]['data'];
+                    const uuid = row.cells[6]['data'];
+                    if (uuid) {
+                        return gridjs.html(`<a href="${url}">${cell}</a> <img src="/img/kitos_icon.svg" alt="OS2kitos Logo" width="40">`);
+                    }
                     return gridjs.html(`<a href="${url}">${cell}</a>`);
                 },
                 width: '40%'
@@ -143,6 +147,10 @@ function initGrid() {
                 },
             },
             {
+                name: "kitos_uuid",
+                hidden: true
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
@@ -165,7 +173,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.allowedActions]
             ),
             total: data => data.totalCount
         },

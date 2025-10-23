@@ -7,11 +7,13 @@ SELECT
     s.updated_at AS updated,
     s.status,
     s.localized_enums,
-    MAX(ao.creation_date) AS last_oversight_date
+    MAX(ao.creation_date) AS last_oversight_date,
+    prop.prop_value AS kitos_uuid
 FROM
     suppliers s
     LEFT JOIN assets a ON a.supplier_id = s.id
     LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
+    LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
 WHERE s.deleted = false
 GROUP BY s.id;
 
