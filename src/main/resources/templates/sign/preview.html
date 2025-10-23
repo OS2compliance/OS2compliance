@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="da">
-<head th:replace="~{fragments/header :: head}"></head>
+<head th:replace="~{fragments/header :: head (sweetalerts = true)}"></head>
 <link rel="stylesheet" th:href="@{/css/sign.css}" />
 
 <body class="jumping">
@@ -20,11 +20,6 @@
                         </nav>
                         <h1 class="page-title mb-0 mt-2">Preview rapport med signering</h1>
                         <p class="lead"></p>
-                    </div>
-                    <div class="align-self-center d-inline-flex">
-                        <a th:href="'/sign/' + ${id}" class="btn btn-success btn-lg hstack gap-2" style="margin-bottom: 8px; height: 45px">
-                            <i class="ti-ink-pen"></i> <span class="vr"></span> Signér
-                        </a>
                     </div>
                 </div>
             </div>
@@ -67,6 +62,11 @@
                         </div>
                     </div>
                 </article>
+                <div class="align-self-center d-flex justify-content-end mt-2">
+                    <a class="btn btn-success btn-lg hstack gap-2 signButton" style="margin-bottom: 8px; height: 45px">
+                        <i class="ti-ink-pen"></i> <span class="vr"></span> Signér
+                    </a>
+                </div>
             </div>
         </div>
     </section>
@@ -74,7 +74,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='signering')}"></nav>
 </div>
 
-<div th:replace="~{fragments/footer :: footer (pdf = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (pdf = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
