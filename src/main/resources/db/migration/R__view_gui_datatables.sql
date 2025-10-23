@@ -41,7 +41,8 @@ SELECT
     (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
     ts.completed as last_completion_date,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
-    GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tags
+    GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tags,
+    GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',') as tag_ids
 FROM tasks t
     LEFT JOIN task_logs ts on ts.task_id = t.id
     LEFT JOIN relatable_tags rt on rt.relatable_id = t.id

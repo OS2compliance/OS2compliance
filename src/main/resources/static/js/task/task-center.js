@@ -87,14 +87,20 @@ function initGrid() {
                     searchKey: 'tags',
                 },
                 formatter: (cell, row) => {
-                    let result = '';
-                    if (cell != null && cell.trim() !== '') {
-                        let tags = cell.split(',');
-                        for (let i =0; i< tags.length; i++) {
-                            result += '<span class="tag-badge">'+tags[i]+'</span>';
-                        }
+                    const prepend = '<div class="d-flex gap-1">'
+                    const append ='</div>'
+                    let html = ''
+                    if (cell.length>0) {
+                        html += prepend
                     }
-                    return gridjs.html(result, 'div')
+                    for (let tag of cell) {
+                        const style = `style="background-color: ${tag.color}; color: ${tag.contrast};"`
+                        html += `<span class="tag-badge" ${style}>${tag.label}</span>`
+                    }
+                    if (cell.length>0) {
+                        html += append
+                    }
+                    return gridjs.html(html)
                 },
             },
             {
