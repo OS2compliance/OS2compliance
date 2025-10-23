@@ -29,7 +29,7 @@ public class DBSOversightsController {
     @GetMapping
     public String assetsList(Model model) {
 		ChoiceList list = choiceService.findChoiceList("supervision-model").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Supervision Model Choices"));
-		List<ChoiceValue> values = list.getValues().stream().filter(v -> v.getIdentifier().startsWith("supervision-model-")).toList();
+		List<ChoiceValue> values = list.getValues().stream().toList();
 		model.addAttribute("supervisions", values);
         return "dbs/oversight/index";
     }
