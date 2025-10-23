@@ -137,6 +137,10 @@ public class RegisterService {
 		return consequenceAssessmentDao.existsByOrganisationAssessmentColumnsChoiceValueId(existingId);
 	}
 
+	public boolean isInUseByChoiceValue(long id) {
+		return registerDao.existsByStatusId(id);
+	}
+
 	public Page<RegisterGrid> getRegisters(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		Page<RegisterGrid> registers;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
