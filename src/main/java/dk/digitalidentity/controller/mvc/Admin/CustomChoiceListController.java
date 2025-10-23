@@ -62,6 +62,9 @@ public class CustomChoiceListController {
     }
 
 	private boolean isInUse(ChoiceValue choiceValue) {
-		return !choiceValue.isEditable() || assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId());
+		if (!choiceValue.isEditable()) {
+			return false;
+		}
+		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId());
 	}
 }
