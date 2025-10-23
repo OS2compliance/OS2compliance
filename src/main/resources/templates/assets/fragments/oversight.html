@@ -52,15 +52,7 @@
                                 <select class="form-control form-select editField" th:field="*{supervisoryModel}" tabindex="-1" disabled>
                                     <option value=""></option>
                                     <option th:each="model : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}" th:value="${model.name}" th:text="${model.message}"></option>
-                                    <select class="form-control form-select editField" name="supervisionModelId" th:value="${oversight?.supervisionModel?.id}" tabindex="-1" disabled>
-                                        <option value="">-- Vælg tilsynsform --</option>
-                                        <option
-                                                th:each="supervision : ${supervisions}"
-                                                th:value="${supervision.id}"
-                                                th:text="${supervision.caption}"
-                                                th:selected="${oversight?.supervisionModel != null && supervision.id == oversight.supervisionModel.id}">
-                                        </option>
-                                    </select>
+                                </select>
                             </td>
                             <td>
                                 <div>
