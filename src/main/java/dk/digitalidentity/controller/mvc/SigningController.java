@@ -166,10 +166,20 @@ public class SigningController {
         byte[] signedPDF = signPdf(s3Document);
         s3Service.uploadWithKey(s3Document.getS3FileKey(), signedPDF);
 
+
         model.addAttribute("id", s3DocumentId);
 
         return "sign/signed";
     }
+
+	@RequireUpdateOwnerOnly
+	@GetMapping("/signed/{S3DocumentId}")
+	public String signedPage(final Model model, @PathVariable("S3DocumentId") final long s3DocumentId) {
+		final S3Document s3Document = s3DocumentService.get(s3DocumentId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		final ThreatAssessment threatAssessment = threatAssessmentService.findByS3Document(s3Document);
+		model.addAttribute("threatAssessmentId", threatAssessment.getId());
+		return "sign/signed";
+	}
 
 	@RequireReadOwnerOnly
     @GetMapping("pdf/{S3DocumentId}")

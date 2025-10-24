@@ -2,6 +2,8 @@ package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
 import dk.digitalidentity.model.entity.enums.DeletionProcedure;
+import dk.digitalidentity.model.entity.enums.LoggingProcedure;
+import dk.digitalidentity.model.entity.enums.UserManagementProcedure;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -66,5 +68,22 @@ public class DataProcessing {
 
 	@Column
 	private boolean deletionAppliesToAll;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private UserManagementProcedure managementProcedure;
+
+	@Column
+	private String userManagementProcedureLink;
+
+	@Column
+	@Enumerated(EnumType.STRING)
+	private LoggingProcedure loggingProcedure;
+
+	@Column
+	private String loggingProcedureLink;
+
+	@Column
+	private String remarks;
 
 }

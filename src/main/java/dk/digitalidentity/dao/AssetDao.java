@@ -23,7 +23,7 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
     @Query("select a from Asset a inner join Property p on p.entity=a where p.key=:key")
     List<Asset> findWithPropertyKey(@Param("key") final String key);
 
-
+	List<Asset> findBySupplierId(Long supplierId);
 
     List<Asset> findAllByIdInAndDeletedFalse(Collection<Long> ids);
 
@@ -48,4 +48,6 @@ public interface AssetDao extends JpaRepository<Asset, Long> {
 	Set<Asset> findByResponsibleUsers_UuidContainsOrManagers_UuidContains(String uuid, String uuid1);
 
 	List<Asset> findAllById(Long id);
+
+	boolean existsBySupervisoryModelId(Long supervisoryModelId);
 }

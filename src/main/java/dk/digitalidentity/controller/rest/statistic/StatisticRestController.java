@@ -93,7 +93,7 @@ public class StatisticRestController {
 				.title(chartConfig.getName())
 				.type(chartConfig.getType())
 				.data(chartData)
-				.dateGrouping(groupTimeBy)
+				.dateGrouping(parsedGroupTimeBy)
 				.build());
 
 	}

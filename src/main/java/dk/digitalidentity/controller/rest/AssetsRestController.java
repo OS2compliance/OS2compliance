@@ -16,7 +16,6 @@ import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.Roles;
@@ -199,7 +198,7 @@ public class AssetsRestController {
 		}
 
         asset.setOversightResponsibleUser(user);
-        if (asset.getSupervisoryModel() != ChoiceOfSupervisionModel.DBS) {
+        if (asset.getSupervisoryModel() == null || !asset.getSupervisoryModel().getIdentifier().startsWith("supervision-model-dbs-123456")) {
             assetOversightService.setAssetsToDbsOversight(Collections.singletonList(asset));
         } else {
             assetOversightService.createOrUpdateAssociatedOversightCheck(asset);

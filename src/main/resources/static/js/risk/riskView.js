@@ -205,6 +205,42 @@ function validateFieldBeforeSetting(setFieldType, value) {
     return true;
 }
 
+function toggleAllCategories() {
+    const allIcons = document.querySelectorAll('[id^="categoryIcon"]');
+
+    let openCount = 0;
+    let closedCount = 0;
+
+    allIcons.forEach(icon => {
+        if (icon.classList.contains('pli-arrow-down')) {
+            closedCount++;
+        } else {
+            openCount++;
+        }
+    });
+
+    const shouldClose = openCount >= closedCount;
+
+    allIcons.forEach(icon => {
+        const isOpen = icon.classList.contains('pli-arrow-up');
+
+        if ((shouldClose && isOpen) || (!shouldClose && !isOpen)) {
+            icon.click();
+        }
+    });
+
+    const arrowTag = document.getElementById('arrowTag');
+    if (arrowTag) {
+        if (shouldClose) {
+            arrowTag.classList.remove('pli-arrow-up');
+            arrowTag.classList.add('pli-arrow-down');
+        } else {
+            arrowTag.classList.remove('pli-arrow-down');
+            arrowTag.classList.add('pli-arrow-up');
+        }
+    }
+}
+
 function updateAverage() {
 
     // probability
@@ -411,11 +447,14 @@ function mailReport() {
     var reportMessage = document.getElementById('reportMessage').value;
     var reportFormat = document.getElementById('reportFormat').value;
     var signReport = document.getElementById('signReport').checked;
+    let alsoSendTo = document.getElementById('alsoSendTo');
+    let selectedValues = [...alsoSendTo.selectedOptions].map(option => option.value);
     var data = {
                  "sendTo": sendReportTo,
                  "message": reportMessage,
                  "format": reportFormat,
-                 "sign": signReport
+                 "sign": signReport,
+                 "alsoSendTo": selectedValues
                };
 
     postData(`/rest/risks/${riskId}/mailReport`, data).then((response) => {
@@ -568,6 +607,7 @@ function pageLoaded() {
     for (var i = 0; i < methodSelects.length; i++) {
         methodSelects[i].addEventListener('change', methodSelectChanged, false);
     }
+    document.getElementById('toggleAllCategories').addEventListener('click', toggleAllCategories);
 
     updateAverage();
 
@@ -646,6 +686,11 @@ function pageLoaded() {
     let responsibleSelect = document.getElementById('sendReportTo');
     if(responsibleSelect !== null) {
         choiceService.initUserSelect('sendReportTo');
+    }
+    // init send also to select
+    let sendAlsoToSelect = document.getElementById('alsoSendTo');
+    if(sendAlsoToSelect !== null) {
+        choiceService.initUserSelect('alsoSendTo');
     }
 
     // checkbox listener

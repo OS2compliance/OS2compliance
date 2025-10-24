@@ -46,10 +46,9 @@
 
                         <div class="form-group row">
                             <label for="status" class="col-form-label">Status</label>
-                            <select class="form-control form-select" th:field="*{status}" name="status" id="status" tabindex="-1" disabled>
-                                <option value=""></option>
-                                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.RegisterStatus).values()}"
-                                        th:value="${status}" th:text="${status.message}"></option>
+                            <select class="form-control form-select" name="status" id="status" tabindex="-1" disabled>
+                                <option value="">-- Vælg status --</option>
+                                <option th:each="statusChoice : ${statusChoices}" th:value="${statusChoice.id}" th:text="${statusChoice.caption}" th:selected="${register.status != null && statusChoice.id == register.status.id}"></option>
                             </select>
                         </div>
                         <div class="form-group row">

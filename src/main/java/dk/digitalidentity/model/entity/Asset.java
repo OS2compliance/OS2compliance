@@ -5,13 +5,13 @@ import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIACompletionStatus;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentCompletionStatus;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
@@ -95,9 +95,10 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @Column
     private String dataProcessingAgreementLink;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private ChoiceOfSupervisionModel supervisoryModel;
+	@Nullable
+	@ManyToOne
+	@JoinColumn(name = "supervisory_model")
+	private ChoiceValue supervisoryModel;
 
     @Column
     @Enumerated(EnumType.STRING)

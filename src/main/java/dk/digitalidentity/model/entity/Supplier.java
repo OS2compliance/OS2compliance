@@ -75,7 +75,7 @@ public class Supplier extends Relatable implements HasSingleResponsibleUser {
 
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
-	@OneToMany(orphanRemoval = true, mappedBy = "supplier")
+	@OneToMany(mappedBy = "supplier")
     @JsonIgnore
 	private List<Asset> assets = new ArrayList<>();
 

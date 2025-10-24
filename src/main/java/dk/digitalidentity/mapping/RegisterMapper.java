@@ -3,11 +3,12 @@ package dk.digitalidentity.mapping;
 
 import dk.digitalidentity.model.dto.RegisterDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Register;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.RegisterService;
 import org.mapstruct.Context;
 import org.mapstruct.Mapper;
@@ -48,7 +49,7 @@ public interface RegisterMapper {
                 .updatedAt(nullSafe(() -> registerGrid.getUpdatedAt().format(DK_DATE_FORMATTER)))
                 .consequence(nullSafe(() -> registerGrid.getConsequence().getMessage(), ""))
                 .consequenceOrder(registerGrid.getConsequenceOrder())
-                .status(nullSafe(() -> registerGrid.getStatus().getMessage(), ""))
+                .status(registerGrid.getStatus() != null ? registerGrid.getStatus() : "")
                 .statusOrder(registerGrid.getStatusOrder())
                 .risk(nullSafe(() -> registerGrid.getRisk().getMessage(), ""))
                 .riskOrder(registerGrid.getRiskOrder())
@@ -67,14 +68,15 @@ public interface RegisterMapper {
 				.toList();
 	}
 
-    default Register fromDTO(final RegisterDTO registerDTO) {
+    default Register fromDTO(final RegisterDTO registerDTO, @Context ChoiceValueService choiceValueService) {
         final Register r = new Register();
         r.setId(registerDTO.getId());
         r.setName(registerDTO.getName());
         r.setPackageName(registerDTO.getPackageName());
         r.setDescription(registerDTO.getDescription());
         r.setGdprChoices(registerDTO.getGdprChoices());
-        r.setStatus(registerDTO.getStatus() == null ? RegisterStatus.NOT_STARTED : RegisterStatus.valueOf(registerDTO.getStatus()));
+		ChoiceValue byIdentifier = choiceValueService.findByIdentifier(registerDTO.getStatus());
+		r.setStatus(byIdentifier != null ? byIdentifier : choiceValueService.findByIdentifier("register-status-not-started-123456"));
         return r;
     }
 

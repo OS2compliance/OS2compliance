@@ -1,15 +1,21 @@
 CREATE OR REPLACE
-VIEW view_gridjs_suppliers AS
+    VIEW view_gridjs_suppliers AS
 SELECT
-	s.id,
-	TRIM(s.name) as name,
-	(SELECT COUNT(1) FROM assets a WHERE a.supplier_id=s.id) AS solution_count,
+    s.id,
+    TRIM(s.name) as name,
+    (SELECT COUNT(1) FROM assets a WHERE a.supplier_id=s.id) AS solution_count,
     s.updated_at AS updated,
     s.status,
-    s.localized_enums
+    s.localized_enums,
+    MAX(ao.creation_date) AS last_oversight_date,
+    prop.prop_value AS kitos_uuid
 FROM
-	suppliers s
-WHERE s.deleted = false;
+    suppliers s
+    LEFT JOIN assets a ON a.supplier_id = s.id
+    LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
+    LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
+WHERE s.deleted = false
+GROUP BY s.id;
 
 CREATE OR REPLACE
 VIEW view_gridjs_tasks AS
@@ -35,6 +41,7 @@ SELECT
           WHEN ts.task_result = 'CRITICAL_ERROR' THEN 3
         END) as task_result_order,
     (ts.id IS NOT NULL AND t.task_type = 'TASK') as completed,
+    ts.completed as last_completion_date,
     concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
     GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tags
 FROM tasks t
@@ -72,11 +79,8 @@ SELECT
           WHEN ta.assessment = 'RED' THEN 5
         END) as risk_order,
     concat(COALESCE(r.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
-    r.status,
-    (CASE WHEN r.status = 'NOT_STARTED' THEN 1
-          WHEN r.status = 'IN_PROGRESS' THEN 2
-          WHEN r.status = 'READY' THEN 3
-        END) as status_order,
+    cv_status.caption as status,
+    cv_status.id as status_order,
     (SELECT COUNT(rel.id) FROM relations rel WHERE (rel.relation_a_id = r.id OR rel.relation_b_id = r.id) AND (rel.relation_a_type = 'ASSET' OR rel.relation_b_type = 'ASSET')) AS asset_count,
     pr.prop_value as asset_assessment,
     (CASE WHEN pr.prop_value = 'GREEN' THEN 1
@@ -86,6 +90,7 @@ SELECT
           WHEN pr.prop_value = 'RED' THEN 5
         END) as asset_assessment_order
 FROM registers r
+LEFT JOIN choice_values cv_status ON cv_status.id = r.status
 LEFT JOIN consequence_assessments ca on ca.register_id = r.id
 LEFT JOIN threat_assessments ta ON ta.id = (
     SELECT MAX(tb.id) FROM threat_assessments tb
@@ -137,6 +142,7 @@ SELECT
     concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ta.localized_enums, '')) as localized_enums,
     IF(properties.prop_value IS null, 0, 1) AS kitos,
     IF(old_kitos_prop.prop_value IS NULL, 0, 1) AS old_kitos,
+    MAX(ao.creation_date) AS last_oversight_date,
     CASE
         WHEN EXISTS (
             SELECT 1
@@ -160,6 +166,7 @@ FROM assets a
     LEFT JOIN choice_values cv ON a.asset_type = cv.id
     LEFT JOIN assets_users_mapping aum ON aum.asset_id = a.id
     LEFT JOIN users mu ON aum.user_uuid = mu.uuid
+    LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
 WHERE a.deleted = false
 GROUP BY a.id;
 
@@ -369,33 +376,37 @@ WHERE a.deleted = false
 GROUP BY a.id;
 
 CREATE OR REPLACE
-VIEW view_gridjs_dbs_oversights AS
+    VIEW view_gridjs_dbs_oversights AS
 SELECT
     a.id,
     a.name,
     s.name as supplier,
     s.id as supplier_id,
-    a.supervisory_model,
+    cv_supervisory.caption as supervisory_model,
     GROUP_CONCAT(da.id ORDER BY da.id SEPARATOR ',') AS dbs_assets,
     GROUP_CONCAT(da.name ORDER BY da.name SEPARATOR ',') AS dbs_asset_names,
     a.oversight_responsible_uuid,
-    ao.creation_date as last_inspection,
-    ao.status as last_inspection_status,
+    latest_ao.creation_date as last_inspection,
+    latest_ao.status as last_inspection_status,
     IF(tl.id is null, t.id, null) AS outstanding_task_id,
-    concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(ao.localized_enums, '')) as localized_enums
+    concat(COALESCE(a.localized_enums, ''), ' ', COALESCE(latest_ao.localized_enums, '')) as localized_enums
 FROM assets a
     LEFT JOIN suppliers s on s.id = a.supplier_id
-    LEFT JOIN assets_oversight ao on ao.asset_id = a.id and ao.id = (
-    	select ao2.id from assets_oversight ao2
-        where ao2.asset_id = a.id
-        order by ao2.creation_date desc
-        limit 1
-    )
+    LEFT JOIN (
+SELECT ao.*
+    FROM assets_oversight ao
+             INNER JOIN (
+        SELECT asset_id, MAX(creation_date) as max_date
+        FROM assets_oversight
+        GROUP BY asset_id
+    ) ao_max ON ao.asset_id = ao_max.asset_id AND ao.creation_date = ao_max.max_date
+) latest_ao ON latest_ao.asset_id = a.id
+    LEFT JOIN choice_values cv_supervisory ON cv_supervisory.id = latest_ao.supervision_model
     LEFT JOIN relations r on ((r.relation_a_id = a.id OR r.relation_b_id = a.id) AND (r.relation_a_type = 'DBSASSET' OR r.relation_b_type = 'DBSASSET'))
     LEFT JOIN dbs_asset da on r.relation_a_id = da.id OR r.relation_b_id = da.id
     LEFT JOIN relations r1 on ((r1.relation_a_id = da.id OR r1.relation_b_id = da.id) AND (r1.relation_a_type = 'TASK' OR r1.relation_b_type = 'TASK'))
-    left join tasks t on r1.relation_a_id = t.id or r1.relation_b_id = t.id
-    left join task_logs tl on tl.task_id = t.id 
+    LEFT JOIN tasks t on r1.relation_a_id = t.id or r1.relation_b_id = t.id
+    LEFT JOIN task_logs tl on tl.task_id = t.id
 WHERE a.deleted = false
 GROUP BY a.id;
 

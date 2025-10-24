@@ -30,8 +30,11 @@
                         <h1 class="page-title mb-0 mt-2" th:text="${risk.name}"></h1>
                         <p class="lead showIfReadOnly" style="color: red; display: none;">NB. denne risikovurdering er skrivebeskyttet, da rapporten enten er sendt til signering eller allerede er signeret.</p>
                     </div>
-                    <div class="align-self-center d-inline-flex">
+                    <div class="align-self-center d-inline-flex gap-2">
                         <div th:replace="~{fragments/component/createTaskButton :: createTaskButton}"></div>
+                        <button type="button" class="btn btn-success btn-lg hstack" id="toggleAllCategories">
+                            <i class="pli-arrow-up" id="arrowTag"></i> <span class="vr"></span> Fold alle ud/ind
+                        </button>
                     </div>
                 </div>
             </div>
@@ -405,7 +408,7 @@
                                 <ul class="dropdown-menu dropdown-menu-end">
                                     <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='WORD')}">Download</a></li>
                                     <li><a class="dropdown-item" th:href="@{/reports/word(identifier='risk', riskId=${risk.id}, type='PDF')}">Download som PDF</a></li>
-                                    <li th:if="${signed}"><a class="dropdown-item" th:href="'/sign/pdf/' + ${risk.threatAssessmentReportS3Document.id}">Download signeret rapport</a></li>
+                                    <li><a class="dropdown-item" th:href="@{/reports/threat-assessment/{id}/excel(id=${risk.id})}">Download som Excel</a></li>                                    <li th:if="${signed}"><a class="dropdown-item" th:href="'/sign/pdf/' + ${risk.threatAssessmentReportS3Document.id}">Download signeret rapport</a></li>
                                     <li class="hideIfReadOnly"><a data-bs-toggle="modal" data-bs-target="#sendReportModal" class="dropdown-item">Send</a></li>
                                 </ul>
                             </div>

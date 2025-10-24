@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="DA">
 <body>
-<div th:fragment="dataProcessing(dbChoices, dataProcessing, primary)" class="row"
+<div th:fragment="dataProcessing(dbChoices, dataProcessing, primary, asset)" class="row"
      th:id="${'dpForm'+dataProcessing.id}">
     <!--@thymesVar id="dataProcessing" type="dk.digitalidentity.model.entity.DataProcessing"-->
     <div class="col-sm-12 col-md-12 col-lg-12 col-xl-12 gx-4">
@@ -36,6 +36,49 @@
                         </select>
                     </td>
                 </tr>
+                <tr th:if="${asset != null}"><td colspan="2"><b>Databehandleraftale</b></td></tr>
+                <tr th:if="${asset != null}">
+                    <td>Er der indgået en databehandleraftale</td>
+                    <td>
+                        <select class="form-control form-select editField" th:value="${asset?.dataProcessingAgreementStatus}" name="dataProcessingAgreementStatus" tabindex="-1" disabled th:if="${asset != null}">
+                            <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus).values()}" th:value="${status.name}" th:text="${status.message}" th:selected="${asset.dataProcessingAgreementStatus == status}"></option>
+                        </select>
+                    </td>
+                </tr>
+                <tr th:if="${asset != null}">
+                    <td>Dato</td>
+                    <td>
+                        <div>
+                            <div class="input-group" th:hidden="${asset.dataProcessingAgreementDate == null}">
+                                <input id="dataProcessingAgreementDateInput"
+                                       type="text"
+                                       class="form-control editField datepicker"
+                                       th:value="${asset.dataProcessingAgreementDate != null ? #temporals.format(asset.dataProcessingAgreementDate, 'dd/MM-yyyy') : ''}"
+                                       name="dataProcessingAgreementDate"
+                                       disabled>
+                                <button id="dataProcessingAgreementDateBtn" class="btn btn-primary editField rounded-end" type="button" disabled>
+                                    <i class="pli-calendar-4 fs-5"></i>
+                                </button>
+                            </div>
+                            <div class="form-control-static" th:hidden="${asset.dataProcessingAgreementDate != null}">Ingen</div>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${asset != null}">
+                    <td>Link</td>
+                    <td>
+                        <div>
+                            <a class="form-control-static editField" th:href="${asset.dataProcessingAgreementLink}" th:text="${asset.dataProcessingAgreementLink}" target="_blank" rel="noopener"></a>
+                            <input class="form-control editField" th:value="${asset.dataProcessingAgreementLink}" name="dataProcessingAgreementLink" hidden>
+                        </div>
+                    </td>
+                </tr>
+                <tr th:if="${asset != null}">
+                    <td>Bemærkninger</td>
+                    <td>
+                        <textarea rows="2" class="editField form-control" th:text="${asset.dataProcessing?.remarks}" name="dataProcessingAgreementRemarks" disabled></textarea>
+                    </td>
+                </tr>
                 <tr><td colspan="2"><b>Personoplysninger</b></td></tr>
                 <tr>
                     <td>Hvor mange behandles der personoplysninger om</td>
@@ -50,6 +93,12 @@
                 </tr>
 
                 <tr>
+                    <td>Note</td>
+                    <td>
+                        <textarea rows="2" class="editField form-control" th:field="${dataProcessing.typesOfPersonalInformationFreetext}" disabled></textarea>
+                    </td>
+                </tr>
+                <tr>
                     <td colspan="2">
                         <div class="row">
                             <div class="col-sm-6 col-lg-4">
@@ -57,13 +106,6 @@
                             </div>
                             <div class="col-sm-6 col-lg-8">
                                 <p>Typer af personoplysninger</p>
-                            </div>
-                        </div>
-                        <div class="row mb-2">
-                            <div class="col-sm-6 col-lg-4">
-                            </div>
-                            <div class="col-sm-6 col-lg-8">
-                                <textarea rows=5 class="editField form-control" th:field="${dataProcessing.typesOfPersonalInformationFreetext}" disabled></textarea>
                             </div>
                         </div>
                         <div class="categoriesTarget"></div>
@@ -115,6 +157,46 @@
                     <td>
                         <a class="form-control-static editField" th:href="${dataProcessing.deletionProcedureLink}" th:text="${dataProcessing.deletionProcedureLink}" target="_blank"  ></a>
                         <input class="form-control" th:value="${dataProcessing.deletionProcedureLink}" name="deletionProcedureLink" hidden>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Er der udarbejdet en procedure for brugerstyring</td>
+                    <td>
+                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-8 col-xxl-4">
+                            <select class="form-control form-select editField" name="userManagementProcedure" tabindex="-1" disabled>
+                                <option value=""></option>
+                                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.UserManagementProcedure).values()}"
+                                        th:selected="${dataProcessing.managementProcedure == status}"
+                                        th:value="${status.name}" th:text="${status.message}"></option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Procedure for brugerstyring</td>
+                    <td>
+                        <a class="form-control-static editField" th:href="${dataProcessing.userManagementProcedureLink}" th:text="${dataProcessing.userManagementProcedureLink}" target="_blank"  ></a>
+                        <input class="form-control" th:value="${dataProcessing.userManagementProcedureLink}" name="userManagementProcedureLink" hidden>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Er der udarbejdet en procedure for logning</td>
+                    <td>
+                        <div class="col-sm-12 col-md-12 col-lg-12 col-xl-8 col-xxl-4">
+                            <select class="form-control form-select editField" name="loggingProcedure" tabindex="-1" disabled>
+                                <option value=""></option>
+                                <option th:each="status : ${T(dk.digitalidentity.model.entity.enums.LoggingProcedure).values()}"
+                                        th:selected="${dataProcessing.loggingProcedure == status}"
+                                        th:value="${status.name}" th:text="${status.message}"></option>
+                            </select>
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td>Link til procedure for logning</td>
+                    <td>
+                        <a class="form-control-static editField" th:href="${dataProcessing.loggingProcedureLink}" th:text="${dataProcessing.loggingProcedureLink}" target="_blank"  ></a>
+                        <input class="form-control" th:value="${dataProcessing.loggingProcedureLink}" name="loggingProcedureLink" hidden>
                     </td>
                 </tr>
                 </tbody>

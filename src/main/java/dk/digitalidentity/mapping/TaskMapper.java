@@ -34,7 +34,8 @@ public interface TaskMapper {
                 .taskResultOrder(taskGrid.getTaskResultOrder())
                 .completed(nullSafe(taskGrid::isCompleted))
                 .tags(nullSafe(() -> taskGrid.getTags()))
-                .build();
+				.lastCompletionDate(nullSafe(() -> taskGrid.getLastCompletionDate().format(DK_DATE_FORMATTER)))
+				.build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		boolean isResponsible =	(taskGrid.getResponsibleUser() != null && taskGrid.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid()));

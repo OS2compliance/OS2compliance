@@ -178,6 +178,9 @@ function initGrid() {
                     } else if (cell === "Ikke startet") {
                         status = '<div class="d-block badge bg-danger" style="width: 60px">' + cell + '</div>';
                     }
+                    else {
+                        status = '<div class="d-block badge bg-gray" style="width: 60px">' + cell + '</div>';
+                    }
                     return gridjs.html(status, 'div');
                 },
             },

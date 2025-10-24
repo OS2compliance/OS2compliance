@@ -1,18 +1,28 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import IncidentService from "./incident-service.js";
 
-let onUnSubmittedService = new OnUnSubmittedService();
-const incidentViewService = new IncidentViewService();
+let incidentViewService;
+let incidentService;
+
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener("DOMContentLoaded", function(event) {
+    incidentService = new IncidentService();
+    incidentService.init();
+
+    const targetId = '_dm-tabsIncident';
+    incidentViewService = new IncidentViewService();
     incidentViewService.init();
+    incidentViewService.setEditable(targetId, false);
 });
 
 // Requires incident-service also
 function IncidentViewService() {
+    let onUnSubmittedService = new OnUnSubmittedService();
 
     this.init = () => {
         const form = document.getElementById(formId);
-        form.addEventListener("submit", (event) => incidentService.validateFormBeforeSubmit(event, form));
+        form.addEventListener("submit", (event) => this.validateFormBeforeSubmit(event, form));
 
         const editDescBtn = document.getElementById("editDescBtn");
         const cancelBtn = document.getElementById("cancelBtn");
@@ -92,5 +102,36 @@ function IncidentViewService() {
             }
         })
     }
+
+    this.validateFormBeforeSubmit = (event, form) => {
+        let valid = true;
+        let invalidFields = [];
+
+        // validate date field
+        const dateInput = form.querySelector('input[name="riskAssessmentConductedDate"]');
+        if (dateInput) {
+            const val = dateInput.value.trim();
+            const feedback = dateInput.parentElement.querySelector('.invalid-feedback');
+            const isValid = val === "" || isValidDateDMY(val);
+
+            if (!isValid) {
+                valid = false;
+                invalidFields.push(dateInput);
+            }
+            assetRiskKitosService.setFieldValidity(dateInput, feedback, isValid);
+        }
+
+        if (!valid) {
+            event.preventDefault();
+            if (invalidFields.length > 0) {
+                invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
+                invalidFields[0].focus();
+            }
+        } else {
+            // enable fields if disabled, to make sure they are included in the form on submit
+            document.getElementById("riskAssessmentConductedDate").disabled = false;
+            document.getElementById("result").disabled = false;
+        }
+    };
 
 }

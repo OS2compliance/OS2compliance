@@ -380,11 +380,11 @@ public class ThreatAssessmentService {
                 final int highestConsequence = findHighestConsequence(threat);
                 final int probability = threat.getProbability();
 
-                if (probability < 1 || highestConsequence < 1) {
-                    continue;
-                }
+				if (probability < 1 || highestConsequence < 1) {
+					continue;
+				}
 
-                riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
+				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
         return riskProfiles;
@@ -777,6 +777,10 @@ public class ThreatAssessmentService {
             context.setVariable("deletionProcedureCreated", riskAsset.getDataProcessing().getDeletionProcedure() != null ? riskAsset.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskAsset.getDataProcessing().getDeletionProcedureLink());
             context.setVariable("sociallyCritical", riskAsset.isSociallyCritical());
+			context.setVariable("userManagementProcedureCreated", riskAsset.getDataProcessing().getManagementProcedure() != null ? riskAsset.getDataProcessing().getManagementProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("userManagementProcedureLink", riskAsset.getDataProcessing().getUserManagementProcedureLink());
+			context.setVariable("loggingProcedureCreated", riskAsset.getDataProcessing().getManagementProcedure() != null ? riskAsset.getDataProcessing().getLoggingProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("loggingProcedureLink", riskAsset.getDataProcessing().getLoggingProcedureLink());
             String dataAccessPersons = riskAsset.getDataProcessing().getAccessWhoIdentifiers().stream()
                 .map(identifier ->
                 {
@@ -811,6 +815,10 @@ public class ThreatAssessmentService {
             context.setVariable("systemOwners", systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
             context.setVariable("deletionProcedureCreated", riskRegister.getDataProcessing().getDeletionProcedure() != null ? riskRegister.getDataProcessing().getDeletionProcedure().getMessage() : "Ikke udfyldt");
             context.setVariable("deletionProcedureLink", riskRegister.getDataProcessing().getDeletionProcedureLink());
+			context.setVariable("userManagementProcedureCreated", riskRegister.getDataProcessing().getManagementProcedure() != null ? riskAsset.getDataProcessing().getManagementProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("userManagementProcedureLink", riskRegister.getDataProcessing().getUserManagementProcedureLink());
+			context.setVariable("loggingProcedureCreated", riskRegister.getDataProcessing().getLoggingProcedure() != null ? riskAsset.getDataProcessing().getLoggingProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("loggingProcedureLink", riskRegister.getDataProcessing().getLoggingProcedureLink());
             String dataAccessPersons = riskRegister.getDataProcessing().getAccessWhoIdentifiers().stream()
                 .map(identifier ->
                 {
@@ -902,7 +910,8 @@ public class ThreatAssessmentService {
                         String method,
                         String elaboration,
                         List<PrecautionDTO> linkedPrecautions,
-                        RiskCalculationDTO residualRisk
+                        RiskCalculationDTO residualRisk,
+						Boolean relevant
     ) {}
     private List<ThreatPDFDTO> buildThreatsForPDF(Map<String, List<ThreatDTO>> threatList, List<RiskProfileDTO> riskProfiles, Map<String, String> colorMap) {
         List<ThreatPDFDTO> result = new ArrayList<>();
@@ -911,7 +920,7 @@ public class ThreatAssessmentService {
                 final RiskProfileDTO profile = riskProfiles.stream()
                     .filter(rp -> rp.getIndex() == t.getIndex())
                     .findFirst().orElse(null);
-                if (profile != null) {
+				if (profile != null) {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
                     final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
@@ -937,9 +946,18 @@ public class ThreatAssessmentService {
                             profile.getResidualProbability(),
                             profile.getResidualConsequence(),
                             residualScore,
-                            residualColor)
+                            residualColor),
+							true
                     ));
                 }
+				else {
+					result.add(new ThreatPDFDTO(
+							t.getIndex() + 1, t.getType(), null, null, null, null, null, null, buildPrecautions(t.getRelatedPrecautions()
+							.stream()
+							.map(Precaution.class::cast)
+							.toList() ), null, false
+					));
+				}
             });
         });
         return result;
