@@ -14,6 +14,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -32,6 +33,8 @@ import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -67,7 +70,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
 @RequiredArgsConstructor
-public class ThreatAssessmentService {
+public class ThreatAssessmentService implements TagableService<ThreatAssessment> {
 	private final RelationService relationService;
     private final RegisterDao registerDao;
     private final ScaleService scaleService;
@@ -300,6 +303,38 @@ public class ThreatAssessmentService {
                 return registerAssetRiskDTO;
             });
     }
+
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		ThreatAssessment entity = threatAssessmentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(ThreatAssessment.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		threatAssessmentDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		ThreatAssessment entity = threatAssessmentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(ThreatAssessment.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			threatAssessmentDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<ThreatAssessment> getEntityType() {
+		return ThreatAssessment.class;
+	}
 
     /**
      * Find the highest risk score based on a list of RiskProfileDTO objects.

@@ -9,7 +9,9 @@ import dk.digitalidentity.model.entity.DPIAResponseSectionAnswer;
 import dk.digitalidentity.model.entity.DPIATemplateQuestion;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
+
 import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAAnswerPlaceholder;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
@@ -17,6 +19,8 @@ import dk.digitalidentity.model.entity.grid.DPIAGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.PlaceholderInfo;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
 import org.htmlcleaner.CleanerProperties;
@@ -41,7 +45,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 @RequiredArgsConstructor
-public class DPIAService {
+public class DPIAService implements TagableService<DPIA> {
     private final DPIADao dpiaDao;
 	private final DPIAGridDao dpiaGridDao;
     private final AssetService assetService;
@@ -282,5 +286,37 @@ public class DPIAService {
 
 	public List<DPIA> getByIds (List<Long> ids) {
 		return dpiaDao.findAllById(ids);
+	}
+
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		DPIA entity = dpiaDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(DPIA.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		dpiaDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		DPIA entity = dpiaDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(DPIA.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			dpiaDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<DPIA> getEntityType() {
+		return DPIA.class;
 	}
 }

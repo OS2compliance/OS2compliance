@@ -1,10 +1,12 @@
 package dk.digitalidentity.model.entity;
 
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -21,14 +23,14 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "documents")
 @Getter
 @Setter
-public class Document extends Relatable implements HasSingleResponsibleUser {
+public class Document extends Relatable implements HasSingleResponsibleUser, Tagable {
 
     @NotNull
     @ManyToOne(fetch = FetchType.LAZY)
@@ -60,9 +62,9 @@ public class Document extends Relatable implements HasSingleResponsibleUser {
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate nextRevision;
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "relatable_tags", joinColumns = { @JoinColumn(name = "relatable_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
-    private List<Tag> tags = new ArrayList<>();
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "documents_tags", joinColumns = { @JoinColumn(name = "document_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {

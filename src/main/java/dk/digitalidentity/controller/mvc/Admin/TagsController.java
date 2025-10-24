@@ -2,7 +2,7 @@ package dk.digitalidentity.controller.mvc.Admin;
 
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
-import dk.digitalidentity.service.TagService;
+import dk.digitalidentity.service.tag.TagService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;

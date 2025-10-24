@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
@@ -37,7 +38,7 @@ import java.util.Set;
 @Table(name = "tasks")
 @Getter
 @Setter
-public class Task extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
+public class Task extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
 
 	@StatisticLabel("Type")
     @Column
@@ -86,9 +87,9 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
     private Set<TaskLog> logs  = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(name = "relatable_tags", joinColumns = { @JoinColumn(name = "relatable_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
-    private List<Tag> tags = new ArrayList<>();
+    @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+    @JoinTable(name = "tasks_tags", joinColumns = { @JoinColumn(name = "task_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+    private Set<Tag> tags = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {

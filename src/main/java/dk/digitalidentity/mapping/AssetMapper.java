@@ -206,6 +206,7 @@ public interface AssetMapper {
 		@Mapping(target = "active", ignore = true),
 		@Mapping(target = "dpiaCompletionStatus", ignore = true),
 		@Mapping(target = "threatAssessmentCompletionStatus", ignore = true),
+		@Mapping(target = "tags", ignore = true),
 		@Mapping(source = "productLinks", target = "productLinks", qualifiedByName = "mapToProductLinks"),
 		@Mapping(target = "departments", source = "departments")
 	})
