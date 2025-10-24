@@ -656,11 +656,13 @@ public class AssetsController {
         if(!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) && !assetService.isResponsibleFor(asset)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
-        asset.setSupervisoryModel(body.getSupervisoryModel());
+		ChoiceValue supervisoryModel = choiceValueService.findById(body.getSupervisoryModelId())
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervisory model"));
+        asset.setSupervisoryModel(supervisoryModel);
 		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
 		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
         asset.setNextInspection(body.getNextInspection());
-        if (body.getNextInspectionDate() == null || body.getSupervisoryModel().getIdentifier().startsWith("supervision-model-dbs-123456")) {
+        if (body.getNextInspectionDate() == null || supervisoryModel.getIdentifier().startsWith("supervision-model-dbs-123456")) {
             asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, LocalDate.now()));
         } else {
             asset.setNextInspectionDate(body.getNextInspectionDate());

@@ -23,6 +23,6 @@ public class DataProcessingOversightDTO {
     private NextInspection nextInspection;
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate nextInspectionDate;
-    private ChoiceValue supervisoryModel;
-    private User oversightResponsibleUser;
+	private Long supervisoryModelId;
+	private User oversightResponsibleUser;
 }
