@@ -654,6 +654,7 @@ public class AssetsController {
         }
         asset.setSupervisoryModel(body.getSupervisoryModel());
 		asset.setDataProcessingAgreementDate(body.getDataProcessingAgreementDate());
+		asset.setDataProcessingAgreementLink(body.getDataProcessingAgreementLink());
         asset.setNextInspection(body.getNextInspection());
         if (body.getNextInspectionDate() == null || body.getSupervisoryModel() == ChoiceOfSupervisionModel.DBS) {
             asset.setNextInspectionDate(assetService.getNextInspectionByInterval(asset, LocalDate.now()));
