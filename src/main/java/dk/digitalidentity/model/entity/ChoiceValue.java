@@ -67,6 +67,16 @@ public class ChoiceValue {
     private List<Asset> assetsWithType = new ArrayList<>();
 
 	@JsonIgnore
+	@OneToMany(mappedBy = "supervisoryModel")
+	@Builder.Default
+	private List<Asset> assetsWithSupervisoryModel = new ArrayList<>();
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "supervisionModel")
+	@Builder.Default
+	private List<AssetOversight> assetOversightsWithSupervisionModel = new ArrayList<>();
+
+	@JsonIgnore
 	@OneToMany(mappedBy = "status")
 	@Builder.Default
 	private List<Register> registersWithStatus = new ArrayList<>();

@@ -358,7 +358,7 @@ public class AssetService {
     }
 
     public boolean isInUseOnAssets(Long assetTypeId) {
-        return assetDao.countByAssetType_Id(assetTypeId) > 0;
+        return assetDao.countByAssetType_Id(assetTypeId) > 0 || assetDao.existsBySupervisoryModelId(assetTypeId);
     }
 
     record DPIAQuestionDTO(String question, String templateAnswer, String response) {}

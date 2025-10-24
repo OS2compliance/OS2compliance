@@ -14,6 +14,7 @@ public class ChoiceValueService {
 
 	private final ChoiceValueDao choiceValueDao;
 
+
 	public Optional<ChoiceValue> findById(long id) {
 		return choiceValueDao.findById(id);
 	}
