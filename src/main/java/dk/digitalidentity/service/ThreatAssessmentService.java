@@ -336,6 +336,16 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		return ThreatAssessment.class;
 	}
 
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return threatAssessmentDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return threatAssessmentDao.findTagsByEntityIds(entityIds);
+	}
+
     /**
      * Find the highest risk score based on a list of RiskProfileDTO objects.
      * @param riskProfileDTOs The list of RiskProfileDTO objects containing the risk profile information.

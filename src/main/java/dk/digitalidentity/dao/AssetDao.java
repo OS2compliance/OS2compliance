@@ -5,17 +5,17 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import dk.digitalidentity.service.tag.TagableRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Supplier;
 
-public interface AssetDao extends JpaRepository<Asset, Long> {
+public interface AssetDao extends TagableRepository<Asset> {
 
     @Query("select a from Asset a inner join Property p on p.entity=a where p.key=:key and p.value=:value")
     Optional<Asset> findByPropertyValue(@Param("key") final String key, @Param("value") final String value);

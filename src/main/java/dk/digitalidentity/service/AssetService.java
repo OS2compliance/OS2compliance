@@ -393,6 +393,16 @@ public class AssetService implements TagableService<Asset> {
 	}
 
 	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return assetDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return assetDao.findTagsByEntityIds(entityIds);
+	}
+
+	@Override
 	public Class<Asset> getEntityType() {
 		return Asset.class;
 	}

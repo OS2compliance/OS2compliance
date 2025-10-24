@@ -34,6 +34,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -318,5 +319,14 @@ public class DPIAService implements TagableService<DPIA> {
 	@Override
 	public Class<DPIA> getEntityType() {
 		return DPIA.class;
+	}
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return dpiaDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return dpiaDao.findTagsByEntityIds(entityIds);
 	}
 }

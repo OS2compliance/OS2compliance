@@ -23,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -163,6 +164,16 @@ public class DocumentService implements TagableService<Document> {
 	@Override
 	public Class<Document> getEntityType() {
 		return Document.class;
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return documentDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return documentDao.findTagsByEntityIds(entityIds);
 	}
 
     private static void setTaskRevisionInterval(final Document document, final Task task) {
