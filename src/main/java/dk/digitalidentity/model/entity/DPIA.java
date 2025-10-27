@@ -103,7 +103,7 @@ public class DPIA extends Relatable implements HasSingleResponsibleUser, Statist
 	private DataProtectionImpactAssessmentScreening dpiaScreening;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-	@JoinTable(name = "dpia_tags", joinColumns = { @JoinColumn(name = "dpia_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@JoinTable(name = "dpia_tag", joinColumns = { @JoinColumn(name = "dpia_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();
 
 	@Override

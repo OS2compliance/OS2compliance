@@ -154,7 +154,7 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
     private String comment;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-	@JoinTable(name = "threat_assessment_tags", joinColumns = { @JoinColumn(name = "threat_assessment_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@JoinTable(name = "threat_assessment_tag", joinColumns = { @JoinColumn(name = "threat_assessment_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();
 
     @Override

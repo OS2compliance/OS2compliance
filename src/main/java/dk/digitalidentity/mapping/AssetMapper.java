@@ -9,6 +9,7 @@ import dk.digitalidentity.model.api.SupplierShallowEO;
 import dk.digitalidentity.model.api.SupplierWriteEO;
 import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.AssetDTO;
+import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetProductLink;
@@ -16,10 +17,12 @@ import dk.digitalidentity.model.entity.AssetSupplierMapping;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.tag.TagService;
 import org.apache.commons.lang3.BooleanUtils;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
@@ -33,6 +36,7 @@ import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -51,7 +55,9 @@ public interface AssetMapper {
         return value.atZone(LOCAL_TZ_ID).toOffsetDateTime();
     }
 
-    default AssetDTO toDTO(final AssetGrid assetGrid) {
+    default AssetDTO toDTO(final AssetGrid assetGrid, Map<Long, Tag> tagsById) {
+		Set<TagDTO> tags = TagService.toTagDTO(assetGrid.getTagIds(), tagsById);
+
         AssetDTO assetDTO = AssetDTO.builder()
             .id(assetGrid.getId())
             .name(assetGrid.getName())
@@ -72,6 +78,7 @@ public interface AssetMapper {
 			.oldKitos(assetGrid.isOldKitos())
 			.active(assetGrid.isActive())
 			.lastOversightDate(assetGrid.getLastOversightDate())
+				.tags(tags)
             .build();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
@@ -90,9 +97,9 @@ public interface AssetMapper {
 		return assetDTO;
     }
 
-    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids) {
+    default List<AssetDTO> toDTO(List<AssetGrid> assetGrids, Map<Long, Tag> tagsById) {
         List<AssetDTO> assetDTOS = new ArrayList<>();
-        assetGrids.forEach(a -> assetDTOS.add(toDTO(a)));
+        assetGrids.forEach(a -> assetDTOS.add(toDTO(a, tagsById)));
         return assetDTOS;
     }
 

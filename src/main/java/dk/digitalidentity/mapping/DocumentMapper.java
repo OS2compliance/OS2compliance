@@ -5,17 +5,16 @@ import dk.digitalidentity.model.api.DocumentEO;
 import dk.digitalidentity.model.api.PageEO;
 import dk.digitalidentity.model.api.UserEO;
 import dk.digitalidentity.model.api.UserWriteEO;
-import dk.digitalidentity.model.dto.AssetDTO;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.tag.TagService;
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.Mappings;
@@ -23,13 +22,10 @@ import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -38,21 +34,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public interface DocumentMapper {
 
 	default DocumentDTO toDTO(final DocumentGrid documentGrid, Map<Long, Tag> tagsById) {
-		Set<TagDTO> tags = documentGrid.getTagIds().isBlank() ? Set.of() : Arrays.stream(documentGrid.getTagIds().split(","))
-				.map(Long::parseLong)
-				.map(id -> {
-					Tag tag = tagsById.get(id);
-					if (tag == null) {
-						return null;
-					}
-					return TagDTO.builder()
-							.label(tag.getValue())
-							.color(tag.getColor().getHexCode())
-							.contrast(tag.getColor().getContrastHexCode())
-							.build();
-				})
-				.filter(Objects::nonNull)
-				.collect(Collectors.toSet());
+		Set<TagDTO> tags = TagService.toTagDTO(documentGrid.getTagIds(), tagsById);
 
 		DocumentDTO documentDTO = DocumentDTO.builder()
 				.id(documentGrid.getId())

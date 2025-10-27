@@ -3,7 +3,6 @@ package dk.digitalidentity.model.dto;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
-import dk.digitalidentity.model.entity.ChoiceValue;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -63,6 +62,9 @@ public class RegisterDTO {
 	@ExcludeFromExport
 	@Builder.Default
 	private Set<String> kleSubjects = new HashSet<>();
+	@ExcludeFromExport
+	@Builder.Default
+	private Set<TagDTO> tags = new HashSet<>();
 	@ExcludeFromExport
 	@Builder.Default
 	private Set<AllowedAction> allowedActions = new HashSet<>();

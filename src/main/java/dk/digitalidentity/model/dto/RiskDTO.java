@@ -8,9 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.HashSet;
 import java.util.Set;
 
-import java.util.List;
 
 @Data
 @Builder
@@ -47,4 +47,8 @@ public class RiskDTO {
 	private String relatedAssetsAndRegisters;
 	@ExcelColumn(headerName = "Trusselskataloger", order = 9)
 	private String threatCatalogs;
+
+	@ExcludeFromExport
+	@Builder.Default
+	private Set<TagDTO> tags = new HashSet<>();
 }

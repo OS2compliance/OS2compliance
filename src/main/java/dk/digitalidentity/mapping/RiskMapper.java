@@ -2,17 +2,19 @@ package dk.digitalidentity.mapping;
 
 
 import dk.digitalidentity.model.dto.RiskDTO;
+import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.grid.RiskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.tag.TagService;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
@@ -20,7 +22,9 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface RiskMapper {
-    default RiskDTO toDTO(final RiskGrid riskGrid) {
+    default RiskDTO toDTO(final RiskGrid riskGrid, Map<Long, Tag> tagsById) {
+		Set<TagDTO> tags = TagService.toTagDTO(riskGrid.getTagIds(), tagsById);
+
         return RiskDTO.builder()
                 .id(riskGrid.getId())
                 .type(riskGrid.getType().getMessage())
@@ -37,16 +41,17 @@ public interface RiskMapper {
                 .fromExternalSource(riskGrid.isFromExternalSource())
                 .externalLink(riskGrid.getExternalLink() != null ? riskGrid.getExternalLink() : "")
 				.threatCatalogs(riskGrid.getThreatCatalogs())
+				.tags(tags)
                 .build();
     }
 
-    default RiskDTO toDTO(final RiskGrid riskGrid, Set<AllowedAction> allowedActions) {
-        RiskDTO riskDTO = toDTO(riskGrid);
+    default RiskDTO toDTO(final RiskGrid riskGrid, Set<AllowedAction> allowedActions, Map<Long, Tag> tagsById) {
+        RiskDTO riskDTO = toDTO(riskGrid, tagsById);
 		riskDTO.setAllowedActions(allowedActions);
         return riskDTO;
     }
 
-    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid, Set<String> responsibleAssetNames, String userUuid) {
+    default List<RiskDTO> toDTO(List<RiskGrid> riskGrid, Set<String> responsibleAssetNames, String userUuid, Map<Long, Tag> tagsById) {
 		return riskGrid.stream().map(r -> {
 			Set<AllowedAction> allowedActions = new HashSet<>();
 			boolean isAssetOwner = containsAnyString(r.getRelatedAssetsAndRegisters(), responsibleAssetNames);
@@ -65,7 +70,7 @@ public interface RiskMapper {
 				allowedActions.add(AllowedAction.COPY);
 			}
 
-			return toDTO(r, allowedActions);
+			return toDTO(r, allowedActions, tagsById);
 		}).toList();
     }
 

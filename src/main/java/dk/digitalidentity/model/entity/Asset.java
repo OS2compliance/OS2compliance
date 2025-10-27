@@ -258,7 +258,7 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 	private List<OrganisationUnit> departments;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-	@JoinTable(name = "asset_tags", joinColumns = { @JoinColumn(name = "asset_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@JoinTable(name = "asset_tag", joinColumns = { @JoinColumn(name = "asset_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();
 
 	@Transient

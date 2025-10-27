@@ -86,7 +86,7 @@ public class Supplier extends Relatable implements HasSingleResponsibleUser, Tag
 	private List<Asset> assets = new ArrayList<>();
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-	@JoinTable(name = "supplier_tags", joinColumns = { @JoinColumn(name = "supplier_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@JoinTable(name = "supplier_tag", joinColumns = { @JoinColumn(name = "supplier_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();
 
 	@Override

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.dao.ChoiceDPIADao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
@@ -17,6 +18,7 @@ import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
@@ -45,7 +47,9 @@ import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
@@ -84,6 +88,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -118,6 +123,7 @@ public class DPIARestController {
 			ThreatAssessmentReportApprovalStatus status,
 			DPIAScreeningConclusion screeningConclusion,
 			Boolean isExternal,
+			Set<TagDTO> tags,
 			Set<AllowedAction> allowedActions) {
 	}
 
@@ -136,9 +142,13 @@ public class DPIARestController {
 		// Normal mode - return paginated JSON
 		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, page, limit, user);
 
+		Set<Long> entityIds = dpiaGrids.getContent().stream().map(DPIAGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = dpiaService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert dpiaGrids != null;
 
-		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
+		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid, tagsById);
 		return new PageDTO<>(dpiaGrids.getTotalElements(), dtos);
 	}
 
@@ -157,9 +167,13 @@ public class DPIARestController {
 		// Fetch all records (no pagination)
 		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
 
+		Set<Long> entityIds = dpiaGrids.getContent().stream().map(DPIAGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = dpiaService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert dpiaGrids != null;
 
-		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
+		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid, tagsById);
 		excelExportService.exportToExcel(dtos, DPIAListDTO.class, fileName, response);
 	}
 
@@ -543,7 +557,7 @@ public class DPIARestController {
 				.contains(SecurityUtil.getPrincipalUuid());
 	}
 
-	private List<DPIAListDTO> mapToListDTO(Page<DPIAGrid> dpiaGrids, String userUuid) {
+	private List<DPIAListDTO> mapToListDTO(Page<DPIAGrid> dpiaGrids, String userUuid, Map<Long, Tag> tagsById) {
 		Set<DPIA> ownedAssetDPIAs = dpiaService.findByOwnedAsset(userUuid);
 		return dpiaGrids.stream().map(dpia -> {
 							Set<AllowedAction> allowedActions = new HashSet<>();
@@ -570,6 +584,7 @@ public class DPIARestController {
 									dpia.getReportApprovalStatus(),
 									dpia.getScreeningConclusion(),
 									dpia.isExternal(),
+									TagService.toTagDTO(dpia.getTagIds(), tagsById),
 									allowedActions
 							);
 						}
