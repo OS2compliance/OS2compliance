@@ -87,7 +87,7 @@ class CustomChoiceValuesService {
         const modalTitle = document.getElementById('choiceValueModalTitle');
 
         // Set form action for edit
-        form.action = `/admin/choicelists/${id}/edit`;
+        form.action = `/rest/choicelists/custom/${id}/edit`;
         modalTitle.textContent = 'Rediger';
 
         // Set form fields
@@ -105,7 +105,7 @@ class CustomChoiceValuesService {
         const modalTitle = document.getElementById('choiceValueModalTitle');
 
         // Set form action for create
-        form.action = '/admin/choicelists/create';
+        form.action = `/rest/choicelists/custom/${choiceListId}/create`;
         modalTitle.textContent = 'Opret ny';
 
         // Clear form fields
@@ -133,17 +133,16 @@ class CustomChoiceValuesService {
             cancelButtonText: 'Annuller'
         }).then((result) => {
             if (result.isConfirmed) {
-                fetch(`/choicelists/${id}/delete`, {
+                fetch(`/choicelists/${id}/delete/${choiceListId}`, {
                     method: 'POST'
-                })
-                    .then(response => {
-                        if (response.ok) {
-                            toastService.info("Værdi slettet");
-                        }
-                        else {
-                            toastService.error("Der opstod en teknisk fejl");
-                        }
-                    });
+                }).then(response => {
+                    if (response.ok) {
+                        toastService.info("Værdi slettet");
+                    }
+                    else {
+                        toastService.error("Der opstod en teknisk fejl");
+                    }
+                });
             }
         });
     }

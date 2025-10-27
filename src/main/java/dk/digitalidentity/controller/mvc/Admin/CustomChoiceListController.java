@@ -12,11 +12,15 @@ import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.RegisterService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
 import java.util.Set;
@@ -51,7 +55,7 @@ public class CustomChoiceListController {
 	public String customChoiceList(Model model, @PathVariable long id) {
 		ChoiceList list = choiceService.findChoiceList(id).orElse(null);
 		Set<ChoiceValueDTO> collect = list.getValues().stream().map(choiceValue -> {
-			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), choiceValue.isEditable());
+			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), !isInUse(choiceValue));
 		}).collect(Collectors.toSet());
 		model.addAttribute("choiceList", list);
 
@@ -59,23 +63,19 @@ public class CustomChoiceListController {
 		return "admin/choicelist/choice_list_view";
 	}
 
-    record ChoiceListValueDTO(long id, String caption, String description, boolean removable){}
-    record EditableCustomChoiceList(long id, String name, boolean multiSelectable, List<ChoiceListValueDTO> values){}
 	@RequireUpdateAll
-    @GetMapping("{id}/edit")
-    public String editChoiceListFragment (Model model, @PathVariable long id) {
-        ChoiceList choiceList = choiceService.findChoiceList(id)
-            .orElseThrow();
+	@PostMapping("/{choiceValueId}/delete/{choiceListId}")
+	public String deleteChoiceValue(@PathVariable Long choiceValueId, @PathVariable Long choiceListId) {
 
+		ChoiceValue choiceValue = choiceValueService.findById(choiceValueId).orElse(null);
+		if (choiceValue == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find choiceValue");
+		}
 
-        model.addAttribute("choiceList", new EditableCustomChoiceList(
-            choiceList.getId(),
-            choiceList.getName(),
-            choiceList.getMultiSelect(),
-            choiceList.getValues().stream().map(choiceValue -> new ChoiceListValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), !isInUse(choiceValue))).toList()
-        ));
-        return "admin/fragments/custom_choice_list_edit :: customChoiceListEditModal";
-    }
+		choiceValueService.delete(choiceValue);
+
+		return "redirect:/admin/choicelists/" + choiceListId;
+	}
 
 	private boolean isInUse(ChoiceValue choiceValue) {
 		if (!choiceValue.isEditable()) {
