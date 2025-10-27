@@ -73,7 +73,7 @@ function ViewTaskService() {
     }
 
     this.loadDescriptionTemplateSelect = function() {
-        const select = document.getElementById('descriptionTemplateSelect');
+        const select = document.getElementById('taskDescriptionTemplateSelect');
         const descriptionField = document.getElementById('description');
         select.addEventListener("click", function () {
             const selectedValue = this.value;
@@ -83,14 +83,14 @@ function ViewTaskService() {
                 descriptionField.value = '';
                 return;
             }
-            // Fetch the template description from backend
-            fetch()
-                .then(data => {
-                    descriptionField.value = data.description;
-                })
-                .catch(error => {
-                    console.error('Der opstod en teknisk fejl:', error);
-                });
+            // TODO: Fetch the template description from backend
+            // fetch()
+            //     .then(data => {
+            //         descriptionField.value = data.description;
+            //     })
+            //     .catch(error => {
+            //         console.error('Der opstod en teknisk fejl:', error);
+            //     });
         });
     }
 
