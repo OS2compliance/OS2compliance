@@ -1,4 +1,6 @@
-    const defaultClassName = {
+import formatTags from "../tags/tag-grid-formatter.js";
+
+const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
         header: "d-flex justify-content-end"
@@ -244,6 +246,13 @@
                     },
                 },
                 {
+                    name: "Tags",
+                    searchable: {
+                        searchKey: 'tag_names',
+                    },
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
+                {
                     id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
@@ -265,7 +274,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.tags, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },

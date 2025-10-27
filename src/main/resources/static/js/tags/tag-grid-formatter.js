@@ -1,4 +1,5 @@
 export default function formatTags(cell, row) {
+    console.log('cell',cell)
     if (cell.length < 0) {
         return ''
     }

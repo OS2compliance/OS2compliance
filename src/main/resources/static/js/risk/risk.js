@@ -1,4 +1,5 @@
 import {initStatisticView} from "../statistic/statisticView.js";
+import formatTags from "../tags/tag-grid-formatter";
 
 const columnProperties = [
     'id',
@@ -216,6 +217,13 @@ function CreateTable() {
                         });
                         return gridjs.html(`<div class="d-flex flex-wrap" style="max-height: 50px; overflow: hidden;">${badges.join('')}</div>`);
                     },
+                },
+                {
+                    name: "Tags",
+                    searchable: {
+                        searchKey: 'tag_names',
+                    },
+                    formatter: (cell, row) => formatTags(cell, row),
                 },
                 {
                     id: 'allowedActions',

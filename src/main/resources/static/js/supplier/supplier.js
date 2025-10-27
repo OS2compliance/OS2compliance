@@ -1,3 +1,5 @@
+import formatTags from "../tags/tag-grid-formatter.js";
+
 let editDialog;
 
 document.addEventListener("DOMContentLoaded", async function (event) {
@@ -151,6 +153,13 @@ function initGrid() {
                 hidden: true
             },
             {
+                name: "Tags",
+                searchable: {
+                    searchKey: 'tag_names',
+                },
+                formatter: (cell, row) => formatTags(cell, row),
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
@@ -173,7 +182,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.tags, supplier.allowedActions]
             ),
             total: data => data.totalCount
         },

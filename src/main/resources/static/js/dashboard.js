@@ -1,4 +1,5 @@
 import {initStatisticView} from "./statistic/statisticView.js";
+import formatTags from "./tags/tag-grid-formatter.js";
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -121,20 +122,11 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 },
                 {
                     name: "Tags",
-                    searchable: {searchKey: 'tags'},
-                    formatter: (cell, row) => {
-                        var result = '<ul>';
-                        if (cell != null && cell.trim() !== '') {
-                            var tags = cell.split(',');
-                            for (var i = 0; i < tags.length; i++) {
-                                result += '<li>' + tags[i] + '</li>';
-                            }
-                        }
-
-                        result += '</ul>';
-                        return gridjs.html(''.concat(...result), 'div')
+                    searchable: {
+                        searchKey: 'tag_names',
                     },
-                }
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
             ],
             server: {
                 url: gridTasksUrl + "/" + userId,
@@ -224,7 +216,14 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         }
                         return gridjs.html(status, 'div');
                     }
-                }
+                },
+                {
+                    name: "Tags",
+                    searchable: {
+                        searchKey: 'tag_names',
+                    },
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
             ],
             server: {
                 url: gridAssetsUrl + "/" + userId,
@@ -233,7 +232,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [asset.id, asset.name, asset.supplier, asset.assetType, asset.responsibleUser, asset.updatedAt, asset.criticality, asset.assetStatus]
+                    [asset.id, asset.name, asset.supplier, asset.assetType, asset.responsibleUser, asset.updatedAt, asset.criticality, asset.assetStatus, asset.tags]
                 ),
                 total: data => data.totalCount
             },
@@ -343,7 +342,14 @@ document.addEventListener("DOMContentLoaded", function (event) {
                         }
                         return gridjs.html(''.concat(...status), 'div')
                     },
-                }
+                },
+                {
+                    name: "Tags",
+                    searchable: {
+                        searchKey: 'tag_names',
+                    },
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
             ],
             server: {
                 url: gridRegistersUrl + "/" + userId,
@@ -352,7 +358,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(register =>
-                    [register.id, register.name, register.responsibleOU, register.responsibleUser, register.updatedAt, register.consequence, register.status]
+                    [register.id, register.name, register.responsibleOU, register.responsibleUser, register.updatedAt, register.consequence, register.status,register.tags]
                 ),
                 total: data => data.count
             },
@@ -441,21 +447,10 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 {
                     name: "Tags",
                     searchable: {
-                        searchKey: 'tags'
+                        searchKey: 'tag_names',
                     },
-                    formatter: (cell, row) => {
-                        var result = '<ul>';
-                        if (cell != null && cell.trim() !== '') {
-                            var tags = cell.split(',');
-                            for (var i = 0; i < tags.length; i++) {
-                                result += '<li>' + tags[i] + '</li>';
-                            }
-                        }
-
-                        result += '</ul>';
-                        return gridjs.html(''.concat(...result), 'div')
-                    },
-                }
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
             ],
             server: {
                 url: gridDocumentsUrl + "/" + userId,
