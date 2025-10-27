@@ -78,6 +78,10 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
+	@ManyToOne
+	@JoinColumn(name = "task_description_template")
+	private ChoiceValue taskDescriptionTemplate;
+
 	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude

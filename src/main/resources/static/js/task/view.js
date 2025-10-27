@@ -30,10 +30,10 @@ function ViewTaskService() {
         saveEditTaskBtn?.addEventListener("click", () => {
             onUnSubmittedService.reset();
         });
-
         this.loadViewAndEditForm();
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
+        this.loadDescriptionTemplateSelect();
         choiceService.initTagSelect("tagsSelect");
         initFormValidationForForm('editForm');
         initFormValidationForForm('completeTaskForm');
@@ -70,6 +70,28 @@ function ViewTaskService() {
     this.fitDescription = function (textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    this.loadDescriptionTemplateSelect = function() {
+        const select = document.getElementById('descriptionTemplateSelect');
+        const descriptionField = document.getElementById('description');
+        select.addEventListener("click", function () {
+            const selectedValue = this.value;
+
+            // If "Ingen valgt" (no selection) or empty value
+            if (!selectedValue || selectedValue === '') {
+                descriptionField.value = '';
+                return;
+            }
+            // Fetch the template description from backend
+            fetch()
+                .then(data => {
+                    descriptionField.value = data.description;
+                })
+                .catch(error => {
+                    console.error('Der opstod en teknisk fejl:', error);
+                });
+        });
     }
 
     this.setEditMode = function(enabled) {
