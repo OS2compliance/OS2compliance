@@ -171,8 +171,7 @@
                             </div>
 
                             <div class="row">
-                                <div
-                                    th:replace="~{fragments/tags :: tagsfragment(tags=${document.tags}, completed=false, relatableId=${document.id})}"></div>
+                                <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (tags=${document.tags}, parentId=${document.id}, parentType='document', allowAdd=${changeableDocument}, allowRemove=${changeableDocument})}"></div>
                             </div>
                         </div>
                     </div>

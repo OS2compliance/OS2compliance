@@ -1,6 +1,5 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
 import initRelatedTagList from "../tags/related-tag-list.js";
-import initTagSelect from "../tags/tag-selector.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let viewTaskService = new ViewTaskService();
@@ -37,8 +36,6 @@ function ViewTaskService() {
         this.loadViewAndEditForm();
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
-
-        initTagSelect("addTagsSelect");
 
         initFormValidationForForm('editForm');
         initFormValidationForForm('completeTaskForm');

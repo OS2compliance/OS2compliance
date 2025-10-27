@@ -1,16 +1,21 @@
+import initTagSelect from "./tag-selector.js";
+
 export default function initRelatedTagList(contextElementSelector) {
     const fragmentIdentifierClass = 'related-tag-list'
     let fragmentContainerElement
     if (contextElementSelector) {
         fragmentContainerElement = document.querySelector(contextElementSelector);
     } else {
-        fragmentContainerElement = document.querySelector(`.${fragmentIdentifierClass}`)
+        fragmentContainerElement = document.querySelector(`.${fragmentIdentifierClass}`).parentElement
     }
     initRemoveTagButtons(fragmentContainerElement)
     initAddTagButton()
+
+    initTagSelect("addTagsSelect");
 }
 
 function initRemoveTagButtons(fragmentContainerElement) {
+
     const tagFragmentContainer = fragmentContainerElement.querySelector('.related-tag-list')
     const targetId = tagFragmentContainer.dataset.targetId;
     const targetType = tagFragmentContainer.dataset.targetType;

@@ -12,7 +12,7 @@ const updateUrl = (prev, query) => {
 
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
-    userChoicesEditSelect = choiceService.initUserSelect('userSelect');
+    const userChoicesEditSelect = choiceService.initUserSelect('userSelect');
     choiceService.initDocumentRelationSelect();
     initTagSelect('createDocumentTagsSelect');
 
@@ -20,6 +20,9 @@ function createDocumentFormLoaded() {
         checkInputField(userChoicesEditSelect);
     });
     initFormValidationForForm("createDocumentModal", () => validateChoices(userChoicesEditSelect));
+
+    const cancelButton = document.getElementById('createCancelButton');
+    cancelButton.addEventListener('click', (e) => formReset())
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {

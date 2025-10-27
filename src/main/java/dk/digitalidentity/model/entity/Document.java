@@ -63,7 +63,7 @@ public class Document extends Relatable implements HasSingleResponsibleUser, Tag
     private LocalDate nextRevision;
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-	@JoinTable(name = "documents_tags", joinColumns = { @JoinColumn(name = "document_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@JoinTable(name = "documents_tag", joinColumns = { @JoinColumn(name = "document_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();
 
     @Override
