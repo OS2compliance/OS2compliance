@@ -19,6 +19,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequireAdmin
@@ -40,8 +42,22 @@ public class CustomChoiceListController {
         model.addAttribute("choiceLists", customChoiceLists.stream().map(choiceList -> new CustomChoiceListDTO(choiceList.getId(), choiceList.getName(), choiceList.getMultiSelect())).toList() );
 
         model.addAttribute("isSuperuser",SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
-        return "admin/custom_choice_lists";
+        return "admin/choicelist/custom_choice_lists";
     }
+
+	public record ChoiceValueDTO(long id, String caption, String description, boolean editable) {}
+	@RequireReadAll
+	@GetMapping("/choice/view/{id}")
+	public String customChoiceList(Model model, @PathVariable long id) {
+		ChoiceList list = choiceService.findChoiceList(id).orElse(null);
+		Set<ChoiceValueDTO> collect = list.getValues().stream().map(choiceValue -> {
+			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), choiceValue.isEditable());
+		}).collect(Collectors.toSet());
+		model.addAttribute("choiceList", list);
+
+		model.addAttribute("choiceValues", collect);
+		return "admin/choicelist/choice_list_view";
+	}
 
     record ChoiceListValueDTO(long id, String caption, String description, boolean removable){}
     record EditableCustomChoiceList(long id, String name, boolean multiSelectable, List<ChoiceListValueDTO> values){}

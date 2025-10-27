@@ -27,7 +27,11 @@ class CustomChoiceListService {
                 },
                 {
                     id: "name",
-                    name: "Titel"
+                    name: "Titel",
+                    formatter: (cell, row) => {
+                        let url = choiceListViewUrl + row.cells[0]['data'];
+                        return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    }
                 },
                 {
                     id: 'handlinger',
