@@ -13,11 +13,13 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.List;
+
 @Slf4j
 @RestController
 @RequireAdmin
 @RequiredArgsConstructor
-@RequestMapping(value = "rest/tags", consumes = "application/json", produces = "application/json")
+@RequestMapping( "rest/tags")
 public class TagsRestController {
     private final TagService tagService;
 
@@ -28,7 +30,7 @@ public class TagsRestController {
      */
 	@RequireDeleteAll
     @Transactional
-    @DeleteMapping(value = "{tagId}")
+    @DeleteMapping(value = "{tagId}/delete")
     public ResponseEntity<?> delete(@PathVariable("tagId") final Long tagId) {
         final Tag tag = tagService.getByID(tagId)
             .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -37,19 +39,24 @@ public class TagsRestController {
     }
 
 	@RequireUpdateAll
-	@PostMapping("{targetType}/{targetId}/tags/{tagId}")
-	public ResponseEntity<Void> addTag(@PathVariable final Long tagId, @PathVariable final Long targetId, @PathVariable final String targetType) {
+	@PostMapping("add/{targetType}/{targetId}")
+	public ResponseEntity<Void> addTag(@PathVariable final Long targetId, @PathVariable final String targetType, @RequestBody final List<Long> tags) {
 
-		if (tagId == null || targetId == null || targetType == null) {
+		if (tags == null || targetId == null || targetType == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
 		}
 
-		tagService.addTag(tagId, targetType, targetId);
+		for (final Long tagId : tags) {
+			if (tagId != null) {
+				tagService.addTag(tagId, targetType, targetId);
+			}
+		}
+
 		return ResponseEntity.ok().build();
 	}
 
 	@RequireDeleteAll
-	@DeleteMapping("{targetType}/{targetId}/tags/{tagId}")
+	@DeleteMapping("{tagId}/remove/{targetType}/{targetId}")
 	public ResponseEntity<Void> removeTag(@PathVariable final Long tagId, @PathVariable final Long targetId, @PathVariable final String targetType) {
 
 		if (tagId == null || targetId == null || targetType == null) {

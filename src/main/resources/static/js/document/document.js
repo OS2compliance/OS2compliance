@@ -1,4 +1,5 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import initTagSelect from "../tags/tag-selector.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let userChoicesEditSelect = null;
@@ -6,7 +7,7 @@ let userChoicesEditSelect = null;
 document.addEventListener("DOMContentLoaded", function(event) {
     loadViewAndEditForm();
     addRelationFormLoaded();
-    choiceService.initTagSelect("tagsSelect");
+    initTagSelect("tagsSelect");
 
     initEditButton();
 

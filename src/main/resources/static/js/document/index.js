@@ -1,3 +1,4 @@
+import initTagSelect from "../tags/tag-selector.js";
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -13,7 +14,7 @@ function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
     userChoicesEditSelect = choiceService.initUserSelect('userSelect');
     choiceService.initDocumentRelationSelect();
-    choiceService.initTagSelect('createDocumentTagsSelect');
+    initTagSelect('createDocumentTagsSelect');
 
     userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(userChoicesEditSelect);

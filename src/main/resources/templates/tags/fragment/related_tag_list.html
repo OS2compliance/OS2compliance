@@ -2,12 +2,12 @@
 <head>
     <title></title></head>
 <body>
-<th:block th:fragment="related_tag_list (tags, parentId, allowAdd, allowRemove)">
-    <div class="card shadow-none col-md-12">
+<th:block th:fragment="related_tag_list (tags, parentId, parentType, allowAdd, allowRemove)">
+    <div class="related-tag-list card shadow-none col-md-12" th:data-target-id="${parentId}" th:data-target-type="${parentType}">
         <div class="card-header toolbar">
             <h5 class="toolbar-start m-0">Tags</h5>
             <div class="toolbar-end">
-                <button th:if="${allowAdd}" type="button" class="btn btn-secondary addTagBtn btn-xs" th:attr="data-relatableid=${parentId}" data-bs-toggle="modal" data-bs-target="#addTagModal">Tilføj</button>
+                <button th:if="${allowAdd}" type="button" class="btn btn-secondary addTagBtn btn-xs" th:data-target-id="${parentId}" th:data-target-type="${parentType}" data-bs-toggle="modal" data-bs-target="#addTagModal">Tilføj</button>
             </div>
         </div>
         <div class="card-body">
@@ -24,7 +24,7 @@
                         <span class="tag-badge" th:text="${tag.value}" th:style="'background-color: ' + ${tag.color.hexCode} + '; color: ' + ${tag.color.contrastHexCode}"></span>
                     </td>
                     <td class="col-lg-1">
-                        <i th:if="${allowRemove}" class="pli-cross fs-5 me-2" onclick="tagService.deleteTag(this)" th:attr="data-relatableid=${parentId}, data-tagid=${tag.id}"></i>
+                        <i th:if="${allowRemove}" class="removeTagButton pli-cross fs-5 me-2" th:data-tagid="${tag.id}"></i>
                     </td>
                 </tr>
                 </tbody>

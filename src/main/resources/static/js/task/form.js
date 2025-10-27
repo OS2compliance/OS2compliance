@@ -1,3 +1,4 @@
+import initTagSelect from "../tags/tag-selector.js";
 
 let copyTaskService = new CopyTaskService();
 let editTaskService = new EditTaskService();
@@ -103,7 +104,7 @@ function CopyTaskService() {
 
        let tagCopySelect = this.getScopedElementById('copyTaskTagsSelect');
        if(tagCopySelect !== null) {
-           choiceService.initTagSelect('copyTaskTagsSelect');
+           initTagSelect('copyTaskTagsSelect');
        }
 
         initFormValidationForForm("copyTaskModalForm");

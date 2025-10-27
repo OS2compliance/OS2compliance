@@ -47,7 +47,7 @@ SELECT
     GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',') as tag_ids
 FROM tasks t
     LEFT JOIN task_logs ts on ts.task_id = t.id
-    LEFT JOIN relatable_tags rt on rt.relatable_id = t.id
+    LEFT JOIN tasks_tag rt on rt.task_id = t.id
     LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE
     t.deleted = false AND
@@ -258,7 +258,7 @@ SELECT
     d.localized_enums,
     GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value ASC SEPARATOR ',') as tags
 FROM documents d
-    LEFT JOIN relatable_tags rt on rt.relatable_id = d.id
+    LEFT JOIN documents_tag rt on rt.document_id = d.id
     LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted=false
 GROUP BY d.id;

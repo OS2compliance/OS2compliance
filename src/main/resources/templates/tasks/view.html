@@ -4,7 +4,6 @@
 <body class="jumping">
 
 <script th:src="@{/js/oversight/oversight-service.js}" defer></script>
-<script th:src="@{/js/tag-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -216,7 +215,7 @@
                                 <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
                             </div>
                             <div class="row">
-                                <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (tags=${task.tags}, parentId=${task.id}, allowAdd=${completed == null || !completed}, allowRemove=${completed == null || !completed})}"></div>
+                                <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (tags=${task.tags}, parentId=${task.id}, parentType='task', allowAdd=${completed == null || !completed}, allowRemove=${completed == null || !completed})}"></div>
                             </div>
                         </div>
                         <div id="_dm-tabsHistorik" class="tab-pane fade" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
@@ -237,7 +236,7 @@
 <div th:replace="~{tasks/completeTask :: completeTask (referral=${myFancyReferral})}"></div>
 </th:block>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${task.id})}"></div>
-<div th:replace="~{fragments/addTags :: addTags(relatableId=${task.id})}"></div>
+<div th:replace="~{tags/fragment/add_tag_modal :: addTags(targetId=${task.id}, targetType='task')}"></div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
 
