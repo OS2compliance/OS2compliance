@@ -1,4 +1,5 @@
 import initTagSelect from "../tags/tag-selector.js";
+import formatTags from "../tags/tag-grid-formatter.js";
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -121,6 +122,13 @@ function initGrid() {
                 },
             },
             {
+                name: "Tags",
+                searchable: {
+                    searchKey: 'tag_names',
+                },
+                formatter: (cell, row) => formatTags(cell, row),
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
@@ -142,7 +150,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(document =>
-                [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status, document.allowedActions ]
+                [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status, document.tags, document.allowedActions ]
             ),
             total: data => data.totalCount
         },

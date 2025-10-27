@@ -88,7 +88,7 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     private Set<TaskLog> logs  = new HashSet<>();
 
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-    @JoinTable(name = "tasks_tag", joinColumns = { @JoinColumn(name = "task_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+    @JoinTable(name = "task_tag", joinColumns = { @JoinColumn(name = "task_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
     private Set<Tag> tags = new HashSet<>();
 
     @Override

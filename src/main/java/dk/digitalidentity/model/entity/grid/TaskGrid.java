@@ -69,7 +69,7 @@ public class TaskGrid  implements HasSingleResponsibleUser {
     private String localizedEnums;
 
     @Column
-    private String tags;
+    private String tagNames;
 
 	@Column
 	private String tagIds;

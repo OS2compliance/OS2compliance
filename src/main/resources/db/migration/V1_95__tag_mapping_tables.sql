@@ -1,5 +1,5 @@
 
-CREATE TABLE documents_tag
+CREATE TABLE document_tag
 (
     document_id BIGINT NOT NULL,
     tag_id  BIGINT NOT NULL,
@@ -9,7 +9,7 @@ CREATE TABLE documents_tag
     INDEX idx_document_tag_tag_document (tag_id, document_id)
 ) collate = utf8mb4_danish_ci;
 
-CREATE TABLE tasks_tag
+CREATE TABLE task_tag
 (
     task_id BIGINT NOT NULL,
     tag_id  BIGINT NOT NULL,
@@ -20,14 +20,14 @@ CREATE TABLE tasks_tag
 ) COLLATE = utf8mb4_danish_ci;
 
 -- Migrate task tags to new table
-INSERT INTO tasks_tag (task_id, tag_id)
+INSERT INTO task_tag (task_id, tag_id)
 SELECT DISTINCT rt.relatable_id, rt.tag_id
 FROM relatable_tags rt
 WHERE EXISTS (SELECT 1 FROM tasks t WHERE t.id = rt.relatable_id)
   AND EXISTS (SELECT 1 FROM tags tg WHERE tg.id = rt.tag_id);
 
 -- migrate document tags to new table
-INSERT INTO documents_tag (document_id, tag_id)
+INSERT INTO document_tag (document_id, tag_id)
 SELECT DISTINCT rt.relatable_id, rt.tag_id
 FROM relatable_tags rt
 WHERE EXISTS (SELECT 1 FROM documents d WHERE d.id = rt.relatable_id)
@@ -46,7 +46,7 @@ CREATE TABLE asset_tag
     INDEX idx_asset_tag_tag_asset (tag_id, asset_id)
 ) collate = utf8mb4_danish_ci;
 
-CREATE TABLE registers_tag
+CREATE TABLE register_tag
 (
     register_id BIGINT NOT NULL,
     tag_id  BIGINT NOT NULL,
@@ -56,7 +56,7 @@ CREATE TABLE registers_tag
     INDEX idx_register_tag_tag_register (tag_id, register_id)
 ) collate = utf8mb4_danish_ci;
 
-CREATE TABLE suppliers_tag
+CREATE TABLE supplier_tag
 (
     supplier_id BIGINT NOT NULL,
     tag_id  BIGINT NOT NULL,
@@ -66,7 +66,7 @@ CREATE TABLE suppliers_tag
     INDEX idx_supplier_tag_tag_supplier (tag_id, supplier_id)
 ) collate = utf8mb4_danish_ci;
 
-CREATE TABLE threat_assessments_tag
+CREATE TABLE threat_assessment_tag
 (
     threat_assessment_id BIGINT NOT NULL,
     tag_id  BIGINT NOT NULL,

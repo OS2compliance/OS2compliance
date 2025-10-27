@@ -185,7 +185,7 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 	private Set<KLESubject> kleSubjects = new HashSet<>();
 
 	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
-	@JoinTable(name = "registers_tags", joinColumns = { @JoinColumn(name = "register_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	@JoinTable(name = "register_tags", joinColumns = { @JoinColumn(name = "register_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();
 
 	@Override

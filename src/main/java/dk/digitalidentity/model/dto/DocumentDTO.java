@@ -31,7 +31,7 @@ public class DocumentDTO {
 	@ExcludeFromExport
     private Integer statusOrder;
 	@ExcludeFromExport
-    private String tags;
+    private Set<TagDTO> tags;
 	@ExcludeFromExport
     private Set<AllowedAction> allowedActions;
 }
