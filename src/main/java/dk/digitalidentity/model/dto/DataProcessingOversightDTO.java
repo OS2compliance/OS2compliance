@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import lombok.Getter;
@@ -23,6 +23,6 @@ public class DataProcessingOversightDTO {
     private NextInspection nextInspection;
     @DateTimeFormat(pattern = "dd/MM-yyyy")
     private LocalDate nextInspectionDate;
-    private ChoiceOfSupervisionModel supervisoryModel;
-    private User oversightResponsibleUser;
+	private Long supervisoryModelId;
+	private User oversightResponsibleUser;
 }

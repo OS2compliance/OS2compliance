@@ -447,11 +447,14 @@ function mailReport() {
     var reportMessage = document.getElementById('reportMessage').value;
     var reportFormat = document.getElementById('reportFormat').value;
     var signReport = document.getElementById('signReport').checked;
+    let alsoSendTo = document.getElementById('alsoSendTo');
+    let selectedValues = [...alsoSendTo.selectedOptions].map(option => option.value);
     var data = {
                  "sendTo": sendReportTo,
                  "message": reportMessage,
                  "format": reportFormat,
-                 "sign": signReport
+                 "sign": signReport,
+                 "alsoSendTo": selectedValues
                };
 
     postData(`/rest/risks/${riskId}/mailReport`, data).then((response) => {
@@ -674,6 +677,11 @@ function pageLoaded() {
     let responsibleSelect = document.getElementById('sendReportTo');
     if(responsibleSelect !== null) {
         choiceService.initUserSelect('sendReportTo');
+    }
+    // init send also to select
+    let sendAlsoToSelect = document.getElementById('alsoSendTo');
+    if(sendAlsoToSelect !== null) {
+        choiceService.initUserSelect('alsoSendTo');
     }
 
     // checkbox listener

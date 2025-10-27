@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -23,11 +24,6 @@ import static dk.digitalidentity.model.api.Examples.*;
 public class AssetEO {
     public enum DataProcessingAgreementStatus {
         YES, NO, ON_GOING, NOT_RELEVANT
-    }
-    public enum ChoiceOfSupervisionModel {
-        SELFCONTROL, PHYSICAL_SUPERVISION, ISAE_3000, ISAE_3402, ISRS_4400, SUPERVISION_JUSTIFIED_SUSPICION,
-        MANAGEMENT_STATEMENT, WRITTEN_CONTROL, SUPERVISION_FORM_DECLARATION_OF_FAITH_AND_LAWS,
-        SWORN_STATEMENT, INDEPENDENT_AUDIT, SOC_STATEMENT, DSD, DBS
     }
     public enum NextInspection {
         DATE, MONTH, QUARTER, HALF_YEAR, YEAR, EVERY_2_YEARS, EVERY_3_YEARS, DBS
@@ -71,8 +67,8 @@ public class AssetEO {
     private LocalDate dataProcessingAgreementDate;
     @Schema(description = "Link to data processing agreement", example = ASSET_DPA_LINK_EXAMPLE)
     private String dataProcessingAgreementLink;
-    @Schema(description = "Supervising model", example = ASSET_DPA_SUPERVISION_EXAMPLE)
-    private ChoiceOfSupervisionModel supervisoryModel;
+    @Schema(description = "Supervising model")
+    private AssetSupervisoryModelUpdateEO supervisoryModel;
     @Schema(description = "Next inspection setting", example = ASSET_DPA_INSPECTION_SETTING_EXAMPLE)
     private NextInspection nextInspection;
     @Schema(description = "Next inspection date", example = ASSET_DPA_DATE_EXAMPLE)

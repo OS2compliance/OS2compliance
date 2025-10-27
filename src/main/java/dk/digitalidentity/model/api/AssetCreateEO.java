@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.api;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
@@ -39,7 +40,7 @@ public class AssetCreateEO {
     @Schema(description = "Link to data processing agreement", example = ASSET_DPA_LINK_EXAMPLE)
     private String dataProcessingAgreementLink;
     @Schema(description = "Supervising model", example = ASSET_DPA_SUPERVISION_EXAMPLE)
-    private AssetEO.ChoiceOfSupervisionModel supervisoryModel;
+    private ChoiceValue supervisoryModel;
     @Schema(description = "Next inspection setting", example = ASSET_DPA_INSPECTION_SETTING_EXAMPLE)
     private AssetEO.NextInspection nextInspection;
     @Schema(description = "Next inspection date", example = ASSET_DPA_DATE_EXAMPLE)

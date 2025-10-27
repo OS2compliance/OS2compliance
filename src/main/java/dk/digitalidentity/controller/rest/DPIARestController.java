@@ -427,7 +427,7 @@ public class DPIARestController {
 		return (bos.toString(StandardCharsets.UTF_8));
 	}
 
-	public record MailReportDTO(String message, String sendTo, boolean sign) {
+	public record MailReportDTO(String message, String sendTo, boolean sign, List<String> alsoSendTo) {
 	}
 	@RequireCreateOwnerOnly
 	@Transactional
@@ -453,6 +453,19 @@ public class DPIARestController {
 
 		byte[] byteData = assetService.getDPIAPdf(dpia);
 		String uuid = UUID.randomUUID().toString();
+
+		List<String> allRecipientEmails = new ArrayList<>();
+		allRecipientEmails.add(responsibleUser.getEmail());
+
+		if (dto.alsoSendTo != null && !dto.alsoSendTo.isEmpty()) {
+			for (String userUuid : dto.alsoSendTo) {
+				userService.findByUuid(userUuid).ifPresent(u -> {
+					if (u.getEmail() != null && !u.getEmail().isBlank()) {
+						allRecipientEmails.add(u.getEmail());
+					}
+				});
+			}
+		}
 
 		List<Asset> savedAssets = new ArrayList<>();
 		if (dto.sign) {
@@ -493,18 +506,24 @@ public class DPIARestController {
 					+ environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "</a>"
 					: "";
 
-			String title = formatTemplateString(template.getTitle(), recipient, objectName, messageFromSender, loggedInUserName, link);
-			String message = formatTemplateString(template.getMessage(), recipient, objectName, messageFromSender, loggedInUserName, link);
+			for (String recipientEmail : allRecipientEmails) {
+				String title = formatTemplateString(template.getTitle(), recipientEmail, objectName, messageFromSender, loggedInUserName, link);
+				String message = formatTemplateString(template.getMessage(), recipientEmail, objectName, messageFromSender, loggedInUserName, link);
 
-			emailEvent.setMessage(message);
-			emailEvent.setSubject(title);
-			emailEvent.setTemplateType(template.getTemplateType());
+				final EmailEvent emailEventForRecipient = EmailEvent.builder()
+						.email(recipientEmail)
+						.subject(title)
+						.message(message)
+						.templateType(template.getTemplateType())
+						.build();
+
+				emailEventForRecipient.getAttachments().addAll(emailEvent.getAttachments());
+
+				eventPublisher.publishEvent(emailEventForRecipient);
+			}
 		} else {
 			log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
 		}
-
-		eventPublisher.publishEvent(emailEvent);
-
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
