@@ -86,13 +86,32 @@ class CustomChoiceValuesService {
         const form = document.getElementById('choiceValueForm');
         const modalTitle = document.getElementById('choiceValueModalTitle');
 
-        // Set form action for edit
-        form.action = `/rest/choicelists/custom/${id}/edit`;
+        // Set form action for edit - use REST endpoint
+        form.action = `/rest/choicelists/custom/${choiceListId}/${id}/edit`;
         modalTitle.textContent = 'Rediger';
 
         // Set form fields
         document.getElementById('name').value = caption;
         document.getElementById('description').value = description === "null" ? '' : description;
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const updatedCaption = document.getElementById('name').value;
+            const updatedDescription = document.getElementById('description').value;
+
+            const data = {
+                caption: updatedCaption,
+                description: updatedDescription
+            };
+
+            const response = await networkService.Post(form.action, data);
+            if (response.success) {
+                window.location.href = `/admin/choicelists/choice/view/${choiceListId}`;
+            } else {
+                toastService.error("Der opstod en teknist fejl: ", response.error);
+            }
+        };
 
         const modal = new bootstrap.Modal(modalContainer);
         modal.show();
@@ -104,8 +123,8 @@ class CustomChoiceValuesService {
         const form = document.getElementById('choiceValueForm');
         const modalTitle = document.getElementById('choiceValueModalTitle');
 
-        // Set form action for create
-        form.action = `/admin/choicelists/custom/${choiceListId}/create`;
+        // Set form action for create - use REST endpoint
+        form.action = `/rest/choicelists/custom/${choiceListId}/create`;
         modalTitle.textContent = 'Opret ny';
 
         // Clear form fields
@@ -123,14 +142,12 @@ class CustomChoiceValuesService {
                 description: description
             };
 
-            try {
-                await networkService.Post(form.action, data);
-            } catch (error) {
-                // TODO: It errors for some reason? Talk to julius about this one maybe
+            const response = await networkService.Post(form.action, data);
+            if (response.success) {
+                window.location.href = `/admin/choicelists/choice/view/${choiceListId}`;
+            } else {
+                toastService.error("Der opstod en teknist fejl: ", response.error);
             }
-
-            // Always redirect after POST
-            window.location.href = `/admin/choicelists/choice/view/${choiceListId}`;
         };
 
         const modal = new bootstrap.Modal(modalContainer);
