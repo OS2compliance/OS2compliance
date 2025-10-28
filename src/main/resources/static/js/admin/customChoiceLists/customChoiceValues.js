@@ -98,19 +98,40 @@ class CustomChoiceValuesService {
         modal.show();
     }
 
-    onCreateChoiceList() {
+    async onCreateChoiceList() {
         const modalContainerId = 'createOrEditChoiceValueModal';
         const modalContainer = document.getElementById(modalContainerId);
         const form = document.getElementById('choiceValueForm');
         const modalTitle = document.getElementById('choiceValueModalTitle');
 
         // Set form action for create
-        form.action = `/rest/choicelists/custom/${choiceListId}/create`;
+        form.action = `/admin/choicelists/custom/${choiceListId}/create`;
         modalTitle.textContent = 'Opret ny';
 
         // Clear form fields
         document.getElementById('name').value = '';
         document.getElementById('description').value = '';
+
+        form.onsubmit = async (e) => {
+            e.preventDefault();
+
+            const caption = document.getElementById('name').value;
+            const description = document.getElementById('description').value;
+
+            const data = {
+                caption: caption,
+                description: description
+            };
+
+            try {
+                await networkService.Post(form.action, data);
+            } catch (error) {
+                // TODO: It errors for some reason? Talk to julius about this one maybe
+            }
+
+            // Always redirect after POST
+            window.location.href = `/admin/choicelists/choice/view/${choiceListId}`;
+        };
 
         const modal = new bootstrap.Modal(modalContainer);
         modal.show();

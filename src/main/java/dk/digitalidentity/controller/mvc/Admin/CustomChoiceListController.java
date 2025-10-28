@@ -18,11 +18,14 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -76,6 +79,37 @@ public class CustomChoiceListController {
 
 		return "redirect:/admin/choicelists/" + choiceListId;
 	}
+
+	public record CreateChoiceListRecord(String caption, String description) {}
+	@RequireUpdateAll
+	@PostMapping("/custom/{choiceListId}/create")
+	public String createChoiceValue(
+			@PathVariable Long choiceListId,
+			@RequestBody CreateChoiceListRecord createChoiceListRecord) {
+
+		ChoiceList choiceList = choiceService.findChoiceList(choiceListId).orElse(null);
+		if (choiceList == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Could not find choiceList");
+		}
+		Random random = new Random();
+		int randomNumber = 100000 + random.nextInt(900000);
+
+		ChoiceValue value = new ChoiceValue();
+		value.setCaption(createChoiceListRecord.caption());
+		String identifier = choiceList.getIdentifier() + "-" + createChoiceListRecord.caption() + "-" + randomNumber;
+		// TODO: Maybe it should just generate a new ID instead? Like try 4 times and then fail?
+		if (choiceValueService.findByIdentifier(identifier) != null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Duplicate identifier");
+		}
+		value.setIdentifier(identifier);
+		value.setDescription(createChoiceListRecord.description());
+		value = choiceValueService.save(value);
+		choiceList.getValues().add(value);
+
+		choiceService.save(choiceList);
+		return "redirect:/admin/choicelists/choice/view/" + choiceListId;
+	}
+
 
 	private boolean isInUse(ChoiceValue choiceValue) {
 		if (!choiceValue.isEditable()) {

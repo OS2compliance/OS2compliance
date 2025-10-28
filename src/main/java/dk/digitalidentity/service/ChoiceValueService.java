@@ -23,8 +23,8 @@ public class ChoiceValueService {
 		return choiceValueDao.findByIdentifier(identifier).orElse(null);
 	}
 
-	public void save(ChoiceValue choiceValue) {
-		choiceValueDao.save(choiceValue);
+	public ChoiceValue save(ChoiceValue choiceValue) {
+		return choiceValueDao.save(choiceValue);
 	}
 
 	public void delete(ChoiceValue choiceValue) {
