@@ -15,7 +15,6 @@ export default function initRelatedTagList(contextElementSelector) {
 }
 
 function initRemoveTagButtons(fragmentContainerElement) {
-
     const tagFragmentContainer = fragmentContainerElement.querySelector('.related-tag-list')
     const targetId = tagFragmentContainer.dataset.targetId;
     const targetType = tagFragmentContainer.dataset.targetType;

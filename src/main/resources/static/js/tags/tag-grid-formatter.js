@@ -1,5 +1,4 @@
 export default function formatTags(cell, row) {
-    console.log('cell',cell)
     if (cell.length < 0) {
         return ''
     }
@@ -30,7 +29,6 @@ function createTag(text) {
 
 function createContainer() {
     const element = document.createElement('div')
-    element.classList.add('d-flex')
-    element.classList.add('gap-1')
+    element.className = 'd-flex flex-wrap gap-1'
     return element
 }

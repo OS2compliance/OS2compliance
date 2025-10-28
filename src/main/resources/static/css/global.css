@@ -211,12 +211,12 @@ html {
     display: inline-block;
     min-width: 3rem;
     min-height: 1rem;
-    padding: .35em .65em;
-    font-weight: 600;
-    line-height: 1;
+    padding: .1rem .33rem;
+    font-weight: 500;
+    font-size: 0.6rem;
     text-align: center;
     white-space: nowrap;
     vertical-align: baseline;
-    border-radius: .4375rem;
+    border-radius: .5rem;
     border-color: black;
 }

@@ -236,7 +236,7 @@
 <div th:replace="~{tasks/completeTask :: completeTask (referral=${myFancyReferral})}"></div>
 </th:block>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${task.id})}"></div>
-<div th:replace="~{tags/fragment/add_tag_modal :: addTags(targetId=${task.id}, targetType='task')}"></div>
+<div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${task.id}, targetType='task')}"></div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
 
