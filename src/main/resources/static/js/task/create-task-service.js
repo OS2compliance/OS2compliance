@@ -77,8 +77,8 @@ function CreateTaskService() {
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
+        this.createTaskNotificationChoicesSelect = choiceService.initNotificationSelect('taskNotificationSelectInput');
         this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
-
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
              var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
@@ -87,6 +87,11 @@ function CreateTaskService() {
              })).catch(error => toastService.error(error));
         })
 
+        const notificationOption = document.getElementById("taskNotificationSetting");
+        notificationOption.addEventListener("change", (event) => {
+            this.showOrHideNotificationSelect(event.target.checked);
+        });
+        notificationOption.dispatchEvent(new Event("change"));
 
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
@@ -144,6 +149,19 @@ function CreateTaskService() {
             },
             false,
         );
+    }
+
+    this.showOrHideNotificationSelect = function (value) {
+        const select = document.getElementById("taskNotificationSelectInput");
+        const selectDiv = document.getElementById("taskNotificationSelectDiv");
+        select.value = '';
+
+        if (value) {
+            selectDiv.hidden = false;
+        }
+        else {
+            selectDiv.hidden = true;
+        }
     }
 
 }

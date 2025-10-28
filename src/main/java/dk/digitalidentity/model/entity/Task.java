@@ -75,6 +75,9 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @Column
     private Boolean notifyResponsible = true;
 
+//	@Column
+	private Boolean taskNotificationOverride = false;
+
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
