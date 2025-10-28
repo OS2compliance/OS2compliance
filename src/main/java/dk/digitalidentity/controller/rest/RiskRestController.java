@@ -138,7 +138,7 @@ public class RiskRestController {
 		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, page, limit, user);
 
 		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
-		Map<Long, Tag> tagsById = registerService.findTagsByEntityIds(entityIds).stream()
+		Map<Long, Tag> tagsById = threatAssessmentService.findTagsByEntityIds(entityIds).stream()
 				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
 
 		assert risks != null;

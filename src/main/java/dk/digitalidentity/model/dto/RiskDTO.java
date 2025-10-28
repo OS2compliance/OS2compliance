@@ -42,13 +42,13 @@ public class RiskDTO {
 	@ExcludeFromExport
     private String externalLink;
 	@ExcludeFromExport
+	@Builder.Default
+	private Set<TagDTO> tags = new HashSet<>();
+	@ExcludeFromExport
 	private Set<AllowedAction> allowedActions;
 	@ExcelColumn(headerName = "Entitet", order = 5)
 	private String relatedAssetsAndRegisters;
 	@ExcelColumn(headerName = "Trusselskataloger", order = 9)
 	private String threatCatalogs;
 
-	@ExcludeFromExport
-	@Builder.Default
-	private Set<TagDTO> tags = new HashSet<>();
 }
