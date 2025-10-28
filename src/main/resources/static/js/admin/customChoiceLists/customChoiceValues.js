@@ -86,11 +86,9 @@ class CustomChoiceValuesService {
         const form = document.getElementById('choiceValueForm');
         const modalTitle = document.getElementById('choiceValueModalTitle');
 
-        // Set form action for edit - use REST endpoint
         form.action = `/rest/choicelists/custom/${choiceListId}/${id}/edit`;
         modalTitle.textContent = 'Rediger';
 
-        // Set form fields
         document.getElementById('name').value = caption;
         document.getElementById('description').value = description === "null" ? '' : description;
 
@@ -123,11 +121,9 @@ class CustomChoiceValuesService {
         const form = document.getElementById('choiceValueForm');
         const modalTitle = document.getElementById('choiceValueModalTitle');
 
-        // Set form action for create - use REST endpoint
         form.action = `/rest/choicelists/custom/${choiceListId}/create`;
         modalTitle.textContent = 'Opret ny';
 
-        // Clear form fields
         document.getElementById('name').value = '';
         document.getElementById('description').value = '';
 
@@ -159,8 +155,8 @@ class CustomChoiceValuesService {
         createButton.addEventListener('click', () => this.onCreateChoiceList());
     }
 
-    onDeleteChoiceValue(id) {
-        Swal.fire({
+    async onDeleteChoiceValue(id) {
+        const result = await Swal.fire({
             title: 'Bekræft fjernelse',
             text: `Er du sikker på at du vil fjerne denne værdi?`,
             icon: 'warning',
@@ -169,20 +165,27 @@ class CustomChoiceValuesService {
             cancelButtonColor: '#3085d6',
             confirmButtonText: 'Ja, fjern det!',
             cancelButtonText: 'Annuller'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                fetch(`/choicelists/${id}/delete/${choiceListId}`, {
-                    method: 'POST'
-                }).then(response => {
-                    if (response.ok) {
-                        toastService.info("Værdi slettet");
-                    }
-                    else {
-                        toastService.error("Der opstod en teknisk fejl");
-                    }
-                });
-            }
         });
+
+        if (result.isConfirmed) {
+            const response = await fetch(`/rest/choicelists/custom/${choiceListId}/${id}/delete`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': networkService.XCSRFToken || token,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    toastService.info("Værdi slettet");
+                    window.location.reload();
+                } else {
+                    toastService.error("Kunne ikke slette værdi: ", data.error);
+                }
+            }
+        }
     }
 }
 

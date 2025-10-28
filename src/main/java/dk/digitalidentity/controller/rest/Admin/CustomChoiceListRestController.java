@@ -85,4 +85,30 @@ public class CustomChoiceListRestController {
 
 		return ResponseEntity.ok(Map.of("success", true, "choiceListId", choiceListId));
 	}
+
+	@RequireUpdateAll
+	@PostMapping("/{choiceListId}/{choiceValueId}/delete")
+	public ResponseEntity<Map<String, Object>> deleteChoiceValue(
+			@PathVariable Long choiceListId,
+			@PathVariable Long choiceValueId) {
+
+		ChoiceList choiceList = choiceService.findChoiceList(choiceListId).orElse(null);
+		if (choiceList == null) {
+			return ResponseEntity.badRequest()
+					.body(Map.of("success", false, "error", "Could not find choiceList"));
+		}
+
+		ChoiceValue choiceValue = choiceValueService.findById(choiceValueId).orElse(null);
+		if (choiceValue == null) {
+			return ResponseEntity.badRequest()
+					.body(Map.of("success", false, "error", "Could not find choice value"));
+		}
+
+		choiceList.getValues().remove(choiceValue);
+		choiceService.save(choiceList);
+
+		choiceValueService.delete(choiceValue);
+
+		return ResponseEntity.ok(Map.of("success", true, "choiceListId", choiceListId));
+	}
 }
