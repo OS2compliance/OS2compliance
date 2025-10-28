@@ -431,7 +431,13 @@ SELECT d.id,
        (SELECT dr.dpia_report_approval_status FROM dpia_report dr WHERE dr.dpia_id = d.id order by dr.id desc limit 1)                                               AS report_approval_status,
        (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id)                                                                                         as screening_conclusion,
        d.from_external_source                                                                                                                                        as is_external,
-       dr.report_approver_uuid                                                                                                                                       AS approver_uuid
+       dr.report_approver_uuid                                                                                                                                       AS approver_uuid,
+       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')                              as tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')                                 as tag_ids
 FROM dpia d
          LEFT JOIN dpia_report dr ON d.id = dr.dpia_id
-WHERE d.deleted = false;
+         LEFT JOIN dpia_tag rt on rt.dpia_id = d.id
+         LEFT JOIN tags tg on rt.tag_id = tg.id
+WHERE d.deleted = false
+GROUP BY d.id, d.name, d.responsible_user_uuid, d.responsible_ou_uuid,
+         d.user_updated_date, d.from_external_source, dr.report_approver_uuid;

@@ -1,5 +1,5 @@
 import {initStatisticView} from "../statistic/statisticView.js";
-import formatTags from "../tags/tag-grid-formatter";
+import formatTags from "../tags/tag-grid-formatter.js";
 
 const columnProperties = [
     'id',
@@ -11,6 +11,7 @@ const columnProperties = [
     'reportApprovalStatus',
     'screeningConclusion',
     'isExternal',
+    'tags',
     'allowedActions'
 ];
 let createDPIAService, createExternalDPIAService, editDPIAService;
@@ -85,8 +86,8 @@ function initGrid() {
                     searchKey: 'name'
                 },
                 formatter: (cell, row) => {
-                    const url = baseUrl + "/" + row.cells[0]['data'];
-                    const isExternal = row.cells[8]['data']; //last cell in row contains the external boolean
+                    const url = baseUrl + "/" + row.cells[columnProperties.indexOf('id')]['data'];
+                    const isExternal = row.cells[columnProperties.indexOf('isExternal')]['data']; //last cell in row contains the external boolean
                     if (isExternal) {
                         return gridjs.html(`<a href="${url}" target="_blank">${cell} (Ekstern)</a>`);
                     } else {
@@ -188,8 +189,8 @@ function initGrid() {
                 sort: 0,
                 width: '100px',
                 formatter: (cell, row) => {
-                    const identifier = row.cells[0]['data'];
-                    const name = row.cells[1]['data'].replaceAll("'", "\\'");
+                    const identifier = row.cells[columnProperties.indexOf('id')]['data'];
+                    const name = row.cells[columnProperties.indexOf('name')]['data'].replaceAll("'", "\\'");
                     const external = row.cells[8]['data']
                     const attributeMap = new Map();
                     attributeMap.set('identifier', identifier);
