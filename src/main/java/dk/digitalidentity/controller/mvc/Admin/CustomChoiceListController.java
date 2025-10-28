@@ -11,11 +11,13 @@ import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.RegisterService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
 import java.util.Set;
@@ -49,6 +51,9 @@ public class CustomChoiceListController {
 	@GetMapping("/choice/view/{id}")
 	public String customChoiceList(Model model, @PathVariable long id) {
 		ChoiceList list = choiceService.findChoiceList(id).orElse(null);
+		if (list == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ChoiceList not found");
+		}
 		Set<ChoiceValueDTO> collect = list.getValues().stream().map(choiceValue -> {
 			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), !isInUse(choiceValue));
 		}).collect(Collectors.toSet());

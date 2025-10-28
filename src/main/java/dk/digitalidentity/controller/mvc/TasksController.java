@@ -279,7 +279,7 @@ public class TasksController {
         model.addAttribute("task", task);
 		model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
         model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
-		ChoiceList list = choiceService.findChoiceList("task-description-template").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Supervision Model Choices"));
+		ChoiceList list = choiceService.findChoiceList("task-description-template").orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Could not find Task description template choices"));
 		List<ChoiceValue> values = list.getValues().stream().toList();
 
 		model.addAttribute("taskDescriptionTemplates", values);

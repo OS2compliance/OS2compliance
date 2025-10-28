@@ -2,6 +2,7 @@ package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.ChoiceService;
@@ -46,18 +47,27 @@ public class CustomChoiceListRestController {
 					.body(Map.of("success", false, "error", "Could not find choiceList"));
 		}
 
+		// Try up to 5 times to generate a unique identifier
+		String identifier = null;
 		Random random = new Random();
-		int randomNumber = 100000 + random.nextInt(900000);
+
+		for (int i = 0; i < 5; i++) {
+			int randomNumber = 100000 + random.nextInt(900000);
+			String candidateIdentifier = choiceList.getIdentifier() + "-" + createChoiceListRecord.caption() + "-" + randomNumber;
+
+			if (choiceValueService.findByIdentifier(candidateIdentifier) == null) {
+				identifier = candidateIdentifier;
+				break;
+			}
+		}
+
+		if (identifier == null) {
+			return ResponseEntity.badRequest()
+					.body(Map.of("success", false, "error", "Could not generate unique identifier after 5 attempts"));
+		}
 
 		ChoiceValue value = new ChoiceValue();
 		value.setCaption(createChoiceListRecord.caption());
-		String identifier = choiceList.getIdentifier() + "-" + createChoiceListRecord.caption() + "-" + randomNumber;
-
-		if (choiceValueService.findByIdentifier(identifier) != null) {
-			return ResponseEntity.badRequest()
-					.body(Map.of("success", false, "error", "Duplicate identifier"));
-		}
-
 		value.setIdentifier(identifier);
 		value.setDescription(createChoiceListRecord.description());
 		value.setEditable(true);
@@ -119,6 +129,7 @@ public class CustomChoiceListRestController {
 		return ResponseEntity.ok(Map.of("success", true, "choiceListId", choiceListId));
 	}
 
+	@RequireReadOwnerOnly
 	@GetMapping(value = "/choiceValue/{choiceValueId}", consumes = "*/*")
 	public ResponseEntity<Map<String, Object>> getChoiceValue(@PathVariable Long choiceValueId) {
 
