@@ -75,7 +75,7 @@ function ViewTaskService() {
     this.loadDescriptionTemplateSelect = function() {
         const select = document.getElementById('taskDescriptionTemplateSelect');
         const descriptionField = document.getElementById('description');
-        select.addEventListener("click", function () {
+        select.addEventListener("change", async function () {
             const selectedValue = this.value;
 
             // If "Ingen valgt" (no selection) or empty value
@@ -83,14 +83,18 @@ function ViewTaskService() {
                 descriptionField.value = '';
                 return;
             }
-            // TODO: Fetch the template description from backend
-            // fetch()
-            //     .then(data => {
-            //         descriptionField.value = data.description;
-            //     })
-            //     .catch(error => {
-            //         console.error('Der opstod en teknisk fejl:', error);
-            //     });
+
+            const response = await fetch(`/rest/choicelists/custom/choiceValue/${selectedValue}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    descriptionField.value = data.description;
+                } else {
+                    toastService.error("Kunne ikke hente beskrivelse");
+                }
+            } else {
+                toastService.error("Der opstod en teknisk fejl");
+            }
         });
     }
 

@@ -6,9 +6,11 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
+import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -16,6 +18,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.Objects;
 import java.util.Random;
 
 @Slf4j
@@ -27,6 +30,7 @@ public class CustomChoiceListRestController {
 
     private final ChoiceService choiceService;
 	private final ChoiceValueService choiceValueService;
+	private final TaskService taskService;
 
 	public record CreateChoiceListRecord(String caption, String description) {}
 
@@ -79,6 +83,9 @@ public class CustomChoiceListRestController {
 		}
 
 		choiceValue.setCaption(updateRecord.caption());
+		if (!Objects.equals(choiceValue.getDescription(), updateRecord.description())) {
+			taskService.updateDescriptions(choiceValue, updateRecord.description);
+		}
 		choiceValue.setDescription(updateRecord.description());
 
 		choiceValueService.save(choiceValue);
@@ -110,5 +117,23 @@ public class CustomChoiceListRestController {
 		choiceValueService.delete(choiceValue);
 
 		return ResponseEntity.ok(Map.of("success", true, "choiceListId", choiceListId));
+	}
+
+	@GetMapping(value = "/choiceValue/{choiceValueId}", consumes = "*/*")
+	public ResponseEntity<Map<String, Object>> getChoiceValue(@PathVariable Long choiceValueId) {
+
+		ChoiceValue choiceValue = choiceValueService.findById(choiceValueId).orElse(null);
+		if (choiceValue == null) {
+			return ResponseEntity.badRequest()
+					.body(Map.of("success", false, "error", "Could not find choice value"));
+		}
+
+		return ResponseEntity.ok(Map.of(
+				"success", true,
+				"id", choiceValue.getId(),
+				"caption", choiceValue.getCaption(),
+				"description", choiceValue.getDescription() != null ? choiceValue.getDescription() : "",
+				"identifier", choiceValue.getIdentifier()
+		));
 	}
 }

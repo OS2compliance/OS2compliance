@@ -1,5 +1,6 @@
 package dk.digitalidentity.dao;
 
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Task;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -30,4 +31,6 @@ public interface TaskDao extends JpaRepository<Task, Long> {
 			"(t.id = r.relationAId AND r.relationAType = 'TASK' AND r.relationBType = 'ASSET') " +
 			"OR (t.id = r.relationBId AND r.relationBType = 'TASK' AND r.relationAType = 'ASSET'))")
 	Set<Task> findAllByResponsibleUserAndNotRelatedToAnyAsset(@Param("userUuid") final String responsibleUserUuid);
+
+    List<Task> findByTaskDescriptionTemplate(ChoiceValue taskDescriptionTemplate);
 }
