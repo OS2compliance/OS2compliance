@@ -82,6 +82,10 @@ public class NotifyResponsibleTask {
 			List<Task> tasksToNotify = new ArrayList<>();
 
 			switch (notificationSetting) {
+				case ONEMONTHBEFORE:
+					tasksToNotify = taskService.getTasksWithDeadlineAtAndNotificationSettingContains(
+							LocalDate.now().plusDays(31), notificationSetting);
+					break;
 				case SEVENDAYSBEFORE:
 					tasksToNotify = taskService.getTasksWithDeadlineAtAndNotificationSettingContains(
 							LocalDate.now().plusDays(7), notificationSetting);

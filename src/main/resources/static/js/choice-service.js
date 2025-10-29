@@ -92,20 +92,6 @@ function ChoiceService() {
             .catch(error => toastService.error(error));
     }
 
-    this.updateNotifications = (choices, search) => {
-        // TODO: Need to create an endpoint once we figure out the data model
-        fetch( `/rest/suppliers/autocomplete?search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(e => {
-                        return {
-                            value: e.id,
-                            label: `${e.name}`}
-                    }), 'value', 'label', true);
-                }))
-            .catch(error => toastService.error(error));
-    }
-
     this.initUserSelect = (elementId, prefetch = true) => {
         let self = this;
         const userSelect = document.getElementById(elementId);
@@ -158,21 +144,6 @@ function ChoiceService() {
             },
             false,
         );
-    }
-
-    this.initNotificationSelect = (elementId, prefetch = true) => {
-        const notificationSelect = document.getElementById(elementId);
-        const notificationChoices = initSelect(notificationSelect);
-        if (prefetch) {
-            choiceService.updateNotifications(ouChoices, "");
-        }
-        notificationSelect.addEventListener("search",
-            function(event) {
-                choiceService.updateNotifications(notificationChoices, event.detail.value);
-            },
-            false,
-        );
-        return notificationChoices;
     }
 
     this.initDocumentRelationSelect = () => {
