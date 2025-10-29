@@ -1,21 +1,24 @@
 package dk.digitalidentity.dao;
 
 import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.enums.NotificationSetting;
+import jakarta.validation.constraints.NotNull;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
 public interface TaskDao extends JpaRepository<Task, Long> {
 
-    List<Task> findByNotifyResponsibleTrueAndNextDeadline(final LocalDate date);
-    List<Task> findByNotifyResponsibleTrueAndNextDeadlineIn(final List<LocalDate> dates);
-
+    List<Task> findByNotifyResponsibleTrueAndNextDeadlineAndTaskNotificationOverride(final LocalDate date, final Boolean taskNotificationOverride);
+    List<Task> findByNotifyResponsibleTrueAndNextDeadlineInAndTaskNotificationOverride(Collection<@NotNull LocalDate> nextDeadline, Boolean taskNotificationOverride);
     List<Task> findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(final LocalDate date);
-
+	List<Task> findByNextDeadlineAndTaskNotificationOverrideTrue(LocalDate nextDeadline);
+	List<Task> findByNextDeadlineInAndTaskNotificationOverrideTrue(List<LocalDate> nextDeadlines);
     @Query("select t from Task  t left join TaskLog tl on tl.task=t where t.includeInReport=true and (t.nextDeadline > :deadline or tl.completed > :deadline) order by t.nextDeadline")
     List<Task> findTaskForYearWheel(@Param("deadline") final LocalDate date);
 

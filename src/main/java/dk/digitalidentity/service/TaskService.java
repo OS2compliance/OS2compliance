@@ -14,6 +14,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -100,8 +101,8 @@ public class TaskService {
      * @return A list of tasks
      */
     @Transactional
-    public List<Task> getTasksWithDeadLineAt(LocalDate deadline) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadline(deadline);
+    public List<Task> getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate deadline) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineAndTaskNotificationOverride(deadline, false);
     }
 
     /**
@@ -110,8 +111,8 @@ public class TaskService {
      * @return A list of tasks
      */
     @Transactional
-    public List<Task> getTasksWithDeadLineIn(List<LocalDate> deadlines) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineIn(deadlines);
+    public List<Task> getTasksWithDeadLineInAndTaskNotificationOverrideFalse(List<LocalDate> deadlines) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineInAndTaskNotificationOverride(deadlines, false);
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
@@ -365,5 +366,19 @@ public class TaskService {
 
 	public List<Task> getByIds (List<Long> ids) {
 		return taskDao.findAllById(ids);
+	}
+
+	public List<Task> getTasksWithDeadlineAtAndNotificationSettingContains(LocalDate deadline, NotificationSetting setting) {
+		return taskDao.findByNextDeadlineAndTaskNotificationOverrideTrue(deadline)
+				.stream()
+				.filter(task -> task.getNotificationReminders() != null && task.getNotificationReminders().contains(setting))
+				.collect(Collectors.toList());
+	}
+
+	public List<Task> getTasksWithDeadlineInAndNotificationSettingContains(List<LocalDate> deadlines, NotificationSetting setting) {
+		return taskDao.findByNextDeadlineInAndTaskNotificationOverrideTrue(deadlines)
+				.stream()
+				.filter(task -> task.getNotificationReminders() != null && task.getNotificationReminders().contains(setting))
+				.collect(Collectors.toList());
 	}
 }

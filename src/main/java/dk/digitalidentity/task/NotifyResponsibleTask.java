@@ -2,6 +2,7 @@ package dk.digitalidentity.task;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.model.entity.Setting;
+import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.service.NotifyService;
 import dk.digitalidentity.service.SettingsService;
@@ -50,13 +51,13 @@ public class NotifyResponsibleTask {
         for (Setting setting : notificationSettings) {
             if (setting.getSettingValue().equalsIgnoreCase("true")) {
                 if (setting.getSettingKey().equalsIgnoreCase(NotificationSetting.SEVENDAYSBEFORE.getValue())) {
-                    taskService.getTasksWithDeadLineAt(LocalDate.now().plusDays(7))
+                    taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusDays(7))
                         .forEach(taskId -> notifyService.notifyTask(taskId.getId()));
                 } else if (setting.getSettingKey().equalsIgnoreCase(NotificationSetting.ONEDAYBEFORE.getValue())) {
-                    taskService.getTasksWithDeadLineAt(LocalDate.now().plusDays(1))
+                    taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusDays(1))
                         .forEach(taskId -> notifyService.notifyTask(taskId.getId()));
                 } else if (setting.getSettingKey().equalsIgnoreCase(NotificationSetting.ONDAY.getValue())) {
-                    taskService.getTasksWithDeadLineAt(LocalDate.now())
+                    taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now())
                         .forEach(taskId -> notifyService.notifyTask(taskId.getId()));
                 } else if (setting.getSettingKey().equalsIgnoreCase(NotificationSetting.EVERYSEVENDAYSAFTER.getValue())) {
                     LocalDate currentDate = LocalDate.now(); //holds the current date, mutated by the loop below
@@ -70,11 +71,48 @@ public class NotifyResponsibleTask {
                     }
 
                     //Notify all matching tasks
-                    taskService.getTasksWithDeadLineIn(sevenMultipleDates).forEach(taskId -> notifyService.notifyTask(taskId.getId()));
+                    taskService.getTasksWithDeadLineInAndTaskNotificationOverrideFalse(sevenMultipleDates).forEach(taskId -> notifyService.notifyTask(taskId.getId()));
 
 
                 }
             }
         }
-    }
+		// Handle tasks with custom notification settings
+		for (NotificationSetting notificationSetting : NotificationSetting.values()) {
+			List<Task> tasksToNotify = new ArrayList<>();
+
+			switch (notificationSetting) {
+				case SEVENDAYSBEFORE:
+					tasksToNotify = taskService.getTasksWithDeadlineAtAndNotificationSettingContains(
+							LocalDate.now().plusDays(7), notificationSetting);
+					break;
+
+				case ONEDAYBEFORE:
+					tasksToNotify = taskService.getTasksWithDeadlineAtAndNotificationSettingContains(
+							LocalDate.now().plusDays(1), notificationSetting);
+					break;
+
+				case ONDAY:
+					tasksToNotify = taskService.getTasksWithDeadlineAtAndNotificationSettingContains(
+							LocalDate.now(), notificationSetting);
+					break;
+
+				case EVERYSEVENDAYSAFTER:
+					LocalDate currentDate = LocalDate.now();
+					LocalDate threeMonthsBefore = currentDate.minusMonths(3);
+					List<LocalDate> sevenMultipleDates = new ArrayList<>();
+
+					currentDate = currentDate.minusDays(7);
+					while (currentDate.isAfter(threeMonthsBefore)) {
+						sevenMultipleDates.add(currentDate);
+						currentDate = currentDate.minusDays(7);
+					}
+
+					tasksToNotify = taskService.getTasksWithDeadlineInAndNotificationSettingContains(
+							sevenMultipleDates, notificationSetting);
+					break;
+			}
+			tasksToNotify.forEach(task -> notifyService.notifyTask(task.getId()));
+		}
+	}
 }
