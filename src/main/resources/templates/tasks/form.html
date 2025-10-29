@@ -146,7 +146,7 @@
                 </div>
 
                 <div class="row mt-3" id="taskNotificationSelectDiv" hidden>
-                    <label for="taskNotificationSelectInput" class="col-sm-4 col-form-label">Tidpunkt</label>
+                    <label for="taskNotificationSelectInput" class="col-sm-4 col-form-label">Tidspunkt</label>
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" id="taskNotificationSelectInput" tabindex="-1" multiple th:field="*{notificationReminders}" >
                             <option th:each="repetition : ${T(dk.digitalidentity.model.entity.enums.NotificationSetting).values()}"
