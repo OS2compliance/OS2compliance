@@ -143,14 +143,48 @@ public class SupplierController {
 	@Transactional
 	@PostMapping("form")
 	public String formPost(@ModelAttribute final Supplier supplier) {
+
+		// Validate lengths
+		if (supplier.getName() == null || supplier.getName().trim().isEmpty()) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Navn er påkrævet");
+		}
+		if (supplier.getName().length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Navn må maks være 255 tegn");
+		}
+		if (supplier.getCvr() != null && supplier.getCvr().length() > 10) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CVR må maks være 10 tegn");
+		}
+		if (supplier.getZip() != null && supplier.getZip().length() > 10) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Postnummer må maks være 10 tegn");
+		}
+		if (supplier.getCity() != null && supplier.getCity().length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "By må maks være 255 tegn");
+		}
+		if (supplier.getAddress() != null && supplier.getAddress().length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Adresse må maks være 255 tegn");
+		}
+		if (supplier.getCountry() != null && supplier.getCountry().length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Land må maks være 255 tegn");
+		}
+		if (supplier.getContact() != null && supplier.getContact().length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kontaktperson må maks være 255 tegn");
+		}
+		if (supplier.getPhone() != null && supplier.getPhone().length() > 50) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Telefon må maks være 50 tegn");
+		}
+		if (supplier.getEmail() != null && supplier.getEmail().length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Email må maks være 255 tegn");
+		}
+
 		if (supplier.getId() != null) {
 			final Supplier existingSupplier = supplierService.get(supplier.getId())
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 			if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-            }
-            existingSupplier.setName(supplier.getName());
+				throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+			}
+
+			existingSupplier.setName(supplier.getName());
 			existingSupplier.setStatus(supplier.getStatus());
 			existingSupplier.setCvr(supplier.getCvr());
 			existingSupplier.setZip(supplier.getZip());
@@ -165,34 +199,57 @@ public class SupplierController {
 			existingSupplier.setDescription(supplier.getDescription());
 			supplierService.save(existingSupplier);
 		} else {
-            supplierService.save(supplier);
+			supplierService.save(supplier);
 		}
+
 		return "redirect:/suppliers";
 	}
 
 	@RequireUpdateAll
 	@Transactional
 	@PostMapping(value = "edit", consumes = MediaType.APPLICATION_FORM_URLENCODED_VALUE)
-	public String descriptionPost(@RequestParam("id") final String id, @RequestParam("description") final String description,
-                                                                       @RequestParam("status") final SupplierStatus status,
-                                                                       @RequestParam("zip") final String zip,
-                                                                       @RequestParam("city") final String city,
-                                                                       @RequestParam("address") final String address,
-                                                                       @RequestParam("country") final String country,
-                                                                       @RequestParam("cvr") final String cvr) {
+	public String descriptionPost(@RequestParam("id") final String id,
+			@RequestParam("description") final String description,
+			@RequestParam("status") final SupplierStatus status,
+			@RequestParam("zip") final String zip,
+			@RequestParam("city") final String city,
+			@RequestParam("address") final String address,
+			@RequestParam("country") final String country,
+			@RequestParam("cvr") final String cvr) {
+
+		// Validate lengths
+		if (cvr != null && cvr.length() > 10) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "CVR må maks være 10 tegn");
+		}
+		if (zip != null && zip.length() > 10) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Postnummer må maks være 10 tegn");
+		}
+		if (city != null && city.length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "By må maks være 255 tegn");
+		}
+		if (address != null && address.length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Adresse må maks være 255 tegn");
+		}
+		if (country != null && country.length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Land må maks være 255 tegn");
+		}
+
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
 		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
-        }
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
 		supplier.setDescription(description);
-        supplier.setStatus(status);
-        supplier.setCvr(cvr);
-        supplier.setZip(zip);
-        supplier.setCity(city);
-        supplier.setAddress(address);
-        supplier.setCountry(country);
+		supplier.setStatus(status);
+		supplier.setCvr(cvr);
+		supplier.setZip(zip);
+		supplier.setCity(city);
+		supplier.setAddress(address);
+		supplier.setCountry(country);
 		supplierService.save(supplier);
+
 		return "redirect:/suppliers/" + id;
 	}
 
