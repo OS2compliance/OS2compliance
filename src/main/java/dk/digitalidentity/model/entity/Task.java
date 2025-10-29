@@ -1,5 +1,7 @@
 package dk.digitalidentity.model.entity;
 
+import dk.digitalidentity.config.NotificationSettingConverter;
+import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
@@ -9,6 +11,7 @@ import dk.digitalidentity.statistic.StatisticLabel;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -75,7 +78,7 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @Column
     private Boolean notifyResponsible = true;
 
-//	@Column
+	@Column
 	private Boolean taskNotificationOverride = false;
 
     @Column(name = "include_in_report")
@@ -92,6 +95,10 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @ManyToMany(fetch = FetchType.LAZY)
     @JoinTable(name = "relatable_tags", joinColumns = { @JoinColumn(name = "relatable_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
     private List<Tag> tags = new ArrayList<>();
+
+	@Column(name = "notification_reminders")
+	@Convert(converter = NotificationSettingConverter.class)
+	private Set<NotificationSetting> notificationReminders = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {

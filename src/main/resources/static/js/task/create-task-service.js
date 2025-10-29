@@ -77,7 +77,10 @@ function CreateTaskService() {
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
-        this.createTaskNotificationChoicesSelect = choiceService.initNotificationSelect('taskNotificationSelectInput');
+        this.taskNotificationSelect = new Choices('#taskNotificationSelectInput', {
+            removeItemButton: true,
+            searchEnabled: true,
+        });
         this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
@@ -152,16 +155,9 @@ function CreateTaskService() {
     }
 
     this.showOrHideNotificationSelect = function (value) {
-        const select = document.getElementById("taskNotificationSelectInput");
         const selectDiv = document.getElementById("taskNotificationSelectDiv");
-        select.value = '';
-
-        if (value) {
-            selectDiv.hidden = false;
-        }
-        else {
-            selectDiv.hidden = true;
-        }
+        selectDiv.hidden = !value;
+        this.taskNotificationSelect.removeActiveItems();
     }
 
 }
