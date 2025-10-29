@@ -146,6 +146,8 @@ public class TaskService {
         task.setCreatedAt(LocalDateTime.now());
         task.setCreatedBy(SecurityUtil.getLoggedInUserUuid());
         task.setIncludeInReport(oldTask.getIncludeInReport());
+		task.setTaskNotificationOverride(oldTask.getTaskNotificationOverride());
+		task.getNotificationReminders().addAll(oldTask.getNotificationReminders());
 
         return taskDao.save(task);
     }
