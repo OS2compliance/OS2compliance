@@ -87,18 +87,6 @@ function ViewTaskService() {
         }
     }
 
-    this.defaultCompleteTaskDescriptionValidation = function () {
-        const comment = document.getElementById("completionComment");
-        if (!comment.value) {
-            comment.classList.add('is-invalid');
-            return false;
-        }
-        else {
-            comment.classList.remove('is-invalid');
-            return true;
-        }
-    }
-
     // In case this task is an oversight, a special oversight dialog can be shown
     this.showOversightDialog = (assetId) => {
         if(!assetId) {
