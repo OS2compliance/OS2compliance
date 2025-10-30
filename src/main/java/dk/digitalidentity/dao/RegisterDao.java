@@ -29,4 +29,5 @@ public interface RegisterDao extends JpaRepository<Register, Long> {
 			"OR (r.id = rel.relationBId AND rel.relationBType = 'TASK' AND rel.relationAType = 'ASSET'))")
 	Set<Register> findAllByResponsibleUserAndNotRelatedToAnyAsset(@Param("user") final User responsibleUser);
 
+	boolean existsByStatusId(Long statusId);
 }

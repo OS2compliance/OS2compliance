@@ -43,4 +43,7 @@ public class SupplierGrid {
 	@Column
 	private LocalDate lastOversightDate;
 
+	@Column
+	private String kitosUuid;
+
 }

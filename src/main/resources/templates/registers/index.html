@@ -51,9 +51,8 @@
                                     </select>
 
                                     <select class="form-control form-select editField" data-trigger="" name="registerStatusSearchSelector" id="registerStatusSearchSelector" tabindex="-1" required >
-                                        <option th:text="'Alle'" th:value="null"></option>
-                                        <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RegisterStatus).values()}"
-                                                th:value="${option}" th:text="${option.message}"></option>
+                                        <option th:text="'Alle'" value=""></option>
+                                        <option th:each="statusChoice : ${statusChoices}" th:value="${statusChoice.caption}" th:text="${statusChoice.caption}"></option>
                                     </select>
 
                                     <select class="form-control form-select editField" data-trigger="" name="registerAssetSearchSelector" id="registerAssetSearchSelector" tabindex="-1" required >
