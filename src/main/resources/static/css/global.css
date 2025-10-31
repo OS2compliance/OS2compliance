@@ -218,5 +218,5 @@ html {
     white-space: nowrap;
     vertical-align: baseline;
     border-radius: .5rem;
-    border-color: black;
+    outline: lightgray solid 1px;
 }
