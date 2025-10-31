@@ -7,6 +7,32 @@ document.addEventListener("DOMContentLoaded", async function(event) {
     initRelatedTagList();
 });
 
+document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("edit-threat-button")) {
+            editThreatClicked(event.target);
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("task-button")) {
+            createTaskClicked(event.target);
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("delete-threat-button")) {
+            deleteThreatClicked(event.target);
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("form-reset-button")) {
+            formReset();
+        }
+    })
+})
+
 function notRelevantSelectChanged() {
     const selected = this.value;
     const rowId = this.dataset.rowid;
@@ -500,6 +526,15 @@ function deleteThreatClicked(elem) {
                 .catch(error => toastService.error(error));
         }
     });
+}
+
+function editThreatClicked(elem) {
+    document.getElementById('customThreatId').value = elem.dataset.customid;
+    document.getElementById('threatType').value = elem.dataset.type;
+    document.getElementById('threatDescription').value = elem.dataset.description;
+
+    editDialog = new bootstrap.Modal(document.getElementById('editCustomThreatFormDialog'));
+    editDialog.show();
 }
 
 let revisionDialog;
