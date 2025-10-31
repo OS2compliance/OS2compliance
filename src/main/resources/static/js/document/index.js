@@ -1,4 +1,6 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import initTagSelect from "../tags/tag-selector.js";
+import formatTags from "../tags/tag-grid-formatter.js";
 
 let userChoicesEditSelect
 
@@ -14,14 +16,17 @@ const updateUrl = (prev, query) => {
 
 function createDocumentFormLoaded() {
     initDatepicker("#nextRevisionBtn", "#nextRevision");
-    userChoicesEditSelect = choiceService.initUserSelect('userSelect');
+    const userChoicesEditSelect = choiceService.initUserSelect('userSelect');
     choiceService.initDocumentRelationSelect();
-    choiceService.initTagSelect('createDocumentTagsSelect');
+    initTagSelect('createDocumentTagsSelect');
 
     userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(userChoicesEditSelect);
     });
     initFormValidationForForm("createDocumentModal", () => validateChoices(userChoicesEditSelect));
+
+    const cancelButton = document.getElementById('createCancelButton');
+    cancelButton.addEventListener('click', (e) => formReset())
 }
 
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -120,6 +125,13 @@ function initGrid() {
                 },
             },
             {
+                name: "Tags",
+                searchable: {
+                    searchKey: 'tagNames',
+                },
+                formatter: (cell, row) => formatTags(cell, row),
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
@@ -141,7 +153,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(document =>
-                [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status, document.allowedActions ]
+                [ document.id, document.name, document.documentType, document.responsibleUser, document.nextRevision, document.status, document.tags, document.allowedActions ]
             ),
             total: data => data.totalCount
         },

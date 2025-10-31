@@ -17,6 +17,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalogThreat;
@@ -136,9 +137,13 @@ public class RiskRestController {
 
 		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, page, limit, user);
 
+		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = threatAssessmentService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert risks != null;
 
-		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid));
+		return new PageDTO<>(risks.getTotalElements(), mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById));
     }
 
 	@RequireReadOwnerOnly
@@ -162,9 +167,13 @@ public class RiskRestController {
 
 		Page<RiskGrid> risks = getRisks(sortColumn, sortDirection, filters, 0, pageLimit, user);
 
+		Set<Long> entityIds = risks.getContent().stream().map(RiskGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = registerService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert risks != null;
 
-		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid);
+		List<RiskDTO> allData = mapper.toDTO(risks.getContent(), responsibleAssetNames, uuid, tagsById);
 		excelExportService.exportToExcel(allData, RiskDTO.class, fileName, response);
 	}
 

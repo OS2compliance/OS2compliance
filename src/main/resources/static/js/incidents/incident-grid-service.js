@@ -4,8 +4,8 @@ export default function IncidentGridService() {
     this.filterFrom = '';
     this.filterTo = '';
 
-    this.init = () => {
-        let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom' );
+    this.init = async () => {
+        let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom');
         let filterFrom = localStorage.getItem("incidentFilterFrom");
         if (filterFrom != null && filterFrom !== "null") {
             fromPicker.setFullDate(new Date(filterFrom));
@@ -13,19 +13,21 @@ export default function IncidentGridService() {
         }
         fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
 
-        let toPicker = initDatepicker('#filterToBtn', '#filterTo' );
+        let toPicker = initDatepicker('#filterToBtn', '#filterTo');
         let filterTo = localStorage.getItem("incidentFilterTo");
         if (filterTo != null && filterTo !== "null") {
             toPicker.setFullDate(new Date(filterTo));
             this.filterTo = toPicker.getFormatedDate();
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
-        incidentService.fetchColumnName()
-            .then(columnNames => {
+        const columnNames = await incidentService.fetchColumnName()
+
+
+            // .then(columnNames => {
                 this.initGrid(columnNames);
                 this.updateSort(this.incidentGrid);
                 this.incidentGrid.updateConfig(this.currentConfig).forceRender();
-            });
+            // });
     }
 
     this.generateExcel = () => {
@@ -104,12 +106,12 @@ export default function IncidentGridService() {
                         const columnIds = this.columns.map(c => c.id);
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
-                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
+                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
                     }
                 }
             },
             columns: this.columns,
-            server:{
+            server: {
                 url: restUrl + 'list',
                 method: 'POST',
                 headers: {
@@ -147,7 +149,13 @@ export default function IncidentGridService() {
             let added = false;
             field.responses.forEach(response => {
                 if (c.id === response.indexColumnName) {
-                    columnValues.push(response.answerValue);
+
+                    let value = response.answerValue
+                    if (response.linkable) {
+                        value = formatAsLink(value, value, true)
+                    }
+
+                    columnValues.push(value);
                     added = true;
                 }
             });
@@ -168,8 +176,8 @@ export default function IncidentGridService() {
                 id: "name",
                 name: "Titel",
                 formatter: (cell, row) => {
-                    const url = viewUrl + row.cells[0]['data'];
-                    return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    const url = '/incidents/logs/' + row.cells[0]['data'];
+                    return formatAsLink(cell, url, false)
                 },
                 width: '250px',
                 canSortFlag: true
@@ -223,7 +231,9 @@ export default function IncidentGridService() {
 
     this.updateSort = () => {
         this.currentConfig.columns.forEach(column => {
-            column.columns.forEach(subcolumn => {subcolumn.sort = column.canSortFlag !== undefined})
+            column.columns.forEach(subcolumn => {
+                subcolumn.sort = column.canSortFlag !== undefined
+            })
         })
     }
 
@@ -233,5 +243,10 @@ function initGridActions() {
     delegateListItemActions('incidentsTable',
         (id, elem) => incidentService.editIncident('editIncidentDialog', id),
         (id, name, elem) => incidentService.deleteIncident(incidentGridService.incidentGrid, id, name),
-        )
+    )
+}
+
+function formatAsLink(label, href, shouldOpenInWindow = false) {
+    const target = shouldOpenInWindow ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return gridjs.html(`<a href="${href}" ${target}>${label}</a>`);
 }

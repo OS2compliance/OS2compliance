@@ -1,5 +1,6 @@
 import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import formatTags from "../tags/tag-grid-formatter.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -85,24 +86,9 @@ function initGrid() {
             {
                 name: "Tags",
                 searchable: {
-                    searchKey: 'tags',
+                    searchKey: 'tagNames',
                 },
-                formatter: (cell, row) => {
-                    const prepend = '<div class="d-flex gap-1">'
-                    const append ='</div>'
-                    let html = ''
-                    if (cell.length>0) {
-                        html += prepend
-                    }
-                    for (let tag of cell) {
-                        const style = `style="background-color: ${tag.color}; color: ${tag.contrast};"`
-                        html += `<span class="tag-badge" ${style}>${tag.label}</span>`
-                    }
-                    if (cell.length>0) {
-                        html += append
-                    }
-                    return gridjs.html(html)
-                },
+                formatter: (cell, row) => formatTags(cell, row),
             },
             {
                 name: "Deadline",

@@ -624,7 +624,14 @@
                                             </div>
                                         </div>
                                     </div>
-
+                                </div>
+                                <div class="row mb-3">
+                                    <div class="col-md-4">
+                                        <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (
+                                        tags=${asset.tags}, parentId=${asset.id}, parentType='asset',
+                                        allowAdd=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')},
+                                        allowRemove=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')})}"></div>
+                                    </div>
                                 </div>
                             </div> <!-- Assets tab end -->
                             <div id="measuresTab" class="tab-pane fade" role="tabpanel" aria-labelledby="measures-tab" th:replace="~{assets/fragments/measures :: measures(${asset}, ${measures})}">
@@ -752,6 +759,7 @@
     <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-hidden="true"></div>
     <div th:replace="~{assets/fragments/riskAssessmentKitosModal :: riskAssessmentKitosModalFragment}"></div>
     <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor = true, hierarchy = true)}"></div>
+    <div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${asset.id}, targetType='asset')}"></div>
 
     <script th:inline="javascript">
         /*<![CDATA[*/

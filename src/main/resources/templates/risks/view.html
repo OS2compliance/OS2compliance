@@ -411,6 +411,12 @@
                         <div class="row">
                             <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${tasks}, relatableId=${risk.id})}"></div>
                         </div>
+                        <div class="row">
+                            <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (
+                                        tags=${risk.tags}, parentId=${risk.id}, parentType='threatassessment',
+                                        allowAdd=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')},
+                                        allowRemove=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')})}"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -489,6 +495,7 @@
 
 <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=false, signOnlyOnce=true)}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
+<div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${risk.id}, targetType='threatassessment')}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -500,9 +507,7 @@
         var riskScoreColorMap = [[${riskScoreColorMap}]];
     +]*/
 
-    document.addEventListener("DOMContentLoaded", function(event) {
-        pageLoaded();
-    });
+
 
     /*]]>*/
 </script>

@@ -8,9 +8,11 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
-import java.util.List;
 
 @Data
 @Builder
@@ -42,9 +44,13 @@ public class RiskDTO {
 	@ExcludeFromExport
     private String externalLink;
 	@ExcludeFromExport
+	@Builder.Default
+	private List<TagDTO> tags = new ArrayList<>();
+	@ExcludeFromExport
 	private Set<AllowedAction> allowedActions;
 	@ExcelColumn(headerName = "Entitet", order = 5)
 	private String relatedAssetsAndRegisters;
 	@ExcelColumn(headerName = "Trusselskataloger", order = 9)
 	private String threatCatalogs;
+
 }
