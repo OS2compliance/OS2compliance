@@ -265,19 +265,16 @@
                                                 </select>
                                             </td>
                                             <td class="riskViewTd text-center" >
-                                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs"
-                                                        th:onclick="|createTaskClicked(this)|" title="Opgave eller kontrol"
-                                                        th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
+                                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs task-button"
+                                                        title="Opgave eller kontrol" th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
                                                     Ny opgave
                                                 </button>
-                                                <button sec:authorize="hasAnyRole('ROLE_delete_all')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1"
-                                                        th:onclick="|deleteThreatClicked(this)|" title="Slet"
-                                                        th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
+                                                <button sec:authorize="hasAnyRole('ROLE_delete_all')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1 delete-threat-button"
+                                                        title="Slet" th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
                                                     Slet trussel
                                                 </button>
-                                                <button sec:authorize="hasAnyRole('ROLE_update_all')" th:id="'editThreatBtn' + ${row.index}" type="button" class="btn btn-secondary btn-xs mt-1"
-                                                        th:onclick="|editThreatClicked(this)|" title="Ret"
-                                                        th:attr="data-customid=${row.id}, data-riskid=${risk.id}, data-type=${row.type()}, data-description=${row.threat()}" th:if="${row.dataType.name == 'CUSTOM'}">
+                                                <button sec:authorize="hasAnyRole('ROLE_update_all')" th:id="'editThreatBtn' + ${row.index}" type="button" class="btn btn-secondary btn-xs mt-1 edit-threat-button"
+                                                        title="Ret" th:attr="data-customid=${row.id}, data-riskid=${risk.id}, data-type=${row.type()}, data-description=${row.threat()}" th:if="${row.dataType.name == 'CUSTOM'}">
                                                     Ret trussel
                                                 </button>
                                             </td>
@@ -456,7 +453,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="button" class="btn btn-secondary form-reset-button" data-bs-dismiss="modal">Annuller</button>
                 <button type="submit" form="createCustomThreatModal" class="btn btn-primary">Gem</button>
             </div>
         </div>
@@ -490,7 +487,7 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="button" class="btn btn-secondary form-reset-button" data-bs-dismiss="modal">Annuller</button>
                 <button type="submit" form="editCustomThreatModal" class="btn btn-primary">Gem</button>
             </div>
         </div>

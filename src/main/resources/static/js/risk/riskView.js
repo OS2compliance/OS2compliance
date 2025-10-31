@@ -1,6 +1,32 @@
 
 var token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
+document.addEventListener("DOMContentLoaded", function() {
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("edit-threat-button")) {
+            editThreatClicked(event.target);
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("task-button")) {
+            createTaskClicked(event.target);
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("delete-threat-button")) {
+            deleteThreatClicked(event.target);
+        }
+    });
+
+    document.addEventListener("click", function(event) {
+        if (event.target.classList.contains("form-reset-button")) {
+            formReset();
+        }
+    })
+})
+
 function notRelevantSelectChanged() {
     const selected = this.value;
     const rowId = this.dataset.rowid;
