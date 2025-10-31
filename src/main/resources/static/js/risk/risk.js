@@ -1,4 +1,5 @@
 import {initStatisticView} from "../statistic/statisticView.js";
+import ColumnOptions from "../grid-js-extension/column-options.js";
 
 const columnProperties = [
     'id',
@@ -290,11 +291,17 @@ function CreateTable() {
                 });
         });
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, 'risksDatatable');
+        const datatableId = 'risksDatatable'
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, datatableId);
 
         initSaveAsExcelButton(customGridFunctions, 'Risikovurderinger');
 
-        gridOptions.init(grid, document.getElementById("gridOptions"));
+        new ColumnOptions(
+            datatableId,
+            grid,
+            ['risikovurdering', 'allowedActions'],
+            ['risikovurdering', 'allowedActions', 'type', 'status'],
+            ['id', 'externalLink', 'fromExternalSource'])
     }
 }
 

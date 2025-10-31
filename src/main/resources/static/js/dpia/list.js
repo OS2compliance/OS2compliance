@@ -1,4 +1,5 @@
 import {initStatisticView} from "../statistic/statisticView.js";
+import ColumnOptions from "../grid-js-extension/column-options.js";
 
 const columnProperties = [
     'id',
@@ -223,10 +224,16 @@ function initGrid() {
             }
         }
     };
-    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "dpiaDatatable" ));
-    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, exportDataUrl, 'dpiaDatatable');
+    const datatableId = "dpiaDatatable"
+    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
+    const customGridFunctions = new CustomGridFunctions(grid, listDataUrl, exportDataUrl, datatableId);
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
+    new ColumnOptions(
+        datatableId,
+        grid,
+        ['titel', 'allowedActions'],
+        ['titel', 'allowedActions', 'screening', 'status', 'opgaver'],
+        ['id', 'isExternal'])
 
     initSaveAsExcelButton(customGridFunctions, 'Konsekvensanalyser')
 

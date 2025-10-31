@@ -1,3 +1,4 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
 
 export default function IncidentGridService() {
     this.filterFrom = '';
@@ -121,12 +122,18 @@ export default function IncidentGridService() {
                 total: data => data.totalCount
             }
         };
+        const datatableId = 'incidentsTable';
         this.incidentGrid = new gridjs.Grid(this.currentConfig);
-        this.incidentGrid.render(document.getElementById("incidentsTable"));
+        this.incidentGrid.render(document.getElementById(datatableId));
         searchService.initSearch(this.incidentGrid, this.currentConfig);
         const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', restUrl + 'export', incidentsTable);
 
-        gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
+        new ColumnOptions(
+            datatableId,
+            this.incidentGrid,
+            ['name', 'allowedActions'],
+            ['name', 'createdAt', 'updatedAt', 'allowedActions'],
+            ['id'])
 
         initGridActions()
         initSaveAsExcelButton(customGridFunctions, 'Hændelseslog')

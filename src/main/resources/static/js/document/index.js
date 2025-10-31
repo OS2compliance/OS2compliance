@@ -1,3 +1,6 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
+
+let userChoicesEditSelect
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -158,12 +161,18 @@ function initGrid() {
             }
         }
     };
-    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "documentsDatatable" ));
+    const datatableId = 'documentsDatatable'
+    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
 
     //Enables custom column search, serverside sorting and pagination
-    const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, exportDocumentsUrl, 'documentsDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridDocumentsUrl, exportDocumentsUrl, datatableId);
 
     initSaveAsExcelButton(customGridFunctions, 'Dokumenter')
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
+    new ColumnOptions(
+        datatableId,
+        grid,
+        ['titel', 'allowedActions'],
+        ['titel', 'allowedActions', 'documentType', 'status'],
+        ['id', 'isExternal'])
 }
