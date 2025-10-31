@@ -1,4 +1,5 @@
 import {initStatisticView} from "./statistic/statisticView.js";
+import ColumnOptions from "./grid-js-extension/column-options.js";
 import formatTags from "./tags/tag-grid-formatter.js";
 
 const defaultClassName = {
@@ -156,12 +157,20 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         };
 
+        const taskDatatableId = "tasksDatatable";
         const gridTasks = new gridjs.Grid(gridConfigTasks)
-            .render(document.getElementById("tasksDatatable"));
+            .render(document.getElementById(taskDatatableId));
 
         //Enables custom column search, serverside sorting and pagination
         new CustomGridFunctions(gridTasks, gridTasksUrl + "/" + userId, 'tasksDatatable')
 
+        new ColumnOptions(
+            taskDatatableId,
+            gridTasks,
+            ['opgavenavn'],
+            ['opgavenavn','deadline','status', 'OpgaveType'],
+            ['id', 'completed'],
+            '.taskTableOptionsContainer')
 
         let gridConfigAssets = {
             className: defaultClassName,
@@ -253,10 +262,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         };
 
-        const gridAssets = new gridjs.Grid(gridConfigAssets).render(document.getElementById("assetsDatatable"));
+        const assetDatatableId = 'assetsDatatable'
+        const gridAssets = new gridjs.Grid(gridConfigAssets).render(document.getElementById(assetDatatableId));
 
         //Enables custom column search, serverside sorting and pagination
         new CustomGridFunctions(gridAssets, gridAssetsUrl + "/" + userId, 'assetsDatatable')
+        new ColumnOptions(
+            assetDatatableId,
+            gridAssets,
+            ['navn'],
+            ['navn','type','status'],
+            ['id'])
 
 
         let gridConfigRegisters = {
@@ -379,10 +395,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
             }
         };
 
-        const gridRegisters = new gridjs.Grid(gridConfigRegisters).render(document.getElementById("registersDatatable"));
+        const registerDatatableId ='registersDatatable'
+        const gridRegisters = new gridjs.Grid(gridConfigRegisters).render(document.getElementById(registerDatatableId));
 
         //Enables custom column search, serverside sorting and pagination
-        new CustomGridFunctions(gridRegisters, gridRegistersUrl + "/" + userId, 'registersDatatable')
+        new CustomGridFunctions(gridRegisters, gridRegistersUrl + "/" + userId, registerDatatableId)
+        new ColumnOptions(
+            registerDatatableId,
+            gridRegisters,
+            ['titel'],
+            ['titel','konsekvensVurdering','status'],
+            ['id'])
 
         let gridConfigDocuments = {
             className: defaultClassName,
@@ -479,10 +502,17 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 }
             }
         };
-        const gridDocuments = new gridjs.Grid(gridConfigDocuments).render(document.getElementById("documentsDatatable"));
+        const documentDatatableId = 'documentsDatatable'
+        const gridDocuments = new gridjs.Grid(gridConfigDocuments).render(document.getElementById(documentDatatableId));
 
         //Enables custom column search, serverside sorting and pagination
-        new CustomGridFunctions(gridDocuments, gridDocumentsUrl + "/" + userId, 'documentsDatatable')
+        new CustomGridFunctions(gridDocuments, gridDocumentsUrl + "/" + userId, documentDatatableId)
+        new ColumnOptions(
+            documentDatatableId,
+            gridDocuments,
+            ['titel'],
+            ['titel','dokumentType','status'],
+            ['id'])
     }
 });
 

@@ -36,7 +36,6 @@
                     <div class="flex-fill">
                         <div class="card mb-3">
                             <div class="card-body">
-                            	<div th:replace="~{fragments/gridOptions :: dropdown}"></div>
                                 <div class="mt-3" id="documentsDatatable"></div>
 
                                 <!-- Custom search selectors-->
@@ -64,7 +63,7 @@
 </div>
 
 <div th:replace="~{documents/create :: createDocumentFragment}"></div>
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/

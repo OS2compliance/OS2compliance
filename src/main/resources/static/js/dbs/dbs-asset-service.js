@@ -1,3 +1,4 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
 
 let dbsAssetService = new DBSAssetService();
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -116,7 +117,12 @@ function DBSAssetService() {
 
         const customGridFunctions = new CustomGridFunctions(grid, gridDBSAssetsUrl, exportDBSAssetsUrl,'assetsDatatable');
 
-        gridOptions.init(grid, document.getElementById("gridOptions"));
+        new ColumnOptions(
+            'assetsDatatable',
+            grid,
+            ['dbsNavn', 'allowedActions'],
+            ['dbsNavn','aktiv(er)', 'sidstHentet', 'leverandør'],
+            ['id'])
 
         initSaveAsExcelButton(customGridFunctions, 'DBS_aktiver');
     }

@@ -1,3 +1,4 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 
 let editDialog;
@@ -204,11 +205,17 @@ function initGrid() {
             }
         }
     };
-    const grid = new gridjs.Grid(gridConfig).render(document.getElementById("suppliersDatatable"));
+    const datatableId ='suppliersDatatable'
+    const grid = new gridjs.Grid(gridConfig).render(document.getElementById(datatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, 'suppliersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, datatableId);
 
     initSaveAsExcelButton(customGridFunctions, 'Leverandører')
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
+    new ColumnOptions(
+        datatableId,
+        grid,
+        ['navn', 'allowedActions'],
+        ['navn', 'allowedActions','antalLøsninger', 'opdateret','status' ],
+        ['id'])
 }

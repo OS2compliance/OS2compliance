@@ -1,3 +1,4 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
 
 let grid = null;
@@ -239,11 +240,18 @@ function initGrid() {
             }
         }
     };
-    grid = new gridjs.Grid(gridConfig).render(document.getElementById("registersDatatable"));
+    const registerDatatableId = 'registersDatatable';
+    grid = new gridjs.Grid(gridConfig).render(document.getElementById(registerDatatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, 'registersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, registerDatatableId);
+
+    new ColumnOptions(
+        registerDatatableId,
+        grid,
+        ['titel', 'allowedActions'],
+        ['titel','risikoVurdering','status', 'aktiver'],
+        ['id'])
 
     initSaveAsExcelButton(customGridFunctions, 'Fortegnelse')
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
 }
