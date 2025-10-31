@@ -8,6 +8,7 @@ document.addEventListener("DOMContentLoaded", async function (event) {
         await fetch(formUrl).then(response => response.text()
             .then(data => {
                 form.innerHTML = data
+                initFormValidationForForm('createForm');
             }))
             .catch(error => toastService.error(error));
     }
@@ -50,6 +51,7 @@ function editClicked(supplierId) {
                     dialog.innerHTML = data;
                     editDialog = new bootstrap.Modal(document.getElementById('formEditDialog'));
                     editDialog.show();
+                    initFormValidationForForm('editForm');
                 }))
             .catch(error => toastService.error(error));
     }
