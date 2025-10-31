@@ -7,13 +7,12 @@ import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
-import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SecurityUserService;
-import dk.digitalidentity.service.TagService;
+import dk.digitalidentity.service.tag.TagService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -29,8 +28,11 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
@@ -61,13 +63,13 @@ public class TaskRestController {
 	) {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		Map<Long, Tag> tagsById = tagService.findAll().stream()
-				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
-
-
 		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, page, limit, user);
 
-        assert tasks != null;
+		Set<Long> taskIds = tasks.getContent().stream().map(TaskGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = taskService.findTagsByEntityIds(taskIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+		assert tasks != null;
         return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), tagsById));
     }
 

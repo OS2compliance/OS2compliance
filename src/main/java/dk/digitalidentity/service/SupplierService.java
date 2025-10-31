@@ -3,25 +3,30 @@ package dk.digitalidentity.service;
 import dk.digitalidentity.dao.SupplierDao;
 import dk.digitalidentity.dao.grid.SupplierGridDao;
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 @Transactional
-public class SupplierService {
+public class SupplierService implements TagableService<Supplier> {
 
 	public boolean isResponsibleFor(Supplier supplier) {
 		return supplier.getResponsibleUser() != null && supplier.getResponsibleUser().getUuid().equals(SecurityUtil.getPrincipalUuid());
@@ -98,5 +103,47 @@ public class SupplierService {
 			);
 		}
 		return suppliers;
+	}
+
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		Supplier entity = supplierDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Supplier.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		supplierDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		Supplier entity = supplierDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Supplier.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			supplierDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<Supplier> getEntityType() {
+		return Supplier.class;
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return supplierDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return supplierDao.findTagsByEntityIds(entityIds);
 	}
 }

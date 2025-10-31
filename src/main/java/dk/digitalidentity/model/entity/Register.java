@@ -1,6 +1,7 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -46,7 +47,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Setter
 @SQLDelete(sql = "UPDATE registers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Register extends Relatable implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers {
+public class Register extends Relatable implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers, Tagable {
 
     @ManyToMany
     @JoinTable(
@@ -182,6 +183,10 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 			inverseJoinColumns = @JoinColumn(name = "subject_number")
 	)
 	private Set<KLESubject> kleSubjects = new HashSet<>();
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "register_tag", joinColumns = { @JoinColumn(name = "register_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
 
 	@Override
     public RelationType getRelationType() {

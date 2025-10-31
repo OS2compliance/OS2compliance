@@ -249,6 +249,13 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
                     },
                 },
                 {
+                    name: "Tags",
+                    searchable: {
+                        searchKey: 'tagNames',
+                    },
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
+                {
                     id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
@@ -270,7 +277,7 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.tags, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },

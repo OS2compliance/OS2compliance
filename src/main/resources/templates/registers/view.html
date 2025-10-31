@@ -99,6 +99,7 @@
 <div th:replace="~{risks/formFragment :: form(risk = ${risk})}"></div>
 <div id="EditRelationModalHolder"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, gridjs = true)}"></div>
+<div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${register.id}, targetType='register')}"></div>
 
 </body>
 

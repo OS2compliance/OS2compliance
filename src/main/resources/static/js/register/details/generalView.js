@@ -1,5 +1,6 @@
 import KLESelectionService from "./kleSelectionService.js";
 import OnUnSubmittedService from "../../on-unsubmitted-changes-service.js";
+import initRelatedTagList from "../../tags/related-tag-list.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let ouChoices;
@@ -19,6 +20,7 @@ export default function RegisterGeneralService() {
         this.initDocumentRelationSelectPrivate();
         this.initTaskRelationSelectPrivate();
         this.initGeneralEditButtons()
+        initRelatedTagList('#_dm-tabsGeneral')
     }
 
     this.initGeneralEditButtons = function () {

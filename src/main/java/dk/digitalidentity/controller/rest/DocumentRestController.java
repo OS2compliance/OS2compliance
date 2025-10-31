@@ -4,10 +4,9 @@ import dk.digitalidentity.dao.grid.DocumentGridDao;
 import dk.digitalidentity.mapping.DocumentMapper;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
-import dk.digitalidentity.security.Roles;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireDocument;
 import dk.digitalidentity.service.DocumentService;
@@ -29,6 +28,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
@@ -59,8 +60,12 @@ public class DocumentRestController {
 
         Page<DocumentGrid> documents = documentService.getDocuments(sortColumn, sortDirection, filters, page, limit, user);
 
+		Set<Long> entityIds = documents.getContent().stream().map(DocumentGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = documentService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
         assert documents != null;
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), tagsById));
     }
 
 	@RequireReadOwnerOnly
@@ -78,9 +83,12 @@ public class DocumentRestController {
 
 		// Fetch all records (no pagination)
 		Page<DocumentGrid> documents = documentService.getDocuments(sortColumn, sortDirection, filters, 0, pageLimit, user);
+		Set<Long> entityIds = documents.getContent().stream().map(DocumentGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = documentService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
 
 		assert documents != null;
-		List<DocumentDTO> allData = mapper.toDTO(documents.getContent());
+		List<DocumentDTO> allData = mapper.toDTO(documents.getContent(), tagsById);
 		excelExportService.exportToExcel(allData, DocumentDTO.class, fileName, response);
 	}
 
@@ -103,8 +111,12 @@ public class DocumentRestController {
 				DocumentGrid.class
 		);
 
+		Set<Long> entityIds = documents.getContent().stream().map(DocumentGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = documentService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
         assert documents != null;
-        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent()));
+        return new PageDTO<>(documents.getTotalElements(), mapper.toDTO(documents.getContent(), tagsById));
     }
 
 }
