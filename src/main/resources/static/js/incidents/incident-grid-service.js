@@ -240,7 +240,7 @@ function initGridActions() {
 
 function formatAsLink(label, href, shouldOpenInWindow = false) {
     const nullSafeLabel = label === null || label === undefined ? '' : label;
-    const nullSafeHref = href === null || href === undefined ? '#' : label;
+    const nullSafeHref = href === null || href === undefined ? '#' : href;
     const target = shouldOpenInWindow ? ' target="_blank" rel="noopener noreferrer"' : '';
     return gridjs.html(`<a href="${nullSafeHref}" ${target}>${nullSafeLabel}</a>`);
 }
