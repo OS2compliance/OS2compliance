@@ -1,0 +1,3 @@
+ALTER TABLE threat_assessment_users
+    ADD COLUMN id BIGINT NOT NULL AUTO_INCREMENT FIRST,
+    ADD PRIMARY KEY (id);

@@ -72,5 +72,8 @@ public class TaskGrid  implements HasSingleResponsibleUser {
     private String tags;
 
 	@Column
+	private String tagIds;
+
+	@Column
 	private LocalDate lastCompletionDate;
 }

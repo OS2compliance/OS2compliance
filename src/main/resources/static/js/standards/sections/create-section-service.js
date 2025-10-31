@@ -39,6 +39,24 @@ function CreateSectionService() {
                     this.sectionModalDialog.innerHTML = data;
                     const createSectionModal = new bootstrap.Modal(this.sectionModalDialog);
                     createSectionModal.show();
+
+                    // Add form validation after modal is shown
+                    const form = this.sectionModalDialog.querySelector('form');
+                    const submitButton = this.sectionModalDialog.querySelector('button[type="submit"]');
+
+                    submitButton.addEventListener('click', (e) => {
+                        e.preventDefault();
+
+                        const headerSelect = form.querySelector('#headerSelect');
+
+                        if (!headerSelect.value || headerSelect.value === '') {
+                            toastService.error('Vælg venligst en gruppe');
+                            return false;
+                        }
+
+                        // If validation passes, submit the form
+                        form.submit();
+                    });
                 }))
             .catch(error => toastService.error(error));
     }

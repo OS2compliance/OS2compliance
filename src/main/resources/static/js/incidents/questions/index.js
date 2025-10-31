@@ -1,4 +1,5 @@
 import IncidentQuestionService from "../incident-question-service.js";
+import ColumnOptions from "../../grid-js-extension/column-options.js";
 
 const formUrl = "/incidents/questionForm"
 const restUrl = "/rest/incidents/questions"
@@ -39,7 +40,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 name: "Svartype"
             },
             {
-                id: "actions",
+                id: "allowedActions",
                 name: "Handlinger",
                 sort: 0,
                 width: '130px',
@@ -74,6 +75,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
         }
     });
     incidentGrid.render(document.getElementById("incidentFieldsTable"));
+
+    new ColumnOptions(
+        'incidentFieldsTable',
+        incidentGrid,
+        ['index', 'allowedActions'],
+        ['index', 'question', 'type', 'allowedActions'],
+        ['id'])
 
     window.incidentGrid = incidentGrid; // TODO - compatibility for onclicks in list - remove when they are replaced with proper listeners
 
