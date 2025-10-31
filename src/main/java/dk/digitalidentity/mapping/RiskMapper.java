@@ -12,6 +12,7 @@ import dk.digitalidentity.service.tag.TagService;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -23,7 +24,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.ERROR)
 public interface RiskMapper {
     default RiskDTO toDTO(final RiskGrid riskGrid, Map<Long, Tag> tagsById) {
-		Set<TagDTO> tags = TagService.toTagDTO(riskGrid.getTagIds(), tagsById);
+		List<TagDTO> tags = TagService.toTagDTO(riskGrid.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList();
 
         return RiskDTO.builder()
                 .id(riskGrid.getId())

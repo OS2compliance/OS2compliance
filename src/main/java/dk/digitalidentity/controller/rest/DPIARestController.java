@@ -82,6 +82,7 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -123,7 +124,7 @@ public class DPIARestController {
 			ThreatAssessmentReportApprovalStatus status,
 			DPIAScreeningConclusion screeningConclusion,
 			Boolean isExternal,
-			Set<TagDTO> tags,
+			List<TagDTO> tags,
 			Set<AllowedAction> allowedActions) {
 	}
 
@@ -584,7 +585,7 @@ public class DPIARestController {
 									dpia.getReportApprovalStatus(),
 									dpia.getScreeningConclusion(),
 									dpia.isExternal(),
-									TagService.toTagDTO(dpia.getTagIds(), tagsById),
+									TagService.toTagDTO(dpia.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(),
 									allowedActions
 							);
 						}

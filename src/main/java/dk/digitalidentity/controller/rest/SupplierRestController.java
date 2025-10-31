@@ -36,6 +36,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,7 @@ public class SupplierRestController {
 			@ExcludeFromExport
 			String kitosUuid,
 			@ExcludeFromExport
-			Set<TagDTO> tags,
+			List<TagDTO> tags,
 			@ExcludeFromExport
 			Set<AllowedAction> allowedActions
 	) {}
@@ -111,7 +112,7 @@ public class SupplierRestController {
 					supplier.getStatus().getMessage(),
 					supplier.getLastOversightDate(),
 					supplier.getKitosUuid(),
-					TagService.toTagDTO(supplier.getTagIds(), tagsById),
+					TagService.toTagDTO(supplier.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(),
 					allowedActions
 			);
 			supplierDTOs.add(dto);
@@ -147,7 +148,7 @@ public class SupplierRestController {
 		final List<SupplierGridDTO> allData = new ArrayList<>();
 		for (final SupplierGrid supplier : suppliers.getContent()) {
 			final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
-					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), supplier.getLastOversightDate(), supplier.getKitosUuid(), TagService.toTagDTO(supplier.getTagIds(), tagsById), allowedActions);
+					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), supplier.getLastOversightDate(), supplier.getKitosUuid(),TagService.toTagDTO(supplier.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(), allowedActions);
 			allData.add(dto);
 		}
 		excelExportService.exportToExcel(allData, SupplierGridDTO.class, fileName, response);

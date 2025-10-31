@@ -12,6 +12,7 @@ import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +26,7 @@ public interface TaskMapper {
 
 	@SuppressWarnings("Convert2MethodRef")
 	default TaskDTO toDTO(final TaskGrid taskGrid, Map<Long, Tag> tagsById) {
-		Set<TagDTO> tags = TagService.toTagDTO(taskGrid.getTagIds(), tagsById);
+		List<TagDTO> tags = TagService.toTagDTO(taskGrid.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList();
 
 		TaskDTO taskDTO = TaskDTO.builder()
 				.id(taskGrid.getId())

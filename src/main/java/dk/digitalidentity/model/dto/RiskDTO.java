@@ -8,7 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 
@@ -43,7 +45,7 @@ public class RiskDTO {
     private String externalLink;
 	@ExcludeFromExport
 	@Builder.Default
-	private Set<TagDTO> tags = new HashSet<>();
+	private List<TagDTO> tags = new ArrayList<>();
 	@ExcludeFromExport
 	private Set<AllowedAction> allowedActions;
 	@ExcelColumn(headerName = "Entitet", order = 5)

@@ -179,7 +179,7 @@ function initGrid() {
             {
                 name: "Tags",
                 searchable: {
-                    searchKey: 'tag_names',
+                    searchKey: 'tagNames',
                 },
                 formatter: (cell, row) => formatTags(cell, row),
             },

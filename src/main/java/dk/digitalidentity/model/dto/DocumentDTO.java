@@ -8,6 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -31,7 +32,7 @@ public class DocumentDTO {
 	@ExcludeFromExport
     private Integer statusOrder;
 	@ExcludeFromExport
-    private Set<TagDTO> tags;
+    private List<TagDTO> tags;
 	@ExcludeFromExport
     private Set<AllowedAction> allowedActions;
 }

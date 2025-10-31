@@ -16,6 +16,7 @@ import org.mapstruct.Context;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,7 +29,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public interface RegisterMapper {
 
     default RegisterDTO toDTO(final RegisterGrid registerGrid, Map<Long, Tag> tagsById) {
-		Set<TagDTO> tags = TagService.toTagDTO(registerGrid.getTagIds(), tagsById);
+		List<TagDTO> tags = TagService.toTagDTO(registerGrid.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList();
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		String userUuid = SecurityUtil.getPrincipalUuid();

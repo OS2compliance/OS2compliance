@@ -22,6 +22,7 @@ import org.mapstruct.ReportingPolicy;
 import org.springframework.data.domain.Page;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -34,7 +35,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 public interface DocumentMapper {
 
 	default DocumentDTO toDTO(final DocumentGrid documentGrid, Map<Long, Tag> tagsById) {
-		Set<TagDTO> tags = TagService.toTagDTO(documentGrid.getTagIds(), tagsById);
+		List<TagDTO> tags = TagService.toTagDTO(documentGrid.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList();
 
 		DocumentDTO documentDTO = DocumentDTO.builder()
 				.id(documentGrid.getId())

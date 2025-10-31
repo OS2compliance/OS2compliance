@@ -1,17 +1,17 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
-       TRIM(s.name)                                               AS name,
-       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id) AS solution_count,
-       s.updated_at                                               AS updated,
+       TRIM(s.name)                                                         AS name,
+       (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id)           AS solution_count,
+       s.updated_at                                                         AS updated,
        s.status,
        s.localized_enums,
        (SELECT MAX(ao.creation_date)
         FROM assets a
                  LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
-        WHERE a.supplier_id = s.id)                               AS last_oversight_date,
-       prop.prop_value                                            AS kitos_uuid,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')         AS tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')            AS tag_ids
+        WHERE a.supplier_id = s.id)                                         AS last_oversight_date,
+       prop.prop_value                                                      AS kitos_uuid,
+       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM suppliers s
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
          LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id
@@ -45,8 +45,8 @@ SELECT t.id,
        (ts.id IS NOT NULL AND t.task_type = 'TASK')                                    as completed,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')                              as tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')                                 as tag_ids
+       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')            AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')               AS tag_ids
 FROM tasks t
          LEFT JOIN task_logs ts on ts.task_id = t.id
          LEFT JOIN task_tag rt on rt.task_id = t.id
@@ -95,8 +95,8 @@ SELECT r.id,
             WHEN pr.prop_value = 'ORANGE' THEN 4
             WHEN pr.prop_value = 'RED' THEN 5
            END)                                                                       as asset_assessment_order,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')                             as tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')                                as tag_ids
+       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')           AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')              AS tag_ids
 FROM registers r
          LEFT JOIN choice_values cv_status ON cv_status.id = r.status
          LEFT JOIN consequence_assessments ca on ca.register_id = r.id
@@ -123,12 +123,12 @@ GROUP BY r.id;
 CREATE OR REPLACE VIEW view_gridjs_assets AS
 SELECT a.id,
        a.name,
-       s.name                                             as supplier,
-       cv.caption                                         as asset_type,
-       GROUP_CONCAT(DISTINCT u.name SEPARATOR ',')        as responsible_user_names,
-       GROUP_CONCAT(DISTINCT u.uuid SEPARATOR ',')        as responsible_user_uuids,
-       GROUP_CONCAT(DISTINCT mu.uuid SEPARATOR ',')       as manager_uuids,
-       GROUP_CONCAT(DISTINCT mu.name SEPARATOR ',')       as manager_user_names,
+       s.name                                                               as supplier,
+       cv.caption                                                           as asset_type,
+       GROUP_CONCAT(DISTINCT u.name SEPARATOR ',')                          as responsible_user_names,
+       GROUP_CONCAT(DISTINCT u.uuid SEPARATOR ',')                          as responsible_user_uuids,
+       GROUP_CONCAT(DISTINCT mu.uuid SEPARATOR ',')                         as manager_uuids,
+       GROUP_CONCAT(DISTINCT mu.name SEPARATOR ',')                         as manager_user_names,
        a.updated_at,
        a.asset_status,
        (CASE
@@ -136,15 +136,15 @@ SELECT a.id,
             WHEN a.asset_status = 'ON_GOING' THEN 2
             WHEN a.asset_status = 'READY' THEN 3
            END
-           )                                              as asset_status_order,
+           )                                                                as asset_status_order,
        a.asset_category,
-       a.active                                           AS active,
+       a.active                                                             AS active,
        (CASE
             WHEN a.asset_category = 'GREEN' THEN 1
             WHEN a.asset_category = 'YELLOW' THEN 2
             WHEN a.asset_category = 'RED' THEN 3
            END
-           )                                              as asset_category_order,
+           )                                                                as asset_category_order,
        ta.assessment,
        (CASE
             WHEN ta.assessment = 'GREEN' THEN 1
@@ -153,30 +153,30 @@ SELECT a.id,
             WHEN ta.assessment = 'ORANGE' THEN 4
             WHEN ta.assessment = 'RED' THEN 5
            END
-           )                                              as assessment_order,
+           )                                                                as assessment_order,
        concat(COALESCE(a.localized_enums, ''
               ), ' ', COALESCE(ta.localized_enums, ''
                       )
-       )                                                  as localized_enums,
-       IF(properties.prop_value IS null, 0, 1)            AS kitos,
-       IF(old_kitos_prop.prop_value IS NULL, 0, 1)        AS old_kitos,
-       MAX(ao.creation_date)                              AS last_oversight_date,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')    as tag_ids,
+       )                                                                    as localized_enums,
+       IF(properties.prop_value IS null, 0, 1)                              AS kitos,
+       IF(old_kitos_prop.prop_value IS NULL, 0, 1)                          AS old_kitos,
+       MAX(ao.creation_date)                                                AS last_oversight_date,
+       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids,
        CASE
            WHEN EXISTS (SELECT 1
                         FROM assets_suppliers
                         WHERE asset_id = a.id
                           AND third_country_transfer = 'YES') THEN TRUE
            ELSE FALSE
-           END                                            AS has_third_country_transfer,
+           END                                                              AS has_third_country_transfer,
        (SELECT COUNT(rel.id
                )
         FROM relations rel
         WHERE (rel.relation_a_id = a.id OR rel.relation_b_id = a.id
             )
           AND (rel.relation_a_type = 'REGISTER' OR rel.relation_b_type = 'REGISTER'
-            ))                                            as registers
+            ))                                                              as registers
 FROM assets a
          LEFT JOIN suppliers s on s.id = a.supplier_id
          LEFT JOIN properties ON properties.entity_id = a.id and properties.prop_key = 'kitos_uuid'
@@ -238,8 +238,8 @@ SELECT t.id,
                  LEFT JOIN threat_catalogs tc ON tac.threat_catalog_identifier = tc.identifier
         WHERE tac.threat_assessment_id = t.id
           AND tc.deleted = false)                                                                                                                                    AS threat_catalogs,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')                                                                                                            as tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')                                                                                                               as tag_ids
+       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')                                                                                          AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')                                                                                             AS tag_ids
 FROM threat_assessments t
          LEFT JOIN relations rel ON (
     (rel.relation_a_type = 'THREAT_ASSESSMENT' AND rel.relation_a_id = t.id)
@@ -273,7 +273,7 @@ SELECT d.id,
             WHEN d.document_type = 'RISK_ASSESSMENT_REPORT' THEN 8
             WHEN d.document_type = 'SUPERVISORY_REPORT' THEN 9
             WHEN d.document_type = 'GUIDE' THEN 10
-           END)                                           as document_type_order,
+           END)                                                             as document_type_order,
        d.responsible_uuid,
        d.next_revision,
        d.status,
@@ -281,10 +281,10 @@ SELECT d.id,
             WHEN d.status = 'NOT_STARTED' THEN 1
             WHEN d.status = 'IN_PROGRESS' THEN 2
             WHEN d.status = 'READY' THEN 3
-           END)                                           as status_order,
+           END)                                                             as status_order,
        d.localized_enums,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',') as tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')    as tag_ids
+       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM documents d
          LEFT JOIN document_tag rt on rt.document_id = d.id
          LEFT JOIN tags tg on rt.tag_id = tg.id
@@ -433,8 +433,8 @@ SELECT d.id,
        (SELECT sc.conclusion FROM dpia_screening sc WHERE sc.dpia_id = d.id)                                                                                         as screening_conclusion,
        d.from_external_source                                                                                                                                        as is_external,
        dr.report_approver_uuid                                                                                                                                       AS approver_uuid,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')                              as tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')                                 as tag_ids
+       GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')                                                                                          AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')                                                                                             AS tag_ids
 FROM dpia d
          LEFT JOIN dpia_report dr ON d.id = dr.dpia_id
          LEFT JOIN dpia_tag rt on rt.dpia_id = d.id

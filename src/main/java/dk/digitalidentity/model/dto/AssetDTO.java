@@ -9,6 +9,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -54,5 +55,5 @@ public class AssetDTO {
 	@ExcelColumn(headerName = "Sidste tilsyn", order = 11)
 	private LocalDate lastOversightDate;
 	@ExcludeFromExport
-	private Set<TagDTO> tags;
+	private List<TagDTO> tags;
 }

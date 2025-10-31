@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 {
                     name: "Tags",
                     searchable: {
-                        searchKey: 'tag_names',
+                        searchKey: 'tagNames',
                     },
                     formatter: (cell, row) => formatTags(cell, row),
                 },
@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 {
                     name: "Tags",
                     searchable: {
-                        searchKey: 'tag_names',
+                        searchKey: 'tagNames',
                     },
                     formatter: (cell, row) => formatTags(cell, row),
                 },
@@ -346,7 +346,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 {
                     name: "Tags",
                     searchable: {
-                        searchKey: 'tag_names',
+                        searchKey: 'tagNames',
                     },
                     formatter: (cell, row) => formatTags(cell, row),
                 },
@@ -447,7 +447,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
                 {
                     name: "Tags",
                     searchable: {
-                        searchKey: 'tag_names',
+                        searchKey: 'tagNames',
                     },
                     formatter: (cell, row) => formatTags(cell, row),
                 },

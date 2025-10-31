@@ -34,6 +34,7 @@ import org.springframework.data.domain.Page;
 import java.time.LocalDateTime;
 import java.time.OffsetDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -56,7 +57,7 @@ public interface AssetMapper {
     }
 
     default AssetDTO toDTO(final AssetGrid assetGrid, Map<Long, Tag> tagsById) {
-		Set<TagDTO> tags = TagService.toTagDTO(assetGrid.getTagIds(), tagsById);
+		List<TagDTO> tags = TagService.toTagDTO(assetGrid.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList();
 
         AssetDTO assetDTO = AssetDTO.builder()
             .id(assetGrid.getId())

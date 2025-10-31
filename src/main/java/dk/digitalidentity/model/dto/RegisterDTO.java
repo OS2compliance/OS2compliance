@@ -8,7 +8,9 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -64,7 +66,7 @@ public class RegisterDTO {
 	private Set<String> kleSubjects = new HashSet<>();
 	@ExcludeFromExport
 	@Builder.Default
-	private Set<TagDTO> tags = new HashSet<>();
+	private List<TagDTO> tags = new ArrayList<>();
 	@ExcludeFromExport
 	@Builder.Default
 	private Set<AllowedAction> allowedActions = new HashSet<>();
