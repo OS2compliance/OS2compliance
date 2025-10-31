@@ -36,7 +36,6 @@
 						<div class="flex-fill">
 							<div class="card mb-3">
 								<div class="card-body">
-                                    <div th:replace="~{fragments/gridOptions :: dropdown}"></div>
 									<div id="suppliersDatatable" class="mt-5"></div>
 
                                     <!-- Custom search selectors-->
@@ -59,7 +58,7 @@
 	<div sec:authorize="hasRole('ROLE_create_all')" class="modal fade" id="formDialog" tabindex="-1" aria-hidden="true"></div>
 	<div sec:authorize="hasRole('ROLE_update_all')" class="modal fade" id="formEditDialog" tabindex="-1" aria-hidden="true"></div>
 
-	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true)}"></div>
+	<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
 
 	<script th:inline="javascript">
@@ -78,7 +77,7 @@
 
 		/*]]>*/
 	</script>
-    <script th:src="@{/js/supplier/supplier.js}" defer></script>
+    <script type="module" th:src="@{/js/supplier/supplier.js}" defer></script>
 </body>
 
 </html>
