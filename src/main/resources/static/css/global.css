@@ -206,3 +206,17 @@ html {
     outline: transparent;
     border-style: none;
 }
+
+.tag-badge {
+    display: inline-block;
+    min-width: 3rem;
+    min-height: 1rem;
+    padding: .35em .65em;
+    font-weight: 600;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
+    border-radius: .4375rem;
+    border-color: black;
+}

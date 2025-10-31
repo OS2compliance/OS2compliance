@@ -39,7 +39,7 @@ public class TaskDTO {
 	@ExcludeFromExport
     private Integer taskResultOrder;
 	@ExcelColumn(headerName = "Tags", order = 5)
-    private String tags;
+    private Set<TagDTO> tags;
 	@ExcludeFromExport
     private Set<AllowedAction> allowedActions;
 	@ExcludeFromExport
