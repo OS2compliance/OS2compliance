@@ -223,7 +223,7 @@ function CreateTable() {
                     id: 'tags',
                     name: "Tags",
                     searchable: {
-                        searchKey: 'tag_names',
+                        searchKey: 'tagNames',
                     },
                     formatter: (cell, row) => formatTags(cell, row),
                 },
