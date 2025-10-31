@@ -1,20 +1,21 @@
 CREATE OR REPLACE VIEW view_gridjs_suppliers AS
 SELECT s.id,
-       TRIM(s.name)                                               as name,
+       TRIM(s.name)                                               AS name,
        (SELECT COUNT(1) FROM assets a WHERE a.supplier_id = s.id) AS solution_count,
        s.updated_at                                               AS updated,
        s.status,
        s.localized_enums,
-       MAX(ao.creation_date)                                      AS last_oversight_date,
+       (SELECT MAX(ao.creation_date)
+        FROM assets a
+                 LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
+        WHERE a.supplier_id = s.id)                               AS last_oversight_date,
        prop.prop_value                                            AS kitos_uuid,
-       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')         as tag_names,
-       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')            as tag_ids
+       GROUP_CONCAT(COALESCE(tg.value, '') SEPARATOR ',')         AS tag_names,
+       GROUP_CONCAT(COALESCE(tg.id, '') SEPARATOR ',')            AS tag_ids
 FROM suppliers s
-         LEFT JOIN assets a ON a.supplier_id = s.id
-         LEFT JOIN assets_oversight ao ON ao.asset_id = a.id
          LEFT JOIN properties prop ON prop.entity_id = s.id AND prop.prop_key = 'kitos_uuid'
-         LEFT JOIN supplier_tag rt on rt.supplier_id = s.id
-         LEFT JOIN tags tg on rt.tag_id = tg.id
+         LEFT JOIN supplier_tag rt ON rt.supplier_id = s.id
+         LEFT JOIN tags tg ON rt.tag_id = tg.id
 WHERE s.deleted = false
 GROUP BY s.id;
 
