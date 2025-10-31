@@ -1,5 +1,6 @@
-export default function IncidentGridService() {
 import ColumnOptions from "../grid-js-extension/column-options.js";
+
+export default function IncidentGridService() {
 
     this.filterFrom = '';
     this.filterTo = '';
