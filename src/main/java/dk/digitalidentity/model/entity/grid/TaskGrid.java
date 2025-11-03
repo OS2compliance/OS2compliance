@@ -4,7 +4,6 @@ import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -59,8 +58,7 @@ public class TaskGrid  implements HasSingleResponsibleUser {
     private boolean completed;
 
     @Column(name = "result")
-    @Enumerated(EnumType.STRING)
-    private TaskResult taskResult;
+    private String taskResult;
 
     @Column
     private Integer taskResultOrder;

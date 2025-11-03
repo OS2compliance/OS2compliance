@@ -81,6 +81,11 @@ public class ChoiceValue {
 	@Builder.Default
 	private List<Register> registersWithStatus = new ArrayList<>();
 
+	@JsonIgnore
+	@OneToMany(mappedBy = "taskResult")
+	@Builder.Default
+	private List<TaskLog> taskLogsWithResult = new ArrayList<>();
+
     @Override
     public boolean equals(final Object o) {
         if (this == o) return true;

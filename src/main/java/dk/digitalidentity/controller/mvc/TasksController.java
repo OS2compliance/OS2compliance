@@ -1,6 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
@@ -14,7 +16,6 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.Roles;
@@ -25,6 +26,8 @@ import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
+import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RelatableService;
@@ -80,7 +83,8 @@ public class TasksController {
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
     private final EmailTemplateService emailTemplateService;
-
+	private final ChoiceValueService choiceValueService;
+	private final ChoiceService choiceService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -259,8 +263,8 @@ public class TasksController {
         return showIndex ? "redirect:/tasks" : "redirect:/tasks/" + existingTask.getId();
     }
 
-    record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
-    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, TaskResult taskResult) {}
+    record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, ChoiceValue taskResult) {}
+    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, Long resultId) {}
     @RequireReadOwnerOnly
 	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
@@ -276,6 +280,7 @@ public class TasksController {
         model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, "", null, null));
+		model.addAttribute("possibleResults", choiceService.findChoiceValuesForListIdentifier("control-result"));
 
         if (task.getTaskType().equals(TaskType.TASK)) {
             final boolean completed = calculateCompleted(task);
@@ -291,9 +296,14 @@ public class TasksController {
                     taskLog.getComment(),
                     taskLog.getCurrentDescription(),
                     taskLog.getDocumentationLink(),
-                    taskLog.getDocument() == null ? null : taskLog.getDocument().getName(), taskLog.getDocument() == null ? null : taskLog.getDocument().getId(),
+                    taskLog.getDocument() == null ? null : taskLog.getDocument().getName(),
+					taskLog.getDocument() == null ? null : taskLog.getDocument().getId(),
                     taskLog.getResponsibleUserUserId() + ", " + taskLog.getResponsibleOUName(),
-                    taskLog.getCompleted(), taskLog.getDeadline(), daysAfterDeadline, taskLog.getTaskResult()));
+                    taskLog.getCompleted(),
+					taskLog.getDeadline(),
+					daysAfterDeadline,
+					taskLog.getTaskResult()
+				));
             }
         } else if (task.getTaskType().equals(TaskType.CHECK)) {
             final List<LogDTO> taskLogs = new ArrayList<>();
@@ -366,9 +376,17 @@ public class TasksController {
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ingen bruger logget ind");
         }
+
         if (StringUtils.isEmpty(dto.comment().trim())) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal angives en kommentar ved udførsel.");
         }
+
+		ChoiceValue result = null;
+		if (dto.resultId() != null) {
+			result = choiceValueService.findById(dto.resultId())
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid result"));
+		}
+
         final TaskLog taskLog = new TaskLog();
         taskLog.setName(task.getName());
         taskLog.setCompleted(dto.dateOfCompletion == null ? LocalDate.now() : dto.dateOfCompletion);
@@ -379,7 +397,7 @@ public class TasksController {
         taskLog.setResponsibleOUName(nullSafe(() -> task.getResponsibleOu().getName()));
         taskLog.setResponsibleUserName(user.getName());
         taskLog.setResponsibleUserUserId(user.getUserId());
-        taskLog.setTaskResult(dto.taskResult());
+        taskLog.setTaskResult(result);
 
         if (!StringUtils.isEmpty(dto.documentLink().trim())) {
             taskLog.setDocumentationLink(dto.documentLink());
