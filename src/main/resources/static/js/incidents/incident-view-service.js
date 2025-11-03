@@ -1,19 +1,15 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import {validateFormBeforeSubmit} from "./incident-validation-service.js";
 import IncidentService from "./incident-service.js";
 
-let incidentViewService;
-let incidentService;
-
-let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
-document.addEventListener("DOMContentLoaded", function(event) {
-    incidentService = new IncidentService();
-    incidentService.init();
-
+document.addEventListener("DOMContentLoaded", function (event) {
     const targetId = '_dm-tabsIncident';
-    incidentViewService = new IncidentViewService();
+    const incidentViewService = new IncidentViewService();
     incidentViewService.init();
     incidentViewService.setEditable(targetId, false);
+
+    const incidentService = new IncidentService();
+    incidentService.initChoicesAndDatePickers(targetId);
 });
 
 // Requires incident-service also
@@ -22,7 +18,7 @@ function IncidentViewService() {
 
     this.init = () => {
         const form = document.getElementById(formId);
-        form.addEventListener("submit", (event) => this.validateFormBeforeSubmit(event, form));
+        form.addEventListener("submit", (event) => validateFormBeforeSubmit(event, form));
 
         const editDescBtn = document.getElementById("editDescBtn");
         const cancelBtn = document.getElementById("cancelBtn");
@@ -102,36 +98,5 @@ function IncidentViewService() {
             }
         })
     }
-
-    this.validateFormBeforeSubmit = (event, form) => {
-        let valid = true;
-        let invalidFields = [];
-
-        // validate date field
-        const dateInput = form.querySelector('input[name="riskAssessmentConductedDate"]');
-        if (dateInput) {
-            const val = dateInput.value.trim();
-            const feedback = dateInput.parentElement.querySelector('.invalid-feedback');
-            const isValid = val === "" || isValidDateDMY(val);
-
-            if (!isValid) {
-                valid = false;
-                invalidFields.push(dateInput);
-            }
-            assetRiskKitosService.setFieldValidity(dateInput, feedback, isValid);
-        }
-
-        if (!valid) {
-            event.preventDefault();
-            if (invalidFields.length > 0) {
-                invalidFields[0].scrollIntoView({behavior: 'smooth', block: 'center'});
-                invalidFields[0].focus();
-            }
-        } else {
-            // enable fields if disabled, to make sure they are included in the form on submit
-            document.getElementById("riskAssessmentConductedDate").disabled = false;
-            document.getElementById("result").disabled = false;
-        }
-    };
 
 }

@@ -1,4 +1,4 @@
-// import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
+import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
 
 const currentYear = new Date().getFullYear();
 

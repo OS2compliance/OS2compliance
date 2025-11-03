@@ -5,6 +5,7 @@ import dk.digitalidentity.service.IncidentService;
 import dk.digitalidentity.statistic.StatisticService;
 import dk.digitalidentity.statistic.dto.ChartConfigurationDTO;
 import dk.digitalidentity.statistic.dto.EntityFieldChoiceDTO;
+import dk.digitalidentity.statistic.dto.ErrorDTO;
 import dk.digitalidentity.statistic.enumerable.DateTimePreset;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import lombok.RequiredArgsConstructor;
@@ -12,8 +13,10 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.time.temporal.TemporalAdjusters;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 @RequiredArgsConstructor
 @Service
@@ -35,14 +38,20 @@ public class ChartConfigurationService {
 	}
 
 	public ChartConfigurationDTO toDTO(ChartConfiguration chartConfig, Class<? extends StatisticEnabled> entityClass) {
+		Set<ErrorDTO> errors = new HashSet<>();
 		List<EntityFieldChoiceDTO> allowedXFieldChoices;
 		List<EntityFieldChoiceDTO> allowedYFieldChoices;
 
+		boolean showYOverride = false;
 		if (chartConfig.getEntityName().equalsIgnoreCase("Incident")) {
 			// special case for incidents, where allowed fields are generated from obligatory incident fields
 			List<IncidentField> incidentFields = incidentService.getAllObligatoryFields();
 			if (incidentFields.isEmpty()) {
-				allowedYFieldChoices = List.of(new EntityFieldChoiceDTO(null, "Ingen obligatoriske valgmuligheder at lave statistik på", null));
+				allowedYFieldChoices = List.of();
+				showYOverride = true;
+				errors.add(new ErrorDTO(
+						ErrorDTO.Regarding.YAXIS,
+						"Ingen obligatoriske felter fundet. Statistik kan kun laves på obligatoriske felter."));
 			} else {
 				allowedYFieldChoices = incidentFields.stream()
 						.map(i -> new EntityFieldChoiceDTO(
@@ -75,7 +84,7 @@ public class ChartConfigurationService {
 				showY = !allowedYFieldChoices.isEmpty();
 			}
 			case X_ONLY -> showX = !allowedXFieldChoices.isEmpty();
-			case Y_ONLY -> showY = !allowedYFieldChoices.isEmpty();
+			case Y_ONLY -> showY = showYOverride || !allowedYFieldChoices.isEmpty();
 			default -> {
 				// None of the axes should show
 			}
@@ -122,6 +131,7 @@ public class ChartConfigurationService {
 				.groupTimeByField(chartConfig.getGroupTimeByField())
 				.yFieldFromXField(yFieldFromXField)
 				.xFieldFromYField(xFieldFromYField)
+				.errors(errors)
 				.build();
 	}
 

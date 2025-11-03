@@ -4,6 +4,7 @@
 <html lang="da">
 <head th:replace="~{fragments/header :: head }"></head>
 
+
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -93,10 +94,11 @@
     var viewUrl = [[@{/incidents/logs/}]];
     var formId = [[${formId}]];
     +]*/
+
+
     /*]]>*/
 </script>
 
-<script type="module" th:src="@{/js/incidents/incident-service.js}" defer></script>
 <script type="module" th:src="@{/js/incidents/incident-view-service.js}" defer></script>
 
 </body>
