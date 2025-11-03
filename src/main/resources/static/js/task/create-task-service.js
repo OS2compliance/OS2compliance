@@ -1,3 +1,4 @@
+import initTagSelect from "../tags/tag-selector.js";
 
 const createTaskService = new CreateTaskService();
 const taskLinkService = new TaskLinkService();
@@ -104,7 +105,7 @@ function CreateTaskService() {
                     this.taskModalDialog.innerHTML = data;
                     this.loaded();
                     this.initTaskRelationSelect();
-                    choiceService.initTagSelect('taskCreateFormTagsSelect');
+                    initTagSelect('taskCreateFormTagsSelect');
                     // create task modal - explainer and riskId
                     // if elem != null it means that the method is called from the risk view page
                     if (elem != null) {

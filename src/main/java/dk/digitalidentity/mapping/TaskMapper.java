@@ -7,17 +7,16 @@ import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.tag.TagService;
 import org.mapstruct.Mapper;
 import org.mapstruct.ReportingPolicy;
 
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 import static dk.digitalidentity.util.NullSafe.nullSafe;
@@ -27,6 +26,8 @@ public interface TaskMapper {
 
 	@SuppressWarnings("Convert2MethodRef")
 	default TaskDTO toDTO(final TaskGrid taskGrid, Map<Long, Tag> tagsById) {
+		List<TagDTO> tags = TagService.toTagDTO(taskGrid.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList();
+
 		TaskDTO taskDTO = TaskDTO.builder()
 				.id(taskGrid.getId())
 				.name(taskGrid.getName())
@@ -39,20 +40,7 @@ public interface TaskMapper {
 				.taskResult(nullSafe(() -> taskGrid.getTaskResult()))
 				.taskResultOrder(taskGrid.getTaskResultOrder())
 				.completed(nullSafe(taskGrid::isCompleted))
-				.tags(nullSafe(() -> Arrays.stream(taskGrid.getTagIds().split(",")).map(sid -> {
-									if (sid.trim().isEmpty()) {
-										return null;
-									}
-									Long id = Long.parseLong(sid);
-									Tag tag = tagsById.getOrDefault(id, null);
-									return TagDTO.builder()
-											.label(tag.getValue())
-											.color(tag.getColor().getHexCode())
-											.contrast(tag.getColor().getContrastHexCode())
-											.build();
-								}).filter(Objects::nonNull)
-								.collect(Collectors.toSet())
-				))
+				.tags(tags)
 				.lastCompletionDate(nullSafe(() -> taskGrid.getLastCompletionDate().format(DK_DATE_FORMATTER)))
 				.build();
 

@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -38,7 +38,7 @@ public class TaskDTO {
 	@ExcludeFromExport
     private Integer taskResultOrder;
 	@ExcelColumn(headerName = "Tags", order = 5)
-    private Set<TagDTO> tags;
+    private List<TagDTO> tags;
 	@ExcludeFromExport
     private Set<AllowedAction> allowedActions;
 	@ExcludeFromExport
