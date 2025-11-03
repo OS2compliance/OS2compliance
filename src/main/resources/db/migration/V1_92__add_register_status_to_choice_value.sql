@@ -6,10 +6,10 @@ VALUES ('register-status', 'Status', 0, 1);
 SET @choice_list_id = LAST_INSERT_ID();
 
 -- Insert into choice_values
-INSERT INTO choice_values (identifier, caption) VALUES
-('register-status-not-started-123456', 'Ikke startet'),
-('register-status-in-progress-123456', 'I gang'),
-('register-status-ready-123456', 'Klar');
+INSERT INTO choice_values (identifier, caption, editable) VALUES
+('register-status-not-started-123456', 'Ikke startet', false),
+('register-status-in-progress-123456', 'I gang', false),
+('register-status-ready-123456', 'Klar', false);
 
 -- Insert into choice_list_values
 INSERT INTO choice_list_values (choice_list_id, choice_value_id)

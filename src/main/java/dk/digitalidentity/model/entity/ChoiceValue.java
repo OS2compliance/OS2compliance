@@ -53,6 +53,9 @@ public class ChoiceValue {
     @Column
     private Long limitUpper;
 
+	@Column
+	private boolean editable;
+
     @JsonIgnore
     @ManyToMany(mappedBy = "values")
     @Builder.Default
@@ -62,6 +65,16 @@ public class ChoiceValue {
     @OneToMany(mappedBy = "assetType")
     @Builder.Default
     private List<Asset> assetsWithType = new ArrayList<>();
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "supervisoryModel")
+	@Builder.Default
+	private List<Asset> assetsWithSupervisoryModel = new ArrayList<>();
+
+	@JsonIgnore
+	@OneToMany(mappedBy = "supervisionModel")
+	@Builder.Default
+	private List<AssetOversight> assetOversightsWithSupervisionModel = new ArrayList<>();
 
 	@JsonIgnore
 	@OneToMany(mappedBy = "status")

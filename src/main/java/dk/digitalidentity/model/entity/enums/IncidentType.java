@@ -15,7 +15,8 @@ public enum IncidentType {
     ORGANIZATION("Enhed"),
     ORGANIZATIONS("Enheder"),
     CHOICE_LIST("Valgliste"),
-    CHOICE_LIST_MULTIPLE("Valgliste (flere svar)");
+    CHOICE_LIST_MULTIPLE("Valgliste (flere svar)"),
+	LINK("Link");
 
     private final String value;
 

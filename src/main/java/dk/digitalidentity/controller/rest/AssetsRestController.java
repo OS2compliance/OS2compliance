@@ -15,8 +15,8 @@ import dk.digitalidentity.model.entity.DPIATemplateSection;
 import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.AssetGrid;
 import dk.digitalidentity.security.Roles;
@@ -72,6 +72,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_ASSET_DPIA_CHANGED_QUEUE;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_DPIA_LAST_SYNC_PROPERTY_KEY;
@@ -110,7 +111,12 @@ public class AssetsRestController {
 
 		Page<AssetGrid> assets = assetService.getAssets(sortColumn, sortDirection, filters, page, limit, user);
 
-		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+		Set<Long> entityIds = assets.getContent().stream().map(AssetGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = assetService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+
+		return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), tagsById));
     }
 
 	@RequireReadOwnerOnly
@@ -129,7 +135,11 @@ public class AssetsRestController {
 		// Fetch all records (no pagination)
 		Page<AssetGrid> assets = assetService.getAssets(sortColumn, sortDirection, filters, 0, pageLimit, user);
 
-		List<AssetDTO> allData = mapper.toDTO(assets.getContent());
+		Set<Long> entityIds = assets.getContent().stream().map(AssetGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = assetService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+		List<AssetDTO> allData = mapper.toDTO(assets.getContent(), tagsById);
 		excelExportService.exportToExcel(allData, AssetDTO.class, fileName, response);
 	}
 
@@ -156,7 +166,11 @@ public class AssetsRestController {
 				AssetGrid.class
 		);
 
-        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent()));
+		Set<Long> entityIds = assets.getContent().stream().map(AssetGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = assetService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+        return new PageDTO<>(assets.getTotalElements(), mapper.toDTO(assets.getContent(), tagsById));
     }
 
 	@RequireUpdateOwnerOnly
@@ -199,7 +213,7 @@ public class AssetsRestController {
 		}
 
         asset.setOversightResponsibleUser(user);
-        if (asset.getSupervisoryModel() != ChoiceOfSupervisionModel.DBS) {
+        if (asset.getSupervisoryModel() == null || !asset.getSupervisoryModel().getIdentifier().startsWith("supervision-model-dbs-123456")) {
             assetOversightService.setAssetsToDbsOversight(Collections.singletonList(asset));
         } else {
             assetOversightService.createOrUpdateAssociatedOversightCheck(asset);

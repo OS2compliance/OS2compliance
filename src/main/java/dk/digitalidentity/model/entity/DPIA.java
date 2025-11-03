@@ -2,6 +2,7 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.config.StringSetNullSafeConverter;
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RevisionInterval;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
@@ -12,6 +13,7 @@ import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
@@ -23,7 +25,6 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
-import org.hibernate.annotations.Formula;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
@@ -36,7 +37,7 @@ import java.util.Set;
 @Table(name = "dpia")
 @Getter
 @Setter
-public class DPIA extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
+public class DPIA extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
 	@ManyToMany
 	@JoinTable(
 			name = "dpia_asset",
@@ -100,6 +101,10 @@ public class DPIA extends Relatable implements HasSingleResponsibleUser, Statist
 
 	@OneToOne(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "dpia")
 	private DataProtectionImpactAssessmentScreening dpiaScreening;
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "dpia_tag", joinColumns = { @JoinColumn(name = "dpia_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
 
 	@Override
 	public RelationType getRelationType() {

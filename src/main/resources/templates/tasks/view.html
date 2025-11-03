@@ -4,7 +4,6 @@
 <body class="jumping">
 
 <script th:src="@{/js/oversight/oversight-service.js}" defer></script>
-<script th:src="@{/js/tag-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -162,18 +161,14 @@
                                 <div class="row mb-3">
                                     <label for="notifyResponsible" class="col-sm-2 col-form-label">Send mail til ansvarlig</label>
                                     <div class="col-sm-10" style="display:flex; align-items: center">
-                                        <div class="input-group">
-                                            <input id="notifyResponsible" class="form-check-input editField" type="checkbox" th:value="${task.notifyResponsible}" th:field="*{notifyResponsible}">
-                                        </div>
+                                        <input id="notifyResponsible" class="form-check-input editField" type="checkbox" th:value="${task.notifyResponsible}" th:field="*{notifyResponsible}">
                                     </div>
                                 </div>
 
                                 <div class="row mb-3">
                                     <label for="includeInReport" class="col-sm-2 col-form-label">Skal indgå i årshjul</label>
                                     <div class="col-sm-10" style="display:flex; align-items: center">
-                                        <div class="input-group">
-                                            <input id="includeInReport" class="form-check-input editField" type="checkbox" th:value="${task.includeInReport}" th:field="*{includeInReport}">
-                                        </div>
+                                        <input id="includeInReport" class="form-check-input editField" type="checkbox" th:value="${task.includeInReport}" th:field="*{includeInReport}">
                                     </div>
                                 </div>
 
@@ -216,7 +211,7 @@
                                 <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
                             </div>
                             <div class="row">
-                                <div th:replace="~{fragments/tags :: tagsfragment (tags=${task.tags}, completed=${completed}, relatableId=${task.id})}"></div>
+                                <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (tags=${task.tags}, parentId=${task.id}, parentType='task', allowAdd=${completed == null || !completed}, allowRemove=${completed == null || !completed})}"></div>
                             </div>
                         </div>
                         <div id="_dm-tabsHistorik" class="tab-pane fade" role="tabpanel" aria-labelledby="historik-tab" th:unless="${task.taskType.name() == 'TASK'}" th:if="${not #lists.isEmpty(taskLogs)}">
@@ -237,7 +232,7 @@
 <div th:replace="~{tasks/completeTask :: completeTask (referral=${myFancyReferral})}"></div>
 </th:block>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${task.id})}"></div>
-<div th:replace="~{fragments/addTags :: addTags(relatableId=${task.id})}"></div>
+<div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${task.id}, targetType='task')}"></div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
 

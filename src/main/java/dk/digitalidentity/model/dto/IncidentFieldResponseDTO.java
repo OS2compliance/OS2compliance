@@ -16,4 +16,5 @@ public class IncidentFieldResponseDTO {
     private IncidentType incidentType;
     private String indexColumnName;
     private String answerValue;
+	private boolean isLinkable;
 }
