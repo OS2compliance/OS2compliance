@@ -241,6 +241,8 @@ public class RiskController {
         }
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.copy(sourceId);
         savedThreatAssessment.setName(assessment.getName());
+		savedThreatAssessment.setResponsibleUser(assessment.getResponsibleUser());
+		savedThreatAssessment.setResponsibleOu(assessment.getResponsibleOu());
 		if (presentUserUuids != null && !presentUserUuids.isEmpty()) {
 			savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
 		}
@@ -454,6 +456,26 @@ public class RiskController {
 
         return "redirect:/risks/" + id;
     }
+
+	@Transactional
+	@RequireUpdateOwnerOnly
+	@PostMapping("{id}/customthreats/edit")
+	public String formEditCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreatDTO customThreatDTO) {
+		final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		CustomThreat customThreat = threatAssessment.getCustomThreats().stream()
+				.filter(ct -> ct.getId().equals(customThreatDTO.id()))
+				.findFirst()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		customThreat.setThreatType(customThreatDTO.threatType);
+		customThreat.setDescription(customThreatDTO.description);
+
+		threatAssessmentService.save(threatAssessment);
+		eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(id).build());
+
+		return "redirect:/risks/" + id;
+	}
 
 	private String findElementName(final ThreatAssessment threatAssessment) {
         final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();

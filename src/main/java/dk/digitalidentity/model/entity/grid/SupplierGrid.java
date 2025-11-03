@@ -43,4 +43,13 @@ public class SupplierGrid {
 	@Column
 	private LocalDate lastOversightDate;
 
+	@Column
+	private String kitosUuid;
+
+	@Column
+	private String tagNames;
+
+	@Column
+	private String tagIds;
+
 }

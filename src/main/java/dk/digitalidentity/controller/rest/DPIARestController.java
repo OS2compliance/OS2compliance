@@ -2,9 +2,9 @@ package dk.digitalidentity.controller.rest;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import dk.digitalidentity.dao.ChoiceDPIADao;
-import dk.digitalidentity.dao.grid.DPIAGridDao;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DPIA;
@@ -18,6 +18,7 @@ import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DPIAReportReportApprovalStatus;
 import dk.digitalidentity.model.entity.enums.DPIAScreeningConclusion;
@@ -28,6 +29,7 @@ import dk.digitalidentity.model.entity.grid.DPIAGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
@@ -45,7 +47,9 @@ import dk.digitalidentity.service.S3DocumentService;
 import dk.digitalidentity.service.S3Service;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.UserService;
+import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
+import lombok.Builder;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.htmlcleaner.BrowserCompactXmlSerializer;
@@ -78,15 +82,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
-
-import static dk.digitalidentity.service.FilterService.buildPageable;
-import static dk.digitalidentity.service.FilterService.validateSearchFilters;
+import java.util.stream.Collectors;
 
 @Slf4j
 @RestController
@@ -121,6 +124,7 @@ public class DPIARestController {
 			ThreatAssessmentReportApprovalStatus status,
 			DPIAScreeningConclusion screeningConclusion,
 			Boolean isExternal,
+			List<TagDTO> tags,
 			Set<AllowedAction> allowedActions) {
 	}
 
@@ -139,9 +143,13 @@ public class DPIARestController {
 		// Normal mode - return paginated JSON
 		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, page, limit, user);
 
+		Set<Long> entityIds = dpiaGrids.getContent().stream().map(DPIAGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = dpiaService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert dpiaGrids != null;
 
-		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
+		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid, tagsById);
 		return new PageDTO<>(dpiaGrids.getTotalElements(), dtos);
 	}
 
@@ -160,9 +168,13 @@ public class DPIARestController {
 		// Fetch all records (no pagination)
 		Page<DPIAGrid> dpiaGrids = dpiaService.getDPIAs(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
 
+		Set<Long> entityIds = dpiaGrids.getContent().stream().map(DPIAGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = dpiaService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert dpiaGrids != null;
 
-		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid);
+		List<DPIAListDTO> dtos = mapToListDTO(dpiaGrids, userUuid, tagsById);
 		excelExportService.exportToExcel(dtos, DPIAListDTO.class, fileName, response);
 	}
 
@@ -430,9 +442,9 @@ public class DPIARestController {
 		return (bos.toString(StandardCharsets.UTF_8));
 	}
 
-	public record MailReportDTO(String message, String sendTo, boolean sign) {
+	public record MailReportDTO(String message, String sendTo, boolean sign, List<String> alsoSendTo) {
 	}
-	@RequireCreateAll
+	@RequireCreateOwnerOnly
 	@Transactional
 	@PostMapping("{dpiaId}/mailReport")
 	public ResponseEntity<?> mailReport(@PathVariable final long dpiaId, @RequestBody final MailReportDTO dto) throws IOException {
@@ -456,6 +468,19 @@ public class DPIARestController {
 
 		byte[] byteData = assetService.getDPIAPdf(dpia);
 		String uuid = UUID.randomUUID().toString();
+
+		List<String> allRecipientEmails = new ArrayList<>();
+		allRecipientEmails.add(responsibleUser.getEmail());
+
+		if (dto.alsoSendTo != null && !dto.alsoSendTo.isEmpty()) {
+			for (String userUuid : dto.alsoSendTo) {
+				userService.findByUuid(userUuid).ifPresent(u -> {
+					if (u.getEmail() != null && !u.getEmail().isBlank()) {
+						allRecipientEmails.add(u.getEmail());
+					}
+				});
+			}
+		}
 
 		List<Asset> savedAssets = new ArrayList<>();
 		if (dto.sign) {
@@ -496,18 +521,24 @@ public class DPIARestController {
 					+ environment.getProperty("di.saml.sp.baseUrl") + "/sign/view/" + s3Document.getId() + "</a>"
 					: "";
 
-			String title = formatTemplateString(template.getTitle(), recipient, objectName, messageFromSender, loggedInUserName, link);
-			String message = formatTemplateString(template.getMessage(), recipient, objectName, messageFromSender, loggedInUserName, link);
+			for (String recipientEmail : allRecipientEmails) {
+				String title = formatTemplateString(template.getTitle(), recipientEmail, objectName, messageFromSender, loggedInUserName, link);
+				String message = formatTemplateString(template.getMessage(), recipientEmail, objectName, messageFromSender, loggedInUserName, link);
 
-			emailEvent.setMessage(message);
-			emailEvent.setSubject(title);
-			emailEvent.setTemplateType(template.getTemplateType());
+				final EmailEvent emailEventForRecipient = EmailEvent.builder()
+						.email(recipientEmail)
+						.subject(title)
+						.message(message)
+						.templateType(template.getTemplateType())
+						.build();
+
+				emailEventForRecipient.getAttachments().addAll(emailEvent.getAttachments());
+
+				eventPublisher.publishEvent(emailEventForRecipient);
+			}
 		} else {
 			log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
 		}
-
-		eventPublisher.publishEvent(emailEvent);
-
 		return new ResponseEntity<>(HttpStatus.OK);
 	}
 
@@ -527,7 +558,7 @@ public class DPIARestController {
 				.contains(SecurityUtil.getPrincipalUuid());
 	}
 
-	private List<DPIAListDTO> mapToListDTO(Page<DPIAGrid> dpiaGrids, String userUuid) {
+	private List<DPIAListDTO> mapToListDTO(Page<DPIAGrid> dpiaGrids, String userUuid, Map<Long, Tag> tagsById) {
 		Set<DPIA> ownedAssetDPIAs = dpiaService.findByOwnedAsset(userUuid);
 		return dpiaGrids.stream().map(dpia -> {
 							Set<AllowedAction> allowedActions = new HashSet<>();
@@ -554,6 +585,7 @@ public class DPIARestController {
 									dpia.getReportApprovalStatus(),
 									dpia.getScreeningConclusion(),
 									dpia.isExternal(),
+									TagService.toTagDTO(dpia.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(),
 									allowedActions
 							);
 						}

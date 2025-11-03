@@ -81,7 +81,7 @@ function IncidentService() {
         });
     }
 
-    this.fetchColumnName =  () => {
+    this.fetchColumnName =  async () => {
         return jsonCall('GET', restUrl + 'columns', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);

@@ -54,6 +54,9 @@ public class DocumentGrid implements HasSingleResponsibleUser {
     @Column
     private String localizedEnums;
 
-    @Column
-    private String tags;
+	@Column
+	private String tagNames;
+
+	@Column
+	private String tagIds;
 }

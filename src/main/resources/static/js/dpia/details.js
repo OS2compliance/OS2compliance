@@ -1,8 +1,10 @@
+import initRelatedTagList from "../tags/related-tag-list.js";
 
 document.addEventListener("DOMContentLoaded", function (event) {
     assetDpiaService = new AssetDpiaService()
     assetDpiaService.init()
     assetDpiaService.initDpia()
+    initRelatedTagList();
 })
 
 
@@ -26,6 +28,17 @@ function AssetDpiaService() {
         this.handleAnswerChange();
         this.initQualityAssuranceCheckboxes()
         this.initCommentField()
+        this.initSetRevisionInterval()
+    }
+
+    this.initSetRevisionInterval = () => {
+        const button = document.getElementById("setRevisionIntervalButton");
+        if (button) {
+            button.addEventListener("click", () =>{
+                const dpiaId = button.dataset.dpiaId
+                this.setRevisionInterval((dpiaId))
+            })
+        }
     }
 
     this.initCommentField = ()=> {
@@ -372,11 +385,15 @@ function mailReport() {
     var sendReportTo = document.getElementById('sendReportTo').value;
     var reportMessage = document.getElementById('reportMessage').value;
     var signReport = document.getElementById('signReport').checked;
+    let alsoSendTo = document.getElementById('alsoSendTo');
+    let selectedValues = [...alsoSendTo.selectedOptions].map(option => option.value);
+
     var data = {
                  "sendTo": sendReportTo,
                  "message": reportMessage,
-                 "sign": signReport
-               };
+                 "sign": signReport,
+                  "alsoSendTo": selectedValues
+    };
 
     postData(`/rest/dpia/${dpiaId}/mailReport`, data).then((response) => {
         if (!response.ok) {

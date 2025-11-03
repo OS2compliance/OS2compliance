@@ -1,3 +1,4 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
 
 let dbsOversightService = new DBSOversightService();
 document.addEventListener("DOMContentLoaded", function(event) {
@@ -191,7 +192,12 @@ function DBSOversightService() {
 
         initSaveAsExcelButton(customGridFunctions, 'DBS_tilsyn');
 
-        gridOptions.init(grid, document.getElementById("gridOptions"));
+        new ColumnOptions(
+            'assetsDatatable',
+            grid,
+            ['navn', 'allowedActions'],
+            ['navn', 'leverandør', 'tilsynsForm','ansvarlig', 'resultat', 'sidsteTilsyn', 'ubehandletTilsyn'],
+            ['id', 'supplierId', 'outstandingTaskId'])
     }
 
     this.handleAddRemoveEvent = async (event) => {

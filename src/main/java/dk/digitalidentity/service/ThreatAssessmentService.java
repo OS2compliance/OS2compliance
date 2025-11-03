@@ -14,6 +14,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -32,6 +33,8 @@ import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
@@ -67,7 +70,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
 @RequiredArgsConstructor
-public class ThreatAssessmentService {
+public class ThreatAssessmentService implements TagableService<ThreatAssessment> {
 	private final RelationService relationService;
     private final RegisterDao registerDao;
     private final ScaleService scaleService;
@@ -301,6 +304,48 @@ public class ThreatAssessmentService {
             });
     }
 
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		ThreatAssessment entity = threatAssessmentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(ThreatAssessment.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		threatAssessmentDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		ThreatAssessment entity = threatAssessmentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(ThreatAssessment.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			threatAssessmentDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<ThreatAssessment> getEntityType() {
+		return ThreatAssessment.class;
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return threatAssessmentDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return threatAssessmentDao.findTagsByEntityIds(entityIds);
+	}
+
     /**
      * Find the highest risk score based on a list of RiskProfileDTO objects.
      * @param riskProfileDTOs The list of RiskProfileDTO objects containing the risk profile information.
@@ -380,11 +425,11 @@ public class ThreatAssessmentService {
                 final int highestConsequence = findHighestConsequence(threat);
                 final int probability = threat.getProbability();
 
-                if (probability < 1 || highestConsequence < 1) {
-                    continue;
-                }
+				if (probability < 1 || highestConsequence < 1) {
+					continue;
+				}
 
-                riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
+				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
         return riskProfiles;
@@ -910,7 +955,8 @@ public class ThreatAssessmentService {
                         String method,
                         String elaboration,
                         List<PrecautionDTO> linkedPrecautions,
-                        RiskCalculationDTO residualRisk
+                        RiskCalculationDTO residualRisk,
+						Boolean relevant
     ) {}
     private List<ThreatPDFDTO> buildThreatsForPDF(Map<String, List<ThreatDTO>> threatList, List<RiskProfileDTO> riskProfiles, Map<String, String> colorMap) {
         List<ThreatPDFDTO> result = new ArrayList<>();
@@ -919,7 +965,7 @@ public class ThreatAssessmentService {
                 final RiskProfileDTO profile = riskProfiles.stream()
                     .filter(rp -> rp.getIndex() == t.getIndex())
                     .findFirst().orElse(null);
-                if (profile != null) {
+				if (profile != null) {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
                     final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
@@ -945,9 +991,18 @@ public class ThreatAssessmentService {
                             profile.getResidualProbability(),
                             profile.getResidualConsequence(),
                             residualScore,
-                            residualColor)
+                            residualColor),
+							true
                     ));
                 }
+				else {
+					result.add(new ThreatPDFDTO(
+							t.getIndex() + 1, t.getType(), null, null, null, null, null, null, buildPrecautions(t.getRelatedPrecautions()
+							.stream()
+							.map(Precaution.class::cast)
+							.toList() ), null, false
+					));
+				}
             });
         });
         return result;

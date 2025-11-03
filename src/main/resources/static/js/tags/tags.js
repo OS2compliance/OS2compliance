@@ -1,15 +1,21 @@
+import {initColorPickerListener} from "./tag-color-picker.js";
+
 const tags = new TagService()
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
+
+    initColorPickerListener('createTagColorPicker')
+    initColorPickerListener('editTagColorPicker')
+
     const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
         header: "d-flex justify-content-end"
     };
 
-    new gridjs.Grid({
+    const grid = new gridjs.Grid({
         className: defaultClassName,
         sort: {
             enabled: true,
@@ -22,8 +28,20 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 hidden: true
             },
             {
-                id: "value",
+                id: "title",
                 name: "Tag"
+            },
+            {
+                id: "color",
+                name: "Farve",
+                formatter: (cell, row) => {
+                    const span = document.createElement("span");
+                    span.className = 'tag-badge'
+                    span.textContent = cell.label;
+                    span.style.backgroundColor = cell.colorCode
+                    span.style.color = cell.contrastCode
+                    return gridjs.html(span.outerHTML)
+                }
             },
             {
                 id: "actions",
@@ -85,9 +103,13 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 'page': (page) => `Side ${page}`
             }
         }
-    }).render(document.getElementById("tagsDatatable"));
+    })
 
-    document.getElementById("tagsDatatable").addEventListener('click', (e) => {
+    const datatableId = "tagsDatatable"
+    const datatableContainerElement = document.getElementById(datatableId)
+    grid.render(datatableContainerElement);
+
+    datatableContainerElement.addEventListener('click', (e) => {
         const button = e.target.closest('button[data-action]');
         if (!button) {
             return;
@@ -132,7 +154,7 @@ function TagService () {
         document.getElementById('editIdentifier').value = id;
         document.getElementById('redigerNavn').value = value;
 
-        editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
+        let editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
         editDialog.show();
     }
 }

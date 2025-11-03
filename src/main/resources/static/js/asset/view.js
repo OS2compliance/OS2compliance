@@ -1,4 +1,5 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import initRelatedTagList from "../tags/related-tag-list.js";
 
 let managersChoicesEditSelect = null;
 let suppliersChoicesEditSelect = null;
@@ -30,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function (event) {
     initTabs();
     rememberSelectedTab();
 
+
     if (threatExists) {
         profilePageLoaded();
     }
@@ -48,6 +50,8 @@ document.addEventListener("DOMContentLoaded", function (event) {
     aiStatusSelect.addEventListener('change', toggleRiskFactorContainer);
 
     initEditButtons();
+
+    initRelatedTagList('#assetTab')
 });
 
 function initEditButtons() {

@@ -4,14 +4,15 @@ import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.TaskGrid;
-import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SecurityUserService;
+import dk.digitalidentity.service.tag.TagService;
 import dk.digitalidentity.service.TaskService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletResponse;
@@ -27,8 +28,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
@@ -45,6 +50,7 @@ public class TaskRestController {
 	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
 	private final TaskService taskService;
+	private final TagService tagService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -59,8 +65,12 @@ public class TaskRestController {
 
 		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, page, limit, user);
 
-        assert tasks != null;
-        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
+		Set<Long> taskIds = tasks.getContent().stream().map(TaskGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = taskService.findTagsByEntityIds(taskIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+		assert tasks != null;
+        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), tagsById));
     }
 
 	@RequireReadOwnerOnly
@@ -77,8 +87,11 @@ public class TaskRestController {
 		// Fetch all records (no pagination)
 		Page<TaskGrid> tasks = taskService.getTasks(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
 
+		Map<Long, Tag> tagsById = tagService.findAll().stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert tasks != null;
-		List<TaskDTO> allData = mapper.toDTO(tasks.getContent());
+		List<TaskDTO> allData = mapper.toDTO(tasks.getContent(), tagsById);
 		excelExportService.exportToExcel(allData, TaskDTO.class, fileName, response);
 	}
 
@@ -103,9 +116,12 @@ public class TaskRestController {
 				TaskGrid.class
 		);
 
+		Map<Long, Tag> tagsById = tagService.findAll().stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
         assert tasks != null;
 
-        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent()));
+        return new PageDTO<>(tasks.getTotalElements(), mapper.toDTO(tasks.getContent(), tagsById));
     }
 
 }
