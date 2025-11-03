@@ -159,12 +159,12 @@ public class TasksController {
             if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
                 final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
                     .filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
-                addRelations(savedTask, relatedAssets);
+                taskService.addRelations(savedTask, relatedAssets);
             }
             else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
                 final List<Relatable> relatedRegisters = relationService.findAllRelatedTo(threatAssessment).stream()
                     .filter(t -> t.getRelationType().equals(RelationType.REGISTER)).toList();
-                addRelations(savedTask, relatedRegisters);
+                taskService.addRelations(savedTask, relatedRegisters);
             }
 
             if (riskCustomId != 0) {
@@ -205,12 +205,6 @@ public class TasksController {
         }
 
         return "redirect:/tasks/"+savedTask.getId();
-    }
-
-    private void addRelations(final Task savedTask, final List<Relatable> relatables) {
-        for (final Relatable relatable : relatables) {
-            relationService.addRelation(savedTask, relatable);
-        }
     }
 
 	@RequireUpdateOwnerOnly

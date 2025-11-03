@@ -409,4 +409,10 @@ public class TaskService implements TagableService<Task> {
 	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
 		return taskDao.findTagsByEntityIds(entityIds);
 	}
+
+	public void addRelations(final Task savedTask, final List<Relatable> relatables) {
+		for (final Relatable relatable : relatables) {
+			relationService.addRelation(savedTask, relatable);
+		}
+	}
 }

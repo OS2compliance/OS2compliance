@@ -149,7 +149,8 @@
         </div>
         <div class="modal-footer">
             <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
-            <button type="submit" th:form="${formId}" class="btn btn-primary">Gem</button>
+            <button type="submit" th:form="${formId}" class="btn btn-primary">Opret og se</button>
+            <button type="button" th:data-form-id="${formId}" id="saveAndContinueBtn" class="btn btn-primary">Opret og fortsæt</button>
         </div>
     </div>
 </div>
