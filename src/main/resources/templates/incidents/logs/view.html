@@ -3,7 +3,6 @@
 <!DOCTYPE html>
 <html lang="da">
 <head th:replace="~{fragments/header :: head }"></head>
-
 <body class="jumping">
 <div id="root" class="root mn--max hd--expanded">
     <section id="content" class="content">
@@ -93,12 +92,11 @@
     var viewUrl = [[@{/incidents/logs/}]];
     var formId = [[${formId}]];
     +]*/
+    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     /*]]>*/
 </script>
 
-<script type="module" th:src="@{/js/incidents/incident-service.js}" defer></script>
-<script type="module" th:src="@{/js/incidents/incident-view-service.js}" defer></script>
-
+<script type="module" th:src="@{/js/incidents/incident-view-service.js}"></script>
 </body>
 
 </html>
