@@ -24,6 +24,7 @@ public interface ChoiceListMapper {
 	@Mapping(target = "editable", constant = "true")
     @Mapping(target = "registersWithStatus", ignore = true)
     @Mapping(target = "taskLogsWithResult", ignore = true)
+    @Mapping(target = "documentsWithType", ignore = true)
     ChoiceValue fromDTO(final ChoiceValueDTO value);
 
     default ChoiceListDTO toDTO(final ChoiceList list) {

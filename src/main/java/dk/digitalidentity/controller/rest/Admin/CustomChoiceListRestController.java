@@ -6,6 +6,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -34,6 +35,7 @@ public class CustomChoiceListRestController {
     private final AssetService assetService;
     private final RegisterService registerService;
 	private final TaskService taskService;
+	private final DocumentService documentService;
 
     record CustomChoiceListDTO(Long id, String value) {
     }
@@ -55,6 +57,7 @@ public class CustomChoiceListRestController {
             .filter( existingId -> !assetService.isInUseOnAssets(existingId)) //do not remove if any assets use this value
             .filter( existingId -> !registerService.isInUseOnConsequenceAssessment(existingId)) //do not remove if any consequenceAssessments uses the column
             .filter( existingId -> !taskService.isInUseOnTaskLog(existingId)) //do not remove if any taskLogs uses the column
+            .filter( existingId -> !documentService.isInUseOnDocument(existingId)) //do not remove if any documents uses the column
             .toList();
         for(Long id : markedForRemoval) {
             choiceService.delete(id);

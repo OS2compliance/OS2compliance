@@ -205,4 +205,7 @@ public class DocumentService implements TagableService<Document> {
 		return documents;
 	}
 
+	public boolean isInUseOnDocument(Long id) {
+		return documentDao.existsByDocumentTypeId(id);
+	}
 }

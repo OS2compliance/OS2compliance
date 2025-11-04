@@ -138,7 +138,7 @@ public class SystemOwnerOverviewService {
 		return new DocumentRow(
 				document.getName(),
 				assetName,
-				document.getDocumentType() != null ? document.getDocumentType().getMessage() : "",
+				document.getDocumentType() != null ? document.getDocumentType().getCaption() : "",
 				document.getNextRevision(),
 				statusCombination,
 				document.getTags().stream().map(Tag::getValue).collect(Collectors.joining(","))

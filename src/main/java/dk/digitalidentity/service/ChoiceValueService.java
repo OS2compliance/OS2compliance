@@ -23,6 +23,11 @@ public class ChoiceValueService {
 		return choiceValueDao.findByIdentifier(identifier).orElse(null);
 	}
 
+	public Optional<ChoiceValue> findOptionalByIdentifier(final String identifier) {
+		return choiceValueDao.findByIdentifier(identifier);
+	}
+
+
 	public void save(ChoiceValue choiceValue) {
 		choiceValueDao.save(choiceValue);
 	}
