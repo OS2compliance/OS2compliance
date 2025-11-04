@@ -38,7 +38,38 @@ function ViewTaskService() {
         this.initTaskDocumentRelationSelect();
 
         initFormValidationForForm('editForm');
-        initFormValidationForForm('completeTaskForm');
+        if (taskType === 'CHECK') {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+                const taskResultSelect = document.getElementById("taskResultSelect");
+                const taskType = document.getElementById("taskType");
+
+                if (taskResultSelect.value === 'NO_ERROR') {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                } else if (taskResultSelect.value !== 'NO_ERROR' && comment.value.trim()) {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                } else {
+                    comment.classList.add('is-invalid');
+                    return false;
+                }
+            });
+        }
+        else {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+                if (!comment.value) {
+                    comment.classList.add('is-invalid');
+                    return false;
+                }
+                else {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                }
+            })
+        }
+
         initDatepicker("#deadlineBtn", "#deadline");
         initDatepicker("#TaskDeadlineBtn", "#TaskDeadline");
         let taskDeadline = document.querySelector("#TaskDeadline");
