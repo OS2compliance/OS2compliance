@@ -6,10 +6,10 @@ import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
 import dk.digitalidentity.model.dto.enums.StatusColor;
-import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
@@ -22,6 +22,8 @@ import dk.digitalidentity.model.entity.grid.TaskGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.model.TaskDTO;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
@@ -32,6 +34,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -50,7 +53,7 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class TaskService {
+public class TaskService implements TagableService<Task> {
     private final DocumentDao documentDao;
     private final TaskDao taskDao;
     private final TaskLogDao taskLogDao;
@@ -366,6 +369,48 @@ public class TaskService {
 
 	public List<Task> getByIds (List<Long> ids) {
 		return taskDao.findAllById(ids);
+	}
+
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		Task entity = taskDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Task.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		taskDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		Task entity = taskDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Task.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			taskDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<Task> getEntityType() {
+		return Task.class;
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return taskDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return taskDao.findTagsByEntityIds(entityIds);
 	}
 
 	public List<Task> getTasksWithDeadlineAtAndNotificationSettingContains(LocalDate deadline, NotificationSetting setting) {

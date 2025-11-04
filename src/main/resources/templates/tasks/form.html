@@ -23,9 +23,9 @@
                     <div class="col-sm-8">
                         <div th:id="${formId + 'Type'}" class="btn-group" role="group" aria-label="Opgave type valg">
                             <input type="radio" class="btn-check" name="btnradio" th:id="${formId + 'BtnTask'}"  value="TASK" onclick="createTaskService.selectCreateTaskOption('TASK')" autocomplete="off" th:field="*{taskType}">
-                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnTask'}">Opgave</label>
+                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnTask'}" title="En opgave udføres en gang">Opgave</label>
                             <input type="radio" class="btn-check" name="btnradio" th:id="${formId + 'BtnCheck'}" value="CHECK" onclick="createTaskService.selectCreateTaskOption('CHECK')" autocomplete="off" th:field="*{taskType}">
-                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnCheck'}">Kontrol</label>
+                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnCheck'}" title="En kontrol er tilbagevendende">Kontrol</label>
                         </div>
                     </div>
                 </div>

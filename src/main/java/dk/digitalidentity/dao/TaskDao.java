@@ -3,6 +3,7 @@ package dk.digitalidentity.dao;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import jakarta.validation.constraints.NotNull;
+import dk.digitalidentity.service.tag.TagableRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -12,7 +13,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 
-public interface TaskDao extends JpaRepository<Task, Long> {
+public interface TaskDao extends TagableRepository<Task> {
 
     List<Task> findByNotifyResponsibleTrueAndNextDeadlineAndTaskNotificationOverride(final LocalDate date, final Boolean taskNotificationOverride);
     List<Task> findByNotifyResponsibleTrueAndNextDeadlineInAndTaskNotificationOverride(Collection<@NotNull LocalDate> nextDeadline, Boolean taskNotificationOverride);

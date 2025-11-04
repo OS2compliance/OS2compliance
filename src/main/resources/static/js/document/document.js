@@ -1,4 +1,5 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import initRelatedTagList from "../tags/related-tag-list.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let userChoicesEditSelect = null;
@@ -6,7 +7,6 @@ let userChoicesEditSelect = null;
 document.addEventListener("DOMContentLoaded", function(event) {
     loadViewAndEditForm();
     addRelationFormLoaded();
-    choiceService.initTagSelect("tagsSelect");
 
     initEditButton();
 
@@ -14,6 +14,8 @@ document.addEventListener("DOMContentLoaded", function(event) {
     saveEditBtn?.addEventListener("click", () => {
         onUnSubmittedService.reset();
     });
+
+    initRelatedTagList()
 });
 
 function initEditButton() {

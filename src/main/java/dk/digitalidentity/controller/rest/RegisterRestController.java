@@ -4,10 +4,9 @@ import dk.digitalidentity.dao.grid.RegisterGridDao;
 import dk.digitalidentity.mapping.RegisterMapper;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.RegisterDTO;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
-import dk.digitalidentity.security.Roles;
-import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.RegisterService;
@@ -29,6 +28,8 @@ import org.springframework.web.server.ResponseStatusException;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
@@ -57,11 +58,14 @@ public class RegisterRestController {
     ) {
 		User user = securityUserService.getCurrentUserOrThrow();
 
-		Page<RegisterGrid> registers;
-		registers = registerService.getRegisters(sortColumn, sortDirection, filters, page, limit, user);
+		Page<RegisterGrid> registers = registerService.getRegisters(sortColumn, sortDirection, filters, page, limit, user);
+
+		Set<Long> entityIds = registers.getContent().stream().map(RegisterGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = registerService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
 
 		assert registers != null;
-        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
+        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(),tagsById));
     }
 
 	@RequireReadOwnerOnly
@@ -78,8 +82,12 @@ public class RegisterRestController {
 		// Fetch all records (no pagination)
 		Page<RegisterGrid> registers = registerService.getRegisters(sortColumn, sortDirection, filters, 0, Integer.MAX_VALUE, user);
 
+		Set<Long> entityIds = registers.getContent().stream().map(RegisterGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = registerService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert registers != null;
-		List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), registerService);
+		List<RegisterDTO> allData = mapper.toDTO(registers.getContent(), tagsById);
 		excelExportService.exportToExcel(allData, RegisterDTO.class, fileName, response);
 	}
 
@@ -102,7 +110,11 @@ public class RegisterRestController {
 				RegisterGrid.class
 		);
 
+		Set<Long> entityIds = registers.getContent().stream().map(RegisterGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = registerService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
         assert registers != null;
-        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), registerService));
+        return new PageDTO<>(registers.getTotalElements(), mapper.toDTO(registers.getContent(), tagsById));
     }
 }

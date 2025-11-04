@@ -1,3 +1,6 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
+import formatTags from "../tags/tag-grid-formatter.js";
+
 let editDialog;
 
 document.addEventListener("DOMContentLoaded", async function (event) {
@@ -153,6 +156,13 @@ function initGrid() {
                 hidden: true
             },
             {
+                name: "Tags",
+                searchable: {
+                    searchKey: 'tagNames',
+                },
+                formatter: (cell, row) => formatTags(cell, row),
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
@@ -175,7 +185,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(supplier =>
-                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.allowedActions]
+                [supplier.id, supplier.name, supplier.solutionCount, supplier.updated, supplier.lastOversightDate, supplier.status, supplier.kitosUuid, supplier.tags, supplier.allowedActions]
             ),
             total: data => data.totalCount
         },
@@ -195,11 +205,17 @@ function initGrid() {
             }
         }
     };
-    const grid = new gridjs.Grid(gridConfig).render(document.getElementById("suppliersDatatable"));
+    const datatableId ='suppliersDatatable'
+    const grid = new gridjs.Grid(gridConfig).render(document.getElementById(datatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, 'suppliersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridSuppliersUrl, exportSuppliersUrl, datatableId);
 
     initSaveAsExcelButton(customGridFunctions, 'Leverandører')
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
+    new ColumnOptions(
+        datatableId,
+        grid,
+        ['navn', 'allowedActions'],
+        ['navn', 'allowedActions','antalLøsninger', 'opdateret','status' ],
+        ['id'])
 }

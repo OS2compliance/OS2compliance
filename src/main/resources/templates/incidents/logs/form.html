@@ -17,6 +17,7 @@
                 <div th:each="response, idx : ${incident.responses}" class="row mt-3">
                     <th:block th:replace="~{incidents/logs/form_fields :: mandatoryFields(response = ${response}, idx = ${idx.index})}"></th:block>
                     <th:block th:replace="${response.incidentType.name() == 'TEXT'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></th:block>
+                    <th:block th:replace="${response.incidentType.name() == 'LINK'} ? ~{incidents/logs/form_fields :: textField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                     <th:block th:replace="${response.incidentType.name() == 'DATE'} ? ~{incidents/logs/form_fields :: dateField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                     <th:block th:replace="${response.incidentType.name() == 'ASSET'} ? ~{incidents/logs/form_fields :: assetField(response = ${response}, idx = ${idx.index})} : _"></th:block>
                     <th:block th:replace="${response.incidentType.name() == 'ASSETS'} ? ~{incidents/logs/form_fields :: assetsField(response = ${response}, idx = ${idx.index})} : _"></th:block>

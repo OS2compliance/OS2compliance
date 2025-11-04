@@ -1,24 +1,27 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.ConsequenceAssessmentDao;
-import dk.digitalidentity.dao.DataProcessingDao;
 import dk.digitalidentity.dao.RegisterDao;
 import dk.digitalidentity.dao.grid.RegisterGridDao;
 import dk.digitalidentity.model.entity.ConsequenceAssessment;
 import dk.digitalidentity.model.entity.DataProcessing;
 import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relation;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.grid.RegisterGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,11 +33,10 @@ import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
 @RequiredArgsConstructor
-public class RegisterService {
+public class RegisterService implements TagableService<Register> {
     private final RegisterDao registerDao;
 	private final RegisterGridDao registerGridDao;
     private final ConsequenceAssessmentDao consequenceAssessmentDao;
-    private final DataProcessingDao dataProcessingDao;
 	private final RelationService relationService;
 
 	public boolean isResponsibleFor(Register register) {
@@ -161,5 +163,47 @@ public class RegisterService {
 			);
 		}
 		return registers;
+	}
+
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		Register entity = registerDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Register.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		registerDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		Register entity = registerDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Register.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			registerDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<Register> getEntityType() {
+		return Register.class;
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return registerDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return registerDao.findTagsByEntityIds(entityIds);
 	}
 }

@@ -1,6 +1,7 @@
 package dk.digitalidentity.dao;
 
 import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.service.tag.TagableRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -10,7 +11,7 @@ import org.springframework.data.repository.query.Param;
 import java.util.List;
 import java.util.Optional;
 
-public interface SupplierDao extends JpaRepository<Supplier, Long> {
+public interface SupplierDao extends TagableRepository<Supplier> {
 
 	@Query("select s from Supplier s where s.name like :search or s.cvr like :search")
 	Page<Supplier> searchForSupplier(@Param("search") final String search, final Pageable pageable);

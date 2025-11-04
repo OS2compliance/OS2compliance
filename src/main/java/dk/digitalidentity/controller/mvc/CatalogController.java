@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -39,7 +40,7 @@ public class CatalogController {
 	@RequireReadAll
     @GetMapping
     public String riskList(final Model model) {
-        final List<ThreatCatalog> catalogList = threatCatalogService.findAll();
+        final List<ThreatCatalog> catalogList = threatCatalogService.findAll().stream().sorted(Comparator.comparing(ThreatCatalog::getName, String.CASE_INSENSITIVE_ORDER)).collect(Collectors.toList());
         model.addAttribute("threatCatalogs", catalogList);
         model.addAttribute("inUse", catalogList.stream()
             .collect(Collectors.toMap(ThreatCatalog::getIdentifier, threatCatalogService::inUse)));

@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.entity;
 
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentReportApprovalStatus;
@@ -28,7 +29,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "threat_assessments")
@@ -36,7 +39,7 @@ import java.util.List;
 @Setter
 @SQLDelete(sql = "UPDATE threat_assessments SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class ThreatAssessment extends Relatable implements HasSingleResponsibleUser, StatisticEnabled {
+public class ThreatAssessment extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
     @Column
     @Enumerated(EnumType.STRING)
     private ThreatAssessmentType threatAssessmentType;
@@ -149,6 +152,10 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
 
     @Column
     private String comment;
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "threat_assessment_tag", joinColumns = { @JoinColumn(name = "threat_assessment_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {
