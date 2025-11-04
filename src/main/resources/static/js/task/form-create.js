@@ -11,39 +11,45 @@ document.addEventListener('click', async function(e) {
         const fd = new FormData(form);
 
         if (!form) {
-            alert('Form not found');
+            console.error("form not found");
             return;
         }
 
         // Validate form first
         if (!form.checkValidity()) {
             form.classList.add('was-validated');
-            alert('Udfyld venligst alle påkrævede felter');
+            toastService.info("info", "Udfyld venligst alle påkrævede felter")
             return;
         }
 
         try {
             const formId = form.id;
 
+            // FIXED: Build task object to match TaskCreateDTO structure
             const task = {
                 id: fd.get('id') || null,
                 name: fd.get('name') || '',
                 taskType: fd.get('taskType') || null,
                 nextDeadline: fd.get(form.id + 'TaskDeadline') || fd.get('nextDeadline') || '',
-                responsibleUser: fd.get('responsibleUser') ? { uuid: fd.get('responsibleUser') } : null,
-                responsibleOu: fd.get('responsibleOu') ? { uuid: fd.get('responsibleOu') } : null,
-                department: fd.get('department') ? { uuid: fd.get('department') } : null,
-                repetition: fd.get('repetition') || '',
+                // CHANGED: Send UUID strings directly, not wrapped in objects
+                responsibleUserUuid: fd.get('responsibleUser') || null,
+                responsibleOuUuid: fd.get('responsibleOu') || null,
+                departmentUuid: fd.get('department') || null,
+                repetition: fd.get('repetition') || null, // Send null instead of empty string
                 description: fd.get('description') || '',
                 notifyResponsible: fd.get('notifyResponsible') === 'on' || fd.get('notifyResponsible') === 'true',
                 includeInReport: fd.get('includeInReport') === 'on' || fd.get('includeInReport') === 'true',
-                tags: (fd.getAll('tags') || []).map(v => ({ id: parseInt(v) })),
+                // CHANGED: Send array of IDs directly, not wrapped in objects
+                tagIds: (fd.getAll('tags') || []).map(v => parseInt(v)),
                 links: []
             };
 
+            // Handle links
             const linkInputs = form.querySelectorAll('#linksEditContainer input[type="text"]');
             linkInputs.forEach(input => {
-                if (input.value.trim()) task.links.push({ url: input.value.trim() });
+                if (input.value.trim()) {
+                    task.links.push({ url: input.value.trim() });
+                }
             });
 
             const relations = (fd.getAll('relations') || []).map(v => parseInt(v));
@@ -60,6 +66,9 @@ document.addEventListener('click', async function(e) {
                 riskCatalogIdentifier: riskCatalogIdentifier
             };
 
+            // Add logging to debug
+            console.log('Sending task data:', JSON.stringify(data, null, 2));
+
             const response = await fetch('/rest/tasks/create', {
                 method: 'POST',
                 headers: {
@@ -71,13 +80,16 @@ document.addEventListener('click', async function(e) {
             });
 
             if (!response.ok) {
-                throw new Error('Kunne ikke oprette opgave: ' + response.status);
+                const errorText = await response.text();
+                console.error('Server error:', errorText);
+                toastService.error('Kunne ikke oprette opgaven');
             }
 
             // Reset form to create another task
             form.reset();
+            toastService.info("info", "Opgaven blev gemt");
         } catch (error) {
-            console.error('Error creating task:', error);
+            toastService.error('Fejl under oprettelse af opgave');
         }
     }
 });

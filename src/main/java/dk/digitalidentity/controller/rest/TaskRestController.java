@@ -3,8 +3,10 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.TaskCreateDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
+import dk.digitalidentity.model.dto.TaskLinkDTO;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Tag;
@@ -22,6 +24,7 @@ import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
 import dk.digitalidentity.service.ExcelExportService;
+import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RelationService;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.ThreatAssessmentService;
@@ -35,6 +38,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -71,6 +75,8 @@ public class TaskRestController {
 	private final TagService tagService;
 	private final ThreatAssessmentService threatAssessmentService;
 	private final RelationService  relationService;
+	private final TaskMapper taskMapper;
+	private final OrganisationService organisationService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -146,17 +152,20 @@ public class TaskRestController {
 
 	@RequireCreateOwnerOnly
 	@PostMapping("create")
+	@Transactional
 	public ResponseEntity<?> createTask(@Valid @RequestBody final TaskCreateRequestDTO request) {
 		log.info("Received task creation request: {}", request);
 
+		Task task = taskMapper.toEntity(request.getTask(), organisationService, userService, tagService);
+
 		// Validate and process links
 		List<TaskLink> links = new ArrayList<>();
-		for (TaskLink link : request.getTask().getLinks()) {
-			links.add(new TaskLink(null, linkify(link.getUrl()), request.getTask()));
+		for (TaskLinkDTO link : request.getTask().getLinks()) {
+			links.add(new TaskLink(null, linkify(link.getUrl()), task));
 		}
-		request.getTask().setLinks(links);
+		task.setLinks(links);
 
-		final Task savedTask = taskService.saveTask(request.getTask());
+		final Task savedTask = taskService.saveTask(task);
 		relationService.setRelationsAbsolute(savedTask, request.getRelations());
 
 		if (request.getTaskRiskId() != null) {
