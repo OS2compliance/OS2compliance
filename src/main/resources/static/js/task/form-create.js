@@ -66,9 +66,6 @@ document.addEventListener('click', async function(e) {
                 riskCatalogIdentifier: riskCatalogIdentifier
             };
 
-            // Add logging to debug
-            console.log('Sending task data:', JSON.stringify(data, null, 2));
-
             const response = await fetch('/rest/tasks/create', {
                 method: 'POST',
                 headers: {

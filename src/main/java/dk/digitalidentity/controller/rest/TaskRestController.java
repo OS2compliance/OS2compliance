@@ -3,7 +3,6 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
-import dk.digitalidentity.model.dto.TaskCreateDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
@@ -49,8 +48,6 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -154,8 +151,6 @@ public class TaskRestController {
 	@PostMapping("create")
 	@Transactional
 	public ResponseEntity<?> createTask(@Valid @RequestBody final TaskCreateRequestDTO request) {
-		log.info("Received task creation request: {}", request);
-
 		Task task = taskMapper.toEntity(request.getTask(), organisationService, userService, tagService);
 
 		// Validate and process links

@@ -3,7 +3,6 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.model.entity.OrganisationUnit;
-import dk.digitalidentity.model.entity.User;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
