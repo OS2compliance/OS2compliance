@@ -25,21 +25,18 @@ document.addEventListener('click', async function(e) {
         try {
             const formId = form.id;
 
-            // FIXED: Build task object to match TaskCreateDTO structure
             const task = {
                 id: fd.get('id') || null,
                 name: fd.get('name') || '',
                 taskType: fd.get('taskType') || null,
                 nextDeadline: fd.get(form.id + 'TaskDeadline') || fd.get('nextDeadline') || '',
-                // CHANGED: Send UUID strings directly, not wrapped in objects
                 responsibleUserUuid: fd.get('responsibleUser') || null,
                 responsibleOuUuid: fd.get('responsibleOu') || null,
                 departmentUuid: fd.get('department') || null,
-                repetition: fd.get('repetition') || null, // Send null instead of empty string
+                repetition: fd.get('repetition') || null,
                 description: fd.get('description') || '',
                 notifyResponsible: fd.get('notifyResponsible') === 'on' || fd.get('notifyResponsible') === 'true',
                 includeInReport: fd.get('includeInReport') === 'on' || fd.get('includeInReport') === 'true',
-                // CHANGED: Send array of IDs directly, not wrapped in objects
                 tagIds: (fd.getAll('tags') || []).map(v => parseInt(v)),
                 links: []
             };
