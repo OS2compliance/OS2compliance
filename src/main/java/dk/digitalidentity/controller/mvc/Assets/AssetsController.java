@@ -5,7 +5,6 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
-import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
@@ -50,7 +49,6 @@ import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
-import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
@@ -108,7 +106,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -404,8 +401,35 @@ public class AssetsController {
         // All related checks should be deleted along with the asset
         final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
         taskService.deleteAll(tasks);
-        asset.getSuppliers().clear();
-        assetService.deleteById(asset);
+
+		// Collect suppliers that only have one asset reference
+		List<Supplier> suppliersToDelete = asset.getSuppliers().stream()
+				.map(AssetSupplierMapping::getSupplier)
+				.filter(sup -> sup.getAssets().size() == 1 && sup.getAssets().get(0).getId().equals(id))
+				.distinct()
+				.toList();
+
+		// Clear the mapping relationship (this deletes AssetSupplierMapping entities)
+		asset.getSuppliers().clear();
+
+		// Clear the direct relationship from the supplier side
+		suppliersToDelete.forEach(supplier -> supplier.getAssets().remove(asset));
+
+		// Clear the direct relationship from the asset side
+		if (asset.getSupplier() != null) {
+			Supplier directSupplier = asset.getSupplier();
+			directSupplier.getAssets().remove(asset);
+			asset.setSupplier(null);
+		}
+
+		// Save to flush relationship changes
+		assetService.save(asset);
+		suppliersToDelete.forEach(supplierService::save);
+
+		// Now delete suppliers that have no more asset references
+		suppliersToDelete.forEach(supplierService::delete);
+
+		assetService.deleteById(asset);
     }
 
 	@RequireUpdateOwnerOnly

@@ -29,6 +29,10 @@ public class AssetSupplierMappingService {
 	private final AssetDao assetDao;
 	private final ChoiceService choiceService;
 
+	public void deleteById(long id) {
+		assetSupplierMappingDao.deleteById(id);
+	}
+
 	@Transactional
 	public List<AssetWithMappingsDTO> getSupplierWithAssetMappings(Long supplierId) {
 		if (supplierId == null) {

@@ -23,6 +23,7 @@ import lombok.Setter;
 import lombok.ToString;
 import org.hibernate.annotations.ResultCheckStyle;
 import org.hibernate.annotations.SQLDelete;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.annotations.Where;
 
 import java.util.ArrayList;
@@ -35,7 +36,7 @@ import java.util.Set;
 @Getter
 @Setter
 @SQLDelete(sql = "UPDATE suppliers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
-@Where(clause = "deleted=false")
+@SQLRestriction("deleted=false")
 public class Supplier extends Relatable implements HasSingleResponsibleUser, Tagable {
 
 	@ManyToOne(fetch = FetchType.LAZY)

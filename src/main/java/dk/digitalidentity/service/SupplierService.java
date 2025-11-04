@@ -42,6 +42,14 @@ public class SupplierService implements TagableService<Supplier> {
 		this.supplierGridDao = supplierGridDao;
 	}
 
+	public Supplier findById(final Long id) {
+		return supplierDao.findById(id).orElse(null);
+	}
+
+	public void deleteById(final Long id) {
+		supplierDao.deleteById(id);
+	}
+
     public List<Supplier> getAll() {
         return supplierDao.findAll();
     }
@@ -145,5 +153,13 @@ public class SupplierService implements TagableService<Supplier> {
 	@Override
 	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
 		return supplierDao.findTagsByEntityIds(entityIds);
+	}
+
+	public Page<Supplier> findAllByDeletedFalse(Pageable pageable) {
+		return supplierDao.findAllByDeletedFalse(pageable);
+	}
+
+	public Page<Supplier> searchForSupplierNotDeleted(String search, Pageable pageable) {
+		return supplierDao.searchForSupplierNotDeleted(search, pageable);
 	}
 }

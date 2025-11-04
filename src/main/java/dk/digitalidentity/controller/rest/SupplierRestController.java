@@ -53,7 +53,6 @@ import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
 @RequiredArgsConstructor
 public class SupplierRestController {
 	private final SupplierMapper supplierMapper;
-	private final SupplierDao supplierDao;
 	private final SupplierService supplierService;
 	private final ExcelExportService excelExportService;
 	private final SecurityUserService securityUserService;
@@ -159,9 +158,9 @@ public class SupplierRestController {
     public PageDTO<SupplierDTO> autocomplete(@RequestParam("search") final String search) {
         final Pageable page = PageRequest.of(0, 25, Sort.by("name").ascending());
         if (StringUtils.length(search) == 0) {
-            return supplierMapper.toDTO(supplierDao.findAll(page));
+            return supplierMapper.toDTO(supplierService.findAllByDeletedFalse(page));
         } else {
-            return supplierMapper.toDTO(supplierDao.searchForSupplier("%" + search + "%", page));
+            return supplierMapper.toDTO(supplierService.searchForSupplierNotDeleted("%" + search + "%", page));
         }
 
     }
