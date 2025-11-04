@@ -109,27 +109,15 @@ function CopyTaskService() {
        }
 
         initFormValidationForForm("copyTaskModalForm");
-        const selectDiv = document.getElementById("copyTaskNotificationSelectDiv");
-        this.taskNotificationSelect = new Choices('#copyTaskNotificationSelectInput', {
-            removeItemButton: true,
-            searchEnabled: true,
-        });
-
-        const notificationOption = document.getElementById("copyTaskNotificationSetting");
-        notificationOption.addEventListener("change", (event) => {
-            this.showOrHideNotificationSelect(event.target.checked);
-        });
-        notificationOption.dispatchEvent(new Event("change"));
-
+        this.notificationSelectHandler = initNotificationSelect(
+            'copyTaskNotificationSetting',
+            'copyTaskNotificationSelectDiv',
+            'copyTaskNotificationSelectInput'
+        );
 
 
         this.copyTaskModal = new bootstrap.Modal(this.modalContainer);
         this.copyTaskModal.show();
-    }
-
-    this.showOrHideNotificationSelect = function (value) {
-        const selectDiv = document.getElementById("copyTaskNotificationSelectDiv");
-        selectDiv.hidden = !value;
     }
 
     this.initCopyTaskRelationSelect = function() {

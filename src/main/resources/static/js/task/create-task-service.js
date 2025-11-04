@@ -80,10 +80,11 @@ function CreateTaskService() {
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
-        this.taskNotificationSelect = new Choices('#taskNotificationSelectInput', {
-            removeItemButton: true,
-            searchEnabled: true,
-        });
+        this.notificationSelectHandler = initNotificationSelect(
+            'taskNotificationSetting',
+            'taskNotificationSelectDiv',
+            'taskNotificationSelectInput'
+        );
         this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
@@ -92,12 +93,6 @@ function CreateTaskService() {
                 self.createTaskOuChoicesEditSelect.setChoiceByValue(data);
              })).catch(error => toastService.error(error));
         })
-
-        const notificationOption = document.getElementById("taskNotificationSetting");
-        notificationOption.addEventListener("change", (event) => {
-            this.showOrHideNotificationSelect(event.target.checked);
-        });
-        notificationOption.dispatchEvent(new Event("change"));
 
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
@@ -155,12 +150,6 @@ function CreateTaskService() {
             },
             false,
         );
-    }
-
-    this.showOrHideNotificationSelect = function (value) {
-        const selectDiv = document.getElementById("taskNotificationSelectDiv");
-        selectDiv.hidden = !value;
-        this.taskNotificationSelect.removeActiveItems();
     }
 
 }

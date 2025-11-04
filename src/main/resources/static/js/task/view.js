@@ -87,46 +87,9 @@ function ViewTaskService() {
                 this.fitDescription(this);
             });
         }
-        const selectDiv = document.getElementById("viewTaskNotificationSelectDiv");
-        if (!selectDiv.hidden) {
-            this.taskNotificationSelect = new Choices('#viewTaskNotificationSelectInput', {
-                removeItemButton: true,
-                searchEnabled: true,
-            });
-        }
-
-        const notificationOption = document.getElementById("viewTaskNotificationSetting");
-        notificationOption.addEventListener("change", (event) => {
-            this.showOrHideNotificationSelect(event.target.checked);
-        });
     }
 
-    this.showOrHideNotificationSelect = function (value) {
-        const selectDiv = document.getElementById("viewTaskNotificationSelectDiv");
-
-        if (!selectDiv) {
-            return;
-        }
-
-        if (value) {
-            selectDiv.hidden = false;
-
-            // Initialize Choices.js only when first shown (if not already initialized)
-            if (!this.taskNotificationSelect) {
-                this.taskNotificationSelect = new Choices('#viewTaskNotificationSelectInput', {
-                    removeItemButton: true,
-                    searchEnabled: true,
-                });
-            }
-        } else {
-            selectDiv.hidden = true;
-            if (this.taskNotificationSelect) {
-                this.taskNotificationSelect.removeActiveItems();
-            }
-        }
-    }
-
-            // In case this task is an oversight, a special oversight dialog can be shown
+    // In case this task is an oversight, a special oversight dialog can be shown
     this.showOversightDialog = (assetId) => {
         if(!assetId) {
             return;
@@ -151,7 +114,6 @@ function ViewTaskService() {
             this.ouChoicesEditSelect.enable();
             this.ouDepartmentChoicesEditSelect.enable();
             this.userChoicesEditSelect.enable();
-            this.taskNotificationSelect.enable();
             document.getElementById('saveEditTaskBtn').hidden = false;
             document.getElementById('editTaskBtn').hidden = true;
             performButton.hidden = true;
@@ -166,7 +128,6 @@ function ViewTaskService() {
             this.ouChoicesEditSelect.disable();
             this.ouDepartmentChoicesEditSelect.disable();
             this.userChoicesEditSelect.disable();
-            this.taskNotificationSelect.disable();
             document.getElementById('saveEditTaskBtn').hidden = true;
             document.getElementById('editTaskBtn').hidden = false;
             performButton.hidden = false;
