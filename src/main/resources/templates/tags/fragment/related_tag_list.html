@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<head>
+    <title></title></head>
+<body>
+<th:block th:fragment="related_tag_list (tags, parentId, parentType, allowAdd, allowRemove)">
+
+    <div class="related-tag-list card shadow-none h-100 border-2" th:data-target-id="${parentId}" th:data-target-type="${parentType}">
+        <div class="card-header toolbar">
+            <h5 class="toolbar-start m-0">Tags</h5>
+            <div class="toolbar-end">
+                <button th:if="${allowAdd}" type="button" class="btn btn-secondary addTagBtn btn-xs"
+                        th:data-target-id="${parentId}" th:data-target-type="${parentType}"
+                        data-bs-toggle="modal" data-bs-target="#addTagModal">Tilføj
+                </button>
+            </div>
+        </div>
+        <div class="card-body">
+            <table class="col-lg-12">
+                <thead><tr><th></th><th></th></tr></thead>
+                <tbody>
+                <tr th:each="tag : ${tags}">
+                    <td class="col-lg-11">
+                        <span class="tag-badge" th:text="${tag.value}" th:style="'background-color: ' + ${tag.color.hexCode} + '; color: ' + ${tag.color.contrastHexCode}"></span>
+                    </td>
+                    <td class="col-lg-1">
+                        <i th:if="${allowRemove}" class="removeTagButton pli-cross fs-5 me-2" th:data-tagid="${tag.id}"></i>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</th:block>
+
+<th:block th:fragment="add_tag_modal (targetId, targetType)">
+    <div class="modal fade" id="addTagModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tilføj tags</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input name="id" id="relatableIdInput" th:value="${targetId}" type="hidden">
+                    <div class="row mt-3">
+                        <label for="addTagsSelect" class="col-sm-4 col-form-label">Tags</label>
+                        <div class="col-sm-8">
+                            <select id="addTagsSelect" class="form-control form-select choices__input" data-type="select-multiple" data-trigger=""
+                                    name="tags" hidden="" tabindex="-1" multiple></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuller</button>
+                    <button id="addTagButton" th:data-target-id="${targetId}" th:data-target-type="${targetType}"
+                            type="button" data-bs-dismiss="modal" class="btn btn-secondary">Gem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>
+</body>

@@ -83,7 +83,8 @@ public interface SupplierMapper {
         @Mapping(target = "dataProcessor", ignore = true),
         @Mapping(target = "assets", ignore = true),
         @Mapping(target = "deleted", ignore = true),
-        @Mapping(target = "localizedEnums", ignore = true)
+        @Mapping(target = "localizedEnums", ignore = true),
+        @Mapping(target = "tags", ignore = true)
     })
     Supplier fromEO(final SupplierCreateEO supplierCreateEO);
 

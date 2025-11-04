@@ -1,4 +1,6 @@
 import {initStatisticView} from "../statistic/statisticView.js";
+import ColumnOptions from "../grid-js-extension/column-options.js";
+import formatTags from "../tags/tag-grid-formatter.js";
 
 const columnProperties = [
     'id',
@@ -12,6 +14,7 @@ const columnProperties = [
     'threatAssessmentReportApprovalStatus',
     'assessment',
     'threatCatalogs',
+    'tags',
     'allowedActions',
     'fromExternalSource',
     'externalLink']
@@ -94,9 +97,9 @@ function CreateTable() {
                         searchKey: 'name'
                     },
                     formatter: (cell, row) => {
-                        const external = row.cells[12]['data']
-                        const externalLink = row.cells[13]['data']
-                        const url = viewUrl + row.cells[0]['data'];
+                        const external = row.cells[columnProperties.indexOf('fromExternalSource')]['data']
+                        const externalLink = row.cells[columnProperties.indexOf('externalLink')]['data']
+                        const url = viewUrl + row.cells[columnProperties.indexOf('id')]['data'];
                         if (external) {
                             return gridjs.html(`<a href="${externalLink}" target="_blank">${cell} (Ekstern)</a>`);
                         } else {
@@ -172,7 +175,7 @@ function CreateTable() {
                         fieldId: 'riskAssessmentSearchSelector'
                     },
                     formatter: (cell, row) => {
-                        var status = cell;
+                        let status = cell;
                         if (cell === "Grøn") {
                             status = [
                                 '<div class="d-block badge bg-green">' + cell + '</div>'
@@ -218,13 +221,21 @@ function CreateTable() {
                     },
                 },
                 {
+                    id: 'tags',
+                    name: "Tags",
+                    searchable: {
+                        searchKey: 'tagNames',
+                    },
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
+                {
                     id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
                     formatter: (cell, row) => {
-                        const identifier = row.cells[0]['data'];
-                        const name = row.cells[1]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[12]['data']
+                        const identifier = row.cells[columnProperties.indexOf('id')]['data'];
+                        const name = row.cells[columnProperties.indexOf('name')]['data'].replaceAll("'", "\\'");
+                        const external = row.cells[columnProperties.indexOf('fromExternalSource')]['data']
                         const attributeMap = new Map();
                         attributeMap.set('identifier', identifier);
                         attributeMap.set('name', name);
@@ -290,11 +301,17 @@ function CreateTable() {
                 });
         });
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, 'risksDatatable');
+        const datatableId = 'risksDatatable'
+        const customGridFunctions = new CustomGridFunctions(grid, gridRisksUrl, exportRisksUrl, datatableId);
 
         initSaveAsExcelButton(customGridFunctions, 'Risikovurderinger');
 
-        gridOptions.init(grid, document.getElementById("gridOptions"));
+        new ColumnOptions(
+            datatableId,
+            grid,
+            ['risikovurdering', 'allowedActions'],
+            ['risikovurdering', 'allowedActions', 'type', 'status'],
+            ['id', 'externalLink', 'fromExternalSource'])
     }
 }
 

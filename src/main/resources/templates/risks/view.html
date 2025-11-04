@@ -6,6 +6,7 @@
 <script th:src="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.min.js}" defer></script>
 <script th:src="@{/js/risk/riskView.js}" defer></script>
 <script th:src="@{/js/form-validation.js}" defer></script>
+<script th:src="@{/js/task/create-task-service.js}" type="module"></script>
 
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/tagin/tagin.css}" />
 <link rel="stylesheet" th:href="@{/webjars/nifty/3.0.1/vendors/mc-datepicker/mc-calendar.css}" />
@@ -265,15 +266,17 @@
                                                 </select>
                                             </td>
                                             <td class="riskViewTd text-center" >
-                                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs"
-                                                        th:onclick="|createTaskClicked(this)|" title="Opgave eller kontrol"
-                                                        th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
+                                                <button sec:authorize="hasAnyRole('ROLE_create_owner','ROLE_create_all')" th:id="'taskBtn' + ${row.index}" type="button" class="btn btn-success btn-xs task-button"
+                                                        title="Opgave eller kontrol" th:attr="data-customid=${row.id}, data-catalogidentifier=${row.identifier}, data-riskid=${risk.id}">
                                                     Ny opgave
                                                 </button>
-                                                <button sec:authorize="hasAnyRole('ROLE_delete_all')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1"
-                                                        th:onclick="|deleteThreatClicked(this)|" title="Slet"
-                                                        th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
+                                                <button sec:authorize="hasAnyRole('ROLE_delete_all')" th:id="'deleteThreatBtn' + ${row.index}" type="button" class="btn btn-warning btn-xs mt-1 delete-threat-button"
+                                                        title="Slet" th:attr="data-customid=${row.id}, data-riskid=${risk.id}" th:if="${row.dataType.name == 'CUSTOM'}">
                                                     Slet trussel
+                                                </button>
+                                                <button sec:authorize="hasAnyRole('ROLE_update_all')" th:id="'editThreatBtn' + ${row.index}" type="button" class="btn btn-secondary btn-xs mt-1 edit-threat-button"
+                                                        title="Ret" th:attr="data-customid=${row.id}, data-riskid=${risk.id}, data-type=${row.type()}, data-description=${row.threat()}" th:if="${row.dataType.name == 'CUSTOM'}">
+                                                    Ret trussel
                                                 </button>
                                             </td>
                                             <td class="riskViewTd riskViewResidual editCell" >
@@ -411,6 +414,12 @@
                         <div class="row">
                             <div th:replace="~{fragments/tasks :: tasksfragment(tasks=${tasks}, relatableId=${risk.id})}"></div>
                         </div>
+                        <div class="row">
+                            <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (
+                                        tags=${risk.tags}, parentId=${risk.id}, parentType='threatassessment',
+                                        allowAdd=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')},
+                                        allowRemove=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')})}"></div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -451,8 +460,42 @@
                 </form>
             </div>
             <div class="modal-footer">
-                <button type="button" onclick="formReset()" class="btn btn-secondary" data-bs-dismiss="modal">Annuller</button>
+                <button type="button" class="btn btn-secondary form-reset-button" data-bs-dismiss="modal">Annuller</button>
                 <button type="submit" form="createCustomThreatModal" class="btn btn-primary">Gem</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="editCustomThreatFormDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Rediger trussel</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="editCustomThreatModal" class="row g-3 needs-validation" action="#" th:action="@{'/risks/' + ${risk.id} + '/customthreats/edit'}" th:object="${customThreat}" method="post" novalidate>
+                    <input type="hidden" id="customThreatId" name="id" th:field="*{id}">
+                    <div class="row mt-3">
+                        <label for="threatType" class="col-sm-4 col-form-label">Type af trussel</label>
+                        <div class="col-sm-8">
+                            <input id="threatType" th:field="*{threatType}" th:value="${customThreat.threatType}" type="text" class="form-control" required>
+                        </div>
+                    </div>
+                    <div class="row mt-3">
+                        <label for="threatDescription" class="col-lg-4 col-form-label">Beskrivelse</label>
+                        <div class="col-lg-8">
+                            <div class="input-group">
+                                <textarea id="threatDescription" class="form-control" th:field="*{description}" th:value="${customThreat.description}" rows="3" required></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary form-reset-button" data-bs-dismiss="modal">Annuller</button>
+                <button type="submit" form="editCustomThreatModal" class="btn btn-primary">Gem</button>
             </div>
         </div>
     </div>
@@ -489,6 +532,7 @@
 
 <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=false, signOnlyOnce=true)}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true)}"></div>
+<div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${risk.id}, targetType='threatassessment')}"></div>
 
 <script th:inline="javascript">
     /*<![CDATA[*/
@@ -500,9 +544,7 @@
         var riskScoreColorMap = [[${riskScoreColorMap}]];
     +]*/
 
-    document.addEventListener("DOMContentLoaded", function(event) {
-        pageLoaded();
-    });
+
 
     /*]]>*/
 </script>

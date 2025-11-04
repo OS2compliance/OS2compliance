@@ -35,8 +35,7 @@
                             <div class="d-flex mt-2 justify-content-end">
                                 <div class="d-flex mt-2">
                                     <div class="d-flex flex-fill align-items-start mb-3 p-1">
-                                        <button type="button" th:if="${changeable}" class="btn btn-success"
-                                                th:onclick="|assetDpiaService.setRevisionInterval(${dpia.id})|">
+                                        <button id="setRevisionIntervalButton" th:data-dpia-id="${dpia.id}" type="button" th:if="${changeable}" class="btn btn-success">
                                             <i class="pli-alarm"></i> <span class="vr"></span> Sæt revisions interval
                                         </button>
                                     </div>
@@ -64,12 +63,18 @@
                                 <div class="accordion-item">
                                     <div class="accordion-header" id="commentAccordionHeading">
                                         <button class="accordion-button collapsed bg-light" type="button" data-bs-toggle="collapse" data-bs-target="#commentAccordionItem" aria-expanded="false" aria-controls="commentAccordionItem">
-                                            Kommentar
+                                            Yderligere oplysninger
                                         </button>
                                     </div>
                                     <div id="commentAccordionItem" class="accordion-collapse collapse" aria-labelledby="commentAccordionHeading" data-bs-parent="#_dm-dpiaAccordion" style="">
                                         <div class="accordion-body">
                                             <textarea id="dpiaCommentArea" th:value="${dpia.comment}" class="form-control editField" placeholder="Indtast kommentar" rows="3" th:text="${dpia.comment}" th:readonly="${!changeable}"></textarea>
+                                        </div>
+                                        <div class="row mb-3">
+                                            <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (
+                                        tags=${dpia.tags}, parentId=${dpia.id}, parentType='dpia',
+                                        allowAdd=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')},
+                                        allowRemove=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')})}"></div>
                                         </div>
                                     </div>
                                 </div>
@@ -131,10 +136,11 @@
 
 <div class="modal fade" id="revisionIntervalDialog" tabindex="-1" aria-labelledby="taskLabel" aria-hidden="true"></div>
 <div th:replace="~{fragments/sendReportModal :: sendReportModalFragment(onlyPdf=true, signOnlyOnce=false)}"></div>
+<div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${dpia.id}, targetType='dpia')}"></div>
 
 <link rel="stylesheet" th:href="@{/css/dpia_schema.css}"/>
 <div th:replace="~{fragments/footer :: footer (sweetalerts = true, imageTextEditor = true, taskDialog = true)}"></div>
-<script th:src="@{/js/dpia/details.js}" defer></script>
+<script type="module" th:src="@{/js/dpia/details.js}" defer></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+

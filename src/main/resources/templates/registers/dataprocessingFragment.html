@@ -35,7 +35,7 @@
             </div>
             <div th:id="'asset' + ${asset.id}" class="accordion-collapse collapse" th:aria-labelledby="'accHeader' + ${asset.id}" data-bs-parent="#_dm-defaultAccordion">
                 <div class="accordion-body">
-                    <div th:replace="~{dataProcessing/dataprocessing :: dataProcessing(dbChoices=${dpChoices}, dataProcessing=${asset.dataProcessing}, primary='false', ${asset})}"></div>
+                    <div th:replace="~{dataProcessing/dataprocessing :: dataProcessing(dbChoices=${dpChoices}, dataProcessing=${asset.dataProcessing}, primary='false', asset=${asset})}"></div>
                 </div>
             </div>
         </div>

@@ -3,12 +3,9 @@ package dk.digitalidentity.controller.mvc;
 import dk.digitalidentity.dao.TagDao;
 import dk.digitalidentity.event.RelationAddedEvent;
 import dk.digitalidentity.event.RelationUpdatedEvent;
-import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.RelationProperty;
-import dk.digitalidentity.model.entity.Tag;
-import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
@@ -32,7 +29,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -118,70 +114,6 @@ public class RelatableController {
 		relationService.delete(toDelete);
 		return getReturnPath(id, relatedTo);
 	}
-
-    record AddTagsDTO(long id, List<Long> tags) {}
-    @RequireUpdateOwnerOnly
-    @Transactional
-    @PostMapping("tags/add")
-    public String addTags(@ModelAttribute final AddTagsDTO dto) {
-        final Relatable relateTo = relatableService.findById(dto.id()).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        if (dto.tags == null) {
-            return getReturnPath(dto.id(), relateTo);
-        }
-
-        if (relateTo.getRelationType().equals(RelationType.DOCUMENT)) {
-            final Document document = (Document) relateTo;
-            if (document.getTags() == null) {
-                document.setTags(new ArrayList<>());
-            }
-
-            final List<Long> addedTags = document.getTags().stream().map(Tag::getId).toList();
-            for (final Long tag : dto.tags) {
-                if (!addedTags.contains(tag)) {
-                    tagDao.findById(tag).ifPresent(dbTag -> document.getTags().add(dbTag));
-                }
-            }
-
-            documentService.create(document);
-        }
-        else if (relateTo.getRelationType().equals(RelationType.TASK)) {
-            final Task task = (Task) relateTo;
-            if (task.getTags() == null) {
-                task.setTags(new ArrayList<>());
-            }
-
-            final List<Long> addedTags = task.getTags().stream().map(Tag::getId).toList();
-            for (final Long tag : dto.tags) {
-                if (!addedTags.contains(tag)) {
-                    tagDao.findById(tag).ifPresent(dbTag -> task.getTags().add(dbTag));
-                }
-            }
-
-            taskService.saveTask(task);
-        }
-
-        return getReturnPath(dto.id(), relateTo);
-    }
-
-    @RequireDeleteOwnerOnly
-    @DeleteMapping("{id}/tags/{tagId}/remove")
-    @ResponseStatus(value = HttpStatus.OK)
-    @Transactional
-    public String deleteRelation(@PathVariable final long id, @PathVariable final long tagId) {
-        final Relatable relatedTo = relatableService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        final Tag tagToDelete = tagDao.findById(tagId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-        ensureModificationIsAllowed(relatedTo);
-        if (relatedTo.getRelationType().equals(RelationType.DOCUMENT)) {
-            final Document document = (Document) relatedTo;
-            document.getTags().remove(tagToDelete);
-            documentService.create(document);
-        } else if (relatedTo.getRelationType().equals(RelationType.TASK)) {
-            final Task task = (Task) relatedTo;
-            task.getTags().remove(tagToDelete);
-            taskService.saveTask(task);
-        }
-        return "redirect:/";
-    }
 
     private String getReturnPath(final long id, final Relatable relatable) {
         if (relatable.getRelationType().equals(RelationType.DOCUMENT)) {

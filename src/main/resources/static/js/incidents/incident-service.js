@@ -1,6 +1,28 @@
 import FormValidationService from "../FormValidationService.js";
+import IncidentGridService from "./incident-grid-service.js";
 
-export default function IncidentService() {
+const incidentGridService = new IncidentGridService();
+const incidentService = new IncidentService();
+
+window.incidentGridService = incidentGridService;
+window.incidentService = incidentService;
+
+document.addEventListener("DOMContentLoaded", async function(event) {
+    incidentService.init();
+
+    // Only init grid if we're on the list page with the grid table
+    if (document.getElementById('incidentsTable')) {
+        incidentGridService.init();
+
+        const statisticModalContainer = document.getElementById('statisticModalContainer');
+        if (statisticModalContainer) {
+            const { initStatisticView } = await import("../statistic/statisticView.js");
+            initStatisticView('incident');
+        }
+    }
+});
+
+function IncidentService() {
     this.init = () => {
         if (document.getElementById('createIncidentDialog')) {
             this.fetchDialog(formUrl, "createIncidentDialog");
@@ -59,7 +81,7 @@ export default function IncidentService() {
         });
     }
 
-    this.fetchColumnName =  () => {
+    this.fetchColumnName =  async () => {
         return jsonCall('GET', restUrl + 'columns', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);
@@ -209,3 +231,5 @@ export default function IncidentService() {
         }
     };
 }
+
+export { incidentService };
