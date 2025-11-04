@@ -212,11 +212,11 @@
                                     <label for="viewTaskNotificationSetting" class="col-sm-2 col-form-label">Tilpasset afsendelse af e-mail påmindelse</label>
                                     <div class="col-sm-10" style="display:flex; align-items: center">
                                         <div class="input-group">
-                                            <input id="viewTaskNotificationSetting" class="form-check-input editField" type="checkbox" th:checked="${task.taskNotificationOverride}" th:field="*{taskNotificationOverride}">
+                                            <input id="viewTaskNotificationSetting" class="form-check-input editField" type="checkbox" th:checked="${!task.notificationReminders.isEmpty()}">
                                         </div>
                                     </div>
                                 </div>
-                                <div class="row mb-3" id="viewTaskNotificationSelectDiv" th:hidden="${!task.taskNotificationOverride}">
+                                <div class="row mb-3" id="viewTaskNotificationSelectDiv" th:hidden="${!task.notificationReminders.isEmpty()}">
                                     <label for="viewTaskNotificationSelectInput" class="col-sm-2 col-form-label">Tidspunkt</label>
                                     <div class="col-sm-10">
                                         <select class="form-control form-select choices__input editField" id="viewTaskNotificationSelectInput" tabindex="-1" multiple th:field="*{notificationReminders}">

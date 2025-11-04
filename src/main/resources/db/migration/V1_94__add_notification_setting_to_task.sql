@@ -1,2 +1,0 @@
-ALTER TABLE tasks ADD COLUMN notification_reminders VARCHAR(255) DEFAULT NULL;
-ALTER TABLE tasks ADD COLUMN task_notification_override BOOLEAN NOT NULL DEFAULT FALSE;

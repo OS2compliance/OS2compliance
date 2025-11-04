@@ -15,11 +15,17 @@ import java.util.Set;
 
 public interface TaskDao extends TagableRepository<Task> {
 
-    List<Task> findByNotifyResponsibleTrueAndNextDeadlineAndTaskNotificationOverride(final LocalDate date, final Boolean taskNotificationOverride);
-    List<Task> findByNotifyResponsibleTrueAndNextDeadlineInAndTaskNotificationOverride(Collection<@NotNull LocalDate> nextDeadline, Boolean taskNotificationOverride);
-    List<Task> findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(final LocalDate date);
-	List<Task> findByNextDeadlineAndTaskNotificationOverrideTrue(LocalDate nextDeadline);
-	List<Task> findByNextDeadlineInAndTaskNotificationOverrideTrue(List<LocalDate> nextDeadlines);
+	@Query("SELECT t FROM Task t WHERE t.notifyResponsible = true AND t.nextDeadline = :date AND SIZE(t.notificationReminders) = 0")
+	List<Task> findByNotifyResponsibleTrueAndNextDeadlineAndNotificationRemindersEmpty(@Param("date") LocalDate date);
+
+	@Query("SELECT t FROM Task t WHERE t.notifyResponsible = true AND t.nextDeadline IN :nextDeadlines AND SIZE(t.notificationReminders) = 0")
+	List<Task> findByNotifyResponsibleTrueAndNextDeadlineInAndNotificationRemindersEmpty(@Param("nextDeadlines") Collection<LocalDate> nextDeadlines);    List<Task> findByNextDeadlineAfterAndIncludeInReportTrueOrderByNextDeadlineAsc(final LocalDate date);
+
+	@Query("SELECT t FROM Task t WHERE t.nextDeadline = :nextDeadline AND SIZE(t.notificationReminders) > 0")
+	List<Task> findByNextDeadlineAndNotificationRemindersNotEmpty(@Param("nextDeadline") LocalDate nextDeadline);
+
+	@Query("SELECT t FROM Task t WHERE t.nextDeadline IN :deadlines AND SIZE(t.notificationReminders) > 0")
+	List<Task> findByNextDeadlineInAndNotificationRemindersNotEmpty(@Param("deadlines") List<LocalDate> deadlines);
     @Query("select t from Task  t left join TaskLog tl on tl.task=t where t.includeInReport=true and (t.nextDeadline > :deadline or tl.completed > :deadline) order by t.nextDeadline")
     List<Task> findTaskForYearWheel(@Param("deadline") final LocalDate date);
 

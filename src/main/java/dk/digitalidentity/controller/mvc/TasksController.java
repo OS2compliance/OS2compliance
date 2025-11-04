@@ -243,7 +243,6 @@ public class TasksController {
 		existingTask.getNotificationReminders().clear();
 		existingTask.getNotificationReminders().addAll(task.getNotificationReminders());
         existingTask.setResponsibleUser(task.getResponsibleUser());
-		existingTask.setTaskNotificationOverride(task.getTaskNotificationOverride());
 
 		existingTask.getLinks().clear();
 		for (TaskLink link : task.getLinks()) {
