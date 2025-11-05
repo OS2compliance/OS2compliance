@@ -1,3 +1,5 @@
+import { refreshTaskGrid } from './task-center.js';
+
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 document.addEventListener('click', async function(e) {
@@ -81,6 +83,10 @@ document.addEventListener('click', async function(e) {
 
             // Reset form to create another task
             form.reset();
+            form.classList.remove('was-validated');
+
+            refreshTaskGrid();
+
             toastService.info("info", "Opgaven blev gemt");
         } catch (error) {
             toastService.error('Fejl under oprettelse af opgave');

@@ -4,7 +4,9 @@
 <body class="jumping">
 <script th:src="@{/js/task/form.js}" defer></script>
 <script th:src="@{/js/export-service.js}" defer></script>
-<script th:src="@{/js/task/form-create.js}" defer></script>
+<script type="module" th:src="@{/js/task/form-create.js}" defer></script>
+<script type="module" th:src="@{/js/task/task-center.js}" defer></script>
+<script type="module" th:src="@{/js/task/create-task-service.js}" defer></script>
 <link rel="stylesheet" th:href="@{/css/tasks.css}" />
 
 <div id="root" class="root mn--max hd--expanded">
@@ -81,8 +83,6 @@
     +]*/
     /*]]>*/
 </script>
-<script type="module" th:src="@{/js/task/task-center.js}" defer></script>
-<script type="module" th:src="@{/js/task/create-task-service.js}" defer></script>
 </body>
 
 </html>

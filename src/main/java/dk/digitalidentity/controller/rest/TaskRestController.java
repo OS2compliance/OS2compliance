@@ -151,9 +151,19 @@ public class TaskRestController {
 	@PostMapping("create")
 	@Transactional
 	public ResponseEntity<?> createTask(@Valid @RequestBody final TaskCreateRequestDTO request) {
+		if (request == null || request.getTask() == null) {
+			log.debug("The request is null or empty");
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
 		Task task = taskMapper.toEntity(request.getTask(), organisationService, userService, tagService);
 
-		// Validate and process links
+		if (task == null) {
+			log.debug("Could not create task");
+			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+		}
+
+		// Process links (no validation needed, as we send an empty list in frontend and thus never have NULL)
 		List<TaskLink> links = new ArrayList<>();
 		for (TaskLinkDTO link : request.getTask().getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
@@ -164,60 +174,13 @@ public class TaskRestController {
 		relationService.setRelationsAbsolute(savedTask, request.getRelations());
 
 		if (request.getTaskRiskId() != null) {
-			final ThreatAssessment threatAssessment = threatAssessmentService.findById(request.getTaskRiskId())
-					.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret risikovurdering ikke fundet"));
-
-			if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-				final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
-						.filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
-				taskService.addRelations(savedTask, relatedAssets);
+			try {
+				threatAssessmentService.handleTaskRiskAssociation(savedTask, request.getTaskRiskId(), request.getRiskCustomId(), request.getRiskCatalogIdentifier());
+				return new ResponseEntity<>(HttpStatus.OK);
+			} catch (IllegalArgumentException ex) {
+				log.error("Risk association failed", ex.getMessage());
+				return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 			}
-			else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
-				final List<Relatable> relatedRegisters = relationService.findAllRelatedTo(threatAssessment).stream()
-						.filter(t -> t.getRelationType().equals(RelationType.REGISTER)).toList();
-				taskService.addRelations(savedTask, relatedRegisters);
-			}
-
-			if (request.getRiskCustomId() != null && request.getRiskCustomId() != 0) {
-				final CustomThreat threat = threatAssessment.getCustomThreats().stream()
-						.filter(t -> t.getId().equals(request.getRiskCustomId()))
-						.findAny()
-						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-				ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
-						.filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(request.getRiskCustomId()))
-						.findAny().orElse(null);
-
-				if (response == null) {
-					response = threatAssessmentService.createResponse(threatAssessment, null, threat);
-					threatAssessmentService.save(threatAssessment);
-				}
-
-				relationService.addRelation(savedTask, response);
-
-			} else if (request.getRiskCatalogIdentifier() != null && !request.getRiskCatalogIdentifier().isEmpty()) {
-				final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
-						.flatMap(catalog -> catalog.getThreats().stream())
-						.filter(t -> t.getIdentifier().equals(request.getRiskCatalogIdentifier()))
-						.findAny()
-						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-
-				ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
-						.filter(r -> r.getThreatCatalogThreat() != null &&
-								r.getThreatCatalogThreat().getIdentifier().equals(request.getRiskCatalogIdentifier()))
-						.findAny().orElse(null);
-
-				if (response == null) {
-					response = threatAssessmentService.createResponse(threatAssessment, threat, null);
-					threatAssessmentService.save(threatAssessment);
-				}
-
-				relationService.addRelation(savedTask, response);
-			}
-
-			relationService.addRelation(savedTask, threatAssessment);
-
-			return new ResponseEntity<>(HttpStatus.OK);
 		}
 
 		return new ResponseEntity<>(HttpStatus.OK);

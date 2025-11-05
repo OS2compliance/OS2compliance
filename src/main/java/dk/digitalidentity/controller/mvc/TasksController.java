@@ -154,54 +154,7 @@ public class TasksController {
         relationService.setRelationsAbsolute(savedTask, relations);
 
         if (riskId != null) {
-            final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret risikovurdering ikke fundet"));
-
-            if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-                final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
-                    .filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
-                taskService.addRelations(savedTask, relatedAssets);
-            }
-            else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
-                final List<Relatable> relatedRegisters = relationService.findAllRelatedTo(threatAssessment).stream()
-                    .filter(t -> t.getRelationType().equals(RelationType.REGISTER)).toList();
-                taskService.addRelations(savedTask, relatedRegisters);
-            }
-
-            if (riskCustomId != 0) {
-                final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(riskCustomId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
-                    .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(riskCustomId))
-                    .findAny().orElse(null);
-
-                // if no response, create one and add relation
-                if (response == null) {
-                    response = threatAssessmentService.createResponse(threatAssessment, null, threat);
-                    threatAssessmentService.save(threatAssessment);
-                }
-
-                relationService.addRelation(savedTask, response);
-
-            } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
-				final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
-						.flatMap(catalog -> catalog.getThreats().stream())
-						.filter(t -> t.getIdentifier().equals(riskCatalogIdentifier))
-						.findAny()
-						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
-                    .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
-                    .findAny().orElse(null);
-
-                // if no response, create one and add relation
-                if (response == null) {
-                    response = threatAssessmentService.createResponse(threatAssessment, threat, null);
-                    threatAssessmentService.save(threatAssessment);
-                }
-
-                relationService.addRelation(savedTask, response);
-            }
-
-            relationService.addRelation(savedTask, threatAssessment);
+            threatAssessmentService.handleTaskRiskAssociation(savedTask, riskId, riskCustomId, riskCatalogIdentifier);
             return "redirect:/risks/" + riskId;
         }
 
