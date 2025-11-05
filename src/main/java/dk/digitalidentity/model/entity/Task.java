@@ -85,6 +85,9 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
+	@Column(name = "preserved_responsible_users")
+	private String preservedResponsibleUserUuids;
+
 	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
