@@ -797,4 +797,15 @@ public class AssetService implements TagableService<Asset> {
 	public List<Asset> getByIds(List<Long> ids) {
 		return assetDao.findAllById(ids);
 	}
+
+	public List<Asset> getAllForContactsReport(String userUuid) {
+		List<Asset> assets;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			assets = assetDao.findAll();
+		}
+		else {
+			assets = new ArrayList<>(assetDao.findByResponsibleUsers_Uuid(userUuid));
+		}
+		return assets;
+	}
 }
