@@ -152,7 +152,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 	private void seedV35() {
 		ChoiceList choiceList = ChoiceList.builder()
 				.identifier("task-description-template")
-				.name("Task Description Template")
+				.name("Opgavebeskrivelses skabelon")
 				.multiSelect(false)
 				.customizable(true)
 				.build();

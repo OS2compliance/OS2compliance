@@ -95,9 +95,18 @@ public class TasksController {
         return "tasks/index";
     }
 
+	record ChoiceValueDTO(long id, String caption) {}
+
 	@RequireUpdateOwnerOnly
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
+		ChoiceList choiceList = choiceService.findChoiceList("task-description-template")
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		List<ChoiceValueDTO> values = new ArrayList<>();
+		choiceList.getValues().forEach(choiceValue -> {
+			values.add(new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption()));
+		});
+		model.addAttribute("descriptionTemplates", values);
         if (id == null) {
 			boolean creationAllowed = SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY);
 			if (!creationAllowed) {
