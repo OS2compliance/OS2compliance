@@ -302,13 +302,13 @@ public class DBSService {
                                     task.setTaskType(TaskType.TASK);
                                     task.setRepetition(TaskRepetition.NONE);
                                     task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
-                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(",")));
 									Property property = Property.builder()
 											.key(ASSOCIATED_INSPECTION_PROPERTY)
 											.value(asset.getId().toString())
 											.entity(task)
 											.build();
 									task.getProperties().add(property);
+                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")));
                                     taskService.saveTask(task);
                                     relationService.addRelation(task, dbsAsset);
                                     relationService.addRelation(task, asset);
