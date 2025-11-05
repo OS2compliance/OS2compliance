@@ -134,6 +134,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(32, this::seedV32);
 		incrementAndPerformIfVersion(33, this::seedV33);
 		incrementAndPerformIfVersion(34, this::seedV34);
+		incrementAndPerformIfVersion(35, this::seedV35);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -146,6 +147,17 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 			}
 			return 0;
 		});
+	}
+
+	private void seedV35() {
+		ChoiceList choiceList = ChoiceList.builder()
+				.identifier("task-description-template")
+				.name("Task Description Template")
+				.multiSelect(false)
+				.customizable(true)
+				.build();
+
+		choiceService.save(choiceList);
 	}
 
 	private void seedV34() {

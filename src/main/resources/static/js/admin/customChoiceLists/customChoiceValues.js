@@ -10,6 +10,7 @@ class CustomChoiceValuesService {
     constructor() {
         this.initGrid()
         this.initButtons();
+        this.initGridActions();
     }
 
     initGrid() {
@@ -52,8 +53,8 @@ class CustomChoiceValuesService {
 
                             return gridjs.html(
                                 `<div class="d-flex gap-2">
-                                <button type="button" class="btn btn-icon btn-outline-light btn-xs"onclick="customChoiceValuesService.onEditChoiceList(${id}, '${caption}', '${description}')"><i class="pli-pencil fs-5"></i></button>
-                                <button type="button" class="btn btn-icon btn-outline-light btn-xs" onclick="customChoiceValuesService.onDeleteChoiceValue(${id})"><i class="pli-trash fs-5"></i></button>
+                                    <button type="button" class="btn btn-icon btn-outline-light btn-xs editBtn" data-id="${id}" data-caption="${caption}" data-description="${description}"><i class="pli-pencil fs-5"></i></button>
+                                    <button type="button" class="btn btn-icon btn-outline-light btn-xs deleteBtn" data-id="${id}"><i class="pli-trash fs-5"></i></button>
                                 </div>`);
                         }
                     }
@@ -68,7 +69,7 @@ class CustomChoiceValuesService {
                     'previous': 'Forrige',
                     'next': 'Næste',
                     'showing': 'Viser',
-                    'results': 'Valglister',
+                    'results': 'Valglist værdier',
                     'of': 'af',
                     'to': 'til',
                     'navigate': (page, pages) => `Side ${page} af ${pages}`,
@@ -153,6 +154,13 @@ class CustomChoiceValuesService {
     initButtons() {
         const createButton = document.getElementById('createChoiceValueButton');
         createButton.addEventListener('click', () => this.onCreateChoiceList());
+    }
+
+    initGridActions() {
+        delegateListItemActions('choiceValueTable',
+            (id, elem) => customChoiceValuesService.onEditChoiceList(elem.dataset.id, elem.dataset.caption, elem.dataset.description),
+            (id, name, elem) => customChoiceValuesService.onDeleteChoiceValue(elem.dataset.id),
+        )
     }
 
     async onDeleteChoiceValue(id) {
