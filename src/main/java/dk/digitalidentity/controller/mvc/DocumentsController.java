@@ -1,5 +1,7 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.model.dto.DocumentEditFormDTO;
+import dk.digitalidentity.model.dto.DocumentFormDTO;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
@@ -61,32 +63,6 @@ public class DocumentsController {
 	private final ChoiceService choiceService;
 	private final ChoiceValueService choiceValueService;
 
-	private record DocumentFormDTO(
-			@NotEmpty
-			String name,
-
-			String description,
-
-			@NotNull
-			Long documentTypeId,
-
-			String documentVersion,
-
-			@NotNull
-			DocumentStatus status,
-
-			String link,
-
-			@NotNull
-			DocumentRevisionInterval revisionInterval,
-
-			@DateTimeFormat(pattern = "dd/MM-yyyy")
-			LocalDate nextRevision,
-
-			@NotNull
-			User responsibleUser
-	) {}
-
 	@RequireReadOwnerOnly
     @GetMapping
     public String documentsList(final Model model) {
@@ -103,19 +79,19 @@ public class DocumentsController {
 			@RequestParam(name = "relations", required = false) final Set<Long> relations,
 			@RequestParam(name = "includeInYearWheel", required = false, defaultValue = "false") final Boolean includeInYearWheel) {
 
-		final ChoiceValue documentType = choiceValueService.findById(documentForm.documentTypeId())
+		final ChoiceValue documentType = choiceValueService.findById(documentForm.getDocumentTypeId())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid document type"));
 
 		final Document document = new Document();
-		document.setName(documentForm.name());
-		document.setDescription(documentForm.description());
+		document.setName(documentForm.getName());
+		document.setDescription(documentForm.getDescription());
 		document.setDocumentType(documentType);
-		document.setDocumentVersion(documentForm.documentVersion());
-		document.setStatus(documentForm.status());
-		document.setLink(documentForm.link());
-		document.setRevisionInterval(documentForm.revisionInterval());
-		document.setNextRevision(documentForm.nextRevision());
-		document.setResponsibleUser(documentForm.responsibleUser());
+		document.setDocumentVersion(documentForm.getDocumentVersion());
+		document.setStatus(documentForm.getStatus());
+		document.setLink(documentForm.getLink());
+		document.setRevisionInterval(documentForm.getRevisionInterval());
+		document.setNextRevision(documentForm.getNextRevision());
+		document.setResponsibleUser(documentForm.getResponsibleUser());
 
 		final Document savedDocument = documentService.create(document);
 		relationService.setRelationsAbsolute(savedDocument, relations);
@@ -123,34 +99,6 @@ public class DocumentsController {
 		return "redirect:/documents/" + savedDocument.getId();
 	}
 
-	public record DocumentEditFormDTO(
-			@NotNull
-			Long id,
-
-			@NotEmpty
-			String name,
-
-			String description,
-
-			@NotNull
-			Long documentTypeId,
-
-			String documentVersion,
-
-			@NotNull
-			DocumentStatus status,
-
-			String link,
-
-			@NotNull
-			DocumentRevisionInterval revisionInterval,
-
-			@DateTimeFormat(pattern = "dd/MM-yyyy")
-			LocalDate nextRevision,
-
-			@NotNull
-			User responsibleUser
-	) {}
 	@RequireReadOwnerOnly
 	@GetMapping("{id}")
 	public String documentView(final Model model, @PathVariable final long id) {
@@ -194,25 +142,25 @@ public class DocumentsController {
 	@PostMapping("edit")
 	public String formEdit(@Valid @ModelAttribute("documentEditForm") final DocumentEditFormDTO documentEditForm,
 			@RequestParam(name = "includeInYearWheel", required = false, defaultValue = "false") final Boolean includeInYearWheel) {
-		final Document existingDocument = documentService.get(documentEditForm.id())
+		final Document existingDocument = documentService.get(documentEditForm.getId())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
 		if(!documentService.isResponsibleFor(existingDocument) && !SecurityUtil.isAdministrator()) {
 			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
 		}
 
-		final ChoiceValue documentType = choiceValueService.findById(documentEditForm.documentTypeId())
+		final ChoiceValue documentType = choiceValueService.findById(documentEditForm.getDocumentTypeId())
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid document type"));
 
-		existingDocument.setName(documentEditForm.name());
+		existingDocument.setName(documentEditForm.getName());
 		existingDocument.setDocumentType(documentType);
-		existingDocument.setDescription(documentEditForm.description());
-		existingDocument.setStatus(documentEditForm.status());
-		existingDocument.setLink(documentEditForm.link());
-		existingDocument.setRevisionInterval(documentEditForm.revisionInterval());
-		existingDocument.setNextRevision(documentEditForm.nextRevision());
-		existingDocument.setResponsibleUser(documentEditForm.responsibleUser());
-		existingDocument.setDocumentVersion(documentEditForm.documentVersion());
+		existingDocument.setDescription(documentEditForm.getDescription());
+		existingDocument.setStatus(documentEditForm.getStatus());
+		existingDocument.setLink(documentEditForm.getLink());
+		existingDocument.setRevisionInterval(documentEditForm.getRevisionInterval());
+		existingDocument.setNextRevision(documentEditForm.getNextRevision());
+		existingDocument.setResponsibleUser(documentEditForm.getResponsibleUser());
+		existingDocument.setDocumentVersion(documentEditForm.getDocumentVersion());
 
 		documentService.update(existingDocument, includeInYearWheel);
 		documentService.updateAssociatedCheck(existingDocument, includeInYearWheel);
