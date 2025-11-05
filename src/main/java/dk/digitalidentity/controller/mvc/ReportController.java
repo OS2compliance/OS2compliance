@@ -519,6 +519,17 @@ public class ReportController {
 		return new ModelAndView(new RiskImageView(), model);
 	}
 
+	@RequireReadOwnerOnly
+	@GetMapping("contacts")
+	public ModelAndView yearWheel(final HttpServletResponse response) {
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"Aarshjul.xls\"");
+		final Map<String, Object> model = new HashMap<>();
+		model.put("Assets", assetService.getA);
+
+		return new ModelAndView(new YearWheelView(), model);
+	}
+
 
 
     private void generateDocument(final HttpServletResponse response, final String inputFilename, final String outputFilename,
