@@ -412,13 +412,13 @@ public class AssetsController {
 		// Clear the mapping relationship (this deletes AssetSupplierMapping entities)
 		asset.getSuppliers().clear();
 
-		// Clear the direct relationship from the supplier side
+		// Clear the relationship to asset on the supplier
 		suppliersToDelete.forEach(supplier -> {
 			supplier.getAssets().remove(asset);
 			supplierService.save(supplier);
 		});
 
-		// Clear the direct relationship from the asset side
+		// This is the direct supplier on the asset (not the mapping), which can have a reference and hence needs to be cleared as well
 		if (asset.getSupplier() != null) {
 			Supplier directSupplier = asset.getSupplier();
 			directSupplier.getAssets().remove(asset);
@@ -426,7 +426,7 @@ public class AssetsController {
 			supplierService.save(directSupplier);
 		}
 
-		// Now delete suppliers that have no more asset references
+		// Delete suppliers that only have a reference to this asset
 		suppliersToDelete.forEach(supplierService::delete);
 
 		assetService.delete(asset);
