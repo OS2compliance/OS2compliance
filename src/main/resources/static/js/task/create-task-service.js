@@ -2,6 +2,8 @@ import initTagSelect from "../tags/tag-selector.js";
 
 const createTaskService = new CreateTaskService();
 const taskLinkService = new TaskLinkService();
+window.createTaskService = createTaskService;
+window.taskLinkService = taskLinkService;
 
 document.addEventListener('DOMContentLoaded', (e) => {
     // Find create task button ( if it exists) and add event listener

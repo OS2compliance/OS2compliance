@@ -19,7 +19,7 @@
                                 <li class="breadcrumb-item active" aria-current="page" th:text="${task.name}"></li>
                             </ol>
                         </nav>
-                        <input id="taskNameField" name="taskTitle" class="page-title transparent-input mb-0 mt-2" th:field="*{name}" disabled />
+                        <input id="taskNameField" name="taskTitle" class="page-title transparent-input mb-0 mt-2 w-100" th:field="*{name}" disabled />
                         <p class="lead"></p>
                     </div>
                     <div class="align-self-center d-inline-flex">
@@ -241,6 +241,7 @@
 
     /*[+
         var taskId = [[${task.id}]];
+        var taskType = [[${task.taskType.name()}]];
         var oversightUrl = [[@{/assets/oversight}]];
         var oversightDialog;
     +]*/
