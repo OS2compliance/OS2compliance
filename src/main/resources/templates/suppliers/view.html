@@ -68,34 +68,49 @@
                                     </table>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="card shadow-none col-md-4 col-sm-12">
-                                    <div class="card-header toolbar">
-                                        <h5 class="toolbar-start m-0">Aktiver</h5>
-                                        <div class="toolbar-end">
-                                            <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
-                                        </div>
-                                    </div>
-                                    <div class="card-body">
-                                        <table class="col-lg-12">
-                                            <tbody>
-                                            <tr th:each="asset : ${assetsDirect}">
-                                                <td class="col-lg-12">
-                                                    <a th:text="${asset.name}" th:href="@{ '/assets/' + ${asset.id}}"></a>
-                                                </td>
-                                            </tr>
-                                            <tr th:each="asset : ${assetsRelated}">
-                                                <td class="col-lg-10">
-                                                    <a th:text="${asset.name}" th:href="@{ '/assets/' + ${asset.id}}"></a>
-                                                </td>
-                                                <td class="col-lg-2" title="Fjern relation" style="text-align: right;">
-                                                    <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${asset.id}, data-relationtype=${asset.relationType}"></i>
-                                                </td>
-                                            </tr>
-                                            </tbody>
-                                        </table>
+                            <div class="card shadow-none">
+                                <div class="card-header toolbar">
+                                    <h5 class="toolbar-start m-0">Aktiver</h5>
+                                    <div class="toolbar-end">
+                                        <button sec:authorize="hasAnyRole('ROLE_update_owner','ROLE_update_all')" type="button" class="btn btn-secondary addRelationBtn btn-xs" th:attr="data-relatableid=${supplier.id}" data-bs-toggle="modal" data-bs-target="#AssetRelationModal">Tilføj</button>
                                     </div>
                                 </div>
+                                <div class="card-body">
+                                    <table class="col-lg-12 table table-striped">
+                                        <thead>
+                                        <tr>
+                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Navn</th>
+                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Ydelse</th>
+                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Tredjelandsoverførsel</th>
+                                            <th style="width: 20%" th:if="${!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()}">Acceptgrundlag</th>
+                                            <th style="width: 20%" th:if="${(!assetsWithMappings.isEmpty() || !assetsRelated.isEmpty()) && (assetsRelated != null && !assetsRelated.isEmpty())}">Handlinger</th>
+                                        </tr>
+                                        </thead>
+                                        <tbody>
+                                        <tr th:each="asset : ${assetsWithMappings}">
+                                            <td>
+                                                <a th:text="${asset?.assetName}" th:href="@{ '/assets/' + ${asset?.assetId}}"></a>
+                                            </td>
+                                            <td th:text="${asset?.service}"></td>
+                                            <td th:text="${asset?.thirdCountryTransfer} ? 'Ja' : 'Nej'"></td>
+                                            <td th:text="${asset?.acceptanceBasis}"></td>
+                                        </tr>
+                                        <tr th:each="asset : ${assetsRelated}">
+                                            <td>
+                                                <a th:text="${asset.name}" th:href="@{ '/assets/' + ${asset.id}}"></a>
+                                            </td>
+                                            <td></td>
+                                            <td></td>
+                                            <td th:text="${@assetUtils.hasThirdCountryTransfer(asset) ? 'Ja' : 'Nej'}"></td>
+                                            <td class="col-lg-2" title="Fjern relation">
+                                                <i class="pli-cross fs-5 me-2" onclick="relationService.deleteRelation(this)" th:attr="data-relatableid=${supplier.id}, data-relationid=${asset.id}, data-relationtype=${asset.relationType}" style="cursor: pointer"></i>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            <div class="row">
                                 <div class="card shadow-none col-md-4 col-sm-12">
                                     <div class="card-header toolbar">
                                         <h5 class="toolbar-start m-0">Dokumenter</h5>
@@ -140,6 +155,7 @@
                                         </table>
                                     </div>
                                 </div>
+
                                 <div class="card shadow-none col-md-4 col-sm-12">
                                     <div class="card-header toolbar">
                                         <h5 class="toolbar-start m-0">Hændelser</h5>
@@ -162,6 +178,11 @@
                                         </table>
                                     </div>
                                 </div>
+
+                                <div th:replace="~{tags/fragment/related_tag_list :: related_tag_list (
+                                        tags=${supplier.tags}, parentId=${supplier.id}, parentType='supplier',
+                                        allowAdd=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')},
+                                        allowRemove=${#authorization.expression('hasAnyRole(''ROLE_update_owner'',''ROLE_update_all'')')})}"></div>
 
                             </div>
                         </div>
@@ -186,8 +207,10 @@
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=TaskRelationModal, relationType=opgaver)}"></div>
 <div th:replace="~{fragments/addRelation :: addRelation(relatableId=${supplier.id}, modalId=IncidentRelationModal, relationType=hændelser)}"></div>
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, sweetalerts = true, textEditor=true)}"></div>
+<div th:replace="~{tags/fragment/related_tag_list :: add_tag_modal (targetId=${supplier.id}, targetType='supplier')}"></div>
 
 
+<script type="module" th:src="@{/js/supplier/view.js}"></script>
 <script th:inline="javascript">
     /*<![CDATA[*/
     /*[+
@@ -196,95 +219,6 @@
         var formUrl = [[@{/contacts/form(sourceRelationId=${supplier.id}, sourceRelationType=SUPPLIER)}]];
         var supplierId = [[${supplier.id}]]
     +]*/
-
-    let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-
-    document.addEventListener("DOMContentLoaded", function(event) {
-        fetch(formUrl)
-            .then(response => response.text()
-                .then(data => document.getElementById('formDialog').innerHTML = data))
-            .catch(error => toastService.error(error));
-
-            addRelationFormLoaded();
-    });
-
-    function addRelationFormLoaded() {
-            initAssetRelationSelectPrivate();
-            initDocumentRelationSelectPrivate();
-            initTaskRelationSelectPrivate();
-            initIncidentRelationSelectPrivate();
-    }
-
-    function initIncidentRelationSelectPrivate() {
-        const relationsSelect = document.getElementById('IncidentRelationModalrelationsSelect');
-        let relationsChoice = initSelect(relationsSelect);
-        relationsSelect.addEventListener("search", (event) => {
-                choiceService.updateRelationsIncidentsOnly(relationsChoice, event.detail.value);
-            },
-            false,
-        );
-        relationsSelect.addEventListener("change", (event) => {
-                choiceService.updateRelationsIncidentsOnly(relationsChoice, "");
-            },
-            false,
-        );
-    }
-
-    function initAssetRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('AssetRelationModalrelationsSelect');
-            let relationsChoice = initSelect(relationsSelect);
-            choiceService.updateRelationsAssetsOnly(relationsChoice, "");
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsAssetsOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-        relationsSelect.addEventListener("change",
-            function(event) {
-                choiceService.updateRelationsAssetsOnly(relationsChoice, "");
-            },
-            false,
-        );
-    }
-
-    function initDocumentRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('DocumentRelationModalrelationsSelect');
-            let relationsChoice = initSelect(relationsSelect);
-            choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsDocumentsOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-        relationsSelect.addEventListener("change",
-            function(event) {
-                choiceService.updateRelationsDocumentsOnly(relationsChoice, "");
-            },
-            false,
-        );
-    }
-
-    function initTaskRelationSelectPrivate() {
-            const relationsSelect = document.getElementById('TaskRelationModalrelationsSelect');
-            let relationsChoice = initSelect(relationsSelect);
-            choiceService.updateRelationsTasksOnly(relationsChoice, "");
-            relationsSelect.addEventListener("search",
-                function(event) {
-                    choiceService.updateRelationsTasksOnly(relationsChoice, event.detail.value);
-                },
-                false,
-            );
-        relationsSelect.addEventListener("change",
-            function(event) {
-                choiceService.updateRelationsTasksOnly(relationsChoice, "");
-            },
-            false,
-            );
-        }
-
-
     /*]]>*/
 </script>
 

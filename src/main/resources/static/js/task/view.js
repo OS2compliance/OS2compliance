@@ -1,9 +1,11 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import initRelatedTagList from "../tags/related-tag-list.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let viewTaskService = new ViewTaskService();
 document.addEventListener("DOMContentLoaded", function(event) {
     viewTaskService.init();
+    initRelatedTagList('#editForm')
 });
 
 function ViewTaskService() {
@@ -34,11 +36,50 @@ function ViewTaskService() {
         this.loadViewAndEditForm();
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
-        choiceService.initTagSelect("tagsSelect");
-        initFormValidationForForm('editForm');
-        initFormValidationForForm('completeTaskForm');
-        initDatepicker("#deadlineBtn", "#deadline");
 
+        initFormValidationForForm('editForm');
+        if (taskType === 'CHECK') {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+                const taskResultSelect = document.getElementById("taskResultSelect");
+                const taskType = document.getElementById("taskType");
+
+                if (taskResultSelect.value === 'NO_ERROR') {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                } else if (taskResultSelect.value !== 'NO_ERROR' && comment.value.trim()) {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                } else {
+                    comment.classList.add('is-invalid');
+                    return false;
+                }
+            });
+        }
+        else {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+                if (!comment.value) {
+                    comment.classList.add('is-invalid');
+                    return false;
+                }
+                else {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                }
+            })
+        }
+
+        initDatepicker("#deadlineBtn", "#deadline");
+        initDatepicker("#TaskDeadlineBtn", "#TaskDeadline");
+        let taskDeadline = document.querySelector("#TaskDeadline");
+        if (taskDeadline) {
+            taskDeadline.value = new Date().toLocaleDateString('da-DK', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).replace(/\./g, '/').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1/$2-$3');
+        }
         var textarea = document.getElementById('description');
         if (textarea) {
             this.fitDescription(textarea);

@@ -39,6 +39,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.core.env.Environment;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,6 +59,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
@@ -259,7 +261,7 @@ public class TasksController {
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
-    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, String documentLink, Long documentRelation, TaskResult taskResult) {}
+    record CompletionFormDTO(@NotNull Long taskId, String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, TaskResult taskResult) {}
     @RequireReadOwnerOnly
 	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
@@ -271,10 +273,10 @@ public class TasksController {
 		}
 
         model.addAttribute("task", task);
-        model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
+		model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
         model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
-        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", "", null, null));
+        model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, "", null, null));
 
         if (task.getTaskType().equals(TaskType.TASK)) {
             final boolean completed = calculateCompleted(task);
@@ -365,12 +367,12 @@ public class TasksController {
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ingen bruger logget ind");
         }
-        if (StringUtils.isEmpty(dto.comment().trim())) {
+        if (StringUtils.isEmpty(dto.comment().trim()) && !Objects.equals(dto.taskResult, TaskResult.NO_ERROR)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal angives en kommentar ved udførsel.");
         }
         final TaskLog taskLog = new TaskLog();
         taskLog.setName(task.getName());
-        taskLog.setCompleted(LocalDate.now());
+        taskLog.setCompleted(dto.dateOfCompletion == null ? LocalDate.now() : dto.dateOfCompletion);
         taskLog.setDeadline(task.getNextDeadline());
         taskLog.setTask(task);
         taskLog.setCurrentDescription(task.getDescription());

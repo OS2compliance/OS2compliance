@@ -2,7 +2,6 @@ package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import dk.digitalidentity.model.entity.enums.AssetOversightStatus;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -30,9 +29,9 @@ public class AssetOversight {
     @JoinColumn(name = "responsible_uuid")
 	@JsonIgnore
     private User responsibleUser;
-    @Column
-    @Enumerated(EnumType.STRING)
-    private ChoiceOfSupervisionModel supervisionModel;
+	@ManyToOne
+	@JoinColumn(name = "supervision_model")
+	private ChoiceValue supervisionModel;
     @Column
     private String conclusion;
     @Column

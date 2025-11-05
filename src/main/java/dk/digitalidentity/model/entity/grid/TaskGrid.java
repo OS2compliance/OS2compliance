@@ -16,6 +16,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.hibernate.annotations.Immutable;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -68,5 +69,11 @@ public class TaskGrid {
     private String localizedEnums;
 
     @Column
-    private String tags;
+    private String tagNames;
+
+	@Column
+	private String tagIds;
+
+	@Column
+	private LocalDate lastCompletionDate;
 }

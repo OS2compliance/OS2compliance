@@ -1,4 +1,4 @@
-import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
+// import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
 
 const currentYear = new Date().getFullYear();
 
@@ -60,15 +60,12 @@ export async function renderChart(argumentConfig, elementId) {
 
     const config = await fetchStatistic(argumentConfig);
 
-    console.log(config)
     const data = config.data;
 
     const chartPicker = document.getElementById('diagramSelector');
     const selectedOption = chartPicker.selectedOptions[0]
     const currentEntityName = selectedOption.dataset.entityName;
-
-    console.log(config.groupedByDate)
-
+    
     // Chart configuration based on type
     const chartConfiguration = getConfigFor(config.type, !!config.dateGrouping, data, config.title, currentEntityName)
 

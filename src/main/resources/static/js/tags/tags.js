@@ -1,15 +1,21 @@
+import {initColorPickerListener} from "./tag-color-picker.js";
+
 const tags = new TagService()
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
 
 document.addEventListener("DOMContentLoaded", function(event) {
+
+    initColorPickerListener('createTagColorPicker')
+    initColorPickerListener('editTagColorPicker')
+
     const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
         header: "d-flex justify-content-end"
     };
 
-    new gridjs.Grid({
+    const grid = new gridjs.Grid({
         className: defaultClassName,
         sort: {
             enabled: true,
@@ -22,8 +28,20 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 hidden: true
             },
             {
-                id: "value",
+                id: "title",
                 name: "Tag"
+            },
+            {
+                id: "color",
+                name: "Farve",
+                formatter: (cell, row) => {
+                    const span = document.createElement("span");
+                    span.className = 'tag-badge'
+                    span.textContent = cell.label;
+                    span.style.backgroundColor = cell.colorCode
+                    span.style.color = cell.contrastCode
+                    return gridjs.html(span.outerHTML)
+                }
             },
             {
                 id: "actions",
@@ -33,8 +51,39 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 formatter: (cell, row) => {
                     const id = row.cells[0]['data'];
                     const tag = row.cells[1]['data'];
-                    const deleteButton = `<button type="button" class="btn btn-icon btn-outline-light btn-xs me-1" onclick="tags.deleteTag('${id}', '${tag}')"><i class="pli-trash fs-5"></i></button>`;
-                    return gridjs.html(deleteButton);
+
+                    // Create container
+                    const container = document.createElement('div');
+
+                    // Create Edit button
+                    const editBtn = document.createElement('button');
+                    editBtn.type = 'button';
+                    editBtn.className = 'btn btn-icon btn-outline-light btn-xs me-1';
+                    editBtn.dataset.action = 'edit';
+                    editBtn.dataset.id = id;
+                    editBtn.dataset.tag = tag;
+
+                    const editIcon = document.createElement('i');
+                    editIcon.className = 'pli-pencil fs-5';
+                    editBtn.appendChild(editIcon);
+
+                    // Create Delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.type = 'button';
+                    deleteBtn.className = 'btn btn-icon btn-outline-light btn-xs me-1';
+                    deleteBtn.dataset.action = 'delete';
+                    deleteBtn.dataset.id = id;
+                    deleteBtn.dataset.tag = tag;
+
+                    const deleteIcon = document.createElement('i');
+                    deleteIcon.className = 'pli-trash fs-5';
+                    deleteBtn.appendChild(deleteIcon);
+
+                    // Append buttons to container
+                    container.appendChild(editBtn);
+                    container.appendChild(deleteBtn);
+
+                    return gridjs.html(container.outerHTML);
                 }
             }
         ],
@@ -54,7 +103,28 @@ document.addEventListener("DOMContentLoaded", function(event) {
                 'page': (page) => `Side ${page}`
             }
         }
-    }).render(document.getElementById("tagsDatatable"));
+    })
+
+    const datatableId = "tagsDatatable"
+    const datatableContainerElement = document.getElementById(datatableId)
+    grid.render(datatableContainerElement);
+
+    datatableContainerElement.addEventListener('click', (e) => {
+        const button = e.target.closest('button[data-action]');
+        if (!button) {
+            return;
+        }
+
+        const action = button.dataset.action;
+        const id = button.dataset.id;
+        const tag = button.dataset.tag;
+
+        if (action === 'edit') {
+            tags.editTag(id, tag);
+        } else if (action === 'delete') {
+            tags.deleteTag(id, tag);
+        }
+    });
 
     initSaveAsExcelButtonWithDefaultGrid('tagsDatatable', 'Tags')
 });
@@ -78,5 +148,13 @@ function TagService () {
                     .catch(error => toastService.error(error));
             }
         });
+    }
+
+    this.editTag = (id, value) => {
+        document.getElementById('editIdentifier').value = id;
+        document.getElementById('redigerNavn').value = value;
+
+        let editDialog = new bootstrap.Modal(document.getElementById('editTagModal'));
+        editDialog.show();
     }
 }

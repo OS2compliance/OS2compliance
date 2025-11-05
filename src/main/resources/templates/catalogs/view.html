@@ -69,10 +69,50 @@
                 .then(data => {
                     let dialog = document.getElementById('editThreatDialog');
                     dialog.innerHTML = data;
+                    initializeFormValidation('editThreatDialog');
                     editDialog = new bootstrap.Modal(document.getElementById('editThreatDialog'));
                     editDialog.show();
                 }))
             .catch(error => toastService.error(error));
+    }
+
+    function initializeFormValidation(dialogId) {
+        const dialog = document.getElementById(dialogId);
+        const threatTypeInput = dialog.querySelector('#navn');
+        const threatTypeCount = dialog.querySelector('#threatTypeCount');
+        const form = dialog.querySelector('form');
+
+        if (threatTypeInput && threatTypeCount) {
+            threatTypeInput.addEventListener('input', function() {
+                const length = this.value.length;
+                threatTypeCount.textContent = length;
+
+                if (length <= 255) {
+                    this.classList.remove('is-invalid');
+                }
+                else {
+                    this.classList.add('is-invalid');
+                }
+            });
+            threatTypeCount.textContent = threatTypeInput.value.length;
+        }
+
+        if (form) {
+            form.addEventListener('submit', function(event) {
+                const length = parseInt(threatTypeCount.textContent);
+
+                if (length > 255) {
+                    event.preventDefault();
+                    event.stopPropagation();
+
+                    threatTypeInput.classList.add('is-invalid');
+                    threatTypeInput.focus();
+                    toastService.error('Type må ikke overstige 255 tegn');
+
+                    return false;
+                }
+            });
+        }
     }
 
     function sortHigher(identifier) {
@@ -110,9 +150,12 @@
 
     document.addEventListener("DOMContentLoaded", function(event) {
         fetch(`${formUrl}?catalogIdentifier=${catalogIdentifier}`)
-            .then(response => response.text()
-                .then(data => document.getElementById('createThreatDialog').innerHTML = data))
-            .catch(error => toastService.error(error));
+                .then(response => response.text()
+                        .then(data => {
+                            document.getElementById('createThreatDialog').innerHTML = data;
+                            initializeFormValidation('createThreatDialog');
+                        }))
+                .catch(error => toastService.error(error));
 
         const defaultClassName = {
             table: 'table table-striped',

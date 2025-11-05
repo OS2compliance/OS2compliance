@@ -90,4 +90,13 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 	@Column
 	private boolean active;
 
+	@Column
+	private LocalDate lastOversightDate;
+
+	@Column
+	private String tagNames;
+
+	@Column
+	private String tagIds;
+
 }

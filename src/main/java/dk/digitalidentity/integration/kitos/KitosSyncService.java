@@ -336,7 +336,7 @@ public class KitosSyncService {
         }
     }
 
-    private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
+	private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
         assert responseDTO.getRightsHolder() != null;
         final Supplier supplier = new Supplier();
         supplier.setCreatedBy(responseDTO.getCreatedBy().getName());

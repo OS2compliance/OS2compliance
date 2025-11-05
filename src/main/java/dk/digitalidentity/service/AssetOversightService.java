@@ -1,14 +1,15 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.AssetOversightDao;
+import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -35,6 +36,7 @@ public class AssetOversightService {
     private final TaskService taskService;
     private final RelationService relationService;
     private final UserService userService;
+	private final ChoiceValueDao choiceValueDao;
 
 
     public List<AssetOversight> findByAssetOrderByCreationDateDesc(final Asset asset) {
@@ -53,7 +55,7 @@ public class AssetOversightService {
         assets.forEach(asset -> {
             asset.setNextInspection(NextInspection.DBS);
             asset.setNextInspectionDate(null);
-            asset.setSupervisoryModel(ChoiceOfSupervisionModel.DBS);
+            asset.setSupervisoryModel(choiceValueDao.findByIdentifier("supervision-model-dbs-123456").orElse(null));
 			User user = userService.currentUser();
 			if (asset.getOversightResponsibleUser() == null) {
 				if (asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
@@ -101,7 +103,7 @@ public class AssetOversightService {
         }
 
         final Task task = findAssociatedOversightCheck(asset);
-        final ChoiceOfSupervisionModel supervisoryModel = asset.getSupervisoryModel();
+        final ChoiceValue supervisoryModel = asset.getSupervisoryModel();
         if (supervisoryModel == null) {
             // No supervisoryModel make sure the associated task is not repeating anymore.
             asset.setNextInspection(null);

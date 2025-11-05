@@ -25,6 +25,8 @@ import org.springframework.web.context.request.ServletWebRequest;
 import org.springframework.web.context.request.WebRequest;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 @Controller
@@ -43,6 +45,7 @@ public class DefaultController implements ErrorController {
             if(userUuid != null) {
                 final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 model.addAttribute("user", user);
+				model.addAttribute("roleString", SecurityUtil.getUserRoleString());
             }
 
 

@@ -17,7 +17,8 @@
                         </nav>
 
                         <h1 class="page-title mb-0 mt-2" th:text="'Hej ' + ${user?.name}"></h1>
-                        <p class="lead">Velkommen til OS2Compliance</p>
+                        <p class="lead mb-1">Velkommen til OS2Compliance</p>
+                        <p class="mb-1 fs-tiny" th:if="${roleString}" th:text="${roleString}"></p>
                     </div>
                     <div class="align-self-center d-inline-flex" sec:authorize="@accessEvaluator.report()"
                          th:if="${isSystemOwner != null && isSystemOwner}">
@@ -56,7 +57,7 @@
                     </ul>
                     <div class="tab-content">
                         <div id="_dm-tabsTask" class="tab-pane fade active show" role="tabpanel" aria-labelledby="task-tab">
-                            <div class="d-flex gap-2">
+                            <div class="taskTableOptionsContainer d-flex gap-2">
                                 <div th:replace="~{statistic/fragment/toggleButton :: toggleStatisticButton}"></div>
                             </div>
                             <div id="tasksDatatable"></div>

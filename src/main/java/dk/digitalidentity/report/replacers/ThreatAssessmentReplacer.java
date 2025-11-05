@@ -261,7 +261,14 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         final Map<String, List<ThreatDTO>> threatList = threatAssessmentService.buildThreatList(context.threatAssessment);
-        createTableCells(table, context.riskProfileDTOList.size() + 1, 14);
+		int totalRows = 1;
+		for (List<ThreatDTO> threats : threatList.values()) {
+			for (ThreatDTO threat : threats) {
+				totalRows++;
+				totalRows += threat.getRelatedPrecautions().size();
+			}
+		}
+		createTableCells(table, totalRows, 14);
 
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Nr.");
@@ -343,8 +350,24 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
 					}
 
+					idx[0]++;
+				}
+				else {
+					// When profile is null, merge all columns from 2 onwards to show "Ikke relevant"
+					setCellTextSmall(row, 0, "" + (t.getIndex() + 1));
+					setCellTextSmall(row, 1, threatType);
 
+					for (int i = 3; i <= 13; i++) {
+						clearCell(row.getCell(i));
+					}
 
+					mergeCellHorizontally(table, idx[0], 2, 13);
+
+					XWPFTableCell cell2 = row.getCell(2);
+					XWPFParagraph para = cell2.getParagraphs().get(0);
+					para.setStyle(SMALL_TEXT);
+					para.setAlignment(ParagraphAlignment.CENTER);
+					addTextRun("Ikke relevant", para);
 
                     idx[0]++;
                 }
@@ -714,7 +737,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			table.setTableAlignment(TableRowAlign.LEFT);
 
 			int extraRowsForAsset = isAsset ? 1 : 0;
-			createTableCells(table, 10 + categories.size() + extraRowsForAsset, 3);
+			createTableCells(table, 13 + categories.size() + extraRowsForAsset, 3);
 			final XWPFTableRow row = table.getRow(0);
 
 			// Purpose
@@ -777,18 +800,33 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			setCellTextSmall(row9, 0, "Link til sletteprocedure");
 			setCellTextSmall(row9, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
 
+			//User management procedure?
+			final XWPFTableRow row10 = table.getRow(10);
+			setCellTextSmall(row10, 0, "Brugerstyringsprocedure udarbejdet?:");
+			setCellTextSmall(row10, 1, dataProcessing.getManagementProcedure() != null ? dataProcessing.getManagementProcedure().getMessage() : "Ikke udfyldt");
+
+			//User management procedure link
+			final XWPFTableRow row11 = table.getRow(11);
+			setCellTextSmall(row11, 0, "Link til brugerstyringsprocedure");
+			setCellTextSmall(row11, 1, dataProcessing.getUserManagementProcedureLink() != null ? dataProcessing.getUserManagementProcedureLink() : "");
+
+			//Logging procedure link
+			final XWPFTableRow row12 = table.getRow(12);
+			setCellTextSmall(row12, 0, "Link til logningsprocedure");
+			setCellTextSmall(row12, 1, dataProcessing.getLoggingProcedureLink() != null ? dataProcessing.getLoggingProcedureLink() : "");
+
 			// sociallyCritical
-			int nextRowIndex = 9;
+			int nextRowIndex = 13;
 			if (isAsset) {
-				final XWPFTableRow row10 = table.getRow(10);
-				setCellTextSmall(row10, 0, "Samfundskritisk:");
-				setCellTextSmall(row10, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
-				nextRowIndex = 11;
+				final XWPFTableRow row13 = table.getRow(13);
+				setCellTextSmall(row13, 0, "Samfundskritisk:");
+				setCellTextSmall(row13, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
+				nextRowIndex = 13;
 			}
 
 			// Registered data categories
 			for (int i = 0; i < categories.size(); i++) {
-				final XWPFTableRow catRow = table.getRow(i + nextRowIndex); // Add magic number of previous rows to start at the current row
+				final XWPFTableRow catRow = table.getRow(i + nextRowIndex);
 				if (i == 0) {
 					setCellTextSmall(catRow, 0, "Registrerede persondatakategorier:");
 				}
@@ -803,8 +841,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				}
 			}
 			if (categories.isEmpty()) {
-				final XWPFTableRow row10 = table.createRow();
-				setCellTextSmall(row10, 0, "Registrerede persondatakategorier:");
+				final XWPFTableRow row13 = table.createRow();
+				setCellTextSmall(row13, 0, "Registrerede persondatakategorier:");
 			}
 
 			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);

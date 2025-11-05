@@ -1,6 +1,9 @@
+import initTagSelect from "../tags/tag-selector.js";
 
 const createTaskService = new CreateTaskService();
 const taskLinkService = new TaskLinkService();
+window.createTaskService = createTaskService;
+window.taskLinkService = taskLinkService;
 
 document.addEventListener('DOMContentLoaded', (e) => {
     // Find create task button ( if it exists) and add event listener
@@ -75,8 +78,9 @@ function CreateTaskService() {
         let self = this;
         this.selectCreateTaskOption('TASK');
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
-         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
-         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
+        this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
+        this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
+        this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
 
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
@@ -103,7 +107,7 @@ function CreateTaskService() {
                     this.taskModalDialog.innerHTML = data;
                     this.loaded();
                     this.initTaskRelationSelect();
-                    choiceService.initTagSelect('taskCreateFormTagsSelect');
+                    initTagSelect('taskCreateFormTagsSelect');
                     // create task modal - explainer and riskId
                     // if elem != null it means that the method is called from the risk view page
                     if (elem != null) {

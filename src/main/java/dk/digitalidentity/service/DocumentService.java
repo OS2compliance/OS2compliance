@@ -5,6 +5,7 @@ import dk.digitalidentity.dao.grid.DocumentGridDao;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -13,6 +14,8 @@ import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.grid.DocumentGrid;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -30,7 +34,7 @@ import static dk.digitalidentity.service.FilterService.buildPageable;
 import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @Service
-public class DocumentService {
+public class DocumentService implements TagableService<Document> {
 
 	private final DocumentGridDao documentGridDao;
 	private final DocumentDao documentDao;
@@ -63,15 +67,14 @@ public class DocumentService {
 	public List<Document> getAll() {
 		return documentDao.findAll();
 	}
-
     @Transactional
 	public Document create(final Document document) {
         return documentDao.save(document);
 	}
 
     @Transactional
-	public void update(final Document document) {
-        updateAssociatedCheck(document);
+	public void update(final Document document, boolean includeInYearWheel) {
+        updateAssociatedCheck(document, includeInYearWheel);
 		documentDao.saveAndFlush(document);
 	}
 
@@ -88,13 +91,14 @@ public class DocumentService {
     }
 
     @Transactional
-    public void updateAssociatedCheck(final Document document) {
+    public void updateAssociatedCheck(final Document document, boolean includeInYearWheel) {
         final List<Relatable> relatedTasks = relationService.findAllRelatedTo(document);
         final Task task = relatedTasks.stream()
             .filter(r -> r.getRelationType() == RelationType.TASK && r.getProperties().stream()
                 .anyMatch(p -> ASSOCIATED_DOCUMENT_PROPERTY.equals(p.getKey()))
             ).findFirst().map(Task.class::cast).orElse(null);
         if (task != null) {
+			task.setIncludeInReport(includeInYearWheel);
             if (document.getNextRevision() != null) {
                 task.setNextDeadline(document.getNextRevision());
             } else {
@@ -105,7 +109,7 @@ public class DocumentService {
     }
 
     @Transactional
-    public void createAssociatedCheck(final Document document) {
+    public void createAssociatedCheck(final Document document, boolean includeInYearWheel) {
         if (document.getNextRevision() == null) {
             return;
         }
@@ -115,7 +119,8 @@ public class DocumentService {
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(document.getNextRevision());
         task.setNotifyResponsible(false);
-        task.setResponsibleUsers(document.getResponsibleUser() != null ? Set.of(document.getResponsibleUser()) : Set.of(userService.currentUser()));
+		task.setIncludeInReport(includeInYearWheel);
+		task.setResponsibleUsers(document.getResponsibleUser() != null ? Set.of(document.getResponsibleUser()) : Set.of(userService.currentUser()));
         task.setDescription("Revider dokumentet " + document.getName());
         task.getProperties().add(Property.builder()
             .entity(task)
@@ -127,6 +132,48 @@ public class DocumentService {
         final Task savedTask = taskService.saveTask(task);
         relationService.addRelation(savedTask, document);
     }
+
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		Document entity = documentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Document.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		documentDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		Document entity = documentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(Document.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			documentDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<Document> getEntityType() {
+		return Document.class;
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return documentDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return documentDao.findTagsByEntityIds(entityIds);
+	}
 
     private static void setTaskRevisionInterval(final Document document, final Task task) {
         switch(document.getRevisionInterval()) {
