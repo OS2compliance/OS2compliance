@@ -7,6 +7,7 @@ import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
 import dk.digitalidentity.model.entity.CustomThreat;
+import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
@@ -38,6 +39,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -48,6 +50,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -156,7 +159,35 @@ public class TaskRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		Task task = taskMapper.toEntity(request.getTask(), organisationService, userService, tagService);
+		User responsibleUser = null;
+		OrganisationUnit responsibleOu = null;
+		OrganisationUnit department = null;
+		Set<Tag> tags = null;
+
+		log.info(request.getTask().getResponsibleUserUuid());
+		log.info(request.getTask().getResponsibleOuUuid());
+		log.info(request.getTask().getDepartmentUuid());
+		log.info("tags: ", request.getTask().getTagIds());
+
+		if (request.getTask().getResponsibleUserUuid() != null && StringUtils.hasText(request.getTask().getResponsibleUserUuid())) {
+			responsibleUser = fetchResponsibleUser(request.getTask().getResponsibleUserUuid());
+		}
+
+		if (request.getTask().getResponsibleOuUuid() != null && StringUtils.hasText(request.getTask().getResponsibleOuUuid())) {
+			responsibleOu = fetchResponsibleOu(request.getTask().getResponsibleOuUuid());
+		}
+
+		if (request.getTask().getDepartmentUuid() != null && StringUtils.hasText(request.getTask().getDepartmentUuid())) {
+			department = fetchDepartment(request.getTask().getDepartmentUuid());
+		}
+
+		if (request.getTask().getTagIds() != null && !request.getTask().getTagIds().isEmpty()) {
+			tags = fetchTags(request.getTask().getTagIds());
+		}
+
+		Task task = taskMapper.toEntity(request.getTask(), responsibleUser, responsibleOu, department, tags);
+
+		log.info(task.toString());
 
 		if (task == null) {
 			log.debug("Could not create task");
@@ -184,6 +215,29 @@ public class TaskRestController {
 		}
 
 		return new ResponseEntity<>(HttpStatus.OK);
+	}
+
+	// Helper methods for createTask
+	private User fetchResponsibleUser(String uuid) {
+		return userService.findByUuid(uuid)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Responsible user not found with UUID: " + uuid));
+	}
+
+	private OrganisationUnit fetchResponsibleOu(String uuid) {
+		return organisationService.findByUuid(uuid)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Responsible OU not found with UUID: " + uuid));
+	}
+
+	private OrganisationUnit fetchDepartment(String uuid) {
+		return organisationService.findByUuid(uuid)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Department not found with UUID: " + uuid));
+	}
+
+	private Set<Tag> fetchTags(List<Long> tagIds) {
+		return tagIds.stream()
+				.map(id -> tagService.findById(id)
+						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tag not found with ID: " + id)))
+				.collect(Collectors.toSet());
 	}
 
 }

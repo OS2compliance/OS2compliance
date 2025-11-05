@@ -82,18 +82,18 @@ public interface TaskMapper {
 		return taskDTOS;
 	}
 
-	@Mapping(target = "id", source = "id")
-	@Mapping(target = "name", source = "name")
-	@Mapping(target = "taskType", source = "taskType")
-	@Mapping(target = "nextDeadline", source = "nextDeadline")
+	@Mapping(target = "id", source = "dto.id")
+	@Mapping(target = "name", source = "dto.name")
+	@Mapping(target = "taskType", source = "dto.taskType")
+	@Mapping(target = "nextDeadline", source = "dto.nextDeadline")
 	@Mapping(target = "repetition", expression = "java(mapRepetition(dto.getRepetition()))")
-	@Mapping(target = "description", source = "description")
-	@Mapping(target = "notifyResponsible", source = "notifyResponsible")
-	@Mapping(target = "includeInReport", source = "includeInReport")
-	@Mapping(target = "responsibleUser", expression = "java(mapResponsibleUser(dto.getResponsibleUserUuid(), userService))")
-	@Mapping(target = "responsibleOu", expression = "java(mapResponsibleOu(dto.getResponsibleOuUuid(), organisationService))")
-	@Mapping(target = "department", expression = "java(mapDepartment(dto.getDepartmentUuid(), organisationService))")
-	@Mapping(target = "tags", expression = "java(mapTags(dto.getTagIds(), tagService))")
+	@Mapping(target = "description", source = "dto.description")
+	@Mapping(target = "notifyResponsible", source = "dto.notifyResponsible")
+	@Mapping(target = "includeInReport", source = "dto.includeInReport")
+	@Mapping(target = "responsibleUser", source = "responsibleUser")
+	@Mapping(target = "responsibleOu", source = "responsibleOu")
+	@Mapping(target = "department", source = "department")
+	@Mapping(target = "tags", source = "tags")
 	@Mapping(target = "links", ignore = true)
 	// Ignore fields we dont need
 	@Mapping(target = "version", ignore = true)
@@ -107,46 +107,11 @@ public interface TaskMapper {
 	@Mapping(target = "properties", ignore = true)
 	@Mapping(target = "logs", ignore = true)
 	@Mapping(target = "status", ignore = true)
-	Task toEntity(TaskCreateDTO dto, @Context OrganisationService organisationService, @Context UserService userService, @Context TagService tagService);
-
-	// Helper methods for mapping complex relationships
-	default User mapResponsibleUser(String uuid, UserService userService) {
-		if (uuid == null || uuid.isEmpty()) {
-			return null;
-		}
-		return userService.findByUuid(uuid)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Responsible user not found with UUID: " + uuid));
-	}
-
-	default OrganisationUnit mapResponsibleOu(String uuid, OrganisationService organisationService) {
-		if (uuid == null || uuid.isEmpty()) {
-			return null;
-		}
-		return organisationService.findByUuid(uuid)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Responsible OU not found with UUID: " + uuid));
-	}
-
-	default OrganisationUnit mapDepartment(String uuid, OrganisationService organisationService) {
-		if (uuid == null || uuid.isEmpty()) {
-			return null;
-		}
-		return organisationService.findByUuid(uuid)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Department not found with UUID: " + uuid));
-	}
-
-	default Set<Tag> mapTags(List<Long> tagIds, TagService tagService) {
-		if (tagIds == null || tagIds.isEmpty()) {
-			return new HashSet<>();
-		}
-		return tagIds.stream()
-				.map(id -> tagService.findById(id)
-						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tag not found with ID: " + id)))
-				.collect(Collectors.toSet());
-	}
+	Task toEntity(TaskCreateDTO dto, User responsibleUser, OrganisationUnit responsibleOu, OrganisationUnit department, Set<Tag> tags);
 
 	default TaskRepetition mapRepetition(String repetition) {
 		if (repetition == null || repetition.trim().isEmpty()) {
-			return null; // or return a default value like TaskRepetition.NONE
+			return null;
 		}
 		try {
 			return TaskRepetition.valueOf(repetition.toUpperCase());
