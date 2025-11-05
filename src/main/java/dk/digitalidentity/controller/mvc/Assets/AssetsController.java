@@ -405,7 +405,7 @@ public class AssetsController {
 		// Collect suppliers that only have one asset reference
 		List<Supplier> suppliersToDelete = asset.getSuppliers().stream()
 				.map(AssetSupplierMapping::getSupplier)
-				.filter(sup -> sup.getAssets().size() == 1 && sup.getAssets().get(0).getId().equals(id))
+				.filter(sup -> sup.getAssets().size() == 1)
 				.distinct()
 				.toList();
 
@@ -413,23 +413,23 @@ public class AssetsController {
 		asset.getSuppliers().clear();
 
 		// Clear the direct relationship from the supplier side
-		suppliersToDelete.forEach(supplier -> supplier.getAssets().remove(asset));
+		suppliersToDelete.forEach(supplier -> {
+			supplier.getAssets().remove(asset);
+			supplierService.save(supplier);
+		});
 
 		// Clear the direct relationship from the asset side
 		if (asset.getSupplier() != null) {
 			Supplier directSupplier = asset.getSupplier();
 			directSupplier.getAssets().remove(asset);
 			asset.setSupplier(null);
+			supplierService.save(directSupplier);
 		}
-
-		// Save to flush relationship changes
-		assetService.save(asset);
-		suppliersToDelete.forEach(supplierService::save);
 
 		// Now delete suppliers that have no more asset references
 		suppliersToDelete.forEach(supplierService::delete);
 
-		assetService.deleteById(asset);
+		assetService.delete(asset);
     }
 
 	@RequireUpdateOwnerOnly
