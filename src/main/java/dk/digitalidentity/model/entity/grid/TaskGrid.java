@@ -4,6 +4,7 @@ import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,13 +19,16 @@ import org.hibernate.annotations.Immutable;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "view_gridjs_tasks")
 @Getter
 @Setter
 @Immutable
-public class TaskGrid {
+public class TaskGrid implements HasMultipleResponsibleUsers {
     @Id
     private Long id;
 
@@ -76,4 +80,8 @@ public class TaskGrid {
 
 	@Column
 	private LocalDate lastCompletionDate;
+
+	public Set<String> getResponsibleUserUuidsAsSet() {
+		return Arrays.stream(responsibleUserUuids.split(",")).collect(Collectors.toSet());
+	}
 }

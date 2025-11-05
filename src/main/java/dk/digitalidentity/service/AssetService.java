@@ -77,6 +77,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -284,7 +285,7 @@ public class AssetService implements TagableService<Asset> {
 			name += (dpia.getAssets().size() > 1) ? " med flere" : "";
 			task.setName(name);
 			task.setNextDeadline(dpia.getNextRevision());
-			task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Set.of(userService.currentUser()));
+			task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Collections.emptySet());
 			task.setDescription("Revider DPIA for " + String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList()));
 			setTaskRevisionInterval(dpia, task);
 			return task;

@@ -47,8 +47,7 @@ public interface TaskMapper {
 
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		boolean isResponsible = (taskGrid.getResponsibleUserUuids() != null &&
-				Arrays.asList(taskGrid.getResponsibleUserUuids().split(","))
-						.contains(SecurityUtil.getPrincipalUuid()));
+				taskGrid.getResponsibleUserUuidsAsSet().contains(SecurityUtil.getPrincipalUuid()));
 		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
 				|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
 			allowedActions.add(AllowedAction.UPDATE);
