@@ -3,6 +3,7 @@ package dk.digitalidentity.dao;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatCatalog;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
+import dk.digitalidentity.service.tag.TagableRepository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -13,7 +14,7 @@ import java.util.Set;
 
 import java.util.List;
 
-public interface ThreatAssessmentDao extends JpaRepository<ThreatAssessment, Long> {
+public interface ThreatAssessmentDao extends TagableRepository<ThreatAssessment> {
 
     long countByThreatCatalogsContains(final ThreatCatalog threatCatalog);
     ThreatAssessment findByThreatAssessmentReportS3DocumentId(long id);

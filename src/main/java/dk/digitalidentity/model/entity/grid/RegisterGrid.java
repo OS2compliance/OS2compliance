@@ -78,4 +78,10 @@ public class RegisterGrid implements HasMultipleResponsibleUsers, HasCustomRespo
 
     @Column
     private Integer assetAssessmentOrder;
+
+	@Column
+	private String tagNames;
+
+	@Column
+	private String tagIds;
 }

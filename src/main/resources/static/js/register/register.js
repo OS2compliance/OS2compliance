@@ -1,3 +1,6 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
+import formatTags from "../tags/tag-grid-formatter.js";
+
 let grid = null;
 
 const defaultClassName = {
@@ -189,6 +192,13 @@ function initGrid() {
                 width: "100px"
             },
             {
+                name: "Tags",
+                searchable: {
+                    searchKey: 'tagNames',
+                },
+                formatter: (cell, row) => formatTags(cell, row),
+            },
+            {
                 id: 'allowedActions',
                 name: 'Handlinger',
                 sort: 0,
@@ -210,7 +220,7 @@ function initGrid() {
                 'X-CSRF-TOKEN': token
             },
             then: data => data.content.map(register =>
-                [register.id, register.name, register.responsibleOUs, register.departments, register.responsibleUsers, register.updatedAt, register.consequence, register.risk, register.assetAssessment, register.status, register.assetCount, register.allowedActions]
+                [register.id, register.name, register.responsibleOUs, register.departments, register.responsibleUsers, register.updatedAt, register.consequence, register.risk, register.assetAssessment, register.status, register.assetCount, register.tags, register.allowedActions]
             ),
             total: data => data.totalCount
         },
@@ -230,11 +240,18 @@ function initGrid() {
             }
         }
     };
-    grid = new gridjs.Grid(gridConfig).render(document.getElementById("registersDatatable"));
+    const registerDatatableId = 'registersDatatable';
+    grid = new gridjs.Grid(gridConfig).render(document.getElementById(registerDatatableId));
 
-    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, 'registersDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridRegistersUrl, exportRegistersUrl, registerDatatableId);
+
+    new ColumnOptions(
+        registerDatatableId,
+        grid,
+        ['titel', 'allowedActions'],
+        ['titel','risikoVurdering','status', 'aktiver'],
+        ['id'])
 
     initSaveAsExcelButton(customGridFunctions, 'Fortegnelse')
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
 }

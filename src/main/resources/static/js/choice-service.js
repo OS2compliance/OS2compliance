@@ -52,19 +52,7 @@ function ChoiceService() {
             .catch(error => toastService.error(error));
     }
 
-    this.updateTags = (choices, search) => {
-        fetch( `/rest/relatable/tags/autocomplete?search=${search}`)
-            .then(response => response.json()
-                .then(data => {
-                    choices.setChoices(data.content.map(reg => {
-                        return {
-                            id: reg.id + "",
-                            name: reg.value
-                        }
-                    }), 'id', 'name', true);
-                }))
-            .catch(error => toastService.error(error));
-    }
+
 
     this.updateAssets = (targetChoice, search) => {
         fetch( `/rest/relatable/autocomplete?types=ASSET&search=${search}&dir=ASC&sort=name`)
@@ -126,24 +114,6 @@ function ChoiceService() {
     this.initHeaderSelect = (elementId) => {
         const headerSelect = document.getElementById(elementId);
         initSelect(headerSelect);
-    }
-
-    this.initTagSelect = (id) => {
-        const tagsSelect = document.getElementById(id);
-        const tagsChoice = initSelect(tagsSelect);
-        this.updateTags(tagsChoice, "");
-        tagsSelect.addEventListener("search",
-            function(event) {
-                choiceService.updateTags(tagsChoice, event.detail.value);
-            },
-            false,
-        );
-        tagsSelect.addEventListener("change",
-            function(event) {
-                choiceService.updateTags(tagsChoice, "");
-            },
-            false,
-        );
     }
 
     this.initDocumentRelationSelect = () => {

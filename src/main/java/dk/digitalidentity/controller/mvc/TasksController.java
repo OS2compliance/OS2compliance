@@ -62,6 +62,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import static dk.digitalidentity.util.LinkHelper.linkify;
@@ -265,7 +266,7 @@ public class TasksController {
     }
 
     record LogDTO(String comment, String description, String documentationLink, String documentName, Long documentId, String performedBy, LocalDate completedDate, LocalDate deadline, long daysAfterDeadline, TaskResult taskResult) {}
-    record CompletionFormDTO(@NotNull Long taskId, @NotNull String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, TaskResult taskResult) {}
+    record CompletionFormDTO(@NotNull Long taskId, String comment, @DateTimeFormat(pattern = "dd/MM-yyyy") LocalDate dateOfCompletion, String documentLink, Long documentRelation, TaskResult taskResult) {}
     @RequireReadOwnerOnly
 	@GetMapping("{id}")
     public String form(final Model model, @PathVariable final long id, @RequestParam(name = "referral", required = false) String referral) {
@@ -375,7 +376,7 @@ public class TasksController {
         if (user == null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Ingen bruger logget ind");
         }
-        if (StringUtils.isEmpty(dto.comment().trim())) {
+        if (StringUtils.isEmpty(dto.comment().trim()) && !Objects.equals(dto.taskResult, TaskResult.NO_ERROR)) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal angives en kommentar ved udførsel.");
         }
         final TaskLog taskLog = new TaskLog();
