@@ -1,4 +1,4 @@
-// import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
+import "../../vendor/chartjs-adapter-date-fns/chartjs-adapter-date-fns.js"
 
 const currentYear = new Date().getFullYear();
 
@@ -65,7 +65,7 @@ export async function renderChart(argumentConfig, elementId) {
     const chartPicker = document.getElementById('diagramSelector');
     const selectedOption = chartPicker.selectedOptions[0]
     const currentEntityName = selectedOption.dataset.entityName;
-    
+
     // Chart configuration based on type
     const chartConfiguration = getConfigFor(config.type, !!config.dateGrouping, data, config.title, currentEntityName)
 
@@ -98,29 +98,26 @@ export function buildUrl(config = defaultConfig) {
 
     const queryArray = []
     if (config.x) {
-        queryArray.push(`&x=${config.x}`);
+        queryArray.push(`x=${config.x}`);
     }
     if (config.y) {
-        queryArray.push(`&y=${config.y}`);
+        queryArray.push(`y=${config.y}`);
     }
     if (config.groupTimeBy) {
-        queryArray.push(`&groupTimeBy=${config.groupTimeBy}`);
+        queryArray.push(`groupTimeBy=${config.groupTimeBy}`);
     }
     if (config.startDate) {
-        queryArray.push(`&startDate=${config.startDate}`);
+        queryArray.push(`startDate=${config.startDate}`);
     }
     if (config.endDate) {
-        queryArray.push(`&endDate=${config.endDate}`);
+        queryArray.push(`endDate=${config.endDate}`);
     }
     if (config.incidentFieldId) {
-        queryArray.push(`&incidentFieldId=${config.incidentFieldId}`);
+        queryArray.push(`incidentFieldId=${config.incidentFieldId}`);
     }
-
     if (queryArray.length > 0) {
-        url += '?'
-        for (const query of queryArray) {
-            url += query;
-        }
+        url += ('?')
+        url += queryArray.join('&')
     }
 
     return url;
