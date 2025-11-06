@@ -89,6 +89,12 @@ function CreateTaskService() {
                 placeholderValue: 'Vælg en skabelon',
                 searchPlaceholderValue: 'Søg...'
             });
+
+            templateDescriptionSelect.addEventListener('change', function(event) {
+                if (templateDescriptionSelect.value !== '' && templateDescriptionSelect.value !== null) {
+                    document.getElementById('taskCreateFormdescription').disabled = true;
+                }
+            });
         }
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {

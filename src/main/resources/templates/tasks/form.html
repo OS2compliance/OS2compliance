@@ -115,7 +115,7 @@
                     <label for="description" class="col-sm-4 col-form-label">Beskrivelse</label>
                     <div class="col-sm-8">
                         <div class="input-group">
-                            <textarea id="description" class="form-control" placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+                            <textarea id="description" class="form-control" th:id="${formId + 'description'}"  placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
                         </div>
                     </div>
                 </div>
