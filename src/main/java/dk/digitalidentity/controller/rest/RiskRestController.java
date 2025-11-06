@@ -37,6 +37,7 @@ import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
+import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
@@ -129,6 +130,17 @@ public class RiskRestController {
 	) {
 		User user = securityUserService.getCurrentUserOrThrow();
 		String uuid = user.getUuid();
+
+		// Default filter: only show non-hidden items if no explicit filter is set
+		String hiddenFilter = filters.get("hidden");
+		if (hiddenFilter == null || hiddenFilter.isEmpty()) {
+			// First load - default to showing only non-hidden
+			filters.put("hidden", "false");
+		} else if ("ALL".equals(hiddenFilter)) {
+			// User explicitly selected "Alle" - remove filter to show all
+			filters.remove("hidden");
+		}
+		// else: keep the filter value as-is (true or false)
 
 		// Assets user is responsible for
 		Set<String> responsibleAssetNames = assetService.findAssetsByOwnerUuid(uuid).stream()
@@ -788,4 +800,22 @@ public class RiskRestController {
 
 		return key;
 	}
+
+	@RequireUpdateOwnerOnly
+	@PostMapping("{id}/toggle-hidden")
+	public ResponseEntity<Void> toggleHidden(@PathVariable Long id) {
+		User user = securityUserService.getCurrentUserOrThrow();
+		ThreatAssessment assessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		if (!SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) &&
+				!(SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY) && threatAssessmentService.isResponsibleFor(assessment))) {
+			throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+		}
+
+		assessment.setHidden(!assessment.isHidden());
+		threatAssessmentService.save(assessment);
+
+		return ResponseEntity.ok().build();
+	}
+
 }
