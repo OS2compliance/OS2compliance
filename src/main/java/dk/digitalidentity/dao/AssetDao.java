@@ -50,4 +50,8 @@ public interface AssetDao extends TagableRepository<Asset> {
 	List<Asset> findAllById(Long id);
 
 	boolean existsBySupervisoryModelId(Long supervisoryModelId);
+
+	List<Asset> findAllByAssetType_Identifier(String identifier);
+
+	Set<Asset> findByAssetType_IdentifierAndResponsibleUsers_Uuid(String identifier, String userUuid);
 }

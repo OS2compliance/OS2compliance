@@ -801,10 +801,10 @@ public class AssetService implements TagableService<Asset> {
 	public List<Asset> getAllForContactsReport(String userUuid) {
 		List<Asset> assets;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
-			assets = assetDao.findAll();
+			assets = assetDao.findAllByAssetType_Identifier(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID);
 		}
 		else {
-			assets = new ArrayList<>(assetDao.findByResponsibleUsers_Uuid(userUuid));
+			assets = new ArrayList<>(assetDao.findByAssetType_IdentifierAndResponsibleUsers_Uuid(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID, userUuid));
 		}
 		return assets;
 	}
