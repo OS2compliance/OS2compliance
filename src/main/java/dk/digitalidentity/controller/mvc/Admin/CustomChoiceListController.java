@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc.Admin;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.security.SecurityUtil;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -46,7 +48,7 @@ public class CustomChoiceListController {
         return "admin/choicelist/custom_choice_lists";
     }
 
-	public record ChoiceValueDTO(long id, String caption, String description, boolean editable) {}
+	public record ChoiceValueDTO(long id, String caption, String description, boolean editable, boolean canBeDeleted) {}
 	@RequireReadAll
 	@GetMapping("/choice/view/{id}")
 	public String customChoiceList(Model model, @PathVariable long id) {
@@ -54,8 +56,10 @@ public class CustomChoiceListController {
 		if (list == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ChoiceList not found");
 		}
+		Set<AllowedAction> allowedActions = setAllowedActions();
+
 		Set<ChoiceValueDTO> collect = list.getValues().stream().map(choiceValue -> {
-			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), !isInUse(choiceValue));
+			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), (allowedActions.contains(AllowedAction.UPDATE)), (!isInUse(choiceValue) && allowedActions.contains(AllowedAction.DELETE)));
 		}).collect(Collectors.toSet());
 		model.addAttribute("choiceList", list);
 
@@ -68,5 +72,15 @@ public class CustomChoiceListController {
 			return true;
 		}
 		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId());
+	}
+	private Set<AllowedAction> setAllowedActions() {
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+		return allowedActions;
 	}
 }
