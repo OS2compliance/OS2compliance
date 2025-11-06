@@ -27,7 +27,7 @@
 }
 
 .choices.is-disabled .choices__input--cloned {
-    background-color: var(--bs-secondary-bg, #eaeaea) !important;
+    background-color: var(--bs-secondary-bg, #eaeaea);
     color: var(--bs-secondary-color, #6c757d);
     cursor: not-allowed;
     opacity: 1;

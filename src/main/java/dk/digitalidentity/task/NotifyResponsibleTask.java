@@ -55,6 +55,10 @@ public class NotifyResponsibleTask {
 				NotificationSetting notificationSetting = NotificationSetting.valueOf(setting.getSettingKey().toUpperCase());
 
 				switch (notificationSetting) {
+					case ONEMONTHBEFORE -> {
+						taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusMonths(1))
+								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
+					}
 					case SEVENDAYSBEFORE -> {
 						taskService.getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate.now().plusDays(7))
 								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
@@ -81,6 +85,9 @@ public class NotifyResponsibleTask {
 						taskService.getTasksWithDeadLineInAndTaskNotificationOverrideFalse(sevenMultipleDates)
 								.forEach(taskId -> notifyService.notifyTask(taskId.getId()));
 					}
+					default -> {
+						log.warn("Unknown notification setting: " + setting.getSettingKey().toUpperCase());
+					}
 				}
 			} catch (IllegalArgumentException e) {
 				log.warn("Illegal argument for notification setting option: " + setting.getSettingKey().toUpperCase() + ": \n" + e.getMessage());
@@ -93,7 +100,7 @@ public class NotifyResponsibleTask {
 			switch (notificationSetting) {
 				case ONEMONTHBEFORE:
 					tasksToNotify = taskService.getTasksWithDeadlineAtAndNotificationSettingContains(
-							LocalDate.now().plusDays(31), notificationSetting);
+							LocalDate.now().plusMonths(1), notificationSetting);
 					break;
 				case SEVENDAYSBEFORE:
 					tasksToNotify = taskService.getTasksWithDeadlineAtAndNotificationSettingContains(
