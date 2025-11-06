@@ -54,6 +54,13 @@ async function getConfigForChart(chartId, entityName) {
 
         initDatePicker('fromTimePicker',)
         initDatePicker('toTimePicker',)
+
+        // Find any error elements, and if any exists, disable button
+        const errorElements = [...document.getElementsByClassName('chartConfigError')];
+        if (errorElements.length > 0) {
+            const generateBtn = document.getElementById('generateChartButton');
+            generateBtn.disabled = true;
+        }
     } else {
         console.error('could not load additional config options for chart ' + chartId);
     }

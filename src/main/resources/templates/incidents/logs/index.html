@@ -81,7 +81,7 @@
     <nav th:replace="~{fragments/navbar :: main (page='incidentlogs')}"></nav>
 </div>
 
-<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, statistic = true)}"></div>
+<div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true, gridoptions = true, statistic = true)}"></div>
 
 <script type="module"  th:src="@{/js/incidents/incident-service.js}" defer></script>
 <script type="module"  th:src="@{/js/incidents/incidentlog.js}" defer></script>
