@@ -403,11 +403,10 @@ public class AssetsController {
         taskService.deleteAll(tasks);
 
 		// Collect suppliers that only have one asset reference
-		List<Supplier> suppliersToDelete = asset.getSuppliers().stream()
+		Set<Supplier> suppliersToDelete = asset.getSuppliers().stream()
 				.map(AssetSupplierMapping::getSupplier)
-				.filter(sup -> sup.getAssets().size() == 1)
-				.distinct()
-				.toList();
+				.filter(sup -> sup.getAssets().size() <= 1)
+				.collect(Collectors.toSet());
 
 		// Clear the mapping relationship (this deletes AssetSupplierMapping entities)
 		asset.getSuppliers().clear();

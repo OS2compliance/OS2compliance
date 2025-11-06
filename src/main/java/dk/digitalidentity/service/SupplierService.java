@@ -42,10 +42,6 @@ public class SupplierService implements TagableService<Supplier> {
 		this.supplierGridDao = supplierGridDao;
 	}
 
-	public Supplier findById(final Long id) {
-		return supplierDao.findById(id).orElse(null);
-	}
-
 	public void deleteById(final Long id) {
 		supplierDao.deleteById(id);
 	}
