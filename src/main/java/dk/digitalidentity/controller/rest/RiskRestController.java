@@ -37,7 +37,6 @@ import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
-import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireRisk;
 import dk.digitalidentity.service.AssetService;
