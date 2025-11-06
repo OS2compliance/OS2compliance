@@ -370,14 +370,6 @@ public class TaskService implements TagableService<Task> {
 		return taskDao.findAllById(ids);
 	}
 
-	public void updateDescriptions(ChoiceValue taskTemplate, String description) {
-		List<Task> tasksToUpdate = taskDao.findByTaskDescriptionTemplate(taskTemplate);
-		tasksToUpdate.forEach(task -> {
-			task.setDescription(description);
-		});
-		saveAll(tasksToUpdate);
-	}
-
 	@Override
 	@Transactional
 	public Tag addTag(Long entityId, Tag tag) {

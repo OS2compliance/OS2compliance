@@ -103,7 +103,6 @@ public class CustomChoiceListRestController {
 
 		choiceValue.setCaption(updateRecord.caption());
 		if (!Objects.equals(choiceValue.getDescription(), updateRecord.description())) {
-			taskService.updateDescriptions(choiceValue, updateRecord.description());
 			choiceValue.setDescription(updateRecord.description());
 		}
 
