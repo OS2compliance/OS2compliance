@@ -36,7 +36,6 @@ function ViewTaskService() {
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
         this.loadDescriptionTemplateSelect();
-        choiceService.initTagSelect("tagsSelect");
 
         initFormValidationForForm('editForm');
         if (taskType === 'CHECK') {

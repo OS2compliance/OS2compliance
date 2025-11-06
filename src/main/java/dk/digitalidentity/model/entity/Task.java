@@ -134,4 +134,9 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
 	private TaskDeadlineStatus status;
 
 
+	// No one calls this one for now, its just for convenience
+	public String getDescription() {
+		return taskDescriptionTemplate != null ? taskDescriptionTemplate.getDescription() : description;
+	}
+
 }
