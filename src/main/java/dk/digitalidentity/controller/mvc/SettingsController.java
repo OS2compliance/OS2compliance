@@ -72,7 +72,7 @@ public class SettingsController {
                 if (setting.getSettingValue() == null && setting.getAssociation() != null && setting.getAssociation().equals("notification")) {
                     setting.setSettingValue("false");
                 }
-				if (setting.getSettingKey().equals(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS) && setting.getSettingValue() != null) {
+				if (setting.getSettingKey() != null && setting.getSettingKey().equals(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS) && setting.getSettingValue() != null) {
 					if (setting.getSettingValue().equals("true") || setting.getSettingValue().equals("false")) {
 						settingsService.updateAllowMultipleResponsible(Boolean.parseBoolean(setting.getSettingValue()));
 					}
