@@ -1,0 +1,1 @@
+ALTER TABLE tasks ADD COLUMN notification_reminders VARCHAR(255) DEFAULT NULL;

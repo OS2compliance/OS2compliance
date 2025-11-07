@@ -241,6 +241,8 @@ public class TasksController {
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setDepartment(task.getDepartment());
         existingTask.setResponsibleUsers(task.getResponsibleUsers());
+		existingTask.getNotificationReminders().clear();
+		existingTask.getNotificationReminders().addAll(task.getNotificationReminders());
 
 		existingTask.getLinks().clear();
 		for (TaskLink link : task.getLinks()) {
