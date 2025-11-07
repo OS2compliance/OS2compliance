@@ -522,9 +522,7 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        if(!Objects.isNull(asset.getSupplier())) {
-            existingAsset.setSupplier(asset.getSupplier());
-        }
+		existingAsset.setSupplier(asset.getSupplier());
 		existingAsset.setAssetType(asset.getAssetType());
 		existingAsset.setCriticality(asset.getCriticality());
 		existingAsset.setDescription(asset.getDescription());
@@ -689,6 +687,7 @@ public class AssetsController {
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervision model"));
 		}
 
+		String redirectUrl = "";
 		Long redirectId = 0L;
 		for (Long assetId : dto.assetIds) {
 			final Asset asset = assetService.get(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -739,17 +738,17 @@ public class AssetsController {
 			}
 
 			if (redirectId == 0) {
-				if (dto.redirect.equals("assets")) {
+				if (dto.redirect.equals("assets") || asset.getSupplier() == null) {
+					redirectUrl = "redirect:/assets/";
 					redirectId = asset.getId();
 				} else {
+					redirectUrl = "redirect:/suppliers/";
 					redirectId = asset.getSupplier().getId();
 				}
 			}
 		}
 
-        return dto.redirect.equals("assets")
-            ? "redirect:/assets/" + redirectId
-            : "redirect:/suppliers/" + redirectId;
+        return redirectUrl + redirectId;
     }
 
 	@RequireReadOwnerOnly
