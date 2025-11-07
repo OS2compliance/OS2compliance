@@ -346,7 +346,6 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						if (i==9 || i ==10) {
 							continue;
 						}
-						System.out.println("merging column: "+i+" from row: "+mergeStartIndex+" to row: "+mergeStartIndex+t.getRelatedPrecautions().size());
 						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
 					}
 
