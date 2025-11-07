@@ -44,18 +44,15 @@
               </div>
             </div>
           </div>
-
           <div class="row mt-3">
-            <label for="copyTaskUserSelect" class="col-sm-4 col-form-label">Ansvarlig</label>
-            <div class="col-sm-8">
-              <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger=""
-                name="ansvarlig" id="copyTaskUserSelect" hidden="" tabindex="-1" required>
-                <option th:if="${task.responsibleUser} != null" th:value="${task.responsibleUser.uuid}" th:text="${task.responsibleUser.name}"></option>
-              </select>
-              <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
-            </div>
+              <label for="copyTaskUserSelect" class="col-sm-4 col-form-label">Ansvarlig</label>
+              <div class="col-sm-8">
+                  <select class="form-control form-select choices__input" th:field="*{responsibleUsers}" data-trigger="" name="ansvarlig" id="copyTaskUserSelect" hidden="" tabindex="-1" required th:attr="multiple=${allowMultipleTaskResponsible} ? 'multiple' : null">
+                      <option th:each="user : ${task.responsibleUsers}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
+                  </select>
+                  <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
+              </div>
           </div>
-
           <div class="row mt-3">
             <label for="copyTaskOuSelect" class="col-sm-4 col-form-label">Afdeling</label>
             <div class="col-sm-8">

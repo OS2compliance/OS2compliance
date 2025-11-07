@@ -21,6 +21,7 @@ import org.springframework.test.context.event.RecordApplicationEvents;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.Optional;
+import java.util.Set;
 import java.util.stream.IntStream;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -65,7 +66,7 @@ public class NotifyServiceTest {
         assertThat(dummyTask.getNotifyResponsible()).isTrue();
         final EmailEvent emailEvent = events.stream(EmailEvent.class)
             .findFirst().orElseGet(() -> fail("Event not received"));
-        assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUser().getEmail());
+		assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUsers().stream().findFirst().get().getEmail());
         assertThat(emailEvent.getSubject()).isEqualTo("Deadline Notifikation");
         assertThat(emailEvent.getMessage()).isEqualTo(expectedMessage());
     }
@@ -88,7 +89,7 @@ public class NotifyServiceTest {
 
         final EmailEvent emailEvent = events.stream(EmailEvent.class)
             .findFirst().orElseGet(() -> fail("Event not received"));
-        assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUser().getEmail());
+		assertThat(emailEvent.getEmail()).isEqualTo(dummyTask.getResponsibleUsers().stream().findFirst().get().getEmail());
         assertThat(emailEvent.getSubject()).isEqualTo("Deadline Notifikation");
         assertThat(emailEvent.getMessage()).isEqualTo(expectedMessage());
     }
@@ -129,10 +130,10 @@ public class NotifyServiceTest {
         t.setId(1L);
         t.setName("opgave navn");
         t.setNextDeadline(LocalDate.now().plusDays(5));
-        t.setResponsibleUser(User.builder()
+        t.setResponsibleUsers(Set.of(User.builder()
                 .name("Test Testrup")
                 .email("dev@null")
-            .build());
+            .build()));
         return t;
     }
 

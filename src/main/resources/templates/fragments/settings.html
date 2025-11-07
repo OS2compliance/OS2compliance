@@ -18,9 +18,9 @@
                         <div class="card card-body">
                             <div th:each="setting, itemStat :  *{settingsList}">
                                 <div th:if="${setting.association} == 'general'" class="row mt-3">
-                                    <label for="inactiveResponsibleEmailInput" class="col-sm-12 col-form-label"
-                                           style="color: black;">Email til notifikation om inaktive ansvarlige</label>
                                     <div th:if="${setting.settingKey} == 'inactiveResponsibleEmail'">
+                                        <label for="inactiveResponsibleEmailInput" class="col-sm-12 col-form-label"
+                                               style="color: black;">Email til notifikation om inaktive ansvarlige</label>
                                         <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
                                         <input type="hidden"
                                                th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
@@ -33,6 +33,31 @@
                                         <input style="color:black;" class="form-control" name="inactiveResponsibleEmail"
                                                id="inactiveResponsibleEmailInput"
                                                th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                    </div>
+                                </div>
+                                <div th:if="${setting.association} == 'general'" class="row mt-3">
+                                    <div th:if="${setting.settingKey} == 'allowMultipleResponsibleOnTasks'">
+                                        <label for="allowMultipleResponsibleInput" class="col-sm-12 col-form-label"
+                                               style="color: black;">Tillad flere ansvarlige brugere pr. opgave</label>
+                                        <input type="hidden" th:field="*{settingsList[__${itemStat.index}__].id}"/>
+                                        <input type="hidden"
+                                               th:field="*{settingsList[__${itemStat.index}__].settingKey}"/>
+                                        <input type="hidden"
+                                               th:field="*{settingsList[__${itemStat.index}__].editable}"/>
+                                        <input type="hidden"
+                                               th:field="*{settingsList[__${itemStat.index}__].association}"/>
+                                        <input type="hidden"
+                                               th:field="*{settingsList[__${itemStat.index}__].lastUpdated}"/>
+                                        <select style="color:black;" class="form-control"
+                                                id="allowMultipleResponsibleInput"
+                                                th:field="*{settingsList[__${itemStat.index}__].settingValue}">
+                                            <option value="true">Ja - tillad flere ansvarlige</option>
+                                            <option value="false">Nej - kun én ansvarlig</option>
+                                        </select>
+                                        <small class="form-text text-muted d-block mt-2">
+                                            Når du skifter fra flere ansvarlige til kun én ansvarlig, gemmes alle nuværende ansvarlige i baggrunden. Systemet vælger automatisk den person, hvis navn kommer først alfabetisk, som den ene ansvarlige bruger. Alle andre fjernes midlertidigt.
+                                            Når du skifter tilbage til at tillade flere ansvarlige, gendannes automatisk alle de tidligere gemte ansvarlige brugere. På denne måde mister du ikke data, når du eksperimenterer med indstillingen.
+                                        </small>
                                     </div>
                                 </div>
                             </div>

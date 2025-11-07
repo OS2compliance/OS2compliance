@@ -7,6 +7,7 @@ import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.statistic.StatisticLabel;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
@@ -36,12 +37,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tasks")
 @Getter
 @Setter
-public class Task extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
+public class Task extends Relatable implements HasMultipleResponsibleUsers, StatisticEnabled, Tagable {
 
 	@StatisticLabel("Type")
     @Column
@@ -49,10 +51,14 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     private TaskType taskType = TaskType.TASK;
 
 	@StatisticLabel("Ansvarlig Bruger")
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsible_uuid")
-    private User responsibleUser;
+	@NotNull
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "task_responsible_users",
+			joinColumns = @JoinColumn(name = "task_id"),
+			inverseJoinColumns = @JoinColumn(name = "user_uuid")
+	)
+	private Set<User> responsibleUsers = new HashSet<>();
 
 	@StatisticLabel("Ansvarlig Afdeling")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -81,6 +87,9 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
 
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
+
+	@Column(name = "preserved_responsible_users")
+	private String preservedResponsibleUserUuids;
 
 	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
@@ -136,5 +145,8 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
 	@Enumerated(EnumType.STRING)
 	private TaskDeadlineStatus status;
 
-
+	@Override
+	public String getResponsibleUserUuids() {
+		return responsibleUsers.stream().map(User::getName).collect(Collectors.joining(","));
+	}
 }
