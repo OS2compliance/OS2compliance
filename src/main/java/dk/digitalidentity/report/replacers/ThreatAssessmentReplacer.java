@@ -246,7 +246,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 setCellTextSmall(row, 1, task.getDescription());
                 setCellTextSmall(row, 2, task.getTaskType().getMessage());
                 setCellTextSmall(row, 3, DK_DATE_FORMATTER.format(task.getNextDeadline()));
-                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUser().getName()));
+                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
                 setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleOu().getName()));
                 idx[0]++;
             }
@@ -346,7 +346,6 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						if (i==9 || i ==10) {
 							continue;
 						}
-						System.out.println("merging column: "+i+" from row: "+mergeStartIndex+" to row: "+mergeStartIndex+t.getRelatedPrecautions().size());
 						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
 					}
 

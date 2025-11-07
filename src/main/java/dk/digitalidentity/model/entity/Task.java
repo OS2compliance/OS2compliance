@@ -1,15 +1,19 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.dto.tag.Tagable;
+import dk.digitalidentity.config.NotificationSettingConverter;
+import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.statistic.StatisticLabel;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
+import jakarta.persistence.Convert;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
@@ -33,12 +37,13 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Entity
 @Table(name = "tasks")
 @Getter
 @Setter
-public class Task extends Relatable implements HasSingleResponsibleUser, StatisticEnabled, Tagable {
+public class Task extends Relatable implements HasMultipleResponsibleUsers, StatisticEnabled, Tagable {
 
 	@StatisticLabel("Type")
     @Column
@@ -46,10 +51,14 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     private TaskType taskType = TaskType.TASK;
 
 	@StatisticLabel("Ansvarlig Bruger")
-    @NotNull
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "responsible_uuid")
-    private User responsibleUser;
+	@NotNull
+	@ManyToMany(fetch = FetchType.LAZY)
+	@JoinTable(
+			name = "task_responsible_users",
+			joinColumns = @JoinColumn(name = "task_id"),
+			inverseJoinColumns = @JoinColumn(name = "user_uuid")
+	)
+	private Set<User> responsibleUsers = new HashSet<>();
 
 	@StatisticLabel("Ansvarlig Afdeling")
     @ManyToOne(fetch = FetchType.LAZY)
@@ -79,6 +88,9 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @Column(name = "include_in_report")
     private Boolean includeInReport = false;
 
+	@Column(name = "preserved_responsible_users")
+	private String preservedResponsibleUserUuids;
+
 	@ManyToOne
 	@JoinColumn(name = "task_description_template")
 	private ChoiceValue taskDescriptionTemplate;
@@ -94,6 +106,10 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
     @ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
     @JoinTable(name = "task_tag", joinColumns = { @JoinColumn(name = "task_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
     private Set<Tag> tags = new HashSet<>();
+
+	@Column(name = "notification_reminders")
+	@Convert(converter = NotificationSettingConverter.class)
+	private Set<NotificationSetting> notificationReminders = new HashSet<>();
 
     @Override
     public RelationType getRelationType() {
@@ -133,6 +149,10 @@ public class Task extends Relatable implements HasSingleResponsibleUser, Statist
 	@Enumerated(EnumType.STRING)
 	private TaskDeadlineStatus status;
 
+	@Override
+	public String getResponsibleUserUuids() {
+		return responsibleUsers.stream().map(User::getName).collect(Collectors.joining(","));
+	}
 
 	// No one calls this one for now, its just for convenience
 	public String getDescription() {

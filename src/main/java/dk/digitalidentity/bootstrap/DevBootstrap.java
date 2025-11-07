@@ -302,7 +302,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t1.setNextDeadline(LocalDate.now().plusDays(10));
                 t1.setTaskType(TaskType.TASK);
                 t1.setResponsibleOu(nibisOu);
-                t1.setResponsibleUser(testAdmin);
+                t1.setResponsibleUsers(Set.of(testAdmin));
                 t1.setNotifyResponsible(false);
                 t1.setName("Regndans");
                 t1.setIncludeInReport(false);
@@ -314,7 +314,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t2.setNextDeadline(LocalDate.now().plusDays(1));
                 t2.setTaskType(TaskType.TASK);
                 t2.setResponsibleOu(diOu);
-                t2.setResponsibleUser(testAdmin);
+                t2.setResponsibleUsers(Set.of(testAdmin));
                 t2.setName("Kageordning");
                 t2.setNotifyResponsible(false);
                 t2.setIncludeInReport(false);
@@ -327,7 +327,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t3.setTaskType(TaskType.CHECK);
                 t3.setName("Opdater dokument");
                 t3.setResponsibleOu(hjelmOu);
-                t3.setResponsibleUser(testAdmin);
+                t3.setResponsibleUsers(Set.of(testAdmin));
                 t3.setNotifyResponsible(false);
                 t3.setIncludeInReport(false);
                 taskDao.save(t3);

@@ -52,6 +52,7 @@
     <div th:if="${taskDialog == true}" class="modal fade" id="sectionFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <div th:if="${taskDialog == true}" class="modal fade" id="headerFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <script th:if="${taskDialog == true}" type="module" th:src="@{/js/task/create-task-service.js}" defer></script>
+    <script th:if="${taskDialog == true}" th:src="@{/js/task/notification-select-handler.js}"></script>
     <script th:if="${taskDialog == true}" th:src="@{/js/standards/create-standard-service.js}" defer></script>
     <script th:if="${taskDialog == true}" th:src="@{/js/standards/sections/create-section-service.js}" defer></script>
     <script th:src="@{/js/settings/settings-service.js}" defer></script>

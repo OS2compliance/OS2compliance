@@ -87,6 +87,12 @@ function ViewTaskService() {
                 this.fitDescription(this);
             });
         }
+
+        this.notificationSelectHandler = initNotificationSelect(
+            'viewTaskNotificationSetting',
+            'viewTaskNotificationSelectDiv',
+            'viewTaskNotificationSelectInput'
+        );
     }
 
     // In case this task is an oversight, a special oversight dialog can be shown
@@ -147,6 +153,7 @@ function ViewTaskService() {
             document.getElementById("linksViewContainer").hidden = true;
             document.getElementById("linksEditContainer").hidden = false;
             document.getElementById("addLinkBtn").hidden = false;
+            this.notificationSelectHandler.enable();
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -161,6 +168,7 @@ function ViewTaskService() {
             document.getElementById("linksViewContainer").hidden = false;
             document.getElementById("linksEditContainer").hidden = true;
             document.getElementById("addLinkBtn").hidden = true;
+            this.notificationSelectHandler.disable();
         }
     }
 

@@ -80,6 +80,11 @@ function CreateTaskService() {
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
+        this.notificationSelectHandler = initNotificationSelect(
+            'taskNotificationSetting',
+            'taskNotificationSelectDiv',
+            'taskNotificationSelectInput'
+        );
         this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
         let templateDescriptionSelect = document.getElementById('taskCreateFormTemplateDescriptionSelect');
         if (templateDescriptionSelect !== null) {
@@ -103,7 +108,6 @@ function CreateTaskService() {
                 self.createTaskOuChoicesEditSelect.setChoiceByValue(data);
              })).catch(error => toastService.error(error));
         })
-
 
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
