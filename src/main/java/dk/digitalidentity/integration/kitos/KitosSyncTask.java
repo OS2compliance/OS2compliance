@@ -1,6 +1,7 @@
 package dk.digitalidentity.integration.kitos;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
+import dk.digitalidentity.model.entity.Setting;
 import dk.digitalidentity.service.SettingsService;
 import dk.kitos.api.model.ItContractResponseDTO;
 import dk.kitos.api.model.ItSystemResponseDTO;
@@ -57,22 +58,27 @@ public class KitosSyncTask {
 			final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
 			final boolean reimport = !changedItSystemUsages.isEmpty();
 			// We need to fetch associated entities
-			final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
-				.map(usage -> usage.getSystemContext().getUuid())
-				.map(kitosClientService::fetchItSystem)
-				.filter(Objects::nonNull)
-				.toList();
 			final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
 			final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
 
 			if (!changedItSystemUsages.isEmpty() || !changedContracts.isEmpty()) {
+				Setting isAssetSyncEnabledSetting = settingsService.findBySettingKey(KitosConstants.KITOS_ENABLE_SYNC_ITSYSTEMS);
 				final List<RoleOptionResponseDTO> roles = kitosClientService.listRoles(municipalUuid);
 				final List<OrganizationUserResponseDTO> users = kitosClientService.listUsers(municipalUuid);
 				kitosService.syncRoles(roles);
 				kitosService.syncUsers(users);
-				kitosService.syncItSystems(mergeUniqueItSystems(assocItSystems, changedItSystems));
-				kitosService.syncItSystemUsages(changedItSystemUsages);
-				kitosService.syncItContracts(changedContracts);
+				if (isAssetSyncEnabledSetting != null && Boolean.parseBoolean(isAssetSyncEnabledSetting.getSettingValue())) {
+					log.info("Starting IT-System sync");
+					final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
+							.map(usage -> usage.getSystemContext().getUuid())
+							.map(kitosClientService::fetchItSystem)
+							.filter(Objects::nonNull)
+							.toList();
+					kitosService.syncItSystems(mergeUniqueItSystems(assocItSystems, changedItSystems));
+					kitosService.syncItSystemUsages(changedItSystemUsages);
+					kitosService.syncItContracts(changedContracts);
+					log.info("Finished IT-System sync");
+				}
 			}
 		}
 		catch (Exception ex) {
