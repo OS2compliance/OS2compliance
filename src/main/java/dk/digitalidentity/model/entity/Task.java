@@ -91,6 +91,10 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@Column(name = "preserved_responsible_users")
 	private String preservedResponsibleUserUuids;
 
+	@ManyToOne
+	@JoinColumn(name = "task_description_template")
+	private ChoiceValue taskDescriptionTemplate;
+
 	@OneToMany(mappedBy = "task", cascade = CascadeType.ALL, orphanRemoval = true)
 	@ToString.Exclude
 	@EqualsAndHashCode.Exclude
@@ -149,4 +153,10 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	public String getResponsibleUserUuids() {
 		return responsibleUsers.stream().map(User::getName).collect(Collectors.joining(","));
 	}
+
+	// No one calls this one for now, its just for convenience
+	public String getDescription() {
+		return taskDescriptionTemplate != null ? taskDescriptionTemplate.getDescription() : description;
+	}
+
 }

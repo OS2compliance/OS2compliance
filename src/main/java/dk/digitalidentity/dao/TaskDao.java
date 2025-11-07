@@ -1,5 +1,6 @@
 package dk.digitalidentity.dao;
 
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.NotificationSetting;
@@ -11,6 +12,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
 import java.util.Collection;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
 
@@ -41,4 +43,6 @@ public interface TaskDao extends TagableRepository<Task> {
 			"(t.id = r.relationAId AND r.relationAType = 'TASK' AND r.relationBType = 'ASSET') " +
 			"OR (t.id = r.relationBId AND r.relationBType = 'TASK' AND r.relationAType = 'ASSET'))")
 	Set<Task> findAllByResponsibleUserAndNotRelatedToAnyAsset(@Param("user") final User responsibleUser);
+
+    List<Task> findByTaskDescriptionTemplate(ChoiceValue taskDescriptionTemplate);
 }

@@ -40,7 +40,7 @@ function EditTaskService() {
         })
 
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
-            checkInputField(self.editTaskUserChoicesEditSelect);
+        checkInputField(self.editTaskUserChoicesEditSelect);
         });
         initFormValidationForForm('taskEditForm',
             () => validateChoices(

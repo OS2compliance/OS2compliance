@@ -138,6 +138,7 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 		incrementAndPerformIfVersion(34, this::seedV34);
 		incrementAndPerformIfVersion(35, this::seedV35);
 		incrementAndPerformIfVersion(36, this::seedV36);
+		incrementAndPerformIfVersion(37, this::seedV37);
 	}
 
 	private void incrementAndPerformIfVersion(final int version, final Runnable applier) {
@@ -154,6 +155,17 @@ public class DataBootstrap implements ApplicationListener<ApplicationReadyEvent>
 
 	private void seedV35() {
 		settingsService.createSetting(KitosConstants.KITOS_ENABLE_SYNC_ITSYSTEMS, "true", "kitos", true);
+	}
+
+	private void seedV37() {
+		ChoiceList choiceList = ChoiceList.builder()
+				.identifier("task-description-template")
+				.name("Opgavebeskrivelses skabelon")
+				.multiSelect(false)
+				.customizable(true)
+				.build();
+
+		choiceService.save(choiceList);
 	}
 
 	private void seedV34() {
