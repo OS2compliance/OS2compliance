@@ -21,7 +21,7 @@ public class NotificationSettingConverter implements AttributeConverter<Set<Noti
 		}
 		return attribute.stream()
 				.map(Enum::name)
-				.sorted() // Optional: ensures consistent ordering
+				.sorted()
 				.collect(Collectors.joining(DELIMITER));
 	}
 
