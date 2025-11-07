@@ -152,7 +152,7 @@ function initGrid() {
                 },
             },
             {
-                name: "kitos_uuid",
+                name: "kitosUuid",
                 hidden: true
             },
             {
