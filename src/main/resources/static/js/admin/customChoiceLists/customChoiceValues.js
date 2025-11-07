@@ -16,7 +16,6 @@ class CustomChoiceValuesService {
     initGrid() {
         let gridConfig = {
             className: this.#defaultClassName,
-            resizable: true,
             sort: true,
             pagination: true,
             autoWidth: true,
@@ -40,23 +39,19 @@ class CustomChoiceValuesService {
                     hidden: true
                 },
                 {
-                    id: 'handlinger',
+                    id: 'allowedActions',
                     name: 'Handlinger',
                     width: "8.3%",
                     sort: 0,
                     formatter: (cell, row) => {
-                        const editable = row.cells[3]['data'];
-                        if (editable) {
-                            const id = row.cells[0]['data'];
-                            const caption = row.cells[1]['data'];
-                            const description = row.cells[2]['data'];
-
-                            return gridjs.html(
-                                `<div class="d-flex gap-2">
-                                    <button type="button" class="btn btn-icon btn-outline-light btn-xs editBtn" data-id="${id}" data-caption="${caption}" data-description="${description}"><i class="pli-pencil fs-5"></i></button>
-                                    <button type="button" class="btn btn-icon btn-outline-light btn-xs deleteBtn" data-id="${id}"><i class="pli-trash fs-5"></i></button>
-                                </div>`);
-                        }
+                        const id = row.cells[0]['data'];
+                        const caption = row.cells[1]['data'];
+                        const description = row.cells[2]['data'];
+                        const attributeMap = new Map();
+                        attributeMap.set('identifier', id);
+                        attributeMap.set('caption', caption);
+                        attributeMap.set('description', description);
+                        return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                     }
                 },
             ],
@@ -158,8 +153,8 @@ class CustomChoiceValuesService {
 
     initGridActions() {
         delegateListItemActions('choiceValueTable',
-            (id, elem) => customChoiceValuesService.onEditChoiceList(elem.dataset.id, elem.dataset.caption, elem.dataset.description),
-            (id, name, elem) => customChoiceValuesService.onDeleteChoiceValue(elem.dataset.id),
+            (id, elem) => customChoiceValuesService.onEditChoiceList(id, elem.dataset.caption, elem.dataset.description),
+            (id, elem) => customChoiceValuesService.onDeleteChoiceValue(id),
         )
     }
 

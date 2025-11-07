@@ -48,7 +48,7 @@ public class CustomChoiceListController {
         return "admin/choicelist/custom_choice_lists";
     }
 
-	public record ChoiceValueDTO(long id, String caption, String description, boolean editable, boolean canBeDeleted) {}
+	public record ChoiceValueDTO(long id, String caption, String description, Set<AllowedAction> allowedActions) {}
 	@RequireReadAll
 	@GetMapping("/choice/view/{id}")
 	public String customChoiceList(Model model, @PathVariable long id) {
@@ -59,7 +59,7 @@ public class CustomChoiceListController {
 		Set<AllowedAction> allowedActions = setAllowedActions();
 
 		Set<ChoiceValueDTO> collect = list.getValues().stream().map(choiceValue -> {
-			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), (allowedActions.contains(AllowedAction.UPDATE)), (!isInUse(choiceValue) && allowedActions.contains(AllowedAction.DELETE)));
+			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), allowedActions);
 		}).collect(Collectors.toSet());
 		model.addAttribute("choiceList", list);
 
