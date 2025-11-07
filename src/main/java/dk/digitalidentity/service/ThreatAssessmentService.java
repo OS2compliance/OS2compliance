@@ -38,6 +38,7 @@ import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
@@ -1039,8 +1040,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		if (comment == null || comment.isBlank()) {
 			return null;
 		}
-
-		return comment.replace("\n", "<br/>");
+		return StringEscapeUtils.escapeHtml4(comment.replace("\n", "<br/>"));
 	}
 
     private String getPresent(final ThreatAssessment threatAssessment) {
