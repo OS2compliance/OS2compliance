@@ -38,6 +38,7 @@ public interface Constants {
 
     String RISK_SCALE_PROPERTY_NAME = "riskScale";
     String LAST_NOTIFY_RUN_DAY_SETTING = "lastNotifyRunDay";
+	String ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS = "allowMultipleResponsibleOnTasks";
 
     String CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID = "asset-type-it-system-123456";
 
