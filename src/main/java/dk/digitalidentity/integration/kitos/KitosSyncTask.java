@@ -58,11 +58,6 @@ public class KitosSyncTask {
 			final List<ItSystemUsageResponseDTO> changedItSystemUsages = kitosClientService.fetchChangedItSystemUsage(municipalUuid);
 			final boolean reimport = !changedItSystemUsages.isEmpty();
 			// We need to fetch associated entities
-			final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
-				.map(usage -> usage.getSystemContext().getUuid())
-				.map(kitosClientService::fetchItSystem)
-				.filter(Objects::nonNull)
-				.toList();
 			final List<ItSystemResponseDTO> changedItSystems = kitosClientService.fetchChangedItSystems(municipalUuid, reimport);
 			final List<ItContractResponseDTO> changedContracts = kitosClientService.fetchChangedItContracts(municipalUuid, reimport);
 
@@ -73,9 +68,16 @@ public class KitosSyncTask {
 				kitosService.syncRoles(roles);
 				kitosService.syncUsers(users);
 				if (isAssetSyncEnabledSetting != null && Boolean.parseBoolean(isAssetSyncEnabledSetting.getSettingValue())) {
+					log.info("Starting IT-System sync");
+					final List<ItSystemResponseDTO> assocItSystems = changedItSystemUsages.stream()
+							.map(usage -> usage.getSystemContext().getUuid())
+							.map(kitosClientService::fetchItSystem)
+							.filter(Objects::nonNull)
+							.toList();
 					kitosService.syncItSystems(mergeUniqueItSystems(assocItSystems, changedItSystems));
 					kitosService.syncItSystemUsages(changedItSystemUsages);
 					kitosService.syncItContracts(changedContracts);
+					log.info("Finished IT-System sync");
 				}
 			}
 		}
