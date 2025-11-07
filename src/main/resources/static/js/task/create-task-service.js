@@ -94,10 +94,20 @@ function CreateTaskService() {
                 placeholderValue: 'Vælg en skabelon',
                 searchPlaceholderValue: 'Søg...'
             });
+            let previousDescription;
 
             templateDescriptionSelect.addEventListener('change', function(event) {
+                let descriptionBox = document.getElementById('taskCreateFormdescription');
                 if (templateDescriptionSelect.value !== '' && templateDescriptionSelect.value !== null) {
-                    document.getElementById('taskCreateFormdescription').disabled = true;
+                    if (descriptionBox.value) {
+                        previousDescription = descriptionBox.value;
+                    }
+                    descriptionBox.value = "";
+                    descriptionBox.disabled = true;
+                }
+                else {
+                    descriptionBox.value = previousDescription;
+                    descriptionBox.disabled = false;
                 }
             });
         }

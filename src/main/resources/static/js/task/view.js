@@ -114,13 +114,21 @@ function ViewTaskService() {
     this.loadDescriptionTemplateSelect = function() {
         const select = document.getElementById('taskDescriptionTemplateSelect');
         const descriptionField = document.getElementById('description');
+        let previousDescription = ''; // Store previous value
+
         select.addEventListener("change", async function () {
             const selectedValue = this.value;
 
             // If "Ingen valgt" (no selection) or empty value
             if (!selectedValue || selectedValue === '') {
-                descriptionField.value = '';
+                descriptionField.value = previousDescription;
+                descriptionField.disabled = false;
                 return;
+            }
+
+            // Save current description before replacing it
+            if (descriptionField.value) {
+                previousDescription = descriptionField.value;
             }
 
             const response = await fetch(`/rest/choicelists/custom/choiceValue/${selectedValue}`);
@@ -128,6 +136,7 @@ function ViewTaskService() {
                 const data = await response.json();
                 if (data.success) {
                     descriptionField.value = data.description;
+                    descriptionField.disabled = true;
                 } else {
                     toastService.error("Kunne ikke hente beskrivelse");
                 }
