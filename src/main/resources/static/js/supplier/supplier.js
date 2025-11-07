@@ -217,5 +217,5 @@ function initGrid() {
         grid,
         ['navn', 'allowedActions'],
         ['navn', 'allowedActions','antalLøsninger', 'opdateret','status' ],
-        ['id'])
+        ['id', 'kitosUuid'])
 }
