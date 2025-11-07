@@ -143,10 +143,6 @@ public class RegisterService implements TagableService<Register> {
 		return registerDao.existsByStatusId(id);
 	}
 
-	public List<Register> test(long id) {
-		return registerDao.findByStatusId(id);
-	}
-
 	public Page<RegisterGrid> getRegisters(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
 		Page<RegisterGrid> registers;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {

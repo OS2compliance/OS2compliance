@@ -29,5 +29,4 @@ public interface RegisterDao extends TagableRepository<Register> {
 	Set<Register> findAllByResponsibleUserAndNotRelatedToAnyAsset(@Param("user") final User responsibleUser);
 
 	boolean existsByStatusId(Long statusId);
-	List<Register> findByStatusId(Long statusId);
 }
