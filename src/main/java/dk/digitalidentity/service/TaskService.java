@@ -14,6 +14,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -103,8 +104,8 @@ public class TaskService implements TagableService<Task> {
      * @return A list of tasks
      */
     @Transactional
-    public List<Task> getTasksWithDeadLineAt(LocalDate deadline) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadline(deadline);
+    public List<Task> getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate deadline) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineAndNotificationRemindersEmpty(deadline);
     }
 
     /**
@@ -113,8 +114,8 @@ public class TaskService implements TagableService<Task> {
      * @return A list of tasks
      */
     @Transactional
-    public List<Task> getTasksWithDeadLineIn(List<LocalDate> deadlines) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineIn(deadlines);
+    public List<Task> getTasksWithDeadLineInAndTaskNotificationOverrideFalse(List<LocalDate> deadlines) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineInAndNotificationRemindersEmpty(deadlines);
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
@@ -149,6 +150,7 @@ public class TaskService implements TagableService<Task> {
         task.setCreatedAt(LocalDateTime.now());
         task.setCreatedBy(SecurityUtil.getLoggedInUserUuid());
         task.setIncludeInReport(oldTask.getIncludeInReport());
+		task.getNotificationReminders().addAll(oldTask.getNotificationReminders());
 
         return taskDao.save(task);
     }
@@ -408,5 +410,19 @@ public class TaskService implements TagableService<Task> {
 	@Override
 	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
 		return taskDao.findTagsByEntityIds(entityIds);
+	}
+
+	public List<Task> getTasksWithDeadlineAtAndNotificationSettingContains(LocalDate deadline, NotificationSetting setting) {
+		return taskDao.findByNextDeadlineAndNotificationRemindersNotEmpty(deadline)
+				.stream()
+				.filter(task -> task.getNotificationReminders().contains(setting))
+				.collect(Collectors.toList());
+	}
+
+	public List<Task> getTasksWithDeadlineInAndNotificationSettingContains(List<LocalDate> deadlines, NotificationSetting setting) {
+		return taskDao.findByNextDeadlineInAndNotificationRemindersNotEmpty(deadlines)
+				.stream()
+				.filter(task -> task.getNotificationReminders().contains(setting))
+				.collect(Collectors.toList());
 	}
 }
