@@ -138,7 +138,7 @@ public class AssetOversightService {
         }
         final Task task = new Task();
         task.setTaskType(TaskType.CHECK);
-        task.setName("Tilsyn af " + asset.getName());
+        task.setName("Udfør tilsyn med leverandøren af " + asset.getName());
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
