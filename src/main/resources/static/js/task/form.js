@@ -1,8 +1,10 @@
 
 let copyTaskService = new CopyTaskService();
 let editTaskService = new EditTaskService();
+let initTagSelect;
 
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", async function() {
+    initTagSelect = await import("../tags/tag-selector.js"); // dynamic import. replace with regular import as soon as possible
     copyTaskService.init();
     editTaskService.init();
 });
@@ -38,7 +40,7 @@ function EditTaskService() {
         })
 
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
-            checkInputField(self.editTaskUserChoicesEditSelect);
+        checkInputField(self.editTaskUserChoicesEditSelect);
         });
         initFormValidationForForm('taskEditForm',
             () => validateChoices(
@@ -103,10 +105,16 @@ function CopyTaskService() {
 
        let tagCopySelect = this.getScopedElementById('copyTaskTagsSelect');
        if(tagCopySelect !== null) {
-           choiceService.initTagSelect('copyTaskTagsSelect');
+           initTagSelect('copyTaskTagsSelect');
        }
 
         initFormValidationForForm("copyTaskModalForm");
+        this.notificationSelectHandler = initNotificationSelect(
+            'copyTaskNotificationSetting',
+            'copyTaskNotificationSelectDiv',
+            'copyTaskNotificationSelectInput'
+        );
+
 
         this.copyTaskModal = new bootstrap.Modal(this.modalContainer);
         this.copyTaskModal.show();

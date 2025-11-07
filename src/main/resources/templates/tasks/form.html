@@ -23,9 +23,9 @@
                     <div class="col-sm-8">
                         <div th:id="${formId + 'Type'}" class="btn-group" role="group" aria-label="Opgave type valg">
                             <input type="radio" class="btn-check" name="btnradio" th:id="${formId + 'BtnTask'}"  value="TASK" onclick="createTaskService.selectCreateTaskOption('TASK')" autocomplete="off" th:field="*{taskType}">
-                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnTask'}">Opgave</label>
+                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnTask'}" title="En opgave udføres en gang">Opgave</label>
                             <input type="radio" class="btn-check" name="btnradio" th:id="${formId + 'BtnCheck'}" value="CHECK" onclick="createTaskService.selectCreateTaskOption('CHECK')" autocomplete="off" th:field="*{taskType}">
-                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnCheck'}">Kontrol</label>
+                            <label class="btn btn-outline-primary" th:for="${formId + 'BtnCheck'}" title="En kontrol er tilbagevendende">Kontrol</label>
                         </div>
                     </div>
                 </div>
@@ -46,9 +46,9 @@
                 <div class="row mt-3">
                     <label th:for="${formId + 'TaskUserSelect'}" class="col-sm-4 col-form-label">Ansvarlig</label>
                     <div class="col-sm-8">
-                        <input th:if="${!responsibleChooseable}" type="hidden" th:field="*{responsibleUser}" />
-                        <select class="form-control form-select choices__input" th:field="*{responsibleUser}" data-trigger="" th:id="${formId + 'TaskUserSelect'}" hidden="" tabindex="-1" required th:disabled="${!responsibleChooseable}">
-                            <option th:if="${task.responsibleUser} != null" th:value="${task.responsibleUser.uuid}" th:text="${task.responsibleUser.name}"></option>
+                        <input th:if="${!responsibleChooseable}" type="hidden" th:field="*{responsibleUsers}" />
+                        <select class="form-control form-select choices__input" th:field="*{responsibleUsers}" data-trigger="" th:id="${formId + 'TaskUserSelect'}" hidden="" tabindex="-1" required th:disabled="${!responsibleChooseable}" th:attr="multiple=${allowMultipleTaskResponsible} ? 'multiple' : null">
+                            <option th:each="user : ${task.responsibleUsers}" th:value="${user.uuid}" th:text="${user.name}" selected></option>
                         </select>
                         <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
                     </div>
@@ -102,11 +102,20 @@
                     </div>
                 </div>
 
+                <div class="row mt-3" th:id="${formId + 'TemplateDescriptionDiv'}" th:unless="${descriptionTemplates == null || descriptionTemplates.isEmpty()}">
+                    <label th:for="${formId + 'TemplateDescriptionSelect'}" class="col-sm-4 col-form-label">Beskrivelseskabeloner</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" name="templateDescription" th:id="${formId + 'TemplateDescriptionSelect'}" tabindex="-1">
+                            <option th:each="template : ${descriptionTemplates}" th:value="${template.id}" th:text="${template.caption}"></option>
+                        </select>
+                    </div>
+                </div>
+
                 <div class="row mt-3">
                     <label for="description" class="col-sm-4 col-form-label">Beskrivelse</label>
                     <div class="col-sm-8">
                         <div class="input-group">
-                            <textarea id="description" class="form-control" placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
+                            <textarea id="description" class="form-control" th:id="${formId + 'description'}"  placeholder="Indtast beskrivelse" th:field="*{description}" rows="3"></textarea>
                         </div>
                     </div>
                 </div>
@@ -150,6 +159,24 @@
                     <div class="col-sm-8">
                         <input id="sendMail" th:field="*{notifyResponsible}" class="form-check-input" type="checkbox" checked="">
                         <label for="sendMail" class="form-check-label">Send som mail til ansvarlig</label>
+                    </div>
+                </div>
+
+                <div class="row mt-3">
+                    <div class="col-sm-4 col-form-label"></div>
+                    <div class="col-sm-8">
+                        <input id="taskNotificationSetting" th:checked="${!task.notificationReminders.isEmpty()}" class="form-check-input" type="checkbox" checked="">
+                        <label for="taskNotificationSetting" class="form-check-label">Tilpasset afsendelse af e-mail påmindelse</label>
+                    </div>
+                </div>
+
+                <div class="row mt-3" id="taskNotificationSelectDiv" hidden>
+                    <label for="taskNotificationSelectInput" class="col-sm-4 col-form-label">Tidspunkt</label>
+                    <div class="col-sm-8">
+                        <select class="form-control form-select choices__input" id="taskNotificationSelectInput" tabindex="-1" multiple th:field="*{notificationReminders}" >
+                            <option th:each="repetition : ${T(dk.digitalidentity.model.entity.enums.NotificationSetting).values()}"
+                                    th:value="${repetition.name}" th:text="${repetition.message}"></option>
+                        </select>
                     </div>
                 </div>
 

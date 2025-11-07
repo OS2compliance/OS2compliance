@@ -241,6 +241,8 @@ public class RiskController {
         }
         final ThreatAssessment savedThreatAssessment = threatAssessmentService.copy(sourceId);
         savedThreatAssessment.setName(assessment.getName());
+		savedThreatAssessment.setResponsibleUser(assessment.getResponsibleUser());
+		savedThreatAssessment.setResponsibleOu(assessment.getResponsibleOu());
 		if (presentUserUuids != null && !presentUserUuids.isEmpty()) {
 			savedThreatAssessment.setPresentAtMeeting(userService.findAllByUuids(presentUserUuids));
 		}
@@ -455,6 +457,26 @@ public class RiskController {
         return "redirect:/risks/" + id;
     }
 
+	@Transactional
+	@RequireUpdateOwnerOnly
+	@PostMapping("{id}/customthreats/edit")
+	public String formEditCustomThreat(@PathVariable final long id, @Valid @ModelAttribute final CustomThreatDTO customThreatDTO) {
+		final ThreatAssessment threatAssessment = threatAssessmentService.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		CustomThreat customThreat = threatAssessment.getCustomThreats().stream()
+				.filter(ct -> ct.getId().equals(customThreatDTO.id()))
+				.findFirst()
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+
+		customThreat.setThreatType(customThreatDTO.threatType);
+		customThreat.setDescription(customThreatDTO.description);
+
+		threatAssessmentService.save(threatAssessment);
+		eventPublisher.publishEvent(ThreatAssessmentUpdatedEvent.builder().threatAssessmentId(id).build());
+
+		return "redirect:/risks/" + id;
+	}
+
 	private String findElementName(final ThreatAssessment threatAssessment) {
         final ThreatAssessmentType threatAssessmentType = threatAssessment.getThreatAssessmentType();
         if (ThreatAssessmentType.ASSET.equals(threatAssessmentType)) {
@@ -478,37 +500,45 @@ public class RiskController {
         }
     }
 
-    private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
-        if (savedThreatAssessment.getResponsibleUser() != null) {
-            EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REMINDER);
-            if (template.isEnabled()) {
-                final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
-                if (task != null && !StringUtils.isEmpty(task.getResponsibleUser().getEmail())) {
-                    final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
-                    final String recipient = task.getResponsibleUser().getName();
-                    final String objectName = task.getName();
-                    final String link = "<a href=\"" + url + "\">" + url + "</a>";
+	private void createTaskAndSendMail(final ThreatAssessment savedThreatAssessment) {
+		if (savedThreatAssessment.getResponsibleUser() != null) {
+			EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.RISK_REMINDER);
+			if (template.isEnabled()) {
+				final Task task = threatAssessmentService.createAssociatedTask(savedThreatAssessment);
+				if (task != null && !task.getResponsibleUsers().isEmpty()) {
+					final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" + task.getId();
+					final String objectName = task.getName();
+					final String link = "<a href=\"" + url + "\">" + url + "</a>";
 
-                    String title = template.getTitle();
-                    title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-                    title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-                    title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-                    String message = template.getMessage();
-                    message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-                    message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-                    message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-                    eventPublisher.publishEvent(EmailEvent.builder()
-                        .message(message)
-                        .subject(title)
-                        .email(task.getResponsibleUser().getEmail())
-						.templateType(template.getTemplateType())
-                        .build());
-                }
-            } else {
-                log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
-            }
-        }
-    }
+					// Send email to each responsible user
+					for (User responsibleUser : task.getResponsibleUsers()) {
+						if (!StringUtils.isEmpty(responsibleUser.getEmail())) {
+							final String recipient = responsibleUser.getName();
+
+							String title = template.getTitle();
+							title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+							title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+							title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+
+							String message = template.getMessage();
+							message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+							message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+							message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+
+							eventPublisher.publishEvent(EmailEvent.builder()
+									.message(message)
+									.subject(title)
+									.email(responsibleUser.getEmail())
+									.templateType(template.getTemplateType())
+									.build());
+						}
+					}
+				}
+			} else {
+				log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+			}
+		}
+	}
 
     private void relateAssets(final Set<Long> selectedAsset, final ThreatAssessment savedThreatAssessment) {
         final List<Asset> relatedAssets = assetService.findAllById(selectedAsset);

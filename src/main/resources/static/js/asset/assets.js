@@ -1,3 +1,7 @@
+import ColumnOptions from "../grid-js-extension/column-options.js";
+
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
     const defaultClassName = {
         table: 'table table-striped',
         search: "form-control",
@@ -7,6 +11,7 @@
     const updateUrl = (prev, query) => {
         return prev + (prev.indexOf('?') >= 0 ? '&' : '?') + new URLSearchParams(query).toString();
     };
+
 
     document.addEventListener("DOMContentLoaded", function(event) {
         const dialog = document.getElementById('formDialog')
@@ -165,6 +170,26 @@
                     width: '100px'
                 },
                 {
+                    name: "Sidste tilsyn",
+                    searchable: {
+                        searchKey: 'lastOversightDate'
+                    },
+                    width: '90px',
+                    formatter: (cell, row) => {
+                        if (!cell || cell.trim() === '') {
+                            return gridjs.html(`<span>-</span>`);
+                        }
+
+                        var dateParts = cell.split('-');
+                        if (dateParts.length === 3) {
+                            var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                            return gridjs.html(`<span>${formattedDate}</span>`);
+                        }
+
+                        return gridjs.html(`<span>${cell}</span>`);
+                    }
+                },
+                {
                     name: "Antal beh.",
                     width: '95px',
                     searchable: {
@@ -224,6 +249,13 @@
                     },
                 },
                 {
+                    name: "Tags",
+                    searchable: {
+                        searchKey: 'tagNames',
+                    },
+                    formatter: (cell, row) => formatTags(cell, row),
+                },
+                {
                     id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
@@ -245,7 +277,7 @@
                     'X-CSRF-TOKEN': token
                 },
                 then: data => data.content.map(asset =>
-                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.registers, asset.assessment, asset.assetStatus, asset.allowedActions, asset.oldKitos],
+                    [ asset.id, asset.kitos, asset.name, asset.supplier, asset.active, asset.hasThirdCountryTransfer, asset.assetType, asset.ownedByUsers, asset.responsibleUsers, asset.updatedAt, asset.lastOversightDate, asset.registers, asset.assessment, asset.assetStatus, asset.tags, asset.allowedActions, asset.oldKitos],
                 ),
                 total: data => data.totalCount
             },
@@ -265,10 +297,14 @@
                 }
             }
         };
-        const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( "assetsDatatable" ));
+        const datatableId ="assetsDatatable"
+        const grid = new gridjs.Grid(assetGridConfig).render( document.getElementById( datatableId ));
 
-        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, 'assetsDatatable');
-        gridOptions.init(grid, document.getElementById("gridOptions"));
+        const customGridFunctions = new CustomGridFunctions(grid, gridAssetsUrl, exportAssetsUrl, datatableId);
+
+        new ColumnOptions(datatableId,grid, ['navn', 'allowedActions'], ['navn', 'allowedActions','type','status' ], ['id', 'kitos'])
+
+
 
         initSaveAsExcelButton(customGridFunctions,'Aktiver')
     }

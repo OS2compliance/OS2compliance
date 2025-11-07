@@ -14,6 +14,7 @@ import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.S3Document;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
@@ -32,9 +33,12 @@ import dk.digitalidentity.service.model.RiskDTO;
 import dk.digitalidentity.service.model.RiskProfileDTO;
 import dk.digitalidentity.service.model.TaskDTO;
 import dk.digitalidentity.service.model.ThreatDTO;
+import dk.digitalidentity.service.tag.TagableService;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
+import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.thymeleaf.TemplateEngine;
@@ -67,7 +71,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 
 @Service
 @RequiredArgsConstructor
-public class ThreatAssessmentService {
+public class ThreatAssessmentService implements TagableService<ThreatAssessment> {
 	private final RelationService relationService;
     private final RegisterDao registerDao;
     private final ScaleService scaleService;
@@ -216,9 +220,8 @@ public class ThreatAssessmentService {
         if (deadline != null && assessment.getRevisionInterval() != null) {
             final Task task = findAssociatedCheck(assessment).orElseGet(() -> createAssociatedCheck(assessment));
             task.setName("Risikovurdering af " + assessment.getName());
-            task.setResponsibleUser(assessment.getResponsibleUser());
             task.setNextDeadline(assessment.getNextRevision());
-            task.setResponsibleUser(assessment.getResponsibleUser() != null ? assessment.getResponsibleUser() : userService.currentUser());
+            task.setResponsibleUsers(assessment.getResponsibleUser() != null ? Set.of(assessment.getResponsibleUser()) : Set.of(userService.currentUser()));
             task.setDescription("Revider risikovurdering af " + assessment.getName());
             setTaskRevisionInterval(assessment, task);
             return task;
@@ -237,7 +240,7 @@ public class ThreatAssessmentService {
             .build()
         );
         task.setTaskType(TaskType.CHECK);
-        task.setResponsibleUser(assessment.getResponsibleUser());
+        task.setResponsibleUsers(Set.of(assessment.getResponsibleUser()));
         task.setNextDeadline(assessment.getNextRevision());
         task.setNotifyResponsible(true);
         final Task savedTask = taskService.saveTask(task);
@@ -251,7 +254,7 @@ public class ThreatAssessmentService {
             Task task = new Task();
             task.setName("Udfyld risikovurdering: " + assessment.getName());
             task.setTaskType(TaskType.TASK);
-            task.setResponsibleUser(assessment.getResponsibleUser());
+			task.setResponsibleUsers(Set.of(assessment.getResponsibleUser()));
             task.setNextDeadline(LocalDate.now().plusMonths(1));
             task.setRepetition(TaskRepetition.NONE);
             task = taskService.saveTask(task);
@@ -300,6 +303,48 @@ public class ThreatAssessmentService {
                 return registerAssetRiskDTO;
             });
     }
+
+	@Override
+	@Transactional
+	public Tag addTag(Long entityId, Tag tag) {
+		ThreatAssessment entity = threatAssessmentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(ThreatAssessment.class.getSimpleName() + " not found with id: " + entityId));
+
+		entity.getTags().add(tag);
+		threatAssessmentDao.save(entity);
+
+		return tag;
+	}
+
+	@Override
+	@Transactional
+	public Tag removeTag(Long entityId, Long tagId) {
+		ThreatAssessment entity = threatAssessmentDao.findById(entityId)
+				.orElseThrow(() -> new EntityNotFoundException(ThreatAssessment.class.getSimpleName() + " not found with id: " + entityId));
+
+		Set<Tag> tags = entity.getTags();
+		Tag tag = tags.stream().filter(t -> t.getId() == tagId).findAny().orElse(null);
+		if (tag != null) {
+			entity.getTags().remove(tag);
+			threatAssessmentDao.save(entity);
+		}
+		return tag;
+	}
+
+	@Override
+	public Class<ThreatAssessment> getEntityType() {
+		return ThreatAssessment.class;
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityId(Long entityId) {
+		return threatAssessmentDao.findTagsByEntityId(entityId);
+	}
+
+	@Override
+	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
+		return threatAssessmentDao.findTagsByEntityIds(entityIds);
+	}
 
     /**
      * Find the highest risk score based on a list of RiskProfileDTO objects.
@@ -380,11 +425,11 @@ public class ThreatAssessmentService {
                 final int highestConsequence = findHighestConsequence(threat);
                 final int probability = threat.getProbability();
 
-                if (probability < 1 || highestConsequence < 1) {
-                    continue;
-                }
+				if (probability < 1 || highestConsequence < 1) {
+					continue;
+				}
 
-                riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
+				riskProfiles.add(new RiskProfileDTO(threat.getIndex(), highestConsequence, probability, threat.getResidualRiskConsequence(), threat.getResidualRiskProbability()));
             }
         }
         return riskProfiles;
@@ -451,7 +496,9 @@ public class ThreatAssessmentService {
         final List<Task> relatedTasks = relationService.findAllRelatedTo(response).stream().filter(r -> r.getRelationType() == RelationType.TASK).map(r -> (Task) r).toList();
         final List<TaskDTO> taskDTOS = new ArrayList<>();
         for (final Task relatedTask : relatedTasks) {
-            taskDTOS.add(new TaskDTO(relatedTask.getId(), relatedTask.getName(), relatedTask.getTaskType(), relatedTask.getResponsibleUser().getName(), relatedTask.getNextDeadline().format(DK_DATE_FORMATTER), relatedTask.getNextDeadline().isBefore(LocalDate.now()), taskService.findHtmlStatusBadgeForTask(relatedTask)));
+            taskDTOS.add(new TaskDTO(relatedTask.getId(), relatedTask.getName(), relatedTask.getTaskType(), relatedTask.getResponsibleUsers().stream()
+					.map(User::getName)
+					.collect(Collectors.joining(", ")), relatedTask.getNextDeadline().format(DK_DATE_FORMATTER), relatedTask.getNextDeadline().isBefore(LocalDate.now()), taskService.findHtmlStatusBadgeForTask(relatedTask)));
         }
         dto.setTasks(taskDTOS);
     }
@@ -779,6 +826,8 @@ public class ThreatAssessmentService {
             context.setVariable("sociallyCritical", riskAsset.isSociallyCritical());
 			context.setVariable("userManagementProcedureCreated", riskAsset.getDataProcessing().getManagementProcedure() != null ? riskAsset.getDataProcessing().getManagementProcedure().getMessage() : "Ikke udfyldt");
 			context.setVariable("userManagementProcedureLink", riskAsset.getDataProcessing().getUserManagementProcedureLink());
+			context.setVariable("loggingProcedureCreated", riskAsset.getDataProcessing().getManagementProcedure() != null ? riskAsset.getDataProcessing().getLoggingProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("loggingProcedureLink", riskAsset.getDataProcessing().getLoggingProcedureLink());
             String dataAccessPersons = riskAsset.getDataProcessing().getAccessWhoIdentifiers().stream()
                 .map(identifier ->
                 {
@@ -815,6 +864,8 @@ public class ThreatAssessmentService {
             context.setVariable("deletionProcedureLink", riskRegister.getDataProcessing().getDeletionProcedureLink());
 			context.setVariable("userManagementProcedureCreated", riskRegister.getDataProcessing().getManagementProcedure() != null ? riskAsset.getDataProcessing().getManagementProcedure().getMessage() : "Ikke udfyldt");
 			context.setVariable("userManagementProcedureLink", riskRegister.getDataProcessing().getUserManagementProcedureLink());
+			context.setVariable("loggingProcedureCreated", riskRegister.getDataProcessing().getLoggingProcedure() != null ? riskAsset.getDataProcessing().getLoggingProcedure().getMessage() : "Ikke udfyldt");
+			context.setVariable("loggingProcedureLink", riskRegister.getDataProcessing().getLoggingProcedureLink());
             String dataAccessPersons = riskRegister.getDataProcessing().getAccessWhoIdentifiers().stream()
                 .map(identifier ->
                 {
@@ -888,7 +939,9 @@ public class ThreatAssessmentService {
                     task.getDescription(),
                     task.getTaskType().getMessage(),
                     DK_DATE_FORMATTER.format(task.getNextDeadline()),
-                    nullSafe(() -> task.getResponsibleUser().getName()),
+                    nullSafe(() -> task.getResponsibleUsers().stream()
+							.map(User::getName)
+							.collect(Collectors.joining(", "))),
                     nullSafe(() -> task.getResponsibleOu().getName())
                 ));
             }
@@ -906,7 +959,8 @@ public class ThreatAssessmentService {
                         String method,
                         String elaboration,
                         List<PrecautionDTO> linkedPrecautions,
-                        RiskCalculationDTO residualRisk
+                        RiskCalculationDTO residualRisk,
+						Boolean relevant
     ) {}
     private List<ThreatPDFDTO> buildThreatsForPDF(Map<String, List<ThreatDTO>> threatList, List<RiskProfileDTO> riskProfiles, Map<String, String> colorMap) {
         List<ThreatPDFDTO> result = new ArrayList<>();
@@ -915,7 +969,7 @@ public class ThreatAssessmentService {
                 final RiskProfileDTO profile = riskProfiles.stream()
                     .filter(rp -> rp.getIndex() == t.getIndex())
                     .findFirst().orElse(null);
-                if (profile != null) {
+				if (profile != null) {
                     final String color = colorMap.get(profile.getConsequence() + "," + profile.getProbability());
                     final int score = profile.getProbability() * profile.getConsequence();
                     final String residualColor = colorMap.get(profile.getResidualConsequence() + "," + profile.getResidualProbability());
@@ -941,9 +995,18 @@ public class ThreatAssessmentService {
                             profile.getResidualProbability(),
                             profile.getResidualConsequence(),
                             residualScore,
-                            residualColor)
+                            residualColor),
+							true
                     ));
                 }
+				else {
+					result.add(new ThreatPDFDTO(
+							t.getIndex() + 1, t.getType(), null, null, null, null, null, null, buildPrecautions(t.getRelatedPrecautions()
+							.stream()
+							.map(Precaution.class::cast)
+							.toList() ), null, false
+					));
+				}
             });
         });
         return result;
@@ -977,8 +1040,7 @@ public class ThreatAssessmentService {
 		if (comment == null || comment.isBlank()) {
 			return null;
 		}
-
-		return comment.replace("\n", "<br/>");
+		return StringEscapeUtils.escapeHtml4(comment.replace("\n", "<br/>"));
 	}
 
     private String getPresent(final ThreatAssessment threatAssessment) {

@@ -1,5 +1,6 @@
 package dk.digitalidentity.controller.mvc;
 
+import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.integration.kitos.KitosConstants;
 import dk.digitalidentity.model.dto.SettingsDTO;
@@ -55,6 +56,7 @@ public class SettingsController {
 			model.addAttribute("kitosFieldsForAssetLinkSource", fields.stream().filter(f -> f.getForField().equals(KitosConstants.KITOS_FIELDS_ASSET_LINK_SOURCE)).collect(Collectors.toSet()));
 			model.addAttribute("kitosFieldsForContractDate", fields.stream().filter(f -> f.getForField().equals(KitosConstants.KITOS_FIELDS_CONTRACT_DATE)).collect(Collectors.toSet()));
 			model.addAttribute("kitosFieldsForContractEnd", fields.stream().filter(f -> f.getForField().equals(KitosConstants.KITOS_FIELDS_CONTRACT_END)).collect(Collectors.toSet()));
+			model.addAttribute("kitosEnableItSystemSync", fields.stream().filter(f -> KitosConstants.KITOS_ENABLE_SYNC_ITSYSTEMS.equals(f.getForField())).collect(Collectors.toSet()));
 		}
 
         return "fragments/settings";
@@ -71,6 +73,11 @@ public class SettingsController {
                 if (setting.getSettingValue() == null && setting.getAssociation() != null && setting.getAssociation().equals("notification")) {
                     setting.setSettingValue("false");
                 }
+				if (setting.getSettingKey() != null && setting.getSettingKey().equals(Constants.ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS) && setting.getSettingValue() != null) {
+					if (setting.getSettingValue().equals("true") || setting.getSettingValue().equals("false")) {
+						settingsService.updateAllowMultipleResponsible(Boolean.parseBoolean(setting.getSettingValue()));
+					}
+				}
             });
 
             settings.settingsList.removeIf(x -> Objects.isNull(x.getSettingValue()) || x.getSettingValue().isEmpty());

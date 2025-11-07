@@ -10,7 +10,7 @@
             <tr>
                 <th>Dato</th>
                 <th>Aktiver</th>
-                <th>Ansvarlig</th>
+                <th>Ansvarlig for tilsyn</th>
                 <th>Tilsynsform</th>
                 <th>Link (DBS)</th>
                 <th>Link (Intern dokumentation)</th>
@@ -24,7 +24,7 @@
                 <td th:text="${oversight.creationDate}"></td>
                 <td th:text="${oversight.asset.name}"></td>
                 <td th:text="${oversight.responsibleUser.userId}"></td>
-                <td th:text="${oversight.supervisionModel.getMessage()}"></td>
+                <td th:text="${oversight.supervisionModel?.getCaption()}"></td>
                 <td>
                     <a th:href="${oversight.dbsLink}" th:text="${oversight.dbsLink}"></a>
                 </td>

@@ -8,6 +8,7 @@ import lombok.Getter;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Builder
@@ -30,4 +31,5 @@ public class ChartConfigurationDTO {
 	private LocalDate defaultEndTime;
 	private boolean yFieldFromXField;
 	private boolean xFieldFromYField;
+	private Set<ErrorDTO> errors;
 }

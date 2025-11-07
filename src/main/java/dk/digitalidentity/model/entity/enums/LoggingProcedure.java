@@ -3,14 +3,14 @@ package dk.digitalidentity.model.entity.enums;
 import lombok.Getter;
 
 @Getter
-public enum RegisterStatus {
-    NOT_STARTED("Ikke startet"),
-    IN_PROGRESS("I gang"),
-    READY("Klar");
+public enum LoggingProcedure {
+    YES("Ja"),
+    NO("Nej"),
+    UNKNOWN("Ved ikke");
+
     private final String message;
 
-    RegisterStatus(final String message) {
+    LoggingProcedure(final String message) {
         this.message = message;
     }
-
 }

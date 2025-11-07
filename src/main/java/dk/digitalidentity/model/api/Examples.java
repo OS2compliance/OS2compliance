@@ -64,6 +64,7 @@ public interface Examples {
     String PAGE_TOTAL_PAGE_NUMBER_EXAMPLE = "0";
 
     String ASSET_TYPE_IDENTIFIER = "asset-type-it-system-83AF9E";
+    String SUPERVISORY_MODEL_IDENTIFIER = "supervision-model-dbs-123456";
     String ASSET_TYPE_NAME = "IT-system";
 	String ASSET_ARCHIVE_EXAMPLE = "UNDECIDED";
 }

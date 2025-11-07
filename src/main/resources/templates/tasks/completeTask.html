@@ -9,6 +9,7 @@
                 <div class="modal-body" style="min-height: 200px;">
                     <form th:name="${referral}" id="completeTaskForm" class="row g-3 needs-validation" action="#" th:action="${referral} ?  @{/tasks/complete} + '?referral=' + ${referral} :  @{/tasks/complete}" method="post" th:object="${completionForm}" novalidate>
                         <input name="taskId" th:value="${task.id}" type="hidden">
+                        <input name="taskType" th:value="${task.taskType.name()}" type="hidden">
                         <div class="row mt-3" th:if="${task.taskType.name() == 'CHECK'}">
                             <label for="taskResultSelect" class="col-sm-4 col-form-label">Resultat </label>
                             <div class="col-sm-8">
@@ -37,7 +38,7 @@
                         <div class="row mt-3">
                             <label for="completionComment" class="col-sm-4 col-form-label">Kommentar</label>
                             <div class="col-sm-8">
-                                <textarea id="completionComment" class="form-control" placeholder="Indtast kommentar til udførsel" th:field="*{comment}" rows="3" required></textarea>
+                                <textarea id="completionComment" class="form-control" placeholder="Indtast kommentar til udførsel" th:field="*{comment}" rows="3"></textarea>
                                 <div class="invalid-feedback">Der skal indtastes en beskrivelse</div>
                             </div>
                         </div>

@@ -246,7 +246,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 setCellTextSmall(row, 1, task.getDescription());
                 setCellTextSmall(row, 2, task.getTaskType().getMessage());
                 setCellTextSmall(row, 3, DK_DATE_FORMATTER.format(task.getNextDeadline()));
-                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUser().getName()));
+                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
                 setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleOu().getName()));
                 idx[0]++;
             }
@@ -261,7 +261,14 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         final Map<String, List<ThreatDTO>> threatList = threatAssessmentService.buildThreatList(context.threatAssessment);
-        createTableCells(table, context.riskProfileDTOList.size() + 1, 14);
+		int totalRows = 1;
+		for (List<ThreatDTO> threats : threatList.values()) {
+			for (ThreatDTO threat : threats) {
+				totalRows++;
+				totalRows += threat.getRelatedPrecautions().size();
+			}
+		}
+		createTableCells(table, totalRows, 14);
 
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Nr.");
@@ -339,12 +346,27 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						if (i==9 || i ==10) {
 							continue;
 						}
-						System.out.println("merging column: "+i+" from row: "+mergeStartIndex+" to row: "+mergeStartIndex+t.getRelatedPrecautions().size());
 						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
 					}
 
+					idx[0]++;
+				}
+				else {
+					// When profile is null, merge all columns from 2 onwards to show "Ikke relevant"
+					setCellTextSmall(row, 0, "" + (t.getIndex() + 1));
+					setCellTextSmall(row, 1, threatType);
 
+					for (int i = 3; i <= 13; i++) {
+						clearCell(row.getCell(i));
+					}
 
+					mergeCellHorizontally(table, idx[0], 2, 13);
+
+					XWPFTableCell cell2 = row.getCell(2);
+					XWPFParagraph para = cell2.getParagraphs().get(0);
+					para.setStyle(SMALL_TEXT);
+					para.setAlignment(ParagraphAlignment.CENTER);
+					addTextRun("Ikke relevant", para);
 
                     idx[0]++;
                 }
@@ -714,7 +736,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			table.setTableAlignment(TableRowAlign.LEFT);
 
 			int extraRowsForAsset = isAsset ? 1 : 0;
-			createTableCells(table, 12 + categories.size() + extraRowsForAsset, 3);
+			createTableCells(table, 13 + categories.size() + extraRowsForAsset, 3);
 			final XWPFTableRow row = table.getRow(0);
 
 			// Purpose
@@ -787,12 +809,17 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			setCellTextSmall(row11, 0, "Link til brugerstyringsprocedure");
 			setCellTextSmall(row11, 1, dataProcessing.getUserManagementProcedureLink() != null ? dataProcessing.getUserManagementProcedureLink() : "");
 
+			//Logging procedure link
+			final XWPFTableRow row12 = table.getRow(12);
+			setCellTextSmall(row12, 0, "Link til logningsprocedure");
+			setCellTextSmall(row12, 1, dataProcessing.getLoggingProcedureLink() != null ? dataProcessing.getLoggingProcedureLink() : "");
+
 			// sociallyCritical
-			int nextRowIndex = 12;
+			int nextRowIndex = 13;
 			if (isAsset) {
-				final XWPFTableRow row12 = table.getRow(12);
-				setCellTextSmall(row12, 0, "Samfundskritisk:");
-				setCellTextSmall(row12, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
+				final XWPFTableRow row13 = table.getRow(13);
+				setCellTextSmall(row13, 0, "Samfundskritisk:");
+				setCellTextSmall(row13, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
 				nextRowIndex = 13;
 			}
 
@@ -813,8 +840,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				}
 			}
 			if (categories.isEmpty()) {
-				final XWPFTableRow row12 = table.createRow();
-				setCellTextSmall(row12, 0, "Registrerede persondatakategorier:");
+				final XWPFTableRow row13 = table.createRow();
+				setCellTextSmall(row13, 0, "Registrerede persondatakategorier:");
 			}
 
 			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);

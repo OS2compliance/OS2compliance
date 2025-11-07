@@ -39,7 +39,7 @@
                 </div>
 
                 <div class="row mt-3">
-                    <label for="oversightUserSelect" class="col-sm-4 col-form-label">Ansvarlig</label>
+                    <label for="oversightUserSelect" class="col-sm-4 col-form-label">Ansvarlig for tilsyn</label>
                     <div class="col-sm-8">
                         <select class="form-control form-select choices__input" th:field="*{responsibleUser}"
                             data-trigger="" id="oversightUserSelect" hidden="" required>
@@ -52,11 +52,14 @@
                 <div class="row mt-3">
                     <label for="oversightSupervisionModelSelect" class="col-sm-4 col-form-label">Tilsynsform</label>
                     <div class="col-sm-8">
-                        <select class="form-control form-select" data-trigger="" name="supervisionModel"
-                            id="oversightSupervisionModelSelect" th:field="*{supervisionModel}">
+                        <select class="form-control form-select" data-trigger="" name="supervisionModelId"
+                                id="oversightSupervisionModelSelect">
+                            <option value="">-- Vælg tilsynsform --</option>
                             <option
-                                th:each="supervision : ${T(dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel).values()}"
-                                th:value="${supervision}" th:text="${supervision.getMessage()}" th:selected="${supervision == oversight.supervisionModel}">
+                                    th:each="supervision : ${supervisions}"
+                                    th:value="${supervision.id}"
+                                    th:text="${supervision.caption}"
+                                    th:selected="${oversight.supervisionModel != null && supervision.id == oversight.supervisionModel.id}">
                             </option>
                         </select>
                     </div>

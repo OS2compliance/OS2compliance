@@ -2,6 +2,7 @@ package dk.digitalidentity.bootstrap;
 
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.ApiClientDao;
+import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.dao.ContactDao;
 import dk.digitalidentity.dao.DocumentDao;
 import dk.digitalidentity.dao.OrganisationUnitDao;
@@ -41,7 +42,7 @@ import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
 import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
+import dk.digitalidentity.model.entity.enums.LoggingProcedure;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.SupplierStatus;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -53,6 +54,7 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.SettingsService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -107,6 +109,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
     private ApiClientDao apiClientDao;
     @Autowired
     private ChoiceService choiceService;
+	@Autowired
+	private ChoiceValueService choiceValueService;
 
     @Override
     @Transactional
@@ -298,7 +302,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t1.setNextDeadline(LocalDate.now().plusDays(10));
                 t1.setTaskType(TaskType.TASK);
                 t1.setResponsibleOu(nibisOu);
-                t1.setResponsibleUser(testAdmin);
+                t1.setResponsibleUsers(Set.of(testAdmin));
                 t1.setNotifyResponsible(false);
                 t1.setName("Regndans");
                 t1.setIncludeInReport(false);
@@ -310,7 +314,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t2.setNextDeadline(LocalDate.now().plusDays(1));
                 t2.setTaskType(TaskType.TASK);
                 t2.setResponsibleOu(diOu);
-                t2.setResponsibleUser(testAdmin);
+                t2.setResponsibleUsers(Set.of(testAdmin));
                 t2.setName("Kageordning");
                 t2.setNotifyResponsible(false);
                 t2.setIncludeInReport(false);
@@ -323,7 +327,7 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 t3.setTaskType(TaskType.CHECK);
                 t3.setName("Opdater dokument");
                 t3.setResponsibleOu(hjelmOu);
-                t3.setResponsibleUser(testAdmin);
+                t3.setResponsibleUsers(Set.of(testAdmin));
                 t3.setNotifyResponsible(false);
                 t3.setIncludeInReport(false);
                 taskDao.save(t3);
@@ -346,8 +350,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r1.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
                 r1.setCreatedBy("");
                 r1.setDataProcessing(new DataProcessing());
-                r1.setStatus(RegisterStatus.READY);
-                registerDao.save(r1);
+				r1.setStatus(choiceValueService.findByIdentifier("register-status-ready-123456"));
+				registerDao.save(r1);
 
                 final Register r2 = new Register();
                 r2.setName("2. Behandling af personoplysninger i forbindelse med fleksjob, løntillæg, jobrotation, virksomhedspraktik, mentorordning og voksenlærling, ressourceforløb og revalidering");
@@ -357,8 +361,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r2.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-e"));
                 r2.setCreatedBy("");
                 r2.setDataProcessing(new DataProcessing());
-                r2.setStatus(RegisterStatus.IN_PROGRESS);
-                registerDao.save(r2);
+				r2.setStatus(choiceValueService.findByIdentifier("register-status-in-progress-123456"));
+				registerDao.save(r2);
 
                 final Register r3 = new Register();
                 r3.setName("3. Behandling af personoplysninger i forbindelse med dagpenge, efterløn/feriedagpenge og seniorjob");
@@ -369,8 +373,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 r3.setResponsibleUsers(List.of(testAdmin));
                 r3.setGdprChoices(Set.of("register-gdpr-valp10", "register-gdpr-valp11", "register-gdpr-valp7", "register-gdpr-p7-a", "register-gdpr-p7-f", "register-gdpr-valp6", "register-gdpr-p6-a", "register-gdpr-p6-e"));
                 r3.setDataProcessing(new DataProcessing());
-                r3.setStatus(RegisterStatus.NOT_STARTED);
-                registerDao.save(r3);
+				r3.setStatus(choiceValueService.findByIdentifier("register-status-not-started-123456"));
+				registerDao.save(r3);
 
 
                 final Relation regDoc = new Relation();
@@ -397,6 +401,8 @@ public class DevBootstrap implements ApplicationListener<ApplicationReadyEvent> 
                 dataProcessing.setAccessWhoIdentifiers(Set.of("dp-access-who-leaders", "dp-access-who-ext"));
                 dataProcessing.setAccessCountIdentifier("dp-access-count-1-10");
                 dataProcessing.setStorageTimeIdentifier("dp-storage-duration-1mth");
+				dataProcessing.setLoggingProcedure(LoggingProcedure.YES);
+				dataProcessing.setLoggingProcedureLink("https://WeLogAllTheTime.nu");
                 dataProcessing.getRegisteredCategories().add(DataProcessingCategoriesRegistered.builder()
                     .personCategoriesRegisteredIdentifier("dp-categories-registered-vuln-children")
                     .dataProcessing(dataProcessing)

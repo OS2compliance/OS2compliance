@@ -1,18 +1,17 @@
 package dk.digitalidentity.model.entity;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.AiRiskFactor;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.ContainsAITechnologyEnum;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DPIACompletionStatus;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.model.entity.enums.ThreatAssessmentCompletionStatus;
 import dk.digitalidentity.model.entity.interfaces.HasManagers;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
@@ -46,6 +45,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -58,7 +58,7 @@ import java.util.stream.Collectors;
 @ToString
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled, Ownable {
+public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled, Ownable, Tagable {
 
     @ManyToMany
     @JoinTable(
@@ -96,9 +96,10 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
     @Column
     private String dataProcessingAgreementLink;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private ChoiceOfSupervisionModel supervisoryModel;
+	@Nullable
+	@ManyToOne
+	@JoinColumn(name = "supervisory_model")
+	private ChoiceValue supervisoryModel;
 
     @Column
     @Enumerated(EnumType.STRING)
@@ -256,6 +257,10 @@ public class Asset extends Relatable implements HasMultipleResponsibleUsers, Has
 			inverseJoinColumns = { @JoinColumn(name = "ou_uuid") }
 	)
 	private List<OrganisationUnit> departments;
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "asset_tag", joinColumns = { @JoinColumn(name = "asset_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
 
 	@Transient
 	@Override

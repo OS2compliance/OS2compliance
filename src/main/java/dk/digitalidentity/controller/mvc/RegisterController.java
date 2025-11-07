@@ -25,7 +25,6 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
 import dk.digitalidentity.model.entity.enums.RegisterSetting;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
@@ -43,6 +42,7 @@ import dk.digitalidentity.security.annotations.sections.RequireRegister;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.CatalogService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DataProcessingService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RegisterAssetAssessmentService;
@@ -113,12 +113,14 @@ public class RegisterController {
 	private final KLELegalReferenceService kLELegalReferenceService;
 	private final KLEMapper kleMapper;
 	private final CatalogService catalogService;
+	private final ChoiceValueService choiceValueService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
 	public String registerList(Model model) {
 
 		model.addAttribute("superuser", SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY));
+		model.addAttribute("statusChoices", choiceService.findChoiceValuesForListIdentifier("register-status").stream().toList());
 		return "registers/index";
 	}
 
@@ -263,7 +265,7 @@ public class RegisterController {
 			@RequestParam(value = "registerRegarding", required = false) final Set<ChoiceValue> registerRegarding,
 			@RequestParam(value = "securityPrecautions", required = false) final String securityPrecautions,
 			@RequestParam(required = false) final String section,
-			@RequestParam(value = "status", required = false) final RegisterStatus status,
+			@RequestParam(value = "status", required = false) final Long statusId,
 			@RequestParam(value = "mainGroups", required = false) final Set<String> mainGroupIds,
 			@RequestParam(value = "groups", required = false) final Set<String> groupIds,
 			@RequestParam(value = "subjects", required = false) final Set<String> subjectIds
@@ -315,9 +317,11 @@ public class RegisterController {
         if (criticality != null) {
             register.setCriticality(criticality);
         }
-        if (status != null) {
-            register.setStatus(status);
-        }
+		if (statusId != null) {
+			ChoiceValue status = choiceValueService.findById(statusId)
+					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid status"));
+			register.setStatus(status);
+		}
 
 		if (mainGroupIds != null && !mainGroupIds.isEmpty()) {
 			register.setKleMainGroups(kLEMainGroupService.getAllByMainGroupNumbers(mainGroupIds));
@@ -494,6 +498,8 @@ public class RegisterController {
 		model.addAttribute("recordOfProcessingActivityRegardingChoices", choiceService.findChoiceValuesForListIdentifier("record-of-processing-activity-regarding").stream()
 				.map(cv -> new SelectionChoiceDTO(cv.getCaption(), cv.getId().toString(), register.getRegisterRegarding().contains(cv))));
 
+		model.addAttribute("statusChoices", choiceService.findChoiceValuesForListIdentifier("register-status").stream().toList());
+
         model.addAttribute("section", section);
 		model.addAttribute("changeableRegister", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || registerService.isResponsibleFor(register)));
 		model.addAttribute("responsibleFieldChangeable", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || registerService.isResponsibleFor(register)));
@@ -517,7 +523,9 @@ public class RegisterController {
 					return new TaskListDTO(
 							task.getId(),
 							task.getName(),
-							task.getResponsibleUser().getName(),
+							task.getResponsibleUsers().stream()
+									.map(User::getName)
+									.collect(Collectors.joining(", ")),
 							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
 							task.getTaskType().getMessage(),
 							task.getNextDeadline().toString(),

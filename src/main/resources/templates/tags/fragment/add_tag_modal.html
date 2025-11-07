@@ -1,0 +1,27 @@
+<th:block th:fragment="addTags (targetId, targetType)">
+    <div class="modal fade" id="addTagModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Tilføj tags</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <input name="id" id="relatableIdInput" th:value="${targetId}" type="hidden">
+                    <div class="row mt-3">
+                        <label for="addTagsSelect" class="col-sm-4 col-form-label">Tags</label>
+                        <div class="col-sm-8">
+                            <select id="addTagsSelect" class="form-control form-select choices__input" data-type="select-multiple" data-trigger=""
+                                    name="tags" hidden="" tabindex="-1" multiple></select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-bs-dismiss="modal">Annuller</button>
+                    <button id="addTagButton" th:data-target-id="${targetId}" th:data-target-type="${targetType}"
+                            type="button" data-bs-dismiss="modal" class="btn btn-secondary">Gem</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</th:block>

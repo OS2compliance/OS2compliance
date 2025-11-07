@@ -18,7 +18,6 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.ArchiveDuty;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.DataProcessingAgreementStatus;
 import dk.digitalidentity.model.entity.enums.NextInspection;
@@ -137,10 +136,17 @@ public class AssetApiController {
         final List<User> responsibleUsers = userService.findAllByUuids(nullSafe(() -> assetUpdateEO.getSystemOwners().stream().map(s -> s.getUuid()).collect(Collectors.toSet())));
         final ChoiceList assetTypeChoiceList = choiceService.findChoiceList("asset-type")
             .orElseThrow( () ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "No asset types found"));
+		final ChoiceList supervisoryModelChoiceList = choiceService.findChoiceList("supervision-model")
+				.orElseThrow( () ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "No supervision models found"));
         final ChoiceValue assetType = assetTypeChoiceList.getValues().stream()
             .filter(value -> value.getIdentifier().equals(assetUpdateEO.getAssetType().getIdentifier()) )
             .findAny()
             .orElseThrow(() ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "AssetType identifier is not valid"));
+		final ChoiceValue superVisoryModelValue = supervisoryModelChoiceList.getValues().stream()
+						.filter(choiceValue -> choiceValue.getIdentifier().equals(assetUpdateEO.getSupervisoryModel().getIdentifier()))
+						.findAny()
+						.orElseThrow(() ->new ResponseStatusException(HttpStatus.BAD_REQUEST, "SupervisoryModel identifier is not valid"));
+
         asset.setName(assetUpdateEO.getName());
         asset.setResponsibleUsers(responsibleUsers);
         asset.setDescription(assetUpdateEO.getDescription());
@@ -148,7 +154,7 @@ public class AssetApiController {
         asset.setDataProcessingAgreementStatus(nullSafe(() -> DataProcessingAgreementStatus.valueOf(assetUpdateEO.getDataProcessingAgreementStatus().name())));
         asset.setDataProcessingAgreementDate(assetUpdateEO.getDataProcessingAgreementDate());
         asset.setDataProcessingAgreementLink(assetUpdateEO.getDataProcessingAgreementLink());
-        asset.setSupervisoryModel(nullSafe(() -> ChoiceOfSupervisionModel.valueOf(assetUpdateEO.getSupervisoryModel().name())));
+        asset.setSupervisoryModel(superVisoryModelValue);
         asset.setNextInspection(nullSafe(() -> NextInspection.valueOf(assetUpdateEO.getNextInspection().name())));
         asset.setNextInspectionDate(assetUpdateEO.getNextInspectionDate());
         asset.setAssetStatus(nullSafe(() -> AssetStatus.valueOf(assetUpdateEO.getAssetStatus().name())));

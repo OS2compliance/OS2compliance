@@ -11,10 +11,12 @@ import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.DBSAsset;
 import dk.digitalidentity.model.entity.DBSOversight;
 import dk.digitalidentity.model.entity.DBSSupplier;
+import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -44,6 +46,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 import static dk.digitalidentity.Constants.LOCAL_TZ_ID;
 import static dk.digitalidentity.integration.kitos.KitosConstants.KITOS_UUID_PROPERTY_KEY;
 
@@ -295,11 +298,17 @@ public class DBSService {
                                     Task task = new Task();
                                     task.setName(getTaskName(asset));
                                     task.setNextDeadline(nowPlus30Days);
-                                    task.setResponsibleUser(asset.getOversightResponsibleUser());
+                                    task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
                                     task.setTaskType(TaskType.TASK);
                                     task.setRepetition(TaskRepetition.NONE);
                                     task.setDescription(baseDBSTaskDescription(dbsOversight) + dbsOversight.getName());
-                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUser().getName());
+									Property property = Property.builder()
+											.key(ASSOCIATED_INSPECTION_PROPERTY)
+											.value(asset.getId().toString())
+											.entity(task)
+											.build();
+									task.getProperties().add(property);
+                                    log.debug("Created task: {} {}", task.getName(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")));
                                     taskService.saveTask(task);
                                     relationService.addRelation(task, dbsAsset);
                                     relationService.addRelation(task, asset);

@@ -1,9 +1,11 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import initRelatedTagList from "../tags/related-tag-list.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let viewTaskService = new ViewTaskService();
 document.addEventListener("DOMContentLoaded", function(event) {
     viewTaskService.init();
+    initRelatedTagList('#editForm')
 });
 
 function ViewTaskService() {
@@ -30,13 +32,45 @@ function ViewTaskService() {
         saveEditTaskBtn?.addEventListener("click", () => {
             onUnSubmittedService.reset();
         });
-
         this.loadViewAndEditForm();
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
-        choiceService.initTagSelect("tagsSelect");
+        this.loadDescriptionTemplateSelect();
+
         initFormValidationForForm('editForm');
-        initFormValidationForForm('completeTaskForm', this.validateSubTasksCompletion.bind(this));
+        if (taskType === 'CHECK') {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+                const taskResultSelect = document.getElementById("taskResultSelect");
+                const taskType = document.getElementById("taskType");
+
+                if (taskResultSelect.value === 'NO_ERROR') {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                } else if (taskResultSelect.value !== 'NO_ERROR' && comment.value.trim()) {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                } else {
+                    comment.classList.add('is-invalid');
+                    return false;
+                }
+                this.validateSubTasksCompletion();
+            });
+        }
+        else {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+                if (!comment.value) {
+                    comment.classList.add('is-invalid');
+                    return false;
+                }
+                else {
+                    comment.classList.remove('is-invalid');
+                    return true;
+                }
+            })
+        }
+
         initDatepicker("#deadlineBtn", "#deadline");
         initDatepicker("#TaskDeadlineBtn", "#TaskDeadline");
         let taskDeadline = document.querySelector("#TaskDeadline");
@@ -54,6 +88,12 @@ function ViewTaskService() {
                 this.fitDescription(this);
             });
         }
+
+        this.notificationSelectHandler = initNotificationSelect(
+            'viewTaskNotificationSetting',
+            'viewTaskNotificationSelectDiv',
+            'viewTaskNotificationSelectInput'
+        );
     }
 
     // In case this task is an oversight, a special oversight dialog can be shown
@@ -108,6 +148,41 @@ function ViewTaskService() {
         textarea.style.height = textarea.scrollHeight + 'px';
     }
 
+    this.loadDescriptionTemplateSelect = function() {
+        const select = document.getElementById('taskDescriptionTemplateSelect');
+        const descriptionField = document.getElementById('description');
+        let previousDescription = ''; // Store previous value
+
+        select.addEventListener("change", async function () {
+            const selectedValue = this.value;
+
+            // If "Ingen valgt" (no selection) or empty value
+            if (!selectedValue || selectedValue === '') {
+                descriptionField.value = previousDescription;
+                descriptionField.disabled = false;
+                return;
+            }
+
+            // Save current description before replacing it
+            if (descriptionField.value) {
+                previousDescription = descriptionField.value;
+            }
+
+            const response = await fetch(`/rest/choicelists/custom/choiceValue/${selectedValue}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    descriptionField.value = data.description;
+                    descriptionField.disabled = true;
+                } else {
+                    toastService.error("Kunne ikke hente beskrivelse");
+                }
+            } else {
+                toastService.error("Der opstod en teknisk fejl");
+            }
+        });
+    }
+
     this.setEditMode = function(enabled) {
         let performButton = document.getElementById('completeBtn') || document.getElementById('oversightBtn');
         if (enabled) {
@@ -126,6 +201,7 @@ function ViewTaskService() {
             document.getElementById("linksEditContainer").hidden = false;
             document.getElementById("subTaskEditContainer").hidden = false;
             document.getElementById("addLinkBtn").hidden = false;
+            this.notificationSelectHandler.enable();
             document.getElementById("subTaskAddLinkBtn").hidden = false;
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
@@ -144,6 +220,7 @@ function ViewTaskService() {
             document.getElementById("subTaskEditContainer").hidden = true;
             document.getElementById("addLinkBtn").hidden = true;
             document.getElementById("subTaskAddLinkBtn").hidden = true;
+            this.notificationSelectHandler.disable();
         }
     }
 

@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_DOCUMENT_PROPERTY;
@@ -164,7 +165,7 @@ public class AdminRestController {
                     break;
                 case TASK:
                     Task task = (Task) responsibleFor;
-                    task.setResponsibleUser(userTo);
+                    task.setResponsibleUsers(Set.of(userTo));
                     taskService.saveTask(task);
                     break;
                 case THREAT_ASSESSMENT:

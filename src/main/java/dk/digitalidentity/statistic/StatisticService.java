@@ -82,7 +82,7 @@ public class StatisticService {
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, parsedLabel, yField, aggregation);
-			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy);
+			case ChartType.PIE -> generatePieChart(rawData, parsedLabel, yField, aggregation, groupTimeBy, dateField);
 			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, parsedLabel, yField, aggregation, dateField, yField);
 		};
 	}
@@ -128,7 +128,7 @@ public class StatisticService {
 
 		return switch (chartType) {
 			case ChartType.BAR -> generateBarChart(rawData, xFieldNoPrefix, yField, aggregation);
-			case ChartType.PIE -> generatePieChart(rawData, isChoiceListType ? answerChoicesFieldName : xFieldNoPrefix, yField, aggregation, groupTimeBy);
+			case ChartType.PIE -> generatePieChart(rawData, isChoiceListType ? answerChoicesFieldName : xFieldNoPrefix, yField, aggregation, groupTimeBy, dateField);
 			case ChartType.STACKEDBAR -> generateStackedBarChart(rawData, xFieldNoPrefix, yField, aggregation, dateField, isChoiceListType ? answerChoicesFieldName : "indexColumnName");
 		}
 
@@ -413,18 +413,18 @@ public class StatisticService {
 	 * @param groupDateBy a field specifying how date labels should be grouped. Null for non-dates
 	 * @return ChartJsConfigDTO object compatible with ChartJS data structure
 	 */
-	private ChartJsDataDTO generatePieChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, Period groupDateBy) {
+	private ChartJsDataDTO generatePieChart(List<Map<String, Object>> rawData, String xField, String yField, AggregationMethod aggregation, Period groupDateBy, String dateField) {
 		// map to datarows
 		List<DataRow> dataRows = rawData.stream().map(d -> new DataRow(d.get("id").toString(), formatLabel(d.get(xField)), d.get(yField))).toList();
 
 		if (groupDateBy == Period.YEAR) {
 			dataRows = rawData.stream()
-					.map(d -> new DataRow(d.get("id").toString(), String.valueOf(LocalDateTime.parse(d.get(xField).toString()).getYear()), d.get(yField)))
+					.map(d -> new DataRow(d.get("id").toString(), String.valueOf(LocalDateTime.parse(d.get(dateField).toString()).getYear()), d.get(yField)))
 					.toList();
 		}
 		else if (groupDateBy == Period.MONTH) {
 			dataRows = rawData.stream()
-					.map(d -> new DataRow(d.get("id").toString(), LocalDateTime.parse(d.get(xField).toString()).getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH), d.get(yField)))
+					.map(d -> new DataRow(d.get("id").toString(), LocalDateTime.parse(d.get(dateField).toString()).getMonth().getDisplayName(TextStyle.SHORT, Locale.ENGLISH), d.get(yField)))
 					.toList();
 		}
 

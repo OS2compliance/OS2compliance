@@ -6,7 +6,9 @@ import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
 import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.SupplierDTO;
+import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.grid.SupplierGrid;
 import dk.digitalidentity.security.Roles;
@@ -16,6 +18,7 @@ import dk.digitalidentity.security.annotations.sections.RequireSupplier;
 import dk.digitalidentity.service.SecurityUserService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.SupplierService;
+import dk.digitalidentity.service.tag.TagService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -31,15 +34,16 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.DK_DATE_FORMATTER;
-import static dk.digitalidentity.service.FilterService.buildPageable;
-import static dk.digitalidentity.service.FilterService.validateSearchFilters;
 
 @SuppressWarnings("ClassEscapesDefinedScope")
 @Slf4j
@@ -65,8 +69,15 @@ public class SupplierRestController {
 			String updated,
 			@ExcelColumn(headerName = "Status", order = 4)
 			String status,
+			@ExcelColumn(headerName = "Sidste tilsyn", order = 5)
+			LocalDate lastOversightDate,
 			@ExcludeFromExport
-			Set<AllowedAction> allowedActions) {}
+			String kitosUuid,
+			@ExcludeFromExport
+			List<TagDTO> tags,
+			@ExcludeFromExport
+			Set<AllowedAction> allowedActions
+	) {}
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -83,6 +94,11 @@ public class SupplierRestController {
 
 		Page<SupplierGrid> suppliers = supplierService.getSuppliers(sortColumn, sortDirection, filters, page, limit, user);
 
+		Set<Long> entityIds = suppliers.getContent().stream().map(SupplierGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = supplierService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
+
 		assert suppliers != null;
 
 		// Convert to DTO
@@ -94,6 +110,9 @@ public class SupplierRestController {
 					supplier.getSolutionCount(),
 					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER),
 					supplier.getStatus().getMessage(),
+					supplier.getLastOversightDate(),
+					supplier.getKitosUuid(),
+					TagService.toTagDTO(supplier.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(),
 					allowedActions
 			);
 			supplierDTOs.add(dto);
@@ -120,12 +139,16 @@ public class SupplierRestController {
 		// Fetch all records (no pagination)
 		Page<SupplierGrid> suppliers = supplierService.getSuppliers(sortColumn, sortDirection, filters, 0, pageLimit, user);
 
+		Set<Long> entityIds = suppliers.getContent().stream().map(SupplierGrid::getId).collect(Collectors.toSet());
+		Map<Long, Tag> tagsById = supplierService.findTagsByEntityIds(entityIds).stream()
+				.collect(Collectors.toMap(Tag::getId, t -> t, (a, b) -> b));
+
 		assert suppliers != null;
 
 		final List<SupplierGridDTO> allData = new ArrayList<>();
 		for (final SupplierGrid supplier : suppliers.getContent()) {
 			final SupplierGridDTO dto = new SupplierGridDTO(supplier.getId(), supplier.getName(), supplier.getSolutionCount(),
-					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), allowedActions);
+					supplier.getUpdated() == null ? "" : supplier.getUpdated().format(DK_DATE_FORMATTER), supplier.getStatus().getMessage(), supplier.getLastOversightDate(), supplier.getKitosUuid(),TagService.toTagDTO(supplier.getTagIds(), tagsById).stream().sorted(Comparator.comparing(TagDTO::getLabel)).toList(), allowedActions);
 			allData.add(dto);
 		}
 		excelExportService.exportToExcel(allData, SupplierGridDTO.class, fileName, response);

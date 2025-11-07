@@ -59,4 +59,11 @@ public class DPIAGrid {
 	@ExcludeFromExport
 	@Column
 	private String approverUuid;
+
+	@Column
+	private String tagNames;
+
+	@ExcludeFromExport
+	@Column
+	private String tagIds;
 }
