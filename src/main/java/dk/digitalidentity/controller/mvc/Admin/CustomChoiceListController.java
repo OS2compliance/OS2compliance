@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.mvc.Admin;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
@@ -56,9 +57,9 @@ public class CustomChoiceListController {
 		if (list == null) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ChoiceList not found");
 		}
-		Set<AllowedAction> allowedActions = setAllowedActions();
 
 		Set<ChoiceValueDTO> collect = list.getValues().stream().map(choiceValue -> {
+			Set<AllowedAction> allowedActions = setAllowedActions(choiceValue);
 			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), allowedActions);
 		}).collect(Collectors.toSet());
 		model.addAttribute("choiceList", list);
@@ -68,17 +69,14 @@ public class CustomChoiceListController {
 	}
 
 	private boolean isInUse(ChoiceValue choiceValue) {
-		if (!choiceValue.isEditable()) {
-			return true;
-		}
 		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId());
 	}
-	private Set<AllowedAction> setAllowedActions() {
+	private Set<AllowedAction> setAllowedActions(ChoiceValue choiceValue) {
 		Set<AllowedAction> allowedActions = new HashSet<>();
 		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
 			allowedActions.add(AllowedAction.UPDATE);
 		}
-		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)) {
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) && !isInUse(choiceValue)) {
 			allowedActions.add(AllowedAction.DELETE);
 		}
 		return allowedActions;
