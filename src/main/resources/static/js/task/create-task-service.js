@@ -86,6 +86,31 @@ function CreateTaskService() {
             'taskNotificationSelectInput'
         );
         this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
+        let templateDescriptionSelect = document.getElementById('taskCreateFormTemplateDescriptionSelect');
+        if (templateDescriptionSelect !== null) {
+            new Choices(templateDescriptionSelect, {
+                removeItemButton: true,
+                searchEnabled: true,
+                placeholderValue: 'Vælg en skabelon',
+                searchPlaceholderValue: 'Søg...'
+            });
+            let previousDescription;
+
+            templateDescriptionSelect.addEventListener('change', function(event) {
+                let descriptionBox = document.getElementById('taskCreateFormdescription');
+                if (templateDescriptionSelect.value !== '' && templateDescriptionSelect.value !== null) {
+                    if (descriptionBox.value) {
+                        previousDescription = descriptionBox.value;
+                    }
+                    descriptionBox.value = "";
+                    descriptionBox.disabled = true;
+                }
+                else {
+                    descriptionBox.value = previousDescription;
+                    descriptionBox.disabled = false;
+                }
+            });
+        }
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
              var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;

@@ -1,6 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
@@ -25,6 +27,8 @@ import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
+import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RelatableService;
@@ -81,7 +85,8 @@ public class TasksController {
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
     private final EmailTemplateService emailTemplateService;
-
+	private final ChoiceService choiceService;
+	private final ChoiceValueService choiceValueService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -91,9 +96,18 @@ public class TasksController {
         return "tasks/index";
     }
 
+	record ChoiceValueDTO(long id, String caption) {}
+
 	@RequireUpdateOwnerOnly
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
+		ChoiceList choiceList = choiceService.findChoiceList("task-description-template")
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		List<ChoiceValueDTO> values = new ArrayList<>();
+		choiceList.getValues().forEach(choiceValue -> {
+			values.add(new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption()));
+		});
+		model.addAttribute("descriptionTemplates", values);
         if (id == null) {
 			boolean creationAllowed = SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY);
 			if (!creationAllowed) {
@@ -144,10 +158,14 @@ public class TasksController {
                            @RequestParam(name = "relations", required = false) final Set<Long> relations,
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
+							@RequestParam(name = "templateDescription", required = false) final Long templateDescriptionId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
 		List<TaskLink> links = new ArrayList<>();
 		for (TaskLink link : task.getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
+		}
+		if (templateDescriptionId != null) {
+			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
 		}
 		task.setLinks(links);
 		final Task savedTask = taskService.saveTask(task);
@@ -236,6 +254,7 @@ public class TasksController {
         }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
         existingTask.setIncludeInReport(task.getIncludeInReport());
+		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
@@ -277,6 +296,10 @@ public class TasksController {
         model.addAttribute("task", task);
 		model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
         model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
+		ChoiceList list = choiceService.findChoiceList("task-description-template").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find Task description template choices"));
+		List<ChoiceValue> values = list.getValues().stream().toList();
+
+		model.addAttribute("taskDescriptionTemplates", values);
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, "", null, null));
 
