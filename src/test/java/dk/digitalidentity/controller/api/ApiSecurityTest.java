@@ -2,6 +2,9 @@ package dk.digitalidentity.controller.api;
 
 import dk.digitalidentity.BaseIntegrationTest;
 import dk.digitalidentity.model.entity.ApiClient;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.Supplier;
 import dk.digitalidentity.service.ApiClientService;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.DocumentService;
@@ -23,6 +26,7 @@ import java.util.Optional;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doReturn;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -47,9 +51,12 @@ public class ApiSecurityTest extends BaseIntegrationTest {
     public void setup() {
         doReturn(Page.empty()).when(userServiceMock).getPaged(anyInt(), anyInt());
         doReturn(Page.empty()).when(supplierServiceMock).getPaged(anyInt(), anyInt());
+		doReturn(Supplier.class).when(supplierServiceMock).getEntityType();
         doReturn(Page.empty()).when(organisationServiceMock).getPaged(anyInt(), anyInt());
         doReturn(Page.empty()).when(documentServiceMock).getPaged(anyInt(), anyInt());
+		doReturn(Document.class).when(documentServiceMock).getEntityType();
         doReturn(Page.empty()).when(assetServiceMock).getPagedNonDeleted(anyInt(), anyInt());
+        doReturn(Asset.class).when(assetServiceMock).getEntityType();
         doReturn(Optional.empty()).when(apiClientService).getClientByApiKey(anyString());
         doReturn(Optional.of(ApiClient.builder()
             .applicationIdentifier("some-app")

@@ -1,6 +1,7 @@
 package dk.digitalidentity.service.tag;
 
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -11,9 +12,11 @@ import java.util.stream.Collectors;
 public class TagableServiceRegistry {
 	private final Map<String, TagableService<?>> services;
 
+	@Autowired
     public TagableServiceRegistry(List<TagableService<?>> serviceList) {
 		// spring auto-magically supplies the list of all services with the interface Taggable
 		this.services = serviceList.stream()
+				.filter(service -> service.getEntityType() != null)
 				.collect(Collectors.toMap(
 						service -> service.getEntityType().getSimpleName().toLowerCase(),
 						service -> service
