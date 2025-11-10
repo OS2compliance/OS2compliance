@@ -92,7 +92,7 @@ public interface TaskMapper {
 	@Mapping(target = "description", source = "dto.description")
 	@Mapping(target = "notifyResponsible", source = "dto.notifyResponsible")
 	@Mapping(target = "includeInReport", source = "dto.includeInReport")
-	@Mapping(target = "responsibleUser", source = "responsibleUser")
+	@Mapping(target = "responsibleUsers", source = "responsibleUsers")
 	@Mapping(target = "responsibleOu", source = "responsibleOu")
 	@Mapping(target = "department", source = "department")
 	@Mapping(target = "tags", source = "tags")
@@ -109,7 +109,7 @@ public interface TaskMapper {
 	@Mapping(target = "properties", ignore = true)
 	@Mapping(target = "logs", ignore = true)
 	@Mapping(target = "status", ignore = true)
-	Task toEntity(TaskCreateDTO dto, User responsibleUser, OrganisationUnit responsibleOu, OrganisationUnit department, Set<Tag> tags);
+	Task toEntity(TaskCreateDTO dto, Set<User> responsibleUsers, OrganisationUnit responsibleOu, OrganisationUnit department, Set<Tag> tags);
 
 	default TaskRepetition mapRepetition(String repetition) {
 		if (repetition == null || repetition.trim().isEmpty()) {

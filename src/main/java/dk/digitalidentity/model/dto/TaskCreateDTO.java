@@ -26,7 +26,7 @@ public class TaskCreateDTO {
 	@NotNull(message = "Deadline is required")
 	private LocalDate nextDeadline;
 
-	private String responsibleUserUuid;
+	private List<String> responsibleUserUuids;
 	private String responsibleOuUuid;
 	private String departmentUuid;
 	private String repetition;

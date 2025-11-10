@@ -32,7 +32,7 @@ document.addEventListener('click', async function(e) {
                 name: fd.get('name') || '',
                 taskType: fd.get('taskType') || null,
                 nextDeadline: fd.get(form.id + 'TaskDeadline') || fd.get('nextDeadline') || '',
-                responsibleUserUuid: fd.get('responsibleUser') || null,
+                responsibleUserUuids: fd.getAll('responsibleUsers') || [],
                 responsibleOuUuid: fd.get('responsibleOu') || null,
                 departmentUuid: fd.get('department') || null,
                 repetition: fd.get('repetition') || null,

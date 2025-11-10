@@ -159,18 +159,18 @@ public class TaskRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		User responsibleUser = null;
+		Set<User> responsibleUsers = null;
 		OrganisationUnit responsibleOu = null;
 		OrganisationUnit department = null;
 		Set<Tag> tags = null;
 
-		log.info(request.getTask().getResponsibleUserUuid());
+		log.info("List: {}", request.getTask().getResponsibleUserUuids());
 		log.info(request.getTask().getResponsibleOuUuid());
 		log.info(request.getTask().getDepartmentUuid());
-		log.info("tags: ", request.getTask().getTagIds());
+		log.info("tags: {}", request.getTask().getTagIds());
 
-		if (request.getTask().getResponsibleUserUuid() != null && StringUtils.hasText(request.getTask().getResponsibleUserUuid())) {
-			responsibleUser = fetchResponsibleUser(request.getTask().getResponsibleUserUuid());
+		if (request.getTask().getResponsibleUserUuids() != null && !request.getTask().getResponsibleUserUuids().isEmpty()) {
+			responsibleUsers = fetchResponsibleUsers(request.getTask().getResponsibleUserUuids());
 		}
 
 		if (request.getTask().getResponsibleOuUuid() != null && StringUtils.hasText(request.getTask().getResponsibleOuUuid())) {
@@ -185,9 +185,7 @@ public class TaskRestController {
 			tags = fetchTags(request.getTask().getTagIds());
 		}
 
-		Task task = taskMapper.toEntity(request.getTask(), responsibleUser, responsibleOu, department, tags);
-
-		log.info(task.toString());
+		Task task = taskMapper.toEntity(request.getTask(), responsibleUsers, responsibleOu, department, tags);
 
 		if (task == null) {
 			log.debug("Could not create task");
@@ -218,9 +216,13 @@ public class TaskRestController {
 	}
 
 	// Helper methods for createTask
-	private User fetchResponsibleUser(String uuid) {
-		return userService.findByUuid(uuid)
-				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Responsible user not found with UUID: " + uuid));
+	private Set<User> fetchResponsibleUsers(List<String> uuids) {
+		Set<User> responsibleUsers = new HashSet<>();
+		for (String uuid : uuids) {
+			User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Responsible user not found with UUID: " + uuid));
+			responsibleUsers.add(user);
+		}
+		return responsibleUsers;
 	}
 
 	private OrganisationUnit fetchResponsibleOu(String uuid) {
