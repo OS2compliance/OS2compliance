@@ -210,6 +210,7 @@ function ViewTaskService() {
             document.getElementById("addLinkBtn").hidden = false;
             this.notificationSelectHandler.enable();
             document.getElementById("subTaskAddLinkBtn").hidden = false;
+            this.toggleSubTaskCheckboxes(true);
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -228,7 +229,16 @@ function ViewTaskService() {
             document.getElementById("addLinkBtn").hidden = true;
             document.getElementById("subTaskAddLinkBtn").hidden = true;
             this.notificationSelectHandler.disable();
+            this.toggleSubTaskCheckboxes(false);
         }
+    }
+
+    this.toggleSubTaskCheckboxes = function(enabled) {
+        const checkboxes = document.querySelectorAll('#subTaskEditContainer input[type="checkbox"]');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.disabled = !enabled;
+        });
     }
 
     this.loadViewAndEditForm = function() {

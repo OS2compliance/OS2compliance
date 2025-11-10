@@ -108,7 +108,7 @@ function SubTaskLinkService() {
         if (!container) return;
 
         const index = container.children.length;
-        const element = this.createSubTaskElement(index);
+        const element = this.createSubTaskElement(index, false);
 
         const input = element.querySelector('input[type="text"]');
         const button = element.querySelector('button');
@@ -118,7 +118,7 @@ function SubTaskLinkService() {
         container.appendChild(element);
     }
 
-    this.createSubTaskElement = function(index) {
+    this.createSubTaskElement = function(index, disableCheckBox=true) {
         const div = document.createElement("div");
         div.className = "input-group mb-2";
 
@@ -128,8 +128,8 @@ function SubTaskLinkService() {
         const checkbox = document.createElement("input");
         checkbox.type = "checkbox";
         checkbox.name = `subTasks[${index}].completed`;
-        checkbox.className = "form-check-input mt-0";
-        checkbox.disabled = true;
+        checkbox.className = "form-check-input mt-0 editField";
+        checkbox.disabled = disableCheckBox;
 
         const input = document.createElement("input");
         input.type = "text";

@@ -420,12 +420,11 @@ public class TasksController {
         taskLog.setResponsibleUserUserId(user.getUserId());
         taskLog.setTaskResult(dto.taskResult());
 		if (task.getSubTasks() != null && !task.getSubTasks().isEmpty()) {
-			Set<Long> completedIds = dto.subTasksCompleted() != null ?
-					new HashSet<>(dto.subTasksCompleted()) :
-					Collections.emptySet();
+			boolean isCheckType = task.getTaskType().equals(TaskType.CHECK);
+			Set<Long> completedIds = isCheckType || dto.subTasksCompleted() == null ? Collections.emptySet() : new HashSet<>(dto.subTasksCompleted());
 
 			for (SubTask subTask : task.getSubTasks()) {
-				subTask.setCompleted(completedIds.contains(subTask.getId()));
+				subTask.setCompleted(!isCheckType && completedIds.contains(subTask.getId()));
 			}
 		}
 

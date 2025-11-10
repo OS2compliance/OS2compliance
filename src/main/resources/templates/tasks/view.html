@@ -136,7 +136,7 @@
                                     <div id="subTaskViewContainer" class="editField">
                                         <ul class="list-unstyled mb-0">
                                             <li th:each="subTask : *{subTasks}" class="mb-2">
-                                                <input class="form-check-input me-2" type="checkbox" th:checked="${subTask.completed}" disabled>
+                                                <input class="form-check-input me-2 editField" type="checkbox" th:checked="${subTask.completed}" disabled>
                                                 <span th:text="${subTask.name}"></span>
                                             </li>
                                         </ul>
