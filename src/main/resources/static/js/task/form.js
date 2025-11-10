@@ -42,9 +42,22 @@ function EditTaskService() {
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
         checkInputField(self.editTaskUserChoicesEditSelect);
         });
+
+        this.initSubTaskButtons();
+
+        subTaskLinkService.validateExistingInputs();
+
         initFormValidationForForm('taskEditForm',
-            () => validateChoices(
-                this.editTaskUserChoicesEditSelect, this.editTaskOuChoicesSelect));
+            () => {
+                const choicesValid = validateChoices(
+                    this.editTaskUserChoicesEditSelect,
+                    this.editTaskOuChoicesSelect
+                );
+                const subTasksValid = subTaskLinkService.validateAllSubTasks();
+
+                return choicesValid && subTasksValid;
+            }
+        );
 
         this.taskModalDialog.querySelector('#taskEditFormThreatAssessmentExplainer').style.display = 'none';
         this.taskModalDialog.querySelector('#taskEditFormRelationsDiv').style.display = 'none';
@@ -60,6 +73,18 @@ function EditTaskService() {
         editTaskModal.show();
     }
 
+    this.initSubTaskButtons = function() {
+        const addBtn = document.getElementById('addSubTaskBtn');
+        if (addBtn) {
+            // Fjern gamle event listeners ved at clone noden
+            const newAddBtn = addBtn.cloneNode(true);
+            addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+
+            newAddBtn.addEventListener('click', () => {
+                subTaskLinkService.addSubTask();
+            });
+        }
+    }
 }
 
 function CopyTaskService() {
