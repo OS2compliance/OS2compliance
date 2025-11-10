@@ -8,6 +8,7 @@ pipelines:
         script:
           - export TESTCONTAINERS_RYUK_DISABLED=true
           - ./validation/flyway_check_migrations.sh
+          - git fetch origin develop:develop
           - ./mvnw spotless:check test
         services:
           - docker
