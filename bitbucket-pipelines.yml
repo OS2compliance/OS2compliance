@@ -6,8 +6,11 @@ pipelines:
         caches:
           - docker
         script:
+          - pwd
+          - ls -la
+          - ls -la validation/ || echo "validation folder not found"
           - export TESTCONTAINERS_RYUK_DISABLED=true
-          - ./validation/flyway_check_migrations.sh
+          - bash validation/flyway_check_migrations.sh
           - ./mvnw spotless:check test
         services:
           - docker
@@ -21,8 +24,8 @@ pipelines:
           script:
             - IMAGE_NAME="os2compliance"
             - IMAGE_TAG="develop"
-            - ./validation/flyway_check_migrations.sh
             - export TESTCONTAINERS_RYUK_DISABLED=true
+            - ./validation/flyway_check_migrations.sh
             - ./mvnw spotless:check test
             - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
             - pipe: atlassian/aws-ecr-push-image:2.0.0
