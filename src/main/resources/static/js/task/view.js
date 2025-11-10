@@ -36,6 +36,8 @@ function ViewTaskService() {
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
         this.loadDescriptionTemplateSelect();
+        this.initSubTaskBtns();
+
 
         initFormValidationForForm('editForm');
         if (taskType === 'CHECK') {
@@ -105,6 +107,11 @@ function ViewTaskService() {
         const url = `/assets/oversight/${assetId}/asset`;
         oversightService.initOversightModal(null, 'asset', assetId)
             .then(() => {oversightDialog.show()});
+    }
+
+    this.initSubTaskBtns = function () {
+        let addBtn = document.getElementById('subTaskAddLinkBtn');
+        addBtn.addEventListener('click', () => subTaskLinkService.addSubTaskFromView);
     }
 
     this.validateSubTasksCompletion = function() {

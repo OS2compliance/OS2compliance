@@ -1,7 +1,6 @@
 import {initStatisticView} from "../statistic/statisticView.js";
 import ColumnOptions from "../grid-js-extension/column-options.js";
 import formatTags from "../tags/tag-grid-formatter.js";
-import {add} from "../../vendor/date-fns/date-fns";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
@@ -12,7 +11,6 @@ document.addEventListener("DOMContentLoaded", function() {
 
     initStatisticView('task')
 
-    initSubTaskBtns();
 });
 
 const DateDiff = {
@@ -265,12 +263,4 @@ function initGridActions() {
         (id, name, elem) => deleteClicked(id, name),
         (id, elem) =>copyTaskService.showCopyDialog(id) ,
     )
-}
-
-function initSubTaskBtns() {
-    let removeSubTaskBtn = document.getElementById('viewRemoveSubTaskBtn');
-    let addSubTaskBtn = document.getElementById('subTaskAddLinkBtn');
-    removeSubTaskBtn.addEventListener("click", () => subTaskLinkService.removeSubTask(this))
-    addSubTaskBtn.addEventListener("click", () => subTaskLinkService.addSubTaskFromView())
-
 }

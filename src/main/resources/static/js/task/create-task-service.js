@@ -5,6 +5,7 @@ const taskLinkService = new TaskLinkService();
 const subTaskLinkService = new SubTaskLinkService();
 window.createTaskService = createTaskService;
 window.taskLinkService = taskLinkService;
+window.subTaskLinkService = subTaskLinkService;
 
 document.addEventListener('DOMContentLoaded', (e) => {
     // Find create task button ( if it exists) and add event listener
@@ -14,28 +15,30 @@ document.addEventListener('DOMContentLoaded', (e) => {
             createTaskService.show()
         })
     }
+    subTaskLinkService.init();
 })
 
 function SubTaskLinkService() {
-    this.addSubTask = function() {
-        const container = document.getElementById('subTasksContainer');
-        const index = container.children.length;
+    this.init = function() {
+        const addBtn = document.getElementById('addSubTaskBtn');
+        const copyAddBtn = document.getElementById('copyAddSubTaskBtn');
 
-        const div = document.createElement('div');
-        div.className = 'input-group mb-2';
-        div.innerHTML = `
-        <div class="input-group-text">
-            <input class="form-check-input mt-0" type="checkbox" name="subTasks[${index}].completed" disabled>
-        </div>
-        <input type="text" name="subTasks[${index}].name" class="form-control" placeholder="Indtast underopgave...">
-        <button type="button" class="btn btn-danger" onclick="subTaskLinkService.removeSubTask(this)">-</button>`;
-        container.appendChild(div);
+        if (addBtn) {
+            addBtn.addEventListener('click', () => this.addSubTask());
+        }
+
+        if (copyAddBtn) {
+            copyAddBtn.addEventListener('click', () => this.addSubTask());
+        }
+
+        document.addEventListener('click', (e) => {
+            if (e.target.classList.contains('subtask-remove-btn')) {
+                this.removeSubTask(e.target);
+            }
+        });
     }
 
-    this.addSubTaskFromView = function () {
-        const container = document.getElementById("subTaskEditContainer");
-        const index = container.children.length;
-
+    this.createSubTaskElement = function(index) {
         const div = document.createElement("div");
         div.className = "input-group mb-2";
 
@@ -46,35 +49,47 @@ function SubTaskLinkService() {
         checkbox.type = "checkbox";
         checkbox.name = `subTasks[${index}].completed`;
         checkbox.className = "form-check-input mt-0";
-        checkbox.disabled = true
+        checkbox.disabled = true;
 
         const input = document.createElement("input");
         input.type = "text";
         input.name = `subTasks[${index}].name`;
-        input.className = "form-control editField";
+        input.className = "form-control";
+        input.placeholder = "Indtast underopgave...";
 
         const removeBtn = document.createElement("button");
         removeBtn.type = "button";
-        removeBtn.className = "btn btn-danger editField";
+        removeBtn.className = "btn btn-danger subtask-remove-btn";
         removeBtn.textContent = "-";
-        removeBtn.addEventListener("click", function () {
-            subTaskLinkService.removeSubTask(removeBtn);
-        });
 
         inputGroupText.appendChild(checkbox);
         div.appendChild(inputGroupText);
         div.appendChild(input);
         div.appendChild(removeBtn);
-        container.appendChild(div);
+
+        return div;
+    }
+
+    this.addSubTask = function() {
+        const container = document.getElementById('subTasksContainer');
+        if (!container) return;
+
+        const index = container.children.length;
+        const element = this.createSubTaskElement(index);
+        container.appendChild(element);
     }
 
     this.removeSubTask = function(button) {
-        button.parentElement.remove();
-        this.reindexSubTasks();
+        if (button && button.parentElement) {
+            const container = button.parentElement.parentElement;
+            button.parentElement.remove();
+            this.reindexSubTasks(container);
+        }
     }
 
-    this.reindexSubTasks = function() {
-        const container = document.getElementById('subTasksContainer');
+    this.reindexSubTasks = function(container) {
+        if (!container) return;
+
         const children = container.children;
 
         for (let i = 0; i < children.length; i++) {
@@ -89,7 +104,6 @@ function SubTaskLinkService() {
             }
         }
     }
-
 }
 
 function TaskLinkService() {
@@ -164,6 +178,10 @@ function CreateTaskService() {
         );
         this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
         let templateDescriptionSelect = document.getElementById('taskCreateFormTemplateDescriptionSelect');
+
+        let addSubTaskBtn = document.getElementById('addSubTaskBtn');
+        addSubTaskBtn.addEventListener("click", () => subTaskLinkService.addSubTask())
+
         if (templateDescriptionSelect !== null) {
             new Choices(templateDescriptionSelect, {
                 removeItemButton: true,

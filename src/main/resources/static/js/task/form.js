@@ -103,9 +103,19 @@ function CopyTaskService() {
            this.initCopyTaskRelationSelect();
        }
 
+        let addSubTaskBtn = document.getElementById('copyAddSubTaskBtn');
+        if (addSubTaskBtn !== null) {
+            addSubTaskBtn.addEventListener("click", () => subTaskLinkService.addSubTask())
+        }
+
+        let removeSubTaskBtn = document.getElementById('copyRemoveSubTaskBtn');
+        if (removeSubTaskBtn !== null) {
+            removeSubTaskBtn.addEventListener("click", () => subTaskLinkService.removeSubTask())
+        }
+
        let tagCopySelect = this.getScopedElementById('copyTaskTagsSelect');
        if(tagCopySelect !== null) {
-           initTagSelect('copyTaskTagsSelect');
+           //initTagSelect('copyTaskTagsSelect');
        }
 
         initFormValidationForForm("copyTaskModalForm");
