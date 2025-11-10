@@ -8,6 +8,11 @@
     <select id="xAxisSelector" class="form-control col-7">
         <option th:each="option : ${config.allowedXFieldChoices}" th:attr="data-incident-field-id=${option.dataAttribute}" th:value="${option.fieldName}" th:text="${option.label}"></option>
     </select>
+    <th:block th:each="error : ${config.errors}">
+        <div class="text-danger" th:if="${error.regarding == T(dk.digitalidentity.statistic.dto.ErrorDTO.Regarding).XAXIS}"
+             th:text="${error.message}">
+        </div>
+    </th:block>
 </div>
 
 <div class="form-group" th:hidden="${!config.showYField}">
@@ -15,6 +20,11 @@
     <select id="yAxisSelector" class="form-control col-7">
         <option th:each="option : ${config.allowedYFieldChoices}" th:attr="data-incident-field-id=${option.dataAttribute}" th:value="${option.fieldName}" th:text="${option.label}"></option>
     </select>
+    <th:block th:each="error : ${config.errors}">
+        <div class="text-danger chartConfigError" th:if="${error.regarding == T(dk.digitalidentity.statistic.dto.ErrorDTO.Regarding).YAXIS}"
+             th:text="${error.message}">
+        </div>
+    </th:block>
 </div>
 
 <!--Time period-->
@@ -46,6 +56,12 @@
             </select>
         </div>
     </div>
+
+    <th:block th:each="error : ${config.errors}">
+        <div class="text-danger" th:if="${error.regarding == T(dk.digitalidentity.statistic.dto.ErrorDTO.Regarding).DATES}"
+             th:text="${error.message}">
+        </div>
+    </th:block>
 </div>
 </body>
 </html>

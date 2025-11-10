@@ -32,10 +32,10 @@ function ViewTaskService() {
         saveEditTaskBtn?.addEventListener("click", () => {
             onUnSubmittedService.reset();
         });
-
         this.loadViewAndEditForm();
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
+        this.loadDescriptionTemplateSelect();
 
         initFormValidationForForm('editForm');
         if (taskType === 'CHECK') {
@@ -87,6 +87,12 @@ function ViewTaskService() {
                 this.fitDescription(this);
             });
         }
+
+        this.notificationSelectHandler = initNotificationSelect(
+            'viewTaskNotificationSetting',
+            'viewTaskNotificationSelectDiv',
+            'viewTaskNotificationSelectInput'
+        );
     }
 
     // In case this task is an oversight, a special oversight dialog can be shown
@@ -105,6 +111,41 @@ function ViewTaskService() {
         textarea.style.height = textarea.scrollHeight + 'px';
     }
 
+    this.loadDescriptionTemplateSelect = function() {
+        const select = document.getElementById('taskDescriptionTemplateSelect');
+        const descriptionField = document.getElementById('description');
+        let previousDescription = ''; // Store previous value
+
+        select.addEventListener("change", async function () {
+            const selectedValue = this.value;
+
+            // If "Ingen valgt" (no selection) or empty value
+            if (!selectedValue || selectedValue === '') {
+                descriptionField.value = previousDescription;
+                descriptionField.disabled = false;
+                return;
+            }
+
+            // Save current description before replacing it
+            if (descriptionField.value) {
+                previousDescription = descriptionField.value;
+            }
+
+            const response = await fetch(`/rest/choicelists/custom/choiceValue/${selectedValue}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    descriptionField.value = data.description;
+                    descriptionField.disabled = true;
+                } else {
+                    toastService.error("Kunne ikke hente beskrivelse");
+                }
+            } else {
+                toastService.error("Der opstod en teknisk fejl");
+            }
+        });
+    }
+
     this.setEditMode = function(enabled) {
         let performButton = document.getElementById('completeBtn') || document.getElementById('oversightBtn');
         if (enabled) {
@@ -121,6 +162,7 @@ function ViewTaskService() {
             document.getElementById("linksViewContainer").hidden = true;
             document.getElementById("linksEditContainer").hidden = false;
             document.getElementById("addLinkBtn").hidden = false;
+            this.notificationSelectHandler.enable();
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -135,6 +177,7 @@ function ViewTaskService() {
             document.getElementById("linksViewContainer").hidden = false;
             document.getElementById("linksEditContainer").hidden = true;
             document.getElementById("addLinkBtn").hidden = true;
+            this.notificationSelectHandler.disable();
         }
     }
 

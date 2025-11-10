@@ -23,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 
@@ -128,7 +129,7 @@ public class AssetOversightService {
 
         }
         if (asset.getOversightResponsibleUser() != null) {
-            task.setResponsibleUser(asset.getOversightResponsibleUser());
+            task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
         }
     }
 
@@ -138,11 +139,11 @@ public class AssetOversightService {
         }
         final Task task = new Task();
         task.setTaskType(TaskType.CHECK);
-        task.setName("Tilsyn af " + asset.getName());
+        task.setName("Udfør tilsyn med leverandøren af " + asset.getName());
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
-        task.setResponsibleUser(asset.getOversightResponsibleUser());
+        task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
             .entity(task)

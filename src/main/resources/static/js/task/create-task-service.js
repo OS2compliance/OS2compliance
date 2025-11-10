@@ -80,8 +80,37 @@ function CreateTaskService() {
         initDatepicker("#taskCreateFormTaskDeadlineBtn", "#taskCreateFormTaskDeadline");
         this.createTaskOuChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskOuSelect');
         this.createTaskDepartmentChoicesEditSelect = choiceService.initOUSelect('taskCreateFormTaskDepartmentSelect');
+        this.notificationSelectHandler = initNotificationSelect(
+            'taskNotificationSetting',
+            'taskNotificationSelectDiv',
+            'taskNotificationSelectInput'
+        );
         this.createTaskDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
+        let templateDescriptionSelect = document.getElementById('taskCreateFormTemplateDescriptionSelect');
+        if (templateDescriptionSelect !== null) {
+            new Choices(templateDescriptionSelect, {
+                removeItemButton: true,
+                searchEnabled: true,
+                placeholderValue: 'Vælg en skabelon',
+                searchPlaceholderValue: 'Søg...'
+            });
+            let previousDescription;
 
+            templateDescriptionSelect.addEventListener('change', function(event) {
+                let descriptionBox = document.getElementById('taskCreateFormdescription');
+                if (templateDescriptionSelect.value !== '' && templateDescriptionSelect.value !== null) {
+                    if (descriptionBox.value) {
+                        previousDescription = descriptionBox.value;
+                    }
+                    descriptionBox.value = "";
+                    descriptionBox.disabled = true;
+                }
+                else {
+                    descriptionBox.value = previousDescription;
+                    descriptionBox.disabled = false;
+                }
+            });
+        }
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
              var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
@@ -89,7 +118,6 @@ function CreateTaskService() {
                 self.createTaskOuChoicesEditSelect.setChoiceByValue(data);
              })).catch(error => toastService.error(error));
         })
-
 
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
