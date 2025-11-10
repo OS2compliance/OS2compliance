@@ -6,6 +6,7 @@ import dk.digitalidentity.model.dto.PageDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Relatable;
@@ -23,6 +24,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.ExcelExportService;
 import dk.digitalidentity.service.OrganisationService;
 import dk.digitalidentity.service.RelationService;
@@ -77,6 +79,7 @@ public class TaskRestController {
 	private final RelationService  relationService;
 	private final TaskMapper taskMapper;
 	private final OrganisationService organisationService;
+	private final ChoiceValueService choiceValueService;
 
 	@RequireReadOwnerOnly
     @PostMapping("list")
@@ -163,11 +166,7 @@ public class TaskRestController {
 		OrganisationUnit responsibleOu = null;
 		OrganisationUnit department = null;
 		Set<Tag> tags = null;
-
-		log.info("List: {}", request.getTask().getResponsibleUserUuids());
-		log.info(request.getTask().getResponsibleOuUuid());
-		log.info(request.getTask().getDepartmentUuid());
-		log.info("tags: {}", request.getTask().getTagIds());
+		ChoiceValue taskDescriptionTemplate = null;
 
 		if (request.getTask().getResponsibleUserUuids() != null && !request.getTask().getResponsibleUserUuids().isEmpty()) {
 			responsibleUsers = fetchResponsibleUsers(request.getTask().getResponsibleUserUuids());
@@ -185,7 +184,11 @@ public class TaskRestController {
 			tags = fetchTags(request.getTask().getTagIds());
 		}
 
-		Task task = taskMapper.toEntity(request.getTask(), responsibleUsers, responsibleOu, department, tags);
+		if (request.getTask().getTaskDescriptionTemplateId() != null) {
+			taskDescriptionTemplate = fetchTaskDescriptionTemplate(request.getTask().getTaskDescriptionTemplateId());
+		}
+
+		Task task = taskMapper.toEntity(request.getTask(), responsibleUsers, responsibleOu, department, tags, taskDescriptionTemplate);
 
 		if (task == null) {
 			log.debug("Could not create task");
@@ -216,7 +219,7 @@ public class TaskRestController {
 	}
 
 	// Helper methods for createTask
-	private Set<User> fetchResponsibleUsers(List<String> uuids) {
+	private Set<User> fetchResponsibleUsers(Set<String> uuids) {
 		Set<User> responsibleUsers = new HashSet<>();
 		for (String uuid : uuids) {
 			User user = userService.findByUuid(uuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Responsible user not found with UUID: " + uuid));
@@ -240,6 +243,11 @@ public class TaskRestController {
 				.map(id -> tagService.findById(id)
 						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Tag not found with ID: " + id)))
 				.collect(Collectors.toSet());
+	}
+
+	private ChoiceValue fetchTaskDescriptionTemplate(Long id) {
+		return choiceValueService.findById(id)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "TaskDescriptionTemplate not found with ID: " + id));
 	}
 
 }

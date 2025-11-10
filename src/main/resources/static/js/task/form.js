@@ -34,9 +34,17 @@ function EditTaskService() {
         this.editTaskUserChoicesEditSelect = choiceService.initUserSelect('taskEditFormTaskUserSelect');
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
             var userUuid = self.editTaskUserChoicesEditSelect.passedElement.element.value;
-            fetch( `/rest/ous/user/` + userUuid).then(response =>  response.text().then(data => {
-                self.editTaskOuChoicesSelect.setChoiceByValue(data);
-            })).catch(error => toastService.error(error));
+            fetch( `/rest/ous/user/` + userUuid)
+                .then(response => {
+                    if (!response.ok) {
+                        toastService.error("Den valgte ansvarlige findes ikke eller har ingen stilling")
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    self.editTaskOuChoicesSelect.setChoiceByValue(data);
+                })
+                .catch(error => toastService.error(error));
         })
 
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {

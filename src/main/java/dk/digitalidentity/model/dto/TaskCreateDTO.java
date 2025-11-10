@@ -9,6 +9,7 @@ import lombok.Setter;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
@@ -26,7 +27,7 @@ public class TaskCreateDTO {
 	@NotNull(message = "Deadline is required")
 	private LocalDate nextDeadline;
 
-	private List<String> responsibleUserUuids;
+	private Set<String> responsibleUserUuids;
 	private String responsibleOuUuid;
 	private String departmentUuid;
 	private String repetition;
@@ -35,4 +36,6 @@ public class TaskCreateDTO {
 	private boolean includeInReport = false;
 	private List<Long> tagIds;
 	private List<TaskLinkDTO> links;
+	private Set<String> notificationReminders;
+	private Long taskDescriptionTemplateId;
 }

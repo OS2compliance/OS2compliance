@@ -4,7 +4,7 @@ import formatTags from "../tags/tag-grid-formatter.js";
 
 let today = new Date();
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
-let taskGrid = null;
+let grid = null;
 
 document.addEventListener("DOMContentLoaded", function() {
 
@@ -241,14 +241,14 @@ function initGrid() {
         }
     };
     const datatableId = 'tasksDatatable';
-    taskGrid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
+    grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
 
     //Enables custom column search, serverside sorting and pagination
-    const customGridFunctions = new CustomGridFunctions(taskGrid, gridTasksUrl, exportTasksUrl, datatableId);
+    const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, exportTasksUrl, datatableId);
 
     new ColumnOptions(
         datatableId,
-        taskGrid,
+        grid,
         ['opgavenavn', 'allowedActions'],
         ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'deadline', 'status', 'resultat'],
         ['id'])
@@ -267,7 +267,7 @@ function initGridActions() {
 }
 
 export function refreshTaskGrid() {
-    if (taskGrid) {
-        taskGrid.forceRender();
+    if (grid) {
+        grid.forceRender();
     }
 }

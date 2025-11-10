@@ -10,12 +10,12 @@ document.addEventListener('click', async function(e) {
         // Find the form within the modal
         let form = e.target.closest('.modal-content').querySelector('form');
 
-        const fd = new FormData(form);
-
         if (!form) {
             console.error("form not found");
             return;
         }
+
+        const fd = new FormData(form);
 
         // Validate form first
         if (!form.checkValidity()) {
@@ -40,6 +40,8 @@ document.addEventListener('click', async function(e) {
                 notifyResponsible: fd.get('notifyResponsible') === 'on' || fd.get('notifyResponsible') === 'true',
                 includeInReport: fd.get('includeInReport') === 'on' || fd.get('includeInReport') === 'true',
                 tagIds: (fd.getAll('tags') || []).map(v => parseInt(v)),
+                notificationReminders: fd.getAll('notificationReminders') || [],
+                taskDescriptionTemplateId: fd.get('templateDescription') ? parseInt(fd.get('templateDescription')) : null,
                 links: []
             };
 
