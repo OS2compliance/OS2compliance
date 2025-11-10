@@ -91,6 +91,20 @@ export default function IncidentGridService() {
                     url: (prev, page, size) => this.updateUrl(prev, `size=${size}&page=${page}&fromDate=${this.filterFrom}&toDate=${this.filterTo}`)
                 }
             },
+            language: {
+                'search': {
+                    'placeholder': 'Søg...'
+                },
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'results': () => 'hændelser',
+                    'of': 'af',
+                    'to': 'til'
+                },
+                'noRecordsFound': 'Ingen hændelser fundet'
+            },
             search: {
                 keyword: searchService.getSavedSearch(),
                 server: {

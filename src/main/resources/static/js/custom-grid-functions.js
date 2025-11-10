@@ -69,6 +69,9 @@ class CustomGridFunctions {
                 server: {
                     url: (prev, columns) => `${this.dataUrl}?${this.updateSorting(prev, columns)}`
                 }
+            },
+            language: {
+                'noRecordsFound': "Ingen data fundet"
             }
         })
 
