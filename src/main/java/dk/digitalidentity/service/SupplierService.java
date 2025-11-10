@@ -43,6 +43,7 @@ public class SupplierService implements TagableService<Supplier> {
 	}
 
 	public void deleteById(final Long id) {
+		relationService.deleteRelatedTo(id);
 		supplierDao.deleteById(id);
 	}
 
@@ -157,5 +158,9 @@ public class SupplierService implements TagableService<Supplier> {
 
 	public Page<Supplier> searchForSupplierNotDeleted(String search, Pageable pageable) {
 		return supplierDao.searchForSupplierNotDeleted(search, pageable);
+	}
+
+	public Supplier findById(Long id) {
+		return supplierDao.findById(id).orElse(null);
 	}
 }

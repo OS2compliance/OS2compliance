@@ -798,4 +798,8 @@ public class AssetService implements TagableService<Asset> {
 	public List<Asset> getByIds(List<Long> ids) {
 		return assetDao.findAllById(ids);
 	}
+
+	public Long countBySupplierId(Long supplierId) {
+		return assetDao.countBySupplierId(supplierId);
+	}
 }

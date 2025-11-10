@@ -56,6 +56,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.AssetSupplierMappingService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -106,6 +107,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -140,6 +142,7 @@ public class AssetsController {
 	private final ApplicationEventPublisher eventPublisher;
 	private final OS2complianceConfiguration os2complianceConfiguration;
 	private final ChoiceValueService choiceValueService;
+	private final AssetSupplierMappingService assetSupplierMappingService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -402,33 +405,46 @@ public class AssetsController {
         final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
         taskService.deleteAll(tasks);
 
-		// Collect suppliers that only have one asset reference
-		Set<Supplier> suppliersToDelete = asset.getSuppliers().stream()
+		Set<Long> supplierIds = new HashSet<>();
+
+		// Add suppliers from mappings to the list
+		asset.getSuppliers().stream()
 				.map(AssetSupplierMapping::getSupplier)
-				.filter(sup -> sup.getAssets().size() <= 1)
-				.collect(Collectors.toSet());
+				.map(Supplier::getId)
+				.forEach(supplierIds::add);
 
-		// Clear the mapping relationship (this deletes AssetSupplierMapping entities)
-		asset.getSuppliers().clear();
-
-		// Clear the relationship to asset on the supplier
-		suppliersToDelete.forEach(supplier -> {
-			supplier.getAssets().remove(asset);
-			supplierService.save(supplier);
-		});
-
-		// This is the direct supplier on the asset (not the mapping), which can have a reference and hence needs to be cleared as well
+		// Add direct suppler if exists
 		if (asset.getSupplier() != null) {
-			Supplier directSupplier = asset.getSupplier();
-			directSupplier.getAssets().remove(asset);
-			asset.setSupplier(null);
-			supplierService.save(directSupplier);
+			supplierIds.add(asset.getSupplier().getId());
 		}
 
-		// Delete suppliers that only have a reference to this asset
-		suppliersToDelete.forEach(supplierService::delete);
+		// Clear the mapping relationships
+		asset.getSuppliers().clear();
 
+		// Clear direct supplier relationship
+		if (asset.getSuppliers() != null) {
+			asset.setSupplier(null);
+		}
+
+		// Delete the asset first (soft delete)
 		assetService.delete(asset);
+
+		// Check each supplier and see if it needs to be deleted
+		Set<Long> suppliersToDelete = new HashSet<>();
+
+		for (Long supplierId : supplierIds) {
+			// Count active non-deleted assets that reference this supplier
+			long mappingCount = assetSupplierMappingService.countBySupplierIdAndActiveAssets(supplierId);
+			long directCount = assetService.countBySupplierId(supplierId);
+
+			// If not active assets reference this supplier we mark for deletion
+			if (mappingCount == 0 && directCount == 0) {
+				suppliersToDelete.add(supplierId);
+			}
+		}
+
+		// Delete suppliers that have no active asset references
+		suppliersToDelete.forEach(supplierService::deleteById);
     }
 
 	@RequireUpdateOwnerOnly

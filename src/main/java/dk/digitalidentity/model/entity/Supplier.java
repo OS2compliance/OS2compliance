@@ -36,7 +36,6 @@ import java.util.Set;
 @Getter
 @Setter
 @SQLDelete(sql = "UPDATE suppliers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
-@SQLRestriction("deleted=false")
 public class Supplier extends Relatable implements HasSingleResponsibleUser, Tagable {
 
 	@ManyToOne(fetch = FetchType.LAZY)
