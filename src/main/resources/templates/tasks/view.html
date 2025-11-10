@@ -149,10 +149,10 @@
                                                     <input class="form-check-input mt-0" type="checkbox" th:name="'subTasks[' + ${iterStat.index} + '].completed'" th:checked="${subTask.completed}" disabled>
                                                 </div>
                                                 <input type="text" th:name="'subTasks[' + ${iterStat.index} + '].name'" th:value="${subTask.name}" class="form-control editField">
-                                                <button type="button" class="btn btn-danger editField" onclick="subTaskLinkService.removeSubTask(this)">-</button>
+                                                <button type="button" class="btn btn-danger editField" id="viewRemoveSubTaskBtn">-</button>
                                             </div>
                                         </div>
-                                        <button id="subTaskAddLinkBtn" class="btn btn-secondary editField" type="button" onclick="subTaskLinkService.addSubTaskFromView()" hidden>+ Tilføj til checkliste</button>
+                                        <button id="subTaskAddLinkBtn" class="btn btn-secondary editField" type="button" hidden>+ Tilføj til checkliste</button>
                                     </div>
                                 </div>
 
