@@ -118,7 +118,7 @@ function CopyTaskService() {
            //initTagSelect('copyTaskTagsSelect');
        }
 
-        initFormValidationForForm("copyTaskModalForm");
+        initFormValidationForForm("copyTaskModalForm", () => subTaskLinkService.validateAllSubTasks());
         this.notificationSelectHandler = initNotificationSelect(
             'copyTaskNotificationSetting',
             'copyTaskNotificationSelectDiv',

@@ -469,15 +469,13 @@ public class TasksController {
 			task.getSubTasks().clear();
 		}
 
-		if (taskForm.getSubTasks() != null && !taskForm.getSubTasks().isEmpty()) {
-			for (SubTask subTask : taskForm.getSubTasks()) {
-				if (subTask.getName() != null && !subTask.getName().trim().isEmpty()) {
-					SubTask newSubTask = new SubTask();
-					newSubTask.setName(subTask.getName());
-					newSubTask.setCompleted(subTask.isCompleted());
-					newSubTask.setTask(task);
-					task.getSubTasks().add(newSubTask);
-				}
+		for (SubTask subTask : taskForm.getSubTasks()) {
+			if (subTask.getName() != null && !subTask.getName().trim().isEmpty()) {
+				SubTask newSubTask = new SubTask();
+				newSubTask.setName(subTask.getName());
+				newSubTask.setCompleted(subTask.isCompleted());
+				newSubTask.setTask(task);
+				task.getSubTasks().add(newSubTask);
 			}
 		}
 		taskService.saveTask(task);

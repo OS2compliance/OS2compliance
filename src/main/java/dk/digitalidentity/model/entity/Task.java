@@ -110,6 +110,7 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@Column(name = "notification_reminders")
 	@Convert(converter = NotificationSettingConverter.class)
 	private Set<NotificationSetting> notificationReminders = new HashSet<>();
+
 	@OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
 	private List<SubTask> subTasks  = new ArrayList<>();
 

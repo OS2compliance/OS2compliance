@@ -36,6 +36,86 @@ function SubTaskLinkService() {
                 this.removeSubTask(e.target);
             }
         });
+
+        document.addEventListener('input', (e) => {
+            if (e.target.matches('#subTasksContainer input[type="text"]') ||
+                e.target.matches('#subTaskEditContainer input[type="text"]')) {
+                this.validateSubTaskInput(e.target);
+            }
+        });
+
+        this.validateExistingInputs();
+    }
+
+    this.validateExistingInputs = function() {
+        const containers = ['subTasksContainer', 'subTaskEditContainer'];
+        containers.forEach(containerId => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                const inputs = container.querySelectorAll('input[type="text"]');
+                inputs.forEach(input => this.validateSubTaskInput(input));
+            }
+        });
+    }
+
+    this.validateSubTaskInput = function(input) {
+        const value = input.value;
+        const length = value.length;
+
+        const existingFeedback = input.parentElement.querySelector('.invalid-feedback');
+        if (existingFeedback) {
+            existingFeedback.remove();
+        }
+
+        input.classList.remove('is-invalid', 'is-valid');
+
+        if (length === 0) {
+            return true;
+        } else if (length > 255) {
+            input.classList.add('is-invalid');
+            const feedback = document.createElement('div');
+            feedback.className = 'invalid-feedback';
+            feedback.textContent = `Maks ${255} tegn (${length}/${255})`;
+            input.parentElement.appendChild(feedback);
+            return false;
+        } else {
+            input.classList.add('is-valid');
+            return true;
+        }
+    }
+
+    this.validateAllSubTasks = function() {
+        let isValid = true;
+        const containers = ['subTasksContainer', 'subTaskEditContainer'];
+
+        containers.forEach(containerId => {
+            const container = document.getElementById(containerId);
+            if (container) {
+                const inputs = container.querySelectorAll('input[type="text"]');
+                inputs.forEach(input => {
+                    if (!this.validateSubTaskInput(input)) {
+                        isValid = false;
+                    }
+                });
+            }
+        });
+
+        return isValid;
+    }
+
+    this.addSubTaskFromView = function() {
+        const container = document.getElementById("subTaskEditContainer");
+        if (!container) return;
+
+        const index = container.children.length;
+        const element = this.createSubTaskElement(index);
+
+        const input = element.querySelector('input[type="text"]');
+        const button = element.querySelector('button');
+        if (input) input.classList.add('editField');
+        if (button) button.classList.add('editField');
+
+        container.appendChild(element);
     }
 
     this.createSubTaskElement = function(index) {
@@ -218,8 +298,16 @@ function CreateTaskService() {
             checkInputField(self.createTaskUserChoicesEditSelect);
         });
         initFormValidationForForm('taskCreateForm',
-            () => validateChoices(
-                this.createTaskUserChoicesEditSelect, this.createTaskOuChoicesEditSelect));
+            () => {
+                const choicesValid = validateChoices(
+                    this.createTaskUserChoicesEditSelect,
+                    this.createTaskOuChoicesEditSelect
+                );
+                const subTasksValid = subTaskLinkService.validateAllSubTasks();
+
+                return choicesValid && subTasksValid;
+            }
+        );
     }
 
     this.show = function(elem = null) {

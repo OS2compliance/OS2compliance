@@ -39,7 +39,7 @@ function ViewTaskService() {
         this.initSubTaskBtns();
 
 
-        initFormValidationForForm('editForm');
+        initFormValidationForForm('editForm', () => subTaskLinkService.validateAllSubTasks());
         if (taskType === 'CHECK') {
             initFormValidationForForm('completeTaskForm', () => {
                 const comment = document.getElementById("completionComment");
@@ -111,7 +111,7 @@ function ViewTaskService() {
 
     this.initSubTaskBtns = function () {
         let addBtn = document.getElementById('subTaskAddLinkBtn');
-        addBtn.addEventListener('click', () => subTaskLinkService.addSubTaskFromView);
+        addBtn.addEventListener('click', () => subTaskLinkService.addSubTaskFromView());
     }
 
     this.validateSubTasksCompletion = function() {

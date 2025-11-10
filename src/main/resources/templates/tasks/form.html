@@ -128,7 +128,7 @@
                                 <div class="input-group-text">
                                     <input class="form-check-input mt-0" type="checkbox" th:name="'subTasks[' + ${iterStat.index} + '].completed'" th:checked="${subTask.completed}" disabled>
                                 </div>
-                                <input type="text" th:name="'subTasks[' + ${iterStat.index} + '].name'" th:value="${subTask.name}" class="form-control" placeholder="Indtast underopgave...">
+                                <input type="text" th:name="'subTasks[' + ${iterStat.index} + '].name'" th:value="${subTask.name}" class="form-control" placeholder="Indtast underopgave..." maxlength="255">
                                 <button type="button" class="btn btn-danger subtask-remove-btn">-</button>
                             </div>
                         </div>
