@@ -114,22 +114,27 @@ function CreateTaskService() {
         this.createTaskUserChoicesEditSelect = choiceService.initUserSelect('taskCreateFormTaskUserSelect');
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('addItem', function() {
              var userUuid = self.createTaskUserChoicesEditSelect.passedElement.element.value;
-             fetch( `/rest/ous/user/` + userUuid)
-                 .then(response => {
-                     if (!response.ok) {
-                         toastService.error("Den valgte ansvarlige findes ikke eller har ingen stilling")
-                     }
-                     return response.text();
-                 })
-                 .then(data => {
-                     self.createTaskOuChoicesEditSelect.setChoiceByValue(data);
-                 })
-                 .catch(error => toastService.error(error));
+             fetch( `/rest/ous/user/` + userUuid).then(response =>  {
+                 if (response.status === 204) {
+                     return;
+                 }
+
+                 if (response.ok) {
+                     response.json().then(orgUnit => {
+                         self.createTaskOuChoicesEditSelect.setChoiceByValue(orgUnit.uuid);
+                     })
+                 }
+             }).catch(error => toastService.error(error));
         })
 
         this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.createTaskUserChoicesEditSelect);
         });
+
+        this.createTaskUserChoicesEditSelect.passedElement.element.addEventListener('removeItem', function() {
+            self.createTaskOuChoicesEditSelect.removeActiveItems();
+        });
+
         initFormValidationForForm('taskCreateForm',
             () => validateChoices(
                 this.createTaskUserChoicesEditSelect, this.createTaskOuChoicesEditSelect));
