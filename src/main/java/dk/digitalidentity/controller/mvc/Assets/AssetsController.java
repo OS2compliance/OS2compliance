@@ -329,7 +329,7 @@ public class AssetsController {
 		model.addAttribute("customSystemOperationResponsibleInput", settingsService.findBySettingKey(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME));
         model.addAttribute("allAssetTypes", choiceService.getAssetTypeChoiceList().getValues());
 
-		model.addAttribute("responsibleFieldChangeable", !assetService.isResponsibleFor(asset)); // Those responsible for an asset change change who is responsible
+		model.addAttribute("responsibleFieldChangeable", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || assetService.isResponsibleFor(asset))); // Those responsible for an asset can change who is responsible
 		return "assets/view";
 	}
 

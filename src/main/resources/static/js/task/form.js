@@ -40,7 +40,7 @@ function EditTaskService() {
         })
 
         this.editTaskUserChoicesEditSelect.passedElement.element.addEventListener('change', function() {
-            checkInputField(self.editTaskUserChoicesEditSelect);
+        checkInputField(self.editTaskUserChoicesEditSelect);
         });
         initFormValidationForForm('taskEditForm',
             () => validateChoices(
@@ -109,6 +109,12 @@ function CopyTaskService() {
        }
 
         initFormValidationForForm("copyTaskModalForm");
+        this.notificationSelectHandler = initNotificationSelect(
+            'copyTaskNotificationSetting',
+            'copyTaskNotificationSelectDiv',
+            'copyTaskNotificationSelectInput'
+        );
+
 
         this.copyTaskModal = new bootstrap.Modal(this.modalContainer);
         this.copyTaskModal.show();

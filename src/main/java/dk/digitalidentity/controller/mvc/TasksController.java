@@ -1,6 +1,8 @@
 package dk.digitalidentity.controller.mvc;
 
 import dk.digitalidentity.event.EmailEvent;
+import dk.digitalidentity.model.entity.ChoiceList;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
@@ -25,6 +27,8 @@ import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireTask;
+import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.EmailTemplateService;
 import dk.digitalidentity.service.RelatableService;
@@ -81,7 +85,8 @@ public class TasksController {
     private final Environment environment;
     private final ApplicationEventPublisher eventPublisher;
     private final EmailTemplateService emailTemplateService;
-
+	private final ChoiceService choiceService;
+	private final ChoiceValueService choiceValueService;
 
 	@RequireReadOwnerOnly
     @GetMapping
@@ -91,9 +96,18 @@ public class TasksController {
         return "tasks/index";
     }
 
+	record ChoiceValueDTO(long id, String caption) {}
+
 	@RequireUpdateOwnerOnly
     @GetMapping("form")
     public String form(final Model model, @RequestParam(name = "id", required = false) final Long id) {
+		ChoiceList choiceList = choiceService.findChoiceList("task-description-template")
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+		List<ChoiceValueDTO> values = new ArrayList<>();
+		choiceList.getValues().forEach(choiceValue -> {
+			values.add(new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption()));
+		});
+		model.addAttribute("descriptionTemplates", values);
         if (id == null) {
 			boolean creationAllowed = SecurityUtil.isOperationAllowed(Roles.CREATE_OWNER_ONLY);
 			if (!creationAllowed) {
@@ -103,9 +117,9 @@ public class TasksController {
 			boolean responsibleChooseable = SecurityUtil.isOperationAllowed(Roles.CREATE_ALL);
 			Task task = new Task();
 			if (!responsibleChooseable) {
-				task.setResponsibleUser(
+				task.setResponsibleUsers(Set.of(
 						userService.findByUuid(SecurityUtil.getLoggedInUserUuid())
-						.orElseThrow()
+						.orElseThrow())
 				);
 			}
 			model.addAttribute("responsibleChooseable", responsibleChooseable);
@@ -144,10 +158,14 @@ public class TasksController {
                            @RequestParam(name = "relations", required = false) final Set<Long> relations,
                            @RequestParam(name = "taskRiskId", required = false) final Long riskId,
                            @RequestParam(name = "riskCustomId", required = false) final Long riskCustomId,
+							@RequestParam(name = "templateDescription", required = false) final Long templateDescriptionId,
                            @RequestParam(name = "riskCatalogIdentifier", required = false) final String riskCatalogIdentifier) {
 		List<TaskLink> links = new ArrayList<>();
 		for (TaskLink link : task.getLinks()) {
 			links.add(new TaskLink(null, linkify(link.getUrl()), task));
+		}
+		if (templateDescriptionId != null) {
+			choiceValueService.findById(templateDescriptionId).ifPresent(task::setTaskDescriptionTemplate);
 		}
 		task.setLinks(links);
 		final Task savedTask = taskService.saveTask(task);
@@ -228,7 +246,7 @@ public class TasksController {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Opgaven er allerede udført");
         }
 
-        if (task.getResponsibleUser() == null) {
+        if (task.getResponsibleUsers() == null || task.getResponsibleUsers().isEmpty()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Der skal vælges en ansvarlig bruger");
         }
         if (task.getName() != null) {
@@ -236,11 +254,14 @@ public class TasksController {
         }
         existingTask.setNotifyResponsible(task.getNotifyResponsible());
         existingTask.setIncludeInReport(task.getIncludeInReport());
+		existingTask.setTaskDescriptionTemplate(task.getTaskDescriptionTemplate());
         existingTask.setDescription(task.getDescription());
         existingTask.setNextDeadline(task.getNextDeadline());
         existingTask.setResponsibleOu(task.getResponsibleOu());
         existingTask.setDepartment(task.getDepartment());
-        existingTask.setResponsibleUser(task.getResponsibleUser());
+        existingTask.setResponsibleUsers(task.getResponsibleUsers());
+		existingTask.getNotificationReminders().clear();
+		existingTask.getNotificationReminders().addAll(task.getNotificationReminders());
 
 		existingTask.getLinks().clear();
 		for (TaskLink link : task.getLinks()) {
@@ -275,6 +296,10 @@ public class TasksController {
         model.addAttribute("task", task);
 		model.addAttribute("oversightAsset", taskService.findOversightAsset(task));
         model.addAttribute("changeableTask", (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) || taskService.isResponsibleFor(task)));
+		ChoiceList list = choiceService.findChoiceList("task-description-template").orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Could not find Task description template choices"));
+		List<ChoiceValue> values = list.getValues().stream().toList();
+
+		model.addAttribute("taskDescriptionTemplates", values);
         model.addAttribute("relations", relationService.findRelationsAsListDTO(task, false));
         model.addAttribute("completionForm", new CompletionFormDTO(task.getId(), "", null, "", null, null));
 
@@ -407,44 +432,53 @@ public class TasksController {
         return "tasks/copyForm";
     }
 
-    @RequireCreateAll
-    @Transactional
-    @PostMapping("{id}/copy")
-    public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,
-                                        @Valid @ModelAttribute final Task taskForm,
-                                        @RequestParam(name = "relations", required = false) final List<Long> relations
-                                        ) {
-        final Task task = taskService.copyTask(taskForm);
-        setupRelations(task, relations);
-        taskService.saveTask(task);
-        if (!StringUtils.isEmpty(task.getResponsibleUser().getEmail()) && task.getNotifyResponsible()) {
-            EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
-            if (template.isEnabled()) {
-                final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" +  task.getId();
-                final String recipient = task.getResponsibleUser().getName();
-                final String objectName = task.getName();
-                final String link = "<a href=\"" + url + "\">" + url + "</a>";
+	@RequireCreateAll
+	@Transactional
+	@PostMapping("{id}/copy")
+	public String performTaskCopyDialog(@PathVariable("id") final long ignoredId,
+			@Valid @ModelAttribute final Task taskForm,
+			@RequestParam(name = "relations", required = false) final List<Long> relations
+	) {
+		final Task task = taskService.copyTask(taskForm);
+		setupRelations(task, relations);
+		taskService.saveTask(task);
 
-                String title = template.getTitle();
-                title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-                title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-                title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-                String message = template.getMessage();
-                message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
-                message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
-                message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
-                eventPublisher.publishEvent(EmailEvent.builder()
-                    .message(message)
-                    .subject(title)
-                    .email(task.getResponsibleUser().getEmail())
-					.templateType(template.getTemplateType())
-                    .build());
-            } else {
-                log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
-            }
-        }
-        return "redirect:/tasks/" + task.getId();
-    }
+		if (!task.getResponsibleUsers().isEmpty() && task.getNotifyResponsible()) {
+			EmailTemplate template = emailTemplateService.findByTemplateType(EmailTemplateType.TASK_RESPONSIBLE);
+			if (template.isEnabled()) {
+				final String url = environment.getProperty("di.saml.sp.baseUrl") + "/tasks/" + task.getId();
+				final String objectName = task.getName();
+				final String link = "<a href=\"" + url + "\">" + url + "</a>";
+
+				// Send email to each responsible user
+				for (User responsibleUser : task.getResponsibleUsers()) {
+					if (!StringUtils.isEmpty(responsibleUser.getEmail())) {
+						final String recipient = responsibleUser.getName();
+
+						String title = template.getTitle();
+						title = title.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+						title = title.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+						title = title.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+
+						String message = template.getMessage();
+						message = message.replace(EmailTemplatePlaceholder.RECEIVER_PLACEHOLDER.getPlaceholder(), recipient);
+						message = message.replace(EmailTemplatePlaceholder.OBJECT_PLACEHOLDER.getPlaceholder(), objectName);
+						message = message.replace(EmailTemplatePlaceholder.LINK_PLACEHOLDER.getPlaceholder(), link);
+
+						eventPublisher.publishEvent(EmailEvent.builder()
+								.message(message)
+								.subject(title)
+								.email(responsibleUser.getEmail())
+								.templateType(template.getTemplateType())
+								.build());
+					}
+				}
+			} else {
+				log.info("Email template with type " + template.getTemplateType() + " is disabled. Email was not sent.");
+			}
+		}
+		return "redirect:/tasks/" + task.getId();
+	}
 
     private void setupRelations(final Task task, final List<Long> relations) {
         final List<Relatable> relatables = relatableService.findAllById(relations);

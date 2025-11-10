@@ -523,7 +523,9 @@ public class RegisterController {
 					return new TaskListDTO(
 							task.getId(),
 							task.getName(),
-							task.getResponsibleUser().getName(),
+							task.getResponsibleUsers().stream()
+									.map(User::getName)
+									.collect(Collectors.joining(", ")),
 							task.getResponsibleOu() != null ? task.getResponsibleOu().getName() : "",
 							task.getTaskType().getMessage(),
 							task.getNextDeadline().toString(),
