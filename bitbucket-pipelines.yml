@@ -7,21 +7,21 @@ pipelines:
           - docker
         script:
           - export TESTCONTAINERS_RYUK_DISABLED=true
-          - ./mvnw test
+          - ./mvnw spotless:check test
         services:
           - docker
 
   branches:
-    master:
+    develop:
       - step:
           name: Build
           caches:
             - docker
           script:
             - IMAGE_NAME="os2compliance"
-            - IMAGE_TAG="master"
+            - IMAGE_TAG="develop"
             - export TESTCONTAINERS_RYUK_DISABLED=true
-            - ./mvnw test
+            - ./mvnw spotless:check test
             - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
             - pipe: atlassian/aws-ecr-push-image:2.0.0
               variables:
