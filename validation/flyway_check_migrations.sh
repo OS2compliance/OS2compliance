@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/bin/sh
 
 # Define the directory (relative path from Bitbucket Pipeline workspace root)
 FOLDER="src/main/resources/db/migration"
 
 # Ensure the folder exists
-if [[ ! -d "$FOLDER" ]]; then
+if [ ! -d "$FOLDER" ]; then
   echo "Error: Migration folder '$FOLDER' does not exist."
   exit 1
 fi
@@ -12,8 +12,8 @@ fi
 # Get all SQL files in the folder
 FILES=$(ls "$FOLDER" | grep -E '^V[0-9]+_[0-9]+__.*\.sql$')
 
-# Create an associative array to track version numbers
-declare -A VERSIONS
+# Track versions using a simple string with newlines
+SEEN_VERSIONS=""
 
 # Loop through each file
 for FILE in $FILES; do
@@ -21,15 +21,20 @@ for FILE in $FILES; do
   VERSION=$(echo "$FILE" | grep -oE '^V[0-9]+_[0-9]+__')
 
   # Check if a version number was found
-  if [[ -n "$VERSION" ]]; then
-    # Check if the version already exists in the array
-    if [[ -n "${VERSIONS[$VERSION]}" ]]; then
-      echo "Error: Files '${VERSIONS[$VERSION]}' and '$FILE' in folder '$FOLDER' have the same version number: '$VERSION'"
-      exit 1
-    fi
+  if [ -n "$VERSION" ]; then
+    # Check if the version already exists in our tracking string
+    case "$SEEN_VERSIONS" in
+      *"$VERSION"*)
+        # Find the original file with this version
+        ORIGINAL_FILE=$(echo "$SEEN_VERSIONS" | grep "$VERSION" | cut -d'|' -f2)
+        echo "Error: Files '$ORIGINAL_FILE' and '$FILE' in folder '$FOLDER' have the same version number: '$VERSION'"
+        exit 1
+        ;;
+    esac
 
-    # Store the filename in the array with the version as the key
-    VERSIONS["$VERSION"]=$FILE
+    # Store the version and filename (format: VERSION|FILENAME)
+    SEEN_VERSIONS="$SEEN_VERSIONS
+$VERSION|$FILE"
   fi
 done
 
