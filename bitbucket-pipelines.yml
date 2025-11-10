@@ -7,7 +7,7 @@ pipelines:
           - docker
         script:
           - export TESTCONTAINERS_RYUK_DISABLED=true
-            - ./validation/flyway_check_migrations.sh
+          - ./validation/flyway_check_migrations.sh
           - ./mvnw spotless:check test
         services:
           - docker
@@ -21,8 +21,8 @@ pipelines:
           script:
             - IMAGE_NAME="os2compliance"
             - IMAGE_TAG="develop"
-            - export TESTCONTAINERS_RYUK_DISABLED=true
             - ./validation/flyway_check_migrations.sh
+            - export TESTCONTAINERS_RYUK_DISABLED=true
             - ./mvnw spotless:check test
             - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
             - pipe: atlassian/aws-ecr-push-image:2.0.0
