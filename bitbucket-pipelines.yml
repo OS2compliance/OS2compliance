@@ -3,12 +3,13 @@ pipelines:
   default:
     - step:
         name: Run tests only
+        clone:
+          depth: full
         caches:
           - docker
         script:
           - export TESTCONTAINERS_RYUK_DISABLED=true
           - ./validation/flyway_check_migrations.sh
-          - git fetch origin develop:develop
           - ./mvnw spotless:check test
         services:
           - docker
