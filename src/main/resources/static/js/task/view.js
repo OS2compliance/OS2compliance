@@ -40,37 +40,46 @@ function ViewTaskService() {
 
 
         initFormValidationForForm('editForm', () => subTaskLinkService.validateAllSubTasks());
+
         if (taskType === 'CHECK') {
             initFormValidationForForm('completeTaskForm', () => {
                 const comment = document.getElementById("completionComment");
                 const taskResultSelect = document.getElementById("taskResultSelect");
                 const taskType = document.getElementById("taskType");
 
+                const subTasksValid = this.validateSubTasksCompletion();
+
+                let commentValid = false;
                 if (taskResultSelect.value === 'NO_ERROR') {
                     comment.classList.remove('is-invalid');
-                    return true;
+                    commentValid = true;
                 } else if (taskResultSelect.value !== 'NO_ERROR' && comment.value.trim()) {
                     comment.classList.remove('is-invalid');
-                    return true;
+                    commentValid = true;
                 } else {
                     comment.classList.add('is-invalid');
-                    return false;
+                    commentValid = false;
                 }
-                this.validateSubTasksCompletion();
+
+                return subTasksValid && commentValid;
             });
-        }
-        else {
+        } else {
             initFormValidationForForm('completeTaskForm', () => {
                 const comment = document.getElementById("completionComment");
+
+                const subTasksValid = this.validateSubTasksCompletion();
+
+                let commentValid = false;
                 if (!comment.value) {
                     comment.classList.add('is-invalid');
-                    return false;
-                }
-                else {
+                    commentValid = false;
+                } else {
                     comment.classList.remove('is-invalid');
-                    return true;
+                    commentValid = true;
                 }
-            })
+
+                return subTasksValid && commentValid;
+            });
         }
 
         initDatepicker("#deadlineBtn", "#deadline");
