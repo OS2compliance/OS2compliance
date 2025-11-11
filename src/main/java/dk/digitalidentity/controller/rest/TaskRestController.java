@@ -162,10 +162,10 @@ public class TaskRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		Set<User> responsibleUsers = null;
+		Set<User> responsibleUsers = new HashSet<>();
 		OrganisationUnit responsibleOu = null;
 		OrganisationUnit department = null;
-		Set<Tag> tags = null;
+		Set<Tag> tags = new HashSet<>();
 		ChoiceValue taskDescriptionTemplate = null;
 
 		if (request.getTask().getResponsibleUserUuids() != null && !request.getTask().getResponsibleUserUuids().isEmpty()) {
@@ -195,12 +195,17 @@ public class TaskRestController {
 			return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
 		}
 
-		// Process links (no validation needed, as we send an empty list in frontend and thus never have NULL)
-		List<TaskLink> links = new ArrayList<>();
-		for (TaskLinkDTO link : request.getTask().getLinks()) {
-			links.add(new TaskLink(null, linkify(link.getUrl()), task));
+		// Process links
+		if (request.getTask().getLinks() != null && !request.getTask().getLinks().isEmpty()) {
+			List<TaskLink> links = new ArrayList<>();
+			for (TaskLinkDTO link : request.getTask().getLinks()) {
+				links.add(new TaskLink(null, linkify(link.getUrl()), task));
+			}
+
+			if (!links.isEmpty()) {
+				task.setLinks(links);
+			}
 		}
-		task.setLinks(links);
 
 		final Task savedTask = taskService.saveTask(task);
 		relationService.setRelationsAbsolute(savedTask, request.getRelations());

@@ -1087,7 +1087,7 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 		return threatAssessmentDao.findAllById(ids);
 	}
 
-	// Helper methods for createTask endpoint (not in service class to avoid circular dependencies)
+	// Helper methods for createTask endpoint
 	@Transactional
 	public void handleTaskRiskAssociation(Task savedTask, Long riskId, Long riskCustomId, String riskCatalogIdentifier) {
 		final ThreatAssessment threatAssessment = findById(riskId)
