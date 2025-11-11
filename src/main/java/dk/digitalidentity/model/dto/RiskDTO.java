@@ -52,5 +52,7 @@ public class RiskDTO {
 	private String relatedAssetsAndRegisters;
 	@ExcelColumn(headerName = "Trusselskataloger", order = 9)
 	private String threatCatalogs;
+	@ExcelColumn(headerName = "Løste opgaver", order = 10)
+	private Integer completedTasks;
 
 }

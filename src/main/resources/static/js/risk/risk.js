@@ -155,6 +155,17 @@ function CreateTable() {
                     },
                 },
                 {
+                    name: "Løste opgaver",
+                    data: (row) => {
+                        console.log("Row data: ", row)
+                        console.log("completed_tasks: ", row.completed_tasks, typeof row.completed_tasks)
+                        return JSON.stringify(row.completed_tasks);
+                    },
+                    searchable: {
+                        sortKey: 'completed_tasks'
+                    }
+                },
+                {
                     name: "Dato",
                     searchable: {
                         searchKey: 'date'
