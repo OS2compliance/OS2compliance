@@ -262,19 +262,8 @@ GROUP BY t.id;
 CREATE OR REPLACE VIEW view_gridjs_documents AS
 SELECT d.id,
        d.name,
-       d.document_type,
-       (CASE
-            WHEN d.document_type = 'OTHER' THEN 1
-            WHEN d.document_type = 'WORKFLOW' THEN 2
-            WHEN d.document_type = 'DATA_PROCESSING_AGREEMENT' THEN 3
-            WHEN d.document_type = 'CONTRACT' THEN 4
-            WHEN d.document_type = 'CONTROL' THEN 5
-            WHEN d.document_type = 'MANAGEMENT_REPORT' THEN 6
-            WHEN d.document_type = 'PROCEDURE' THEN 7
-            WHEN d.document_type = 'RISK_ASSESSMENT_REPORT' THEN 8
-            WHEN d.document_type = 'SUPERVISORY_REPORT' THEN 9
-            WHEN d.document_type = 'GUIDE' THEN 10
-           END)                                                             as document_type_order,
+       cv_type.caption                                                              as document_type,
+       cv_type.id                                                                   as document_type_order,
        d.responsible_uuid,
        d.next_revision,
        d.status,
@@ -287,6 +276,7 @@ SELECT d.id,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM documents d
+         LEFT JOIN choice_values cv_type ON cv_type.id = d.document_type
          LEFT JOIN document_tag rt on rt.document_id = d.id
          LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted = false

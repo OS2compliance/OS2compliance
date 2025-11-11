@@ -48,7 +48,7 @@
                     <div class="tab-content">
                         <div id="_dm-tabsGenerelt" class="tab-pane fade active show" role="tabpanel"
                              aria-labelledby="opgave-tab">
-                            <form id="editForm" action="#" th:action="@{/documents/edit}" th:object="${document}"
+                            <form id="editForm" action="#" th:action="@{/documents/edit}" th:object="${documentEditForm}"
                                   method="post" class="needs-validation" novalidate>
                                 <div class="row mb-3">
                                     <button id="saveEditBtn" th:if="${changeableDocument}" type="submit" class="btn btn-secondary btn-md col-md-1 btn-right" hidden>Gem</button>
@@ -65,11 +65,10 @@
                                 <div class="row mb-3">
                                     <label for="documentType" class="col-sm-2 col-form-label">Dokumenttype</label>
                                     <div class="col-sm-10">
-                                        <select class="form-control form-select editField" th:field="*{documentType}"
+                                        <select class="form-control form-select editField" th:field="*{documentTypeId}"
                                                 id="documentType" required disabled>
-                                            <option
-                                                th:each="docType : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
-                                                th:value="${docType}" th:text="${docType.message}"></option>
+                                            <option th:each="option : ${possibleDocumentTypes}"
+                                                    th:value="${option.id}" th:text="${option.caption}"></option>
                                         </select>
                                         <div class="invalid-feedback">Der skal vælges en dokument type</div>
                                     </div>

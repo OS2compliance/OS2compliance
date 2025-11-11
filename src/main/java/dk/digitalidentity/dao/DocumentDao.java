@@ -10,4 +10,5 @@ import java.util.List;
 public interface DocumentDao extends TagableRepository<Document> {
     List<Document> findAllByResponsibleUserAndNextRevisionBefore(User user, LocalDate date);
 
+	boolean existsByDocumentTypeId(Long id);
 }

@@ -11,6 +11,7 @@ import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
+import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -37,6 +38,7 @@ public class CustomChoiceListController {
     private final AssetService assetService;
     private final RegisterService registerService;
 	private final TaskService taskService;
+	private final DocumentService documentService;
 
 	record CustomChoiceListDTO(Long id, String name, boolean multipleSelect) {}
 	@RequireReadAll
@@ -73,7 +75,7 @@ public class CustomChoiceListController {
 		if (!choiceValue.isEditable()) {
 			return true;
 		}
-		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId()) || taskService.isInUseOnTaskLog(choiceValue.getId());
+		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId()) || taskService.isInUseOnTaskLog(choiceValue.getId()) || documentService.isInUseOnDocument(choiceValue.getId());
 	}
 	private Set<AllowedAction> setAllowedActions(ChoiceValue choiceValue) {
 		Set<AllowedAction> allowedActions = new HashSet<>();

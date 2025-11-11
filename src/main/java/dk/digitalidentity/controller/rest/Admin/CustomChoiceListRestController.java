@@ -8,6 +8,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.TaskService;
@@ -35,6 +36,7 @@ public class CustomChoiceListRestController {
     private final RegisterService registerService;
 	private final ChoiceValueService choiceValueService;
 	private final TaskService taskService;
+	private final DocumentService documentService;
 
 	// Request/Response DTOs
 	public record CreateChoiceListRecord(String caption, String description) {}
@@ -143,6 +145,7 @@ public class CustomChoiceListRestController {
 
 		return ResponseEntity.ok(ChoiceValueResponse.success(choiceListId));
 	}
+	
 	@RequireReadOwnerOnly
 	@GetMapping(value = "/choiceValue/{choiceValueId}", consumes = "*/*")
 	public ResponseEntity<ChoiceValueDetailResponse> getChoiceValue(@PathVariable Long choiceValueId) {
