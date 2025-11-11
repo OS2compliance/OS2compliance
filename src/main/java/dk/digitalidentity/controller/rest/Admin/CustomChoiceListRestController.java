@@ -6,7 +6,9 @@ import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
+import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
+import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
@@ -29,6 +31,8 @@ import java.util.Objects;
 public class CustomChoiceListRestController {
 
     private final ChoiceService choiceService;
+    private final AssetService assetService;
+    private final RegisterService registerService;
 	private final ChoiceValueService choiceValueService;
 	private final TaskService taskService;
 
@@ -139,7 +143,6 @@ public class CustomChoiceListRestController {
 
 		return ResponseEntity.ok(ChoiceValueResponse.success(choiceListId));
 	}
-
 	@RequireReadOwnerOnly
 	@GetMapping(value = "/choiceValue/{choiceValueId}", consumes = "*/*")
 	public ResponseEntity<ChoiceValueDetailResponse> getChoiceValue(@PathVariable Long choiceValueId) {

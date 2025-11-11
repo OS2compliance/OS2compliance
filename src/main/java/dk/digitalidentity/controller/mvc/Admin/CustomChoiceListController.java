@@ -12,6 +12,7 @@ import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
@@ -35,7 +36,7 @@ public class CustomChoiceListController {
     private final ChoiceService choiceService;
     private final AssetService assetService;
     private final RegisterService registerService;
-	private final ChoiceValueService choiceValueService;
+	private final TaskService taskService;
 
 	record CustomChoiceListDTO(Long id, String name, boolean multipleSelect) {}
 	@RequireReadAll
@@ -69,7 +70,10 @@ public class CustomChoiceListController {
 	}
 
 	private boolean isInUse(ChoiceValue choiceValue) {
-		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId());
+		if (!choiceValue.isEditable()) {
+			return true;
+		}
+		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId()) || taskService.isInUseOnTaskLog(choiceValue.getId());
 	}
 	private Set<AllowedAction> setAllowedActions(ChoiceValue choiceValue) {
 		Set<AllowedAction> allowedActions = new HashSet<>();

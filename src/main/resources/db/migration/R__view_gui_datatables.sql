@@ -37,12 +37,8 @@ SELECT t.id,
             WHEN t.repetition = 'EVERY_SECOND_YEAR' THEN 6
             WHEN t.repetition = 'EVERY_THIRD_YEAR' THEN 7
            END)                                                                        as repetition_order,
-       ts.task_result                                                                  AS result,
-       (CASE
-            WHEN ts.task_result = 'NO_ERROR' THEN 1
-            WHEN ts.task_result = 'NO_CRITICAL_ERROR' THEN 2
-            WHEN ts.task_result = 'CRITICAL_ERROR' THEN 3
-           END)                                                                        as task_result_order,
+       cv_result.caption                                                               as result,
+       cv_result.id                                                                    as task_result_order,
        (ts.id IS NOT NULL AND t.task_type = 'TASK')                                    as completed,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
@@ -52,6 +48,7 @@ FROM tasks t
     LEFT JOIN task_responsible_users tru ON tru.task_id = t.id
     LEFT JOIN users u ON u.uuid = tru.user_uuid
     LEFT JOIN task_logs ts on ts.task_id = t.id
+    LEFT JOIN choice_values cv_result ON cv_result.id = ts.task_result
     LEFT JOIN task_tag rt on rt.task_id = t.id
     LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE t.deleted = false
