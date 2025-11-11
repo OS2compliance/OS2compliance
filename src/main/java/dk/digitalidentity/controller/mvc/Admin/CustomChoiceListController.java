@@ -1,10 +1,11 @@
 package dk.digitalidentity.controller.mvc.Admin;
 
+import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadAll;
-import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.service.AssetService;
@@ -14,13 +15,18 @@ import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.RegisterService;
 import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.server.ResponseStatusException;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @Controller
 @RequireAdmin
@@ -43,31 +49,42 @@ public class CustomChoiceListController {
         model.addAttribute("choiceLists", customChoiceLists.stream().map(choiceList -> new CustomChoiceListDTO(choiceList.getId(), choiceList.getName(), choiceList.getMultiSelect())).toList() );
 
         model.addAttribute("isSuperuser",SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
-        return "admin/custom_choice_lists";
+        return "admin/choicelist/custom_choice_lists";
     }
 
-    record ChoiceListValueDTO(long id, String caption, String description, boolean removable){}
-    record EditableCustomChoiceList(long id, String name, boolean multiSelectable, List<ChoiceListValueDTO> values){}
-	@RequireUpdateAll
-    @GetMapping("{id}/edit")
-    public String editChoiceListFragment (Model model, @PathVariable long id) {
-        ChoiceList choiceList = choiceService.findChoiceList(id)
-            .orElseThrow();
+	public record ChoiceValueDTO(long id, String caption, String description, Set<AllowedAction> allowedActions) {}
+	@RequireReadAll
+	@GetMapping("/choice/view/{id}")
+	public String customChoiceList(Model model, @PathVariable long id) {
+		ChoiceList list = choiceService.findChoiceList(id).orElse(null);
+		if (list == null) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ChoiceList not found");
+		}
 
+		Set<ChoiceValueDTO> collect = list.getValues().stream().map(choiceValue -> {
+			Set<AllowedAction> allowedActions = setAllowedActions(choiceValue);
+			return new ChoiceValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), allowedActions);
+		}).collect(Collectors.toSet());
+		model.addAttribute("choiceList", list);
 
-        model.addAttribute("choiceList", new EditableCustomChoiceList(
-            choiceList.getId(),
-            choiceList.getName(),
-            choiceList.getMultiSelect(),
-            choiceList.getValues().stream().map(choiceValue -> new ChoiceListValueDTO(choiceValue.getId(), choiceValue.getCaption(), choiceValue.getDescription(), !isInUse(choiceValue))).toList()
-        ));
-        return "admin/fragments/custom_choice_list_edit :: customChoiceListEditModal";
-    }
+		model.addAttribute("choiceValues", collect);
+		return "admin/choicelist/choice_list_view";
+	}
 
 	private boolean isInUse(ChoiceValue choiceValue) {
 		if (!choiceValue.isEditable()) {
 			return true;
 		}
 		return assetService.isInUseOnAssets(choiceValue.getId()) || registerService.isInUseOnConsequenceAssessment(choiceValue.getId()) || registerService.isInUseByChoiceValue(choiceValue.getId()) || taskService.isInUseOnTaskLog(choiceValue.getId()) || documentService.isInUseOnDocument(choiceValue.getId());
+	}
+	private Set<AllowedAction> setAllowedActions(ChoiceValue choiceValue) {
+		Set<AllowedAction> allowedActions = new HashSet<>();
+		if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)) {
+			allowedActions.add(AllowedAction.UPDATE);
+		}
+		if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL) && !isInUse(choiceValue)) {
+			allowedActions.add(AllowedAction.DELETE);
+		}
+		return allowedActions;
 	}
 }

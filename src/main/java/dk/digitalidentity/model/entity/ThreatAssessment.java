@@ -157,6 +157,9 @@ public class ThreatAssessment extends Relatable implements HasSingleResponsibleU
 	@JoinTable(name = "threat_assessment_tag", joinColumns = { @JoinColumn(name = "threat_assessment_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
 	private Set<Tag> tags = new HashSet<>();
 
+	@Column
+	private boolean hidden;
+
     @Override
     public RelationType getRelationType() {
         return RelationType.THREAT_ASSESSMENT;

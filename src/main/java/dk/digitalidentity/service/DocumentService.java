@@ -116,12 +116,11 @@ public class DocumentService implements TagableService<Document> {
         final Task task = new Task();
         task.setTaskType(TaskType.CHECK);
         task.setName("Revision af " + document.getName());
-        task.setResponsibleUser(document.getResponsibleUser());
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(document.getNextRevision());
         task.setNotifyResponsible(false);
 		task.setIncludeInReport(includeInYearWheel);
-        task.setResponsibleUser(document.getResponsibleUser() != null ? document.getResponsibleUser() : userService.currentUser());
+		task.setResponsibleUsers(document.getResponsibleUser() != null ? Set.of(document.getResponsibleUser()) : Set.of(userService.currentUser()));
         task.setDescription("Revider dokumentet " + document.getName());
         task.getProperties().add(Property.builder()
             .entity(task)

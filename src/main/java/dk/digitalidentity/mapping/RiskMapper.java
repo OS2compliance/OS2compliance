@@ -43,6 +43,7 @@ public interface RiskMapper {
                 .externalLink(riskGrid.getExternalLink() != null ? riskGrid.getExternalLink() : "")
 				.threatCatalogs(riskGrid.getThreatCatalogs())
 				.tags(tags)
+				.hidden(riskGrid.isHidden())
                 .build();
     }
 
@@ -62,6 +63,8 @@ public interface RiskMapper {
 			if (SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL)
 					|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.UPDATE_OWNER_ONLY))) {
 				allowedActions.add(AllowedAction.UPDATE);
+				allowedActions.add(AllowedAction.HIDE);
+				allowedActions.add(AllowedAction.SHOW);
 			}
 			if (SecurityUtil.isOperationAllowed(Roles.DELETE_ALL)
 					|| (isResponsible && SecurityUtil.isOperationAllowed(Roles.DELETE_OWNER_ONLY))) {
