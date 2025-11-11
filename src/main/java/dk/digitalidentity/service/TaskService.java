@@ -6,6 +6,8 @@ import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
 import dk.digitalidentity.model.dto.enums.StatusColor;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -14,6 +16,7 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
+import dk.digitalidentity.model.entity.enums.NotificationSetting;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskType;
@@ -61,7 +64,9 @@ public class TaskService implements TagableService<Task> {
     private final RelatableService relatableService;
 
 	public boolean isResponsibleFor(Task task) {
-		return task.getResponsibleUser() != null && SecurityUtil.getPrincipalUuid().equals(task.getResponsibleUser().getUuid());
+		return task.getResponsibleUsers().stream()
+				.map(User::getUuid)
+				.anyMatch(SecurityUtil.getPrincipalUuid()::equals);
 	}
 
     public List<Task> findAll() {
@@ -103,8 +108,8 @@ public class TaskService implements TagableService<Task> {
      * @return A list of tasks
      */
     @Transactional
-    public List<Task> getTasksWithDeadLineAt(LocalDate deadline) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadline(deadline);
+    public List<Task> getTasksWithDeadLineAtAndTaskNotificationOverrideFalse(LocalDate deadline) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineAndNotificationRemindersEmpty(deadline);
     }
 
     /**
@@ -113,8 +118,8 @@ public class TaskService implements TagableService<Task> {
      * @return A list of tasks
      */
     @Transactional
-    public List<Task> getTasksWithDeadLineIn(List<LocalDate> deadlines) {
-        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineIn(deadlines);
+    public List<Task> getTasksWithDeadLineInAndTaskNotificationOverrideFalse(List<LocalDate> deadlines) {
+        return taskDao.findByNotifyResponsibleTrueAndNextDeadlineInAndNotificationRemindersEmpty(deadlines);
     }
 
     public List<Task> findAllYearWheelTasksWithDeadlineAfter(final LocalDate date) {
@@ -141,7 +146,7 @@ public class TaskService implements TagableService<Task> {
         task.setName(oldTask.getName());
         task.setTaskType(oldTask.getTaskType());
         task.setNextDeadline(oldTask.getNextDeadline());
-        task.setResponsibleUser(oldTask.getResponsibleUser());
+        task.setResponsibleUsers(oldTask.getResponsibleUsers());
         task.setResponsibleOu(oldTask.getResponsibleOu());
         task.setRepetition(oldTask.getRepetition());
         task.setTags(oldTask.getTags());
@@ -149,6 +154,7 @@ public class TaskService implements TagableService<Task> {
         task.setCreatedAt(LocalDateTime.now());
         task.setCreatedBy(SecurityUtil.getLoggedInUserUuid());
         task.setIncludeInReport(oldTask.getIncludeInReport());
+		task.getNotificationReminders().addAll(oldTask.getNotificationReminders());
 
         return taskDao.save(task);
     }
@@ -204,7 +210,7 @@ public class TaskService implements TagableService<Task> {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;
             }
-            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUser().getName(), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
+            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
         }
         return relatedTasks;
     }
@@ -216,7 +222,7 @@ public class TaskService implements TagableService<Task> {
             if (onlyNotCompleted && task.getTaskType().equals(TaskType.TASK) && !task.getLogs().isEmpty()) {
                 continue;
             }
-            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUser().getName(), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
+            relatedTasks.add(new TaskDTO(task.getId(), task.getName(), task.getTaskType(), task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), task.getNextDeadline().format(DK_DATE_FORMATTER), task.getNextDeadline().isBefore(LocalDate.now()), findHtmlStatusBadgeForTask(task)));
         }
         return relatedTasks;
     }
@@ -338,8 +344,8 @@ public class TaskService implements TagableService<Task> {
         return taskLogDao.findByTaskIdIn(taskList.stream().map(Relatable::getId).toList());
     }
 
-	public Set<Task> findAllUnrelatedTasksForResponsibleUser (String userUuid) {
-		return taskDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(userUuid);
+	public Set<Task> findAllUnrelatedTasksForResponsibleUser (User user) {
+		return taskDao.findAllByResponsibleUserAndNotRelatedToAnyAsset(user);
 	}
 
 	public Page<TaskGrid> getTasks(String sortColumn, String sortDirection, Map<String, String> filters, int page, int pageLimit, User user) {
@@ -408,5 +414,19 @@ public class TaskService implements TagableService<Task> {
 	@Override
 	public Set<Tag> findTagsByEntityIds(Collection<Long> entityIds) {
 		return taskDao.findTagsByEntityIds(entityIds);
+	}
+
+	public List<Task> getTasksWithDeadlineAtAndNotificationSettingContains(LocalDate deadline, NotificationSetting setting) {
+		return taskDao.findByNextDeadlineAndNotificationRemindersNotEmpty(deadline)
+				.stream()
+				.filter(task -> task.getNotificationReminders().contains(setting))
+				.collect(Collectors.toList());
+	}
+
+	public List<Task> getTasksWithDeadlineInAndNotificationSettingContains(List<LocalDate> deadlines, NotificationSetting setting) {
+		return taskDao.findByNextDeadlineInAndNotificationRemindersNotEmpty(deadlines)
+				.stream()
+				.filter(task -> task.getNotificationReminders().contains(setting))
+				.collect(Collectors.toList());
 	}
 }

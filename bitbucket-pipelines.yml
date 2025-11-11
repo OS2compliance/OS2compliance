@@ -1,0 +1,59 @@
+image: amazoncorretto:21-alpine
+pipelines:
+  default:
+    - step:
+        name: Run tests only
+        clone:
+          depth: full
+        caches:
+          - docker
+        script:
+          - export TESTCONTAINERS_RYUK_DISABLED=true
+          - ./validation/flyway_check_migrations.sh
+          - ./mvnw spotless:check test
+        services:
+          - docker
+
+  branches:
+    develop:
+      - step:
+          name: Build
+          caches:
+            - docker
+          script:
+            - IMAGE_NAME="os2compliance"
+            - IMAGE_TAG="develop"
+            - export TESTCONTAINERS_RYUK_DISABLED=true
+            - ./validation/flyway_check_migrations.sh
+            - ./mvnw spotless:check test
+            - docker build . -t ${IMAGE_NAME}:${IMAGE_TAG}
+            - pipe: atlassian/aws-ecr-push-image:2.0.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                IMAGE_NAME: ${IMAGE_NAME}
+                AWS_DEFAULT_REGION: "eu-west-1"
+                TAGS: ${IMAGE_TAG}
+                DEBUG: "true"
+          services:
+            - docker
+
+  tags:
+    release-*:
+      - step:
+          name: Build
+          caches:
+            - docker
+          script:
+            - IMAGE_NAME="os2compliance"
+            - docker build . -t ${IMAGE_NAME}:${BITBUCKET_TAG}
+            - pipe: atlassian/aws-ecr-push-image:2.2.0
+              variables:
+                AWS_ACCESS_KEY_ID: $AWS_ACCESS_KEY_ID
+                AWS_SECRET_ACCESS_KEY: $AWS_SECRET_ACCESS_KEY
+                IMAGE_NAME: ${IMAGE_NAME}
+                AWS_DEFAULT_REGION: "eu-west-1"
+                TAGS: ${BITBUCKET_TAG}
+                DEBUG: "true"
+          services:
+            - docker

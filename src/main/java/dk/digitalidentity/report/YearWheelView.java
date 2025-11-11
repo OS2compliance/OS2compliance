@@ -4,6 +4,7 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import jakarta.servlet.http.HttpServletRequest;
@@ -96,8 +97,8 @@ public class YearWheelView extends AbstractXlsView {
     private void createTaskColumns(final Row row, final Task task, final String relatedAssets) {
         createCell(row, 0, task.getName(), style);
         createCell(row, 1, task.getTaskType().getMessage(), style);
-        createCell(row, 2, nullSafe(() -> task.getResponsibleUser().getUserId(), ""), style);
-        createCell(row, 3, nullSafe(() -> task.getResponsibleUser().getName(), ""), style);
+        createCell(row, 2, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getUserId).collect(Collectors.joining(", ")), ""), style);
+        createCell(row, 3, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", ")), ""), style);
         createCell(row, 4, nullSafe(() -> task.getResponsibleOu().getName(), ""), style);
         createCell(row, 6, nullSafe(() -> task.getRepetition().getMessage()), style);
         createCell(row, 7, nullSafe(() -> task.getTags().stream().map(Tag::getValue)

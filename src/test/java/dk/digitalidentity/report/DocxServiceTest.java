@@ -392,7 +392,7 @@ public class DocxServiceTest {
         t.setNextDeadline(LocalDate.now());
         t.setDescription("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris convallis augue non lectus eleifend, eget sagittis nisl iaculis. Nam in mi at eros maximus mattis. Donec tempus congue diam eu pellentesque.");
         t.setName("Et opgave navn");
-        t.setResponsibleUser(User.builder().name("En Bruger").build());
+        t.setResponsibleUsers(Set.of(User.builder().name("En Bruger").build()));
         t.setResponsibleOu(OrganisationUnit.builder().name("En afdeling").build());
         return t;
     }

@@ -2,25 +2,24 @@ package dk.digitalidentity.controller.rest.Admin;
 
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
+import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
+import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
 import dk.digitalidentity.security.annotations.sections.RequireAdmin;
-import dk.digitalidentity.service.AssetService;
 import dk.digitalidentity.service.ChoiceService;
-import dk.digitalidentity.service.RegisterService;
+import dk.digitalidentity.service.ChoiceValueService;
+import dk.digitalidentity.service.TaskService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
 @Slf4j
 @RestController
@@ -30,64 +29,126 @@ import java.util.List;
 public class CustomChoiceListRestController {
 
     private final ChoiceService choiceService;
-    private final AssetService assetService;
-    private final RegisterService registerService;
+	private final ChoiceValueService choiceValueService;
+	private final TaskService taskService;
 
-    record CustomChoiceListDTO(Long id, String value) {
-    }
+	// Request/Response DTOs
+	public record CreateChoiceListRecord(String caption, String description) {}
+	public record ChoiceValueResponse(boolean success, Long choiceListId, String error) {
+		public static ChoiceValueResponse success(Long choiceListId) {
+			return new ChoiceValueResponse(true, choiceListId, null);
+		}
+
+		public static ChoiceValueResponse error(String error) {
+			return new ChoiceValueResponse(false, null, error);
+		}
+	}
+
+	public record ChoiceValueDetailResponse(boolean success, Long id, String caption, String description, String identifier, String error) {
+		public static ChoiceValueDetailResponse success(ChoiceValue choiceValue) {
+			return new ChoiceValueDetailResponse(
+					true,
+					choiceValue.getId(),
+					choiceValue.getCaption(),
+					choiceValue.getDescription() != null ? choiceValue.getDescription() : "",
+					choiceValue.getIdentifier(),
+					null
+			);
+		}
+
+		public static ChoiceValueDetailResponse error(String error) {
+			return new ChoiceValueDetailResponse(false, null, null, null, null, error);
+		}
+	}
+
+	@RequireCreateAll
+	@PostMapping("/{choiceListId}/create")
+	public ResponseEntity<ChoiceValueResponse> createChoiceValue(
+			@PathVariable Long choiceListId,
+			@RequestBody CreateChoiceListRecord createChoiceListRecord) {
+
+		ChoiceList choiceList = choiceService.findChoiceList(choiceListId).orElse(null);
+		if (choiceList == null) {
+			return ResponseEntity.badRequest().body(ChoiceValueResponse.error("Could not find choiceList"));
+		}
+
+		// Generate unique identifier using timestamp
+		long timestamp = System.currentTimeMillis();
+		String identifier = choiceList.getIdentifier() + "-" + createChoiceListRecord.caption() + "-" + timestamp;
+
+		ChoiceValue value = new ChoiceValue();
+		value.setCaption(createChoiceListRecord.caption());
+		value.setIdentifier(identifier);
+		value.setDescription(createChoiceListRecord.description());
+		value.setEditable(true);
+		value = choiceValueService.save(value);
+		choiceList.getValues().add(value);
+
+		choiceService.save(choiceList);
+
+		return ResponseEntity.ok(ChoiceValueResponse.success(choiceListId));
+	}
 
 	@RequireUpdateAll
-    @Transactional
-    @PutMapping("{listId}/update")
-    public ResponseEntity<?> updateList(@PathVariable final Long listId, @RequestBody List<CustomChoiceListDTO> customChoiceListDTOs) {
+	@PostMapping("/{choiceListId}/{choiceValueId}/edit")
+	public ResponseEntity<ChoiceValueResponse> editChoiceValue(
+			@PathVariable Long choiceListId,
+			@PathVariable Long choiceValueId,
+			@RequestBody CreateChoiceListRecord updateRecord) {
 
-        ChoiceList choiceList = choiceService.findChoiceList(listId)
-            .orElseThrow();
-        List<Long> existingIds = choiceList.getValues().stream().map(ChoiceValue::getId).toList();
-        List<Long> updatedIds = customChoiceListDTOs.stream().map(dto -> dto.id).toList();
+		ChoiceValue choiceValue = choiceValueService.findById(choiceValueId).orElse(null);
+		if (choiceValue == null) {
+			return ResponseEntity.badRequest().body(ChoiceValueResponse.error("Could not find choice value"));
+		}
 
-        List<ChoiceValue> finaLChoiceValues = new ArrayList<>();
-        //find values that needs to be deleted:
-        List<Long> markedForRemoval = existingIds.stream()
-            .filter(existingId -> !updatedIds.contains(existingId))
-            .filter( existingId -> !assetService.isInUseOnAssets(existingId)) //do not remove if any assets use this value
-            .filter( existingId -> !registerService.isInUseOnConsequenceAssessment(existingId)) //do not remove if any consequenceAssessments uses the column
-            .toList();
-        for(Long id : markedForRemoval) {
-            choiceService.delete(id);
-        }
+		choiceValue.setCaption(updateRecord.caption());
+		if (!Objects.equals(choiceValue.getDescription(), updateRecord.description())) {
+			choiceValue.setDescription(updateRecord.description());
+		}
+
+		choiceValueService.save(choiceValue);
+
+		return ResponseEntity.ok(ChoiceValueResponse.success(choiceListId));
+	}
+
+	@RequireUpdateAll
+	@PostMapping("/{choiceListId}/{choiceValueId}/delete")
+	public ResponseEntity<ChoiceValueResponse> deleteChoiceValue(
+			@PathVariable Long choiceListId,
+			@PathVariable Long choiceValueId) {
+
+		ChoiceList choiceList = choiceService.findChoiceList(choiceListId).orElse(null);
+		if (choiceList == null) {
+			return ResponseEntity.badRequest().body(ChoiceValueResponse.error("Could not find choiceList"));
+		}
 
 
-        //find values that needs to be updated:
-        List<CustomChoiceListDTO> markedForUpdate = customChoiceListDTOs.stream()
-            .filter(dto -> existingIds.contains(dto.id)).toList();
+		ChoiceValue choiceValue = choiceList.getValues().stream()
+				.filter(cv -> cv.getId().equals(choiceValueId))
+				.findFirst()
+				.orElse(null);
 
-        for (CustomChoiceListDTO choiceValue : markedForUpdate) {
-            ChoiceValue updatedChoiceValue = choiceService.update(choiceValue.id, choiceValue.value());
-                finaLChoiceValues.add(updatedChoiceValue);
-        }
+		if (choiceValue == null) {
+			return ResponseEntity.badRequest().body(ChoiceValueResponse.error("Could not find choice value"));
+		}
 
-        //find values that needs to be created:
-        List<CustomChoiceListDTO> markedForCreation = customChoiceListDTOs.stream()
-            .filter(dto -> !existingIds.contains(dto.id)).toList();
+		choiceList.getValues().remove(choiceValue);
+		choiceService.save(choiceList);
 
-        List<ChoiceValue> createdValues = markedForCreation.stream()
-            .map(dto -> {
-                return ChoiceValue.builder()
-                    .identifier(choiceList.getIdentifier() + "-" + dto.value.toLowerCase().replace(" ", "-")+"-"+ RandomStringUtils.randomAlphanumeric(6))
-                    .caption(dto.value)
-					.editable(true)
-                    .build();
-            }).toList();
+		choiceValueService.delete(choiceValue);
 
-        for (ChoiceValue choiceValue : createdValues) {
-            ChoiceValue savedValue = choiceService.save(choiceValue);
-            finaLChoiceValues.add(savedValue);
-        }
+		return ResponseEntity.ok(ChoiceValueResponse.success(choiceListId));
+	}
 
-        choiceList.setValues(finaLChoiceValues);
-        choiceService.save(choiceList);
+	@RequireReadOwnerOnly
+	@GetMapping(value = "/choiceValue/{choiceValueId}", consumes = "*/*")
+	public ResponseEntity<ChoiceValueDetailResponse> getChoiceValue(@PathVariable Long choiceValueId) {
 
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-    }
+		ChoiceValue choiceValue = choiceValueService.findById(choiceValueId).orElse(null);
+		if (choiceValue == null) {
+			return ResponseEntity.badRequest().body(ChoiceValueDetailResponse.error("Could not find choice value"));
+		}
+
+		return ResponseEntity.ok(ChoiceValueDetailResponse.success(choiceValue));
+	}
 }

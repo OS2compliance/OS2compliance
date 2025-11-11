@@ -19,6 +19,22 @@
                                 </select>
                             </div>
                         </div>
+                        <div class="row mt-3" th:if="${task.subTasks != null and !task.subTasks.isEmpty()}">
+                            <label class="col-sm-4 col-form-label">Checkliste</label>
+                            <div class="col-sm-8">
+                                <div class="border rounded p-3 bg-light">
+                                    <div th:each="subTask, iterStat : ${task.subTasks}" class="form-check mb-2">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               th:id="'completeSubTask' + ${subTask.id}"
+                                               name="subTasksCompleted"
+                                               th:value="${subTask.id}"
+                                               th:checked="${subTask.completed}">
+                                        <label class="form-check-label" th:for="'completeSubTask' + ${subTask.id}" th:text="${subTask.name}"></label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="row mt-3">
                             <label for="completionComment" class="col-sm-4 col-form-label">Kommentar</label>
                             <div class="col-sm-8">

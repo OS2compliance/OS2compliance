@@ -1,28 +1,8 @@
 import FormValidationService from "../FormValidationService.js";
-import IncidentGridService from "./incident-grid-service.js";
 
-const incidentGridService = new IncidentGridService();
-const incidentService = new IncidentService();
+export default function IncidentService() {
 
-window.incidentGridService = incidentGridService;
-window.incidentService = incidentService;
 
-document.addEventListener("DOMContentLoaded", async function(event) {
-    incidentService.init();
-
-    // Only init grid if we're on the list page with the grid table
-    if (document.getElementById('incidentsTable')) {
-        incidentGridService.init();
-
-        const statisticModalContainer = document.getElementById('statisticModalContainer');
-        if (statisticModalContainer) {
-            const { initStatisticView } = await import("../statistic/statisticView.js");
-            initStatisticView('incident');
-        }
-    }
-});
-
-function IncidentService() {
     this.init = () => {
         if (document.getElementById('createIncidentDialog')) {
             this.fetchDialog(formUrl, "createIncidentDialog");
@@ -81,7 +61,7 @@ function IncidentService() {
         });
     }
 
-    this.fetchColumnName =  async () => {
+    this.fetchColumnName = async () => {
         return jsonCall('GET', restUrl + 'columns', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);
@@ -96,7 +76,7 @@ function IncidentService() {
         pickers.forEach(picker => {
             let id = picker.getAttribute('id');
             let buttonId = picker.parentElement.querySelector('button').getAttribute('id');
-            initDatepicker(`#${buttonId}`, `#${id}` );
+            initDatepicker(`#${buttonId}`, `#${id}`);
         })
     }
 
@@ -183,7 +163,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(nameInput);
             }
-            incidentService.setFieldValidity(nameInput, feedback, isValid);
+            this.setFieldValidity(nameInput, feedback, isValid);
         }
 
         // validate textField textarea max length
@@ -198,7 +178,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(textArea);
             }
-            incidentService.setFieldValidity(textArea, feedback, isValid);
+            this.setFieldValidity(textArea, feedback, isValid);
         });
 
         // validate date fields
@@ -212,7 +192,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(input);
             }
-            incidentService.setFieldValidity(input, feedback, isValid);
+            this.setFieldValidity(input, feedback, isValid);
         });
 
         // Validate obligatory fields
@@ -231,5 +211,3 @@ function IncidentService() {
         }
     };
 }
-
-export { incidentService };
