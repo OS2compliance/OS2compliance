@@ -226,7 +226,7 @@ SELECT t.id,
         FROM relations r
         JOIN tasks task ON (
             (r.relation_a_id = task.id AND r.relation_a_type = 'TASK' AND r.relation_b_id = t.id) OR
-            (r.relation_b_id = task.id AND r.relation_b_type = 'TASK' AND relation_a_id = t.id)
+            (r.relation_b_id = task.id AND r.relation_b_type = 'TASK' AND r.relation_a_id = t.id)
             )
         WHERE (SELECT CASE
                     WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
