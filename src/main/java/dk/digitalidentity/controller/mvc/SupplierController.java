@@ -215,7 +215,8 @@ public class SupplierController {
 			@RequestParam("city") final String city,
 			@RequestParam("address") final String address,
 			@RequestParam("country") final String country,
-			@RequestParam("cvr") final String cvr) {
+			@RequestParam("cvr") final String cvr,
+			@RequestParam("contact") final String contact) {
 
 		// Validate lengths
 		if (cvr != null && cvr.length() > 10) {
@@ -233,6 +234,9 @@ public class SupplierController {
 		if (country != null && country.length() > 255) {
 			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Land må maks være 255 tegn");
 		}
+		if (contact != null && contact.length() > 255) {
+			throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Kontakt må maks være 255 tegn");
+		}
 
 		final Supplier supplier = supplierService.get(Long.valueOf(id))
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -248,6 +252,7 @@ public class SupplierController {
 		supplier.setCity(city);
 		supplier.setAddress(address);
 		supplier.setCountry(country);
+		supplier.setContact(contact);
 		supplierService.save(supplier);
 
 		return "redirect:/suppliers/" + id;
