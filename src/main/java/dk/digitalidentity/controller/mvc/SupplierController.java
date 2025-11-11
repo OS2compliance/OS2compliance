@@ -97,9 +97,6 @@ public class SupplierController {
             .filter(o -> o.getAsset().getSupplier() != null && o.getAsset().getSupplier().equals(supplier))
             .toList();
 
-		log.info("Liste 1: {}", assetRelated);
-		log.info("Liste 2: {}", assetsWithMappings);
-
         model.addAttribute("oversights", assetOversights);
         model.addAttribute("changeableSupplier", SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL) );
 		model.addAttribute("supplier", supplier);
