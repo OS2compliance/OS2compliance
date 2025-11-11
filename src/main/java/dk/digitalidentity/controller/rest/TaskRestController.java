@@ -8,6 +8,7 @@ import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
 import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.OrganisationUnit;
+import dk.digitalidentity.model.entity.SubTask;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
@@ -198,6 +199,14 @@ public class TaskRestController {
 			if (!links.isEmpty()) {
 				task.setLinks(links);
 			}
+		}
+
+		if (request.getTask().getSubTasks() != null && !request.getTask().getSubTasks().isEmpty()) {
+			List<SubTask> subTasks = new ArrayList<>();
+			for (SubTask subTask : task.getSubTasks()) {
+				subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
+			}
+			task.setSubTasks(subTasks);
 		}
 
 		final Task savedTask = taskService.saveTask(task);

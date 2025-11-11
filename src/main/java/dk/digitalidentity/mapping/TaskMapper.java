@@ -97,6 +97,7 @@ public interface TaskMapper {
 	@Mapping(target = "taskDescriptionTemplate", source = "taskDescriptionTemplate")
 	@Mapping(target = "notificationReminders", expression = "java(mapNotificationReminders(dto.getNotificationReminders()))")
 	@Mapping(target = "links", ignore = true)
+	@Mapping(target = "subTasks", ignore = true)
 	// Ignore fields we dont need
 	@Mapping(target = "version", ignore = true)
 	@Mapping(target = "preservedResponsibleUserUuids", ignore = true)

@@ -38,4 +38,5 @@ public class TaskCreateDTO {
 	private List<TaskLinkDTO> links;
 	private Set<String> notificationReminders;
 	private Long taskDescriptionTemplateId;
+	private List<SubTaskDTO> subTasks;
 }
