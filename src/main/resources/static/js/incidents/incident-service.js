@@ -1,7 +1,8 @@
 import FormValidationService from "../FormValidationService.js";
-import IncidentGridService from "./incident-grid-service.js";
 
-function IncidentService() {
+export default function IncidentService() {
+
+
     this.init = () => {
         if (document.getElementById('createIncidentDialog')) {
             this.fetchDialog(formUrl, "createIncidentDialog");
@@ -162,7 +163,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(nameInput);
             }
-            incidentService.setFieldValidity(nameInput, feedback, isValid);
+            this.setFieldValidity(nameInput, feedback, isValid);
         }
 
         // validate textField textarea max length
@@ -177,7 +178,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(textArea);
             }
-            incidentService.setFieldValidity(textArea, feedback, isValid);
+            this.setFieldValidity(textArea, feedback, isValid);
         });
 
         // validate date fields
@@ -191,7 +192,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(input);
             }
-            incidentService.setFieldValidity(input, feedback, isValid);
+            this.setFieldValidity(input, feedback, isValid);
         });
 
         // Validate obligatory fields
@@ -210,12 +211,3 @@ function IncidentService() {
         }
     };
 }
-
-const incidentGridService = new IncidentGridService();
-const incidentService = new IncidentService();
-
-window.incidentGridService = incidentGridService;
-window.incidentService = incidentService;
-
-export default incidentService;
-export { incidentService, incidentGridService };
