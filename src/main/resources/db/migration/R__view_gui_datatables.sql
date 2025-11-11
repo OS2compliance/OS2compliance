@@ -23,7 +23,8 @@ CREATE OR REPLACE VIEW view_gridjs_tasks AS
 SELECT t.id,
        t.name,
        t.task_type,
-       t.responsible_uuid,
+       GROUP_CONCAT(DISTINCT tru.user_uuid SEPARATOR ',') as responsible_uuid,
+       GROUP_CONCAT(DISTINCT u.name SEPARATOR ', ') as responsible_names,
        t.responsible_ou_uuid,
        t.next_deadline,
        t.repetition,
@@ -48,9 +49,11 @@ SELECT t.id,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',')            AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')               AS tag_ids
 FROM tasks t
-         LEFT JOIN task_logs ts on ts.task_id = t.id
-         LEFT JOIN task_tag rt on rt.task_id = t.id
-         LEFT JOIN tags tg on rt.tag_id = tg.id
+    LEFT JOIN task_responsible_users tru ON tru.task_id = t.id
+    LEFT JOIN users u ON u.uuid = tru.user_uuid
+    LEFT JOIN task_logs ts on ts.task_id = t.id
+    LEFT JOIN task_tag rt on rt.task_id = t.id
+    LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE t.deleted = false
   AND (ts.id IS NULL OR ts.id = (SELECT MAX(id) FROM task_logs WHERE task_id = t.id))
 GROUP BY t.id;
