@@ -8,7 +8,6 @@ import dk.digitalidentity.model.entity.enums.TaskRepetition;
 import dk.digitalidentity.model.entity.enums.TaskDeadlineStatus;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
-import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.statistic.StatisticLabel;
 import dk.digitalidentity.statistic.interfaces.StatisticEnabled;
 import jakarta.persistence.CascadeType;
@@ -110,6 +109,9 @@ public class Task extends Relatable implements HasMultipleResponsibleUsers, Stat
 	@Column(name = "notification_reminders")
 	@Convert(converter = NotificationSettingConverter.class)
 	private Set<NotificationSetting> notificationReminders = new HashSet<>();
+
+	@OneToMany(orphanRemoval = true, mappedBy = "task", cascade = CascadeType.ALL)
+	private List<SubTask> subTasks  = new ArrayList<>();
 
     @Override
     public RelationType getRelationType() {
