@@ -711,13 +711,13 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			List<registeredDataCategory> categories = dataProcessing.getRegisteredCategories().stream().map(cat ->
 					{
 						Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
-						List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+						List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream()
+								.map(choiceService::getValue)
+								.filter(Optional::isPresent)
+								.map(opt -> opt.get().getCaption())
 								.filter(Objects::nonNull)
 								.toList();
-						if (title.isEmpty()) {
-							return null;
-						}
-						return new registeredDataCategory(title.get().getCaption(), types);
+						return title.map(choiceValue -> new registeredDataCategory(choiceValue.getCaption(), types)).orElse(null);
 					})
 					.filter(Objects::nonNull)
 					.toList();
@@ -820,7 +820,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				final XWPFTableRow row13 = table.getRow(13);
 				setCellTextSmall(row13, 0, "Samfundskritisk:");
 				setCellTextSmall(row13, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
-				nextRowIndex = 13;
+				nextRowIndex = 14;
 			}
 
 			// Registered data categories
