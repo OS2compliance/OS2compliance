@@ -29,7 +29,7 @@
                         <div th:unless="${taskLog.taskResult} == null" class="row mb-3">
                             <label for="checkCompletedtaskResult" class="col-sm-3 col-form-label">Resultat</label>
                             <div class="col-sm-9" style="padding-top: 10px;">
-                                <input class="form-control" id="checkCompletedtaskResult" th:value="${taskLog.taskResult.getValue()}" disabled readonly>
+                                <input class="form-control" id="checkCompletedtaskResult" th:value="${taskLog.taskResult.getCaption}" disabled readonly>
                             </div>
                         </div>
                     </div>

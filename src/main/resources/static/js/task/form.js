@@ -55,9 +55,21 @@ function EditTaskService() {
             self.editTaskOuChoicesSelect.removeActiveItems();
         });
 
+        this.initSubTaskButtons();
+
+        subTaskLinkService.validateExistingInputs();
+
         initFormValidationForForm('taskEditForm',
-            () => validateChoices(
-                this.editTaskUserChoicesEditSelect, this.editTaskOuChoicesSelect));
+            () => {
+                const choicesValid = validateChoices(
+                    this.editTaskUserChoicesEditSelect,
+                    this.editTaskOuChoicesSelect
+                );
+                const subTasksValid = subTaskLinkService.validateAllSubTasks();
+
+                return choicesValid && subTasksValid;
+            }
+        );
 
         this.taskModalDialog.querySelector('#taskEditFormThreatAssessmentExplainer').style.display = 'none';
         this.taskModalDialog.querySelector('#taskEditFormRelationsDiv').style.display = 'none';
@@ -73,6 +85,18 @@ function EditTaskService() {
         editTaskModal.show();
     }
 
+    this.initSubTaskButtons = function() {
+        const addBtn = document.getElementById('addSubTaskBtn');
+        if (addBtn) {
+            // Fjern gamle event listeners ved at clone noden
+            const newAddBtn = addBtn.cloneNode(true);
+            addBtn.parentNode.replaceChild(newAddBtn, addBtn);
+
+            newAddBtn.addEventListener('click', () => {
+                subTaskLinkService.addSubTask();
+            });
+        }
+    }
 }
 
 function CopyTaskService() {
@@ -116,12 +140,22 @@ function CopyTaskService() {
            this.initCopyTaskRelationSelect();
        }
 
+        let addSubTaskBtn = document.getElementById('copyAddSubTaskBtn');
+        if (addSubTaskBtn !== null) {
+            addSubTaskBtn.addEventListener("click", () => subTaskLinkService.addSubTask())
+        }
+
+        let removeSubTaskBtn = document.getElementById('copyRemoveSubTaskBtn');
+        if (removeSubTaskBtn !== null) {
+            removeSubTaskBtn.addEventListener("click", () => subTaskLinkService.removeSubTask())
+        }
+
        let tagCopySelect = this.getScopedElementById('copyTaskTagsSelect');
        if(tagCopySelect !== null) {
-           initTagSelect('copyTaskTagsSelect');
+           //initTagSelect('copyTaskTagsSelect');
        }
 
-        initFormValidationForForm("copyTaskModalForm");
+        initFormValidationForForm("copyTaskModalForm", () => subTaskLinkService.validateAllSubTasks());
         this.notificationSelectHandler = initNotificationSelect(
             'copyTaskNotificationSetting',
             'copyTaskNotificationSelectDiv',

@@ -4,6 +4,7 @@ import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class DefaultController implements ErrorController {
 	private final ErrorAttributes errorAttributes = new DefaultErrorAttributes();
     private final UserService userService;
 	private final AssetService assetService;
+	private final ChoiceService choiceService;
 
 	@Transactional
     @GetMapping("/dashboard")
@@ -46,6 +48,8 @@ public class DefaultController implements ErrorController {
                 final User user = userService.findByUuid(userUuid).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
                 model.addAttribute("user", user);
 				model.addAttribute("roleString", SecurityUtil.getUserRoleString());
+
+				model.addAttribute("possibleDocumentTypes", choiceService.findChoiceValuesForListIdentifier("document-type"));
             }
 
 

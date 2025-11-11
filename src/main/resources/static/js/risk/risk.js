@@ -15,9 +15,11 @@ const columnProperties = [
     'assessment',
     'threatCatalogs',
     'tags',
+    'hidden',
     'allowedActions',
     'fromExternalSource',
-    'externalLink']
+    'externalLink'
+]
 
 const defaultClassName = {
     table: 'table table-striped',
@@ -72,7 +74,23 @@ function initTableActions() {
         },
         (id, name, elem) => deleteClicked(id, name),
         (id, elem) => copyRiskService.showCopyDialog(id),
+        (id, elem) => toggleHiddenClicked(id)
     )
+}
+
+function toggleHiddenClicked(riskId) {
+    fetch(`${restUrl}/${riskId}/toggle-hidden`, {
+        method: 'POST',
+        headers: {'X-CSRF-TOKEN': token}
+    })
+    .then(response => {
+        if (response.ok) {
+            window.location.reload();
+        } else {
+            toastService.error('Kunne ikke ændre skjult status');
+        }
+    })
+    .catch(error => toastService.error(error));
 }
 
 function CreateTable() {
@@ -229,17 +247,30 @@ function CreateTable() {
                     formatter: (cell, row) => formatTags(cell, row),
                 },
                 {
+                    name: "Skjult",
+                    searchable: {
+                        searchKey: 'hidden',
+                        fieldId: 'riskHiddenSearchSelector'
+                    },
+                    formatter: (cell, row) => {
+                        const isHidden = cell === true || cell === 'true';
+                        return gridjs.html(isHidden ? 'Ja' : 'Nej');
+                    }
+                },
+                {
                     id: 'allowedActions',
                     name: 'Handlinger',
                     sort: 0,
                     formatter: (cell, row) => {
                         const identifier = row.cells[columnProperties.indexOf('id')]['data'];
                         const name = row.cells[columnProperties.indexOf('name')]['data'].replaceAll("'", "\\'");
-                        const external = row.cells[columnProperties.indexOf('fromExternalSource')]['data']
+                        const external = row.cells[columnProperties.indexOf('fromExternalSource')]['data'];
+                        const hidden = row.cells[columnProperties.indexOf('hidden')]['data'];
                         const attributeMap = new Map();
                         attributeMap.set('identifier', identifier);
                         attributeMap.set('name', name);
                         attributeMap.set('external', external);
+                        attributeMap.set('hidden', hidden);
                         return gridjs.html(formatAllowedActions(cell, row, attributeMap));
                     }
                 },
@@ -311,7 +342,7 @@ function CreateTable() {
             grid,
             ['risikovurdering', 'allowedActions'],
             ['risikovurdering', 'allowedActions', 'type', 'status'],
-            ['id', 'externalLink', 'fromExternalSource'])
+            ['id', 'externalLink', 'fromExternalSource', 'hidden'])
     }
 }
 

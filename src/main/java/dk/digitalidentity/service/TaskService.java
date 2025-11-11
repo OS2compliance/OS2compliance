@@ -243,11 +243,7 @@ public class TaskService implements TagableService<Task> {
 
             String statusText = "Ikke udført";
             if (newestLog != null && newestLog.getTaskResult() != null) {
-                switch (newestLog.getTaskResult()) {
-                    case NO_ERROR -> statusText = "Ingen fejl";
-                    case NO_CRITICAL_ERROR -> statusText = "Ingen kritiske fejl";
-                    case CRITICAL_ERROR -> statusText = "Kritiske fejl";
-                }
+                statusText = newestLog.getTaskResult().getCaption();
             }
 
             if (diff < 0) {
@@ -277,12 +273,8 @@ public class TaskService implements TagableService<Task> {
 			}
 
 			String statusText = "Ikke udført";
-			if (newestLog != null) {
-				switch (newestLog.getTaskResult()) {
-					case NO_ERROR -> statusText = "Ingen fejl";
-					case NO_CRITICAL_ERROR -> statusText = "Ingen kritiske fejl";
-					case CRITICAL_ERROR -> statusText = "Kritiske fejl";
-				}
+			if (newestLog != null && newestLog.getTaskResult() != null) {
+				statusText = newestLog.getTaskResult().getCaption();
 			}
 
 			if (diff < 0) {
@@ -372,6 +364,10 @@ public class TaskService implements TagableService<Task> {
 
 	public List<Task> getByIds (List<Long> ids) {
 		return taskDao.findAllById(ids);
+	}
+
+	public boolean isInUseOnTaskLog(Long existingId) {
+		return taskLogDao.existsByTaskResultId(existingId);
 	}
 
 	@Override

@@ -58,7 +58,7 @@
                     </li>
                     <li class="nav-item has-sub" sec:authorize="@accessEvaluator.risk()">
                         <a href="#" class="mininav-toggle nav-link collapsed"
-                           th:classappend="${page == 'risikovurderinger' || page == 'catalogs' || page == 'dpia_template' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
+                           th:classappend="${page == 'risikovurderinger' || page == 'riskDashboard' || page == 'catalogs' || page == 'dpia_template' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
                             <i class="pli-flashlight fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Risikostyring</span>
                         </a>
                         <ul class="mininav-content nav collapse">

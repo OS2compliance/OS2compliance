@@ -41,6 +41,7 @@ public interface Constants {
 	String ALLOW_MULTIPLE_RESPONSIBLE_ON_TASKS = "allowMultipleResponsibleOnTasks";
 
     String CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID = "asset-type-it-system-123456";
+    String CHOICE_LIST_TASK_RESULT_NO_ERROR_ID = "control-result-no-error-123456";
 
     DateTimeFormatter DK_DATE_FORMATTER = new DateTimeFormatterBuilder()
             .parseCaseInsensitive()
