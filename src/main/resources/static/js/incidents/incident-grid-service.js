@@ -1,6 +1,6 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
 
-export default function IncidentGridService() {
+const IncidentGridService = function() {
 
     this.filterFrom = '';
     this.filterTo = '';
@@ -238,7 +238,9 @@ export default function IncidentGridService() {
         })
     }
 
-}
+};
+
+export default IncidentGridService;
 
 function initGridActions() {
     delegateListItemActions('incidentsTable',

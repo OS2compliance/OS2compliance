@@ -10,12 +10,10 @@ document.addEventListener("DOMContentLoaded", function(event) {
     incidentService.init();
 
     const targetId = '_dm-tabsIncident';
-    const incidentViewService = new IncidentViewService();
+    incidentViewService = new IncidentViewService();
     incidentViewService.init();
     incidentViewService.setEditable(targetId, false);
 
-    const incidentService = new IncidentService();
-    incidentService.initChoicesAndDatePickers(targetId);
 });
 
 // Requires incident-service also

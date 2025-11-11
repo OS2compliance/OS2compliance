@@ -1,27 +1,6 @@
 import FormValidationService from "../FormValidationService.js";
 import IncidentGridService from "./incident-grid-service.js";
 
-const incidentGridService = new IncidentGridService();
-const incidentService = new IncidentService();
-
-window.incidentGridService = incidentGridService;
-window.incidentService = incidentService;
-
-document.addEventListener("DOMContentLoaded", async function(event) {
-    incidentService.init();
-
-    // Only init grid if we're on the list page with the grid table
-    if (document.getElementById('incidentsTable')) {
-        incidentGridService.init();
-
-        const statisticModalContainer = document.getElementById('statisticModalContainer');
-        if (statisticModalContainer) {
-            const { initStatisticView } = await import("../statistic/statisticView.js");
-            initStatisticView('incident');
-        }
-    }
-});
-
 function IncidentService() {
     this.init = () => {
         if (document.getElementById('createIncidentDialog')) {
@@ -81,7 +60,7 @@ function IncidentService() {
         });
     }
 
-    this.fetchColumnName =  async () => {
+    this.fetchColumnName = async () => {
         return jsonCall('GET', restUrl + 'columns', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);
@@ -96,7 +75,7 @@ function IncidentService() {
         pickers.forEach(picker => {
             let id = picker.getAttribute('id');
             let buttonId = picker.parentElement.querySelector('button').getAttribute('id');
-            initDatepicker(`#${buttonId}`, `#${id}` );
+            initDatepicker(`#${buttonId}`, `#${id}`);
         })
     }
 
@@ -232,4 +211,11 @@ function IncidentService() {
     };
 }
 
-export { incidentService };
+const incidentGridService = new IncidentGridService();
+const incidentService = new IncidentService();
+
+window.incidentGridService = incidentGridService;
+window.incidentService = incidentService;
+
+export default incidentService;
+export { incidentService, incidentGridService };
