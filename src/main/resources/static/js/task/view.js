@@ -186,8 +186,12 @@ function ViewTaskService() {
         this.userChoicesEditSelect = choiceService.initUserSelect('userSelect');
         this.ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
         this.ouDepartmentChoicesEditSelect = choiceService.initOUSelect('departmentOuSelect');
-        this.nameField = document.getElementById("taskNameField")
+        const currentValue = this.ouDepartmentChoicesEditSelect.getValue(true);
 
+        if (!currentValue || currentValue === '' || currentValue === null) {
+            this.ouDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
+        }
+        this.nameField = document.getElementById("taskNameField")
         this.userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.userChoicesEditSelect);
         });
