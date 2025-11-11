@@ -18,4 +18,4 @@ CREATE TABLE chart_configuration
     owner_only                 BOOLEAN      NOT NULL DEFAULT FALSE
 );
 
-CREATE INDEX IF NOT EXISTS idx_chart_config_entity_name ON chart_configuration (entity_name);
+CREATE INDEX idx_chart_config_entity_name ON chart_configuration (entity_name);

@@ -13,6 +13,12 @@
     <template id="copyListItemButtonTemplate" th:if="${gridjs == true}">
         <button type="button" class="copyBtn btn btn-icon btn-outline-light btn-xs"><i class="pli-data-copy fs-5"></i></button>
     </template>
+    <template id="hideListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="hideBtn btn btn-icon btn-outline-light btn-xs" title="Skjul"><i class="pli-minimize-3 fs-5"></i></button>
+    </template>
+    <template id="showListItemButtonTemplate" th:if="${gridjs == true}">
+        <button type="button" class="showBtn btn btn-icon btn-outline-light btn-xs" title="Vis"><i class="pli-eye-visible fs-5"></i></button>
+    </template>
 
     <!-- Template for grid column options -->
     <template id="columnOptionContainerTemplate" th:if="${gridjs == true}">
@@ -52,6 +58,7 @@
     <div th:if="${taskDialog == true}" class="modal fade" id="sectionFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <div th:if="${taskDialog == true}" class="modal fade" id="headerFormDialog" aria-labelledby="taskLabel" aria-hidden="true"></div>
     <script th:if="${taskDialog == true}" type="module" th:src="@{/js/task/create-task-service.js}" defer></script>
+    <script th:if="${taskDialog == true}" th:src="@{/js/task/notification-select-handler.js}"></script>
     <script th:if="${taskDialog == true}" th:src="@{/js/standards/create-standard-service.js}" defer></script>
     <script th:if="${taskDialog == true}" th:src="@{/js/standards/sections/create-section-service.js}" defer></script>
     <script th:src="@{/js/settings/settings-service.js}" defer></script>

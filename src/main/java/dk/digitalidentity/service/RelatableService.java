@@ -17,6 +17,7 @@ import dk.digitalidentity.security.SecurityUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -44,9 +45,9 @@ public class RelatableService {
         return switch (relatable.getRelationType()) {
             case SUPPLIER -> Collections.singletonList(((Supplier)relatable).getResponsibleUser());
             case CONTACT, DBSOVERSIGHT, INCIDENT, DBSASSET, PRECAUTION -> Collections.emptyList();
-            case TASK -> Collections.singletonList(((Task)relatable).getResponsibleUser());
+			case TASK -> new ArrayList<>(((Task)relatable).getResponsibleUsers());
             case DOCUMENT -> Collections.singletonList(((Document)relatable).getResponsibleUser());
-            case TASK_LOG -> Collections.singletonList(((TaskLog)relatable).getTask().getResponsibleUser());
+            case TASK_LOG -> new ArrayList<>(((TaskLog)relatable).getTask().getResponsibleUsers());
             case REGISTER -> ((Register)relatable).getResponsibleUsers();
             case ASSET -> ((Asset)relatable).getResponsibleUsers();
             case STANDARD_SECTION -> Collections.singletonList(((StandardSection)relatable).getResponsibleUser());
@@ -60,9 +61,9 @@ public class RelatableService {
 		String userUuid = SecurityUtil.getPrincipalUuid();
 		boolean isResponsible = switch (relatable.getRelationType()) {
 			case SUPPLIER -> ((Supplier)relatable).getResponsibleUser().getUuid().equals(userUuid);
-			case TASK -> ((Task)relatable).getResponsibleUser().getUuid().equals(userUuid);
+			case TASK -> ((Task)relatable).getResponsibleUsers().stream().map(User::getUuid).anyMatch(userUuid::equals);
 			case DOCUMENT -> ((Document)relatable).getResponsibleUser().getUuid().equals(userUuid);
-			case TASK_LOG -> ((TaskLog)relatable).getTask().getResponsibleUser().getUuid().equals(userUuid);
+			case TASK_LOG -> ((TaskLog)relatable).getTask().getResponsibleUsers().stream().map(User::getUuid).anyMatch(userUuid::equals);
 			case REGISTER -> ((Register)relatable).getResponsibleUsers().stream().anyMatch(u -> u.getUuid().equals(userUuid));
 			case ASSET -> ((Asset)relatable).getResponsibleUsers().stream().anyMatch(u -> u.getUuid().equals(userUuid));
 			case STANDARD_SECTION -> ((StandardSection)relatable).getResponsibleUser().getUuid().equals(userUuid);

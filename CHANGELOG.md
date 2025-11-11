@@ -23,6 +23,7 @@ and this project adheres to adher to [Semantic Versioning](http://semver.org/).
 - (Ad-hoc) Statistik overskredne opgaver virkede ikke
 - (Ad-hoc) Tilføjet validering af trusselstype input felt, så der ikke sker server fejl, når man skriver for meget tekst 
 - (Ad-hoc) Brug residual risiko i risk matrixen på dashboard
+- (Ad-hoc) Fix risikovurderingsrapport kunne ikke dannes, hvis der var brug & tegn i kommentaren.
 
 ## [2.4.0] - 2025-09-10
 ### Added

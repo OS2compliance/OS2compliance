@@ -220,9 +220,7 @@ function setField() {
                };
 
     postData("/rest/risks/" + riskId + "/threats/setfield", data).then((response) => {
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
+            defaultResponseErrorHandler(response);
             toastService.info("Info", "Dine ændringer er blevet gemt")
         }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.error(error)});
 }
@@ -490,9 +488,7 @@ function mailReport() {
                };
 
     postData(`/rest/risks/${riskId}/mailReport`, data).then((response) => {
-        if (!response.ok) {
-            throw new Error(`${response.status} ${response.statusText}`);
-        }
+        defaultResponseErrorHandler(response);
         toastService.info("Sendt");
         document.querySelector('#sendReportModal .btn-close').click();
         setTimeout(() => {
@@ -587,9 +583,7 @@ function setPrecautions() {
                };
 
     postData("/rest/risks/" + riskId + "/threats/setPrecautions", data).then((response) => {
-            if (!response.ok) {
-                throw new Error(`${response.status} ${response.statusText}`);
-            }
+            defaultResponseErrorHandler(response);
             toastService.info("Info", "Dine ændringer er blevet gemt")
         }).catch(error => {toastService.error("Der er sket en fejl og ændringerne kan ikke gemmes, genindlæs siden og prøv igen"); console.log(error)});
 }

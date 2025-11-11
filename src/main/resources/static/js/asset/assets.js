@@ -73,7 +73,7 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
 
         let dialog = document.getElementById('formDialog');
         dialog.innerHTML = responseText;
-        editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
+        const editDialog = new bootstrap.Modal(document.getElementById('formDialog'));
         editDialog.show();
 
     }
