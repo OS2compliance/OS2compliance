@@ -1,4 +1,4 @@
-let editTemplate, deleteTemplate, copyTemplate;
+let editTemplate, deleteTemplate, copyTemplate, hideTemplate, showTemplate;
 
 /**
  * Used to format the "Actions" column of a grid. Assumes there are editbutton and deletebutton templates in the HTML
@@ -40,6 +40,30 @@ function formatAllowedActions(cell, row, additionalDataAttributeMap = new Map())
         container.appendChild(button);
     }
 
+    // Toggle hidden button - only show if user has permission
+    const isHidden = additionalDataAttributeMap.get('hidden');
+    if (isHidden === true || isHidden === 'true') {
+        if (cell?.includes("SHOW")) {
+            const buttonFragment = getShowTemplate()?.content.cloneNode(true);
+            const button = buttonFragment.firstElementChild;
+
+            for (const [key, value] of additionalDataAttributeMap.entries()) {
+                button.dataset[key] = value;
+            }
+            container.appendChild(button);
+        }
+    } else {
+        if (cell?.includes("HIDE")) {
+            const buttonFragment = getHideTemplate()?.content.cloneNode(true);
+            const button = buttonFragment.firstElementChild;
+
+            for (const [key, value] of additionalDataAttributeMap.entries()) {
+                button.dataset[key] = value;
+            }
+            container.appendChild(button);
+        }
+    }
+
     return container.innerHTML; // Ugly hack because grid.js sucks
 }
 
@@ -64,14 +88,29 @@ function getCopyTemplate() {
     return copyTemplate;
 }
 
+function getHideTemplate() {
+    if (!hideTemplate) {
+        return document.getElementById('hideListItemButtonTemplate');
+    }
+    return hideTemplate;
+}
+
+function getShowTemplate() {
+    if (!showTemplate) {
+        return document.getElementById('showListItemButtonTemplate');
+    }
+    return showTemplate;
+}
+
 /**
  * Initializes event delegation for the table with the given ID. Assigns the provided functions to the edit and delete button on click.
  * @param tableId Id of the parent table element
  * @param editAction Function to run when edit button is clicked. Is passed the ID of the row as parameter, and the button element itself for data-attribute extraction purposes
  * @param deleteAction Function to run when the delete button is clicked. Is passed ID and name of the row,and the button element itself for data-attribute extraction purposes
  * @param copyAction Function to run when copy button is clicked, Is passed the ID of the row as parameter, and the button element itself for data-attribute extraction purposes
+ * @param toggleHiddenAction Function to run when hide/show button is clicked, Is passed the ID of the row as parameter, and the button element itself for data-attribute extraction purposes
  */
-function delegateListItemActions(tableId, editAction = (id, element) => {}, deleteAction = (id, name, element) => {}, copyAction = (id, element) => {}) {
+function delegateListItemActions(tableId, editAction = (id, element) => {}, deleteAction = (id, name, element) => {}, copyAction = (id, element) => {}, toggleHiddenAction = (id, element) => {}) {
     const table = document.getElementById(tableId);
 
     table.addEventListener("click", (e) => {
@@ -86,6 +125,9 @@ function delegateListItemActions(tableId, editAction = (id, element) => {}, dele
         }else if (target?.classList.contains('copyBtn')) {
             const id = target.dataset.identifier;
             copyAction(id, target)
+        } else if (target?.classList.contains('hideBtn') || target?.classList.contains('showBtn')) {
+            const id = target.dataset.identifier;
+            toggleHiddenAction(id, target)
         }
     })
 }

@@ -213,6 +213,7 @@ SELECT t.id,
        t.threat_assessment_report_approval_status,
        t.updated_at                                                                                                                                                  as date,
        t.assessment,
+       t.hidden,
        t.localized_enums,
        (CASE
             WHEN t.assessment = 'GREEN' THEN 1
