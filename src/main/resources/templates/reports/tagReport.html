@@ -6,7 +6,8 @@
     <h1 class="card-header bg-light" th:text="${taskAndLogs.left.name}"></h1>
     <div class="card-body">
         <div class="row">
-            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${taskAndLogs.left.responsibleUser?.name}"></div>
+            <div class="col-lg-2 col-sm-3"><h5>Ansvarlig:</h5></div>
+            <div class="col-lg-10 col-sm-9 fs-6" th:text="${#strings.listJoin(taskAndLogs.left.responsibleUsers.![name], ', ')}"></div>
         </div>
         <div class="row">
             <div class="col-lg-2 col-sm-3"><h5>Ansvarlig afdeling:</h5></div><div class="col-lg-10 col-sm-9 fs-6" th:text="${taskAndLogs.left.responsibleOu?.name}"></div>

@@ -77,6 +77,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -267,13 +268,13 @@ public class AssetService implements TagableService<Asset> {
 				.ifPresent(t -> dpia.setNextRevision(t.getNextDeadline()));
 	}
 
-	public Optional<Task> findAssociatedCheck(final DPIA dpia) {
-		final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpia.getId());
-		if (tasks == null || tasks.isEmpty()) {
-			return Optional.empty();
-		}
-		return Optional.of(tasks.get(0));
-	}
+    public Optional<Task> findAssociatedCheck(final DPIA dpia) {
+        final List<Task> tasks = taskService.findTaskWithProperty(ASSOCIATED_ASSET_DPIA_PROPERTY, "" + dpia.getId());
+        if (tasks == null || tasks.isEmpty()) {
+            return Optional.empty();
+        }
+        return Optional.of(tasks.getFirst());
+    }
 
 	@Transactional
 	public Task createOrUpdateAssociatedCheck(DPIA dpia) {
@@ -284,7 +285,7 @@ public class AssetService implements TagableService<Asset> {
 			name += (dpia.getAssets().size() > 1) ? " med flere" : "";
 			task.setName(name);
 			task.setNextDeadline(dpia.getNextRevision());
-			task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
+			task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Collections.emptySet());
 			task.setDescription("Revider DPIA for " + String.join(", ", dpia.getAssets().stream().map(Relatable::getName).toList()));
 			setTaskRevisionInterval(dpia, task);
 			return task;
@@ -311,7 +312,7 @@ public class AssetService implements TagableService<Asset> {
 				.build()
 		);
 		task.setTaskType(TaskType.CHECK);
-		task.setResponsibleUser(dpia.getResponsibleUser() != null ? dpia.getResponsibleUser() : userService.currentUser());
+		task.setResponsibleUsers(dpia.getResponsibleUser() != null ? Set.of(dpia.getResponsibleUser()) : Set.of(userService.currentUser()));
 		task.setNextDeadline(dpia.getNextRevision());
 		task.setNotifyResponsible(true);
 		final Task savedTask = taskService.saveTask(task);
@@ -446,7 +447,7 @@ public class AssetService implements TagableService<Asset> {
 		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a -> a.getAssetType().getCaption()).toList()));
 		context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
 		context.setVariable("managerNames", String.join(", ", assets.stream().flatMap(a -> a.getManagers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
-		context.setVariable("supplierName", String.join(", ", assets.stream().map(a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
+		context.setVariable("supplierName", String.join(", ", assets.stream().filter(a -> a.getSupplier() != null).map(a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
 
 		return templateEngine.process("reports/dpia/dpia_pdf", context);
 	}

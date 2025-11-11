@@ -1,0 +1,1 @@
+ALTER TABLE threat_assessments ADD COLUMN hidden BOOLEAN NOT NULL DEFAULT FALSE;

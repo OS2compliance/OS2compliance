@@ -59,8 +59,8 @@
                                 <div class="row mb-3">
                                     <label for="userSelect" class="col-sm-2 col-form-label">Ansvarlig</label>
                                     <div class="col-sm-10">
-                                        <select class="form-control form-select choices__input editField" th:field="*{responsibleUser}" data-trigger="" name="ansvarlig" id="userSelect" tabindex="-1" required hidden >
-                                            <option th:value="*{responsibleUser.uuid}" th:text="'(' + *{responsibleUser.userId} + ') ' + *{responsibleUser.name}" selected></option>
+                                        <select class="form-control form-select choices__input editField" th:field="*{responsibleUsers}" data-trigger="" name="ansvarlig" id="userSelect" tabindex="-1" required hidden th:attr="multiple=${allowMultipleTaskResponsible} ? 'multiple' : null">
+                                            <option th:each="user : *{responsibleUsers}" th:value="${user.uuid}" th:text="'(' + ${user.userId} + ') ' + ${user.name}" selected></option>
                                         </select>
                                         <div class="invalid-feedback">Der skal vælges en ansvarlig</div>
                                     </div>
@@ -114,11 +114,47 @@
                                     <label for="description" class="col-sm-2 col-form-label">Beskrivelse</label>
                                     <div class="col-sm-10">
                                         <div class="input-group">
-                                            <textarea id="description" class="form-control editField" placeholder="Indtast beskrivelse" th:field="*{description}" rows="1" style="overflow:hidden; resize:none"></textarea>
+                                            <textarea id="description" class="form-control editField" placeholder="Indtast beskrivelse" th:value="${task.getDescription()}" th:text="${task.getDescription()}" name="description" rows="1" style="overflow:hidden; resize:none"></textarea>
                                             <div class="invalid-feedback">Der skal indtastes en beskrivelse</div>
                                         </div>
                                     </div>
                                 </div>
+                                <div class="row mb-3">
+                                    <label for="taskDescriptionTemplateSelect" class="col-sm-2 col-form-label">Opgavebeskrivelses-skabelon</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select editField" th:field="*{taskDescriptionTemplate}" data-trigger="" name="ansvarlig" id="taskDescriptionTemplateSelect" tabindex="-1">
+                                            <option th:selected="${task.taskDescriptionTemplate == null}" th:value="${null}">Ingen valgt</option>
+                                            <option th:each="template : ${taskDescriptionTemplates}" th:value="${template.id}" th:text="${template.caption}" th:selected="${template.id} == ${task.taskDescriptionTemplate?.id}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                            <div class="row mb-3">
+                                <label for="taskType" class="col-sm-2 col-form-label">Underopgaver</label>
+                                <div class="col-sm-10">
+                                    <!-- view mode -->
+                                    <div id="subTaskViewContainer" class="editField">
+                                        <ul class="list-unstyled mb-0">
+                                            <li th:each="subTask : *{subTasks}" class="mb-2">
+                                                <input class="form-check-input me-2 editField" type="checkbox" th:checked="${subTask.completed}" disabled>
+                                                <span th:text="${subTask.name}"></span>
+                                            </li>
+                                        </ul>
+                                    </div>
+
+                                    <!-- edit mode -->
+                                    <div id="subTaskEditContainer" hidden>
+                                        <div th:each="subTask, iterStat : *{subTasks}" class="input-group mb-2">
+                                            <div class="input-group-text">
+                                                <input class="form-check-input mt-0" type="checkbox" th:name="'subTasks[' + ${iterStat.index} + '].completed'" th:checked="${subTask.completed}" disabled>
+                                            </div>
+                                            <input type="text" th:name="'subTasks[' + ${iterStat.index} + '].name'" th:value="${subTask.name}" class="form-control editField" maxlength="255">
+                                            <button type="button" class="btn btn-danger editField subtask-remove-btn">-</button>
+                                        </div>
+                                    </div>
+                                    <button id="subTaskAddLinkBtn" class="btn btn-secondary editField" type="button" hidden>+ Tilføj til checkliste</button>
+                                </div>
+                            </div>
 
                                 <div class="row mb-3">
                                     <label for="taskType" class="col-sm-2 col-form-label">Links</label>
@@ -207,6 +243,25 @@
                                         </div>
                                     </div>
                                 </th:block>
+
+                                <div class="row mb-3">
+                                    <label for="viewTaskNotificationSetting" class="col-sm-2 col-form-label">Tilpasset afsendelse af e-mail påmindelse</label>
+                                    <div class="col-sm-10" style="display:flex; align-items: center">
+                                        <div class="input-group">
+                                            <input id="viewTaskNotificationSetting" class="form-check-input editField" type="checkbox" th:checked="${!task.notificationReminders.isEmpty()}">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row mb-3" id="viewTaskNotificationSelectDiv" th:hidden="${!task.notificationReminders.isEmpty()}">
+                                    <label for="viewTaskNotificationSelectInput" class="col-sm-2 col-form-label">Tidspunkt</label>
+                                    <div class="col-sm-10">
+                                        <select class="form-control form-select choices__input editField" id="viewTaskNotificationSelectInput" tabindex="-1" multiple th:field="*{notificationReminders}">
+                                            <option th:each="repetition : ${T(dk.digitalidentity.model.entity.enums.NotificationSetting).values()}"
+                                                    th:value="${repetition.name}" th:text="${repetition.message}"></option>
+                                        </select>
+                                    </div>
+                                </div>
+
                             <div class="row">
                                 <div th:replace="~{fragments/relations :: relationsfragment (relations=${relations}, completed=${completed}, relatableId=${task.id}, customDelete=false)}"></div>
                             </div>
