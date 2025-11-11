@@ -1,6 +1,8 @@
 import ColumnOptions from "../grid-js-extension/column-options.js";
+import IncidentService from "./incident-service.js";
 
-export default function IncidentGridService() {
+export default function IncidentGridService () {
+    this.incidentService = new IncidentService();
 
     this.filterFrom = '';
     this.filterTo = '';
@@ -21,7 +23,7 @@ export default function IncidentGridService() {
             this.filterTo = toPicker.getFormatedDate();
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
-        const columnNames = await incidentService.fetchColumnName()
+        const columnNames = await this.incidentService.fetchColumnName()
 
 
             // .then(columnNames => {
@@ -252,7 +254,7 @@ export default function IncidentGridService() {
         })
     }
 
-}
+};
 
 function initGridActions() {
     delegateListItemActions('incidentsTable',

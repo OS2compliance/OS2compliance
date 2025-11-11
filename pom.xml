@@ -328,6 +328,21 @@
 					</annotationProcessorPaths>
 				</configuration>
 			</plugin>
+
+			<plugin>
+				<groupId>com.diffplug.spotless</groupId>
+				<artifactId>spotless-maven-plugin</artifactId>
+				<version>3.0.0</version>
+				<configuration>
+					<ratchetFrom>origin/develop</ratchetFrom>
+					<java>
+						<toggleOffOn />
+						<endWithNewline />
+						<removeUnusedImports />
+						<forbidWildcardImports />
+					</java>
+				</configuration>
+			</plugin>
 		</plugins>
 
 		<finalName>os2compliance</finalName>
