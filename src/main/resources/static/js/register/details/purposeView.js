@@ -17,8 +17,6 @@ export default class RegisterPurposeService {
         // Check for conditional fields visibility
         this.#consentFieldChange()
         this.#supplementalLegalFieldChange()
-
-        this.setRowsBasedOnContent();
     };
 
     setPurposeEditState(editable) {
@@ -68,20 +66,6 @@ export default class RegisterPurposeService {
             this.#supplementalLegalElements.set(identifier, element);
             element?.addEventListener('change', (e) => this.#onGDPRCheckboxChange(element))
         }
-    }
-
-    setRowsBasedOnContent() {
-        let textarea = document.getElementById('registerNameField');
-        if (!textarea) return;
-
-        textarea.rows = 1;
-
-        const style = window.getComputedStyle(textarea);
-        const lineHeight = parseInt(style.lineHeight);
-
-        const rows = Math.ceil(textarea.scrollHeight / lineHeight);
-
-        textarea.rows = Math.max(1, Math.min(rows, 10)) - 1;
     }
 
     #onGDPRCheckboxChange(element) {
