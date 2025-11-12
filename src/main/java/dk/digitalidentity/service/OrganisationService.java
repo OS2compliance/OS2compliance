@@ -3,7 +3,7 @@ package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.OrganisationUnitDao;
 import dk.digitalidentity.model.entity.OrganisationUnit;
-import dk.digitalidentity.model.entity.User;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
@@ -34,4 +34,11 @@ public class OrganisationService {
     public List<OrganisationUnit> findAllByUuids(final Set<String> uuids) {
         return organisationUnitDao.findAllByUuidInAndActiveTrue(uuids);
     }
+
+	public Optional<OrganisationUnit> findByUuid(final String uuid) {
+		if (StringUtils.isEmpty(uuid)) {
+			return Optional.empty();
+		}
+		return Optional.ofNullable(organisationUnitDao.findByUuid(uuid));
+	}
 }

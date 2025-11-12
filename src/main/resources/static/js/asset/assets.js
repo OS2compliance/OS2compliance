@@ -57,7 +57,7 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
         })
     }
 
-    async function onEditclicked(assetId) {
+    async function onEditClicked(assetId) {
         const response = await fetch(`${formUrl}?id=${assetId}`, {
             headers: {
                 'X-CSRF-TOKEN': token
@@ -312,7 +312,7 @@ let token = document.getElementsByName("_csrf")[0].getAttribute("content");
     function initGridActionButtons() {
         delegateListItemActions(
             "assetsDatatable",
-            (id) => onEditclicked(id),
+            (id) => onEditClicked(id),
             (id, name)=> deleteClicked(id, name)
         )
     }

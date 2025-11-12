@@ -43,6 +43,7 @@ public interface RiskMapper {
                 .externalLink(riskGrid.getExternalLink() != null ? riskGrid.getExternalLink() : "")
 				.threatCatalogs(riskGrid.getThreatCatalogs())
 				.tags(tags)
+				.completedTasks(riskGrid.getCompletedTasks())
 				.hidden(riskGrid.isHidden())
                 .build();
     }

@@ -4,22 +4,16 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.event.EmailEvent;
 import dk.digitalidentity.model.entity.ChoiceList;
 import dk.digitalidentity.model.entity.ChoiceValue;
-import dk.digitalidentity.model.entity.CustomThreat;
 import dk.digitalidentity.model.entity.EmailTemplate;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.SubTask;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLink;
 import dk.digitalidentity.model.entity.TaskLog;
-import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
-import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
-import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskType;
-import dk.digitalidentity.model.entity.enums.ThreatAssessmentType;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
@@ -179,64 +173,11 @@ public class TasksController {
         relationService.setRelationsAbsolute(savedTask, relations);
 
         if (riskId != null) {
-            final ThreatAssessment threatAssessment = threatAssessmentService.findById(riskId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Relateret risikovurdering ikke fundet"));
-
-            if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
-                final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
-                    .filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
-                addRelations(savedTask, relatedAssets);
-            }
-            else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
-                final List<Relatable> relatedRegisters = relationService.findAllRelatedTo(threatAssessment).stream()
-                    .filter(t -> t.getRelationType().equals(RelationType.REGISTER)).toList();
-                addRelations(savedTask, relatedRegisters);
-            }
-
-            if (riskCustomId != 0) {
-                final CustomThreat threat = threatAssessment.getCustomThreats().stream().filter(t -> t.getId().equals(riskCustomId)).findAny().orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
-                    .filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(riskCustomId))
-                    .findAny().orElse(null);
-
-                // if no response, create one and add relation
-                if (response == null) {
-                    response = threatAssessmentService.createResponse(threatAssessment, null, threat);
-                    threatAssessmentService.save(threatAssessment);
-                }
-
-                relationService.addRelation(savedTask, response);
-
-            } else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isEmpty()) {
-				final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
-						.flatMap(catalog -> catalog.getThreats().stream())
-						.filter(t -> t.getIdentifier().equals(riskCatalogIdentifier))
-						.findAny()
-						.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
-                ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
-                    .filter(r -> r.getThreatCatalogThreat() != null && r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
-                    .findAny().orElse(null);
-
-                // if no response, create one and add relation
-                if (response == null) {
-                    response = threatAssessmentService.createResponse(threatAssessment, threat, null);
-                    threatAssessmentService.save(threatAssessment);
-                }
-
-                relationService.addRelation(savedTask, response);
-            }
-
-            relationService.addRelation(savedTask, threatAssessment);
+            threatAssessmentService.handleTaskRiskAssociation(savedTask, riskId, riskCustomId, riskCatalogIdentifier);
             return "redirect:/risks/" + riskId;
         }
 
         return "redirect:/tasks/"+savedTask.getId();
-    }
-
-    private void addRelations(final Task savedTask, final List<Relatable> relatables) {
-        for (final Relatable relatable : relatables) {
-            relationService.addRelation(savedTask, relatable);
-        }
     }
 
 	@RequireUpdateOwnerOnly

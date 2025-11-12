@@ -9,7 +9,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -54,5 +53,7 @@ public class RiskDTO {
 	private String threatCatalogs;
 	@ExcludeFromExport
 	private boolean hidden;
+	@ExcelColumn(headerName = "Løste opgaver", order = 10)
+	private Integer completedTasks;
 
 }

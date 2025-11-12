@@ -36,11 +36,11 @@ import dk.digitalidentity.service.model.ThreatDTO;
 import dk.digitalidentity.service.tag.TagableService;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.apache.commons.text.StringEscapeUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.apache.commons.lang3.StringUtils;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.xhtmlrenderer.pdf.ITextRenderer;
@@ -1085,5 +1085,75 @@ public class ThreatAssessmentService implements TagableService<ThreatAssessment>
 
 	public List<ThreatAssessment> getByIds (List<Long> ids) {
 		return threatAssessmentDao.findAllById(ids);
+	}
+
+	// Helper methods for createTask endpoint
+	@Transactional
+	public void handleTaskRiskAssociation(Task savedTask, Long riskId, Long riskCustomId, String riskCatalogIdentifier) {
+		final ThreatAssessment threatAssessment = findById(riskId)
+				.orElseThrow(() -> new IllegalArgumentException("Relateret risikovurdering ikke fundet"));
+
+		associateTaskWithThreatAssessmentAssets(savedTask, threatAssessment);
+		handleSpecificThreatAssociation(savedTask, threatAssessment, riskCustomId, riskCatalogIdentifier);
+		relationService.addRelation(savedTask, threatAssessment);
+	}
+
+	private void associateTaskWithThreatAssessmentAssets(Task savedTask, ThreatAssessment threatAssessment) {
+		if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.ASSET)) {
+			final List<Relatable> relatedAssets = relationService.findAllRelatedTo(threatAssessment).stream()
+					.filter(t -> t.getRelationType().equals(RelationType.ASSET)).toList();
+			taskService.addRelations(savedTask, relatedAssets);
+		}
+		else if (threatAssessment.getThreatAssessmentType().equals(ThreatAssessmentType.REGISTER)) {
+			final List<Relatable> relatedRegisters = relationService.findAllRelatedTo(threatAssessment).stream()
+					.filter(t -> t.getRelationType().equals(RelationType.REGISTER)).toList();
+			taskService.addRelations(savedTask, relatedRegisters);
+		}
+	}
+
+	private void handleSpecificThreatAssociation(Task savedTask, ThreatAssessment threatAssessment, Long riskCustomId, String riskCatalogIdentifier) {
+		if (riskCustomId != null && riskCustomId != 0) {
+			handleCustomThreatAssociation(savedTask, threatAssessment, riskCustomId);
+		} else if (riskCatalogIdentifier != null && !riskCatalogIdentifier.isBlank()) {
+			handleCatalogThreatAssociation(savedTask, threatAssessment, riskCatalogIdentifier);
+		}
+	}
+
+	private void handleCustomThreatAssociation(Task savedTask, ThreatAssessment threatAssessment, Long riskCustomId) {
+		final CustomThreat threat = threatAssessment.getCustomThreats().stream()
+				.filter(t -> t.getId().equals(riskCustomId))
+				.findAny()
+				.orElseThrow(() -> new IllegalArgumentException("Relateret brugerdefineret trussel med id: " + riskCustomId + " ikke fundet"));
+
+		ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+				.filter(r -> r.getCustomThreat() != null && r.getCustomThreat().getId().equals(riskCustomId))
+				.findAny().orElse(null);
+
+		if (response == null) {
+			response = createResponse(threatAssessment, null, threat);
+			threatAssessmentDao.save(threatAssessment);
+		}
+
+		relationService.addRelation(savedTask, response);
+	}
+
+	private void handleCatalogThreatAssociation(Task savedTask, ThreatAssessment threatAssessment, String riskCatalogIdentifier) {
+		final ThreatCatalogThreat threat = threatAssessment.getThreatCatalogs().stream()
+				.flatMap(catalog -> catalog.getThreats().stream())
+				.filter(t -> t.getIdentifier().equals(riskCatalogIdentifier))
+				.findAny()
+				.orElseThrow(() -> new IllegalArgumentException("Relateret trussel med identifikator: " + riskCatalogIdentifier + " ikke fundet"));
+
+		ThreatAssessmentResponse response = threatAssessment.getThreatAssessmentResponses().stream()
+				.filter(r -> r.getThreatCatalogThreat() != null &&
+						r.getThreatCatalogThreat().getIdentifier().equals(riskCatalogIdentifier))
+				.findAny().orElse(null);
+
+		if (response == null) {
+			response = createResponse(threatAssessment, threat, null);
+			threatAssessmentDao.save(threatAssessment);
+		}
+
+		relationService.addRelation(savedTask, response);
 	}
 }
