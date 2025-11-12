@@ -34,6 +34,7 @@ async function handleSubmit(fd, form) {
         // Create the task object with the form data
         const task = extractTaskFromFormData(fd, form);
         task.links = extractLinksFromForm(form);
+        task.subTasks = extractSubTasksFromForm(form);
 
         const relations = (fd.getAll('relations') || []).map(v => parseInt(v));
         const riskData = extractRiskDataFromForm(fd, form);
@@ -90,7 +91,8 @@ function extractTaskFromFormData(fd, form) {
         tagIds: (fd.getAll('tags') || []).map(v => parseInt(v)),
         notificationReminders: fd.getAll('notificationReminders') || [],
         taskDescriptionTemplateId: fd.get('templateDescription') ? parseInt(fd.get('templateDescription')) : null,
-        links: []
+        links: [],
+        subTasks: []
     };
 }
 
@@ -105,6 +107,22 @@ function extractLinksFromForm(form) {
     });
 
     return links;
+}
+
+function extractSubTasksFromForm(form) {
+    const subTasks = [];
+    const subTaskInputs = form.querySelectorAll('#subTasksContainer input[type="text"]');
+
+    subTaskInputs.forEach(input => {
+        if (input.value.trim()) {
+            subTasks.push({
+                name: input.value.trim(),
+                completed: false
+            });
+        }
+    });
+
+    return subTasks;
 }
 
 function extractRiskDataFromForm(fd, form) {

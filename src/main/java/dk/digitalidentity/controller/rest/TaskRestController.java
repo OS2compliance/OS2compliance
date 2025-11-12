@@ -3,6 +3,7 @@ package dk.digitalidentity.controller.rest;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.mapping.TaskMapper;
 import dk.digitalidentity.model.dto.PageDTO;
+import dk.digitalidentity.model.dto.SubTaskDTO;
 import dk.digitalidentity.model.dto.TaskCreateRequestDTO;
 import dk.digitalidentity.model.dto.TaskDTO;
 import dk.digitalidentity.model.dto.TaskLinkDTO;
@@ -203,7 +204,7 @@ public class TaskRestController {
 
 		if (request.getTask().getSubTasks() != null && !request.getTask().getSubTasks().isEmpty()) {
 			List<SubTask> subTasks = new ArrayList<>();
-			for (SubTask subTask : task.getSubTasks()) {
+			for (SubTaskDTO subTask : request.getTask().getSubTasks()) {
 				subTasks.add(new SubTask(null, subTask.getName(), subTask.isCompleted(), task));
 			}
 			task.setSubTasks(subTasks);
