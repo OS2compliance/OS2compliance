@@ -220,6 +220,18 @@ SELECT t.id,
             WHEN t.assessment = 'RED' THEN 5
            END)                                                                                                                                                      as assessment_order,
        (SELECT COUNT(r.id) FROM relations r WHERE (r.relation_a_id = t.id OR r.relation_b_id = t.id) AND (r.relation_a_type = 'TASK' OR r.relation_b_type = 'TASK')) AS tasks,
+       (SELECT COUNT(r.id)
+        FROM relations r
+        JOIN tasks task ON (
+            (r.relation_a_id = task.id AND r.relation_a_type = 'TASK' AND r.relation_b_id = t.id) OR
+            (r.relation_b_id = task.id AND r.relation_b_type = 'TASK' AND r.relation_a_id = t.id)
+            )
+        WHERE (SELECT CASE
+                    WHEN EXISTS (SELECT 1 FROM task_logs tl WHERE tl.task_id = task.id) THEN 'COMPLETED'
+                    WHEN task.next_deadline > CURRENT_TIMESTAMP() THEN 'FUTURE'
+                    ELSE 'EXCEEDED'
+                    END) = 'COMPLETED'
+        ) AS completed_tasks,
        t.from_external_source,
        t.external_link,
        GROUP_CONCAT(DISTINCT
