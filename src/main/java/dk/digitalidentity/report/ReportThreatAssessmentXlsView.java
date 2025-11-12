@@ -12,6 +12,7 @@ import dk.digitalidentity.model.entity.enums.DeletionProcedure;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
 import org.apache.poi.ss.usermodel.Font;
@@ -58,11 +59,21 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		data.put("accessCount", accessCount);
 		data.put("dataCategories", dataCategories);
 
-		createHeader(workbook, sheet, headerStyle, data);
+		createHeader(sheet, headerStyle, data);
 
 		// Create normal cell style for data rows
 		CellStyle normalStyle = workbook.createCellStyle();
 		normalStyle.setWrapText(true);
+
+		normalStyle.setBorderBottom(BorderStyle.THIN);
+		normalStyle.setBorderTop(BorderStyle.THIN);
+		normalStyle.setBorderLeft(BorderStyle.THIN);
+		normalStyle.setBorderRight(BorderStyle.THIN);
+
+		CellStyle alternateRowStyle = workbook.createCellStyle();
+		alternateRowStyle.cloneStyleFrom(normalStyle);
+		alternateRowStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+		alternateRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		final List<Relatable> relations = (List<Relatable>) model.get("relations");
 
@@ -81,7 +92,7 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		}
 	}
 
-	private void createHeader(Workbook workbook, Sheet sheet, CellStyle headerStyle, Map<String, String> model) {
+	private void createHeader(Sheet sheet, CellStyle headerStyle, Map<String, String> model) {
 		final Row header = sheet.createRow(0);
 
 		createCell(header, 0, "Titel", headerStyle);
