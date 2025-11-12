@@ -41,12 +41,10 @@ public class ISO27002Replacer implements PlaceHolderReplacer {
     private static final String HEADING2 = "Heading2";
 
     private final StandardTemplateDao standardTemplateDao;
-	private final ChoiceValueService choiceValueService;
 
-    public ISO27002Replacer(final RelationService relationService, final StandardTemplateDao standardTemplateDao, final ChoiceValueService choiceValueService) {
+    public ISO27002Replacer(final RelationService relationService, final StandardTemplateDao standardTemplateDao) {
         this.relationService = relationService;
         this.standardTemplateDao = standardTemplateDao;
-		this.choiceValueService = choiceValueService;
     }
 
     @Override
