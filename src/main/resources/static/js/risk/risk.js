@@ -378,11 +378,6 @@ function deleteClicked(riskId, name) {
     })
 }
 
-function formReset() {
-    const form = document.querySelector('form');
-    form.reset();
-}
-
 function updateTypeSelect(choices, search, types) {
     fetch(`/rest/relatable/autocomplete?types=${types}&search=${search}`)
         .then(response => response.json()
