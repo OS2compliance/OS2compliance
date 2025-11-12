@@ -16,11 +16,8 @@ import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
-import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.ThreatCatalog;
-import dk.digitalidentity.model.entity.ThreatCatalogThreat;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.EmailTemplatePlaceholder;
 import dk.digitalidentity.model.entity.enums.EmailTemplateType;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -344,9 +341,6 @@ public class RiskController {
         boolean signed = threatAssessment.getThreatAssessmentReportApprovalStatus().equals(ThreatAssessmentReportApprovalStatus.SIGNED) && threatAssessment.getThreatAssessmentReportS3Document() != null;
         model.addAttribute("signed", signed);
 
-        final Document document = new Document();
-        document.setDocumentType(DocumentType.PROCEDURE);
-        model.addAttribute("document", document);
         return "risks/view";
     }
 

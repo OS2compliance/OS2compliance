@@ -115,8 +115,8 @@
                             <!-- Custom search selectors-->
                             <select class="form-control form-select editField" data-trigger="" name="documentTypeStatusSearchSelector" id="documentTypeStatusSearchSelector" tabindex="-1" required >
                                 <option th:text="'Alle'" th:value="null"></option>
-                                <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.DocumentType).values()}"
-                                        th:value="${option}" th:text="${option.message}"></option>
+                                <option th:each="option : ${possibleDocumentTypes}"
+                                        th:value="${option.caption}" th:text="${option.caption}"></option>
                             </select>
                         </div>
                     </div>

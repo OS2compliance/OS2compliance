@@ -5,7 +5,6 @@ import dk.digitalidentity.model.entity.ChoiceValue;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -21,6 +20,10 @@ public class ChoiceValueService {
 
 	public ChoiceValue findByIdentifier(final String identifier) {
 		return choiceValueDao.findByIdentifier(identifier).orElse(null);
+	}
+
+	public Optional<ChoiceValue> findOptionalByIdentifier(final String identifier) {
+		return choiceValueDao.findByIdentifier(identifier);
 	}
 
 	public ChoiceValue save(ChoiceValue choiceValue) {

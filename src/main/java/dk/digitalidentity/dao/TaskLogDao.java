@@ -22,4 +22,5 @@ public interface TaskLogDao extends JpaRepository<TaskLog, Long> {
      */
     List<TaskLog> findByTaskIdIn(Collection<Long> ids);
 
+	boolean existsByTaskResultId(Long existingId);
 }
