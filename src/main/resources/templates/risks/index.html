@@ -63,6 +63,13 @@
                                         <option th:each="option : ${T(dk.digitalidentity.model.entity.enums.RiskAssessment).values()}"
                                                 th:value="${option}" th:text="${option.message}"></option>
                                     </select>
+
+                                    <!-- Custom search selector for Hidden -->
+                                    <select class="form-control form-select editField" data-trigger="" name="riskHiddenSearchSelector" id="riskHiddenSearchSelector" tabindex="-1" required >
+                                        <option value="false" selected>Nej</option>
+                                        <option value="true">Ja</option>
+                                        <option value="ALL">Alle</option>
+                                    </select>
                             </div>
                         </div>
                     </div>

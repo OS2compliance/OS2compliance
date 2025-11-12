@@ -36,38 +36,50 @@ function ViewTaskService() {
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
         this.loadDescriptionTemplateSelect();
+        this.initSubTaskBtns();
 
-        initFormValidationForForm('editForm');
+
+        initFormValidationForForm('editForm', () => subTaskLinkService.validateAllSubTasks());
+
         if (taskType === 'CHECK') {
             initFormValidationForForm('completeTaskForm', () => {
                 const comment = document.getElementById("completionComment");
                 const taskResultSelect = document.getElementById("taskResultSelect");
                 const taskType = document.getElementById("taskType");
 
+                const subTasksValid = this.validateSubTasksCompletion();
+
+                let commentValid = false;
                 if (taskResultSelect.value === 'NO_ERROR') {
                     comment.classList.remove('is-invalid');
-                    return true;
+                    commentValid = true;
                 } else if (taskResultSelect.value !== 'NO_ERROR' && comment.value.trim()) {
                     comment.classList.remove('is-invalid');
-                    return true;
+                    commentValid = true;
                 } else {
                     comment.classList.add('is-invalid');
-                    return false;
+                    commentValid = false;
                 }
+
+                return subTasksValid && commentValid;
             });
-        }
-        else {
+        } else {
             initFormValidationForForm('completeTaskForm', () => {
                 const comment = document.getElementById("completionComment");
+
+                const subTasksValid = this.validateSubTasksCompletion();
+
+                let commentValid = false;
                 if (!comment.value) {
                     comment.classList.add('is-invalid');
-                    return false;
-                }
-                else {
+                    commentValid = false;
+                } else {
                     comment.classList.remove('is-invalid');
-                    return true;
+                    commentValid = true;
                 }
-            })
+
+                return subTasksValid && commentValid;
+            });
         }
 
         initDatepicker("#deadlineBtn", "#deadline");
@@ -104,6 +116,47 @@ function ViewTaskService() {
         const url = `/assets/oversight/${assetId}/asset`;
         oversightService.initOversightModal(null, 'asset', assetId)
             .then(() => {oversightDialog.show()});
+    }
+
+    this.initSubTaskBtns = function () {
+        let addBtn = document.getElementById('subTaskAddLinkBtn');
+        addBtn.addEventListener('click', () => subTaskLinkService.addSubTaskFromView());
+    }
+
+    this.validateSubTasksCompletion = function() {
+        const subTaskCheckboxes = document.querySelectorAll('#completeTaskForm input[name="subTasksCompleted"]');
+
+        // If there are no subtasks, validation passes
+        if (subTaskCheckboxes.length === 0) {
+            return true;
+        }
+
+        // Check if all subtasks are checked
+        const allChecked = Array.from(subTaskCheckboxes).every(checkbox => checkbox.checked);
+
+        const errorMessageDiv = document.getElementById('subTaskValidationError');
+
+        if (!allChecked) {
+            // Show error message
+            if (!errorMessageDiv) {
+                const errorDiv = document.createElement('div');
+                errorDiv.id = 'subTaskValidationError';
+                errorDiv.className = 'alert alert-danger mt-2';
+                errorDiv.textContent = 'Alle underopgaver skal være fuldført før opgaven kan afsluttes.';
+
+                const subTaskContainer = document.querySelector('#completeTaskForm .border.rounded.p-3.bg-light');
+                if (subTaskContainer) {
+                    subTaskContainer.parentElement.appendChild(errorDiv);
+                }
+            }
+            return false;
+        } else {
+            // Remove error message if it exists
+            if (errorMessageDiv) {
+                errorMessageDiv.remove();
+            }
+            return true;
+        }
     }
 
     this.fitDescription = function (textarea) {
@@ -160,9 +213,13 @@ function ViewTaskService() {
             performButton.hidden = true;
             this.nameField.disabled = false
             document.getElementById("linksViewContainer").hidden = true;
+            document.getElementById("subTaskViewContainer").hidden = true;
             document.getElementById("linksEditContainer").hidden = false;
+            document.getElementById("subTaskEditContainer").hidden = false;
             document.getElementById("addLinkBtn").hidden = false;
             this.notificationSelectHandler.enable();
+            document.getElementById("subTaskAddLinkBtn").hidden = false;
+            this.toggleSubTaskCheckboxes(true);
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -175,10 +232,22 @@ function ViewTaskService() {
             performButton.hidden = false;
             this.nameField.disabled = true
             document.getElementById("linksViewContainer").hidden = false;
+            document.getElementById("subTaskViewContainer").hidden = false;
             document.getElementById("linksEditContainer").hidden = true;
+            document.getElementById("subTaskEditContainer").hidden = true;
             document.getElementById("addLinkBtn").hidden = true;
+            document.getElementById("subTaskAddLinkBtn").hidden = true;
             this.notificationSelectHandler.disable();
+            this.toggleSubTaskCheckboxes(false);
         }
+    }
+
+    this.toggleSubTaskCheckboxes = function(enabled) {
+        const checkboxes = document.querySelectorAll('#subTaskEditContainer input[type="checkbox"]');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.disabled = !enabled;
+        });
     }
 
     this.loadViewAndEditForm = function() {
@@ -186,8 +255,12 @@ function ViewTaskService() {
         this.userChoicesEditSelect = choiceService.initUserSelect('userSelect');
         this.ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
         this.ouDepartmentChoicesEditSelect = choiceService.initOUSelect('departmentOuSelect');
-        this.nameField = document.getElementById("taskNameField")
+        const currentValue = this.ouDepartmentChoicesEditSelect.getValue(true);
 
+        if (!currentValue || currentValue === '' || currentValue === null) {
+            this.ouDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
+        }
+        this.nameField = document.getElementById("taskNameField")
         this.userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.userChoicesEditSelect);
         });

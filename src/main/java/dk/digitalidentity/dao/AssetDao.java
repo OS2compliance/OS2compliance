@@ -54,4 +54,8 @@ public interface AssetDao extends TagableRepository<Asset> {
 
 	@Query("select count(a) from Asset a where a.supplier.id = :supplierId and a.deleted = false")
 	long countBySupplierId(@Param("supplierId") Long supplierId);
+
+	List<Asset> findAllByAssetType_Identifier(String identifier);
+
+	Set<Asset> findByAssetType_IdentifierAndResponsibleUsers_Uuid(String identifier, String userUuid);
 }

@@ -6,8 +6,6 @@ import dk.digitalidentity.dao.TaskLogDao;
 import dk.digitalidentity.dao.grid.TaskGridDao;
 import dk.digitalidentity.model.dto.StatusCombination;
 import dk.digitalidentity.model.dto.enums.StatusColor;
-import dk.digitalidentity.model.entity.Asset;
-import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
@@ -243,11 +241,7 @@ public class TaskService implements TagableService<Task> {
 
             String statusText = "Ikke udført";
             if (newestLog != null && newestLog.getTaskResult() != null) {
-                switch (newestLog.getTaskResult()) {
-                    case NO_ERROR -> statusText = "Ingen fejl";
-                    case NO_CRITICAL_ERROR -> statusText = "Ingen kritiske fejl";
-                    case CRITICAL_ERROR -> statusText = "Kritiske fejl";
-                }
+                statusText = newestLog.getTaskResult().getCaption();
             }
 
             if (diff < 0) {
@@ -277,12 +271,8 @@ public class TaskService implements TagableService<Task> {
 			}
 
 			String statusText = "Ikke udført";
-			if (newestLog != null) {
-				switch (newestLog.getTaskResult()) {
-					case NO_ERROR -> statusText = "Ingen fejl";
-					case NO_CRITICAL_ERROR -> statusText = "Ingen kritiske fejl";
-					case CRITICAL_ERROR -> statusText = "Kritiske fejl";
-				}
+			if (newestLog != null && newestLog.getTaskResult() != null) {
+				statusText = newestLog.getTaskResult().getCaption();
 			}
 
 			if (diff < 0) {
@@ -374,6 +364,10 @@ public class TaskService implements TagableService<Task> {
 		return taskDao.findAllById(ids);
 	}
 
+	public boolean isInUseOnTaskLog(Long existingId) {
+		return taskLogDao.existsByTaskResultId(existingId);
+	}
+
 	@Override
 	@Transactional
 	public Tag addTag(Long entityId, Tag tag) {
@@ -428,5 +422,11 @@ public class TaskService implements TagableService<Task> {
 				.stream()
 				.filter(task -> task.getNotificationReminders().contains(setting))
 				.collect(Collectors.toList());
+	}
+
+	public void addRelations(final Task savedTask, final List<Relatable> relatables) {
+		for (final Relatable relatable : relatables) {
+			relationService.addRelation(savedTask, relatable);
+		}
 	}
 }

@@ -8,6 +8,7 @@ import dk.digitalidentity.model.api.UserWriteEO;
 import dk.digitalidentity.model.dto.DocumentDTO;
 import dk.digitalidentity.model.dto.TagDTO;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
@@ -40,7 +41,7 @@ public interface DocumentMapper {
 		DocumentDTO documentDTO = DocumentDTO.builder()
 				.id(documentGrid.getId())
 				.name(documentGrid.getName())
-				.documentType(nullSafe(() -> documentGrid.getDocumentType().getMessage()))
+				.documentType(documentGrid.getDocumentType())
 				.documentTypeOrder(documentGrid.getDocumentTypeOrder())
 				.responsibleUser(nullSafe(() -> documentGrid.getResponsibleUser().getName(), ""))
 				.nextRevision(nullSafe(() -> documentGrid.getNextRevision().format(DK_DATE_FORMATTER)))
@@ -105,8 +106,32 @@ public interface DocumentMapper {
 			@Mapping(target = "properties", ignore = true),
 			@Mapping(target = "tags", ignore = true),
 			@Mapping(target = "deleted", ignore = true),
-			@Mapping(target = "localizedEnums", ignore = true)
+			@Mapping(target = "localizedEnums", ignore = true),
+			@Mapping(target = "documentType", ignore = true)
 	})
 	Document fromEO(DocumentCreateEO documentCreateEO);
+
+	default DocumentEO.DocumentType map(final ChoiceValue choiceValue) {
+		if (choiceValue == null) {
+			return null;
+		}
+
+		return switch (choiceValue.getIdentifier()) {
+			case "document-type-other-123456" -> DocumentEO.DocumentType.OTHER;
+			case "document-type-workflow-123456" -> DocumentEO.DocumentType.WORKFLOW;
+			case "document-type-data-processing-agreement-123456" -> DocumentEO.DocumentType.DATA_PROCESSING_AGREEMENT;
+			case "document-type-contract-123456" -> DocumentEO.DocumentType.CONTRACT;
+			case "document-type-control-123456" -> DocumentEO.DocumentType.CONTROL;
+			case "document-type-management-report-123456" -> DocumentEO.DocumentType.MANAGEMENT_REPORT;
+			case "document-type-procedure-123456" -> DocumentEO.DocumentType.PROCEDURE;
+			case "document-type-risk-assessment-report-123456" -> DocumentEO.DocumentType.RISK_ASSESSMENT_REPORT;
+			case "document-type-supervisory-report-123456" -> DocumentEO.DocumentType.SUPERVISORY_REPORT;
+			case "document-type-guide-123456" -> DocumentEO.DocumentType.GUIDE;
+			default -> {
+				// map to OTHER. This means that every new ChoiceValue documentType will have Other as type in v1 api
+				yield DocumentEO.DocumentType.OTHER;
+			}
+		};
+	}
 
 }

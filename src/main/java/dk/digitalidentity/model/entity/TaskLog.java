@@ -1,11 +1,8 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.model.entity.enums.RelationType;
-import dk.digitalidentity.model.entity.enums.TaskResult;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EnumType;
-import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
@@ -49,9 +46,10 @@ public class TaskLog extends Relatable {
 
     @Column
     private LocalDate completed;
-    @Enumerated(EnumType.STRING)
-    @Column
-    private TaskResult taskResult;
+
+	@ManyToOne
+	@JoinColumn(name = "task_result")
+	private ChoiceValue taskResult;
 
     @EqualsAndHashCode.Exclude
     @ManyToOne(fetch = FetchType.LAZY)
@@ -70,6 +68,6 @@ public class TaskLog extends Relatable {
 
     @Override
     public String getLocalizedEnumValues() {
-        return taskResult != null ? taskResult.getValue() : "";
+        return taskResult != null ? taskResult.getCaption() : "";
     }
 }

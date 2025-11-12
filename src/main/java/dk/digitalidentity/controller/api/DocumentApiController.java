@@ -6,11 +6,12 @@ import dk.digitalidentity.model.api.DocumentEO;
 import dk.digitalidentity.model.api.DocumentUpdateEO;
 import dk.digitalidentity.model.api.ErrorEO;
 import dk.digitalidentity.model.api.PageEO;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
-import dk.digitalidentity.model.entity.enums.DocumentType;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DocumentService;
 import dk.digitalidentity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -49,6 +50,7 @@ public class DocumentApiController {
     private final UserService userService;
     private final DocumentService documentService;
     private final DocumentMapper documentMapper;
+	private final ChoiceValueService choiceValueService;
 
 
     @Operation(summary = "Fetch a document")
@@ -75,21 +77,30 @@ public class DocumentApiController {
         return documentMapper.toEO(documentService.getPaged(pageSize, page));
     }
 
-    @Operation(summary = "Create a new document")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "The created document"),
-            @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEO.class)))
-    })
-    @PostMapping(produces = "application/json", consumes = "application/json")
-    @Transactional
-    @ResponseStatus(HttpStatus.CREATED)
-    public DocumentEO create(@Valid @RequestBody final DocumentCreateEO documentCreateEO) {
-        final User responsibleUser = userService.get(nullSafe(() -> documentCreateEO.getResponsibleUser().getUuid()))
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Responsible user not valid"));
-        final Document document = documentMapper.fromEO(documentCreateEO);
-        document.setResponsibleUser(responsibleUser);
-        return documentMapper.toEO(documentService.create(document));
-    }
+	@Operation(summary = "Create a new document")
+	@ApiResponses(value = {
+			@ApiResponse(responseCode = "201", description = "The created document"),
+			@ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEO.class))),
+			@ApiResponse(responseCode = "400", description = "Bad request - invalid document type", content = @Content(mediaType = "application/json", schema = @Schema(implementation = ErrorEO.class)))
+	})
+	@PostMapping(produces = "application/json", consumes = "application/json")
+	@Transactional
+	@ResponseStatus(HttpStatus.CREATED)
+	public DocumentEO create(@Valid @RequestBody final DocumentCreateEO documentCreateEO) {
+		final User responsibleUser = userService.get(nullSafe(() -> documentCreateEO.getResponsibleUser().getUuid()))
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Responsible user not valid"));
+
+		// Map DocumentType enum to ChoiceValue
+		final String identifier = mapDocumentTypeToIdentifier(documentCreateEO.getDocumentType());
+		final ChoiceValue documentType = choiceValueService.findOptionalByIdentifier(identifier)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Document type choice value not found"));
+
+		final Document document = documentMapper.fromEO(documentCreateEO);
+		document.setResponsibleUser(responsibleUser);
+		document.setDocumentType(documentType);
+
+		return documentMapper.toEO(documentService.create(document));
+	}
 
     @Operation(summary = "Update a document", description = "Updates a document, the client should make a GET request first to ensure they have the newest version, update the fields they need and then call this method with the complete entity.")
     @ApiResponses(value = {
@@ -109,15 +120,22 @@ public class DocumentApiController {
         }
         final User responsibleUser = userService.get(nullSafe(() -> documentUpdateEO.getResponsibleUser().getUuid()))
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Responsible user not valid"));
+
+		// Map DocumentType enum to ChoiceValue
+		final String identifier = mapDocumentTypeToIdentifier(documentUpdateEO.getDocumentType());
+		final ChoiceValue documentType = choiceValueService.findOptionalByIdentifier(identifier)
+				.orElseThrow(() -> new ResponseStatusException(HttpStatus.INTERNAL_SERVER_ERROR, "Document type choice value not found"));
+
         document.setName(documentUpdateEO.getName());
         document.setResponsibleUser(responsibleUser);
         document.setStatus(DocumentStatus.valueOf(documentUpdateEO.getStatus().name()));
-        document.setDocumentType(DocumentType.valueOf(documentUpdateEO.getDocumentType().name()));
+		document.setDocumentType(documentType);
         document.setDescription(documentUpdateEO.getDescription());
         document.setLink(documentUpdateEO.getLink());
         document.setDocumentVersion(documentUpdateEO.getDocumentVersion());
         document.setRevisionInterval(nullSafe(() -> DocumentRevisionInterval.valueOf(documentUpdateEO.getRevisionInterval().name())));
         document.setNextRevision(documentUpdateEO.getNextRevision());
+
         documentService.update(document, documentUpdateEO.isIncludeInYearWheel());
     }
 
@@ -135,5 +153,20 @@ public class DocumentApiController {
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Document not found"));
         documentService.delete(document);
     }
+
+	private String mapDocumentTypeToIdentifier(DocumentEO.DocumentType documentType) {
+		return switch (documentType) {
+			case OTHER -> "document-type-other-123456";
+			case WORKFLOW -> "document-type-workflow-123456";
+			case DATA_PROCESSING_AGREEMENT -> "document-type-data-processing-agreement-123456";
+			case CONTRACT -> "document-type-contract-123456";
+			case CONTROL -> "document-type-control-123456";
+			case MANAGEMENT_REPORT -> "document-type-management-report-123456";
+			case PROCEDURE -> "document-type-procedure-123456";
+			case RISK_ASSESSMENT_REPORT -> "document-type-risk-assessment-report-123456";
+			case SUPERVISORY_REPORT -> "document-type-supervisory-report-123456";
+			case GUIDE -> "document-type-guide-123456";
+		};
+	}
 
 }
