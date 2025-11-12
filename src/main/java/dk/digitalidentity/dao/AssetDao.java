@@ -23,7 +23,8 @@ public interface AssetDao extends TagableRepository<Asset> {
     @Query("select a from Asset a inner join Property p on p.entity=a where p.key=:key")
     List<Asset> findWithPropertyKey(@Param("key") final String key);
 
-	List<Asset> findBySupplierId(Long supplierId);
+	@Query("select a from Asset a where a.supplier.id = :supplierId and a.deleted = false")
+	List<Asset> findBySupplierId(@Param("supplierId") Long supplierId);
 
     List<Asset> findAllByIdInAndDeletedFalse(Collection<Long> ids);
 
@@ -50,4 +51,11 @@ public interface AssetDao extends TagableRepository<Asset> {
 	List<Asset> findAllById(Long id);
 
 	boolean existsBySupervisoryModelId(Long supervisoryModelId);
+
+	@Query("select count(a) from Asset a where a.supplier.id = :supplierId and a.deleted = false")
+	long countBySupplierId(@Param("supplierId") Long supplierId);
+
+	List<Asset> findAllByAssetType_Identifier(String identifier);
+
+	Set<Asset> findByAssetType_IdentifierAndResponsibleUsers_Uuid(String identifier, String userUuid);
 }

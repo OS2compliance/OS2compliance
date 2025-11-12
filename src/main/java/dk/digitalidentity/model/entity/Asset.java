@@ -57,7 +57,6 @@ import java.util.stream.Collectors;
 @Setter
 @ToString
 @SQLDelete(sql = "UPDATE assets SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
-@Where(clause = "deleted=false")
 public class Asset extends Relatable implements HasMultipleResponsibleUsers, HasManagers, StatisticEnabled, Ownable, Tagable {
 
     @ManyToMany

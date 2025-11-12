@@ -13,10 +13,26 @@
                         <div class="row mt-3" th:if="${task.taskType.name() == 'CHECK'}">
                             <label for="taskResultSelect" class="col-sm-4 col-form-label">Resultat </label>
                             <div class="col-sm-8">
-                                <select class="form-control form-select" id="taskResultSelect" th:field="*{taskResult}">
-                                    <option th:each="taskResult : ${T(dk.digitalidentity.model.entity.enums.TaskResult).values()}"
-                                    th:value="${taskResult}" th:text="${taskResult.getValue()}"></option>
+                                <select class="form-control form-select" id="taskResultSelect" th:field="*{resultId}">
+                                    <option th:each="taskResult : ${possibleResults}"
+                                    th:value="${taskResult.id}" th:text="${taskResult.caption}"></option>
                                 </select>
+                            </div>
+                        </div>
+                        <div class="row mt-3" th:if="${task.subTasks != null and !task.subTasks.isEmpty()}">
+                            <label class="col-sm-4 col-form-label">Checkliste</label>
+                            <div class="col-sm-8">
+                                <div class="border rounded p-3 bg-light">
+                                    <div th:each="subTask, iterStat : ${task.subTasks}" class="form-check mb-2">
+                                        <input class="form-check-input"
+                                               type="checkbox"
+                                               th:id="'completeSubTask' + ${subTask.id}"
+                                               name="subTasksCompleted"
+                                               th:value="${subTask.id}"
+                                               th:checked="${subTask.completed}">
+                                        <label class="form-check-label" th:for="'completeSubTask' + ${subTask.id}" th:text="${subTask.name}"></label>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                         <div class="row mt-3">

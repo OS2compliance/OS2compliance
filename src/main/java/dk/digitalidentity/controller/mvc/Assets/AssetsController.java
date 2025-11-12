@@ -5,7 +5,6 @@ import dk.digitalidentity.Constants;
 import dk.digitalidentity.config.OS2complianceConfiguration;
 import dk.digitalidentity.dao.AssetMeasuresDao;
 import dk.digitalidentity.dao.ChoiceMeasuresDao;
-import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.event.AssetRiskKitosEvent;
 import dk.digitalidentity.event.AssetUpdatedEvent;
 import dk.digitalidentity.integration.kitos.KitosConstants;
@@ -50,7 +49,6 @@ import dk.digitalidentity.model.entity.enums.ThirdCountryTransfer;
 import dk.digitalidentity.security.Roles;
 import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireCreateAll;
-import dk.digitalidentity.security.annotations.crud.RequireCreateOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireDeleteOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.crud.RequireUpdateAll;
@@ -58,6 +56,7 @@ import dk.digitalidentity.security.annotations.crud.RequireUpdateOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireAsset;
 import dk.digitalidentity.service.AssetOversightService;
 import dk.digitalidentity.service.AssetService;
+import dk.digitalidentity.service.AssetSupplierMappingService;
 import dk.digitalidentity.service.ChoiceService;
 import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.DPIATemplateQuestionService;
@@ -143,6 +142,7 @@ public class AssetsController {
 	private final ApplicationEventPublisher eventPublisher;
 	private final OS2complianceConfiguration os2complianceConfiguration;
 	private final ChoiceValueService choiceValueService;
+	private final AssetSupplierMappingService assetSupplierMappingService;
 
 	@RequireReadOwnerOnly
 	@GetMapping
@@ -404,8 +404,47 @@ public class AssetsController {
         // All related checks should be deleted along with the asset
         final List<Task> tasks = taskService.findRelatedTasks(asset, t -> t.getTaskType() == TaskType.CHECK);
         taskService.deleteAll(tasks);
-        asset.getSuppliers().clear();
-        assetService.deleteById(asset);
+
+		Set<Long> supplierIds = new HashSet<>();
+
+		// Add suppliers from mappings to the list
+		asset.getSuppliers().stream()
+				.map(AssetSupplierMapping::getSupplier)
+				.map(Supplier::getId)
+				.forEach(supplierIds::add);
+
+		// Add direct suppler if exists
+		if (asset.getSupplier() != null) {
+			supplierIds.add(asset.getSupplier().getId());
+		}
+
+		// Clear the mapping relationships
+		asset.getSuppliers().clear();
+
+		// Clear direct supplier relationship
+		if (asset.getSuppliers() != null) {
+			asset.setSupplier(null);
+		}
+
+		// Delete the asset first (soft delete)
+		assetService.delete(asset);
+
+		// Check each supplier and see if it needs to be deleted
+		Set<Long> suppliersToDelete = new HashSet<>();
+
+		for (Long supplierId : supplierIds) {
+			// Count active non-deleted assets that reference this supplier
+			long mappingCount = assetSupplierMappingService.countBySupplierIdAndActiveAssets(supplierId);
+			long directCount = assetService.countBySupplierId(supplierId);
+
+			// If not active assets reference this supplier we mark for deletion
+			if (mappingCount == 0 && directCount == 0) {
+				suppliersToDelete.add(supplierId);
+			}
+		}
+
+		// Delete suppliers that have no active asset references
+		suppliersToDelete.forEach(supplierService::deleteById);
     }
 
 	@RequireUpdateOwnerOnly
@@ -522,9 +561,7 @@ public class AssetsController {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
 
-        if(!Objects.isNull(asset.getSupplier())) {
-            existingAsset.setSupplier(asset.getSupplier());
-        }
+		existingAsset.setSupplier(asset.getSupplier());
 		existingAsset.setAssetType(asset.getAssetType());
 		existingAsset.setCriticality(asset.getCriticality());
 		existingAsset.setDescription(asset.getDescription());
@@ -689,6 +726,7 @@ public class AssetsController {
 					.orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid supervision model"));
 		}
 
+		String redirectUrl = "";
 		Long redirectId = 0L;
 		for (Long assetId : dto.assetIds) {
 			final Asset asset = assetService.get(assetId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -739,17 +777,17 @@ public class AssetsController {
 			}
 
 			if (redirectId == 0) {
-				if (dto.redirect.equals("assets")) {
+				if (dto.redirect.equals("assets") || asset.getSupplier() == null) {
+					redirectUrl = "redirect:/assets/";
 					redirectId = asset.getId();
 				} else {
+					redirectUrl = "redirect:/suppliers/";
 					redirectId = asset.getSupplier().getId();
 				}
 			}
 		}
 
-        return dto.redirect.equals("assets")
-            ? "redirect:/assets/" + redirectId
-            : "redirect:/suppliers/" + redirectId;
+        return redirectUrl + redirectId;
     }
 
 	@RequireReadOwnerOnly

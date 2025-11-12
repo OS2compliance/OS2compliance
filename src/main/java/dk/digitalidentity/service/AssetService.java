@@ -447,7 +447,7 @@ public class AssetService implements TagableService<Asset> {
 		context.setVariable("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a -> a.getAssetType().getCaption()).toList()));
 		context.setVariable("responsibleUserNames", String.join(", ", assets.stream().flatMap(a -> a.getResponsibleUsers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
 		context.setVariable("managerNames", String.join(", ", assets.stream().flatMap(a -> a.getManagers().stream().map(u -> u.getName() + " (" + u.getUserId() + ")")).toList()));
-		context.setVariable("supplierName", String.join(", ", assets.stream().map(a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
+		context.setVariable("supplierName", String.join(", ", assets.stream().filter(a -> a.getSupplier() != null).map(a -> a.getSupplier().getName()).filter(n -> n != null && n.isBlank()).toList()));
 
 		return templateEngine.process("reports/dpia/dpia_pdf", context);
 	}
@@ -797,5 +797,20 @@ public class AssetService implements TagableService<Asset> {
 
 	public List<Asset> getByIds(List<Long> ids) {
 		return assetDao.findAllById(ids);
+	}
+
+	public Long countBySupplierId(Long supplierId) {
+		return assetDao.countBySupplierId(supplierId);
+	}
+
+	public List<Asset> getAllForContactsReport(String userUuid) {
+		List<Asset> assets;
+		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {
+			assets = assetDao.findAllByAssetType_Identifier(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID);
+		}
+		else {
+			assets = new ArrayList<>(assetDao.findByAssetType_IdentifierAndResponsibleUsers_Uuid(Constants.CHOICE_LIST_ASSET_IT_SYSTEM_TYPE_ID, userUuid));
+		}
+		return assets;
 	}
 }

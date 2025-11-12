@@ -37,12 +37,8 @@ SELECT t.id,
             WHEN t.repetition = 'EVERY_SECOND_YEAR' THEN 6
             WHEN t.repetition = 'EVERY_THIRD_YEAR' THEN 7
            END)                                                                        as repetition_order,
-       ts.task_result                                                                  AS result,
-       (CASE
-            WHEN ts.task_result = 'NO_ERROR' THEN 1
-            WHEN ts.task_result = 'NO_CRITICAL_ERROR' THEN 2
-            WHEN ts.task_result = 'CRITICAL_ERROR' THEN 3
-           END)                                                                        as task_result_order,
+       cv_result.caption                                                               as result,
+       cv_result.id                                                                    as task_result_order,
        (ts.id IS NOT NULL AND t.task_type = 'TASK')                                    as completed,
        ts.completed                                                                    as last_completion_date,
        concat(COALESCE(t.localized_enums, ''), ' ', COALESCE(ts.localized_enums, ' ')) as localized_enums,
@@ -52,6 +48,7 @@ FROM tasks t
     LEFT JOIN task_responsible_users tru ON tru.task_id = t.id
     LEFT JOIN users u ON u.uuid = tru.user_uuid
     LEFT JOIN task_logs ts on ts.task_id = t.id
+    LEFT JOIN choice_values cv_result ON cv_result.id = ts.task_result
     LEFT JOIN task_tag rt on rt.task_id = t.id
     LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE t.deleted = false
@@ -213,6 +210,7 @@ SELECT t.id,
        t.threat_assessment_report_approval_status,
        t.updated_at                                                                                                                                                  as date,
        t.assessment,
+       t.hidden,
        t.localized_enums,
        (CASE
             WHEN t.assessment = 'GREEN' THEN 1
@@ -276,19 +274,8 @@ GROUP BY t.id;
 CREATE OR REPLACE VIEW view_gridjs_documents AS
 SELECT d.id,
        d.name,
-       d.document_type,
-       (CASE
-            WHEN d.document_type = 'OTHER' THEN 1
-            WHEN d.document_type = 'WORKFLOW' THEN 2
-            WHEN d.document_type = 'DATA_PROCESSING_AGREEMENT' THEN 3
-            WHEN d.document_type = 'CONTRACT' THEN 4
-            WHEN d.document_type = 'CONTROL' THEN 5
-            WHEN d.document_type = 'MANAGEMENT_REPORT' THEN 6
-            WHEN d.document_type = 'PROCEDURE' THEN 7
-            WHEN d.document_type = 'RISK_ASSESSMENT_REPORT' THEN 8
-            WHEN d.document_type = 'SUPERVISORY_REPORT' THEN 9
-            WHEN d.document_type = 'GUIDE' THEN 10
-           END)                                                             as document_type_order,
+       cv_type.caption                                                              as document_type,
+       cv_type.id                                                                   as document_type_order,
        d.responsible_uuid,
        d.next_revision,
        d.status,
@@ -301,6 +288,7 @@ SELECT d.id,
        GROUP_CONCAT(COALESCE(tg.value, '') ORDER BY tg.value SEPARATOR ',') AS tag_names,
        GROUP_CONCAT(COALESCE(tg.id, '') ORDER BY tg.value SEPARATOR ',')    AS tag_ids
 FROM documents d
+         LEFT JOIN choice_values cv_type ON cv_type.id = d.document_type
          LEFT JOIN document_tag rt on rt.document_id = d.id
          LEFT JOIN tags tg on rt.tag_id = tg.id
 WHERE d.deleted = false

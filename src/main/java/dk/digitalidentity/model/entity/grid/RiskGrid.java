@@ -86,5 +86,8 @@ public class RiskGrid  implements HasSingleResponsibleUser {
 	private String tagIds;
 
 	@Column
+	private boolean hidden;
+
+	@Column
 	private Integer completedTasks;
 }
