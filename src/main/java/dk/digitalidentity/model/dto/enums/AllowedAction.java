@@ -9,5 +9,7 @@ public enum AllowedAction {
 	UPDATE,
 	CREATE,
 	DELETE,
-	COPY;
+	COPY,
+	SHOW,
+	HIDE;
 }

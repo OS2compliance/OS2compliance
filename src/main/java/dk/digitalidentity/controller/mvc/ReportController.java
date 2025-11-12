@@ -20,6 +20,7 @@ import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.report.ContactsView;
 import dk.digitalidentity.report.DocsReportGeneratorComponent;
 import dk.digitalidentity.report.IncidentsXlsView;
 import dk.digitalidentity.report.ReportISO27002XlsView;
@@ -31,6 +32,7 @@ import dk.digitalidentity.report.riskimage.dto.ThreatRow;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewView;
 import dk.digitalidentity.report.YearWheelView;
 import dk.digitalidentity.report.systemowneroverview.SystemOwnerOverviewService;
+import dk.digitalidentity.security.SecurityUtil;
 import dk.digitalidentity.security.annotations.crud.RequireReadOwnerOnly;
 import dk.digitalidentity.security.annotations.sections.RequireReport;
 import dk.digitalidentity.service.AssetService;
@@ -517,6 +519,17 @@ public class ReportController {
 		model.put("threats", threats);
 
 		return new ModelAndView(new RiskImageView(), model);
+	}
+
+	@RequireReadOwnerOnly
+	@GetMapping("contacts")
+	public ModelAndView contacts(final HttpServletResponse response) {
+		response.setContentType("application/ms-excel");
+		response.setHeader("Content-Disposition", "attachment; filename=\"Kontakter.xls\"");
+		final Map<String, Object> model = new HashMap<>();
+		model.put("assets", assetService.getAllForContactsReport(SecurityUtil.getLoggedInUserUuid()));
+
+		return new ModelAndView(new ContactsView(), model);
 	}
 
 

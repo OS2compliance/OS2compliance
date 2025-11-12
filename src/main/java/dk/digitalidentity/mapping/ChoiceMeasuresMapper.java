@@ -27,6 +27,8 @@ public interface ChoiceMeasuresMapper {
     @Mapping(target = "assetOversightsWithSupervisionModel", ignore = true)
     @Mapping(target = "assetsWithSupervisoryModel", ignore = true)
     @Mapping(target = "registersWithStatus", ignore = true)
+    @Mapping(target = "taskLogsWithResult", ignore = true)
+    @Mapping(target = "documentsWithType", ignore = true)
     ChoiceValue fromDTO(final ChoiceValueDTO value);
 
     default ChoiceMeasureDTO toDTO(final ChoiceMeasure measure) {

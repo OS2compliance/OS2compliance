@@ -2,7 +2,6 @@ package dk.digitalidentity.model.entity.grid;
 
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
-import dk.digitalidentity.model.entity.enums.TaskResult;
 import dk.digitalidentity.model.entity.enums.TaskType;
 import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import jakarta.persistence.Column;
@@ -63,8 +62,7 @@ public class TaskGrid implements HasMultipleResponsibleUsers {
     private boolean completed;
 
     @Column(name = "result")
-    @Enumerated(EnumType.STRING)
-    private TaskResult taskResult;
+    private String taskResult;
 
     @Column
     private Integer taskResultOrder;

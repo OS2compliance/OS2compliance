@@ -3,7 +3,6 @@ package dk.digitalidentity.model.entity;
 import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
-import dk.digitalidentity.model.entity.enums.DocumentType;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import jakarta.persistence.CascadeType;
@@ -41,9 +40,9 @@ public class Document extends Relatable implements HasSingleResponsibleUser, Tag
     @Enumerated(EnumType.STRING)
     private DocumentStatus status;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private DocumentType documentType;
+	@ManyToOne
+	@JoinColumn(name = "document_type")
+	private ChoiceValue documentType;
 
     @Column
     private String description;
@@ -74,6 +73,6 @@ public class Document extends Relatable implements HasSingleResponsibleUser, Tag
     @Override
     public String getLocalizedEnumValues() {
         return (status != null ? status.getMessage() : "") + " " +
-                (documentType != null ? documentType.getMessage() : "");
+                (documentType != null ? documentType.getCaption() : "");
     }
 }

@@ -9,6 +9,7 @@ import dk.digitalidentity.model.entity.StandardTemplateSection;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.report.DocxUtil;
+import dk.digitalidentity.service.ChoiceValueService;
 import dk.digitalidentity.service.RelationService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
@@ -24,7 +25,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static dk.digitalidentity.model.entity.enums.DocumentType.PROCEDURE;
 import static dk.digitalidentity.model.entity.enums.TaskType.CHECK;
 import static dk.digitalidentity.report.DocxUtil.addBoldTextRun;
 import static dk.digitalidentity.report.DocxUtil.addHtmlRun;
@@ -41,10 +41,12 @@ public class ISO27002Replacer implements PlaceHolderReplacer {
     private static final String HEADING2 = "Heading2";
 
     private final StandardTemplateDao standardTemplateDao;
+	private final ChoiceValueService choiceValueService;
 
-    public ISO27002Replacer(final RelationService relationService, final StandardTemplateDao standardTemplateDao) {
+    public ISO27002Replacer(final RelationService relationService, final StandardTemplateDao standardTemplateDao, final ChoiceValueService choiceValueService) {
         this.relationService = relationService;
         this.standardTemplateDao = standardTemplateDao;
+		this.choiceValueService = choiceValueService;
     }
 
     @Override
@@ -121,9 +123,11 @@ public class ISO27002Replacer implements PlaceHolderReplacer {
         insertBoldParagraph(document, cursor, "Efterlevelse af kravet:");
         addHtmlRun(section.getStandardSection().getDescription(), document, cursor);
 
+
+
         final List<Relatable> allRelatedTo = relationService.findAllRelatedTo(section.getStandardSection());
         final List<Relatable> procedures = allRelatedTo.stream().filter(r -> RelationType.DOCUMENT.equals(r.getRelationType()))
-            .filter(r -> PROCEDURE.equals(((Document)r).getDocumentType()))
+            .filter(r -> ((Document)r).getDocumentType() != null && "document-type-procedure-123456".equals(((Document)r).getDocumentType().getIdentifier()))
             .toList();
         insertBoldParagraph(document, cursor, "Procedurer");
         addBulletList(document, cursor, procedures, "Ingen procedure til dette krav");
