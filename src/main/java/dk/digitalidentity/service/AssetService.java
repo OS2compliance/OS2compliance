@@ -799,6 +799,10 @@ public class AssetService implements TagableService<Asset> {
 		return assetDao.findAllById(ids);
 	}
 
+	public Long countBySupplierId(Long supplierId) {
+		return assetDao.countBySupplierId(supplierId);
+	}
+
 	public List<Asset> getAllForContactsReport(String userUuid) {
 		List<Asset> assets;
 		if (SecurityUtil.isOperationAllowed(Roles.READ_ALL)) {

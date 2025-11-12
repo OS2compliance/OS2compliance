@@ -15,4 +15,7 @@ public interface AssetSupplierMappingDao extends CrudRepository<AssetSupplierMap
 			"WHERE asm.supplier.id = :supplierId " +
 			"ORDER BY a.name")
 	List<AssetSupplierMapping> findBySupplierIdWithAssets(@Param("supplierId") Long supplierId);
+
+	@Query("select count(asm) from AssetSupplierMapping asm where asm.supplier.id = :supplierId and asm.asset.deleted = false")
+	Long countBySupplierIdAndActiveAssets(@Param("supplierId") Long supplierId);
 }
