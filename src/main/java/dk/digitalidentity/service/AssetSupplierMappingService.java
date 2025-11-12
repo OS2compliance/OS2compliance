@@ -87,4 +87,8 @@ public class AssetSupplierMappingService {
 		}
 		return result;
 	}
+
+	public Long countBySupplierIdAndActiveAssets(Long supplierId) {
+		return assetSupplierMappingDao.countBySupplierIdAndActiveAssets(supplierId);
+	}
 }
