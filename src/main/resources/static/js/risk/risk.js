@@ -550,11 +550,18 @@ function CopyRiskService() {
 
     this.userChanged = function (userUuid) {
         fetch(`/rest/ous/user/` + userUuid)
-            .then(response => response.json()
-                .then(data => {
-                    this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
-                    this.ouChoicesSelect.setChoiceByValue(data.uuid);
-                })).catch(error => toastService.error(error));
+            .then(response => {
+                if (response.status === 204) {
+                    return;
+                }
+
+                if (response.ok) {
+                    response.json().then(data => {
+                        this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
+                        this.ouChoicesSelect.setChoiceByValue(data.uuid);
+                    });
+                }
+            }).catch(error => toastService.error(error));
     }
 
     this.validate = function () {
@@ -658,11 +665,18 @@ function CreateRiskService() {
 
     this.userChanged = function (userUuid) {
         fetch(`/rest/ous/user/` + userUuid)
-            .then(response => response.json()
-                .then(data => {
-                    this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
-                    this.ouChoicesSelect.setChoiceByValue(data.uuid);
-                })).catch(error => toastService.error(error));
+            .then(response => {
+                if (response.status === 204) {
+                    return;
+                }
+
+                if (response.ok) {
+                    response.json().then(data => {
+                        this.ouChoicesSelect.setChoices([data], 'uuid', 'name');
+                        this.ouChoicesSelect.setChoiceByValue(data.uuid);
+                    });
+                }
+            }).catch(error => toastService.error(error));
     }
 
     this.clearRegisterValidationError = function () {
