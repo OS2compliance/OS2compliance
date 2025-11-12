@@ -71,7 +71,15 @@ class CustomGridFunctions {
                 }
             },
             language: {
-                'noRecordsFound': "Ingen data fundet"
+                'noRecordsFound': "Ingen data fundet",
+                'pagination': {
+                    'previous': 'Forrige',
+                    'next': 'Næste',
+                    'showing': 'Viser',
+                    'navigate': (page, pages) => `Side ${page} af ${pages}`,
+                    'of': 'af',
+                    'to': 'til'
+                },
             }
         })
 
