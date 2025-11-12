@@ -394,7 +394,7 @@ public class StandardController {
 
 	@RequireCreateAll
 	@Transactional
-	@PostMapping("/headers/create/{identifier}")g
+	@PostMapping("/headers/create/{identifier}")
 	public String createHeader(@Valid @ModelAttribute final StandardTemplateSection standardTemplateSection, @PathVariable(name = "identifier") final String id, RedirectAttributes redirectAttributes, BindingResult result) {
 		StandardTemplate template = supportingStandardService.lookup(id)
 				.orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
