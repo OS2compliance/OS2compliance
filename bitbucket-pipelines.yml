@@ -1,18 +1,19 @@
 image: amazoncorretto:21-alpine
 pipelines:
-  default:
-    - step:
-        name: Run tests only
-        clone:
-          depth: full
-        caches:
-          - docker
-        script:
-          - export TESTCONTAINERS_RYUK_DISABLED=true
-          - ./validation/flyway_check_migrations.sh
-          - ./mvnw spotless:check test
-        services:
-          - docker
+  pull-requests:
+    '**':
+      - step:
+          name: Run tests only
+          clone:
+            depth: full
+          caches:
+            - docker
+          script:
+            - export TESTCONTAINERS_RYUK_DISABLED=true
+            - ./validation/flyway_check_migrations.sh
+            - ./mvnw spotless:check test
+          services:
+            - docker
 
   branches:
     develop:
@@ -39,7 +40,7 @@ pipelines:
             - docker
 
   tags:
-    release-*:
+    v*:
       - step:
           name: Build
           caches:
