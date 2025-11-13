@@ -1,5 +1,6 @@
 package dk.digitalidentity.model.dto;
 
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentRevisionInterval;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
@@ -12,6 +13,7 @@ import lombok.Setter;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDate;
+import java.util.List;
 
 @AllArgsConstructor
 @NoArgsConstructor
@@ -41,4 +43,6 @@ public class DocumentFormDTO {
 
 	@NotNull
 	private User responsibleUser;
+
+	private List<Tag> tags;
 }
