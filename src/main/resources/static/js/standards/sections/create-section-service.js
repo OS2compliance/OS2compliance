@@ -5,22 +5,38 @@ document.addEventListener("shown.bs.modal", function(event) {
     if (form) {
         form.addEventListener("submit", function(event) {
             event.preventDefault();
+
+            form.classList.add("was-validated");
+
             const inputField = document.getElementById("sectionNumberInput");
+
+            // Validate section format, length and characters
             const maxLength = 10;
             const maxInteger = 2147483647;
             const sectionValue = form.elements['section'].value;
-            // Validate section format, as we do not allow the sections to be versioned too deep
-            const parts = sectionValue.split('.');
-            if (parts.length > 3 || (parts.length === 1 && !/^\d+$/.test(sectionValue))) {
+
+            let validated = ValidateSection(sectionValue, maxLength, maxInteger);
+
+            // Check if form is valid or not and act accordingly
+            if (!validated.isValid) {
+                inputField.classList.add("is-invalid");
+                inputField.classList.remove("is-valid");
+
+                const feedback = inputField.parentNode.querySelector(".invalid-feedback");
+                if (feedback) {
+                    feedback.textContent = validated.errorMessage;
+                }
+
+                return;
+            } else {
+                inputField.classList.remove("is-invalid");
+                inputField.classList.add("is-valid");
+            }
+
+            if (!form.checkVisibility()) {
                 return;
             }
 
-            if (sectionValue.length > maxLength || isNaN(sectionValue) || parseInt(sectionValue) > maxInteger) {
-                inputField.classList.add('is-invalid');
-                return;
-            } else {
-                inputField.classList.remove('is-invalid');
-            }
             form.submit();
         });
     }
@@ -105,4 +121,73 @@ function CreateSectionService() {
         })
     }
 
+}
+
+/**
+ * Validates a section number input according to business rules
+ * @param {string} sectionValue - The section value to validate
+ * @param {number} maxLength - Maximum allowed length (default: 10)
+ * @param {number} maxInteger - Maximum allowed integer value (default: 2147483647)
+ * @returns {object} - {isValid: boolean, errorMessage: string}
+ */
+function ValidateSection(sectionValue, maxLength, maxInteger) {
+    // Basic length validation
+    if (sectionValue.length === 0) {
+        return {
+            isValid: false,
+            errorMessage: "Du skal angive et sektionsnummer"
+        }
+    } else if (sectionValue.length > maxLength) {
+        return {
+            isValid: false,
+            errorMessage: "Der må maks angives 10 tegn"
+        }
+    } else {
+        // Parse and validate structure
+        const parts = sectionValue.split('.');
+
+        // Check for valid number of parts (not more than three allowed, cases like "1.2.3.4" are not allowed)
+        if (parts.length > 3) {
+            return {
+                isValid: false,
+                errorMessage: "Maksimalt 3 niveauer tilladt (f.eks. 1.2.3)"
+            }
+        }
+
+        // Validate each part
+        for (let i = 0; i < parts.length; i++) {
+            const part = parts[i];
+
+            // Check if part is empty (cases like "1..2" or ".1")
+            if (part === '') {
+                return {
+                    isValid: false,
+                    errorMessage: "Ugyldigt format (Du må ikke bruge et format som 1..2)"
+                }
+            }
+
+            // Check that parts only contain digits (not letters or other special characters)
+            if (!/^\d+$/.test(part)) {
+                return {
+                    isValid: false,
+                    errorMessage: "Kun tal og punktum er tilladt"
+                }
+            }
+
+            // Check that numerical value is in range
+            const numericValue = parseInt(part, 10);
+            if (numericValue > maxInteger) {
+                return {
+                    isValid: false,
+                    errorMessage: "Tallet er for langt"
+                }
+            }
+        }
+    }
+
+    // All validation passed
+    return {
+        isValid: true,
+        errorMessage: ""
+    };
 }
