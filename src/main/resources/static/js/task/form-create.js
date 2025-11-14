@@ -1,6 +1,16 @@
-import {refreshTaskGrid} from './task-center.js';
-
 let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+
+const hasTasksTable = document.getElementById('tasksDatatable') !== null;
+let refreshTaskGrid = null;
+
+if (hasTasksTable) {
+    // Import refresh function if we are on the tasks/index page
+    import('./task-center.js').then(module => {
+        refreshTaskGrid = module.refreshTaskGrid;
+    }).catch(error => {
+        console.warn('Could not load task-center.js:', error);
+    });
+}
 
 document.addEventListener('click', async function(e) {
     if (e.target && e.target.id === 'saveAndContinueBtn') {
@@ -46,6 +56,9 @@ async function handleSubmit(fd, form) {
             ...riskData
         };
 
+        console.log('Sending data:', data);
+        console.log('Risk data extracted:', riskData);
+
         const response = await fetch('/rest/tasks/create', {
             method: 'POST',
             headers: {
@@ -70,7 +83,17 @@ async function handleSubmit(fd, form) {
         let bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
         bsModal.hide();
 
-        refreshTaskGrid();
+        // If we are on the tasks/index page we need to refresh the grid to show the new task
+        if (refreshTaskGrid) {
+            refreshTaskGrid();
+        }
+
+        // If we are on a threat assessment and add a task for a custom threat we need to refresh the page to show the new task
+        if (riskData.taskRiskId) {
+            if (window.location.pathname.includes('/risks/')) {
+                window.location.reload();
+            }
+        }
 
         toastService.info("info", "Opgaven blev gemt");
     } catch (error) {
@@ -130,8 +153,8 @@ function extractSubTasksFromForm(form) {
 
 function extractRiskDataFromForm(fd, form) {
     return {
-        taskRiskId: fd.get(form.id + 'TaskRiskId') ? parseInt(fd.get(form.id + 'TaskRiskId')) : null,
-        riskCustomId: fd.get(form.id + 'RiskCustomId') ? parseInt(fd.get(form.id + 'RiskCustomId')) : null,
-        riskCatalogIdentifier: fd.get(form.id + 'RiskCatalogIdentifier') || null
+        taskRiskId: fd.get('taskRiskId') ? parseInt(fd.get('taskRiskId')) : null,
+        riskCustomId: fd.get('riskCustomId') ? parseInt(fd.get('riskCustomId')) : null,
+        riskCatalogIdentifier: fd.get('riskCatalogIdentifier') || null
     };
 }

@@ -174,7 +174,6 @@ public class TasksController {
 
         if (riskId != null) {
             threatAssessmentService.handleTaskRiskAssociation(savedTask, riskId, riskCustomId, riskCatalogIdentifier);
-            return "redirect:/risks/" + riskId;
         }
 
         return "redirect:/tasks/"+savedTask.getId();
