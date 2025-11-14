@@ -32,35 +32,35 @@
             <div class="card mb-3 col-xxl-6 offset-xxl-3">
               <div class="card-body">
                 <div class="list-group">
-                    <a th:href="@{reports/yearwheel}" class="list-group-item list-group-item-action">
+                    <a href="#" data-report-url="/reports/yearwheel" class="list-group-item list-group-item-action report-link">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">Årshjul</h5>
                             <i class="pli-download-2 fs-3 text-info"></i>
                         </div>
                         <p class="mb-1 pe-2">Liste af opgaver henover året</p>
                     </a>
-                    <a th:href="@{reports/word(identifier='iso27001')}" class="list-group-item list-group-item-action">
+                    <a href="#" data-report-url="/reports/word?identifier=iso27001" data-filename="ISO27001_Rapport.docx" class="list-group-item list-group-item-action report-link">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">ISO27001 Rapport</h5>
                             <i class="pli-download-2 fs-3 text-info"></i>
                         </div>
                         <p class="mb-1">Ledelsessystem for Informationssikkerhed</p>
                     </a>
-                    <a th:href="@{reports/word(identifier='iso27002_2022')}" class="list-group-item list-group-item-action">
+                    <a href="#" data-report-url="/reports/word?identifier=iso27002_2022" data-filename="ISO27002_Rapport.docx" class="list-group-item list-group-item-action report-link">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">ISO270002 Rapport</h5>
                             <i class="pli-download-2 fs-3 text-info"></i>
                         </div>
                         <p class="mb-1">ISO27002-2022</p>
                     </a>
-                    <a th:href="@{reports/sheet(identifier='nsis_2_0_2a')}" class="list-group-item list-group-item-action">
+                    <a href="#" data-report-url="/reports/sheet?identifier=nsis_2_0_2a" data-filename="NSIS_Efterlevelse.xlsx" class="list-group-item list-group-item-action report-link">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">Efterlevelse af NSIS</h5>
                             <i class="pli-download-2 fs-3 text-info"></i>
                         </div>
                         <p class="mb-1">NSIS vers. 2.0.2a</p>
                     </a>
-                    <a th:href="@{reports/word(identifier='article30')}" class="list-group-item list-group-item-action">
+                    <a href="#" data-report-url="/reports/word?identifier=article30" data-filename="Artikel30_Fortegnelse.docx" class="list-group-item list-group-item-action report-link">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">Artikel 30 fortegnelse</h5>
                             <i class="pli-download-2 fs-3 text-info"></i>
@@ -72,7 +72,6 @@
                             <h5 class="mb-1">Tag-rapport</h5>
                             <i class="pli-printer fs-3 text-info"></i>
                         </div>
-
                         <p class="mb-1">Kontrol liste</p>
                     </button>
                     <button id="riskImageDialogButton" href="#" class="list-group-item list-group-item-action" data-bs-toggle="modal" data-bs-target="#riskImageReportDialog" aria-expanded="false">
@@ -82,7 +81,7 @@
                         </div>
                         <p class="mb-1">Samlet billede af udvalgte risikovurderinger</p>
                     </button>
-                    <a th:href="@{reports/contacts}" class="list-group-item list-group-item-action">
+                    <a href="#" data-report-url="/reports/contacts" data-filename="Kontaktpersoner.xlsx" class="list-group-item list-group-item-action report-link">
                         <div class="d-flex w-100 justify-content-between">
                             <h5 class="mb-1">Kontaktpersoner</h5>
                             <i class="pli-download-2 fs-3 text-info"></i>
@@ -103,6 +102,17 @@
 
 <div th:replace="~{reports/fragments/tagReportDialog :: tagReportDialog}"></div>
 <div th:replace="~{reports/fragments/riskImageReportDialog :: riskImageReportDialog}"></div>
+
+<!-- Loading overlay -->
+<div id="reportLoadingOverlay" class="position-fixed top-0 start-0 w-100 h-100 d-none"
+     style="background-color: rgba(0, 0, 0, 0.5); z-index: 9999;">
+    <div class="position-absolute top-50 start-50 translate-middle text-center">
+        <div class="spinner-border text-light" role="status" style="width: 3rem; height: 3rem;">
+            <span class="visually-hidden">Genererer rapport...</span>
+        </div>
+        <p class="text-light mt-3 fs-5">Genererer rapport...</p>
+    </div>
+</div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
