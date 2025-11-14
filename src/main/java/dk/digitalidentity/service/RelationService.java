@@ -4,12 +4,29 @@ import dk.digitalidentity.dao.RelatableDao;
 import dk.digitalidentity.dao.RelationDao;
 import dk.digitalidentity.model.dto.RelatedDTO;
 import dk.digitalidentity.model.dto.RelationDTO;
+import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.Contact;
+import dk.digitalidentity.model.entity.DBSAsset;
+import dk.digitalidentity.model.entity.DBSOversight;
+import dk.digitalidentity.model.entity.DPIA;
+import dk.digitalidentity.model.entity.Document;
+import dk.digitalidentity.model.entity.Incident;
+import dk.digitalidentity.model.entity.Precaution;
+import dk.digitalidentity.model.entity.Register;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Relation;
 import dk.digitalidentity.model.entity.StandardSection;
+import dk.digitalidentity.model.entity.Supplier;
+import dk.digitalidentity.model.entity.Task;
+import dk.digitalidentity.model.entity.TaskLog;
+import dk.digitalidentity.model.entity.ThreatAssessment;
+import dk.digitalidentity.model.entity.ThreatAssessmentResponse;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Subquery;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Propagation;
@@ -18,8 +35,11 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -73,8 +93,7 @@ public class RelationService {
         return related.stream()
                 .map(r -> Objects.equals(r.getRelationAId(), relatable.getId()) ? r.getRelationBId() : r.getRelationAId())
                 .map(rid -> relatableDao.findById(rid).orElseGet(() -> {
-                    log.error("Could not look up related entity {}, source relation type {}, id {}", rid, relatable.getRelationType(), relatable.getId());
-					relationDao.deleteRelationByEntityIds(rid, relatable.getId());
+                    log.warn("Could not look up related entity {}, source relation type {}, id {}", rid, relatable.getRelationType(), relatable.getId());
                     return null;
                 }))
                 .filter(Objects::nonNull)
@@ -172,4 +191,68 @@ public class RelationService {
     public void deleteAll(final List<Relation> toDelete) {
         relationDao.deleteAll(toDelete);
     }
+
+	@Transactional(readOnly = true)
+	public Map<Class<?>, Set<Relation>> findBrokenRelations() {
+		Map<RelationType, Class<?>> classPerType = new EnumMap<>(RelationType.class);
+		classPerType.put(RelationType.SUPPLIER, Supplier.class);
+		classPerType.put(RelationType.CONTACT, Contact.class);
+		classPerType.put(RelationType.TASK, Task.class);
+		classPerType.put(RelationType.DOCUMENT, Document.class);
+		classPerType.put(RelationType.TASK_LOG, TaskLog.class);
+		classPerType.put(RelationType.REGISTER, Register.class);
+		classPerType.put(RelationType.ASSET, Asset.class);
+		classPerType.put(RelationType.STANDARD_SECTION, StandardSection.class);
+		classPerType.put(RelationType.THREAT_ASSESSMENT, ThreatAssessment.class);
+		classPerType.put(RelationType.THREAT_ASSESSMENT_RESPONSE, ThreatAssessmentResponse.class);
+		classPerType.put(RelationType.PRECAUTION, Precaution.class);
+		classPerType.put(RelationType.DBSASSET, DBSAsset.class);
+		classPerType.put(RelationType.DBSOVERSIGHT, DBSOversight.class);
+		classPerType.put(RelationType.INCIDENT, Incident.class);
+		classPerType.put(RelationType.DPIA, DPIA.class);
+
+		Map<Class<?>, Set<Relation>> brokenRelations = new HashMap<>();
+		for (Map.Entry<RelationType, Class<?>> entry : classPerType.entrySet()) {
+			brokenRelations.put( entry.getValue(), new HashSet<>(relationDao.findAll(hasBrokenRelations(entry.getKey(), entry.getValue()))));
+		}
+
+		return brokenRelations;
+	}
+
+	@Transactional
+	public void deleteAllByIds(final Collection<Long> ids) {
+		relationDao.deleteAllById(ids);
+	}
+
+	private static Specification<Relation> hasBrokenRelation(
+			RelationType type,
+			Class<?> entityClass,
+			String typeField,
+			String idField) {
+		return (root, query, cb) -> {
+			Subquery<Long> subquery = Objects.requireNonNull(query, "query must not be null")
+					.subquery(Long.class);
+			Root<?> entity = subquery.from(entityClass);
+
+			subquery.select(cb.literal(1L))
+					.where(cb.equal(entity.get("id"), root.get(idField)));
+
+			return cb.and(
+					cb.equal(root.get(typeField), type),
+					cb.not(cb.exists(subquery))
+			);
+		};
+	}
+
+	public static Specification<Relation> hasBrokenRelationA(RelationType type, Class<?> entityClass) {
+		return hasBrokenRelation(type, entityClass, "relationAType", "relationAId");
+	}
+
+	public static Specification<Relation> hasBrokenRelationB(RelationType type, Class<?> entityClass) {
+		return hasBrokenRelation(type, entityClass, "relationBType", "relationBId");
+	}
+
+	public static Specification<Relation> hasBrokenRelations(RelationType type, Class<?> entityClass) {
+		return hasBrokenRelationA(type, entityClass).or(hasBrokenRelationB(type, entityClass));
+	}
 }
