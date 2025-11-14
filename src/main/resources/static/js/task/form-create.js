@@ -8,7 +8,7 @@ if (hasTasksTable) {
     import('./task-center.js').then(module => {
         refreshTaskGrid = module.refreshTaskGrid;
     }).catch(error => {
-        console.warn('Could not load task-center.js:', error);
+        console.debug('Could not load task-center.js:', error);
     });
 }
 
@@ -55,9 +55,6 @@ async function handleSubmit(fd, form) {
             relations: relations,
             ...riskData
         };
-
-        console.log('Sending data:', data);
-        console.log('Risk data extracted:', riskData);
 
         const response = await fetch('/rest/tasks/create', {
             method: 'POST',
