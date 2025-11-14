@@ -49,7 +49,9 @@
 </div>
 
 <th:block th:replace="~{tags/fragment/create_tag_modal :: create_tag_modal}"></th:block>
-<th:block th:replace="~{tags/fragment/edit_tag_modal :: edit_tag_modal}"></th:block>
+<div id="editTagModalContainer">
+    <th:block th:replace="~{tags/fragment/edit_tag_modal :: edit_tag_modal}"></th:block>
+</div>
 
 <div th:replace="~{fragments/footer :: footer (taskDialog = true, gridjs = true, sweetalerts = true)}"></div>
 
@@ -61,7 +63,7 @@
         const restUrl = [[@{/rest/tags}]];
     +]*/
 
-/*]]>*/
+    /*]]>*/
 </script>
 </body>
 </html>

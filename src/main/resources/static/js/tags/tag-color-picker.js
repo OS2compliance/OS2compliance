@@ -7,13 +7,10 @@ export function initColorPickerListener(colorPickerId) {
     const picker = document.getElementById(colorPickerId);
 
     new ColorPickerIndicator(picker);
-
-
 }
 
 class ColorPickerIndicator {
     picker
-    indicator
 
     constructor (picker) {
         if (!picker) {
@@ -31,8 +28,7 @@ class ColorPickerIndicator {
 
     initIndicator() {
         const indicator = document.createElement("span")
-        indicator.classList.add("color-picker-indicator")
-        indicator.classList.add("tag-badge")
+        indicator.className = "tag-badge color-picker-indicator"
 
         this.picker.parentElement.appendChild(indicator)
     }
