@@ -41,6 +41,15 @@ public class TagsController {
         return "tags/tags_view";
     }
 
+	@GetMapping({"{id}"})
+	public String getTag(@PathVariable Long id, Model model){
+		Tag tag = tagService.findById(id)
+				.orElseThrow();
+
+		model.addAttribute("tag", tag);
+		return "tags/fragment/edit_tag_modal";
+	}
+
     /**
      * Creates a new tag and redirects to the main tag page
      * @param tag
