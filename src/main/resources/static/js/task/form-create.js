@@ -63,9 +63,12 @@ async function handleSubmit(fd, form) {
             return;
         }
 
-        // Reset form to create another task
-        form.reset();
+        // Close the modal
         form.classList.remove('was-validated');
+
+        let modal = form.closest('.modal');
+        let bsModal = bootstrap.Modal.getInstance(modal) || new bootstrap.Modal(modal);
+        bsModal.hide();
 
         refreshTaskGrid();
 
