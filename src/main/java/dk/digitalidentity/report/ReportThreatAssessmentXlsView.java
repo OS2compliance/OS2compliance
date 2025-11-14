@@ -35,7 +35,7 @@ import static dk.digitalidentity.report.XlsUtil.createCell;
 public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 
 	@Override
-	protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) throws Exception {
+	protected void buildExcelDocument(Map<String, Object> model, Workbook workbook, HttpServletRequest request, HttpServletResponse response) {
 		final ThreatAssessment threatAssessment = (ThreatAssessment) model.get("threatAssessment");
 		String customOwnerName = (String) model.get("customOwnerName");
 		String customResponsibleName = (String) model.get("customResponsibleName");
@@ -69,11 +69,8 @@ public class ReportThreatAssessmentXlsView extends AbstractXlsView {
 		normalStyle.setBorderTop(BorderStyle.THIN);
 		normalStyle.setBorderLeft(BorderStyle.THIN);
 		normalStyle.setBorderRight(BorderStyle.THIN);
-
-		CellStyle alternateRowStyle = workbook.createCellStyle();
-		alternateRowStyle.cloneStyleFrom(normalStyle);
-		alternateRowStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
-		alternateRowStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+		normalStyle.setFillForegroundColor(IndexedColors.GREY_25_PERCENT.getIndex());
+		normalStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
 		final List<Relatable> relations = (List<Relatable>) model.get("relations");
 
