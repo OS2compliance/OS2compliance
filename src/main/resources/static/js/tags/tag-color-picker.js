@@ -13,7 +13,6 @@ class ColorPickerIndicator {
     picker
 
     constructor (picker) {
-        console.log(picker)
         if (!picker) {
             console.error("Could not initialize colorPicker. No Id found")
         }
