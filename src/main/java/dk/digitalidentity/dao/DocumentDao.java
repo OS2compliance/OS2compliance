@@ -2,12 +2,13 @@ package dk.digitalidentity.dao;
 
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.User;
-import org.springframework.data.jpa.repository.JpaRepository;
+import dk.digitalidentity.service.tag.TagableRepository;
 
 import java.time.LocalDate;
 import java.util.List;
 
-public interface DocumentDao extends JpaRepository<Document, Long> {
+public interface DocumentDao extends TagableRepository<Document> {
     List<Document> findAllByResponsibleUserAndNextRevisionBefore(User user, LocalDate date);
 
+	boolean existsByDocumentTypeId(Long id);
 }

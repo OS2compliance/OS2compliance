@@ -1,14 +1,15 @@
 package dk.digitalidentity.service;
 
 import dk.digitalidentity.dao.AssetOversightDao;
+import dk.digitalidentity.dao.ChoiceValueDao;
 import dk.digitalidentity.model.entity.Asset;
 import dk.digitalidentity.model.entity.AssetOversight;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Property;
 import dk.digitalidentity.model.entity.Relatable;
 import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.TaskLog;
 import dk.digitalidentity.model.entity.User;
-import dk.digitalidentity.model.entity.enums.ChoiceOfSupervisionModel;
 import dk.digitalidentity.model.entity.enums.NextInspection;
 import dk.digitalidentity.model.entity.enums.RelationType;
 import dk.digitalidentity.model.entity.enums.TaskRepetition;
@@ -22,6 +23,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static dk.digitalidentity.Constants.ASSOCIATED_INSPECTION_PROPERTY;
 
@@ -34,6 +36,7 @@ public class AssetOversightService {
     private final TaskService taskService;
     private final RelationService relationService;
     private final UserService userService;
+	private final ChoiceValueDao choiceValueDao;
 
 
     public List<AssetOversight> findByAssetOrderByCreationDateDesc(final Asset asset) {
@@ -52,7 +55,7 @@ public class AssetOversightService {
         assets.forEach(asset -> {
             asset.setNextInspection(NextInspection.DBS);
             asset.setNextInspectionDate(null);
-            asset.setSupervisoryModel(ChoiceOfSupervisionModel.DBS);
+            asset.setSupervisoryModel(choiceValueDao.findByIdentifier("supervision-model-dbs-123456").orElse(null));
 			User user = userService.currentUser();
 			if (asset.getOversightResponsibleUser() == null) {
 				if (asset.getResponsibleUsers() != null && !asset.getResponsibleUsers().isEmpty()) {
@@ -100,7 +103,7 @@ public class AssetOversightService {
         }
 
         final Task task = findAssociatedOversightCheck(asset);
-        final ChoiceOfSupervisionModel supervisoryModel = asset.getSupervisoryModel();
+        final ChoiceValue supervisoryModel = asset.getSupervisoryModel();
         if (supervisoryModel == null) {
             // No supervisoryModel make sure the associated task is not repeating anymore.
             asset.setNextInspection(null);
@@ -126,7 +129,7 @@ public class AssetOversightService {
 
         }
         if (asset.getOversightResponsibleUser() != null) {
-            task.setResponsibleUser(asset.getOversightResponsibleUser());
+            task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
         }
     }
 
@@ -136,11 +139,11 @@ public class AssetOversightService {
         }
         final Task task = new Task();
         task.setTaskType(TaskType.CHECK);
-        task.setName("Tilsyn af " + asset.getName());
+        task.setName("Udfør tilsyn med leverandøren af " + asset.getName());
         task.setCreatedAt(LocalDateTime.now());
         task.setNextDeadline(asset.getNextInspectionDate());
         task.setNotifyResponsible(false);
-        task.setResponsibleUser(asset.getOversightResponsibleUser());
+        task.setResponsibleUsers(Set.of(asset.getOversightResponsibleUser()));
         task.setDescription("Gå ind på aktivet " + asset.getName() + " og udfør tilsyn.");
         task.getProperties().add(Property.builder()
             .entity(task)

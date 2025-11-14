@@ -1,13 +1,16 @@
 package dk.digitalidentity.model.entity;
 
 import dk.digitalidentity.config.StringSetNullSafeConverter;
+import dk.digitalidentity.model.dto.tag.Tagable;
 import dk.digitalidentity.model.entity.enums.Criticality;
 import dk.digitalidentity.model.entity.enums.InformationObligationStatus;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RelationType;
+import dk.digitalidentity.model.entity.interfaces.HasCustomResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.kle.KLEGroup;
 import dk.digitalidentity.model.entity.kle.KLELegalReference;
 import dk.digitalidentity.model.entity.kle.KLEMainGroup;
+import dk.digitalidentity.model.entity.kle.KLESubject;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Convert;
@@ -44,7 +47,7 @@ import static dk.digitalidentity.util.NullSafe.nullSafe;
 @Setter
 @SQLDelete(sql = "UPDATE registers SET deleted = true WHERE id=? and version=?", check = ResultCheckStyle.COUNT)
 @Where(clause = "deleted=false")
-public class Register extends Relatable implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers {
+public class Register extends Relatable implements HasMultipleResponsibleUsers, HasCustomResponsibleUsers, Tagable {
 
     @ManyToMany
     @JoinTable(
@@ -130,9 +133,9 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
     @Enumerated(EnumType.STRING)
     private InformationObligationStatus informationObligation;
 
-    @Column
-    @Enumerated(EnumType.STRING)
-    private RegisterStatus status;
+	@ManyToOne
+	@JoinColumn(name = "status")
+	private ChoiceValue status;
 
     @Column
     @Convert(converter = StringSetNullSafeConverter.class)
@@ -173,6 +176,18 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 	)
 	private Set<KLELegalReference> relevantKLELegalReferences = new HashSet<>();
 
+	@ManyToMany(fetch = FetchType.LAZY, cascade = { CascadeType.MERGE, CascadeType.PERSIST, CascadeType.REFRESH })
+	@JoinTable(
+			name = "register_kle_subject_mapping",
+			joinColumns = @JoinColumn(name = "register_id"),
+			inverseJoinColumns = @JoinColumn(name = "subject_number")
+	)
+	private Set<KLESubject> kleSubjects = new HashSet<>();
+
+	@ManyToMany(fetch = FetchType.LAZY, cascade = {CascadeType.PERSIST, CascadeType.MERGE, CascadeType.REFRESH, CascadeType.DETACH})
+	@JoinTable(name = "register_tag", joinColumns = { @JoinColumn(name = "register_id") }, inverseJoinColumns = { @JoinColumn(name = "tag_id") })
+	private Set<Tag> tags = new HashSet<>();
+
 	@Override
     public RelationType getRelationType() {
         return RelationType.REGISTER;
@@ -180,17 +195,21 @@ public class Register extends Relatable implements HasMultipleResponsibleUsers, 
 
     @Override
     public String getLocalizedEnumValues() {
-        return (status != null ? status.getMessage() : "") +
+        return (status != null ? status.getCaption() : "") +
             (consequenceAssessment != null ? nullSafe(() -> consequenceAssessment.getAssessment().getMessage(), "") : "");
     }
 
 	@Override
 	public String getCustomResponsibleUserUuids() {
-		return customResponsibleUsers.stream().map(c -> c.getUuid()).collect(Collectors.joining(","));
+		return customResponsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
 	}
 
 	@Override
 	public String getResponsibleUserUuids() {
-		return responsibleUsers.stream().map(u -> u.getUuid()).collect(Collectors.joining(","));
+		return responsibleUsers.stream().map(User::getUuid).collect(Collectors.joining(","));
+	}
+
+	public boolean containsSubject(KLESubject subject) {
+		return kleGroups.stream().anyMatch(kleGroup -> kleGroup.getSubjects().contains(subject));
 	}
 }

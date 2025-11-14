@@ -1,9 +1,11 @@
 import OnUnSubmittedService from "../on-unsubmitted-changes-service.js";
+import initRelatedTagList from "../tags/related-tag-list.js";
 
 let onUnSubmittedService = new OnUnSubmittedService();
 let viewTaskService = new ViewTaskService();
 document.addEventListener("DOMContentLoaded", function(event) {
     viewTaskService.init();
+    initRelatedTagList('#editForm')
 });
 
 function ViewTaskService() {
@@ -30,15 +32,66 @@ function ViewTaskService() {
         saveEditTaskBtn?.addEventListener("click", () => {
             onUnSubmittedService.reset();
         });
-
         this.loadViewAndEditForm();
         this.initRelationSelect();
         this.initTaskDocumentRelationSelect();
-        choiceService.initTagSelect("tagsSelect");
-        initFormValidationForForm('editForm');
-        initFormValidationForForm('completeTaskForm');
-        initDatepicker("#deadlineBtn", "#deadline");
+        this.loadDescriptionTemplateSelect();
+        this.initSubTaskBtns();
 
+
+        initFormValidationForForm('editForm', () => subTaskLinkService.validateAllSubTasks());
+
+        if (taskType === 'CHECK') {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+                const taskResultSelect = document.getElementById("taskResultSelect");
+                const taskType = document.getElementById("taskType");
+
+                const subTasksValid = this.validateSubTasksCompletion();
+
+                let commentValid = false;
+                if (taskResultSelect.value === 'NO_ERROR') {
+                    comment.classList.remove('is-invalid');
+                    commentValid = true;
+                } else if (taskResultSelect.value !== 'NO_ERROR' && comment.value.trim()) {
+                    comment.classList.remove('is-invalid');
+                    commentValid = true;
+                } else {
+                    comment.classList.add('is-invalid');
+                    commentValid = false;
+                }
+
+                return subTasksValid && commentValid;
+            });
+        } else {
+            initFormValidationForForm('completeTaskForm', () => {
+                const comment = document.getElementById("completionComment");
+
+                const subTasksValid = this.validateSubTasksCompletion();
+
+                let commentValid = false;
+                if (!comment.value) {
+                    comment.classList.add('is-invalid');
+                    commentValid = false;
+                } else {
+                    comment.classList.remove('is-invalid');
+                    commentValid = true;
+                }
+
+                return subTasksValid && commentValid;
+            });
+        }
+
+        initDatepicker("#deadlineBtn", "#deadline");
+        initDatepicker("#TaskDeadlineBtn", "#TaskDeadline");
+        let taskDeadline = document.querySelector("#TaskDeadline");
+        if (taskDeadline) {
+            taskDeadline.value = new Date().toLocaleDateString('da-DK', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            }).replace(/\./g, '/').replace(/(\d{2})\/(\d{2})\/(\d{4})/, '$1/$2-$3');
+        }
         var textarea = document.getElementById('description');
         if (textarea) {
             this.fitDescription(textarea);
@@ -46,6 +99,12 @@ function ViewTaskService() {
                 this.fitDescription(this);
             });
         }
+
+        this.notificationSelectHandler = initNotificationSelect(
+            'viewTaskNotificationSetting',
+            'viewTaskNotificationSelectDiv',
+            'viewTaskNotificationSelectInput'
+        );
     }
 
     // In case this task is an oversight, a special oversight dialog can be shown
@@ -59,9 +118,85 @@ function ViewTaskService() {
             .then(() => {oversightDialog.show()});
     }
 
+    this.initSubTaskBtns = function () {
+        let addBtn = document.getElementById('subTaskAddLinkBtn');
+        addBtn.addEventListener('click', () => subTaskLinkService.addSubTaskFromView());
+    }
+
+    this.validateSubTasksCompletion = function() {
+        const subTaskCheckboxes = document.querySelectorAll('#completeTaskForm input[name="subTasksCompleted"]');
+
+        // If there are no subtasks, validation passes
+        if (subTaskCheckboxes.length === 0) {
+            return true;
+        }
+
+        // Check if all subtasks are checked
+        const allChecked = Array.from(subTaskCheckboxes).every(checkbox => checkbox.checked);
+
+        const errorMessageDiv = document.getElementById('subTaskValidationError');
+
+        if (!allChecked) {
+            // Show error message
+            if (!errorMessageDiv) {
+                const errorDiv = document.createElement('div');
+                errorDiv.id = 'subTaskValidationError';
+                errorDiv.className = 'alert alert-danger mt-2';
+                errorDiv.textContent = 'Alle underopgaver skal være fuldført før opgaven kan afsluttes.';
+
+                const subTaskContainer = document.querySelector('#completeTaskForm .border.rounded.p-3.bg-light');
+                if (subTaskContainer) {
+                    subTaskContainer.parentElement.appendChild(errorDiv);
+                }
+            }
+            return false;
+        } else {
+            // Remove error message if it exists
+            if (errorMessageDiv) {
+                errorMessageDiv.remove();
+            }
+            return true;
+        }
+    }
+
     this.fitDescription = function (textarea) {
         textarea.style.height = 'auto';
         textarea.style.height = textarea.scrollHeight + 'px';
+    }
+
+    this.loadDescriptionTemplateSelect = function() {
+        const select = document.getElementById('taskDescriptionTemplateSelect');
+        const descriptionField = document.getElementById('description');
+        let previousDescription = ''; // Store previous value
+
+        select.addEventListener("change", async function () {
+            const selectedValue = this.value;
+
+            // If "Ingen valgt" (no selection) or empty value
+            if (!selectedValue || selectedValue === '') {
+                descriptionField.value = previousDescription;
+                descriptionField.disabled = false;
+                return;
+            }
+
+            // Save current description before replacing it
+            if (descriptionField.value) {
+                previousDescription = descriptionField.value;
+            }
+
+            const response = await fetch(`/rest/choicelists/custom/choiceValue/${selectedValue}`);
+            if (response.ok) {
+                const data = await response.json();
+                if (data.success) {
+                    descriptionField.value = data.description;
+                    descriptionField.disabled = true;
+                } else {
+                    toastService.error("Kunne ikke hente beskrivelse");
+                }
+            } else {
+                toastService.error("Der opstod en teknisk fejl");
+            }
+        });
     }
 
     this.setEditMode = function(enabled) {
@@ -76,12 +211,15 @@ function ViewTaskService() {
             document.getElementById('saveEditTaskBtn').hidden = false;
             document.getElementById('editTaskBtn').hidden = true;
             performButton.hidden = true;
-            document.getElementById('realLink').hidden = true;
-            document.getElementById('linkField').hidden = false;
             this.nameField.disabled = false
             document.getElementById("linksViewContainer").hidden = true;
+            document.getElementById("subTaskViewContainer").hidden = true;
             document.getElementById("linksEditContainer").hidden = false;
+            document.getElementById("subTaskEditContainer").hidden = false;
             document.getElementById("addLinkBtn").hidden = false;
+            this.notificationSelectHandler.enable();
+            document.getElementById("subTaskAddLinkBtn").hidden = false;
+            this.toggleSubTaskCheckboxes(true);
         } else {
             document.querySelectorAll('.editField').forEach(elem => {
                 elem.disabled = true;
@@ -92,13 +230,24 @@ function ViewTaskService() {
             document.getElementById('saveEditTaskBtn').hidden = true;
             document.getElementById('editTaskBtn').hidden = false;
             performButton.hidden = false;
-            document.getElementById('realLink').hidden = false;
-            document.getElementById('linkField').hidden = true;
             this.nameField.disabled = true
             document.getElementById("linksViewContainer").hidden = false;
+            document.getElementById("subTaskViewContainer").hidden = false;
             document.getElementById("linksEditContainer").hidden = true;
+            document.getElementById("subTaskEditContainer").hidden = true;
             document.getElementById("addLinkBtn").hidden = true;
+            document.getElementById("subTaskAddLinkBtn").hidden = true;
+            this.notificationSelectHandler.disable();
+            this.toggleSubTaskCheckboxes(false);
         }
+    }
+
+    this.toggleSubTaskCheckboxes = function(enabled) {
+        const checkboxes = document.querySelectorAll('#subTaskEditContainer input[type="checkbox"]');
+
+        checkboxes.forEach(checkbox => {
+            checkbox.disabled = !enabled;
+        });
     }
 
     this.loadViewAndEditForm = function() {
@@ -106,8 +255,12 @@ function ViewTaskService() {
         this.userChoicesEditSelect = choiceService.initUserSelect('userSelect');
         this.ouChoicesEditSelect = choiceService.initOUSelect('ouSelect');
         this.ouDepartmentChoicesEditSelect = choiceService.initOUSelect('departmentOuSelect');
-        this.nameField = document.getElementById("taskNameField")
+        const currentValue = this.ouDepartmentChoicesEditSelect.getValue(true);
 
+        if (!currentValue || currentValue === '' || currentValue === null) {
+            this.ouDepartmentChoicesEditSelect.setChoices([{ value: '', label: 'Vælg forvaltning...', selected: true }], 'value', 'label', false);
+        }
+        this.nameField = document.getElementById("taskNameField")
         this.userChoicesEditSelect.passedElement.element.addEventListener('change', function() {
             checkInputField(self.userChoicesEditSelect);
         });

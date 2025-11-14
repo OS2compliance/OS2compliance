@@ -1,7 +1,7 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.HasManagers;
-import dk.digitalidentity.model.entity.HasMultipleResponsibleUsers;
+import dk.digitalidentity.model.entity.interfaces.HasManagers;
+import dk.digitalidentity.model.entity.interfaces.HasMultipleResponsibleUsers;
 import dk.digitalidentity.model.entity.enums.AssetCategory;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 
@@ -89,5 +89,14 @@ public class AssetGrid implements HasMultipleResponsibleUsers, HasManagers {
 
 	@Column
 	private boolean active;
+
+	@Column
+	private LocalDate lastOversightDate;
+
+	@Column
+	private String tagNames;
+
+	@Column
+	private String tagIds;
 
 }

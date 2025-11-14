@@ -13,4 +13,6 @@ public interface IncidentFieldDao extends CrudRepository<IncidentField, Long> {
     Optional<Long> selectMaxSortKey();
 
     List<IncidentField> findAllByOrderBySortKeyAsc();
+
+	List<IncidentField> findAllByObligatoryAnswerTrue();
 }

@@ -1,9 +1,8 @@
 package dk.digitalidentity.model.entity.grid;
 
-import dk.digitalidentity.model.entity.HasSingleResponsibleUser;
+import dk.digitalidentity.model.entity.interfaces.HasSingleResponsibleUser;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
-import dk.digitalidentity.model.entity.enums.DocumentType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -31,8 +30,7 @@ public class DocumentGrid implements HasSingleResponsibleUser {
     private String name;
 
     @Column
-    @Enumerated(EnumType.STRING)
-    private DocumentType documentType;
+    private String documentType;
 
     @Column(name = "document_type_order")
     private Integer documentTypeOrder;
@@ -54,6 +52,9 @@ public class DocumentGrid implements HasSingleResponsibleUser {
     @Column
     private String localizedEnums;
 
-    @Column
-    private String tags;
+	@Column
+	private String tagNames;
+
+	@Column
+	private String tagIds;
 }

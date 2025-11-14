@@ -17,4 +17,7 @@ public interface KLELegalReferenceDao extends JpaRepository<KLELegalReference, S
 	void softDeleteByAccessionNumbers(Collection<String> accessionNumbers);
 
 	Set<KLELegalReference> findByDeletedFalseAndAccessionNumberIn(Collection<String> accessionNumbers);
+
+	@Query("SELECT k.accessionNumber FROM KLELegalReference k")
+	Set<String> findAllIds();
 }

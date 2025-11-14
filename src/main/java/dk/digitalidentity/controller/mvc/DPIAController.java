@@ -16,6 +16,7 @@ import dk.digitalidentity.model.entity.DataProtectionImpactAssessmentScreening;
 import dk.digitalidentity.model.entity.DataProtectionImpactScreeningAnswer;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Relatable;
+import dk.digitalidentity.model.entity.Tag;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.User;
 import dk.digitalidentity.model.entity.enums.RelationType;
@@ -82,7 +83,7 @@ public class DPIAController {
 
 	public record DPIAScreeningDTO(List<DataProtectionImpactScreeningAnswerDTO> questions){}
 	public record DPIADetailAssetDTO(long id, String name) {}
-    public record DPIADetailDTO (long id, String name, List<DPIADetailAssetDTO> assets, String comment) {}
+    public record DPIADetailDTO (long id, String name, List<DPIADetailAssetDTO> assets, String comment, Set<Tag> tags) {}
 	@RequireReadOwnerOnly
     @GetMapping("{id}")
     public String dpiaDetails(final Model model, @PathVariable Long id) {
@@ -137,7 +138,7 @@ public class DPIAController {
 
 		model.addAttribute("changeableAsset", assetService.isEditable(assets));
 		model.addAttribute("changeable", assetService.isEditable(assets));
-        model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), dpia.getName(), assets.stream().map(a-> new DPIADetailAssetDTO(a.getId(), a.getName())).toList(), dpia.getComment()));
+        model.addAttribute("dpia", new DPIADetailDTO(dpia.getId(), dpia.getName(), assets.stream().map(a-> new DPIADetailAssetDTO(a.getId(), a.getName())).toList(), dpia.getComment(), dpia.getTags()));
         model.addAttribute("assets", assets);
 		model.addAttribute("assetNames", String.join(", ", dpia.getAssets().stream().map(Asset::getName).toList()));
 		model.addAttribute("assetTypeNames", String.join(", ", dpia.getAssets().stream().map(a->a.getAssetType().getCaption()).toList()));
@@ -207,7 +208,7 @@ public class DPIAController {
 		if (dpia.getResponsibleOu() != null) {
 			model.addAttribute("responsibleOu", new DPIAResponsibleOu(dpia.getResponsibleOu().getUuid(), dpia.getResponsibleOu().getName()));
 		}
-		model.addAttribute("isResponsible", dpiaService.isResponsibleFor(dpia));
+		model.addAttribute("isResponsible", dpiaService.isResponsibleFor(dpia) || SecurityUtil.isOperationAllowed(Roles.UPDATE_ALL));
 		return "dpia/fragments/edit_dpia_modal :: edit_dpia_modal";
 	}
 

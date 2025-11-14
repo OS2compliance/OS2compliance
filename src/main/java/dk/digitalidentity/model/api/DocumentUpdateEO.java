@@ -49,4 +49,6 @@ public class DocumentUpdateEO {
     private DocumentEO.DocumentRevisionInterval revisionInterval;
     @Schema(description = "Next revision")
     private LocalDate nextRevision;
+	@Schema(description = "Include in yearwheel")
+	private boolean includeInYearWheel;
 }

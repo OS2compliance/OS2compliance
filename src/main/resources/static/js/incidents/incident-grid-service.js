@@ -1,13 +1,14 @@
-const incidentGridService = new IncidentGridService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    incidentGridService.init();
-});
-function IncidentGridService() {
+import ColumnOptions from "../grid-js-extension/column-options.js";
+import IncidentService from "./incident-service.js";
+
+export default function IncidentGridService () {
+    this.incidentService = new IncidentService();
+
     this.filterFrom = '';
     this.filterTo = '';
 
-    this.init = () => {
-        let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom' );
+    this.init = async () => {
+        let fromPicker = initDatepicker('#filterFromBtn', '#filterFrom');
         let filterFrom = localStorage.getItem("incidentFilterFrom");
         if (filterFrom != null && filterFrom !== "null") {
             fromPicker.setFullDate(new Date(filterFrom));
@@ -15,19 +16,21 @@ function IncidentGridService() {
         }
         fromPicker.onSelect((date, formatedDate) => this.setFilterFrom(date, formatedDate));
 
-        let toPicker = initDatepicker('#filterToBtn', '#filterTo' );
+        let toPicker = initDatepicker('#filterToBtn', '#filterTo');
         let filterTo = localStorage.getItem("incidentFilterTo");
         if (filterTo != null && filterTo !== "null") {
             toPicker.setFullDate(new Date(filterTo));
             this.filterTo = toPicker.getFormatedDate();
         }
         toPicker.onSelect((date, formatedDate) => this.setFilterTo(date, formatedDate));
-        incidentService.fetchColumnName()
-            .then(columnNames => {
+        const columnNames = await this.incidentService.fetchColumnName()
+
+
+            // .then(columnNames => {
                 this.initGrid(columnNames);
                 this.updateSort(this.incidentGrid);
                 this.incidentGrid.updateConfig(this.currentConfig).forceRender();
-            });
+            // });
     }
 
     this.generateExcel = () => {
@@ -106,12 +109,12 @@ function IncidentGridService() {
                         const columnIds = this.columns.map(c => c.id);
                         const col = columns[0]; // multiColumn false
                         const order = columnIds[col.index];
-                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + ( order ? '&order=' + order : ''));
+                        return this.updateUrl(prev, 'dir=' + (col.direction === 1 ? 'asc' : 'desc') + (order ? '&order=' + order : ''));
                     }
                 }
             },
             columns: this.columns,
-            server:{
+            server: {
                 url: restUrl + 'list',
                 method: 'POST',
                 headers: {
@@ -124,14 +127,20 @@ function IncidentGridService() {
                 total: data => data.totalCount
             }
         };
+        const datatableId = 'incidentsTable';
         this.incidentGrid = new gridjs.Grid(this.currentConfig);
-        this.incidentGrid.render(document.getElementById("incidentsTable"));
+        this.incidentGrid.render(document.getElementById(datatableId));
         searchService.initSearch(this.incidentGrid, this.currentConfig);
         const customGridFunctions = new CustomGridFunctions(this.incidentGrid, restUrl + 'list', restUrl + 'export', incidentsTable);
 
-        gridOptions.init(this.incidentGrid, document.getElementById("gridOptions"));
+        new ColumnOptions(
+            datatableId,
+            this.incidentGrid,
+            ['name', 'allowedActions'],
+            ['name', 'createdAt', 'updatedAt', 'allowedActions'],
+            ['id'])
 
-        initGridActions()
+        this.initGridActions()
         initSaveAsExcelButton(customGridFunctions, 'Hændelseslog')
     }
 
@@ -143,7 +152,13 @@ function IncidentGridService() {
             let added = false;
             field.responses.forEach(response => {
                 if (c.id === response.indexColumnName) {
-                    columnValues.push(response.answerValue);
+
+                    let value = response.answerValue
+                    if (response.linkable) {
+                        value = formatAsLink(value, value, true)
+                    }
+
+                    columnValues.push(value);
                     added = true;
                 }
             });
@@ -164,8 +179,8 @@ function IncidentGridService() {
                 id: "name",
                 name: "Titel",
                 formatter: (cell, row) => {
-                    const url = viewUrl + row.cells[0]['data'];
-                    return gridjs.html(`<a href="${url}">${cell}</a>`);
+                    const url = '/incidents/logs/' + row.cells[0]['data'];
+                    return formatAsLink(cell, url, false)
                 },
                 width: '250px',
                 canSortFlag: true
@@ -219,15 +234,24 @@ function IncidentGridService() {
 
     this.updateSort = () => {
         this.currentConfig.columns.forEach(column => {
-            column.columns.forEach(subcolumn => {subcolumn.sort = column.canSortFlag !== undefined})
+            column.columns.forEach(subcolumn => {
+                subcolumn.sort = column.canSortFlag !== undefined
+            })
         })
     }
 
-}
-
-function initGridActions() {
-    delegateListItemActions('incidentsTable',
-        (id, elem) => incidentService.editIncident('editIncidentDialog', id),
-        (id, name, elem) => incidentService.deleteIncident(incidentGridService.incidentGrid, id, name),
+    this.initGridActions = () => {
+        delegateListItemActions('incidentsTable',
+            (id, elem) => this.incidentService.editIncident('editIncidentDialog', id),
+            (id, name, elem) => this.incidentService.deleteIncident(this.incidentGrid, id, name),
         )
+    }
+
+};
+
+function formatAsLink(label, href, shouldOpenInWindow = false) {
+    const nullSafeLabel = label === null || label === undefined ? '' : label;
+    const nullSafeHref = href === null || href === undefined ? '#' : href;
+    const target = shouldOpenInWindow ? ' target="_blank" rel="noopener noreferrer"' : '';
+    return gridjs.html(`<a href="${nullSafeHref}" ${target}>${nullSafeLabel}</a>`);
 }

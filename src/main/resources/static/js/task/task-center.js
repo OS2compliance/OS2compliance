@@ -1,4 +1,18 @@
+import {initStatisticView} from "../statistic/statisticView.js";
+import ColumnOptions from "../grid-js-extension/column-options.js";
+import formatTags from "../tags/tag-grid-formatter.js";
+
 let today = new Date();
+let token = document.getElementsByName("_csrf")[0].getAttribute("content");
+let grid = null;
+
+document.addEventListener("DOMContentLoaded", function() {
+
+    initGrid()
+
+    initStatisticView('task')
+
+});
 
 const DateDiff = {
     inDays: function (d1, d2) {
@@ -13,13 +27,6 @@ const defaultClassName = {
     search: "form-control",
     header: "d-flex justify-content-end"
 };
-
-document.addEventListener("DOMContentLoaded", function() {
-
-    initGrid()
-
-});
-
 
 function deleteClicked(taskId, name) {
     Swal.fire({
@@ -68,7 +75,7 @@ function initGrid() {
             {
                 name: "Ansvarlig",
                 searchable: {
-                    searchKey: 'responsibleUser.name',
+                    searchKey: 'responsibleNames',
                 },
             },
             {
@@ -80,18 +87,9 @@ function initGrid() {
             {
                 name: "Tags",
                 searchable: {
-                    searchKey: 'tags',
+                    searchKey: 'tagNames',
                 },
-                formatter: (cell, row) => {
-                    let result = '';
-                    if (cell != null && cell.trim() !== '') {
-                        let tags = cell.split(',');
-                        for (let i =0; i< tags.length; i++) {
-                            result += '<div class=" badge bg-info mb-1">'+tags[i]+'</div>';
-                        }
-                    }
-                    return gridjs.html(result, 'div')
-                },
+                formatter: (cell, row) => formatTags(cell, row),
             },
             {
                 name: "Deadline",
@@ -137,6 +135,25 @@ function initGrid() {
                     searchKey: 'taskResult',
                 },
                 hidden: true,
+            },
+            {
+                name: "Sidst udført",
+                searchable: {
+                    searchKey: 'lastCompletionDate'
+                },
+                formatter: (cell, row) => {
+                    if (!cell || cell.trim() === '') {
+                        return gridjs.html(`<span>-</span>`);
+                    }
+
+                    var dateParts = cell.split('-');
+                    if (dateParts.length === 3) {
+                        var formattedDate = `${dateParts[2]}/${dateParts[1]}-${dateParts[0]}`;
+                        return gridjs.html(`<span>${formattedDate}</span>`);
+                    }
+
+                    return gridjs.html(`<span>${cell}</span>`);
+                }
             },
             {
                 name: "Status",
@@ -202,8 +219,8 @@ function initGrid() {
             },
             then: data => data.content.map(task =>
                 [ task.id, task.name, task.taskType,
-                    task.responsibleUser, task.responsibleOU, task.tags, task.nextDeadline,
-                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.completed, task.allowedActions ]
+                    task.responsibleNames, task.responsibleOU, task.tags, task.nextDeadline,
+                    task.taskRepetition !== null ? task.taskRepetition : "", task.taskResult, task.lastCompletionDate, task.completed, task.allowedActions ]
             ),
             total: data => data.totalCount
         },
@@ -223,12 +240,18 @@ function initGrid() {
             }
         }
     };
-    const grid = new gridjs.Grid(gridConfig).render( document.getElementById( "tasksDatatable" ));
+    const datatableId = 'tasksDatatable';
+    grid = new gridjs.Grid(gridConfig).render( document.getElementById( datatableId ));
 
     //Enables custom column search, serverside sorting and pagination
-    const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, exportTasksUrl, 'tasksDatatable');
+    const customGridFunctions = new CustomGridFunctions(grid, gridTasksUrl, exportTasksUrl, datatableId);
 
-    gridOptions.init(grid, document.getElementById("gridOptions"));
+    new ColumnOptions(
+        datatableId,
+        grid,
+        ['opgavenavn', 'allowedActions'],
+        ['opgavenavn', 'allowedActions', 'opgaveType', 'ansvarlig', 'deadline', 'status', 'resultat'],
+        ['id'])
 
     initGridActions()
 
@@ -241,4 +264,10 @@ function initGridActions() {
         (id, name, elem) => deleteClicked(id, name),
         (id, elem) =>copyTaskService.showCopyDialog(id) ,
     )
+}
+
+export function refreshTaskGrid() {
+    if (grid) {
+        grid.forceRender();
+    }
 }

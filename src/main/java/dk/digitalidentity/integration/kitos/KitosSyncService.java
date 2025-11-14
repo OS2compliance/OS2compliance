@@ -35,10 +35,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 import static dk.digitalidentity.Constants.NEEDS_CVR_UPDATE_PROPERTY;
 import static dk.digitalidentity.integration.kitos.KitosConstants.*;
@@ -266,6 +266,8 @@ public class KitosSyncService {
 			} else {
 				log.warn("Unexpected number of users found for kitos uuid {}, found {}", ownerUuid, userEntities.size());
 			}
+		} else {
+			asset.setResponsibleUsers(Collections.emptyList());
 		}
 	}
 
@@ -277,24 +279,6 @@ public class KitosSyncService {
         log.warn("Unexpected number of users found for kitos uuid {}, found {}", uuid, userEntities.size());
         return Optional.empty();
     }
-
-	// TODO: Refactor when eliminating mapping tables in the future
-	private void setAssetOperationResponsible(final Asset asset, final ItSystemUsageResponseDTO itSystemUsageResponseDTO) {
-		final String operationResponsibleRoleUuid = settingsService.getString(KITOS_OPERATION_RESPONSIBLE_ROLE_SETTING_KEY, "");
-		asset.getOperationResponsibleUsers().clear();
-		itSystemUsageResponseDTO.getRoles().stream()
-				.filter(r -> operationResponsibleRoleUuid.equalsIgnoreCase(r.getRole().getUuid().toString()))
-				.map(r -> r.getUser().getUuid())
-				.forEach(r -> {
-					final Optional<User> user = findUser(r.toString());
-					user.ifPresent(value -> {
-						// Make sure to only add managers once
-						if (asset.getOperationResponsibleUsers().stream().noneMatch(u -> value.getUuid().equals(u.getUuid()))) {
-							asset.getOperationResponsibleUsers().add(value);
-						}
-					});
-				});
-	}
 
     private void updateAsset(final Asset asset, final ItSystemResponseDTO responseDTO) {
         asset.setName(responseDTO.getName());
@@ -352,7 +336,7 @@ public class KitosSyncService {
         }
     }
 
-    private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
+	private Supplier createSupplier(final ItSystemResponseDTO responseDTO) {
         assert responseDTO.getRightsHolder() != null;
         final Supplier supplier = new Supplier();
         supplier.setCreatedBy(responseDTO.getCreatedBy().getName());
@@ -452,7 +436,7 @@ public class KitosSyncService {
 				responseDTO.getExternalReferences().stream()
 						.filter(e -> e.getUrl() != null && !e.getUrl().isBlank())
 						.map(e -> new AssetProductLink(null, e.getUrl(), asset))
-					.collect(Collectors.toList())
+					.toList()
 			);
 		}
 	}

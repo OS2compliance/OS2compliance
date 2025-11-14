@@ -1,11 +1,8 @@
 import FormValidationService from "../FormValidationService.js";
 
-window.incidentService = new IncidentService();
-document.addEventListener("DOMContentLoaded", function(event) {
-    incidentService.init();
-});
+export default function IncidentService() {
 
-function IncidentService() {
+
     this.init = () => {
         if (document.getElementById('createIncidentDialog')) {
             this.fetchDialog(formUrl, "createIncidentDialog");
@@ -64,7 +61,7 @@ function IncidentService() {
         });
     }
 
-    this.fetchColumnName =  () => {
+    this.fetchColumnName = async () => {
         return jsonCall('GET', restUrl + 'columns', null)
             .then((response) => {
                 defaultResponseErrorHandler(response);
@@ -79,7 +76,7 @@ function IncidentService() {
         pickers.forEach(picker => {
             let id = picker.getAttribute('id');
             let buttonId = picker.parentElement.querySelector('button').getAttribute('id');
-            initDatepicker(`#${buttonId}`, `#${id}` );
+            initDatepicker(`#${buttonId}`, `#${id}`);
         })
     }
 
@@ -166,7 +163,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(nameInput);
             }
-            incidentService.setFieldValidity(nameInput, feedback, isValid);
+            this.setFieldValidity(nameInput, feedback, isValid);
         }
 
         // validate textField textarea max length
@@ -181,7 +178,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(textArea);
             }
-            incidentService.setFieldValidity(textArea, feedback, isValid);
+            this.setFieldValidity(textArea, feedback, isValid);
         });
 
         // validate date fields
@@ -195,7 +192,7 @@ function IncidentService() {
                 valid = false;
                 invalidFields.push(input);
             }
-            incidentService.setFieldValidity(input, feedback, isValid);
+            this.setFieldValidity(input, feedback, isValid);
         });
 
         // Validate obligatory fields

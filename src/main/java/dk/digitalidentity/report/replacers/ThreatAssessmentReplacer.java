@@ -246,7 +246,7 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
                 setCellTextSmall(row, 1, task.getDescription());
                 setCellTextSmall(row, 2, task.getTaskType().getMessage());
                 setCellTextSmall(row, 3, DK_DATE_FORMATTER.format(task.getNextDeadline()));
-                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUser().getName()));
+                setCellTextSmall(row, 4, nullSafe(() -> task.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))));
                 setCellTextSmall(row, 5, nullSafe(() -> task.getResponsibleOu().getName()));
                 idx[0]++;
             }
@@ -261,7 +261,14 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
         advanceCursor(cursor);
         final XWPFTable table = tableParagraph.getBody().insertNewTbl(cursor);
         final Map<String, List<ThreatDTO>> threatList = threatAssessmentService.buildThreatList(context.threatAssessment);
-        createTableCells(table, context.riskProfileDTOList.size() + 1, 14);
+		int totalRows = 1;
+		for (List<ThreatDTO> threats : threatList.values()) {
+			for (ThreatDTO threat : threats) {
+				totalRows++;
+				totalRows += threat.getRelatedPrecautions().size();
+			}
+		}
+		createTableCells(table, totalRows, 14);
 
         final XWPFTableRow headerRow = table.getRow(0);
         setCellHeaderTextSmall(headerRow, 0, "Nr.");
@@ -339,12 +346,27 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 						if (i==9 || i ==10) {
 							continue;
 						}
-						System.out.println("merging column: "+i+" from row: "+mergeStartIndex+" to row: "+mergeStartIndex+t.getRelatedPrecautions().size());
 						mergeCellVertically (table, i, mergeStartIndex, mergeStartIndex+t.getRelatedPrecautions().size());
 					}
 
+					idx[0]++;
+				}
+				else {
+					// When profile is null, merge all columns from 2 onwards to show "Ikke relevant"
+					setCellTextSmall(row, 0, "" + (t.getIndex() + 1));
+					setCellTextSmall(row, 1, threatType);
 
+					for (int i = 3; i <= 13; i++) {
+						clearCell(row.getCell(i));
+					}
 
+					mergeCellHorizontally(table, idx[0], 2, 13);
+
+					XWPFTableCell cell2 = row.getCell(2);
+					XWPFParagraph para = cell2.getParagraphs().get(0);
+					para.setStyle(SMALL_TEXT);
+					para.setAlignment(ParagraphAlignment.CENTER);
+					addTextRun("Ikke relevant", para);
 
                     idx[0]++;
                 }
@@ -683,18 +705,19 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 
 	private void addGeneralInfoSection(final XWPFDocument document, final XmlCursor cursor, final ThreatContext context) {
 		if (context.asset != null || context.register != null) {
+
 			boolean isAsset = context.asset != null;
 			DataProcessing dataProcessing = isAsset ? context.asset.getDataProcessing() : context.register.getDataProcessing();
 			List<registeredDataCategory> categories = dataProcessing.getRegisteredCategories().stream().map(cat ->
 					{
 						Optional<ChoiceValue> title = choiceService.getValue(cat.getPersonCategoriesRegisteredIdentifier());
-						List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream().map(type -> Objects.requireNonNull(choiceService.getValue(type).orElse(null)).getCaption())
+						List<String> types = cat.getPersonCategoriesInformationIdentifiers().stream()
+								.map(choiceService::getValue)
+								.filter(Optional::isPresent)
+								.map(opt -> opt.get().getCaption())
 								.filter(Objects::nonNull)
 								.toList();
-						if (title.isEmpty()) {
-							return null;
-						}
-						return new registeredDataCategory(title.get().getCaption(), types);
+						return title.map(choiceValue -> new registeredDataCategory(choiceValue.getCaption(), types)).orElse(null);
 					})
 					.filter(Objects::nonNull)
 					.toList();
@@ -713,76 +736,96 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 			table.setTableAlignment(TableRowAlign.LEFT);
 
 			int extraRowsForAsset = isAsset ? 1 : 0;
-			createTableCells(table, 9 + categories.size() + extraRowsForAsset, 3);
+			createTableCells(table, 13 + categories.size() + extraRowsForAsset, 3);
 			final XWPFTableRow row = table.getRow(0);
 
+			// Purpose
+			setCellTextSmall(row, 0, "Formål:");
+			setCellTextSmall(row, 1, (context.register != null && context.register.getPurpose() != null) ? context.register.getPurpose() : "Ikke angivet");
+
 			//System type
-			setCellTextSmall(row, 0, "Systemtype:");
-			setCellTextSmall(row, 1, isAsset ? context.asset.getAssetType().getCaption() : "Fortegnelse");
+			final XWPFTableRow row1 = table.getRow(1);
+			setCellTextSmall(row1, 0, "Systemtype:");
+			setCellTextSmall(row1, 1, isAsset ? context.asset.getAssetType().getCaption() : "Fortegnelse");
 
 			//System owners
-			final XWPFTableRow row1 = table.getRow(1);
+			final XWPFTableRow row2 = table.getRow(2);
 			String systemOwners = isAsset ?
 					context.asset.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "))
 					: context.register.getResponsibleUsers().stream().map(User::getName).collect(Collectors.joining(", "));
 			;
 			Setting ownerInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_OWNER_ROLE_SETTING_INPUT_FIELD_NAME);
 			String customInputOwner = (ownerInputSetting != null ? ownerInputSetting.getSettingValue() : "systemejer") + ":";
-			setCellTextSmall(row1, 0, customInputOwner);
-			setCellTextSmall(row1, 1, systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
+			setCellTextSmall(row2, 0, customInputOwner);
+			setCellTextSmall(row2, 1, systemOwners.isBlank() ? "Ikke udfyldt" : systemOwners);
 
 			//System responsible
-			final XWPFTableRow row2 = table.getRow(2);
+			final XWPFTableRow row3 = table.getRow(3);
 			Setting responsibleInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
 			String customInputResponsible = (responsibleInputSetting != null ? responsibleInputSetting.getSettingValue() : "Systemansvarlige") + ":";
-			setCellTextSmall(row2, 0, customInputResponsible);
-			setCellTextSmall(row2, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
-
-			//Operation responsible
-			final XWPFTableRow row3 = table.getRow(3);
-			Setting operationResponsibleInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
-			String customInputOperationResponsible = (operationResponsibleInputSetting != null ? operationResponsibleInputSetting.getSettingValue() : "Driftsansvarlige") + ":";
-			setCellTextSmall(row3, 0, customInputOperationResponsible);
+			setCellTextSmall(row3, 0, customInputResponsible);
 			setCellTextSmall(row3, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
 
-			//Suppliers
+			//Operation responsible
 			final XWPFTableRow row4 = table.getRow(4);
-			setCellTextSmall(row4, 0, "Leverandør:");
-			setCellTextSmall(row4, 1, isAsset && context.asset.getSupplier() != null ? context.asset.getSupplier().getName() : "");
+			Setting operationResponsibleInputSetting = settingsService.findBySettingKey(KitosConstants.KITOS_RESPONSIBLE_ROLE_SETTING_INPUT_FIELD_NAME);
+			String customInputOperationResponsible = (operationResponsibleInputSetting != null ? operationResponsibleInputSetting.getSettingValue() : "Driftsansvarlige") + ":";
+			setCellTextSmall(row4, 0, customInputOperationResponsible);
+			setCellTextSmall(row4, 1, isAsset ? context.asset.getManagers().stream().map(User::getName).collect(Collectors.joining(", ")) : "");
+
+			//Suppliers
+			final XWPFTableRow row5 = table.getRow(5);
+			setCellTextSmall(row5, 0, "Leverandør:");
+			setCellTextSmall(row5, 1, isAsset && context.asset.getSupplier() != null ? context.asset.getSupplier().getName() : "");
 
 			//Who has access?
-			final XWPFTableRow row5 = table.getRow(5);
-			setCellTextSmall(row5, 0, "Hvem har adgang til personoplysningerne?:");
-			setCellTextSmall(row5, 1, String.join(", ", context.personsWithDataAccessList));
+			final XWPFTableRow row6 = table.getRow(6);
+			setCellTextSmall(row6, 0, "Hvem har adgang til personoplysningerne?:");
+			setCellTextSmall(row6, 1, String.join(", ", context.personsWithDataAccessList));
 
 			//Access count
-			final XWPFTableRow row6 = table.getRow(6);
-			setCellTextSmall(row6, 0, "Hvor mange har adgang til personoplysningerne?:");
+			final XWPFTableRow row7 = table.getRow(7);
+			setCellTextSmall(row7, 0, "Hvor mange har adgang til personoplysningerne?:");
 			var accessCount = choiceService.getValue(dataProcessing.getAccessCountIdentifier());
-			setCellTextSmall(row6, 1, accessCount.isPresent() ? accessCount.get().getCaption() : "");
+			setCellTextSmall(row7, 1, accessCount.isPresent() ? accessCount.get().getCaption() : "");
 
 			//Deletion procedure?
-			final XWPFTableRow row7 = table.getRow(7);
-			setCellTextSmall(row7, 0, "Sletteprocedure udarbejdet?:");
-			setCellTextSmall(row7, 1, dataProcessing.getDeletionProcedure() != null ? dataProcessing.getDeletionProcedure().getMessage() : "Ikke udfyldt");
+			final XWPFTableRow row8 = table.getRow(8);
+			setCellTextSmall(row8, 0, "Sletteprocedure udarbejdet?:");
+			setCellTextSmall(row8, 1, dataProcessing.getDeletionProcedure() != null ? dataProcessing.getDeletionProcedure().getMessage() : "Ikke udfyldt");
 
 			//Deletion procedure link
-			final XWPFTableRow row8 = table.getRow(8);
-			setCellTextSmall(row8, 0, "Link til sletteprocedure");
-			setCellTextSmall(row8, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
+			final XWPFTableRow row9 = table.getRow(9);
+			setCellTextSmall(row9, 0, "Link til sletteprocedure");
+			setCellTextSmall(row9, 1, dataProcessing.getDeletionProcedureLink() != null ? dataProcessing.getDeletionProcedureLink() : "");
+
+			//User management procedure?
+			final XWPFTableRow row10 = table.getRow(10);
+			setCellTextSmall(row10, 0, "Brugerstyringsprocedure udarbejdet?:");
+			setCellTextSmall(row10, 1, dataProcessing.getManagementProcedure() != null ? dataProcessing.getManagementProcedure().getMessage() : "Ikke udfyldt");
+
+			//User management procedure link
+			final XWPFTableRow row11 = table.getRow(11);
+			setCellTextSmall(row11, 0, "Link til brugerstyringsprocedure");
+			setCellTextSmall(row11, 1, dataProcessing.getUserManagementProcedureLink() != null ? dataProcessing.getUserManagementProcedureLink() : "");
+
+			//Logging procedure link
+			final XWPFTableRow row12 = table.getRow(12);
+			setCellTextSmall(row12, 0, "Link til logningsprocedure");
+			setCellTextSmall(row12, 1, dataProcessing.getLoggingProcedureLink() != null ? dataProcessing.getLoggingProcedureLink() : "");
 
 			// sociallyCritical
-			int nextRowIndex = 9;
+			int nextRowIndex = 13;
 			if (isAsset) {
-				final XWPFTableRow row9 = table.getRow(9);
-				setCellTextSmall(row9, 0, "Samfundskritisk:");
-				setCellTextSmall(row9, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
-				nextRowIndex = 10;
+				final XWPFTableRow row13 = table.getRow(13);
+				setCellTextSmall(row13, 0, "Samfundskritisk:");
+				setCellTextSmall(row13, 1, context.asset.isSociallyCritical() ? "Ja" : "Nej");
+				nextRowIndex = 14;
 			}
 
 			// Registered data categories
 			for (int i = 0; i < categories.size(); i++) {
-				final XWPFTableRow catRow = table.getRow(i + nextRowIndex); // Add magic number of previous rows to start at the current row
+				final XWPFTableRow catRow = table.getRow(i + nextRowIndex);
 				if (i == 0) {
 					setCellTextSmall(catRow, 0, "Registrerede persondatakategorier:");
 				}
@@ -797,8 +840,8 @@ public class ThreatAssessmentReplacer implements PlaceHolderReplacer {
 				}
 			}
 			if (categories.isEmpty()) {
-				final XWPFTableRow row9 = table.createRow();
-				setCellTextSmall(row9, 0, "Registrerede persondatakategorier:");
+				final XWPFTableRow row13 = table.createRow();
+				setCellTextSmall(row13, 0, "Registrerede persondatakategorier:");
 			}
 
 			setTableBorders(table, XWPFTable.XWPFBorderType.NONE);

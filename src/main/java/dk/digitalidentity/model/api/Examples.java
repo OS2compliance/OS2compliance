@@ -37,6 +37,7 @@ public interface Examples {
     String SUPPLIER_STATUS_EXAMPLE = "IN_PROGRESS";
     String DOCUMENT_STATUS_EXAMPLE = "IN_PROGRESS";
     String DOCUMENT_TYPE_EXAMPLE = "GUIDE";
+    String DOCUMENT_TYPE_NEW_EXAMPLE = "document-type-procedure-123456";
     String DOCUMENT_DESCRIPTION_EXAMPLE = "En beskrivelse af dokumentet";
     String DOCUMENT_LINK_EXAMPLE = "http://someurl.com/filename.doc";
     String DOCUMENT_VERSION_EXAMPLE = "1.2b";
@@ -64,6 +65,7 @@ public interface Examples {
     String PAGE_TOTAL_PAGE_NUMBER_EXAMPLE = "0";
 
     String ASSET_TYPE_IDENTIFIER = "asset-type-it-system-83AF9E";
+    String SUPERVISORY_MODEL_IDENTIFIER = "supervision-model-dbs-123456";
     String ASSET_TYPE_NAME = "IT-system";
 	String ASSET_ARCHIVE_EXAMPLE = "UNDECIDED";
 }

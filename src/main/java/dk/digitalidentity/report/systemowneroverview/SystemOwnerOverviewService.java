@@ -3,6 +3,7 @@ package dk.digitalidentity.report.systemowneroverview;
 import dk.digitalidentity.model.dto.StatusCombination;
 import dk.digitalidentity.model.dto.enums.StatusColor;
 import dk.digitalidentity.model.entity.Asset;
+import dk.digitalidentity.model.entity.ChoiceValue;
 import dk.digitalidentity.model.entity.Document;
 import dk.digitalidentity.model.entity.OrganisationUnit;
 import dk.digitalidentity.model.entity.Register;
@@ -12,7 +13,6 @@ import dk.digitalidentity.model.entity.Task;
 import dk.digitalidentity.model.entity.ThreatAssessment;
 import dk.digitalidentity.model.entity.enums.AssetStatus;
 import dk.digitalidentity.model.entity.enums.DocumentStatus;
-import dk.digitalidentity.model.entity.enums.RegisterStatus;
 import dk.digitalidentity.model.entity.enums.RiskAssessment;
 import dk.digitalidentity.report.systemowneroverview.dto.AssetRow;
 import dk.digitalidentity.report.systemowneroverview.dto.DocumentRow;
@@ -138,7 +138,7 @@ public class SystemOwnerOverviewService {
 		return new DocumentRow(
 				document.getName(),
 				assetName,
-				document.getDocumentType() != null ? document.getDocumentType().getMessage() : "",
+				document.getDocumentType() != null ? document.getDocumentType().getCaption() : "",
 				document.getNextRevision(),
 				statusCombination,
 				document.getTags().stream().map(Tag::getValue).collect(Collectors.joining(","))
@@ -146,15 +146,16 @@ public class SystemOwnerOverviewService {
 	}
 
 	public RegisterRow mapToRow(Register register, String assetName) {
-		RegisterStatus status = register.getStatus();
+		ChoiceValue status = register.getStatus();
 		StatusCombination statusCombination = new StatusCombination("", StatusColor.GREY);
 		if (status != null) {
-			StatusColor statusColor = switch (status) {
-				case READY -> StatusColor.GREEN;
-				case IN_PROGRESS -> StatusColor.YELLOW;
+			StatusColor statusColor = switch (status.getIdentifier()) {
+				case "register-status-ready-123456" -> StatusColor.GREEN;
+				case "register-status-in-progress-123456" -> StatusColor.YELLOW;
+				case "register-status-not-started-123456" -> StatusColor.RED;
 				default -> StatusColor.GREY;
 			};
-			statusCombination = new StatusCombination(status.getMessage(), statusColor);
+			statusCombination = new StatusCombination(status.getCaption(), statusColor);
 		}
 
 		RiskAssessment assessment = register.getConsequenceAssessment() != null ? register.getConsequenceAssessment().getAssessment() : null;

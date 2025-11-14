@@ -58,7 +58,7 @@
                     </li>
                     <li class="nav-item has-sub" sec:authorize="@accessEvaluator.risk()">
                         <a href="#" class="mininav-toggle nav-link collapsed"
-                           th:classappend="${page == 'risikovurderinger' || page == 'catalogs' || page == 'dpia_template' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
+                           th:classappend="${page == 'risikovurderinger' || page == 'riskDashboard' || page == 'catalogs' || page == 'dpia_template' || page == 'dpia' || page == 'precautions' ? 'active' : ''}">
                             <i class="pli-flashlight fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Risikostyring</span>
                         </a>
                         <ul class="mininav-content nav collapse">
@@ -68,7 +68,7 @@
                             </li>
                             <li class="nav-item">
                                 <a th:href="@{/risks/dashboard}" sec:authorize="@accessEvaluator.configuration()" class="nav-link"
-                                   th:classappend="${page} == 'riskDashboard' ? 'active' : ''">Trusselsbillede</a>
+                                   th:classappend="${page} == 'riskDashboard' ? 'active' : ''">Risikobillede</a>
                             </li>
                             <li class="nav-item" sec:authorize="@accessEvaluator.dpia()">
                                 <a th:href="@{/dpia}" class="nav-link"
@@ -126,7 +126,7 @@
                     <li class="nav-item has-sub" sec:authorize="@accessEvaluator.admin()">
                         <a href="#" class="mininav-toggle nav-link collapsed"
                            th:classappend="${page == 'inactiveUsers' || page == 'mailtemplates' || page == 'tags' || page == 'choicelists' || page == 'maillog' ? 'active' : ''}">
-                            <i class="pli-stamp fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Administrativt</span>
+                            <i class="pli-stamp fs-5 me-2 nav-icons"></i> <span class="nav-label ms-1">Administration</span>
                         </a>
                         <ul class="mininav-content nav collapse">
                             <li class="nav-item">

@@ -31,6 +31,8 @@ public interface KitosConstants {
 	String KITOS_ASSET_RISK_CHANGED_QUEUE = "kitosRiskQueue";
 	String KITOS_ASSET_DPIA_CHANGED_QUEUE = "kitosDPIAQueue";
 
+	String KITOS_ENABLE_SYNC_ITSYSTEMS = "kitos_enable_sync_itsystems";
+
     ZonedDateTime KITOS_DELTA_START_FROM = OffsetDateTime.of(1970, 1, 1, 0, 0, 0 ,0, ZoneOffset.UTC).toZonedDateTime();
     OffsetDateTime KITOS_DELTA_START_FROM_OFFSET = KITOS_DELTA_START_FROM.toOffsetDateTime().withOffsetSameInstant(ZoneOffset.UTC);
 
@@ -39,7 +41,7 @@ public interface KitosConstants {
 
     Integer PAGE_SIZE = 100;
 
-    Integer MAX_PAGE_REQUEST = 50;
+    Integer MAX_PAGE_REQUEST = 100;
 
 
 }

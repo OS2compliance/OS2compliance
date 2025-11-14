@@ -21,6 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -87,7 +88,7 @@ public class RelationServiceTest extends BaseIntegrationTest {
         task.setName(name);
         task.setTaskType(TaskType.TASK);
         task.setDescription("Something something ... CAKE");
-        task.setResponsibleUser(user);
+        task.setResponsibleUsers(Set.of(user));
         task.setResponsibleOu(ou);
         task.setNextDeadline(LocalDate.now().plusMonths(1));
         return taskDao.save(task);

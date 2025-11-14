@@ -11,6 +11,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.OneToMany;
 import jakarta.persistence.PostLoad;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
@@ -34,7 +35,7 @@ import java.util.Set;
 @Setter
 @Entity
 @Table(name = "kle_subject")
-public class KLESubject implements Persistable<String> {
+public class KLESubject implements Persistable<String>, Syncable<String> {
 
 	@Id
 	@Column(name = "subject_number")
@@ -111,8 +112,7 @@ public class KLESubject implements Persistable<String> {
 		this.isNew = false;
 	}
 
-	// Helper method for your sync logic
-	public void markAsExisting() {
-		this.isNew = false;
+	public void markNew() {
+		this.isNew = true;
 	}
 }

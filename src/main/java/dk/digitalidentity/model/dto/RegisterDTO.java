@@ -3,13 +3,14 @@ package dk.digitalidentity.model.dto;
 import dk.digitalidentity.model.dto.enums.AllowedAction;
 import dk.digitalidentity.model.ExcelColumn;
 import dk.digitalidentity.model.ExcludeFromExport;
-import dk.digitalidentity.model.entity.kle.KLEGroup;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -60,6 +61,12 @@ public class RegisterDTO {
 	@ExcludeFromExport
 	@Builder.Default
 	private Set<String> kleGroups = new HashSet<>();
+	@ExcludeFromExport
+	@Builder.Default
+	private Set<String> kleSubjects = new HashSet<>();
+	@ExcludeFromExport
+	@Builder.Default
+	private List<TagDTO> tags = new ArrayList<>();
 	@ExcludeFromExport
 	@Builder.Default
 	private Set<AllowedAction> allowedActions = new HashSet<>();
